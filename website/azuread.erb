@@ -1,0 +1,70 @@
+
+<% wrap_layout :inner do %>
+    <% content_for :sidebar do %>
+        <div class="docs-sidebar hidden-print affix-top" role="complementary">
+          <ul class="nav docs-sidenav">
+            <li<%= sidebar_current("docs-home") %>>
+              <a href="/docs/providers/index.html">All Providers</a>
+            </li>
+
+            <li<%= sidebar_current("docs-azuread-authentication") %>>
+              <a href="#">Authentication</a>
+              <ul class="nav nav-visible">
+                <li<%= sidebar_current("docs-azuread-authentication-azure-cli") %>>
+                   <a href="/docs/providers/azuread/auth/azure_cli.html">Authenticating using the Azure CLI</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-authentication-managed-service-identity") %>>
+                   <a href="/docs/providers/azuread/auth/managed_service_identity.html">Authenticating using Managed Service Identity</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-authentication-service-principal-client-certificate") %>>
+                   <a href="/docs/providers/azuread/auth/service_principal_client_certificate.html">Authenticating using a Service Principal with a Client Certificate</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-authentication-service-principal-client-secret") %>>
+                   <a href="/docs/providers/azuread/auth/service_principal_client_secret.html">Authenticating using a Service Principal with a Client Secret</a>
+                </li>
+              </ul>
+            </li>
+
+            <li<%= sidebar_current("docs-azuread-datasource") %>>
+              <a href="#">Data Sources</a>
+              <ul class="nav nav-visible">
+
+                <li<%= sidebar_current("docs-azuread-datasource-azuread-application") %>>
+                  <a href="/docs/providers/azuread/d/application.html">azuread_application</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-datasource-azuread-application") %>>
+                  <a href="/docs/providers/azuread/d/service_principal.html">azuread_service_principal</a>
+                </li>
+
+              </ul>
+            </li>
+
+            <li<%= sidebar_current("docs-azuread-resource-azuread") %>>
+              <a href="#">Azure Active Directory Resources</a>
+              <ul class="nav nav-visible">
+
+                <li<%= sidebar_current("docs-azuread-resource-azuread-application") %>>
+                  <a href="/docs/providers/azuread/r/application.html">azuread_application</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-resource-azuread-service-principal-x") %>>
+                  <a href="/docs/providers/azuread/r/service_principal.html">azuread_service_principal</a>
+                </li>
+
+                <li<%= sidebar_current("docs-azuread-resource-azuread-service-principal-password") %>>
+                  <a href="/docs/providers/azuread/r/service_principal_password.html">azuread_service_principal_password</a>
+                </li>
+
+              </ul>
+            </li>
+
+          </ul>
+        </div>
+    <% end %>
+
+    <%= yield %>
+<% end %>
