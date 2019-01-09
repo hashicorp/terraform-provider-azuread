@@ -111,13 +111,15 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	id := fmt.Sprintf("%s/%s", objectId, keyId)
 	updatedCredentials := make([]graphrbac.PasswordCredential, 0)
 	if existingCredentials.Value != nil {
-		for _, v := range *existingCredentials.Value {
-			if v.KeyID == nil {
-				continue
-			}
+		if requireResourcesToBeImported {
+			for _, v := range *existingCredentials.Value {
+				if v.KeyID == nil {
+					continue
+				}
 
-			if *v.KeyID == keyId {
-				return tf.ImportAsExistsError("azuread_service_principal_password", id)
+				if *v.KeyID == keyId {
+					return tf.ImportAsExistsError("azuread_service_principal_password", id)
+				}
 			}
 		}
 

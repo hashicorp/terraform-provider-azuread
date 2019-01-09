@@ -43,6 +43,11 @@ func TestAccAzureADServicePrincipalPassword_basic(t *testing.T) {
 }
 
 func TestAccAzureADServicePrincipalPassword_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
 	resourceName := "azuread_service_principal_password.test"
 	applicationId, err := uuid.GenerateUUID()
 	if err != nil {
