@@ -171,6 +171,7 @@ func testAccADServicePrincipalPassword_requiresImport(applicationId, value strin
 %s
 
 resource "azuread_service_principal_password" "import" {
+  key_id               = "${azuread_service_principal_password.test.key_id}"
   service_principal_id = "${azuread_service_principal_password.test.service_principal_id}"
   value                = "${azuread_service_principal_password.test.value}"
   end_date             = "${azuread_service_principal_password.test.end_date}"
