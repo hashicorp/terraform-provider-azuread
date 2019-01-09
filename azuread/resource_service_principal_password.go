@@ -108,15 +108,18 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error Listing Password Credentials for Service Principal %q: %+v", objectId, err)
 	}
 
+	id := fmt.Sprintf("%s/%s", objectId, keyId)
 	updatedCredentials := make([]graphrbac.PasswordCredential, 0)
 	if existingCredentials.Value != nil {
-		for _, v := range *existingCredentials.Value {
-			if v.KeyID == nil {
-				continue
-			}
+		if requireResourcesToBeImported {
+			for _, v := range *existingCredentials.Value {
+				if v.KeyID == nil {
+					continue
+				}
 
-			if *v.KeyID == keyId {
-				return tf.ImportAsExistsError("azuread_service_principal_password", fmt.Sprintf("%s/%s", objectId, keyId))
+				if *v.KeyID == keyId {
+					return tf.ImportAsExistsError("azuread_service_principal_password", id)
+				}
 			}
 		}
 
@@ -133,7 +136,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error creating Password Credential %q for Service Principal %q: %+v", keyId, objectId, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", objectId, keyId))
+	d.SetId(id)
 
 	return resourceServicePrincipalPasswordRead(d, meta)
 }
