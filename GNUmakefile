@@ -2,6 +2,9 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=azuread
 
+#make sure we catch schema errors during testing
+TF_SCHEMA_PANIC_ON_ERROR=1
+
 default: build
 
 build: fmtcheck
@@ -32,7 +35,7 @@ goimport:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@gometalinter ./...
+	gometalinter ./...
 
 tools:
 	@echo "==> installing required tooling..."
@@ -66,4 +69,3 @@ endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
-
