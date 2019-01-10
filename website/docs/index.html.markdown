@@ -30,7 +30,9 @@ We recommend using either a Service Principal or Managed Service Identity when r
 
 ```hcl
 # Configure the Microsoft Azure Active Directory Provider
-provider "azuread" {}
+provider "azuread" {
+  version = "=0.1.0"
+}
 
 # Create an application
 resource "azuread_application" "example" {
@@ -42,8 +44,6 @@ resource "azuread_service_principal" "example" {
   application_id = "${azuread_application.example.application_id}"
 }
 ```
-
-## Argument Reference
 
 ## Features and Bug Requests
 
