@@ -33,13 +33,13 @@ data "azuread_group" "test_group" {
 
 The following arguments are supported:
 
-* `object_id` - (Optional) The ID of the Azure AD Group we want to lookup.
+* `object_id` - (Optional) The UUID of the Azure AD Group we want to lookup.
 
-* `name` - (Optional) The ID of the Azure AD Group we want to loopup.
+* `name` - (Optional) The UUID of the Azure AD Group we want to lookup.
 
 -> **NOTE:** At least one of `name` or `object_id` must be specified.
 
--> **WARNING:** `name` is not unique within Azure Active Directory. The data source will only return the first Group found.
+~> **WARNING:** `name` is not unique within Azure Active Directory. The data source will only return the first Group found.
 
 ## Attributes Reference
 

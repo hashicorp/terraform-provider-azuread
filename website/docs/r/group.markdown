@@ -18,7 +18,7 @@ Manages a Group within Azure Active Directory.
 * User Account Administrator
 * Company Administrator
 
-You can assign one of the required Azure Active Directory Roles with PowerShell. Please refer to [this documentation](https://docs.microsoft.com/en-us/powershell/module/azuread/add-azureaddirectoryrolemember) for more details.
+You can assign one of the required Azure Active Directory Roles with the **AzureAD PowerShell Module**, which is available for Windows PowerShell or in the Azure Cloud Shell. Please refer to [this documentation](https://docs.microsoft.com/en-us/powershell/module/azuread/add-azureaddirectoryrolemember) for more details.
 
 ## Example Usage
 

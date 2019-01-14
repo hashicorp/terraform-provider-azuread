@@ -65,7 +65,7 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 		// use the name to find the Azure AD group
 		name := d.Get("name").(string)
 		filter := fmt.Sprintf("displayName eq '%s'", name)
-		log.Printf("[DEBUG] [data_source_azuread_group] Using filter %q", filter)
+		log.Printf("[DEBUG] Using filter %q", filter)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
@@ -73,16 +73,20 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 		}
 
 		for _, v := range *resp.Response().Value {
-			if v.DisplayName != nil {
+			if v.DisplayName == nil {
+				//no DisplayName returned, continue with the next iteration
+				continue
+			} else {
 				if strings.EqualFold(*v.DisplayName, name) {
-					log.Printf("[DEBUG] [data_source_azuread_group] %q (API result) matches %q (given value). The group has the objectId: %q", *v.DisplayName, name, *v.ObjectID)
+					log.Printf("[DEBUG] %q (API result) matches %q (given value). The group has the objectId: %q", *v.DisplayName, name, *v.ObjectID)
 					groupObj = &v
 					break
 				} else {
-					log.Printf("[DEBUG] [data_source_azuread_group] %q (API result) does not match %q (given value)", *v.DisplayName, name)
+					log.Printf("[DEBUG] %q (API result) does not match %q (given value)", *v.DisplayName, name)
 				}
 			}
 		}
+
 		if groupObj == nil {
 			return fmt.Errorf("Couldn't locate a Azure AD group with a name of %q", name)
 		}

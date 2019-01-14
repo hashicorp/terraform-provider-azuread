@@ -61,7 +61,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if ar.ResponseWasNotFound(resp.Response) {
-			log.Printf("[DEBUG] [resource_azuread_group] Azure AD group with id %q was not found - removing from state", d.Id())
+			log.Printf("[DEBUG] Azure AD group with id %q was not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
