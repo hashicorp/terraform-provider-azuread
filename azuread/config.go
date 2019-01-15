@@ -30,6 +30,7 @@ type ArmClient struct {
 	// azure AD clients
 	applicationsClient      graphrbac.ApplicationsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
+	groupsClient            graphrbac.GroupsClient
 }
 
 // getArmClient is a helper method which returns a fully instantiated *ArmClient based on the auth Config's current settings.
@@ -75,6 +76,9 @@ func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authoriz
 
 	c.servicePrincipalsClient = graphrbac.NewServicePrincipalsClientWithBaseURI(endpoint, tenantID)
 	configureClient(&c.servicePrincipalsClient.Client, authorizer)
+
+	c.groupsClient = graphrbac.NewGroupsClientWithBaseURI(endpoint, tenantID)
+	configureClient(&c.groupsClient.Client, authorizer)
 }
 
 func configureClient(client *autorest.Client, auth autorest.Authorizer) {
