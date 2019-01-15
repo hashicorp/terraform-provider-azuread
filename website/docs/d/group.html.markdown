@@ -25,7 +25,7 @@ data "azuread_group" "test_group" {
 
 The following arguments are supported:
 
-* `name` - (Required) The UUID of the Azure AD Group we want to lookup.
+* `name` - (Required) The Name of the Azure AD Group we want to lookup.
 
 ~> **WARNING:** `name` is not unique within Azure Active Directory. The data source will only return the first Group found.
 
