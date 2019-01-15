@@ -3,7 +3,6 @@ package azuread
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -77,7 +76,7 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 				//no DisplayName returned, continue with the next iteration
 				continue
 			} else {
-				if strings.EqualFold(*v.DisplayName, name) {
+				if *v.DisplayName == name {
 					log.Printf("[DEBUG] %q (API result) matches %q (given value). The group has the objectId: %q", *v.DisplayName, name, *v.ObjectID)
 					groupObj = &v
 					break
