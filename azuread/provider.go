@@ -76,12 +76,14 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"azuread_application":       dataApplication(),
 			"azuread_service_principal": dataServicePrincipal(),
+			"azuread_user":              dataSourceUser(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
 			"azuread_application":                resourceApplication(),
 			"azuread_service_principal":          resourceServicePrincipal(),
 			"azuread_service_principal_password": resourceServicePrincipalPassword(),
+			"azuread_user":                       resourceUser(),
 		},
 	}
 
