@@ -23,6 +23,33 @@ resource "azuread_application" "test" {
   reply_urls                 = ["https://replyurl"]
   available_to_other_tenants = false
   oauth2_allow_implicit_flow = true
+
+	required_resource_access {
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+
+		resource_access {
+        id = "..."
+        type = "Role"
+		}
+		resource_access {
+        id = "..."
+        type = "Scope"
+		}
+
+		resource_access {
+        id = "..."
+        type = "Scope"
+		}
+	}
+
+	required_resource_access {
+    resource_app_id = "00000002-0000-0000-c000-000000000000"
+
+		resource_access {
+        id = ".."
+        type = "Scope"
+		}
+	}
 }
 ```
 
@@ -41,6 +68,24 @@ The following arguments are supported:
 * `available_to_other_tenants` - (Optional) Is this Azure AD Application available to other tenants? Defaults to `false`.
 
 * `oauth2_allow_implicit_flow` - (Optional) Does this Azure AD Application allow OAuth2.0 implicit flow tokens? Defaults to `false`.
+
+* `required_resource_access` - (Optional) A collection of required_resource_access blocks as documented below. Specifies resources that this application requires access to and the set of OAuth permission scopes and application roles that it needs under each of those resources. This pre-configuration of required resource access drives the consent experience.
+
+---
+
+`required_resource_access` supports the following:
+
+* `resource_app_id` - (Required) The unique identifier for the resource that the application requires access to. This should be equal to the appId declared on the target resource application.
+
+* `resource_access"` - (Required) A collection of resource_access blocks as documented below
+
+---
+
+`resource_access` supports the following:
+
+* `id` - (Required) The unique identifier for one of the OAuth2Permission or AppRole instances that the resource application exposes. 
+
+* `type` - (Required) Specifies whether the id property references an OAuth2Permission or an AppRole. Possible values are "scope" or "role".
 
 ## Attributes Reference
 
