@@ -67,7 +67,7 @@ func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface
 	for _, v := range *results.Value {
 		domain := make(map[string]interface{})
 
-		if tenantDomainOnly == true && v.AdditionalProperties["isInitial"].(bool) == false {
+		if tenantDomainOnly && !v.AdditionalProperties["isInitial"].(bool) {
 			//we only want the tenant root domain, which is always the initial domain
 			//if this conditional matches, the current domain result should be skipped
 			log.Printf("[DEBUG] Domain %q skipped, as we only want the tenant root domain.", *v.Name)
