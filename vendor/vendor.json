@@ -127,12 +127,6 @@
 			"revisionTime": "2017-04-18T07:21:50Z"
 		},
 		{
-			"checksumSHA1": "+2yCNqbcf7VcavAptooQReTGiHY=",
-			"path": "github.com/apparentlymart/go-rundeck-api",
-			"revision": "f6af74d34d1ef69a511c59173876fc1174c11f0d",
-			"revisionTime": "2016-08-26T14:30:32Z"
-		},
-		{
 			"checksumSHA1": "Ffhtm8iHH7l2ynVVOIGJE3eiuLA=",
 			"path": "github.com/apparentlymart/go-textseg/textseg",
 			"revision": "b836f5c4d331d1945a2fead7188db25432d73b69",
@@ -1529,14 +1523,6 @@
 			"revisionTime": "2018-12-04T23:41:53Z",
 			"version": "v1.17.0",
 			"versionExact": "v1.17.0"
-		},
-		{
-			"checksumSHA1": "wICWAGQfZcHD2y0dHesz9R2YSiw=",
-			"path": "k8s.io/kubernetes/pkg/apimachinery",
-			"revision": "b0b7a323cc5a4a2019b2e9520c21c7830b7f708e",
-			"revisionTime": "2017-04-03T20:32:25Z",
-			"version": "v1.6.1",
-			"versionExact": "v1.6.1"
 		}
 	],
 	"rootPath": "github.com/terraform-providers/terraform-provider-azuread"
