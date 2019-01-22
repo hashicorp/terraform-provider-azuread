@@ -7,6 +7,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* dependencies: switching to use Go Modules [GH-26]
 * dependencies: updating `github.com/Azure/azure-sdk-for-go` to v24.1.0 [GH-25]
 * dependencies: updating `github.com/Azure/go-autorest` to v11.2.8 [GH-24]
 
