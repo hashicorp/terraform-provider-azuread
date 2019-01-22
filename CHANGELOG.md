@@ -1,9 +1,12 @@
 ## 0.2.0 (Unreleased)
 
-IMPROVEMENTS:
+FEATURES:
 
 * **New Data Source:** `azuread_group` [GH-14]
 * **New Resource:** `azuread_group` [GH-14]
+
+IMPROVEMENTS:
+
 * dependencies: updating `github.com/Azure/azure-sdk-for-go` to v24.1.0 [GH-25]
 * dependencies: updating `github.com/Azure/go-autorest` to v11.2.8 [GH-24]
 
