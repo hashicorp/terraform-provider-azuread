@@ -45,16 +45,15 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 
 	for _, v := range *resp.Response().Value {
 		if v.DisplayName == nil {
-			//no DisplayName returned, continue with the next iteration
 			continue
+		}
+
+		if *v.DisplayName == name {
+			log.Printf("[DEBUG] %q (API result) matches %q (given value)", *v.DisplayName, name)
+			groupObj = &v
+			break
 		} else {
-			if *v.DisplayName == name {
-				log.Printf("[DEBUG] %q (API result) matches %q (given value). The group has the objectId: %q", *v.DisplayName, name, *v.ObjectID)
-				groupObj = &v
-				break
-			} else {
-				log.Printf("[DEBUG] %q (API result) does not match %q (given value)", *v.DisplayName, name)
-			}
+			log.Printf("[DEBUG] %q (API result) does not match %q (given value)", *v.DisplayName, name)
 		}
 	}
 
@@ -65,7 +64,6 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 	adgroup = *groupObj
 
 	d.SetId(*adgroup.ObjectID)
-	d.Set("object_id", adgroup.ObjectID)
 
 	return nil
 }
