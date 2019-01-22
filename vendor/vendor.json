@@ -444,14 +444,6 @@
 			"versionExact": "0.3.1"
 		},
 		{
-			"checksumSHA1": "QwsnT5sLpT2jJ/1qJQRvqU8xl14=",
-			"path": "github.com/hashicorp/go-azure-helpers/resourceproviders",
-			"revision": "38db96513363e6bd8832cae8918dbdf27b8af21d",
-			"revisionTime": "2018-12-11T12:13:09Z",
-			"version": "0.3.1",
-			"versionExact": "0.3.1"
-		},
-		{
 			"checksumSHA1": "ip//Px6kdSuCH6OKEJUSMIgI3ng=",
 			"path": "github.com/hashicorp/go-azure-helpers/response",
 			"revision": "38db96513363e6bd8832cae8918dbdf27b8af21d",
