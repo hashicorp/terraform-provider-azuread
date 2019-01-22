@@ -4,6 +4,8 @@ PKG_NAME=azuread
 
 #make sure we catch schema errors during testing
 TF_SCHEMA_PANIC_ON_ERROR=1
+GO111MODULE=on
+GOFLAGS=-mod=vendor
 
 default: build
 
@@ -35,12 +37,12 @@ goimport:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	gometalinter ./...
+	@gometalinter ./...
 
 tools:
 	@echo "==> installing required tooling..."
-	go get -u github.com/kardianos/govendor
-	go get -u github.com/alecthomas/gometalinter
+	@sh "$(CURDIR)/scripts/gogetcookie.sh"
+	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
 	gometalinter --install
 
 vendor-status:
