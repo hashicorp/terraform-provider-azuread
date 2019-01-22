@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
@@ -86,8 +88,8 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
-		IdentifierUris:          expandADApplicationIdentifierUris(d),
-		ReplyUrls:               expandADApplicationReplyUrls(d),
+		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
+		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 	}
 
@@ -122,11 +124,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("identifier_uris") {
-		properties.IdentifierUris = expandADApplicationIdentifierUris(d)
+		properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = expandADApplicationReplyUrls(d)
+		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{}))
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -167,19 +169,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
 
-	identifierUris := make([]string, 0)
-	if s := resp.IdentifierUris; s != nil {
-		identifierUris = *s
-	}
-	if err := d.Set("identifier_uris", identifierUris); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	replyUrls := make([]string, 0)
-	if s := resp.IdentifierUris; s != nil {
-		replyUrls = *s
-	}
-	if err := d.Set("reply_urls", replyUrls); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(resp.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 
@@ -197,8 +191,8 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		properties := graphrbac.ApplicationUpdateParameters{
 			AvailableToOtherTenants: p.Bool(false),
 		}
-		_, err := client.Patch(ctx, d.Id(), properties)
-		if err != nil {
+
+		if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
 			return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 	}
@@ -219,26 +213,4 @@ func expandADApplicationHomepage(d *schema.ResourceData, name string) *string {
 	}
 
 	return p.String(fmt.Sprintf("https://%s", name))
-}
-
-func expandADApplicationIdentifierUris(d *schema.ResourceData) *[]string {
-	identifierUris := d.Get("identifier_uris").([]interface{})
-	identifiers := make([]string, 0)
-
-	for _, id := range identifierUris {
-		identifiers = append(identifiers, id.(string))
-	}
-
-	return &identifiers
-}
-
-func expandADApplicationReplyUrls(d *schema.ResourceData) *[]string {
-	replyUrls := d.Get("reply_urls").([]interface{})
-	urls := make([]string, 0)
-
-	for _, url := range replyUrls {
-		urls = append(urls, url.(string))
-	}
-
-	return &urls
 }

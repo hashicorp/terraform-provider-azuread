@@ -29,6 +29,7 @@ type ArmClient struct {
 
 	// azure AD clients
 	applicationsClient      graphrbac.ApplicationsClient
+	groupsClient            graphrbac.GroupsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
 	usersClient             graphrbac.UsersClient
 }
@@ -73,6 +74,9 @@ func getArmClient(authCfg *authentication.Config) (*ArmClient, error) {
 func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authorizer autorest.Authorizer) {
 	c.applicationsClient = graphrbac.NewApplicationsClientWithBaseURI(endpoint, tenantID)
 	configureClient(&c.applicationsClient.Client, authorizer)
+
+	c.groupsClient = graphrbac.NewGroupsClientWithBaseURI(endpoint, tenantID)
+	configureClient(&c.groupsClient.Client, authorizer)
 
 	c.servicePrincipalsClient = graphrbac.NewServicePrincipalsClientWithBaseURI(endpoint, tenantID)
 	configureClient(&c.servicePrincipalsClient.Client, authorizer)
