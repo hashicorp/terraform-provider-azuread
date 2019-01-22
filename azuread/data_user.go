@@ -37,9 +37,8 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	var user graphrbac.User
-	var queryString string
 
-	queryString = d.Get("user_principal_name").(string)
+	queryString := d.Get("user_principal_name").(string)
 
 	log.Printf("[DEBUG] Using Get with the following query string: %q", queryString)
 	resp, err := client.Get(ctx, queryString)

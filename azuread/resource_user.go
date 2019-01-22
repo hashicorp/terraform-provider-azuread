@@ -67,7 +67,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	password := d.Get("password").(string)
 	forcePasswordChange := d.Get("force_password_change").(bool)
 
-	passwordProfile := &graphrbac.PasswordProfile{
+	passwordProfile := graphrbac.PasswordProfile{
 		ForceChangePasswordNextLogin: &forcePasswordChange,
 		Password:                     &password,
 	}
@@ -76,7 +76,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		AccountEnabled:    &accountEnabled,
 		DisplayName:       &displayName,
 		MailNickname:      &mailNickName,
-		PasswordProfile:   &*passwordProfile,
+		PasswordProfile:   &passwordProfile,
 		UserPrincipalName: &userPrincipalName,
 	}
 
