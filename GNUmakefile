@@ -45,9 +45,6 @@ tools:
 	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
 	GO111MODULE=off gometalinter --install
 
-vendor-status:
-	@govendor status
-
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
