@@ -52,6 +52,8 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_to_other_tenants", "true"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("https://%s.hashicorptest.com", id)),
 				),
 			},
 			{
@@ -79,6 +81,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 				),
@@ -119,7 +122,9 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.0", fmt.Sprintf("http://%s.hashicorptest.com", updatedId)),
 				),
 			},
 		},
@@ -195,7 +200,7 @@ func testAccADApplication_complete(id string) string {
 resource "azuread_application" "test" {
   name                       = "acctest%s"
   homepage                   = "https://homepage-%s"
-  identifier_uris            = ["http://%s.hashicorptest.com"]
+  identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://%s.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
 }

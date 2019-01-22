@@ -3,6 +3,8 @@ package azuread
 import (
 	"fmt"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -125,11 +127,11 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("available_to_other_tenants", application.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", application.Oauth2AllowImplicitFlow)
 
-	if err := d.Set("identifier_uris", application.IdentifierUris); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(application.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	if err := d.Set("reply_urls", application.ReplyUrls); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(application.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 
