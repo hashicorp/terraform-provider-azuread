@@ -3,36 +3,36 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "UhJRm079RffZyb5lr6ejn6NGiu0=",
+			"checksumSHA1": "U2UlPbz0yLRogFpi3zThZknoH2o=",
 			"path": "github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/resources",
-			"revision": "1951233eb944a49aa5f7278cba8e3e32a8c958af",
-			"revisionTime": "2018-12-19T17:12:57Z",
-			"version": "v24.0.0",
-			"versionExact": "v24.0.0"
+			"revision": "392ea0b046cfb0cb05942ea92baf22af9ff7f9df",
+			"revisionTime": "2019-01-15T22:53:05Z",
+			"version": "v24.1.0",
+			"versionExact": "v24.1.0"
 		},
 		{
 			"checksumSHA1": "TLS49M5qFLOtWvgjHAmcBFbC/hY=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac",
-			"revision": "1951233eb944a49aa5f7278cba8e3e32a8c958af",
-			"revisionTime": "2018-12-19T17:12:57Z",
-			"version": "v24.0.0",
-			"versionExact": "v24.0.0"
+			"revision": "392ea0b046cfb0cb05942ea92baf22af9ff7f9df",
+			"revisionTime": "2019-01-15T22:53:05Z",
+			"version": "v24.1.0",
+			"versionExact": "v24.1.0"
 		},
 		{
 			"checksumSHA1": "Tnw6Ah2Iqc9m/1lCar+6rXvIvwk=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-02-01/resources",
-			"revision": "1951233eb944a49aa5f7278cba8e3e32a8c958af",
-			"revisionTime": "2018-12-19T17:12:57Z",
-			"version": "v24.0.0",
-			"versionExact": "v24.0.0"
+			"revision": "392ea0b046cfb0cb05942ea92baf22af9ff7f9df",
+			"revisionTime": "2019-01-15T22:53:05Z",
+			"version": "v24.1.0",
+			"versionExact": "v24.1.0"
 		},
 		{
-			"checksumSHA1": "5OXhmdScl78ZC8+IuDA6LBE8f7U=",
+			"checksumSHA1": "olWwaqk/E+bXvnS7oJEKYWAbuRQ=",
 			"path": "github.com/Azure/azure-sdk-for-go/version",
-			"revision": "1951233eb944a49aa5f7278cba8e3e32a8c958af",
-			"revisionTime": "2018-12-19T17:12:57Z",
-			"version": "v24.0.0",
-			"versionExact": "v24.0.0"
+			"revision": "392ea0b046cfb0cb05942ea92baf22af9ff7f9df",
+			"revisionTime": "2019-01-15T22:53:05Z",
+			"version": "v24.1.0",
+			"versionExact": "v24.1.0"
 		},
 		{
 			"checksumSHA1": "AUVb80JXsNPSMRGnXGOy+Jr/cd0=",
