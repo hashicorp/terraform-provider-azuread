@@ -42,23 +42,15 @@ func resourceUser() *schema.Resource {
 				Required: true,
 			},
 
-			"password_profile": {
-				Type:     schema.TypeSet,
+			"password": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+			},
+
+			"force_password_change": {
+				Type:     schema.TypeBool,
 				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-						"force_password_change": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -72,13 +64,13 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	displayName := d.Get("display_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
 	accountEnabled := d.Get("account_enabled").(bool)
+	password := d.Get("password").(string)
+	forcePasswordChange := d.Get("force_password_change").(bool)
 
-	log.Print("[DEBUG] expandingPasswordProfile start")
-	passwordProfile, err := expandPasswordProfile(d)
-	if err != nil {
-		return fmt.Errorf("Failed to expand passwordProfile: %+v", err)
+	passwordProfile := &graphrbac.PasswordProfile{
+		ForceChangePasswordNextLogin: &forcePasswordChange,
+		Password:                     &password,
 	}
-	log.Print("[DEBUG] expandingPasswordProfile done")
 
 	userCreateParameters := graphrbac.UserCreateParameters{
 		AccountEnabled:    &accountEnabled,
@@ -150,6 +142,18 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		userUpdateParameters.AccountEnabled = p.Bool(accountEnabled)
 	}
 
+	if d.HasChange("password") {
+		password := d.Get("password").(string)
+		forcePasswordChange := d.Get("force_password_change").(bool)
+
+		passwordProfile := &graphrbac.PasswordProfile{
+			ForceChangePasswordNextLogin: &forcePasswordChange,
+			Password:                     &password,
+		}
+
+		userUpdateParameters.PasswordProfile = passwordProfile
+	}
+
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
 		return fmt.Errorf("Error updating User with ID %q: %+v", d.Id(), err)
 	}
@@ -169,20 +173,4 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func expandPasswordProfile(d *schema.ResourceData) (*graphrbac.PasswordProfile, error) {
-
-	passwordProfiles := d.Get("password_profile").(*schema.Set).List()
-	passwordProfile := passwordProfiles[0].(map[string]interface{})
-
-	forcePasswordChange := passwordProfile["force_password_change"].(bool)
-	password := passwordProfile["password"].(string)
-
-	passwordProfileProperties := &graphrbac.PasswordProfile{
-		ForceChangePasswordNextLogin: &forcePasswordChange,
-		Password:                     &password,
-	}
-
-	return passwordProfileProperties, nil
 }
