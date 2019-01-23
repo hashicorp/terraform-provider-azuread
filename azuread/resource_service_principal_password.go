@@ -43,10 +43,11 @@ func resourceServicePrincipalPassword() *schema.Resource {
 			},
 
 			"value": {
-				Type:      schema.TypeString,
-				Required:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ValidateFunc: validate.NoEmptyStrings,
 			},
 
 			"start_date": {
