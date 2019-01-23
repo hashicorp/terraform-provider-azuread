@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -18,6 +19,7 @@ func dataServicePrincipal() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validate.UUID,
 				ConflictsWith: []string{"display_name", "application_id"},
 			},
 
@@ -25,6 +27,7 @@ func dataServicePrincipal() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validate.NoEmptyStrings,
 				ConflictsWith: []string{"object_id", "application_id"},
 			},
 
@@ -32,6 +35,7 @@ func dataServicePrincipal() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validate.UUID,
 				ConflictsWith: []string{"object_id", "display_name"},
 			},
 		},

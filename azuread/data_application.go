@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
@@ -20,6 +21,7 @@ func dataApplication() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validate.UUID,
 				ConflictsWith: []string{"name"},
 			},
 
@@ -27,6 +29,7 @@ func dataApplication() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validate.NoEmptyStrings,
 				ConflictsWith: []string{"object_id"},
 			},
 

@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 	"log"
 
 	"github.com/hashicorp/go-azure-helpers/response"
@@ -25,9 +26,10 @@ func resourceServicePrincipal() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
 			},
 
 			"display_name": {
