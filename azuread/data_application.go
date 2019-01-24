@@ -100,7 +100,6 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		filter := fmt.Sprintf("displayName eq '%s'", name)
 
 		resp, err := client.ListComplete(ctx, filter)
-
 		if err != nil {
 			return fmt.Errorf("Error listing Azure AD Applications: %+v", err)
 		}
@@ -118,7 +117,6 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		if app == nil {
 			return fmt.Errorf("Couldn't locate an Azure AD Application with a name of %q", name)
 		}
-
 		application = *app
 	}
 
