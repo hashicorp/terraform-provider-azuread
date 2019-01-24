@@ -122,6 +122,9 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		application = *app
 	}
 
+	if application.ObjectID == nil {
+		return fmt.Errorf("Application objectId is nil")
+	}
 	d.SetId(*application.ObjectID)
 
 	d.Set("object_id", application.ObjectID)

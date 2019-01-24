@@ -49,6 +49,9 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if group.ObjectID == nil {
+		return fmt.Errorf("Group objectId is nil")
+	}
 	d.SetId(*group.ObjectID)
 
 	return resourceGroupRead(d, meta)
