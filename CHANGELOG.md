@@ -11,6 +11,7 @@ IMPROVEMENTS:
 * dependencies: updating `github.com/Azure/azure-sdk-for-go` to v24.1.0 [GH-25]
 * dependencies: updating `github.com/Azure/go-autorest` to v11.2.8 [GH-24]
 * validation: adding validation to all fields [GH-30]
+* `azuread_service_principal` - support for the `tags` property [GH-31]
 
 BUG FIXES:
 
