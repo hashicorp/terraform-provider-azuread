@@ -206,29 +206,33 @@ resource "azuread_application" "test" {
   reply_urls                 = ["http://%s.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
 
-	required_resource_access {
+  required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
-		resource_access {
-        id = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
-        type = "Role"
-		}
-		resource_access {
-        id = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
-        type = "Scope"
-		}
 
-		resource_access {
-        id = "06da0dbc-49e2-44d2-8312-53f166ab848a"
-        type = "Scope"
-		}
-	}
-	required_resource_access {
+    resource_access {
+      id = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
+      type = "Role"
+    }
+
+    resource_access {
+      id = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      type = "Scope"
+    }
+    
+    resource_access {
+      id = "06da0dbc-49e2-44d2-8312-53f166ab848a"
+      type = "Scope"
+    }
+  }
+
+  required_resource_access {
     resource_app_id = "00000002-0000-0000-c000-000000000000"
-		resource_access {
-        id = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
-        type = "Scope"
-		}
-	}
+
+    resource_access {
+      id = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+      type = "Scope"
+    }
+  }
 }
 `, id, id, id, id)
 }

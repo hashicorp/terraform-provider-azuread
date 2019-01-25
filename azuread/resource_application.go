@@ -91,16 +91,17 @@ func resourceApplication() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validate.UUID,
 									},
 
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice(
-											[]string{"scope", "role"},
-											true, // ignore case
+											[]string{"Scope", "Role"},
+											false, // force case sensitivity
 										),
 									},
 								},
@@ -216,11 +217,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 
-	requiredResourceAccesses := make([]graphrbac.RequiredResourceAccess, 0)
-	if s := *resp.RequiredResourceAccess; s != nil {
-		requiredResourceAccesses = s
-	}
-	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(&requiredResourceAccesses)); err != nil {
+	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(resp.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
@@ -268,7 +265,6 @@ func expandADApplicationRequiredResourceAccess(d *schema.ResourceData) *[]graphr
 
 	for _, raw := range requiredResourcesAccesses {
 		requiredResourceAccess := raw.(map[string]interface{})
-
 		resource_app_id := requiredResourceAccess["resource_app_id"].(string)
 
 		result = append(result,
@@ -304,18 +300,19 @@ func expandADApplicationResourceAccess(in []interface{}) *[]graphrbac.ResourceAc
 
 func flattenADApplicationRequiredResourceAccess(in *[]graphrbac.RequiredResourceAccess) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(*in))
+	if *in == nil {
+		return result
+	}
 
-	if in != nil {
-		for _, requiredResourceAccess := range *in {
-			resource := make(map[string]interface{})
-			resource["resource_app_id"] = *requiredResourceAccess.ResourceAppID
+	for _, requiredResourceAccess := range *in {
+		resource := make(map[string]interface{})
+		resource["resource_app_id"] = *requiredResourceAccess.ResourceAppID
 
-			if *requiredResourceAccess.ResourceAccess != nil {
-				resource["resource_access"] = flattenADApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
-			}
-
-			result = append(result, resource)
+		if *requiredResourceAccess.ResourceAccess != nil {
+			resource["resource_access"] = flattenADApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
 		}
+
+		result = append(result, resource)
 	}
 
 	return result
@@ -332,5 +329,6 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []map[st
 			},
 		)
 	}
+
 	return accesses
 }

@@ -24,32 +24,32 @@ resource "azuread_application" "test" {
   available_to_other_tenants = false
   oauth2_allow_implicit_flow = true
 
-	required_resource_access {
+  required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
-
-		resource_access {
-        id = "..."
-        type = "Role"
-		}
-		resource_access {
-        id = "..."
-        type = "Scope"
-		}
-
-		resource_access {
-        id = "..."
-        type = "Scope"
-		}
-	}
-
-	required_resource_access {
+  
+    resource_access {
+      id = "..."
+      type = "Role"
+    }
+    resource_access {
+      id = "..."
+      type = "Scope"
+    }
+    
+    resource_access {
+      id = "..."
+      type = "Scope"
+    }
+  }
+    
+  required_resource_access {
     resource_app_id = "00000002-0000-0000-c000-000000000000"
-
-		resource_access {
-        id = ".."
-        type = "Scope"
-		}
-	}
+    
+    resource_access {
+      id = ".."
+      type = "Scope"
+    }
+  }
 }
 ```
 
@@ -85,7 +85,7 @@ The following arguments are supported:
 
 * `id` - (Required) The unique identifier for one of the OAuth2Permission or AppRole instances that the resource application exposes. 
 
-* `type` - (Required) Specifies whether the id property references an OAuth2Permission or an AppRole. Possible values are "scope" or "role".
+* `type` - (Required) Specifies whether the id property references an OAuth2Permission or an AppRole. Possible values are "Scope" or "Role" (case sensitive).
 
 ## Attributes Reference
 
