@@ -47,3 +47,21 @@ output "azure_ad_object_id" {
 * `object_id` - the Object ID of the Azure Active Directory Application.
 
 * `reply_urls` - A list of URLs that user tokens are sent to for sign in, or the redirect URIs that OAuth 2.0 authorization codes and access tokens are sent to.
+
+* `required_resource_access` - (Optional) A collection of required_resource_access blocks as documented below. Specifies resources that this application requires access to and the set of OAuth permission scopes and application roles that it needs under each of those resources. This pre-configuration of required resource access drives the consent experience.
+
+---
+
+`required_resource_access` block exports the following:
+
+* `resource_app_id` - (Required) The unique identifier for the resource that the application requires access to. This should be equal to the appId declared on the target resource application.
+
+* `resource_access"` - (Required) A collection of resource_access blocks as documented below
+
+---
+
+`resource_access` block exports the following:
+
+* `id` - (Required) The unique identifier for one of the OAuth2Permission or AppRole instances that the resource application exposes. 
+
+* `type` - (Required) Specifies whether the id property references an OAuth2Permission or an AppRole. Possible values are "Scope" or "Role" (case sensitive).
