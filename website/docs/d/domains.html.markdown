@@ -24,7 +24,8 @@ output "domains" {
 
 ## Argument Reference
 
-* `tenant_domain_only` - (Optional) Set to `true` if only the Azure AD tenant root domain should be returned. Defaults to `false`.
+* `include_unverified` - (Optional) Set to `true` if unverified Azure AD Domains should be included. Defaults to `false`.
+* `only_initial` - (Optional) Set to `true` to only return the initial domain, which is your primary Azure Active Directory tenant domain. Defaults to `false`.
 
 ## Attributes Reference
 
@@ -33,6 +34,7 @@ output "domains" {
 The `domain` block contains:
 
 * `domain_name` - The name of the domain.
+* `authentication_type` - The authentication type of the domain (Managed or Federated).
 * `is_default` - `True` if this is the default domain that is used for user creation.
 * `is_initial` - `True` if this is the initial domain created by Azure Activie Directory.
 * `is_verified` - `True` if the domain has completed domain ownership verification.

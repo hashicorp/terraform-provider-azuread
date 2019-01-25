@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dataDomains() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceActiveDirectoryDomainsRead,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
-			"tenant_domain_only": {
+			"include_unverified": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"only_initial": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -25,6 +27,10 @@ func dataDomains() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domain_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"authentication_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -48,52 +54,89 @@ func dataDomains() *schema.Resource {
 }
 
 func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface{}) error {
-	armClient := meta.(*ArmClient)
+	tenantId := meta.(*ArmClient).tenantID
 	client := meta.(*ArmClient).domainsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	tenantDomainOnly := false
-	if value, ok := d.GetOk("tenant_domain_only"); ok {
-		tenantDomainOnly = value.(bool)
-	}
+	includeUnverified := d.Get("include_unverified").(bool)
+	onlyInitial := d.Get("only_initial").(bool)
 
 	results, err := client.List(ctx, "")
 	if err != nil {
 		return fmt.Errorf("Error listing Azure AD Domains: %+v", err)
 	}
 
-	//iterate across each domain and append it to slice
-	domains := make([]map[string]interface{}, 0)
-	for _, v := range *results.Value {
-		domain := make(map[string]interface{})
+	d.SetId("domains-" + tenantId)
 
-		if tenantDomainOnly && !v.AdditionalProperties["isInitial"].(bool) {
-			//we only want the tenant root domain, which is always the initial domain
-			//if the conditions above match, the current domain result should be skipped
-			log.Printf("[DEBUG] Domain %q skipped, as we only want the tenant root domain.", *v.Name)
-			continue
-		}
-
-		if v.Name != nil {
-			domain["domain_name"] = *v.Name
-		}
-		if v.AdditionalProperties["isInitial"] != nil {
-			domain["is_initial"] = v.AdditionalProperties["isInitial"].(bool)
-		}
-		if v.IsVerified != nil {
-			domain["is_verified"] = *v.IsVerified
-		}
-		if v.IsDefault != nil {
-			domain["is_default"] = *v.IsDefault
-		}
-
-		domains = append(domains, domain)
+	domains := flattenDomains(results.Value, includeUnverified, onlyInitial)
+	if len(domains) == 0 {
+		return fmt.Errorf("Error: No domains were returned based on those filters")
 	}
 
-	d.SetId("domains-" + armClient.tenantID)
 	if err = d.Set("domains", domains); err != nil {
 		return fmt.Errorf("Error setting `domains`: %+v", err)
 	}
 
 	return nil
+}
+
+func flattenDomains(input *[]graphrbac.Domain, includeUnverified, onlyInitial bool) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+
+	domains := make([]interface{}, 0)
+	for _, v := range *input {
+		if v.Name == nil {
+			log.Printf("[DEBUG] Domain Name was nil - skipping")
+			continue
+		}
+
+		domainName := *v.Name
+
+		authenticationType := "undefined"
+		if v.AuthenticationType != nil {
+			authenticationType = *v.AuthenticationType
+		}
+
+		isDefault := false
+		if v.IsDefault != nil {
+			isDefault = *v.IsDefault
+		}
+
+		isInitial := false
+		if v.AdditionalProperties["isInitial"] != nil {
+			isInitial = v.AdditionalProperties["isInitial"].(bool)
+		}
+
+		isVerified := false
+		if v.IsVerified != nil {
+			isVerified = *v.IsVerified
+		}
+
+		// Filters
+		if !isInitial && onlyInitial {
+			// skip all domains except the initial domain
+			log.Printf("[DEBUG] Skipping %q since the filter requires the initial domain", domainName)
+			continue
+		}
+
+		if !isVerified && !includeUnverified {
+			//skip unverified domains
+			log.Printf("[DEBUG] Skipping %q since the filter requires verified domains", domainName)
+			continue
+		}
+
+		domain := map[string]interface{}{
+			"authentication_type": authenticationType,
+			"domain_name":         domainName,
+			"is_default":          isDefault,
+			"is_initial":          isInitial,
+			"is_verified":         isVerified,
+		}
+
+		domains = append(domains, domain)
+	}
+
+	return domains
 }
