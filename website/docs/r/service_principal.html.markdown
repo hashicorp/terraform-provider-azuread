@@ -27,6 +27,8 @@ resource "azuread_application" "test" {
 
 resource "azuread_service_principal" "test" {
   application_id = "${azuread_application.test.application_id}"
+  
+  tags = ["example", "tags", "here"]
 }
 ```
 
@@ -35,6 +37,8 @@ resource "azuread_service_principal" "test" {
 The following arguments are supported:
 
 * `application_id` - (Required) The ID of the Azure AD Application for which to create a Service Principal.
+
+* `tags` - (Optional) A list of tags to apply to the Service Principal.
 
 ## Attributes Reference
 
