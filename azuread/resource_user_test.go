@@ -14,6 +14,7 @@ import (
 func TestAccAzureADUser_basic(t *testing.T) {
 	resourceName := "azuread_user.test"
 	id := strconv.Itoa(rand.Intn(9999))
+	password := id + "p@$$wR2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +22,7 @@ func TestAccAzureADUser_basic(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADUser_basic(id),
+				Config: testAccADUser_basic(id, password),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
@@ -34,6 +35,10 @@ func TestAccAzureADUser_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_password_change",
+					"password", // not returned from API, sensitive
+				},
 			},
 		},
 	})
@@ -42,7 +47,9 @@ func TestAccAzureADUser_basic(t *testing.T) {
 func TestAccAzureADUser_update(t *testing.T) {
 	resourceName := "azuread_user.test"
 	id := strconv.Itoa(rand.Intn(9999))
+	password := id + "p@$$wR2"
 	updatedId := strconv.Itoa(rand.Intn(9999))
+	updatedPassword := updatedId + "p@$$wR2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -50,7 +57,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 		CheckDestroy: testCheckADUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADUser_basic(id),
+				Config: testAccADUser_basic(id, password),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
@@ -60,7 +67,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccADUser_basic(updatedId),
+				Config: testAccADUser_basic(updatedId, updatedPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
@@ -119,12 +126,12 @@ func testCheckADUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccADUser_basic(id string) string {
+func testAccADUser_basic(id string, password string) string {
 	return fmt.Sprintf(`
 
-data "azuread_domains" "tenant_domain" {
-	only_initial = true
-}
+#data "azuread_domains" "tenant_domain" {
+#	only_initial = true
+#}
 
 resource "azuread_user" "test" {
 	user_principal_name = "acctest%s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
@@ -132,7 +139,7 @@ resource "azuread_user" "test" {
 	mail_nickname = "acctest%s"
 	account_enabled = true
 	password = "%s"
-	force_change_password = true
+	force_password_change = true
 }
-`, id, id, id, id)
+`, id, id, id, password)
 }
