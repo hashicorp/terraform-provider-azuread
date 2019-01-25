@@ -123,7 +123,7 @@ func testAccADUser_basic(id string) string {
 	return fmt.Sprintf(`
 
 data "azuread_domains" "tenant_domain" {
-	tenant_domain_only = true
+	only_initial = true
 }
 
 resource "azuread_user" "test" {
