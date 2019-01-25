@@ -27,6 +27,28 @@ func TestAccDataSourceAzureADDomains_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAzureADDomains_onlyDefault(t *testing.T) {
+	dataSourceName := "data.azuread_domains.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: `data "azuread_domains" "test" {
+					only_default = true
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "domains.0.domain_name"),
+					resource.TestCheckResourceAttr(dataSourceName, "domains.0.is_default", "true"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "domains.0.is_default"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "domains.0.is_verified"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAzureADDomains_onlyInitial(t *testing.T) {
 	dataSourceName := "data.azuread_domains.test"
 

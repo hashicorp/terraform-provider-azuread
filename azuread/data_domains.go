@@ -14,12 +14,19 @@ func dataDomains() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"include_unverified": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"only_default", "only_initial"}, //default or initial domains have to be verified
+			},
+			"only_default": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"only_initial"},
 			},
 			"only_initial": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"only_default"},
 			},
 			"domains": {
 				Type:     schema.TypeList,
@@ -59,6 +66,7 @@ func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface
 	ctx := meta.(*ArmClient).StopContext
 
 	includeUnverified := d.Get("include_unverified").(bool)
+	onlyDefault := d.Get("only_default").(bool)
 	onlyInitial := d.Get("only_initial").(bool)
 
 	results, err := client.List(ctx, "")
@@ -68,7 +76,7 @@ func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface
 
 	d.SetId("domains-" + tenantId)
 
-	domains := flattenDomains(results.Value, includeUnverified, onlyInitial)
+	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
 		return fmt.Errorf("Error: No domains were returned based on those filters")
 	}
@@ -80,7 +88,7 @@ func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func flattenDomains(input *[]graphrbac.Domain, includeUnverified, onlyInitial bool) []interface{} {
+func flattenDomains(input *[]graphrbac.Domain, includeUnverified, onlyDefault, onlyInitial bool) []interface{} {
 	if input == nil {
 		return []interface{}{}
 	}
@@ -115,6 +123,12 @@ func flattenDomains(input *[]graphrbac.Domain, includeUnverified, onlyInitial bo
 		}
 
 		// Filters
+		if !isDefault && onlyDefault {
+			// skip all domains except the initial domain
+			log.Printf("[DEBUG] Skipping %q since the filter requires the default domain", domainName)
+			continue
+		}
+
 		if !isInitial && onlyInitial {
 			// skip all domains except the initial domain
 			log.Printf("[DEBUG] Skipping %q since the filter requires the initial domain", domainName)

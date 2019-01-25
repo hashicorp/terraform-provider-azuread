@@ -25,7 +25,10 @@ output "domains" {
 ## Argument Reference
 
 * `include_unverified` - (Optional) Set to `true` if unverified Azure AD Domains should be included. Defaults to `false`.
+* `only_default` - (Optional) Set to `true` to only return the default domain.
 * `only_initial` - (Optional) Set to `true` to only return the initial domain, which is your primary Azure Active Directory tenant domain. Defaults to `false`.
+
+-> **NOTE:** If `include_unverified` is set to `true` you cannot specify `only_default` or `only_initial`. Additionally you cannot combine `only_default` with `only_initial`.
 
 ## Attributes Reference
 
