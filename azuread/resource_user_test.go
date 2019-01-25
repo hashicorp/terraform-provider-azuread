@@ -25,8 +25,8 @@ func TestAccAzureADUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestt%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestt%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
 				),
 			},
@@ -54,8 +54,8 @@ func TestAccAzureADUser_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestt%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestt%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
 				),
 			},
@@ -64,8 +64,8 @@ func TestAccAzureADUser_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestt%s", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestt%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
 				),
 			},
