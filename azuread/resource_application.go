@@ -299,18 +299,18 @@ func expandADApplicationResourceAccess(in []interface{}) *[]graphrbac.ResourceAc
 }
 
 func flattenADApplicationRequiredResourceAccess(in *[]graphrbac.RequiredResourceAccess) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0, len(*in))
-	if *in == nil {
-		return result
+	if in == nil {
+		return []map[string]interface{}{}
 	}
 
+	result := make([]map[string]interface{}, 0, len(*in))
 	for _, requiredResourceAccess := range *in {
 		resource := make(map[string]interface{})
-		resource["resource_app_id"] = *requiredResourceAccess.ResourceAppID
-
-		if *requiredResourceAccess.ResourceAccess != nil {
-			resource["resource_access"] = flattenADApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
+		if requiredResourceAccess.ResourceAppID != nil {
+			resource["resource_app_id"] = *requiredResourceAccess.ResourceAppID
 		}
+
+		resource["resource_access"] = flattenADApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
 
 		result = append(result, resource)
 	}
@@ -318,16 +318,21 @@ func flattenADApplicationRequiredResourceAccess(in *[]graphrbac.RequiredResource
 	return result
 }
 
-func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []map[string]interface{} {
-	accesses := make([]map[string]interface{}, 0)
+func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
 
+	accesses := make([]interface{}, 0)
 	for _, resourceAccess := range *in {
-		accesses = append(accesses,
-			map[string]interface{}{
-				"id":   *resourceAccess.ID,
-				"type": *resourceAccess.Type,
-			},
-		)
+		access := make(map[string]interface{}, 0)
+		if resourceAccess.ID != nil {
+			access["id"] = *resourceAccess.ID
+		}
+		if resourceAccess.Type != nil {
+			access["type"] = *resourceAccess.Type
+		}
+		accesses = append(accesses, access)
 	}
 
 	return accesses

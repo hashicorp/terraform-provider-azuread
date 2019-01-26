@@ -11,7 +11,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func dataApplication() *schema.Resource {
@@ -72,33 +71,28 @@ func dataApplication() *schema.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:     schema.TypeList,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resource_app_id": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 
 						"resource_access": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validate.UUID,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 
 									"type": {
 										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"Scope", "Role"},
-											false, // force case sensitivity
-										),
+										Computed: true,
 									},
 								},
 							},
