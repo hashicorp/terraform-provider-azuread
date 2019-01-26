@@ -325,7 +325,7 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 
 	accesses := make([]interface{}, 0)
 	for _, resourceAccess := range *in {
-		access := make(map[string]interface{}, 0)
+		access := make(map[string]interface{})
 		if resourceAccess.ID != nil {
 			access["id"] = *resourceAccess.ID
 		}
