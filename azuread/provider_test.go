@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -30,21 +31,21 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	//	variables := []string{
-	//		"ARM_SUBSCRIPTION_ID",
-	//		"ARM_CLIENT_ID",
-	//		"ARM_CLIENT_SECRET",
-	//		"ARM_TENANT_ID",
-	//		"ARM_TEST_LOCATION",
-	//		"ARM_TEST_LOCATION_ALT",
-	//	}
-	//
-	//	for _, variable := range variables {
-	//		value := os.Getenv(variable)
-	//		if value == "" {
-	//			t.Fatalf("`%s` must be set for acceptance tests!", variable)
-	//		}
-	//	}
+	variables := []string{
+		"ARM_SUBSCRIPTION_ID",
+		"ARM_CLIENT_ID",
+		"ARM_CLIENT_SECRET",
+		"ARM_TENANT_ID",
+		"ARM_TEST_LOCATION",
+		"ARM_TEST_LOCATION_ALT",
+	}
+
+	for _, variable := range variables {
+		value := os.Getenv(variable)
+		if value == "" {
+			t.Fatalf("`%s` must be set for acceptance tests!", variable)
+		}
+	}
 }
 
 func testRequiresImportError(resourceName string) *regexp.Regexp {
