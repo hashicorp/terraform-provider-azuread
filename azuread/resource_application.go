@@ -74,6 +74,42 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"required_resource_access": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_app_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"resource_access": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validate.UUID,
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"Scope", "Role"},
+											false, // force case sensitivity
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -90,6 +126,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
 		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
+		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
@@ -140,6 +177,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.Oauth2AllowImplicitFlow = p.Bool(oauth)
 	}
 
+	if d.HasChange("required_resource_access") {
+		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
+	}
+
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
 		return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
@@ -174,6 +215,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(resp.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
+	}
+
+	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(resp.RequiredResourceAccess)); err != nil {
+		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
 	return nil
@@ -212,4 +257,83 @@ func expandADApplicationHomepage(d *schema.ResourceData, name string) *string {
 	}
 
 	return p.String(fmt.Sprintf("https://%s", name))
+}
+
+func expandADApplicationRequiredResourceAccess(d *schema.ResourceData) *[]graphrbac.RequiredResourceAccess {
+	requiredResourcesAccesses := d.Get("required_resource_access").(*schema.Set).List()
+	result := make([]graphrbac.RequiredResourceAccess, 0)
+
+	for _, raw := range requiredResourcesAccesses {
+		requiredResourceAccess := raw.(map[string]interface{})
+		resource_app_id := requiredResourceAccess["resource_app_id"].(string)
+
+		result = append(result,
+			graphrbac.RequiredResourceAccess{
+				ResourceAppID: &resource_app_id,
+				ResourceAccess: expandADApplicationResourceAccess(
+					requiredResourceAccess["resource_access"].([]interface{}),
+				),
+			},
+		)
+	}
+	return &result
+}
+
+func expandADApplicationResourceAccess(in []interface{}) *[]graphrbac.ResourceAccess {
+	var resourceAccesses []graphrbac.ResourceAccess
+	for _, resource_access_raw := range in {
+		resource_access := resource_access_raw.(map[string]interface{})
+
+		resourceId := resource_access["id"].(string)
+		resourceType := resource_access["type"].(string)
+
+		resourceAccesses = append(resourceAccesses,
+			graphrbac.ResourceAccess{
+				ID:   &resourceId,
+				Type: &resourceType,
+			},
+		)
+	}
+
+	return &resourceAccesses
+}
+
+func flattenADApplicationRequiredResourceAccess(in *[]graphrbac.RequiredResourceAccess) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0, len(*in))
+	for _, requiredResourceAccess := range *in {
+		resource := make(map[string]interface{})
+		if requiredResourceAccess.ResourceAppID != nil {
+			resource["resource_app_id"] = *requiredResourceAccess.ResourceAppID
+		}
+
+		resource["resource_access"] = flattenADApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
+
+		result = append(result, resource)
+	}
+
+	return result
+}
+
+func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	accesses := make([]interface{}, 0)
+	for _, resourceAccess := range *in {
+		access := make(map[string]interface{})
+		if resourceAccess.ID != nil {
+			access["id"] = *resourceAccess.ID
+		}
+		if resourceAccess.Type != nil {
+			access["type"] = *resourceAccess.Type
+		}
+		accesses = append(accesses, access)
+	}
+
+	return accesses
 }

@@ -69,6 +69,37 @@ func dataApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"required_resource_access": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_app_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"resource_access": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -135,6 +166,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(application.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
+	}
+
+	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(application.RequiredResourceAccess)); err != nil {
+		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
 	return nil
