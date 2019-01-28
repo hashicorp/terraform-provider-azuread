@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `azuread_domains` [GH-27]
 * **New Data Source:** `azuread_group` [GH-14]
 * **New Resource:** `azuread_group` [GH-14]
 
