@@ -126,14 +126,13 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 
 		updatedCredentials = *existingCredentials.Value
 	}
-
 	updatedCredentials = append(updatedCredentials, credential)
 
 	parameters := graphrbac.PasswordCredentialsUpdateParameters{
 		Value: &updatedCredentials,
 	}
-	_, err = client.UpdatePasswordCredentials(ctx, objectId, parameters)
-	if err != nil {
+
+	if _, err = client.UpdatePasswordCredentials(ctx, objectId, parameters); err != nil {
 		return fmt.Errorf("Error creating Password Credential %q for Service Principal %q: %+v", keyId, objectId, err)
 	}
 

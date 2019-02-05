@@ -30,7 +30,6 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	var adgroup graphrbac.ADGroup
 	var groupObj *graphrbac.ADGroup
 
 	// use the name to find the Azure AD group
@@ -61,9 +60,10 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Couldn't locate a Azure AD group with a name of %q", name)
 	}
 
-	adgroup = *groupObj
-
-	d.SetId(*adgroup.ObjectID)
+	if groupObj.ObjectID == nil {
+		return fmt.Errorf("Group objectId is nil")
+	}
+	d.SetId(*groupObj.ObjectID)
 
 	return nil
 }

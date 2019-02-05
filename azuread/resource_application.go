@@ -138,6 +138,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if app.ObjectID == nil {
+		return fmt.Errorf("Application objectId is nil")
+	}
 	d.SetId(*app.ObjectID)
 
 	return resourceApplicationRead(d, meta)
