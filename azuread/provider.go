@@ -75,6 +75,7 @@ func Provider() terraform.ResourceProvider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"azuread_application":       dataApplication(),
+			"azuread_domains":           dataDomains(),
 			"azuread_group":             dataGroup(),
 			"azuread_service_principal": dataServicePrincipal(),
 			"azuread_user":              dataSourceUser(),

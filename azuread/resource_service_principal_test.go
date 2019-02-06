@@ -14,7 +14,6 @@ import (
 func TestAccAzureADServicePrincipal_basic(t *testing.T) {
 	resourceName := "azuread_service_principal.test"
 	id := uuid.New().String()
-	config := testAccADServicePrincipal_basic(id)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,11 +21,36 @@ func TestAccAzureADServicePrincipal_basic(t *testing.T) {
 		CheckDestroy: testCheckADServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccADServicePrincipal_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADServicePrincipal_complete(t *testing.T) {
+	resourceName := "azuread_service_principal.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADServicePrincipalDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADServicePrincipal_complete(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADServicePrincipalExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "3"),
 				),
 			},
 			{
@@ -92,6 +116,20 @@ resource "azuread_application" "test" {
 
 resource "azuread_service_principal" "test" {
   application_id = "${azuread_application.test.application_id}"
+}
+`, id)
+}
+
+func testAccADServicePrincipal_complete(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestspa%s"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = "${azuread_application.test.application_id}"
+
+  tags = ["test", "multiple", "CapitalS"]
 }
 `, id)
 }
