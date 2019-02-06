@@ -5,6 +5,8 @@ services:
 language: go
 go:
 - "1.11.x"
+env:
+- GO111MODULE=off
 
 install:
 # This script is used by the Travis build to install a cookie for
