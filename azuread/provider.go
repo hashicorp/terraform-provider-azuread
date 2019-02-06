@@ -126,7 +126,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		client.StopContext = p.StopContext()
 
 		// replaces the context between tests
-		p.MetaReset = func() error {
+		p.MetaReset = func() error { //nolint unparam
 			client.StopContext = p.StopContext()
 			return nil
 		}
