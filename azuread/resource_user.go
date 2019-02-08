@@ -49,7 +49,8 @@ func resourceUser() *schema.Resource {
 
 			"account_enabled": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
+				Default:  true,
 			},
 
 			"password": {
@@ -61,7 +62,8 @@ func resourceUser() *schema.Resource {
 
 			"force_password_change": {
 				Type:     schema.TypeBool,
-				Required: true,
+				Optional: true,
+				Default:  false,
 			},
 		},
 	}

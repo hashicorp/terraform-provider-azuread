@@ -20,9 +20,7 @@ resource "azuread_user" "test_user" {
   user_principal_name = "john@hashicorp.com"
   display_name = "John Doe"
   mail_nickname = "johnd"
-  account_enabled = true
   password = "SecretP@sswd99!"
-  force_password_change = true
 }
 ```
 
@@ -33,12 +31,13 @@ The following arguments are supported:
 * `user_principal_name` - (Required) The User Principal Name of the Azure AD User.
 * `display_name` - (Required) The name to display in the address book for the user.
 * `mail_nickname`- (Required) The mail alias for the user.
-* `account_enabled` - (Required) `true` if the account should be enabled, otherwise `false`.
+* `account_enabled` - (Optional) `true` if the account should be enabled, otherwise `false`. Defaults to `true`.
 * `password` - (Required) The password for the User. The password must satisfy minimum requirements as specified by the password policy. The maximum length is 16 characters.
-* `force_password_change` - (Required) `true` if the User is forced to change the password during the next sign-in.
+* `force_password_change` - (Optional) `true` if the User is forced to change the password during the next sign-in. Defaults to `false`.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - The Object ID of the Azure AD User.
+* `mail` - The primary email address of the Azure AD User.
