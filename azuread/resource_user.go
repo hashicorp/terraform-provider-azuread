@@ -36,6 +36,11 @@ func resourceUser() *schema.Resource {
 				ValidateFunc: validate.NoEmptyStrings,
 			},
 
+			"mail": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"mail_nickname": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -96,6 +101,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error retrieving User (%q) with ObjectID %q: %+v", userPrincipalName, *objectId, err)
 	}
 
+	if resp.ObjectID == nil {
+		return fmt.Errorf("User objectId is nil")
+	}
+
 	d.SetId(*resp.ObjectID)
 
 	return resourceUserRead(d, meta)
@@ -119,6 +128,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("user_principal_name", user.UserPrincipalName)
 	d.Set("display_name", user.DisplayName)
+	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("account_enabled", user.AccountEnabled)
 

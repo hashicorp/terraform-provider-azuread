@@ -129,9 +129,9 @@ func testCheckADUserDestroy(s *terraform.State) error {
 func testAccADUser_basic(id string, password string) string {
 	return fmt.Sprintf(`
 
-#data "azuread_domains" "tenant_domain" {
-#	only_initial = true
-#}
+data "azuread_domains" "tenant_domain" {
+	only_initial = true
+}
 
 resource "azuread_user" "test" {
 	user_principal_name = "acctest%s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
