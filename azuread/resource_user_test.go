@@ -2,8 +2,7 @@ package azuread
 
 import (
 	"fmt"
-	"math/rand"
-	"strconv"
+	"github.com/hashicorp/terraform/helper/acctest"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -13,7 +12,7 @@ import (
 
 func TestAccAzureADUser_basic(t *testing.T) {
 	resourceName := "azuread_user.test"
-	id := strconv.Itoa(rand.Intn(9999))
+	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 	password := id + "p@$$wR2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,9 +45,9 @@ func TestAccAzureADUser_basic(t *testing.T) {
 
 func TestAccAzureADUser_update(t *testing.T) {
 	resourceName := "azuread_user.test"
-	id := strconv.Itoa(rand.Intn(9999))
+	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 	password := id + "p@$$wR2"
-	updatedId := strconv.Itoa(rand.Intn(9999))
+	updatedId := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 	updatedPassword := updatedId + "p@$$wR2"
 
 	resource.ParallelTest(t, resource.TestCase{
