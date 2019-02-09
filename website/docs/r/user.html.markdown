@@ -18,9 +18,9 @@ Manages a User within Azure Active Directory.
 ```hcl
 resource "azuread_user" "test_user" {
   user_principal_name = "john@hashicorp.com"
-  display_name = "John Doe"
-  mail_nickname = "johnd"
-  password = "SecretP@sswd99!"
+  display_name        = "John Doe"
+  mail_nickname       = "johnd"
+  password            = "SecretP@sswd99!"
 }
 ```
 
