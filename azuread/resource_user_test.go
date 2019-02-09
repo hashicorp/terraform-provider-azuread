@@ -134,11 +134,11 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-	user_principal_name = "acctest%s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name = "acctest%s"
-	mail_nickname = "acctest%s"
-	account_enabled = true
-	password = "%s"
+	user_principal_name   = "acctest%s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctest%s"
+	mail_nickname         = "acctest%s"
+	account_enabled       = true
+	password              = "%s"
 	force_password_change = true
 }
 `, id, id, id, password)
