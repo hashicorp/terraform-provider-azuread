@@ -149,6 +149,7 @@ github.com/hashicorp/terraform/flatmap
 github.com/hashicorp/terraform/helper/hilmapstructure
 github.com/hashicorp/terraform/moduledeps
 github.com/hashicorp/terraform/tfdiags
+github.com/hashicorp/terraform/helper/acctest
 github.com/hashicorp/terraform/helper/resource
 github.com/hashicorp/terraform/config/hcl2shim
 github.com/hashicorp/terraform/registry
