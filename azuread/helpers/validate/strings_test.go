@@ -97,3 +97,37 @@ func TestNoEmptyStrings(t *testing.T) {
 		})
 	}
 }
+
+func TestStringIsEmailAddress(t *testing.T) {
+	cases := []struct {
+		Value    string
+		TestName string
+		ErrCount int
+	}{
+		{
+			Value:    "john.doe@hashicorp.com",
+			TestName: "Valid_EmailAddress",
+			ErrCount: 0,
+		},
+		{
+			Value:    "john.doehashicorp.com",
+			TestName: "Invalid_EmailAddress_NoAtChar",
+			ErrCount: 1,
+		},
+		{
+			Value:    "john/doe@ha$hicorp.com",
+			TestName: "Invalid_EmailAddress_InvalidChars",
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.TestName, func(t *testing.T) {
+			_, errors := StringIsEmailAddress(tc.Value, tc.TestName)
+
+			if len(errors) != tc.ErrCount {
+				t.Fatalf("Expected StringIsEmailAddress to have %d not %d errors for %q", tc.ErrCount, len(errors), tc.TestName)
+			}
+		})
+	}
+}
