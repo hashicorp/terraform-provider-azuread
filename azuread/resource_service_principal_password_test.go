@@ -141,7 +141,7 @@ func TestAccAzureADServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
-func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFunc {
+func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
