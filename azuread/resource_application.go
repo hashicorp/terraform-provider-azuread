@@ -110,6 +110,11 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "webapp/api",
+			},
 		},
 	}
 }
@@ -119,6 +124,16 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
+
+	appType := d.Get("type")
+
+	if appType == "native" {
+		if _, ok := d.GetOk("identifier_uris"); ok {
+			return fmt.Errorf("identifier_uris is not required for a native application")
+		}
+	} else if appType != "webapp/api" {
+		return fmt.Errorf("Error creating Azure AD Application with name %q: Unknow application type %v. Supported types are [webapp/api, native]", name, appType)
+	}
 
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
@@ -144,6 +159,25 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	if app.ObjectID == nil {
 		return fmt.Errorf("Application objectId is nil")
 	}
+
+	// follow suggested hack for azure-cli
+	// AAD graph doesn't have the API to create a native app, aka public client, the recommended hack is
+	// to create a web app first, then convert to a native one
+	if appType == "native" {
+
+		properties := graphrbac.ApplicationUpdateParameters{
+			Homepage:       nil,
+			IdentifierUris: &[]string{},
+			AdditionalProperties: map[string]interface{}{
+				"publicClient": true,
+			},
+		}
+		_, err := client.Patch(ctx, *app.ObjectID, properties)
+		if err != nil {
+			return err
+		}
+	}
+
 	d.SetId(*app.ObjectID)
 
 	return resourceApplicationRead(d, meta)
@@ -187,6 +221,26 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
 	}
 
+	if d.HasChange("type") {
+
+		switch appType := d.Get("type"); appType {
+
+		case "webapp/api":
+			properties.AdditionalProperties = map[string]interface{}{
+				"publicClient": false,
+			}
+			properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
+		case "native":
+			properties.AdditionalProperties = map[string]interface{}{
+				"publicClient": true,
+			}
+			properties.IdentifierUris = &[]string{}
+		default:
+			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
+
+		}
+	}
+
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
 		return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
@@ -214,6 +268,13 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("homepage", resp.Homepage)
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
+
+	switch appType := resp.AdditionalProperties["publicClient"]; appType {
+	case true:
+		d.Set("type", "native")
+	default:
+		d.Set("type", "webapp/api")
+	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)

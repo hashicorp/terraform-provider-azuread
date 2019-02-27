@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
@@ -132,6 +133,96 @@ func TestAccAzureADApplication_update(t *testing.T) {
 		},
 	})
 }
+func TestAccAzureADApplication_native(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_native(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
+					resource.TestCheckResourceAttr(resourceName, "type", "native"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccADApplication_native_app_does_not_allow_identifier_uris(id),
+				ExpectError: regexp.MustCompile("identifier_uris is not required for a native application"),
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_update_type(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+	updatedId := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_complete(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
+				),
+			},
+			{
+				Config: testAccADApplication_native(updatedId),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "type", "native"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+				),
+			},
+			{
+				Config: testAccADApplication_complete(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
+				),
+			},
+		},
+	})
+}
 
 func testCheckADApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -235,4 +326,23 @@ resource "azuread_application" "test" {
   }
 }
 `, id, id, id, id)
+}
+
+func testAccADApplication_native(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctest%s"
+  type = "native"
+}
+`, id)
+}
+
+func testAccADApplication_native_app_does_not_allow_identifier_uris(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name            = "acctest%s"
+  identifier_uris = ["http://%s.hashicorptest.com"]
+  type            = "native"
+}
+`, id, id)
 }
