@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/suppress"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/hashicorp/terraform/helper/validation"
@@ -75,6 +76,16 @@ func resourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"group_membership_claims": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppress.CaseDifference,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"None", "SecurityGroup", "All"},
+					true,
+				),
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -121,6 +132,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	properties := graphrbac.ApplicationCreateParameters{
+		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
@@ -131,6 +143,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
 		properties.Oauth2AllowImplicitFlow = p.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("group_membership_claims"); ok {
+		properties.AdditionalProperties["groupMembershipClaims"] = v
 	}
 
 	app, err := client.Create(ctx, properties)
@@ -153,6 +169,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	var properties graphrbac.ApplicationUpdateParameters
+	properties.AdditionalProperties = make(map[string]interface{})
 
 	if d.HasChange("name") {
 		properties.DisplayName = &name
@@ -184,6 +201,16 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
 	}
 
+	if d.HasChange("group_membership_claims") {
+		groupMembershipClaims := d.Get("group_membership_claims").(string)
+
+		if len(groupMembershipClaims) == 0 {
+			properties.AdditionalProperties["groupMembershipClaims"] = nil
+		} else {
+			properties.AdditionalProperties["groupMembershipClaims"] = groupMembershipClaims
+		}
+	}
+
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
 		return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
@@ -211,6 +238,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("homepage", resp.Homepage)
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
+
+	if groupMembershipClaims, ok := resp.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
+	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
