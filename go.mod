@@ -13,6 +13,7 @@ require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/fsouza/go-dockerclient v0.0.0-20160427172547-1d4f4ae73768 // indirect
 	github.com/go-ini/ini v1.23.1 // indirect
+	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/google/uuid v0.0.0-20170814143639-7e072fc3a7be
 	github.com/hashicorp/go-azure-helpers v0.0.0-20181211121309-38db96513363
 	github.com/hashicorp/go-cleanhttp v0.0.0-20170211013415-3573b8b52aa7 // indirect
