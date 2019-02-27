@@ -122,11 +122,14 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
-		Homepage:                expandADApplicationHomepage(d, name),
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
 		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
+	}
+
+	if _, ok := d.GetOk("homepage"); ok {
+		properties.Homepage = expandADApplicationHomepage(d, name)
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
