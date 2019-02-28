@@ -70,6 +70,8 @@ github.com/dimchansky/utfbom
 github.com/fatih/color
 # github.com/go-ini/ini v1.23.1
 github.com/go-ini/ini
+# github.com/gofrs/uuid v3.2.0+incompatible
+github.com/gofrs/uuid
 # github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes/timestamp
