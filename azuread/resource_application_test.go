@@ -52,8 +52,6 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_to_other_tenants", "true"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("https://%s.hashicorptest.com", id)),
 				),
 			},
 			{
@@ -189,9 +187,14 @@ resource "azuread_application" "test" {
 
 func testAccADApplication_availableToOtherTenants(id string) string {
 	return fmt.Sprintf(`
+
+data "azuread_domains" "tenant_domain" {
+	only_initial = true
+}
+
 resource "azuread_application" "test" {
   name                       = "acctest%s"
-  identifier_uris            = ["https://%s.hashicorptest.com"]
+  identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
 }
 `, id, id)
