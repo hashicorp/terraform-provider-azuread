@@ -14,6 +14,7 @@ IMPROVEMENTS:
 * validation: adding validation to all fields [GH-30]
 * `azuread_application` - support for `required_resource_access` property [GH-23]
 * `azuread_service_principal` - support for the `tags` property [GH-31]
+* `azuread_service_principal_password` - support for realitive ends dates with the `end_date_relative` property [GH-53]
 
 BUG FIXES:
 
