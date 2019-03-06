@@ -20,6 +20,8 @@ Terraform supports a number of different methods for authenticating to Azure:
 
 We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
+Beyond authentication and permission to manage azure resources further steps are required to make changes to an Azure Active Directory as can be found in the [Configuring a Service Principal for AAD](service_principal_configuration.html) guide.
+
 ## Creating a Service Principal
 
 A Service Principal is an application within Azure Active Directory whose authentication tokens can be used as the `client_id`, `client_secret`, and `tenant_id` fields needed by Terraform (`subscription_id` can be independently recovered from your Azure account details).
