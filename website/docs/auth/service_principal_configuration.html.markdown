@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# Azure Active Directory Provider: Authenticating using a Service Principal 
+# Azure Active Directory Provider: Configuring a Service Principal for managing Azure Active Directory
 
 Terraform supports a number of different methods for authenticating to Azure:
 
@@ -38,6 +38,7 @@ Depending on how the service principal authenticates to azure it can be created 
 
 
 Firstly, connect to the directory using:
+
 ```shell
 Connect-AzureAD -TenantID "00000000-0000-0000-0000-000000000000"
 ```
@@ -46,10 +47,10 @@ Next we want to get the correct role to assign, in this case `User Account Admin
 
 ```shell
 $role = Get-AzureADDirectoryRole | Where-Object {$_.displayName -eq 'User Account Administrator'}
-$role
+Write-Host $role
 ```
 
-If role instance does not exist, we can instantiate it based on the role template
+Since this is a built-in Role, if this doesn't exist (returns `null` above) then we need to instantiate it from the Role Template:
 
 ```shell
 if ($role -eq $null) {
@@ -62,20 +63,21 @@ if ($role -eq $null) {
 }
 ```
 
-Next we need our service principal's client/application id. if you don't know it we can find it by searching for it's display name:
+Next we need the Client ID (sometimes referred to as the Application ID) of the Service Principal. We can look this up by it's display name:
 
 ```shell
-$sp = Get-AzureADServicePrincipal | Where-Object {$_.displayName -eq 'Service Pricipal Name'}
+$sp = Get-AzureADServicePrincipal | Where-Object {$_.displayName -eq 'Service Principal Name'}
 $sp.AppId
 ```
 
 Now that we have all the required information we can add the service principal to the role:
+
 ```shell
 Add-AzureADDirectoryRoleMember -ObjectId $role.ObjectId -RefObjectId $sp.AppId
 
 ```
 
-Finally we can repeat this for the Company Administrator role:
+Finally we can repeat this for the `Company Administrator` role:
 
 ```shell
 $role = Get-AzureADDirectoryRole | Where-Object {$_.displayName -eq 'Company Administrator'}
@@ -83,11 +85,11 @@ $role
 
 if ($role -eq $null) {
     # Instantiate an instance of the role template
-    $roleTemplate = Get-AzureADDirectoryRoleTemplate | Where-Object {$_.displayName -eq 'User Account Administrator'}
+    $roleTemplate = Get-AzureADDirectoryRoleTemplate | Where-Object {$_.displayName -eq 'Company Administrator'}
     Enable-AzureADDirectoryRole -RoleTemplateId $roleTemplate.ObjectId
 
     # Fetch User Account Administrator role instance again
-    $role = Get-AzureADDirectoryRole | Where-Object {$_.displayName -eq 'User Account Administrator'}
+    $role = Get-AzureADDirectoryRole | Where-Object {$_.displayName -eq 'Company Administrator'}
 }
 
 $sp = Get-AzureADServicePrincipal | Where-Object {$_.displayName -eq 'Service Pricipal Name'}
@@ -97,4 +99,4 @@ Add-AzureADDirectoryRoleMember -ObjectId $role.ObjectId -RefObjectId $sp.AppId
 
 ```
 
-At this point you should now be able to manage users groups and more by running either `terraform plan` or `terraform apply`.
+At this point you should now be able to manage Users, Groups and other Azure Active Directory resources using Terraform.
