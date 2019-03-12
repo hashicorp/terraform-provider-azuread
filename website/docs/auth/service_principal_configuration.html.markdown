@@ -1,9 +1,9 @@
 ---
 layout: "azuread"
-page_title: "Azure Active Directory Provider: Configuring a Service Principal for AAD"
+page_title: "Azure Active Directory Provider: Configuring a Service Principal to manage an Azure Active Directory"
 sidebar_current: "docs-azuread-authentication-configuring-service-principal"
 description: |-
-  This guide will cover how to use grant permissions to a Service Principal (Shared Account) to interact with the Azure Active Directory Provider.
+  This guide will cover how to use grant permissions to a Service Principal (Shared Account) to manage objects within an Azure Active Directory .
 
 ---
 
@@ -15,6 +15,10 @@ Terraform supports a number of different methods for authenticating to Azure:
 * [Authenticating to Azure using Managed Service Identity](managed_service_identity.html)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * Authenticating to Azure using a Service Principal and a Client Secret (which is covered in this guide)
+
+Further steps must be taken to grant a Service Principal permission to manage objects in an Azure Active Directory:
+
+* Granting a Service Principal permission to manage AAD (which is covered in this guide) 
 
 ---
 
