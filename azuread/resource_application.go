@@ -2,9 +2,8 @@ package azuread
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -172,8 +171,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 				"publicClient": true,
 			},
 		}
-		_, err := client.Patch(ctx, *app.ObjectID, properties)
-		if err != nil {
+		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
 			return err
 		}
 	}
