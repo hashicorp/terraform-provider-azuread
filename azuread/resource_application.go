@@ -2,8 +2,9 @@ package azuread
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"log"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
