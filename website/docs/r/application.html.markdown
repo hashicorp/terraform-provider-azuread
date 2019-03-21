@@ -23,6 +23,7 @@ resource "azuread_application" "test" {
   reply_urls                 = ["https://replyurl"]
   available_to_other_tenants = false
   oauth2_allow_implicit_flow = true
+  type                       = "webapp/api"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
@@ -70,6 +71,8 @@ The following arguments are supported:
 * `oauth2_allow_implicit_flow` - (Optional) Does this Azure AD Application allow OAuth2.0 implicit flow tokens? Defaults to `false`.
 
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
+
+* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property should not be set.  
 
 ---
 
