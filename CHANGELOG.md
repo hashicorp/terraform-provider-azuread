@@ -1,4 +1,9 @@
 ## 0.3.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - the order of the `reply_urls` property no longer matters [GH-61]
+
 ## 0.2.0 (March 12, 2019)
 
 FEATURES:
