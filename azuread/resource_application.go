@@ -51,7 +51,7 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"reply_urls": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -124,7 +124,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
-		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
+		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
@@ -167,7 +167,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{}))
+		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	if d.HasChange("available_to_other_tenants") {
