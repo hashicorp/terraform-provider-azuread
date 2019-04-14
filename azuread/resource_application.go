@@ -111,9 +111,10 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "webapp/api",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
+				Default:      "webapp/api",
 			},
 		},
 	}
