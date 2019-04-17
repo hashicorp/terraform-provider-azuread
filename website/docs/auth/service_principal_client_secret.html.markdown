@@ -16,9 +16,15 @@ Terraform supports a number of different methods for authenticating to Azure:
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * Authenticating to Azure using a Service Principal and a Client Secret (which is covered in this guide)
 
+Further steps must be taken to grant a Service Principal permission to manage objects in an Azure Active Directory:
+ 
+[Granting a Service Principal permission to manage AAD](service_principal_configuration.html)
+
 ---
 
 We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
+
+Beyond authentication and managing Azure AAD resources further steps are required to make so a Service principal can make changes to Azure Active Directory objects such as users and groups. The [Granting a Service Principal permission to manage AAD](service_principal_configuration.html) guide contains the required steps.
 
 ## Creating a Service Principal
 
@@ -212,3 +218,5 @@ provider "azuread" {
 More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Service Principal to authenticate.
+
+Next you may want to follow the [Granting a Service Principal permission to manage AAD](service_principal_configuration.html) guide to grant the Service Ability permission to create and modify Azure Active Directory objects such as users and groups.

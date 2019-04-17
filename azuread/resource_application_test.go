@@ -52,8 +52,6 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_to_other_tenants", "true"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("https://%s.hashicorptest.com", id)),
 				),
 			},
 			{
@@ -125,7 +123,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.0", fmt.Sprintf("http://%s.hashicorptest.com", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 				),
 			},
@@ -189,9 +187,14 @@ resource "azuread_application" "test" {
 
 func testAccADApplication_availableToOtherTenants(id string) string {
 	return fmt.Sprintf(`
+
+data "azuread_domains" "tenant_domain" {
+	only_initial = true
+}
+
 resource "azuread_application" "test" {
   name                       = "acctest%s"
-  identifier_uris            = ["https://%s.hashicorptest.com"]
+  identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
 }
 `, id, id)
@@ -203,7 +206,7 @@ resource "azuread_application" "test" {
   name                       = "acctest%s"
   homepage                   = "https://homepage-%s"
   identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
-  reply_urls                 = ["http://%s.hashicorptest.com"]
+  reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
 
   required_resource_access {
@@ -218,7 +221,7 @@ resource "azuread_application" "test" {
       id = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
       type = "Scope"
     }
-    
+
     resource_access {
       id = "06da0dbc-49e2-44d2-8312-53f166ab848a"
       type = "Scope"
@@ -234,5 +237,5 @@ resource "azuread_application" "test" {
     }
   }
 }
-`, id, id, id, id)
+`, id, id, id)
 }
