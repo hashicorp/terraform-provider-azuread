@@ -1,12 +1,12 @@
-## 0.3.0 (Unreleased)
+## 0.3.0 (April 18, 2019)
 
 NOTES:
 
-* This release includes a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and there should not be any significant behavioural changes. [GH-56]
+* This release includes a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and there should not be any significant behavioural changes. ([#56](https://github.com/terraform-providers/terraform-provider-azuread/issues/56))
 
 BUG FIXES:
 
-* `azuread_application` - the order of the `reply_urls` property no longer matters [GH-61]
+* `azuread_application` - the order of the `reply_urls` property no longer matters ([#61](https://github.com/terraform-providers/terraform-provider-azuread/issues/61))
 
 ## 0.2.0 (March 12, 2019)
 
