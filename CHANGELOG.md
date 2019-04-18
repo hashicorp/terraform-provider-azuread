@@ -1,4 +1,9 @@
-## 0.4.0 (Unreleased)
+## 0.3.1 (Unreleased)
+
+BUG FIXES:
+
+* Release fixing metadata to register the provider as compatible with Terraform 0.12.
+
 ## 0.3.0 (April 18, 2019)
 
 NOTES:
