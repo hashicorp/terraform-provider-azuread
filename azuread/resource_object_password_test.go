@@ -438,7 +438,7 @@ resource "azuread_object_password" "test" {
 }
 
 func testAccADObjectPasswordServicePrincipal_requiresImport(applicationId, value string) string {
-	template := testAccADServicePrincipalPassword_basic(applicationId, value)
+	template := testAccADObjectPasswordServicePrincipal_basic(applicationId, value)
 	return fmt.Sprintf(`
 %s
 
