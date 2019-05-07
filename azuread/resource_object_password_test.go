@@ -160,10 +160,10 @@ func TestAccAzureADObjectPasswordServicePrincipal_basic(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADServicePrincipalPassword_basic(applicationId, value),
+				Config: testAccADObjectPasswordServicePrincipal_basic(applicationId, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
-					testCheckADServicePrincipalPasswordExists(resourceName),
+					testCheckADObjectPasswordServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
@@ -195,13 +195,13 @@ func TestAccAzureADObjectPasswordServicePrincipal_requiresImport(t *testing.T) {
 		CheckDestroy: testCheckADServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADServicePrincipalPassword_basic(applicationId, value),
+				Config: testAccADObjectPasswordServicePrincipal_basic(applicationId, value),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADServicePrincipalPasswordExists(resourceName),
+					testCheckADObjectPasswordServicePrincipalExists(resourceName),
 				),
 			},
 			{
-				Config:      testAccADServicePrincipalPassword_requiresImport(applicationId, value),
+				Config:      testAccADObjectPasswordServicePrincipal_requiresImport(applicationId, value),
 				ExpectError: testRequiresImportError("azuread_object_password"),
 			},
 		},
@@ -229,7 +229,7 @@ func TestAccAzureADObjectPasswordServicePrincipal_customKeyId(t *testing.T) {
 		CheckDestroy: testCheckADServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADServicePrincipalPassword_customKeyId(applicationId, keyId, value),
+				Config: testAccADObjectPasswordServicePrincipal_customKeyId(applicationId, keyId, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
 					testCheckADObjectPasswordServicePrincipalExists(resourceName),
@@ -259,10 +259,10 @@ func TestAccAzureADObjectPasswordServicePrincipal_relativeEndDate(t *testing.T) 
 		CheckDestroy: testCheckADServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADServicePrincipalPassword_relativeEndDate(applicationId, value),
+				Config: testAccADObjectPasswordServicePrincipal_relativeEndDate(applicationId, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
-					testCheckADServicePrincipalPasswordExists(resourceName),
+					testCheckADObjectPasswordServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_date"),
