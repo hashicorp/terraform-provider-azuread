@@ -83,7 +83,7 @@ func Provider() terraform.ResourceProvider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			"azuread_application":                resourceApplication(),
-			"azuread_application_password":       resourceApplicationPassword(),
+			"azuread_object_password":            resourceObjectPassword(),
 			"azuread_group":                      resourceGroup(),
 			"azuread_service_principal":          resourceServicePrincipal(),
 			"azuread_service_principal_password": resourceServicePrincipalPassword(),
