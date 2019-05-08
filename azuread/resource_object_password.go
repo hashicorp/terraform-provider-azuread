@@ -20,8 +20,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-const typeApplication string = "application"
-const typeServicePrincipal = "service_principal"
 const objectNotFound = "Object not found"
 
 const passwordResourceName = "azuread_object_password"
@@ -136,8 +134,13 @@ func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) erro
 		credential.StartDate = &date.Time{Time: startDate}
 	}
 
-	azureADLockByName(objectId, passwordResourceName)
-	defer azureADUnlockByName(objectId, passwordResourceName)
+	resourceName, err := client.GetObjectType(objectId)
+	if err != nil {
+		return fmt.Errorf("Error getting resource name for Object ID %q: %+v", objectId, err)
+	}
+
+	azureADLockByName(objectId, resourceName)
+	defer azureADUnlockByName(objectId, resourceName)
 
 	existingCredentials, err := client.ListPasswordCredentials(objectId)
 	if err != nil {
@@ -255,8 +258,13 @@ func resourceObjectPasswordDelete(d *schema.ResourceData, meta interface{}) erro
 	objectId := id[0]
 	keyId := id[1]
 
-	azureADLockByName(objectId, passwordResourceName)
-	defer azureADUnlockByName(objectId, passwordResourceName)
+	resourceName, err := client.GetObjectType(objectId)
+	if err != nil {
+		return fmt.Errorf("Error getting resource name for Object ID %q: %+v", objectId, err)
+	}
+
+	azureADLockByName(objectId, resourceName)
+	defer azureADUnlockByName(objectId, resourceName)
 
 	// ensure the parent Application exists
 	exists, err := client.ObjectExists(objectId)
@@ -300,30 +308,30 @@ type passwordsClient struct {
 	ctx       context.Context
 }
 
-func (c passwordsClient) getObjectType(id string) (string, error) {
+func (c passwordsClient) GetObjectType(id string) (string, error) {
+	// try if id is an application
 	application, err := c.appClient.Get(c.ctx, id)
 	if err == nil {
-		return typeApplication, nil
+		return applicationResourceName, nil
 	}
 	if !ar.ResponseWasNotFound(application.Response) {
 		return "", fmt.Errorf("Error retrieving Application Object ID %q: %+v", id, err)
 	}
 
+	// try if id is a service principal
 	sp, err := c.spClient.Get(c.ctx, id)
 	if err == nil {
-		return typeServicePrincipal, nil
+		return servicePrincipalResourceName, nil
 	}
 	if !ar.ResponseWasNotFound(sp.Response) {
 		return "", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", id, err)
 	}
 
-	log.Printf("[DEBUG] Object ID %q was not found as application or Service Principal!", id)
-
 	return "", errors.New(objectNotFound)
 }
 
 func (c passwordsClient) ObjectExists(id string) (bool, error) {
-	_, err := c.getObjectType(id)
+	_, err := c.GetObjectType(id)
 	if err != nil {
 		if err.Error() == objectNotFound {
 			return false, nil
@@ -335,18 +343,18 @@ func (c passwordsClient) ObjectExists(id string) (bool, error) {
 }
 
 func (c passwordsClient) ListPasswordCredentials(id string) (*graphrbac.PasswordCredentialListResult, error) {
-	objectType, err := c.getObjectType(id)
+	objectType, err := c.GetObjectType(id)
 	if err != nil {
 		return nil, err
 	}
 	switch objectType {
-	case typeApplication:
+	case applicationResourceName:
 		credentials, err := c.appClient.ListPasswordCredentials(c.ctx, id)
 		if err != nil {
 			return nil, err
 		}
 		return &credentials, nil
-	case typeServicePrincipal:
+	case servicePrincipalResourceName:
 		credentials, err := c.spClient.ListPasswordCredentials(c.ctx, id)
 		if err != nil {
 			return nil, err
@@ -357,18 +365,18 @@ func (c passwordsClient) ListPasswordCredentials(id string) (*graphrbac.Password
 }
 
 func (c passwordsClient) UpdatePasswordCredentials(id string, parameters graphrbac.PasswordCredentialsUpdateParameters) (*autorest.Response, error) {
-	objectType, err := c.getObjectType(id)
+	objectType, err := c.GetObjectType(id)
 	if err != nil {
 		return nil, err
 	}
 	switch objectType {
-	case typeApplication:
+	case applicationResourceName:
 		resp, err := c.appClient.UpdatePasswordCredentials(c.ctx, id, parameters)
 		if err != nil {
 			return nil, err
 		}
 		return &resp, nil
-	case typeServicePrincipal:
+	case servicePrincipalResourceName:
 		resp, err := c.spClient.UpdatePasswordCredentials(c.ctx, id, parameters)
 		if err != nil {
 			return nil, err

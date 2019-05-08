@@ -15,6 +15,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 )
 
+var applicationResourceName = "azuread_application"
+
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceApplicationCreate,
