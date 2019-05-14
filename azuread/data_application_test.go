@@ -30,7 +30,6 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "group_membership_claims", "SecurityGroup"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 				),
 			},
@@ -60,7 +59,6 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "group_membership_claims", "SecurityGroup"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 				),
 			},
@@ -90,7 +88,31 @@ func TestAccAzureADApplicationDataSource_byName(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "group_membership_claims", "SecurityGroup"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplicationDataSource_byNameWithGroupMembershipClaims(t *testing.T) {
+	dataSourceName := "data.azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_withGroupMembershipClaimsAll(id),
+			},
+			{
+				Config: testAccAzureADApplicationDataSource_nameWithGroupMembershipClaims(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(dataSourceName),
+					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(dataSourceName, "group_membership_claims", "All"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 				),
 			},
@@ -122,6 +144,17 @@ data "azuread_application" "test" {
 
 func testAccAzureADApplicationDataSource_name(id string) string {
 	template := testAccADApplication_basic(id)
+	return fmt.Sprintf(`
+%s
+
+data "azuread_application" "test" {
+  name = "${azuread_application.test.name}"
+}
+`, template)
+}
+
+func testAccAzureADApplicationDataSource_nameWithGroupMembershipClaims(id string) string {
+	template := testAccADApplication_withGroupMembershipClaimsAll(id)
 	return fmt.Sprintf(`
 %s
 
