@@ -48,6 +48,8 @@ output "azure_ad_object_id" {
 
 * `reply_urls` - A list of URLs that user tokens are sent to for sign in, or the redirect URIs that OAuth 2.0 authorization codes and access tokens are sent to.
 
+* `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
+
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
 
 

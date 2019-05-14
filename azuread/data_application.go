@@ -2,6 +2,8 @@ package azuread
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/suppress"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
@@ -68,6 +70,16 @@ func dataApplication() *schema.Resource {
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"group_membership_claims": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				DiffSuppressFunc: suppress.CaseDifference,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"None", "SecurityGroup", "All"},
+					true,
+				),
 			},
 
 			"required_resource_access": {
@@ -173,6 +185,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(application.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if groupMembershipClaims, ok := application.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
 	}
 
 	return nil
