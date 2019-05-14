@@ -256,7 +256,7 @@ resource "azuread_application" "test" {
   name                       = "acctest%s"
   group_membership_claims    = "All"
 }
-`, id, id)
+`, id)
 }
 
 func testAccADApplication_withGroupMembershipClaimsSecurityGroupLowerCase(id string) string {
@@ -265,7 +265,7 @@ resource "azuread_application" "test" {
   name                       = "acctest%s"
   group_membership_claims    = "securitygroup"
 }
-`, id, id)
+`, id)
 }
 
 func testAccADApplication_complete(id string) string {
