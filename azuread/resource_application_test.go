@@ -63,6 +63,56 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_withGroupMembershipClaimsAll(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_withGroupMembershipClaimsAll(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_withGroupMembershipClaimsSecurityGroup(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_withGroupMembershipClaimsSecurityGroupLowerCase(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "SecurityGroup"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
 	id := uuid.New().String()
@@ -196,6 +246,24 @@ resource "azuread_application" "test" {
   name                       = "acctest%s"
   identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
+}
+`, id, id)
+}
+
+func testAccADApplication_withGroupMembershipClaimsAll(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                       = "acctest%s"
+  group_membership_claims    = "All"
+}
+`, id, id)
+}
+
+func testAccADApplication_withGroupMembershipClaimsSecurityGroupLowerCase(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                       = "acctest%s"
+  group_membership_claims    = "securitygroup"
 }
 `, id, id)
 }
