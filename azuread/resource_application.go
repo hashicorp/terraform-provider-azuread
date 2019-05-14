@@ -75,6 +75,55 @@ func resourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"oauth2_permissions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"admin_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -121,6 +170,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	properties := graphrbac.ApplicationCreateParameters{
+		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
@@ -222,6 +272,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(resp.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if oauth2Permissions, ok := resp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
+		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
 	}
 
 	return nil
@@ -339,4 +393,44 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
+}
+
+func flattenADApplicationOauth2Permissions(in []interface{}) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0, len(in))
+	for _, oauth2Permissions := range in {
+		rawPermission := oauth2Permissions.(map[string]interface{})
+		permission := make(map[string]interface{})
+		if rawPermission["adminConsentDescription"] != nil {
+			permission["admin_consent_description"] = rawPermission["adminConsentDescription"]
+		}
+		if rawPermission["adminConsentDisplayName"] != nil {
+			permission["admin_consent_description"] = rawPermission["adminConsentDescription"]
+		}
+		if rawPermission["id"] != nil {
+			permission["id"] = rawPermission["id"]
+		}
+		if rawPermission["isEnabled"] != nil {
+			permission["is_enabled"] = rawPermission["isEnabled"].(bool)
+		}
+		if rawPermission["type"] != nil {
+			permission["type"] = rawPermission["type"]
+		}
+		if rawPermission["userConsentDescription"] != nil {
+			permission["user_consent_description"] = rawPermission["userConsentDescription"]
+		}
+		if rawPermission["userConsentDisplayName"] != nil {
+			permission["user_consent_display_name"] = rawPermission["userConsentDisplayName"]
+		}
+		if rawPermission["value"] != nil {
+			permission["value"] = rawPermission["value"]
+		}
+
+		result = append(result, permission)
+	}
+
+	return result
 }

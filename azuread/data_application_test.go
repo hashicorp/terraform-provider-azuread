@@ -30,6 +30,8 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest%s", id))),
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 				),
 			},

@@ -70,6 +70,54 @@ func dataApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"oauth2_permissions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"admin_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -173,6 +221,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(application.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if oauth2Permissions, ok := application.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
+		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
 	}
 
 	return nil
