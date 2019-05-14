@@ -69,7 +69,7 @@ The following arguments are supported:
 
 * `oauth2_allow_implicit_flow` - (Optional) Does this Azure AD Application allow OAuth2.0 implicit flow tokens? Defaults to `false`.
 
-* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
+* `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below. 
 
 ---
 
@@ -92,6 +92,28 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `application_id` - The Application ID.
+
+* `oauth2_permissions` - A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by a `oauth2_permission` block as documented below.
+
+---
+
+`oauth2_permission` block exports the following:
+
+* `id` - The unique identifier for one of the `OAuth2Permission`
+
+* `type` - The type of the permission
+
+* `admin_consent_description` - The description of the admin consent
+
+* `admin_consent_display_name` - The display name of the admin consent
+
+* `is_enabled` - Is this permission enabled?
+
+* `user_consent_description` - The description of the user consent
+
+* `user_consent_display_name` - The display name of the user consent
+
+* `value` - The name of this permission
 
 ## Import
 
