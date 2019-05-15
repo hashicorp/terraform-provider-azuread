@@ -170,7 +170,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	properties := graphrbac.ApplicationCreateParameters{
-		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
@@ -404,29 +403,29 @@ func flattenADApplicationOauth2Permissions(in []interface{}) []map[string]interf
 	for _, oauth2Permissions := range in {
 		rawPermission := oauth2Permissions.(map[string]interface{})
 		permission := make(map[string]interface{})
-		if rawPermission["adminConsentDescription"] != nil {
-			permission["admin_consent_description"] = rawPermission["adminConsentDescription"]
+		if v := rawPermission["adminConsentDescription"]; v != nil {
+			permission["admin_consent_description"] = v
 		}
-		if rawPermission["adminConsentDisplayName"] != nil {
-			permission["admin_consent_description"] = rawPermission["adminConsentDescription"]
+		if v := rawPermission["adminConsentDisplayName"]; v != nil {
+			permission["admin_consent_description"] = v
 		}
-		if rawPermission["id"] != nil {
-			permission["id"] = rawPermission["id"]
+		if v := rawPermission["id"]; v != nil {
+			permission["id"] = v
 		}
-		if rawPermission["isEnabled"] != nil {
-			permission["is_enabled"] = rawPermission["isEnabled"].(bool)
+		if v := rawPermission["isEnabled"]; v != nil {
+			permission["is_enabled"] = v.(bool)
 		}
-		if rawPermission["type"] != nil {
-			permission["type"] = rawPermission["type"]
+		if v := rawPermission["type"]; v != nil {
+			permission["type"] = v
 		}
-		if rawPermission["userConsentDescription"] != nil {
-			permission["user_consent_description"] = rawPermission["userConsentDescription"]
+		if v := rawPermission["userConsentDescription"]; v != nil {
+			permission["user_consent_description"] = v
 		}
-		if rawPermission["userConsentDisplayName"] != nil {
-			permission["user_consent_display_name"] = rawPermission["userConsentDisplayName"]
+		if v := rawPermission["userConsentDisplayName"]; v != nil {
+			permission["user_consent_display_name"] = v
 		}
-		if rawPermission["value"] != nil {
-			permission["value"] = rawPermission["value"]
+		if v := rawPermission["value"]; v != nil {
+			permission["value"] = v
 		}
 
 		result = append(result, permission)
