@@ -8,5 +8,5 @@ require (
 	github.com/google/uuid v0.0.0-20170814143639-7e072fc3a7be
 	github.com/hashicorp/go-azure-helpers v0.0.0-20190129193224-166dfd221bb2
 	github.com/hashicorp/go-uuid v1.0.1
-	github.com/hashicorp/terraform v0.12.0-alpha4.0.20190417210818-177a7afb781f
+	github.com/hashicorp/terraform v0.12.0
 )
