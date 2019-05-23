@@ -74,7 +74,7 @@ The following arguments are supported:
 
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
 
-* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property should not be set.  
+* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property can not not be set.  
 
 ---
 
