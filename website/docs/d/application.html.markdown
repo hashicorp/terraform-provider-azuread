@@ -52,6 +52,7 @@ output "azure_ad_object_id" {
 
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
 
+* `oauth2_permissions` - A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by a `oauth2_permission` block as documented below.
 
 ---
 
@@ -68,3 +69,23 @@ output "azure_ad_object_id" {
 * `id` - The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes. 
 
 * `type` - Specifies whether the id property references an `OAuth2Permission` or an `AppRole`.
+
+---
+
+`oauth2_permission` block exports the following:
+
+* `id` - The unique identifier for one of the `OAuth2Permission`
+
+* `type` - The type of the permission
+
+* `admin_consent_description` - The description of the admin consent
+
+* `admin_consent_display_name` - The display name of the admin consent
+
+* `is_enabled` - Is this permission enabled?
+
+* `user_consent_description` - The description of the user consent
+
+* `user_consent_display_name` - The display name of the user consent
+
+* `value` - The name of this permission
