@@ -32,7 +32,7 @@ The following arguments are supported:
 * `display_name` - (Required) The name to display in the address book for the user.
 * `account_enabled` - (Optional) `true` if the account should be enabled, otherwise `false`. Defaults to `true`.
 * `mail_nickname`- (Optional) The mail alias for the user. Defaults to the user name part of the User Principal Name.
-* `password` - (Required) The password for the User. The password must satisfy minimum requirements as specified by the password policy. The maximum length is 16 characters.
+* `password` - (Required) The password for the User. The password must satisfy minimum requirements as specified by the password policy. The maximum length is 256 characters.
 * `force_password_change` - (Optional) `true` if the User is forced to change the password during the next sign-in. Defaults to `false`.
 
 ## Attributes Reference
