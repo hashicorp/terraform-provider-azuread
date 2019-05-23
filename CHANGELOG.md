@@ -3,7 +3,6 @@
 IMPROVEMENTS:
 
 * dependencies: upgrading to `v0.12.0` of `github.com/hashicorp/terraform` [GH-82]
-
 * Data Source `azuread_application` - now exports the `group_membership_claims` property [GH-78]
 * Data Source `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
 * `azuread_application` - support for the `group_membership_claims` property [GH-78]
