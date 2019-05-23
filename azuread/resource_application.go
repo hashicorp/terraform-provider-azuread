@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func resourceApplication() *schema.Resource {
@@ -51,7 +49,7 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"reply_urls": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -73,6 +71,15 @@ func resourceApplication() *schema.Resource {
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"group_membership_claims": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"None", "SecurityGroup", "All"},
+					false,
+				),
 			},
 
 			"required_resource_access": {
@@ -137,9 +144,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	properties := graphrbac.ApplicationCreateParameters{
+		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
-		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
+		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
@@ -150,6 +158,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
 		properties.Oauth2AllowImplicitFlow = p.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("group_membership_claims"); ok {
+		properties.AdditionalProperties["groupMembershipClaims"] = v
 	}
 
 	app, err := client.Create(ctx, properties)
@@ -190,6 +202,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	var properties graphrbac.ApplicationUpdateParameters
+	properties.AdditionalProperties = make(map[string]interface{})
 
 	if d.HasChange("name") {
 		properties.DisplayName = &name
@@ -204,7 +217,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{}))
+		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -219,6 +232,16 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("required_resource_access") {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
+	}
+
+	if d.HasChange("group_membership_claims") {
+		groupMembershipClaims := d.Get("group_membership_claims").(string)
+
+		if len(groupMembershipClaims) == 0 {
+			properties.AdditionalProperties["groupMembershipClaims"] = nil
+		} else {
+			properties.AdditionalProperties["groupMembershipClaims"] = groupMembershipClaims
+		}
 	}
 
 	if d.HasChange("type") {
@@ -268,6 +291,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("homepage", resp.Homepage)
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
+
+	if groupMembershipClaims, ok := resp.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
+	}
 
 	switch appType := resp.AdditionalProperties["publicClient"]; appType {
 	case true:

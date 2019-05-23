@@ -59,10 +59,20 @@ func resourceServicePrincipalPassword() *schema.Resource {
 			},
 
 			"end_date": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date_relative"},
+				ValidateFunc:  validation.ValidateRFC3339TimeString,
+			},
+
+			"end_date_relative": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validate.NoEmptyStrings,
 			},
 		},
 	}
@@ -75,7 +85,6 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	objectId := d.Get("service_principal_id").(string)
 	value := d.Get("value").(string)
 	// errors will be handled by the validation
-	endDate, _ := time.Parse(time.RFC3339, d.Get("end_date").(string))
 
 	var keyId string
 	if v, ok := d.GetOk("key_id"); ok {
@@ -87,6 +96,19 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 		}
 
 		keyId = kid
+	}
+
+	var endDate time.Time
+	if v := d.Get("end_date").(string); v != "" {
+		endDate, _ = time.Parse(time.RFC3339, v)
+	} else if v := d.Get("end_date_relative").(string); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			return fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
+		}
+		endDate = time.Now().Add(d)
+	} else {
+		return fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
 	}
 
 	credential := graphrbac.PasswordCredential{

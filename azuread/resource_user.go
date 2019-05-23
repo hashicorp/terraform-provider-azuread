@@ -3,6 +3,7 @@ package azuread
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -36,15 +37,10 @@ func resourceUser() *schema.Resource {
 				ValidateFunc: validate.NoEmptyStrings,
 			},
 
-			"mail": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"mail_nickname": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 
 			"account_enabled": {
@@ -57,13 +53,18 @@ func resourceUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 16), //currently the max length for AAD passwords is 16
+				ValidateFunc: validation.StringLenBetween(1, 256), //currently the max length for AAD passwords is 256
 			},
 
 			"force_password_change": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+
+			"mail": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -79,6 +80,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	accountEnabled := d.Get("account_enabled").(bool)
 	password := d.Get("password").(string)
 	forcePasswordChange := d.Get("force_password_change").(bool)
+
+	//default mail nickname to the first part of the UPN (matches the portal)
+	if mailNickName == "" {
+		mailNickName = strings.Split(userPrincipalName, "@")[0]
+	}
 
 	userCreateParameters := graphrbac.UserCreateParameters{
 		AccountEnabled: &accountEnabled,

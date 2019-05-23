@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/guid"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 )
 
@@ -39,9 +40,9 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:     &name,
-		MailEnabled:     p.Bool(false), //we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
-		MailNickname:    &name,
-		SecurityEnabled: p.Bool(true), //we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
+		MailEnabled:     p.Bool(false),                 //we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
+		MailNickname:    p.String(guid.New().String()), //this matches the portal behavior
+		SecurityEnabled: p.Bool(true),                  //we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
 	}
 
 	group, err := client.Create(ctx, properties)
@@ -49,9 +50,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if group.ObjectID == nil {
-		return fmt.Errorf("Group objectId is nil")
-	}
 	d.SetId(*group.ObjectID)
 
 	return resourceGroupRead(d, meta)

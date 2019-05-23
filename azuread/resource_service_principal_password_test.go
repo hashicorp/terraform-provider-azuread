@@ -111,7 +111,37 @@ func TestAccAzureADServicePrincipalPassword_customKeyId(t *testing.T) {
 	})
 }
 
-func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFunc {
+func TestAccAzureADServicePrincipalPassword_relativeEndDate(t *testing.T) {
+	resourceName := "azuread_service_principal_password.test"
+	applicationId, err := uuid.GenerateUUID()
+	if err != nil {
+		t.Fatal(err)
+	}
+	value, err := uuid.GenerateUUID()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADServicePrincipalDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADServicePrincipalPassword_relativeEndDate(applicationId, value),
+				Check: resource.ComposeTestCheckFunc(
+					// can't assert on Value since it's not returned
+					testCheckADServicePrincipalPasswordExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "end_date"),
+				),
+			},
+		},
+	})
+}
+
+func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -152,7 +182,7 @@ func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccADServicePrincipalPassword_basic(applicationId, value string) string {
+func testAccADServicePrincipalPassword_template(applicationId string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctestspa%s"
@@ -161,13 +191,19 @@ resource "azuread_application" "test" {
 resource "azuread_service_principal" "test" {
   application_id = "${azuread_application.test.application_id}"
 }
+`, applicationId)
+}
+
+func testAccADServicePrincipalPassword_basic(applicationId, value string) string {
+	return fmt.Sprintf(`
+%s
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = "${azuread_service_principal.test.id}"
   value                = "%s"
   end_date             = "2020-01-01T01:02:03Z"
 }
-`, applicationId, value)
+`, testAccADServicePrincipalPassword_template(applicationId), value)
 }
 
 func testAccADServicePrincipalPassword_requiresImport(applicationId, value string) string {
@@ -186,13 +222,7 @@ resource "azuread_service_principal_password" "import" {
 
 func testAccADServicePrincipalPassword_customKeyId(applicationId, keyId, value string) string {
 	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  name = "acctestspa%s"
-}
-
-resource "azuread_service_principal" "test" {
-  application_id = "${azuread_application.test.application_id}"
-}
+%s
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = "${azuread_service_principal.test.id}"
@@ -200,5 +230,17 @@ resource "azuread_service_principal_password" "test" {
   value                = "%s"
   end_date             = "2020-01-01T01:02:03Z"
 }
-`, applicationId, keyId, value)
+`, testAccADServicePrincipalPassword_template(applicationId), keyId, value)
+}
+
+func testAccADServicePrincipalPassword_relativeEndDate(applicationId, value string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = "${azuread_service_principal.test.id}"
+  value                = "%s"
+  end_date_relative    = "8760h"
+}
+`, testAccADServicePrincipalPassword_template(applicationId), value)
 }
