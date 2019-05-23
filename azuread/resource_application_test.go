@@ -26,8 +26,8 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Access %s", fmt.Sprintf("acctest%s", id))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
@@ -37,6 +37,75 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_complete(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_complete(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_update(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+	updatedId := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
+				),
+			},
+			{
+				Config: testAccADApplication_complete(updatedId),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
+					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
+				),
 			},
 		},
 	})
@@ -67,7 +136,7 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_withGroupMembershipClaimsUpdate(t *testing.T) {
+func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	resourceName := "azuread_application.test"
 	id := uuid.New().String()
 
@@ -105,73 +174,6 @@ func TestAccAzureADApplication_withGroupMembershipClaimsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_complete(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADApplication_complete(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAzureADApplication_update(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
-	updatedId := uuid.New().String()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADApplication_basic(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
-				),
-			},
-			{
-				Config: testAccADApplication_complete(updatedId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
-					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
-				),
-			},
-		},
-	})
-}
 func TestAccAzureADApplication_native(t *testing.T) {
 	resourceName := "azuread_application.test"
 	id := uuid.New().String()
@@ -201,6 +203,64 @@ func TestAccAzureADApplication_native(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				Config: testAccADApplication_native(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "type", "native"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccADApplication_complete(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
 	id := uuid.New().String()
 
@@ -212,52 +272,6 @@ func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *test
 			{
 				Config:      testAccADApplication_native_app_does_not_allow_identifier_uris(id),
 				ExpectError: regexp.MustCompile("identifier_uris is not required for a native application"),
-			},
-		},
-	})
-}
-
-func TestAccAzureADApplication_update_type(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
-	updatedId := uuid.New().String()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADApplication_complete(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
-				),
-			},
-			{
-				Config: testAccADApplication_native(updatedId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "type", "native"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
-				),
-			},
-			{
-				Config: testAccADApplication_complete(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
-				),
 			},
 		},
 	})

@@ -82,6 +82,49 @@ func resourceApplication() *schema.Resource {
 				),
 			},
 
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
+				Default:      "webapp/api",
+			},
+
+			"required_resource_access": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_app_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"resource_access": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validate.UUID,
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"Scope", "Role"},
+											false, // force case sensitivity
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"oauth2_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -129,48 +172,6 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-
-			"required_resource_access": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resource_app_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"resource_access": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validate.UUID,
-									},
-
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"Scope", "Role"},
-											false, // force case sensitivity
-										),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
-				Default:      "webapp/api",
-			},
 		},
 	}
 }
@@ -180,15 +181,11 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
-
 	appType := d.Get("type")
-
 	if appType == "native" {
 		if _, ok := d.GetOk("identifier_uris"); ok {
 			return fmt.Errorf("identifier_uris is not required for a native application")
 		}
-	} else if appType != "webapp/api" {
-		return fmt.Errorf("Error creating Azure AD Application with name %q: Unknow application type %v. Supported types are [webapp/api, native]", name, appType)
 	}
 
 	properties := graphrbac.ApplicationCreateParameters{
@@ -200,8 +197,14 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
 
-	if _, ok := d.GetOk("homepage"); ok {
-		properties.Homepage = expandADApplicationHomepage(d, name)
+	if v, ok := d.GetOk("homepage"); ok {
+		properties.Homepage = p.String(v.(string))
+	} else {
+		// continue to automatically set the homepage with the type is not native
+		if appType != "native" {
+			properties.Homepage = p.String(fmt.Sprintf("https://%s", name))
+
+		}
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
@@ -257,7 +260,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("homepage") {
-		properties.Homepage = expandADApplicationHomepage(d, name)
+		properties.Homepage = p.String(d.Get("homepage").(string))
 	}
 
 	if d.HasChange("identifier_uris") {
@@ -293,18 +296,12 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("type") {
-
 		switch appType := d.Get("type"); appType {
-
 		case "webapp/api":
-			properties.AdditionalProperties = map[string]interface{}{
-				"publicClient": false,
-			}
+			properties.AdditionalProperties["publicClient"] = false
 			properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
 		case "native":
-			properties.AdditionalProperties = map[string]interface{}{
-				"publicClient": true,
-			}
+			properties.AdditionalProperties["publicClient"] = true
 			properties.IdentifierUris = &[]string{}
 		default:
 			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
@@ -395,14 +392,6 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func expandADApplicationHomepage(d *schema.ResourceData, name string) *string {
-	if v, ok := d.GetOk("homepage"); ok {
-		return p.String(v.(string))
-	}
-
-	return p.String(fmt.Sprintf("https://%s", name))
 }
 
 func expandADApplicationRequiredResourceAccess(d *schema.ResourceData) *[]graphrbac.RequiredResourceAccess {
