@@ -3,11 +3,9 @@ package azuread
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -66,6 +64,11 @@ func dataApplication() *schema.Resource {
 			},
 
 			"application_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"group_membership_claims": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -222,6 +225,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(application.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if groupMembershipClaims, ok := application.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
 	}
 
 	if oauth2Permissions, ok := application.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
