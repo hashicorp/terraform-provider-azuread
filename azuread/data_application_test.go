@@ -59,6 +59,7 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "group_membership_claims", "All"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 				),
 			},

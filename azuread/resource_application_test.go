@@ -63,6 +63,44 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_withGroupMembershipClaimsUpdate(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+				),
+			},
+			{
+				Config: testAccADApplication_withGroupMembershipClaimsAll(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+				),
+			},
+			{
+				Config: testAccADApplication_withGroupMembershipClaimsSecurityGroup(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "SecurityGroup"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
 	id := uuid.New().String()
@@ -200,6 +238,24 @@ resource "azuread_application" "test" {
 `, id, id)
 }
 
+func testAccADApplication_withGroupMembershipClaimsAll(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                       = "acctest%s"
+  group_membership_claims    = "All"
+}
+`, id)
+}
+
+func testAccADApplication_withGroupMembershipClaimsSecurityGroup(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                       = "acctest%s"
+  group_membership_claims    = "SecurityGroup"
+}
+`, id)
+}
+
 func testAccADApplication_complete(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
@@ -208,6 +264,7 @@ resource "azuread_application" "test" {
   identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
+  group_membership_claims    = "All"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
