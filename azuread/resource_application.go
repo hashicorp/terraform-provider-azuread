@@ -4,16 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/suppress"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func resourceApplication() *schema.Resource {
@@ -77,12 +74,11 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"group_membership_claims": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: suppress.CaseDifference,
+				Type:     schema.TypeString,
+				Optional: true,
 				ValidateFunc: validation.StringInSlice(
 					[]string{"None", "SecurityGroup", "All"},
-					true,
+					false,
 				),
 			},
 
