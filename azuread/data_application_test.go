@@ -29,6 +29,7 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Access %s", fmt.Sprintf("acctest%s", id))),
