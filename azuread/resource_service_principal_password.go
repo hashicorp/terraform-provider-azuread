@@ -17,11 +17,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
+
 func resourceServicePrincipalPassword() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServicePrincipalPasswordCreate,
 		Read:   resourceServicePrincipalPasswordRead,
 		Delete: resourceServicePrincipalPasswordDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

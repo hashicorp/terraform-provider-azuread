@@ -125,8 +125,8 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
-		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
-		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{})),
+		IdentifierUris:          tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").([]interface{})),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
@@ -165,11 +165,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("identifier_uris") {
-		properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
+		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").([]interface{}))
+		properties.ReplyUrls = tf.ExpandStringSlicePtr(d.Get("reply_urls").([]interface{}))
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -214,11 +214,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
 
-	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(resp.ReplyUrls)); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(resp.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 

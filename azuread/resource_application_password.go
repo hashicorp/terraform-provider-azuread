@@ -22,78 +22,75 @@ import (
 
 const objectNotFound = "Object not found"
 
-const passwordResourceName = "azuread_object_password"
-
-func resourceObjectPassword() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceObjectPasswordCreate,
-		Read:   resourceObjectPasswordRead,
-		Delete: resourceObjectPasswordDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+// valid types are `application` and `service_pricipal`
+func resourceObjectPasswordSchema(object_type string) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		object_type + "_id": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
-			},
+		"key_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+		},
 
-			"key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
-			},
+		"value": {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			Sensitive:    true,
+			ValidateFunc: validate.NoEmptyStrings,
+		},
 
-			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validate.NoEmptyStrings,
-			},
+		"start_date": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.ValidateRFC3339TimeString,
+		},
 
-			"start_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
-			},
+		"end_date": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Computed:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"end_date_relative"},
+			ValidateFunc:  validation.ValidateRFC3339TimeString,
+		},
 
-			"end_date": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date_relative"},
-				ValidateFunc:  validation.ValidateRFC3339TimeString,
-			},
-
-			"end_date_relative": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date"},
-				ValidateFunc:  validate.NoEmptyStrings,
-			},
+		"end_date_relative": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"end_date"},
+			ValidateFunc:  validate.NoEmptyStrings,
 		},
 	}
 }
 
-func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) error {
-	client := passwordsClient{
-		appClient: meta.(*ArmClient).applicationsClient,
-		spClient:  meta.(*ArmClient).servicePrincipalsClient,
-		ctx:       meta.(*ArmClient).StopContext,
+func resourceApplicationPassword() *schema.Resource {
+	return &schema.Resource{
+		Create: resourceObjectPasswordCreate,
+		Read:   resourceObjectPasswordRead,
+		Delete: resourceObjectPasswordDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
+		Schema: resourceObjectPasswordSchema("application"),
 	}
+}
 
-	objectId := d.Get("object_id").(string)
-
+func resourceObjectPasswordGetPasswordCredential(d *schema.ResourceData, objectType string) (*graphrbac.PasswordCredential, error) {
+	objectId := d.Get(objectType+"_id").(string)
 	value := d.Get("value").(string)
 	// errors will be handled by the validation
 
@@ -103,7 +100,7 @@ func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		kid, err := uuid.GenerateUUID()
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		keyId = kid
@@ -115,11 +112,11 @@ func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) erro
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
-			return fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
+			return nil, fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
+		return nil, fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
 	}
 
 	credential := graphrbac.PasswordCredential{
@@ -133,6 +130,18 @@ func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) erro
 		startDate, _ := time.Parse(time.RFC3339, v.(string))
 		credential.StartDate = &date.Time{Time: startDate}
 	}
+
+	return &credential, nil
+}
+
+func resourceObjectPasswordCreate(d *schema.ResourceData, meta interface{}) error {
+	client := passwordsClient{
+		appClient: meta.(*ArmClient).applicationsClient,
+		spClient:  meta.(*ArmClient).servicePrincipalsClient,
+		ctx:       meta.(*ArmClient).StopContext,
+	}
+
+
 
 	resourceName, err := client.GetObjectType(objectId)
 	if err != nil {
