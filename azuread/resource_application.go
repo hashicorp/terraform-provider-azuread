@@ -77,7 +77,6 @@ func resourceApplication() *schema.Resource {
 
 			"oauth2_permissions": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
