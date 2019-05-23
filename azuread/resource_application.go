@@ -182,8 +182,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	appType := d.Get("type")
+	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
 	if appType == "native" {
-		if _, ok := d.GetOk("identifier_uris"); ok {
+		if hasIdentUrls {
 			return fmt.Errorf("identifier_uris is not required for a native application")
 		}
 	}
@@ -191,7 +192,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	properties := graphrbac.ApplicationCreateParameters{
 		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
-		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:          tf.ExpandStringArrayPtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
