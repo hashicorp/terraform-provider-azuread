@@ -7,6 +7,7 @@ IMPROVEMENTS:
 * Data Source `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
 * `azuread_application` - support for the `group_membership_claims` property [GH-78]
 * `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
+* `azuread_application` - support for the `type` property enabling the creation of `native` applications [GH-74]
 * `azuread_user` - increase the maximum allowed lengh of `password` to 256 [GH-81]
 
 ## 0.3.1 (April 18, 2019)
