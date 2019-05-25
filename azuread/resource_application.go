@@ -181,8 +181,8 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
-		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
-		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
+		IdentifierUris:          tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
@@ -230,7 +230,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List())
+		properties.ReplyUrls = tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -289,7 +289,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("group_membership_claims", groupMembershipClaims)
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
