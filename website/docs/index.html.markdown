@@ -31,7 +31,7 @@ We recommend using either a Service Principal or Managed Service Identity when r
 ```hcl
 # Configure the Microsoft Azure Active Directory Provider
 provider "azuread" {
-  version = "=0.1.0"
+  version = "=0.3.0"
 }
 
 # Create an application

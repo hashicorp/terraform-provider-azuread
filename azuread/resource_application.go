@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
-	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 var resourceApplicationName = "azuread_application"
@@ -53,7 +51,7 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"reply_urls": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -75,6 +73,63 @@ func resourceApplication() *schema.Resource {
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"group_membership_claims": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"None", "SecurityGroup", "All"},
+					false,
+				),
+			},
+
+			"oauth2_permissions": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"admin_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 
 			"required_resource_access": {
@@ -123,16 +178,21 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	properties := graphrbac.ApplicationCreateParameters{
+		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		Homepage:                expandADApplicationHomepage(d, name),
-		IdentifierUris:          tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
-		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").([]interface{})),
+		IdentifierUris:          tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{})),
+		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
 		properties.Oauth2AllowImplicitFlow = p.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("group_membership_claims"); ok {
+		properties.AdditionalProperties["groupMembershipClaims"] = v
 	}
 
 	app, err := client.Create(ctx, properties)
@@ -155,6 +215,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	var properties graphrbac.ApplicationUpdateParameters
+	properties.AdditionalProperties = make(map[string]interface{})
 
 	if d.HasChange("name") {
 		properties.DisplayName = &name
@@ -169,7 +230,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringSlicePtr(d.Get("reply_urls").([]interface{}))
+		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -184,6 +245,16 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("required_resource_access") {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
+	}
+
+	if d.HasChange("group_membership_claims") {
+		groupMembershipClaims := d.Get("group_membership_claims").(string)
+
+		if len(groupMembershipClaims) == 0 {
+			properties.AdditionalProperties["groupMembershipClaims"] = nil
+		} else {
+			properties.AdditionalProperties["groupMembershipClaims"] = groupMembershipClaims
+		}
 	}
 
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
@@ -214,7 +285,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
+	if groupMembershipClaims, ok := resp.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
+	}
+
+	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
@@ -224,6 +299,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(resp.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if oauth2Permissions, ok := resp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
+		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
 	}
 
 	return nil
@@ -341,4 +420,44 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
+}
+
+func flattenADApplicationOauth2Permissions(in []interface{}) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0, len(in))
+	for _, oauth2Permissions := range in {
+		rawPermission := oauth2Permissions.(map[string]interface{})
+		permission := make(map[string]interface{})
+		if v := rawPermission["adminConsentDescription"]; v != nil {
+			permission["admin_consent_description"] = v
+		}
+		if v := rawPermission["adminConsentDisplayName"]; v != nil {
+			permission["admin_consent_description"] = v
+		}
+		if v := rawPermission["id"]; v != nil {
+			permission["id"] = v
+		}
+		if v := rawPermission["isEnabled"]; v != nil {
+			permission["is_enabled"] = v.(bool)
+		}
+		if v := rawPermission["type"]; v != nil {
+			permission["type"] = v
+		}
+		if v := rawPermission["userConsentDescription"]; v != nil {
+			permission["user_consent_description"] = v
+		}
+		if v := rawPermission["userConsentDisplayName"]; v != nil {
+			permission["user_consent_display_name"] = v
+		}
+		if v := rawPermission["value"]; v != nil {
+			permission["value"] = v
+		}
+
+		result = append(result, permission)
+	}
+
+	return result
 }

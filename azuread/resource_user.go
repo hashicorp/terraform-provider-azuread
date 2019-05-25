@@ -53,7 +53,7 @@ func resourceUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 16), //currently the max length for AAD passwords is 16
+				ValidateFunc: validation.StringLenBetween(1, 256), //currently the max length for AAD passwords is 256
 			},
 
 			"force_password_change": {

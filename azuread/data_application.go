@@ -3,11 +3,9 @@ package azuread
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -68,6 +66,60 @@ func dataApplication() *schema.Resource {
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"group_membership_claims": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"oauth2_permissions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"admin_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 
 			"required_resource_access": {
@@ -173,6 +225,14 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(application.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if groupMembershipClaims, ok := application.AdditionalProperties["groupMembershipClaims"]; ok {
+		d.Set("group_membership_claims", groupMembershipClaims)
+	}
+
+	if oauth2Permissions, ok := application.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
+		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
 	}
 
 	return nil
