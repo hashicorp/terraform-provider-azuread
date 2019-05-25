@@ -23,6 +23,7 @@ resource "azuread_application" "test" {
   reply_urls                 = ["https://replyurl"]
   available_to_other_tenants = false
   oauth2_allow_implicit_flow = true
+  type                       = "webapp/api"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
@@ -72,6 +73,8 @@ The following arguments are supported:
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Defaults to `SecurityGroup`. Possible values are `None`, `SecurityGroup` or `All`.
 
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
+
+* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property can not not be set.  
 
 ---
 

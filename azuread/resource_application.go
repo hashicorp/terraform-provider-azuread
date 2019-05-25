@@ -84,6 +84,49 @@ func resourceApplication() *schema.Resource {
 				),
 			},
 
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
+				Default:      "webapp/api",
+			},
+
+			"required_resource_access": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"resource_app_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"resource_access": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validate.UUID,
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice(
+											[]string{"Scope", "Role"},
+											false, // force case sensitivity
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"oauth2_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -131,42 +174,6 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-
-			"required_resource_access": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resource_app_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
-						"resource_access": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validate.UUID,
-									},
-
-									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"Scope", "Role"},
-											false, // force case sensitivity
-										),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 		},
 	}
 }
@@ -176,15 +183,31 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
+	appType := d.Get("type")
+	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
+	if appType == "native" {
+		if hasIdentUrls {
+			return fmt.Errorf("identifier_uris is not required for a native application")
+		}
+	}
 
 	properties := graphrbac.ApplicationCreateParameters{
 		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
-		Homepage:                expandADApplicationHomepage(d, name),
-		IdentifierUris:          tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
+	}
+
+	if v, ok := d.GetOk("homepage"); ok {
+		properties.Homepage = p.String(v.(string))
+	} else {
+		// continue to automatically set the homepage with the type is not native
+		if appType != "native" {
+			properties.Homepage = p.String(fmt.Sprintf("https://%s", name))
+
+		}
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
@@ -203,6 +226,24 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	if app.ObjectID == nil {
 		return fmt.Errorf("Application objectId is nil")
 	}
+
+	// follow suggested hack for azure-cli
+	// AAD graph doesn't have the API to create a native app, aka public client, the recommended hack is
+	// to create a web app first, then convert to a native one
+	if appType == "native" {
+
+		properties := graphrbac.ApplicationUpdateParameters{
+			Homepage:       nil,
+			IdentifierUris: &[]string{},
+			AdditionalProperties: map[string]interface{}{
+				"publicClient": true,
+			},
+		}
+		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
+			return err
+		}
+	}
+
 	d.SetId(*app.ObjectID)
 
 	return resourceApplicationRead(d, meta)
@@ -222,7 +263,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("homepage") {
-		properties.Homepage = expandADApplicationHomepage(d, name)
+		properties.Homepage = p.String(d.Get("homepage").(string))
 	}
 
 	if d.HasChange("identifier_uris") {
@@ -254,6 +295,20 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			properties.AdditionalProperties["groupMembershipClaims"] = nil
 		} else {
 			properties.AdditionalProperties["groupMembershipClaims"] = groupMembershipClaims
+		}
+	}
+
+	if d.HasChange("type") {
+		switch appType := d.Get("type"); appType {
+		case "webapp/api":
+			properties.AdditionalProperties["publicClient"] = false
+			properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
+		case "native":
+			properties.AdditionalProperties["publicClient"] = true
+			properties.IdentifierUris = &[]string{}
+		default:
+			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
+
 		}
 	}
 
@@ -289,7 +344,14 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("group_membership_claims", groupMembershipClaims)
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
+	switch appType := resp.AdditionalProperties["publicClient"]; appType {
+	case true:
+		d.Set("type", "native")
+	default:
+		d.Set("type", "webapp/api")
+	}
+
+	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
@@ -333,14 +395,6 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func expandADApplicationHomepage(d *schema.ResourceData, name string) *string {
-	if v, ok := d.GetOk("homepage"); ok {
-		return p.String(v.(string))
-	}
-
-	return p.String(fmt.Sprintf("https://%s", name))
 }
 
 func expandADApplicationRequiredResourceAccess(d *schema.ResourceData) *[]graphrbac.RequiredResourceAccess {
