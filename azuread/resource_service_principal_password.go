@@ -17,7 +17,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-
 func resourceServicePrincipalPassword() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServicePrincipalPasswordCreate,
@@ -85,7 +84,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	ctx := meta.(*ArmClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
-	value := d.Get("value").(string)
+
 	// errors will be handled by the validation
 
 	var keyId string
@@ -115,7 +114,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 
 	credential := graphrbac.PasswordCredential{
 		KeyID:   p.String(keyId),
-		Value:   p.String(value),
+		Value:   p.String("TODO FIX THIS"),
 		EndDate: &date.Time{Time: endDate},
 	}
 

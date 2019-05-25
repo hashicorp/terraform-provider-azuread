@@ -143,13 +143,13 @@ func TestAccAzureADServicePrincipalPassword_relativeEndDate(t *testing.T) {
 
 func testCheckADServicePrincipalPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
+		client := testAccProvider.Meta().(*ArmClient).servicePrincipalsClient
+		ctx := testAccProvider.Meta().(*ArmClient).StopContext
+
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %q", name)
 		}
-
-		client := testAccProvider.Meta().(*ArmClient).servicePrincipalsClient
-		ctx := testAccProvider.Meta().(*ArmClient).StopContext
 
 		id := strings.Split(rs.Primary.ID, "/")
 		objectId := id[0]
