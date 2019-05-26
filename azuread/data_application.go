@@ -220,11 +220,11 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
 
-	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(app.IdentifierUris)); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(app.ReplyUrls)); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 

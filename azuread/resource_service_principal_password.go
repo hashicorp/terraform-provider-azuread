@@ -3,18 +3,13 @@ package azuread
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/Azure/go-autorest/autorest/date"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func resourceServicePrincipalPassword() *schema.Resource {
@@ -22,59 +17,12 @@ func resourceServicePrincipalPassword() *schema.Resource {
 		Create: resourceServicePrincipalPasswordCreate,
 		Read:   resourceServicePrincipalPasswordRead,
 		Delete: resourceServicePrincipalPasswordDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"service_principal_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
-			},
-
-			"key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
-			},
-
-			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validate.NoEmptyStrings,
-			},
-
-			"start_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
-			},
-
-			"end_date": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date_relative"},
-				ValidateFunc:  validation.ValidateRFC3339TimeString,
-			},
-
-			"end_date_relative": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date"},
-				ValidateFunc:  validate.NoEmptyStrings,
-			},
-		},
+		Schema: graph.PasswordResourceSchema("service_principal"),
 	}
 }
 
@@ -83,82 +31,31 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	ctx := meta.(*ArmClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
-	value := d.Get("value").(string)
-	// errors will be handled by the validation
 
-	var keyId string
-	if v, ok := d.GetOk("key_id"); ok {
-		keyId = v.(string)
-	} else {
-		kid, err := uuid.GenerateUUID()
-		if err != nil {
-			return err
-		}
-
-		keyId = kid
-	}
-
-	var endDate time.Time
-	if v := d.Get("end_date").(string); v != "" {
-		endDate, _ = time.Parse(time.RFC3339, v)
-	} else if v := d.Get("end_date_relative").(string); v != "" {
-		d, err := time.ParseDuration(v)
-		if err != nil {
-			return fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
-		}
-		endDate = time.Now().Add(d)
-	} else {
-		return fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
-	}
-
-	credential := graphrbac.PasswordCredential{
-		KeyID:   p.String(keyId),
-		Value:   p.String(value),
-		EndDate: &date.Time{Time: endDate},
-	}
-
-	if v, ok := d.GetOk("start_date"); ok {
-		// errors will be handled by the validation
-		startDate, _ := time.Parse(time.RFC3339, v.(string))
-		credential.StartDate = &date.Time{Time: startDate}
-	}
-
-	azureADLockByName(objectId, servicePrincipalResourceName)
-	defer azureADUnlockByName(objectId, servicePrincipalResourceName)
-
-	existingCredentials, err := client.ListPasswordCredentials(ctx, objectId)
+	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal %q: %+v", objectId, err)
+		return fmt.Errorf("Error generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
+	}
+	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
+
+	azureADLockByName(servicePrincipalResourceName, id.ObjectId)
+	defer azureADUnlockByName(servicePrincipalResourceName, id.ObjectId)
+
+	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
+	if err != nil {
+		return fmt.Errorf("Error Listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
 	}
 
-	id := fmt.Sprintf("%s/%s", objectId, keyId)
-	updatedCredentials := make([]graphrbac.PasswordCredential, 0)
-	if existingCredentials.Value != nil {
-		if requireResourcesToBeImported {
-			for _, v := range *existingCredentials.Value {
-				if v.KeyID == nil {
-					continue
-				}
-
-				if *v.KeyID == keyId {
-					return tf.ImportAsExistsError("azuread_service_principal_password", id)
-				}
-			}
-		}
-
-		updatedCredentials = *existingCredentials.Value
-	}
-	updatedCredentials = append(updatedCredentials, credential)
-
-	parameters := graphrbac.PasswordCredentialsUpdateParameters{
-		Value: &updatedCredentials,
+	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred, requireResourcesToBeImported)
+	if err != nil {
+		return tf.ImportAsExistsError("azuread_service_principal_password", id.String())
 	}
 
-	if _, err = client.UpdatePasswordCredentials(ctx, objectId, parameters); err != nil {
-		return fmt.Errorf("Error creating Password Credential %q for Service Principal %q: %+v", keyId, objectId, err)
+	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
+		return fmt.Errorf("Error creating Password Credential %q for Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
-	d.SetId(id)
+	d.SetId(id.String())
 
 	return resourceServicePrincipalPasswordRead(d, meta)
 }
@@ -167,52 +64,38 @@ func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface
 	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/")
-	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {objectId}/{keyId} - but got %q", d.Id())
+	id, err := graph.ParsePasswordCredentialId(d.Id())
+	if err != nil {
+		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
 
-	objectId := id[0]
-	keyId := id[1]
-
 	// ensure the parent Service Principal exists
-	servicePrincipal, err := client.Get(ctx, objectId)
+	servicePrincipal, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		// the parent Service Principal has been removed - skip it
 		if ar.ResponseWasNotFound(servicePrincipal.Response) {
-			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
+			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", objectId, err)
+		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", id.ObjectId, err)
 	}
 
-	credentials, err := client.ListPasswordCredentials(ctx, objectId)
+	credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", objectId, err)
+		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
 	}
 
-	var credential *graphrbac.PasswordCredential
-	for _, c := range *credentials.Value {
-		if c.KeyID == nil {
-			continue
-		}
-
-		if *c.KeyID == keyId {
-			credential = &c
-			break
-		}
-	}
-
+	credential := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
 	if credential == nil {
-		log.Printf("[DEBUG] Service Principal Password %q (Object ID %q) was not found - removing from state!", keyId, objectId)
+		log.Printf("[DEBUG] Service Principal %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
 		return nil
 	}
 
 	// value is available in the SDK but isn't returned from the API
 	d.Set("key_id", credential.KeyID)
-	d.Set("service_principal_id", objectId)
+	d.Set("service_principal_id", id.ObjectId)
 
 	if endDate := credential.EndDate; endDate != nil {
 		d.Set("end_date", endDate.Format(time.RFC3339))
@@ -229,50 +112,33 @@ func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interfa
 	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/")
-	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {objectId}/{keyId} - but got %q", d.Id())
+	id, err := graph.ParsePasswordCredentialId(d.Id())
+	if err != nil {
+		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
 
-	objectId := id[0]
-	keyId := id[1]
-
-	azureADLockByName(objectId, servicePrincipalResourceName)
-	defer azureADUnlockByName(objectId, servicePrincipalResourceName)
+	azureADLockByName(servicePrincipalResourceName, id.ObjectId)
+	defer azureADUnlockByName(servicePrincipalResourceName, id.ObjectId)
 
 	// ensure the parent Service Principal exists
-	servicePrincipal, err := client.Get(ctx, objectId)
+	servicePrincipal, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		// the parent Service Principal was removed - skip it
 		if ar.ResponseWasNotFound(servicePrincipal.Response) {
+			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-
-		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", objectId, err)
+		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", id.ObjectId, err)
 	}
 
-	existing, err := client.ListPasswordCredentials(ctx, objectId)
+	existing, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", objectId, err)
+		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
 	}
 
-	updatedCredentials := make([]graphrbac.PasswordCredential, 0)
-	for _, credential := range *existing.Value {
-		if credential.KeyID == nil {
-			continue
-		}
-
-		if *credential.KeyID != keyId {
-			updatedCredentials = append(updatedCredentials, credential)
-		}
-	}
-
-	parameters := graphrbac.PasswordCredentialsUpdateParameters{
-		Value: &updatedCredentials,
-	}
-	_, err = client.UpdatePasswordCredentials(ctx, objectId, parameters)
-	if err != nil {
-		return fmt.Errorf("Error removing Password %q from Service Principal %q: %+v", keyId, objectId, err)
+	newCreds := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
+	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
+		return fmt.Errorf("Error removing Password %q from Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
 	return nil

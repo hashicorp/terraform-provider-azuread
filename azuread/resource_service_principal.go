@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-var servicePrincipalResourceName = "azuread_service_principal"
+const servicePrincipalResourceName = "azuread_service_principal"
 
 func resourceServicePrincipal() *schema.Resource {
 	return &schema.Resource{
@@ -66,7 +66,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		AccountEnabled: p.Bool(true),
 	}
 	if v, ok := d.GetOk("tags"); ok {
-		properties.Tags = tf.ExpandStringArrayPtr(v.(*schema.Set).List())
+		properties.Tags = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 	}
 
 	sp, err := client.Create(ctx, properties)
@@ -114,7 +114,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 	// tags doesn't exist as a property, so extract it
 	if iTags, ok := app.AdditionalProperties["tags"]; ok {
 		if tags, ok := iTags.([]interface{}); ok {
-			if err := d.Set("tags", tf.ExpandStringArrayPtr(tags)); err != nil {
+			if err := d.Set("tags", tf.ExpandStringSlicePtr(tags)); err != nil {
 				return fmt.Errorf("Error setting `tags`: %+v", err)
 			}
 		}

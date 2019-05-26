@@ -13,6 +13,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
+const resourceApplicationName = "azuread_application"
+
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceApplicationCreate,
@@ -192,8 +194,8 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	properties := graphrbac.ApplicationCreateParameters{
 		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
-		IdentifierUris:          tf.ExpandStringArrayPtr(identUrls.([]interface{})),
-		ReplyUrls:               tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List()),
+		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
+		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 	}
@@ -265,11 +267,11 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("identifier_uris") {
-		properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
+		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
 	}
 
 	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringArrayPtr(d.Get("reply_urls").(*schema.Set).List())
+		properties.ReplyUrls = tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	if d.HasChange("available_to_other_tenants") {
@@ -300,7 +302,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		switch appType := d.Get("type"); appType {
 		case "webapp/api":
 			properties.AdditionalProperties["publicClient"] = false
-			properties.IdentifierUris = tf.ExpandStringArrayPtr(d.Get("identifier_uris").([]interface{}))
+			properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
 		case "native":
 			properties.AdditionalProperties["publicClient"] = true
 			properties.IdentifierUris = &[]string{}
@@ -349,11 +351,11 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("type", "webapp/api")
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringArrayPtr(resp.ReplyUrls)); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(resp.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 
