@@ -38,8 +38,8 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	}
 	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
 
-	azureADLockByName(id.ObjectId, servicePrincipalResourceName)
-	defer azureADUnlockByName(id.ObjectId, servicePrincipalResourceName)
+	azureADLockByName(servicePrincipalResourceName, id.ObjectId)
+	defer azureADUnlockByName(servicePrincipalResourceName, id.ObjectId)
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
@@ -117,8 +117,8 @@ func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
 
-	azureADLockByName(id.ObjectId, servicePrincipalResourceName)
-	defer azureADUnlockByName(id.ObjectId, servicePrincipalResourceName)
+	azureADLockByName(servicePrincipalResourceName, id.ObjectId)
+	defer azureADUnlockByName(servicePrincipalResourceName, id.ObjectId)
 
 	// ensure the parent Service Principal exists
 	servicePrincipal, err := client.Get(ctx, id.ObjectId)

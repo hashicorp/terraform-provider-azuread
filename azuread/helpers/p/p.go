@@ -1,7 +1,6 @@
-package p //or maybe ptr?
+package p // or maybe ptr?
 
-//helper functions to convert to a pointer
-
+// helper functions to convert to a pointer
 func Bool(input bool) *bool {
 	return &input
 }

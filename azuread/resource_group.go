@@ -5,10 +5,10 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/guid"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 )
 
@@ -41,7 +41,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:     &name,
 		MailEnabled:     p.Bool(false),                 //we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
-		MailNickname:    p.String(guid.New().String()), //this matches the portal behavior
+		MailNickname:    p.String(uuid.New().String()), //this matches the portal behavior
 		SecurityEnabled: p.Bool(true),                  //we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
 	}
 
