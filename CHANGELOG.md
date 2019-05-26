@@ -1,5 +1,10 @@
 ## 0.4.0 (Unreleased)
 
+
+FEATURES:
+
+* **New Resource:** `azuread_application_password` [GH-71]
+
 IMPROVEMENTS:
 
 * dependencies: upgrading to `v0.12.0` of `github.com/hashicorp/terraform` [GH-82]
