@@ -351,7 +351,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("type", "webapp/api")
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringArrayPtr(resp.IdentifierUris)); err != nil {
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 

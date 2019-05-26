@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-// valid types are `application` and `service_pricipal`
+// valid types are `application` and `service_principal`
 func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		object_type + "_id": {
