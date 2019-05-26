@@ -24,7 +24,7 @@ func testCheckADApplicationPasswordExists(name string) resource.TestCheckFunc { 
 
 		id, err := graph.ParsePasswordCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error Application Password Credential ID: %v", err)
+			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
 		}
 		resp, err := client.Get(ctx, id.ObjectId)
 		if err != nil {
@@ -48,6 +48,35 @@ func testCheckADApplicationPasswordExists(name string) resource.TestCheckFunc { 
 	}
 }
 
+func testCheckADApplicationPasswordCheckDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		client := testAccProvider.Meta().(*ArmClient).applicationsClient
+		ctx := testAccProvider.Meta().(*ArmClient).StopContext
+
+		if rs.Type != "azuread_application_password" {
+			continue
+		}
+
+		id, err := graph.ParsePasswordCredentialId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
+		}
+
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if ar.ResponseWasNotFound(resp.Response) {
+				return nil
+			}
+
+			return err
+		}
+
+		return fmt.Errorf("Azure AD Application Password Credential still exists:\n%#v", resp)
+	}
+
+	return nil
+}
+
 func TestAccAzureADApplicationPassword_basic(t *testing.T) {
 	resourceName := "azuread_application_password.test"
 	applicationId := uuid.New().String()
@@ -56,7 +85,7 @@ func TestAccAzureADApplicationPassword_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADObjectPasswordApplication_basic(applicationId, value),
@@ -85,7 +114,7 @@ func TestAccAzureADApplicationPassword_requiresImport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADObjectPasswordApplication_basic(applicationId, value),
@@ -110,7 +139,7 @@ func TestAccAzureADApplicationPassword_customKeyId(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADApplicationPassword_customKeyId(applicationId, keyId, value),
@@ -133,7 +162,7 @@ func TestAccAzureADApplicationPassword_relativeEndDate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADApplicationPassword_relativeEndDate(applicationId, value),
@@ -149,7 +178,6 @@ func TestAccAzureADApplicationPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
-// Application templates
 func testAccADApplicationPassword_template(applicationId string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
