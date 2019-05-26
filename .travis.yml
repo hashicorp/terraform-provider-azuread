@@ -1,10 +1,19 @@
 dist: trusty
 sudo: required
 services:
-- docker
+  - docker
 language: go
 go:
-- "1.11.x"
+  - "1.12.x"
+
+branches:
+  only:
+    - master
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: tip
 
 install:
 # This script is used by the Travis build to install a cookie for
@@ -14,15 +23,13 @@ install:
 - bash scripts/gogetcookie.sh
 - make tools
 
-script:
-- make test
-- make lint
-- make website-test
+env:
+  matrix:
+    - MODE=unit-tests
+    - MODE=linters
+    - MODE=website
 
-branches:
-  only:
-  - master
-matrix:
-  fast_finish: true
-  allow_failures:
-  - go: tip
+script:
+  - if [[ $MODE == 'unit-tests' ]]; then make test; fi
+  - if [[ $MODE == 'linters' ]]; then make lint; fi
+  - if [[ $MODE == 'website' ]]; then make website-test; fi
