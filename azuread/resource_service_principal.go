@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-var servicePrincipalResourceName = "azuread_service_principal"
+const servicePrincipalResourceName = "azuread_service_principal"
 
 func resourceServicePrincipal() *schema.Resource {
 	return &schema.Resource{

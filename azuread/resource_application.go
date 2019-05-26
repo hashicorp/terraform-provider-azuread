@@ -13,7 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-var resourceApplicationName = "azuread_application"
+const resourceApplicationName = "azuread_application"
 
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{

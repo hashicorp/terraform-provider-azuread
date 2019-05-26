@@ -38,12 +38,12 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	}
 	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
 
-	azureADLockByName(objectId, resourceApplicationName)
-	defer azureADUnlockByName(objectId, resourceApplicationName)
+	azureADLockByName(id.ObjectId, resourceApplicationName)
+	defer azureADUnlockByName(id.ObjectId, resourceApplicationName)
 
-	existingCreds, err := client.ListPasswordCredentials(ctx, objectId)
+	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Application Credentials for Object ID %q: %+v", objectId, err)
+		return fmt.Errorf("Error Listing Application Credentials for Object ID %q: %+v", id.ObjectId, err)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred, requireResourcesToBeImported)
@@ -51,8 +51,8 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 		return tf.ImportAsExistsError("azuread_application_password", id.String())
 	}
 
-	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("Error creating Application Credentials %q for Object ID %q: %+v", *cred.KeyID, objectId, err)
+	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
+		return fmt.Errorf("Error creating Application Credentials %q for Object ID %q: %+v", *cred.KeyID, id.ObjectId, err)
 	}
 
 	d.SetId(id.String())
@@ -126,7 +126,6 @@ func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{})
 		// the parent Service Principal has been removed - skip it
 		if ar.ResponseWasNotFound(app.Response) {
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
-			d.SetId("")
 			return nil
 		}
 		return fmt.Errorf("Error retrieving Application ID %q: %+v", id.ObjectId, err)
