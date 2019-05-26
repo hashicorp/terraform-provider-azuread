@@ -1,22 +1,22 @@
 ---
 layout: "azuread"
-page_title: "Azure Active Directory: azuread_object_password"
-sidebar_current: "docs-azuread-resource-azuread-object-password"
+page_title: "Azure Active Directory: azuread_application_password"
+sidebar_current: "docs-azuread-resource-azuread-application-password"
 description: |-
-  Manages a Password associated with an Application or Service Principal within Azure Active Directory.
+  Manages a Password associated with an Application within Azure Active Directory.
 
 ---
 
 # azuread_application_password
 
-Manages a Password associated with an Application or Service Principal within Azure Active Directory.
+Manages a Password associated with an Application within Azure Active Directory.
 
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API.
 
 ## Example Usage
 
 ```hcl
-resource "azuread_application" "test" {
+resource "azuread_application" "example" {
   name                       = "example"
   homepage                   = "http://homepage"
   identifier_uris            = ["http://uri"]
@@ -25,12 +25,8 @@ resource "azuread_application" "test" {
   oauth2_allow_implicit_flow = true
 }
 
-resource "azuread_service_principal" "test" {
-  application_id = "${azuread_application.test.application_id}"
-}
-
-resource "azuread_application_password" "test" {
-  object_id             = "${azuread_application.test.id}"
+resource "azuread_application_password" "example" {
+  object_id             = "${azuread_application.example.id}"
   value                 = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
   end_date              = "2020-01-01T01:02:03Z"
 }
@@ -40,9 +36,9 @@ resource "azuread_application_password" "test" {
 
 The following arguments are supported:
 
-* `object_id` - (Required) The Object ID of the Application or Service Principal for which this password should be created. Changing this field forces a new resource to be created.
+* `object_id` - (Required) The Object ID of the Application for which this password should be created. Changing this field forces a new resource to be created.
 
-* `value` - (Required) The Password for this Application or Service Principal.
+* `value` - (Required) The Password for this Application .
 
 * `end_date` - (Optional) The End Date which the Password is valid until, formatted as a RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
 
@@ -63,10 +59,10 @@ The following attributes are exported:
 
 ## Import
 
-Passwords can be imported using the `object id` of an Application or Service Principal, e.g.
+Passwords can be imported using the `object id` of an Application, e.g.
 
 ```shell
-terraform import azuread_object_password.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
+terraform import azuread_application_password.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's or Service Principal's Object ID and the Password's Key ID in the format `{ObjectId}/{PasswordKeyId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the Password's Key ID in the format `{ObjectId}/{PasswordKeyId}`.
