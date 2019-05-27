@@ -3,7 +3,9 @@ package azuread
 import (
 	"fmt"
 	"log"
+	`time`
 
+	`github.com/hashicorp/terraform/helper/resource`
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -73,21 +75,21 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error creating Service Principal for application  %q: %+v", applicationId, err)
 	}
-
 	if sp.ObjectID == nil {
-		return fmt.Errorf("Create returned a nil object id for application %q", applicationId)
+		return fmt.Errorf("Service Principal	objectID is nil")
 	}
-	objectId := *sp.ObjectID
+	d.SetId(*sp.ObjectID)
 
-	resp, err := client.Get(ctx, objectId)
-	if err != nil {
-		return fmt.Errorf("Error retrieving Service Principal with ID %q: %+v", objectId, err)
-	}
+	// mimicking the behaviour of az tool retry until a successful get
+	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+		if _, err := client.Get(ctx, *sp.ObjectID); err != nil {
+			return resource.RetryableError(err)
+		}
 
-	if resp.ObjectID == nil {
-		return fmt.Errorf("Get returned a nil object ID for %q", objectId)
+		return nil
+	}); err != nil {
+		return fmt.Errorf("Error waiting for Application %q to become available: %+v", name, err)
 	}
-	d.SetId(*resp.ObjectID)
 
 	return resourceServicePrincipalRead(d, meta)
 }
