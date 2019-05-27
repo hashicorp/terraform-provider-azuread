@@ -88,7 +88,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	}); err != nil {
-		return fmt.Errorf("Error waiting for Application %q to become available: %+v", name, err)
+		return fmt.Errorf("Error waiting for Service Principal %q to become available: %+v", applicationId, err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)
