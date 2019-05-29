@@ -5,7 +5,7 @@ FEATURES:
 
 * **New Resource:** `azuread_application_password` [GH-71]
 
-IMPROVEMENTS:
+IMPROVEMENTS:Application & Service Principal Creation should now wait on replication #86
 
 * dependencies: upgrading to `v0.12.0` of `github.com/hashicorp/terraform` [GH-82]
 * Data Source `azuread_application` - now exports the `group_membership_claims` property [GH-78]
@@ -13,6 +13,8 @@ IMPROVEMENTS:
 * `azuread_application` - support for the `group_membership_claims` property [GH-78]
 * `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
 * `azuread_application` - support for the `type` property enabling the creation of `native` applications [GH-74]
+* `azuread_application` - will now wait for replication by waiting for a successful get [GH-86]
+* `azuread_service_principal` - will now wait for replication by waiting for a successful get [GH-86]
 * `azuread_user` - increase the maximum allowed lengh of `password` to 256 [GH-81]
 
 ## 0.3.1 (April 18, 2019)
