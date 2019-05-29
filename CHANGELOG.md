@@ -5,7 +5,7 @@ FEATURES:
 
 * **New Resource:** `azuread_application_password` [GH-71]
 
-IMPROVEMENTS:Application & Service Principal Creation should now wait on replication #86
+IMPROVEMENTS:
 
 * dependencies: upgrading to `v0.12.0` of `github.com/hashicorp/terraform` [GH-82]
 * Data Source `azuread_application` - now exports the `group_membership_claims` property [GH-78]
