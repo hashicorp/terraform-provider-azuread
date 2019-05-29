@@ -3,9 +3,11 @@ package azuread
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
@@ -17,6 +19,7 @@ func resourceGroup() *schema.Resource {
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
 		Delete: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,10 +50,23 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := client.Create(ctx, properties)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error retrieving Group (%q): %+v", name, err)
 	}
-
+	if group.ObjectID == nil {
+		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
+	}
 	d.SetId(*group.ObjectID)
+
+	// mimicking the behaviour of az tool retry until a successful get
+	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+		if _, err := client.Get(ctx, *group.ObjectID); err != nil {
+			return resource.RetryableError(err)
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("Error waiting for Group %q to become available: %+v", name, err)
+	}
 
 	return resourceGroupRead(d, meta)
 }
@@ -71,7 +87,6 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.DisplayName)
-
 	return nil
 }
 
