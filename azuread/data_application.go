@@ -3,12 +3,12 @@ package azuread
 import (
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/terraform/helper/schema"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
-	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dataApplication() *schema.Resource {
@@ -168,7 +168,6 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	var app graphrbac.Application
 
 	if oId, ok := d.GetOk("object_id"); ok {
-
 		// use the object_id to find the Azure AD application
 		objectId := oId.(string)
 		resp, err := client.Get(ctx, objectId)
@@ -182,7 +181,6 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 		app = resp
 	} else {
-
 		// use the name to find the Azure AD application
 		name := d.Get("name").(string)
 		filter := fmt.Sprintf("displayName eq '%s'", name)

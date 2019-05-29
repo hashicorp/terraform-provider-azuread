@@ -108,7 +108,6 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Error retrieving User (%q) with ObjectID %q: %+v", userPrincipalName, *objectId, err)
 	}
-
 	if resp.ObjectID == nil {
 		return fmt.Errorf("User objectId is nil")
 	}

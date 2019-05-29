@@ -3,8 +3,10 @@ package azuread
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
@@ -222,9 +224,20 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	if app.ObjectID == nil {
 		return fmt.Errorf("Application objectId is nil")
+	}
+	d.SetId(*app.ObjectID)
+
+	// mimicking the behaviour of az tool retry until a successful get
+	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+		if _, err := client.Get(ctx, *app.ObjectID); err != nil {
+			return resource.RetryableError(err)
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("Error waiting for Application %q to become available: %+v", name, err)
 	}
 
 	// follow suggested hack for azure-cli
@@ -243,8 +256,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-
-	d.SetId(*app.ObjectID)
 
 	return resourceApplicationRead(d, meta)
 }
