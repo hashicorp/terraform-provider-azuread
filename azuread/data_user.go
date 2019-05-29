@@ -2,7 +2,6 @@ package azuread
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -18,10 +17,20 @@ func dataSourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"object_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validate.UUID,
+				ConflictsWith: []string{"user_principal_name"},
+			},
+
 			"user_principal_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ValidateFunc:  validate.NoEmptyStrings,
+				ConflictsWith: []string{"object_id"},
 			},
 
 			"account_enabled": {
@@ -53,22 +62,55 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var user graphrbac.User
 
-	queryString := d.Get("user_principal_name").(string)
+	if oId, ok := d.GetOk("user_principal_name"); ok {
+		// use the object_id to find the Azure AD application
+		resp, err := client.Get(ctx, oId.(string))
+		if err != nil {
+			if ar.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Error: AzureAD User with ID %q was not found", oId.(string))
+			}
 
-	log.Printf("[DEBUG] Using Get with the following query string: %q", queryString)
-	user, err := client.Get(ctx, queryString)
-	if err != nil {
-		if ar.ResponseWasNotFound(user.Response) {
-			return fmt.Errorf("Error: No AzureAD User found with the following query string: %q", queryString)
+			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", oId.(string), err)
 		}
-		return fmt.Errorf("Error making Read request on AzureAD User the following query string: %q: %+v", queryString, err)
+
+		user = resp
+	} else if name, ok := d.Get("object_id").(string); ok {
+		filter := fmt.Sprintf("objectId eq '%s'", name)
+
+		resp, err := client.ListComplete(ctx, filter)
+		if err != nil {
+			return fmt.Errorf("Error listing Azure AD Users for filter %q: %+v", filter, err)
+		}
+
+		values := resp.Response().Value
+		if values == nil {
+			return fmt.Errorf("nil values for AD Users matching %q", filter)
+		}
+		if len(*values) == 0 {
+			return fmt.Errorf("Found no AD Users matching %q", filter)
+		}
+		if len(*values) > 2 {
+			return fmt.Errorf("Found multiple AD Users matching %q", filter)
+		}
+
+		user = (*values)[0]
+		if user.DisplayName == nil {
+			return fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
+		}
+		if *user.DisplayName != name {
+			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, name)
+		}
+	} else {
+		return fmt.Errorf("one of `object_id` or `user_principal_name` must be supplied")
 	}
 
 	if user.ObjectID == nil {
-		return fmt.Errorf("User objectId is nil")
+		return fmt.Errorf("Group objectId is nil")
 	}
+	d.SetId(*user.ObjectID)
 
 	d.SetId(*user.ObjectID)
+	d.Set("object_id", user.ObjectID)
 	d.Set("user_principal_name", user.UserPrincipalName)
 	d.Set("account_enabled", user.AccountEnabled)
 	d.Set("display_name", user.DisplayName)

@@ -74,7 +74,7 @@ func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error listing Azure AD Domains: %+v", err)
 	}
 
-	d.SetId("domains-" + tenantId)
+	d.SetId("domains-" + tenantId) // todo this should be more unique
 
 	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
