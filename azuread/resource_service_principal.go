@@ -3,9 +3,9 @@ package azuread
 import (
 	"fmt"
 	"log"
-	`time`
+	"time"
 
-	`github.com/hashicorp/terraform/helper/resource`
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
