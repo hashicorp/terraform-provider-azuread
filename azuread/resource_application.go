@@ -55,8 +55,7 @@ func resourceApplication() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.URLIsHTTPOrHTTPS,
+					Type: schema.TypeString,
 				},
 			},
 
