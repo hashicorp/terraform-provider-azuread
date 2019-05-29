@@ -44,7 +44,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The Object ID for the Service Principal.
+* `id` - The Object ID (internal ID) for the Service Principal.
+
+* `application_id` - The Application ID (appId) for the Service Principal.
 
 * `display_name` - The Display Name of the Azure Active Directory Application associated with this Service Principal.
 
