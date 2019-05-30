@@ -218,9 +218,7 @@ func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "type", "native"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					// I didn't understand the reason reply_urls.3714513888 was used in TestAccAzureADApplication_update
-					// and that reply_urls.0 does not work either, explanation would be much appreciated
-					// resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "urn:ietf:wg:oauth:2.0:oob"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 				),
 			},
@@ -448,8 +446,8 @@ func testAccADApplication_nativeReplyUrls(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name       = "acctest%s"
-	type       = "native"
-	reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
+  type       = "native"
+  reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
 }
 `, id)
 }
