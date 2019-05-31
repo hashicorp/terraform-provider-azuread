@@ -5,11 +5,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
 func TestAccAzureADApplication_basic(t *testing.T) {
@@ -191,6 +190,35 @@ func TestAccAzureADApplication_native(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
 					resource.TestCheckResourceAttr(resourceName, "type", "native"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_nativeReplyUrls(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "type", "native"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 				),
 			},
@@ -410,6 +438,16 @@ func testAccADApplication_native(id string) string {
 resource "azuread_application" "test" {
   name = "acctest%s"
   type = "native"
+}
+`, id)
+}
+
+func testAccADApplication_nativeReplyUrls(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name       = "acctest%s"
+  type       = "native"
+  reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
 }
 `, id)
 }
