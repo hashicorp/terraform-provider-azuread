@@ -229,16 +229,27 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	// mimicking the behaviour of az tool retry until a successful get
-	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		if _, err := client.Get(ctx, *app.ObjectID); err != nil {
-			return resource.RetryableError(err)
-		}
+	//todo graph.WaitForReplication
+	i, err := resource.StateChangeConf{
+		Pending:    []string{"Error"},
+		Target:     []string{"Found"},
+		Timeout:    3 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		ContinuousTargetOccurence: 10,
+		Refresh: func() (interface{}, string, error) {
 
-		return nil
-	}); err != nil {
-		return fmt.Errorf("Error waiting for Application %q to become available: %+v", name, err)
+			resp, err2 := client.Get(ctx, *app.ObjectID)
+			if err2 != nil {
+				return resp, "Error", fmt.Errorf("Error getting application: %+v", err2)
+			}
+
+			return resp, "Found", nil
+		},
+	}.WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for application: %+v", err)
 	}
+	app = i.(graphrbac.Application)
 
 	// follow suggested hack for azure-cli
 	// AAD graph doesn't have the API to create a native app, aka public client, the recommended hack is
