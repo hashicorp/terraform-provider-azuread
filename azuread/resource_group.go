@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 )
 
@@ -17,6 +18,7 @@ func resourceGroup() *schema.Resource {
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
 		Delete: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -47,10 +49,19 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := client.Create(ctx, properties)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating Group (%q): %+v", name, err)
 	}
-
+	if group.ObjectID == nil {
+		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
+	}
 	d.SetId(*group.ObjectID)
+
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *group.ObjectID)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Group (%s) with ObjectId %q: %+v", name, *group.ObjectID, err)
+	}
 
 	return resourceGroupRead(d, meta)
 }
@@ -71,7 +82,6 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.DisplayName)
-
 	return nil
 }
 

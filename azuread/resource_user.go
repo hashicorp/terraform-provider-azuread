@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -19,6 +20,7 @@ func resourceUser() *schema.Resource {
 		Read:   resourceUserRead,
 		Update: resourceUserUpdate,
 		Delete: resourceUserDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -74,7 +76,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).usersClient
 	ctx := meta.(*ArmClient).StopContext
 
-	userPrincipalName := d.Get("user_principal_name").(string)
+	upn := d.Get("user_principal_name").(string)
 	displayName := d.Get("display_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
 	accountEnabled := d.Get("account_enabled").(bool)
@@ -83,7 +85,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	//default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
-		mailNickName = strings.Split(userPrincipalName, "@")[0]
+		mailNickName = strings.Split(upn, "@")[0]
 	}
 
 	userCreateParameters := graphrbac.UserCreateParameters{
@@ -94,25 +96,24 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 			ForceChangePasswordNextLogin: &forcePasswordChange,
 			Password:                     &password,
 		},
-		UserPrincipalName: &userPrincipalName,
+		UserPrincipalName: &upn,
 	}
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return fmt.Errorf("Error creating User %q: %+v", userPrincipalName, err)
+		return fmt.Errorf("Error creating User (%q): %+v", upn, err)
 	}
+	if user.ObjectID == nil {
+		return fmt.Errorf("nil User ID for %q: %+v", upn, err)
+	}
+	d.SetId(*user.ObjectID)
 
-	objectId := user.ObjectID
-
-	resp, err := client.Get(ctx, *objectId)
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *user.ObjectID)
+	})
 	if err != nil {
-		return fmt.Errorf("Error retrieving User (%q) with ObjectID %q: %+v", userPrincipalName, *objectId, err)
+		return fmt.Errorf("Error waiting for User (%s) with ObjectId %q: %+v", upn, *user.ObjectID, err)
 	}
-	if resp.ObjectID == nil {
-		return fmt.Errorf("User objectId is nil")
-	}
-
-	d.SetId(*resp.ObjectID)
 
 	return resourceUserRead(d, meta)
 }
@@ -138,7 +139,6 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("account_enabled", user.AccountEnabled)
-
 	return nil
 }
 

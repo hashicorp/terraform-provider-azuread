@@ -3,13 +3,13 @@ package azuread
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform/helper/resource"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -229,28 +229,12 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	i, err := (&resource.StateChangeConf{
-		Pending:                   []string{"404"},
-		Target:                    []string{"Found"},
-		Timeout:                   azureAdReplicationTimeout,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: azureAdReplicationTargetOccurence,
-		Refresh: func() (interface{}, string, error) {
-			resp, err2 := client.Get(ctx, *app.ObjectID)
-			if err2 != nil {
-				if ar.ResponseWasNotFound(resp.Response) {
-					return resp, "404", nil
-				}
-				return resp, "Error", fmt.Errorf("Error retrieving Application ID %q: %+v", *app.ObjectID, err2)
-			}
-
-			return resp, "Found", nil
-		},
-	}).WaitForState()
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *app.ObjectID)
+	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for application: %+v", err)
+		return fmt.Errorf("Error waiting for Application with ObjectId %q: %+v", *app.ObjectID, err)
 	}
-	app = i.(graphrbac.Application)
 
 	// follow suggested hack for azure-cli
 	// AAD graph doesn't have the API to create a native app, aka public client, the recommended hack is
