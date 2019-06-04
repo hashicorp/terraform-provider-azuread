@@ -85,7 +85,6 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error waiting for Service Pricipal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
-	sp = i.(graphrbac.ServicePrincipal)
 
 	return resourceServicePrincipalRead(d, meta)
 }
