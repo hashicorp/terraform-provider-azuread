@@ -13,7 +13,7 @@ import (
 // armMutexKV is the instance of MutexKV for ARM resources
 var armMutexKV = mutexkv.NewMutexKV()
 
-const azureAdReplicationTimeout = 1 * time.Minute
+const azureAdReplicationTimeout = 5 * time.Minute
 const azureAdReplicationTargetOccurence = 10
 
 // Provider returns a terraform.ResourceProvider.
