@@ -167,15 +167,15 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	var app graphrbac.Application
 
-	if oId, ok := d.GetOk("object_id"); ok {
+	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, oId.(string))
+		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", oId.(string))
+				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", oId.(string), err)
+			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", oId, err)
 		}
 
 		app = resp
