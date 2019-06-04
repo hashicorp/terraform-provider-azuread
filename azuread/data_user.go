@@ -62,20 +62,20 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var user graphrbac.User
 
-	if oId, ok := d.GetOk("user_principal_name"); ok {
+	if upn, ok := d.GetOk("user_principal_name"); ok {
 		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, oId.(string))
+		resp, err := client.Get(ctx, upn.(string))
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD User with ID %q was not found", oId.(string))
+				return fmt.Errorf("Error: AzureAD User with ID %q was not found", upn.(string))
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", oId.(string), err)
+			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", upn.(string), err)
 		}
 
 		user = resp
-	} else if name, ok := d.Get("object_id").(string); ok {
-		filter := fmt.Sprintf("objectId eq '%s'", name)
+	} else if oId, ok := d.Get("object_id").(string); ok {
+		filter := fmt.Sprintf("objectId eq '%s'", oId)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
@@ -97,8 +97,8 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		if user.DisplayName == nil {
 			return fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
 		}
-		if *user.DisplayName != name {
-			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, name)
+		if *user.DisplayName != oId {
+			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, oId)
 		}
 	} else {
 		return fmt.Errorf("one of `object_id` or `user_principal_name` must be supplied")
