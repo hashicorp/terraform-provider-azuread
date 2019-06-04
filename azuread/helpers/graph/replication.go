@@ -11,7 +11,7 @@ import (
 
 func WaitForReplication(f func() (interface{}, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
-		Pending:                   []string{"404"},
+		Pending:                   []string{"404", "BadCast"},
 		Target:                    []string{"Found"},
 		Timeout:                   5 * time.Minute,
 		MinTimeout:                1 * time.Second,
@@ -21,7 +21,7 @@ func WaitForReplication(f func() (interface{}, error)) (interface{}, error) {
 			if err != nil {
 				r, ok := i.(autorest.Response)
 				if !ok {
-					return i, "Error", fmt.Errorf("Unable to cast to response: %v", i)
+					return i, "BadCast", nil // sometimes the SDK bubbles up an entirely empty object
 				}
 				if ar.ResponseWasNotFound(r) {
 					return i, "404", nil
