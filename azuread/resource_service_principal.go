@@ -81,15 +81,26 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(*sp.ObjectID)
 
 	// mimicking the behaviour of az tool retry until a successful get
-	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		if _, err := client.Get(ctx, *sp.ObjectID); err != nil {
-			return resource.RetryableError(err)
-		}
+	i, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Error"},
+		Target:                    []string{"Found"},
+		Timeout:                   3 * time.Minute,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 10,
+		Refresh: func() (interface{}, string, error) {
 
-		return nil
-	}); err != nil {
-		return fmt.Errorf("Error waiting for Service Principal %q to become available: %+v", applicationId, err)
+			resp, err2 := client.Get(ctx, *sp.ObjectID)
+			if err2 != nil {
+				return resp, "Error", fmt.Errorf("Error getting application: %+v", err2)
+			}
+
+			return resp, "Found", nil
+		},
+	}).WaitForState()
+	if err != nil {
+		return fmt.Errorf("Error waiting for application: %+v", err)
 	}
+	sp = i.(graphrbac.ServicePrincipal)
 
 	return resourceServicePrincipalRead(d, meta)
 }

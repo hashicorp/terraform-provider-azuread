@@ -229,12 +229,12 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	//todo graph.WaitForReplication
-	i, err := resource.StateChangeConf{
-		Pending:    []string{"Error"},
-		Target:     []string{"Found"},
-		Timeout:    3 * time.Minute,
-		MinTimeout: 1 * time.Second,
+	//todo graph.WaitForReplication?
+	i, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Error"},
+		Target:                    []string{"Found"},
+		Timeout:                   3 * time.Minute,
+		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {
 
@@ -245,7 +245,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 			return resp, "Found", nil
 		},
-	}.WaitForState()
+	}).WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for application: %+v", err)
 	}
