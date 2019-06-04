@@ -49,7 +49,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := client.Create(ctx, properties)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Group (%q): %+v", name, err)
+		return fmt.Errorf("Error creating Group (%q): %+v", name, err)
 	}
 	if group.ObjectID == nil {
 		return fmt.Errorf("nil Group ID for %q: %+v", name, err)

@@ -101,7 +101,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return fmt.Errorf("Error retrieving User (%q): %+v", upn, err)
+		return fmt.Errorf("Error creating User (%q): %+v", upn, err)
 	}
 	if user.ObjectID == nil {
 		return fmt.Errorf("nil User ID for %q: %+v", upn, err)
