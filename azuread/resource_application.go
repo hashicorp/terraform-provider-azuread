@@ -229,7 +229,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	//todo graph.WaitForReplication?
 	i, err := (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
@@ -237,7 +236,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: azureAdReplicationTargetOccurence,
 		Refresh: func() (interface{}, string, error) {
-
 			resp, err2 := client.Get(ctx, *app.ObjectID)
 			if err2 != nil {
 				if ar.ResponseWasNotFound(resp.Response) {

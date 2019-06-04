@@ -80,7 +80,6 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	d.SetId(*sp.ObjectID)
 
-	// mimicking the behaviour of az tool retry until a successful get
 	i, err := (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
@@ -88,7 +87,6 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: azureAdReplicationTargetOccurence,
 		Refresh: func() (interface{}, string, error) {
-
 			resp, err2 := client.Get(ctx, *sp.ObjectID)
 			if err2 != nil {
 				if ar.ResponseWasNotFound(resp.Response) {
