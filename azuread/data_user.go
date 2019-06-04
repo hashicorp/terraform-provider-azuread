@@ -98,8 +98,8 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		if user.DisplayName == nil {
 			return fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
 		}
-		if *user.DisplayName != oId {
-			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, oId)
+		if *user.ObjectID != oId {
+			return fmt.Errorf("objectID for AD Users matching %q does is does not match(%q!=%q)", filter, *user.ObjectID, oId)
 		}
 	} else {
 		return fmt.Errorf("one of `object_id` or `user_principal_name` must be supplied")
