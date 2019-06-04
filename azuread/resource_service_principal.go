@@ -91,10 +91,10 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 
 			resp, err2 := client.Get(ctx, *sp.ObjectID)
 			if err2 != nil {
-				if ar.ResponseWasNotFound(sp.Response) {
+				//if ar.ResponseWasNotFound(sp.Response) {
 					return resp, "404", nil
-				}
-				return resp, "Error", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", *sp.ObjectID, err2)
+				//}
+				//return resp, "Error", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", *sp.ObjectID, err2)
 			}
 
 			return resp, "Found", nil
