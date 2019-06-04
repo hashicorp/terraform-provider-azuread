@@ -233,17 +233,17 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	i, err := (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
-		Timeout:                   3 * time.Minute,
+		Timeout:                   azureAdReplicationTimeout,
 		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 10,
+		ContinuousTargetOccurence: azureAdReplicationTargetOccurence,
 		Refresh: func() (interface{}, string, error) {
 
 			resp, err2 := client.Get(ctx, *app.ObjectID)
 			if err2 != nil {
-				//if ar.ResponseWasNotFound(app.Response) {
+				if ar.ResponseWasNotFound(resp.Response) {
 					return resp, "404", nil
-				//}
-				//return resp, "Error", fmt.Errorf("Error retrieving Application ID %q: %+v", *app.ObjectID, err2)
+				}
+				return resp, "Error", fmt.Errorf("Error retrieving Application ID %q: %+v", *app.ObjectID, err2)
 			}
 
 			return resp, "Found", nil

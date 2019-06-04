@@ -84,17 +84,17 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	i, err := (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
-		Timeout:                   3 * time.Minute,
+		Timeout:                   azureAdReplicationTimeout,
 		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 10,
+		ContinuousTargetOccurence: azureAdReplicationTargetOccurence,
 		Refresh: func() (interface{}, string, error) {
 
 			resp, err2 := client.Get(ctx, *sp.ObjectID)
 			if err2 != nil {
-				//if ar.ResponseWasNotFound(sp.Response) {
+				if ar.ResponseWasNotFound(resp.Response) {
 					return resp, "404", nil
-				//}
-				//return resp, "Error", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", *sp.ObjectID, err2)
+				}
+				return resp, "Error", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", *sp.ObjectID, err2)
 			}
 
 			return resp, "Found", nil
