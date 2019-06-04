@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -109,15 +108,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*user.ObjectID)
 
-	// mimicking the behaviour of az tool retry until a successful get
-	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		if _, err := client.Get(ctx, *user.ObjectID); err != nil {
-			return resource.RetryableError(err)
-		}
-
-		return nil
-	}); err != nil {
-		return fmt.Errorf("Error waiting for Group %q to become available: %+v", upn, err)
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *user.ObjectID)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for User (%s) with ObjectId %q: %+v", upn, *user.ObjectID, err)
 	}
 
 	return resourceUserRead(d, meta)
