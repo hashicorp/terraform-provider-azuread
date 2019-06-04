@@ -231,7 +231,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	//todo graph.WaitForReplication?
 	i, err := (&resource.StateChangeConf{
-		Pending:                   []string{"Error"},
+		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
 		Timeout:                   3 * time.Minute,
 		MinTimeout:                1 * time.Second,
