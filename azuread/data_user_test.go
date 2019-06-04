@@ -68,7 +68,7 @@ func testAccAzureADUserDataSource_byObjectId(id, password string) string {
 %s
 
 data "azuread_user" "test" {
-	user_principal_name = "${azuread_user.test.user_principal_name}"
+	object_id = "${azuread_user.test.id}"
 }
 `, testAccADUser_basic(id, password))
 }
