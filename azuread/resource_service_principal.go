@@ -82,7 +82,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 
 	// mimicking the behaviour of az tool retry until a successful get
 	i, err := (&resource.StateChangeConf{
-		Pending:                   []string{"Error"},
+		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
 		Timeout:                   3 * time.Minute,
 		MinTimeout:                1 * time.Second,
@@ -91,7 +91,10 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 
 			resp, err2 := client.Get(ctx, *sp.ObjectID)
 			if err2 != nil {
-				return resp, "Error", fmt.Errorf("Error getting application: %+v", err2)
+				if ar.ResponseWasNotFound(sp.Response) {
+					return resp, "404", nil
+				}
+				return resp, "Error", fmt.Errorf("Error retrieving Service Principal ID %q: %+v", *sp.ObjectID, err2)
 			}
 
 			return resp, "Found", nil
