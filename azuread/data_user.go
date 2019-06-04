@@ -62,19 +62,20 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var user graphrbac.User
 
-	if upn, ok := d.GetOk("user_principal_name"); ok {
+	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
+
 		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, upn.(string))
+		resp, err := client.Get(ctx, upn)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD User with ID %q was not found", upn.(string))
+				return fmt.Errorf("Error: AzureAD User with ID %q was not found", upn)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", upn.(string), err)
+			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", upn, err)
 		}
 
 		user = resp
-	} else if oId, ok := d.Get("object_id").(string); ok {
+	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		filter := fmt.Sprintf("objectId eq '%s'", oId)
 
 		resp, err := client.ListComplete(ctx, filter)

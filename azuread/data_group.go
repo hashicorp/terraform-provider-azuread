@@ -42,19 +42,19 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 
 	var group graphrbac.ADGroup
 
-	if oId, ok := d.GetOk("object_id"); ok {
+	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, oId.(string))
+		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Group with ID %q was not found", oId.(string))
+				return fmt.Errorf("Error: AzureAD Group with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Group with ID %q: %+v", oId.(string), err)
+			return fmt.Errorf("Error making Read request on AzureAD Group with ID %q: %+v", oId, err)
 		}
 
 		group = resp
-	} else if name, ok := d.Get("name").(string); ok {
+	} else if name, ok := d.Get("name").(string); ok && name != "" {
 		filter := fmt.Sprintf("displayName eq '%s'", name)
 
 		resp, err := client.ListComplete(ctx, filter)
