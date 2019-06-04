@@ -2,7 +2,7 @@ package azuread
 
 import (
 	"fmt"
-	`time`
+	"time"
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/terraform/helper/mutexkv"
