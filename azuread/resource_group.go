@@ -1,8 +1,13 @@
 package azuread
 
 import (
+	"context"
 	"fmt"
 	"log"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/slices"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/google/uuid"
@@ -17,6 +22,7 @@ func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGroupCreate,
 		Read:   resourceGroupRead,
+		Update: resourceGroupUpdate,
 		Delete: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -34,6 +40,17 @@ func resourceGroup() *schema.Resource {
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"members": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      schema.HashString,
+				ForceNew: false,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validate.UUID,
+				},
 			},
 		},
 	}
@@ -60,6 +77,17 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
 	}
 	d.SetId(*group.ObjectID)
+
+	// Add members if specified
+	if v, ok := d.GetOk("members"); ok {
+		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+
+		for _, memberUuid := range *members {
+			if err := addMember(*group.ObjectID, memberUuid, client, ctx); err != nil {
+				return err
+			}
+		}
+	}
 
 	_, err = graph.WaitForReplication(func() (interface{}, error) {
 		return client.Get(ctx, *group.ObjectID)
@@ -88,7 +116,48 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("name", resp.DisplayName)
 	d.Set("object_id", resp.ObjectID)
+
+	members, err := fetchAllMembers(d.Id(), client, ctx)
+	if err != nil {
+		return err
+	}
+
+	d.Set("members", members)
+
 	return nil
+}
+
+func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).groupsClient
+	ctx := meta.(*ArmClient).StopContext
+
+	if v, ok := d.GetOk("members"); ok && d.HasChange("members") {
+		existingMembers, err := fetchAllMembers(d.Id(), client, ctx)
+		if err != nil {
+			return err
+		}
+
+		desiredMembers := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		membersForRemoval := slices.Difference(existingMembers, desiredMembers)
+		membersToAdd := slices.Difference(desiredMembers, existingMembers)
+
+		for _, existingMember := range membersForRemoval {
+			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", existingMember, d.Id())
+			if resp, err := client.RemoveMember(ctx, d.Id(), existingMember); err != nil {
+				if !ar.ResponseWasNotFound(resp) {
+					return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", existingMember, d.Id(), err)
+				}
+			}
+		}
+
+		for _, newMember := range membersToAdd {
+			if err := addMember(d.Id(), newMember, client, ctx); err != nil {
+				return err
+			}
+		}
+	}
+
+	return resourceGroupRead(d, meta)
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
@@ -99,6 +168,43 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		if !ar.ResponseWasNotFound(resp) {
 			return fmt.Errorf("Error Deleting Azure AD Group with ID %q: %+v", d.Id(), err)
 		}
+	}
+
+	return nil
+}
+
+func fetchAllMembers(groupId string, client graphrbac.GroupsClient, ctx context.Context) ([]string, error) {
+	it, err := client.GetGroupMembersComplete(ctx, groupId)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error listing existing group members from Azure AD Group with ID %q: %+v", groupId, err)
+	}
+
+	existingMembers := make([]string, 0)
+
+	for it.NotDone() {
+		currUser, _ := it.Value().AsUser()
+		existingMembers = append(existingMembers, *currUser.ObjectID)
+		if err := it.NextWithContext(ctx); err != nil {
+			return nil, fmt.Errorf("Error during pagination of group members from Azure AD Group with ID %q: %+v", groupId, err)
+		}
+	}
+
+	log.Printf("[DEBUG] %d members in Azure AD group with ID: %q", len(existingMembers), groupId)
+
+	return existingMembers, nil
+}
+
+func addMember(groupId string, member string, client graphrbac.GroupsClient, ctx context.Context) error {
+	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
+
+	properties := graphrbac.GroupAddMemberParameters{
+		URL: &memberGraphURL,
+	}
+
+	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
+	if _, err := client.AddMember(ctx, groupId, properties); err != nil {
+		return err
 	}
 
 	return nil
