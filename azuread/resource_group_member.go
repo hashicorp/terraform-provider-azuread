@@ -2,7 +2,6 @@ package azuread
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -51,8 +50,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 		URL: &memberGraphURL,
 	}
 
-	_, err := client.AddMember(ctx, groupID, properties)
-	if err != nil {
+	if _, err := client.AddMember(ctx, groupID, properties); err != nil {
 		return err
 	}
 
@@ -82,7 +80,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	var memberObjectID string
 	for members.NotDone() {
 		// possible members are users, groups or service principals
-		// we try to 'cast' each result as the correspondig type and diff
+		// we try to 'cast' each result as the corresponding type and diff
 		// if we found the object we're looking for
 		user, _ := members.Value().AsUser()
 		if user != nil {
@@ -114,14 +112,12 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		err = members.NextWithContext(ctx)
-		if err != nil {
+		if err = members.NextWithContext(ctx); err != nil {
 			return fmt.Errorf("Error listing Azure AD Group Members: %s", err)
 		}
 	}
 
 	if memberObjectID == "" {
-		log.Printf("[DEBUG] Azure AD Group Member was not found (groupObjectId:%q / memberObjectId:%q ) - removing from state!", groupID, memberID)
 		d.SetId("")
 		return fmt.Errorf("Azure AD Group Member not found - groupObjectId:%q / memberObjectId:%q", groupID, memberID)
 	}
@@ -145,7 +141,6 @@ func resourceGroupMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	memberID := id[1]
 
 	resp, err := client.RemoveMember(ctx, groupID, memberID)
-
 	if err != nil {
 		if !ar.ResponseWasNotFound(resp) {
 			return fmt.Errorf("Error removing Member (memberObjectId: %q) from Azure AD Group (groupObjectId: %q): %+v", memberID, groupID, err)

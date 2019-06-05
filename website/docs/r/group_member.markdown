@@ -33,8 +33,8 @@ resource "azuread_group_member" "test" {
 
 The following arguments are supported:
 
-* `group_object_id` - (Required) The Object ID of the Azure AD Group you want to add the Member to.
-* `member_object_id` - (Required) The Object ID of the Azure AD Object you want to add as a Member to the Group. Supported Object types are Users, Groups or Service Principals.
+* `group_object_id` - (Required) The Object ID of the Azure AD Group you want to add the Member to.  Changing this forces a new resource to be created.
+* `member_object_id` - (Required) The Object ID of the Azure AD Object you want to add as a Member to the Group. Supported Object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 
 -> **NOTE:** The Member object has to be present in your Azure Active Directory, either as a Member or a Guest.
 
