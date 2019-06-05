@@ -41,7 +41,7 @@ data "azuread_service_principal" "test" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional) The ID of the Azure AD Application for which to create a Service Principal.
+* `application_id` - (Optional) The ID of the Azure AD Application.
 
 * `object_id` - (Optional) The ID of the Azure AD Service Principal.
 

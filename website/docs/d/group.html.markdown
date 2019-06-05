@@ -25,9 +25,11 @@ data "azuread_group" "test_group" {
 
 The following arguments are supported:
 
-* `name` - (Required) The Name of the Azure AD Group we want to lookup.
+* `name` - (Optional) The Name of the AD Group we want to lookup.
 
-~> **WARNING:** `name` is not unique within Azure Active Directory. The data source will only return the first Group found.
+* `object_id` - (Optional) Specifies the Object ID of the AD Group within Azure Active Directory.
+
+-> **NOTE:** Either a `name` or an `object_id` must be specified.
 
 ## Attributes Reference
 
