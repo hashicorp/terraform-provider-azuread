@@ -176,6 +176,11 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -346,6 +351,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("homepage", resp.Homepage)
 	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
+	d.Set("object_id", resp.ObjectID)
 
 	if groupMembershipClaims, ok := resp.AdditionalProperties["groupMembershipClaims"]; ok {
 		d.Set("group_membership_claims", groupMembershipClaims)

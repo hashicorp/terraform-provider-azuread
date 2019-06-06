@@ -26,6 +26,7 @@ func TestAccAzureADServicePrincipal_basic(t *testing.T) {
 					testCheckADServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
@@ -51,6 +52,7 @@ func TestAccAzureADServicePrincipal_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
