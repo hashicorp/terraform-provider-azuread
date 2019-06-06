@@ -51,6 +51,18 @@ resource "azuread_application" "test" {
       type = "Scope"
     }
   }
+
+  app_role {
+    allowed_member_types = [
+      "User",
+      "Application",
+    ]
+
+    description  = "Admins can manage roles and perform all task actions"
+    display_name = "Admin"
+    is_enabled   = true
+    value        = "Admin"
+  }
 }
 ```
 
@@ -74,7 +86,9 @@ The following arguments are supported:
 
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
 
-* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property can not not be set.  
+* `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property can not not be set.
+
+* `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
 ---
 
@@ -88,9 +102,23 @@ The following arguments are supported:
 
 `resource_access` supports the following:
 
-* `id` - (Required) The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes. 
+* `id` - (Required) The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes.
 
 * `type` - (Required) Specifies whether the id property references an `OAuth2Permission` or an `AppRole`. Possible values are `Scope` or `Role`.
+
+---
+
+`app_role` supports the following:
+
+* `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in daemon service scenarios) by setting to `Application`, or to both.
+
+* `description` - (Required) Permission help text that appears in the admin app assignment and consent experiences.
+
+* `display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
+
+* `is_enabled` - (Required) Determines if the app role is enabled.
+
+* `value` - (Required) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 
 ## Attributes Reference
 

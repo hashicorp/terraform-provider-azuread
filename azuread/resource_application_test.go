@@ -5,11 +5,10 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
 func TestAccAzureADApplication_basic(t *testing.T) {
@@ -131,6 +130,92 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_appRoles(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_appRoles(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.allowed_member_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.allowed_member_types.2550101162", "Application"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.allowed_member_types.2906997583", "User"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.description", "Admins can manage roles and perform all task actions"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.display_name", "Admin"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.3282540397.value", "Admin"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_appRolesUpdate(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_appRoles(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+				),
+			},
+			{
+				Config: testAccADApplication_appRolesUpdate(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_appRolesDelete(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_appRolesUpdate(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "2"),
+				),
+			},
+			{
+				Config: testAccADApplication_appRoles(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+				),
 			},
 		},
 	})
@@ -405,11 +490,51 @@ resource "azuread_application" "test" {
 `, id, id, id)
 }
 
+func testAccADApplication_appRoles(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name     = "acctest%s"
+  app_role {
+    allowed_member_types = [
+      "User",
+      "Application",
+    ]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = "Admin"
+  }
+}
+`, id)
+}
+
+func testAccADApplication_appRolesUpdate(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name     = "acctest%s"
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = "Admin"
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "ReadOnly roles have limited query access"
+    display_name         = "ReadOnly"
+    is_enabled           = true
+    value                = "User"
+  }
+}
+`, id)
+}
+
 func testAccADApplication_native(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctest%s"
-  type = "native"
 }
 `, id)
 }
