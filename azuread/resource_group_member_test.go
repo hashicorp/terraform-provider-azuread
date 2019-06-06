@@ -110,7 +110,7 @@ func testCheckAzureADGroupMemberDestroy(s *terraform.State) error {
 		var memberObjectID string
 		for members.NotDone() {
 			// possible members are users, groups or service principals
-			// we try to 'cast' each result as the correspondig type and diff
+			// we try to 'cast' each result as the corresponding type and diff
 			// if we found the object we're looking for
 			user, _ := members.Value().AsUser()
 			if user != nil {
