@@ -167,43 +167,46 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	var app graphrbac.Application
 
-	if oId, ok := d.GetOk("object_id"); ok {
+	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		// use the object_id to find the Azure AD application
-		objectId := oId.(string)
-		resp, err := client.Get(ctx, objectId)
+		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", objectId)
+				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", objectId, err)
+			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", oId, err)
 		}
 
 		app = resp
-	} else {
-		// use the name to find the Azure AD application
-		name := d.Get("name").(string)
+	} else if name, ok := d.Get("name").(string); ok {
 		filter := fmt.Sprintf("displayName eq '%s'", name)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("Error listing Azure AD Applications: %+v", err)
+			return fmt.Errorf("Error listing Azure AD Applications for filter %q: %+v", filter, err)
 		}
 
-		var a *graphrbac.Application
-		for _, v := range *resp.Response().Value {
-			if v.DisplayName != nil {
-				if *v.DisplayName == name {
-					a = &v
-					break
-				}
-			}
+		values := resp.Response().Value
+		if values == nil {
+			return fmt.Errorf("nil values for AD Applications matching %q", filter)
+		}
+		if len(*values) == 0 {
+			return fmt.Errorf("Found no AD Applications matching %q", filter)
+		}
+		if len(*values) > 2 {
+			return fmt.Errorf("Found multiple AD Applications matching %q", filter)
 		}
 
-		if a == nil {
-			return fmt.Errorf("Couldn't locate an Azure AD Application with a name of %q", name)
+		app = (*values)[0]
+		if app.DisplayName == nil {
+			return fmt.Errorf("nil DisplayName for AD Applications matching %q", filter)
 		}
-		app = *a
+		if *app.DisplayName != name {
+			return fmt.Errorf("displayname for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, name)
+		}
+	} else {
+		return fmt.Errorf("one of `object_id` or `name` must be supplied")
 	}
 
 	if app.ObjectID == nil {

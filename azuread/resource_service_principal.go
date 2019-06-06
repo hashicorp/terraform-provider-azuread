@@ -3,9 +3,8 @@ package azuread
 import (
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -80,15 +79,11 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	d.SetId(*sp.ObjectID)
 
-	// mimicking the behaviour of az tool retry until a successful get
-	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		if _, err := client.Get(ctx, *sp.ObjectID); err != nil {
-			return resource.RetryableError(err)
-		}
-
-		return nil
-	}); err != nil {
-		return fmt.Errorf("Error waiting for Service Principal %q to become available: %+v", applicationId, err)
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *sp.ObjectID)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Service Pricipal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)

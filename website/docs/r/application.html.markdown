@@ -116,7 +116,7 @@ The following arguments are supported:
 
 * `display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
 
-* `is_enabled` - (Required) Determines if the app role is enabled.
+* `is_enabled` - (Required) Determines if the app role is enabled: Defaults to `true`.
 
 * `value` - (Required) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 
