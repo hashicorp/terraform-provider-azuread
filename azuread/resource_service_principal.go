@@ -50,6 +50,11 @@ func resourceServicePrincipal() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -107,6 +112,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("application_id", app.AppID)
 	d.Set("display_name", app.DisplayName)
+	d.Set("object_id", app.ObjectID)
 
 	// tags doesn't exist as a property, so extract it
 	if iTags, ok := app.AdditionalProperties["tags"]; ok {

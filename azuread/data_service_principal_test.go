@@ -102,7 +102,7 @@ func testAccAzureADServicePrincipalDataSource_byObjectId(id string) string {
 %s
 
 data "azuread_service_principal" "test" {
-  object_id = "${azuread_service_principal.test.id}"
+  object_id = "${azuread_service_principal.test.object_id}"
 }
 `, template)
 }
