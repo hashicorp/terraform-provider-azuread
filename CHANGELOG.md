@@ -2,7 +2,7 @@
 
 NOTES:
 
-* Applies with this release could potentially take longer as the provider will now attempt to wait for replication when objets are created. 
+* Resource creation potentially could take longer after this release as the provider will now attempt to wait for replication like the az cli tool. 
 
 FEATURES:
 
