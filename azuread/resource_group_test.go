@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-uuid"
@@ -29,6 +30,49 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "members"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADGroup_members(t *testing.T) {
+	resourceName := "azuread_group.test"
+	id, err := uuid.GenerateUUID()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	members := make([]string, 0)
+
+	for i := 0; i < 5; i++ {
+		memberUuid, err := uuid.GenerateUUID()
+		if err != nil {
+			t.Fatal(err)
+		}
+		members = append(members, "\""+memberUuid+"\"")
+	}
+
+	config := testAccAzureADGroupWithMembers(id, members)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+					resource.TestCheckResourceAttr(resourceName, "members", fmt.Sprintf("[ %s ]", strings.Join(members, ", "))),
 				),
 			},
 			{
@@ -122,4 +166,13 @@ resource "azuread_group" "test" {
   name = "acctest%s"
 }
 `, id)
+}
+
+func testAccAzureADGroupWithMembers(id string, members []string) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name = "acctest%s"
+  members = [ %s ]
+}
+`, id, strings.Join(members, ", "))
 }
