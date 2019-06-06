@@ -39,6 +39,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The Object ID of the Azure AD User.
+* `object_id` - The Object ID of the Azure AD User.
 * `id` - The Object ID of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
