@@ -15,12 +15,16 @@ IMPROVEMENTS:
 * Data Source `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
 * `azuread_application` - support for the `group_membership_claims` property [GH-78]
 * `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
+* `azuread_application` - now exports the `object_id` property [GH-99]
 * `azuread_application` - support for the `type` property enabling the creation of `native` applications [GH-74]
 * `azuread_application` - will now wait for replication by waiting for 10 successful reads after creation [GH-93]
 * `azuread_group` - will now wait for replication by waiting for 10 successful reads after creation [GH-91]
+* `azuread_group` - now exports the `object_id` property [GH-99]
 * `azuread_service_principal` - will now wait for replication by waiting for 10 successful reads after creation [GH-93]
+* `azuread_service_principal` - now exports the `object_id` property [GH-99]
 * `azuread_user` - will now wait for replication by waiting for 10 successful reads after creation [GH-91]
 * `azuread_user` - increase the maximum allowed lengh of `password` to 256 [GH-81]
+* `azuread_user` - now exports the `object_id` property [GH-99]
 
 ## 0.3.1 (April 18, 2019)
 
