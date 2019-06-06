@@ -1,5 +1,8 @@
 ## 0.4.0 (Unreleased)
 
+NOTES:
+
+* Applies with this release could potentially take longer as the provider will now attempt to wait for replication when objets are created. 
 
 FEATURES:
 
@@ -13,8 +16,10 @@ IMPROVEMENTS:
 * `azuread_application` - support for the `group_membership_claims` property [GH-78]
 * `azuread_application` - now exports the `oauth2_permissions` property [GH-79]
 * `azuread_application` - support for the `type` property enabling the creation of `native` applications [GH-74]
-* `azuread_application` - will now wait for replication by waiting for a successful get [GH-86]
-* `azuread_service_principal` - will now wait for replication by waiting for a successful get [GH-86]
+* `azuread_application` - will now wait for replication by waiting for 10 successful reads after creation [GH-93]
+* `azuread_group` - will now wait for replication by waiting for 10 successful reads after creation [GH-91]
+* `azuread_service_principal` - will now wait for replication by waiting for 10 successful reads after creation [GH-93]
+* `azuread_user` - will now wait for replication by waiting for 10 successful reads after creation [GH-91]
 * `azuread_user` - increase the maximum allowed lengh of `password` to 256 [GH-81]
 
 ## 0.3.1 (April 18, 2019)
