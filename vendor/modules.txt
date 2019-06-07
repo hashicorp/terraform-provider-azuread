@@ -11,7 +11,7 @@ contrib.go.opencensus.io/exporter/ocagent
 # github.com/Azure/azure-sdk-for-go v29.0.0+incompatible
 github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac
 github.com/Azure/azure-sdk-for-go/version
-# github.com/Azure/go-autorest v11.2.8+incompatible
+# github.com/Azure/go-autorest v11.7.0+incompatible
 github.com/Azure/go-autorest/autorest
 github.com/Azure/go-autorest/autorest/adal
 github.com/Azure/go-autorest/autorest/azure
