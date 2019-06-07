@@ -214,7 +214,7 @@ func resourceApplication() *schema.Resource {
 
 						"is_enabled": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
 							Default:  true,
 						},
 
