@@ -8,7 +8,7 @@ cloud.google.com/go/internal/version
 cloud.google.com/go/compute/metadata
 # contrib.go.opencensus.io/exporter/ocagent v0.4.2
 contrib.go.opencensus.io/exporter/ocagent
-# github.com/Azure/azure-sdk-for-go v24.1.0+incompatible
+# github.com/Azure/azure-sdk-for-go v29.0.0+incompatible
 github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac
 github.com/Azure/azure-sdk-for-go/version
 # github.com/Azure/go-autorest v11.2.8+incompatible
