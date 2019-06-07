@@ -48,6 +48,8 @@ The following attributes are exported:
 
 * `application_id` - The Application ID (appId) for the Service Principal.
 
+* `object_id` - The Service Principal's Object ID.
+
 * `display_name` - The Display Name of the Azure Active Directory Application associated with this Service Principal.
 
 ## Import

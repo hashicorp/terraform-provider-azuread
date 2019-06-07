@@ -30,6 +30,7 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Access %s", fmt.Sprintf("acctest%s", id))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
@@ -62,6 +63,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{

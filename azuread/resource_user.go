@@ -68,6 +68,11 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -139,6 +144,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("account_enabled", user.AccountEnabled)
+	d.Set("object_id", user.ObjectID)
 	return nil
 }
 

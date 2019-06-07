@@ -105,7 +105,7 @@ func testAccAzureADApplicationDataSource_objectId(id string) string {
 %s
 
 data "azuread_application" "test" {
-  object_id = "${azuread_application.test.id}"
+  object_id = "${azuread_application.test.object_id}"
 }
 `, template)
 }
@@ -116,7 +116,7 @@ func testAccAzureADApplicationDataSource_objectIdComplete(id string) string {
 %s
 
 data "azuread_application" "test" {
-  object_id = "${azuread_application.test.id}"
+  object_id = "${azuread_application.test.object_id}"
 }
 `, template)
 }

@@ -126,6 +126,8 @@ The following attributes are exported:
 
 * `application_id` - The Application ID.
 
+* `object_id` - The Application's Object ID.
+
 * `oauth2_permissions` - A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by a `oauth2_permission` block as documented below.
 
 ---

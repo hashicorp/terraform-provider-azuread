@@ -28,6 +28,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
@@ -57,6 +58,7 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
