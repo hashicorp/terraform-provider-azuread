@@ -199,7 +199,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	properties := graphrbac.ApplicationCreateParameters{
-		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
@@ -222,7 +221,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("group_membership_claims"); ok {
-		properties.AdditionalProperties["groupMembershipClaims"] = v
+		properties.GroupMembershipClaims = v
 	}
 
 	app, err := client.Create(ctx, properties)
@@ -249,9 +248,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		properties := graphrbac.ApplicationUpdateParameters{
 			Homepage:       nil,
 			IdentifierUris: &[]string{},
-			AdditionalProperties: map[string]interface{}{
-				"publicClient": true,
-			},
+			PublicClient:   p.Bool(true),
 		}
 		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
 			return err
@@ -268,7 +265,6 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	var properties graphrbac.ApplicationUpdateParameters
-	properties.AdditionalProperties = make(map[string]interface{})
 
 	if d.HasChange("name") {
 		properties.DisplayName = &name
@@ -304,19 +300,19 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		groupMembershipClaims := d.Get("group_membership_claims").(string)
 
 		if len(groupMembershipClaims) == 0 {
-			properties.AdditionalProperties["groupMembershipClaims"] = nil
+			properties.GroupMembershipClaims = nil
 		} else {
-			properties.AdditionalProperties["groupMembershipClaims"] = groupMembershipClaims
+			properties.GroupMembershipClaims = groupMembershipClaims
 		}
 	}
 
 	if d.HasChange("type") {
 		switch appType := d.Get("type"); appType {
 		case "webapp/api":
-			properties.AdditionalProperties["publicClient"] = false
+			properties.PublicClient = p.Bool(false)
 			properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
 		case "native":
-			properties.AdditionalProperties["publicClient"] = true
+			properties.PublicClient = p.Bool(true)
 			properties.IdentifierUris = &[]string{}
 		default:
 			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
