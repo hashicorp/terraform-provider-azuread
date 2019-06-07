@@ -5,7 +5,7 @@ require (
 	github.com/Azure/azure-sdk-for-go v29.0.0+incompatible
 	github.com/Azure/go-autorest v11.7.0+incompatible
 	github.com/google/uuid v1.1.1
-	github.com/hashicorp/go-azure-helpers v0.0.0-20190129193224-166dfd221bb2
+	github.com/hashicorp/go-azure-helpers v0.4.1
 	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/terraform v0.12.0
 )
