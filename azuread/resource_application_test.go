@@ -585,6 +585,7 @@ func testAccADApplication_native(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctest%s"
+  type = "native"
 }
 `, id)
 }
