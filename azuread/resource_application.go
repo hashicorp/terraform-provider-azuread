@@ -81,7 +81,7 @@ func resourceApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice(
-					[]string{"None", "SecurityGroup", "All"},
+					[]string{"All", "None", "SecurityGroup", "DirectoryRole", "DistributionGroup"},
 					false,
 				),
 			},
@@ -297,13 +297,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("group_membership_claims") {
-		groupMembershipClaims := d.Get("group_membership_claims").(string)
-
-		if len(groupMembershipClaims) == 0 {
-			properties.GroupMembershipClaims = nil
-		} else {
-			properties.GroupMembershipClaims = groupMembershipClaims
-		}
+		properties.GroupMembershipClaims = d.Get("group_membership_claims")
 	}
 
 	if d.HasChange("type") {
@@ -331,9 +325,9 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).applicationsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	resp, err := client.Get(ctx, d.Id())
+	app, err := client.Get(ctx, d.Id())
 	if err != nil {
-		if ar.ResponseWasNotFound(resp.Response) {
+		if ar.ResponseWasNotFound(app.Response) {
 			log.Printf("[DEBUG] Azure AD Application with ID %q was not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -342,38 +336,37 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error retrieving Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
 
-	d.Set("name", resp.DisplayName)
-	d.Set("application_id", resp.AppID)
-	d.Set("homepage", resp.Homepage)
-	d.Set("available_to_other_tenants", resp.AvailableToOtherTenants)
-	d.Set("oauth2_allow_implicit_flow", resp.Oauth2AllowImplicitFlow)
-	d.Set("object_id", resp.ObjectID)
+	d.Set("name", app.DisplayName)
+	d.Set("application_id", app.AppID)
+	d.Set("homepage", app.Homepage)
+	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
+	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	d.Set("object_id", app.ObjectID)
 
-	if groupMembershipClaims, ok := resp.AdditionalProperties["groupMembershipClaims"]; ok {
-		d.Set("group_membership_claims", groupMembershipClaims)
-	}
-
-	switch appType := resp.AdditionalProperties["publicClient"]; appType {
-	case true:
+	if v := app.PublicClient; v != nil && *v {
 		d.Set("type", "native")
-	default:
+	} else {
 		d.Set("type", "webapp/api")
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(resp.IdentifierUris)); err != nil {
+	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
+		return fmt.Errorf("Error setting `group_membership_claims`: %+v", err)
+	}
+
+	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
 		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(resp.ReplyUrls)); err != nil {
+	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
 		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
 	}
 
-	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(resp.RequiredResourceAccess)); err != nil {
+	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
-	if oauth2Permissions, ok := resp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
-		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
+	if err := d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(app.Oauth2Permissions)); err != nil {
+		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
 
 	return nil
@@ -485,37 +478,36 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	return accesses
 }
 
-func flattenADApplicationOauth2Permissions(in []interface{}) []map[string]interface{} {
+func flattenADApplicationOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	result := make([]map[string]interface{}, 0, len(in))
-	for _, oauth2Permissions := range in {
-		rawPermission := oauth2Permissions.(map[string]interface{})
+	result := make([]map[string]interface{}, 0)
+	for _, p := range *in {
 		permission := make(map[string]interface{})
-		if v := rawPermission["adminConsentDescription"]; v != nil {
+		if v := p.AdminConsentDescription; v != nil {
 			permission["admin_consent_description"] = v
 		}
-		if v := rawPermission["adminConsentDisplayName"]; v != nil {
-			permission["admin_consent_description"] = v
+		if v := p.AdminConsentDisplayName; v != nil {
+			permission["admin_consent_display_name"] = v
 		}
-		if v := rawPermission["id"]; v != nil {
+		if v := p.ID; v != nil {
 			permission["id"] = v
 		}
-		if v := rawPermission["isEnabled"]; v != nil {
-			permission["is_enabled"] = v.(bool)
+		if v := p.IsEnabled; v != nil {
+			permission["is_enabled"] = *v
 		}
-		if v := rawPermission["type"]; v != nil {
+		if v := p.Type; v != nil {
 			permission["type"] = v
 		}
-		if v := rawPermission["userConsentDescription"]; v != nil {
+		if v := p.UserConsentDescription; v != nil {
 			permission["user_consent_description"] = v
 		}
-		if v := rawPermission["userConsentDisplayName"]; v != nil {
+		if v := p.UserConsentDisplayName; v != nil {
 			permission["user_consent_display_name"] = v
 		}
-		if v := rawPermission["value"]; v != nil {
+		if v := p.Value; v != nil {
 			permission["value"] = v
 		}
 
