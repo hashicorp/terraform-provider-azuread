@@ -3,7 +3,7 @@ package azuread
 import (
 	"fmt"
 	"log"
-	
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
