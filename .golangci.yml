@@ -28,6 +28,8 @@ linters:
 linters-settings:
   errcheck:
     ignore: github.com/hashicorp/terraform/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  misspell:
+    locale: UK
 
 run:
   modules-download-mode: vendor

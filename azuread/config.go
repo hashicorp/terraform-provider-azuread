@@ -15,8 +15,9 @@ import (
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform/httpclient"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/version"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
 // ArmClient contains the handles to all the specific Azure ADger resource classes' respective clients.

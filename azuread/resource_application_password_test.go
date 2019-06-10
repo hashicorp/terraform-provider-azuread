@@ -44,7 +44,7 @@ func testCheckADApplicationPasswordExists(name string) resource.TestCheckFunc { 
 			return nil
 		}
 
-		return fmt.Errorf("Password Credential %q was not found in Aplication %q", id.KeyId, id.ObjectId)
+		return fmt.Errorf("Password Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
 	}
 }
 

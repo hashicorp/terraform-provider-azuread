@@ -31,9 +31,9 @@ fmt:
 fmtcheck:
 	@sh "$(CURDIR)/scripts/gofmtcheck.sh"
 
-goimport:
+goimports:
 	@echo "==> Fixing imports code with goimports..."
-	goimports -w $(PKG_NAME)/
+	goimports -local "github.com/terraform-providers/terraform-provider-azuread/azuread" -w $(PKG_NAME)/
 
 lint:
 	@echo "==> Checking source code against linters..."
