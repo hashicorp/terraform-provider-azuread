@@ -38,6 +38,55 @@ func dataServicePrincipal() *schema.Resource {
 				ValidateFunc:  validate.UUID,
 				ConflictsWith: []string{"object_id", "display_name"},
 			},
+
+			"oauth2_permissions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"admin_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -125,6 +174,10 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 	d.Set("application_id", sp.AppID)
 	d.Set("display_name", sp.DisplayName)
 	d.Set("object_id", sp.ObjectID)
+
+	if oauth2Permissions, ok := sp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
+		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
+	}
 
 	return nil
 }
