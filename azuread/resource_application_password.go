@@ -99,7 +99,7 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 		objectId = d.Get("application_id").(string)
 	}
 	if objectId == "" {
-		return fmt.Errorf("one of `application_object_id` or `application_id` must be specifed")
+		return fmt.Errorf("one of `application_object_id` or `application_id` must be specified")
 	}
 
 	cred, err := graph.PasswordCredentialForResource(d)
