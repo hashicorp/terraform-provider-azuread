@@ -86,7 +86,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Service Pricipal with ObjectId %q: %+v", *sp.ObjectID, err)
+		return fmt.Errorf("Error waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)
