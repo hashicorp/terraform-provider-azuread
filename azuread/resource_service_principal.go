@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
-	"github.com/hashicorp/go-azure-helpers/response"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/terraform/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -34,16 +32,6 @@ func resourceServicePrincipal() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validate.UUID,
-			},
-
-			"tags": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      schema.HashString,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 
 			"display_name": {
@@ -103,6 +91,16 @@ func resourceServicePrincipal() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      schema.HashString,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -136,7 +134,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Service Pricipal with ObjectId %q: %+v", *sp.ObjectID, err)
+		return fmt.Errorf("Error waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)
@@ -161,14 +159,9 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("application_id", app.AppID)
 	d.Set("display_name", app.DisplayName)
 	d.Set("object_id", app.ObjectID)
-
 	// tags doesn't exist as a property, so extract it
-	if iTags, ok := app.AdditionalProperties["tags"]; ok {
-		if tags, ok := iTags.([]interface{}); ok {
-			if err := d.Set("tags", tf.ExpandStringSlicePtr(tags)); err != nil {
-				return fmt.Errorf("Error setting `tags`: %+v", err)
-			}
-		}
+	if err := d.Set("tags", app.Tags); err != nil {
+		return fmt.Errorf("Error setting `tags`: %+v", err)
 	}
 
 	if oauth2Permissions, ok := app.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {

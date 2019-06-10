@@ -233,19 +233,18 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
-	switch appType := app.AdditionalProperties["publicClient"]; appType {
-	case true:
+	if v := app.PublicClient; v != nil && *v {
 		d.Set("type", "native")
-	default:
+	} else {
 		d.Set("type", "webapp/api")
 	}
 
-	if groupMembershipClaims, ok := app.AdditionalProperties["groupMembershipClaims"]; ok {
-		d.Set("group_membership_claims", groupMembershipClaims)
+	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
+		return fmt.Errorf("Error setting `group_membership_claims`: %+v", err)
 	}
 
-	if oauth2Permissions, ok := app.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
-		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
+	if err := d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(app.Oauth2Permissions)); err != nil {
+		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
 
 	return nil

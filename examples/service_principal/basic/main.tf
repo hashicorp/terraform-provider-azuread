@@ -1,5 +1,5 @@
 ## This example creates a basic application and Service Principal using the Azure Active Directory resources.
-# WARNING: the service pricipal password will be presisted to state
+# WARNING: the service Principal password will be presisted to state
 
 #create a random identifier for the application name
 resource "random_id" "app_name" {

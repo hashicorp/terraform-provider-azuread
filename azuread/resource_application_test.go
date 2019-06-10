@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
@@ -28,7 +29,7 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Access %s", fmt.Sprintf("acctest%s", id))),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest%s", id))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -153,10 +154,10 @@ func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccADApplication_withGroupMembershipClaimsAll(id),
+				Config: testAccADApplication_withGroupMembershipClaimsDirectoryRole(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "DirectoryRole"),
 				),
 			},
 			{
@@ -376,11 +377,11 @@ resource "azuread_application" "test" {
 `, id, id)
 }
 
-func testAccADApplication_withGroupMembershipClaimsAll(id string) string {
+func testAccADApplication_withGroupMembershipClaimsDirectoryRole(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name                       = "acctest%s"
-  group_membership_claims    = "All"
+  group_membership_claims    = "DirectoryRole"
 }
 `, id)
 }
