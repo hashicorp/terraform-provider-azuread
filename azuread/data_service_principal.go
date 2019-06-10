@@ -176,7 +176,7 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 	d.Set("object_id", sp.ObjectID)
 
 	if oauth2Permissions, ok := sp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
-		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
+		d.Set("oauth2_permissions", flattenServicePrincipalOauth2Permissions(oauth2Permissions))
 	}
 
 	return nil
