@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform/httpclient"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/version"
 )
 
@@ -50,6 +51,8 @@ func getArmClient(authCfg *authentication.Config) (*ArmClient, error) {
 		environment:    *env,
 	}
 
+	sender := ar.BuildSender()
+
 	oauthConfig, err := adal.NewOAuthConfig(env.ActiveDirectoryEndpoint, client.tenantID)
 	if err != nil {
 		return nil, err
@@ -62,7 +65,7 @@ func getArmClient(authCfg *authentication.Config) (*ArmClient, error) {
 
 	// Graph Endpoints
 	graphEndpoint := env.GraphEndpoint
-	graphAuthorizer, err := authCfg.GetAuthorizationToken(oauthConfig, graphEndpoint)
+	graphAuthorizer, err := authCfg.GetAuthorizationToken(sender, oauthConfig, graphEndpoint)
 	if err != nil {
 		return nil, err
 	}
