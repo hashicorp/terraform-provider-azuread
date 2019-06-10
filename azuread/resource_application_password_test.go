@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
-
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 )
 
 func testCheckADApplicationPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
@@ -89,6 +89,30 @@ func TestAccAzureADApplicationPassword_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADObjectPasswordApplication_basic(applicationId, value),
+				Check: resource.ComposeTestCheckFunc(
+					// can't assert on Value since it's not returned
+					testCheckADApplicationPasswordExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplicationPassword_basicOld(t *testing.T) {
+	resourceName := "azuread_application_password.test"
+	applicationId := uuid.New().String()
+	value := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADObjectPasswordApplication_basicOld(applicationId, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
 					testCheckADApplicationPasswordExists(resourceName),
@@ -191,9 +215,21 @@ func testAccADObjectPasswordApplication_basic(applicationId, value string) strin
 %s
 
 resource "azuread_application_password" "test" {
-  application_id       = "${azuread_application.test.id}"
-  value                = "%s"
-  end_date             = "2020-01-01T01:02:03Z"
+  application_object_id = "${azuread_application.test.id}"
+  value                 = "%s"
+  end_date              = "2020-01-01T01:02:03Z"
+}
+`, testAccADApplicationPassword_template(applicationId), value)
+}
+
+func testAccADObjectPasswordApplication_basicOld(applicationId, value string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_application_password" "test" {
+  application_id = "${azuread_application.test.id}"
+  value          = "%s"
+  end_date       = "2020-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), value)
 }
@@ -204,10 +240,10 @@ func testAccADApplicationPassword_requiresImport(applicationId, value string) st
 %s
 
 resource "azuread_application_password" "import" {
-  application_id       = "${azuread_application_password.test.application_id}"
-  key_id               = "${azuread_application_password.test.key_id}"
-  value                = "${azuread_application_password.test.value}"
-  end_date             = "${azuread_application_password.test.end_date}"
+  application_object_id = "${azuread_application_password.test.application_id}"
+  key_id                = "${azuread_application_password.test.key_id}"
+  value                 = "${azuread_application_password.test.value}"
+  end_date              = "${azuread_application_password.test.end_date}"
 }
 `, template)
 }
@@ -217,10 +253,10 @@ func testAccADApplicationPassword_customKeyId(applicationId, keyId, value string
 %s
 
 resource "azuread_application_password" "test" {
-  application_id       = "${azuread_application.test.id}"
-  key_id               = "%s"
-  value                = "%s"
-  end_date             = "2020-01-01T01:02:03Z"
+  application_object_id = "${azuread_application.test.id}"
+  key_id                = "%s"
+  value                 = "%s"
+  end_date              = "2020-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), keyId, value)
 }
@@ -230,9 +266,9 @@ func testAccADApplicationPassword_relativeEndDate(applicationId, value string) s
 %s
 
 resource "azuread_application_password" "test" {
-  application_id       = "${azuread_application.test.id}"
-  value                = "%s"
-  end_date_relative    = "8760h"
+  application_object_id = "${azuread_application.test.id}"
+  value                 = "%s"
+  end_date_relative     = "8760h"
 }
 `, testAccADApplicationPassword_template(applicationId), value)
 }

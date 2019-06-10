@@ -36,7 +36,7 @@ resource "azuread_application_password" "example" {
 
 The following arguments are supported:
 
-* `object_id` - (Required) The Object ID of the Application for which this password should be created. Changing this field forces a new resource to be created.
+* `application_object_id` - (Required) The Object ID of the Application for which this password should be created. Changing this field forces a new resource to be created.
 
 * `value` - (Required) The Password for this Application .
 

@@ -11,9 +11,29 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func resourceApplicationPassword() *schema.Resource {
+
+	// temporary terrible hack/code to allow deprecation of `application_id`
+	// todo remove in 1.0
+	s := graph.PasswordResourceSchema("application_object")
+	s["application_id"] = &schema.Schema{
+		Type:          schema.TypeString,
+		Optional:      true,
+		ForceNew:      true,
+		Computed:      true,
+		ValidateFunc:  validate.UUID,
+		Deprecated:    "Deprecated in favour of `application_object_id` to prevent confusion",
+		ConflictsWith: []string{"application_id"},
+	}
+	// this is bad, i am aware of it, and I feel awful about it
+	s["application_object_id"].Required = false
+	s["application_object_id"].Optional = true
+	s["application_object_id"].Computed = true
+	s["application_object_id"].ConflictsWith = []string{"application_object_id"}
+
 	return &schema.Resource{
 		Create: resourceApplicationPasswordCreate,
 		Read:   resourceApplicationPasswordRead,
@@ -23,7 +43,8 @@ func resourceApplicationPassword() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: graph.PasswordResourceSchema("application"),
+		//Schema: graph.PasswordResourceSchema("application_object"),
+		Schema: s,
 	}
 }
 
@@ -31,7 +52,13 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	client := meta.(*ArmClient).applicationsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	objectId := d.Get("application_id").(string)
+	objectId := d.Get("application_object_id").(string)
+	if objectId == "" { // todo remove in 1.0
+		objectId = d.Get("application_id").(string)
+	}
+	if objectId == "" {
+		return fmt.Errorf("one of `application_object_id` or `application_id` must be specifed")
+	}
 
 	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
@@ -95,7 +122,8 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	// todo, move this into a graph helper function?
-	d.Set("application_id", id.ObjectId)
+	d.Set("application_object_id", id.ObjectId)
+	d.Set("application_id", id.ObjectId) //todo remove in 2.0
 	d.Set("key_id", id.KeyId)
 
 	if endDate := credential.EndDate; endDate != nil {
