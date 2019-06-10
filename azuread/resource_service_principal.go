@@ -39,53 +39,7 @@ func resourceServicePrincipal() *schema.Resource {
 				Computed: true,
 			},
 
-			"oauth2_permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_consent_description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"admin_consent_display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"is_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"user_consent_description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"user_consent_display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
 
 			"object_id": {
 				Type:     schema.TypeString,
@@ -164,8 +118,8 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("Error setting `tags`: %+v", err)
 	}
 
-	if oauth2Permissions, ok := app.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
-		d.Set("oauth2_permissions", flattenServicePrincipalOauth2Permissions(oauth2Permissions))
+	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
+		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
 
 	return nil
@@ -184,44 +138,4 @@ func resourceServicePrincipalDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
-}
-
-func flattenServicePrincipalOauth2Permissions(in []interface{}) []map[string]interface{} {
-	if in == nil {
-		return []map[string]interface{}{}
-	}
-
-	result := make([]map[string]interface{}, 0, len(in))
-	for _, oauth2Permissions := range in {
-		rawPermission := oauth2Permissions.(map[string]interface{})
-		permission := make(map[string]interface{})
-		if v := rawPermission["adminConsentDescription"]; v != nil {
-			permission["admin_consent_description"] = v
-		}
-		if v := rawPermission["adminConsentDisplayName"]; v != nil {
-			permission["admin_consent_description"] = v
-		}
-		if v := rawPermission["id"]; v != nil {
-			permission["id"] = v
-		}
-		if v := rawPermission["isEnabled"]; v != nil {
-			permission["is_enabled"] = v.(bool)
-		}
-		if v := rawPermission["type"]; v != nil {
-			permission["type"] = v
-		}
-		if v := rawPermission["userConsentDescription"]; v != nil {
-			permission["user_consent_description"] = v
-		}
-		if v := rawPermission["userConsentDisplayName"]; v != nil {
-			permission["user_consent_display_name"] = v
-		}
-		if v := rawPermission["value"]; v != nil {
-			permission["value"] = v
-		}
-
-		result = append(result, permission)
-	}
-
-	return result
 }
