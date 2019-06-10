@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
@@ -15,25 +16,6 @@ import (
 )
 
 func resourceApplicationPassword() *schema.Resource {
-
-	// temporary terrible hack/code to allow deprecation of `application_id`
-	// todo remove in 1.0
-	s := graph.PasswordResourceSchema("application_object")
-	s["application_id"] = &schema.Schema{
-		Type:          schema.TypeString,
-		Optional:      true,
-		ForceNew:      true,
-		Computed:      true,
-		ValidateFunc:  validate.UUID,
-		Deprecated:    "Deprecated in favour of `application_object_id` to prevent confusion",
-		ConflictsWith: []string{"application_id"},
-	}
-	// this is bad, i am aware of it, and I feel awful about it
-	s["application_object_id"].Required = false
-	s["application_object_id"].Optional = true
-	s["application_object_id"].Computed = true
-	s["application_object_id"].ConflictsWith = []string{"application_object_id"}
-
 	return &schema.Resource{
 		Create: resourceApplicationPasswordCreate,
 		Read:   resourceApplicationPasswordRead,
@@ -43,8 +25,68 @@ func resourceApplicationPassword() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		//Schema: graph.PasswordResourceSchema("application_object"),
-		Schema: s,
+		// Schema: graph.PasswordResourceSchema("application_object"), //todo switch back to this in 1.0
+		Schema: map[string]*schema.Schema{
+			"application_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ValidateFunc:  validate.UUID,
+				Deprecated:    "Deprecated in favour of `application_object_id` to prevent confusion",
+				ConflictsWith: []string{"application_id"},
+			},
+
+			"application_object_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validate.UUID,
+				ConflictsWith: []string{"application_object_id"},
+			},
+
+			"key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
+			},
+
+			"value": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ValidateFunc: validate.NoEmptyStrings,
+			},
+
+			"start_date": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.ValidateRFC3339TimeString,
+			},
+
+			"end_date": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date_relative"},
+				ValidateFunc:  validation.ValidateRFC3339TimeString,
+			},
+
+			"end_date_relative": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validate.NoEmptyStrings,
+			},
+		},
 	}
 }
 
