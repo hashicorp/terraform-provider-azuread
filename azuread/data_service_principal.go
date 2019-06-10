@@ -3,11 +3,11 @@ package azuread
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func dataServicePrincipal() *schema.Resource {
