@@ -1,5 +1,10 @@
 ## 0.5.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `azuread_service_principal` - export the `oauth2_permissions` property [GH-103]
+
+
 ## 0.4.0 (June 06, 2019)
 
 NOTES:
