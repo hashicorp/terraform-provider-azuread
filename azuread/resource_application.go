@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
@@ -436,12 +435,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
-	if err := d.Set("app_role", flattenADApplicationAppRoles(resp.AppRoles)); err != nil {
+	if err := d.Set("app_role", flattenADApplicationAppRoles(app.AppRoles)); err != nil {
 		return fmt.Errorf("Error setting `app_role`: %+v", err)
 	}
 
-	if oauth2Permissions, ok := resp.AdditionalProperties["oauth2Permissions"].([]interface{}); ok {
-		d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(oauth2Permissions))
 	if err := d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(app.Oauth2Permissions)); err != nil {
 		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
