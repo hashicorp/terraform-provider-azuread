@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
