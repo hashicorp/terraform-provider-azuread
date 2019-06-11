@@ -110,6 +110,8 @@ The following arguments are supported:
 
 `app_role` supports the following:
 
+* `id` - The unique identifier of the `app_role`.
+
 * `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in daemon service scenarios) by setting to `Application`, or to both.
 
 * `description` - (Required) Permission help text that appears in the admin app assignment and consent experiences.

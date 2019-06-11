@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-uuid"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
@@ -248,8 +248,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	var disableAppRoles = false
-
 	properties := graphrbac.ApplicationCreateParameters{
 		AdditionalProperties:    make(map[string]interface{}),
 		DisplayName:             &name,
@@ -257,7 +255,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
-		AppRoles:                expandADApplicationAppRoles(d.Get("app_role").(*schema.Set).List(), disableAppRoles),
+	}
+
+	if v, ok := d.GetOk("app_role"); ok {
+		properties.AppRoles = expandADApplicationAppRoles(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -354,15 +355,20 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("app_role") {
-		var disableAppRoles = true
+		// if the app role already exists then it must be disabled
+		// with no other changes before it can be edited or deleted
 		var appRolesProperties graphrbac.ApplicationUpdateParameters
 		oldAppRolesRaw, newAppRolesRaw := d.GetChange("app_role")
-		appRolesProperties.AppRoles = expandADApplicationAppRoles(oldAppRolesRaw.(*schema.Set).List(), disableAppRoles)
+		appRolesProperties.AppRoles = expandADApplicationAppRoles(oldAppRolesRaw.(*schema.Set).List())
+		for _, appRole := range *appRolesProperties.AppRoles {
+			*appRole.IsEnabled = false
+		}
 		if _, err := client.Patch(ctx, d.Id(), appRolesProperties); err != nil {
 			return fmt.Errorf("Error disabling App Roles for Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
-		disableAppRoles = false
-		properties.AppRoles = expandADApplicationAppRoles(newAppRolesRaw.(*schema.Set).List(), disableAppRoles)
+
+		// now we can set the new state of the app role
+		properties.AppRoles = expandADApplicationAppRoles(newAppRolesRaw.(*schema.Set).List())
 	}
 
 	if d.HasChange("group_membership_claims") {
@@ -597,28 +603,32 @@ func flattenADApplicationOauth2Permissions(in []interface{}) []map[string]interf
 	return result
 }
 
-func expandADApplicationAppRoles(in []interface{}, disable bool) *[]graphrbac.AppRole {
-	var results []graphrbac.AppRole
+func expandADApplicationAppRoles(input []interface{}) *[]graphrbac.AppRole {
+	if len(input) == 0 {
+		return nil
+	}
 
-	for _, appRoleRaw := range in {
+	var output []graphrbac.AppRole
+
+	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
+
 		appRoleID := appRole["id"].(string)
 		if appRoleID == "" {
-			appRoleID, _ = uuid.GenerateUUID()
+			appRoleID = uuid.New().String()
 		}
+
 		var appRoleAllowedMemberTypes []string
 		for _, appRoleAllowedMemberType := range appRole["allowed_member_types"].(*schema.Set).List() {
 			appRoleAllowedMemberTypes = append(appRoleAllowedMemberTypes, appRoleAllowedMemberType.(string))
 		}
+
 		appRoleDescription := appRole["description"].(string)
 		appRoleDisplayName := appRole["display_name"].(string)
 		appRoleIsEnabled := appRole["is_enabled"].(bool)
-		if disable {
-			appRoleIsEnabled = false
-		}
 		appRoleValue := appRole["value"].(string)
 
-		results = append(results,
+		output = append(output,
 			graphrbac.AppRole{
 				ID:                 &appRoleID,
 				AllowedMemberTypes: &appRoleAllowedMemberTypes,
@@ -629,7 +639,8 @@ func expandADApplicationAppRoles(in []interface{}, disable bool) *[]graphrbac.Ap
 			},
 		)
 	}
-	return &results
+
+	return &output
 }
 
 func flattenADApplicationAppRoles(in *[]graphrbac.AppRole) []interface{} {
