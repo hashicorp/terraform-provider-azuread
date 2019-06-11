@@ -49,8 +49,30 @@ The following arguments are supported:
 
 -> **NOTE:** At least one of `application_id`, `display_name` or `object_id` must be specified.
 
+* `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated application. Each permission is covered by a `oauth2_permission` block as documented below.
+
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - The Object ID for the Service Principal.
+
+---
+
+`oauth2_permission` block exports the following:
+
+* `id` - The unique identifier for one of the `OAuth2Permission`
+
+* `type` - The type of the permission
+
+* `admin_consent_description` - The description of the admin consent
+
+* `admin_consent_display_name` - The display name of the admin consent
+
+* `is_enabled` - Is this permission enabled?
+
+* `user_consent_description` - The description of the user consent
+
+* `user_consent_display_name` - The display name of the user consent
+
+* `value` - The name of this permission
