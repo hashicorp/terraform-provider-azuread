@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 
@@ -93,6 +94,56 @@ func resourceApplication() *schema.Resource {
 				Default:      "webapp/api",
 			},
 
+			"app_role": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"allowed_member_types": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice(
+									[]string{"User", "Application"},
+									false,
+								),
+							},
+						},
+
+						"description": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"display_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
+						"value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -158,6 +209,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
+		AppRoles:                expandADApplicationAppRoles(d.Get("app_role")),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -250,6 +302,32 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
 	}
 
+	if d.HasChange("app_role") {
+		// if the app role already exists then it must be disabled
+		// with no other changes before it can be edited or deleted
+		var app graphrbac.Application
+		var appRolesProperties graphrbac.ApplicationUpdateParameters
+		resp, err := client.Get(ctx, d.Id())
+		if err != nil {
+			if ar.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", d.Id())
+			}
+
+			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
+		}
+		app = resp
+		for _, appRole := range *app.AppRoles {
+			*appRole.IsEnabled = false
+		}
+		appRolesProperties.AppRoles = app.AppRoles
+		if _, err := client.Patch(ctx, d.Id(), appRolesProperties); err != nil {
+			return fmt.Errorf("Error disabling App Roles for Azure AD Application with ID %q: %+v", d.Id(), err)
+		}
+
+		// now we can set the new state of the app role
+		properties.AppRoles = expandADApplicationAppRoles(d.Get("app_role"))
+	}
+
 	if d.HasChange("group_membership_claims") {
 		properties.GroupMembershipClaims = d.Get("group_membership_claims")
 	}
@@ -264,7 +342,6 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			properties.IdentifierUris = &[]string{}
 		default:
 			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
-
 		}
 	}
 
@@ -317,6 +394,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if err := d.Set("app_role", flattenADApplicationAppRoles(app.AppRoles)); err != nil {
+		return fmt.Errorf("Error setting `app_role`: %+v", err)
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
@@ -430,4 +511,77 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
+}
+
+func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
+	input := i.(*schema.Set).List()
+	if len(input) == 0 {
+		return nil
+	}
+
+	var output []graphrbac.AppRole
+
+	for _, appRoleRaw := range input {
+		appRole := appRoleRaw.(map[string]interface{})
+
+		appRoleID := appRole["id"].(string)
+		if appRoleID == "" {
+			appRoleID = uuid.New().String()
+		}
+
+		var appRoleAllowedMemberTypes []string
+		for _, appRoleAllowedMemberType := range appRole["allowed_member_types"].(*schema.Set).List() {
+			appRoleAllowedMemberTypes = append(appRoleAllowedMemberTypes, appRoleAllowedMemberType.(string))
+		}
+
+		appRoleDescription := appRole["description"].(string)
+		appRoleDisplayName := appRole["display_name"].(string)
+		appRoleIsEnabled := appRole["is_enabled"].(bool)
+		appRoleValue := appRole["value"].(string)
+
+		output = append(output,
+			graphrbac.AppRole{
+				ID:                 &appRoleID,
+				AllowedMemberTypes: &appRoleAllowedMemberTypes,
+				Description:        &appRoleDescription,
+				DisplayName:        &appRoleDisplayName,
+				IsEnabled:          &appRoleIsEnabled,
+				Value:              &appRoleValue,
+			},
+		)
+	}
+
+	return &output
+}
+
+func flattenADApplicationAppRoles(in *[]graphrbac.AppRole) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	appRoles := make([]interface{}, 0)
+	for _, role := range *in {
+		appRole := make(map[string]interface{})
+		if role.ID != nil {
+			appRole["id"] = *role.ID
+		}
+		if role.AllowedMemberTypes != nil {
+			appRole["allowed_member_types"] = *role.AllowedMemberTypes
+		}
+		if role.Description != nil {
+			appRole["description"] = *role.Description
+		}
+		if role.DisplayName != nil {
+			appRole["display_name"] = *role.DisplayName
+		}
+		if role.IsEnabled != nil {
+			appRole["is_enabled"] = *role.IsEnabled
+		}
+		if role.Value != nil {
+			appRole["value"] = *role.Value
+		}
+		appRoles = append(appRoles, appRole)
+	}
+
+	return appRoles
 }

@@ -2,8 +2,8 @@
 
 IMPROVEMENTS:
 
+* `azuread_application` - support for the `app_roles` property [GH-98]
 * `azuread_service_principal` - export the `oauth2_permissions` property [GH-103]
-
 
 ## 0.4.0 (June 06, 2019)
 
