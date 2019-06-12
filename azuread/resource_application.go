@@ -36,6 +36,20 @@ func resourceApplication() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 
+			"available_to_other_tenants": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"group_membership_claims": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					[]string{"All", "None", "SecurityGroup", "DirectoryRole", "DistributionGroup"},
+					false,
+				),
+			},
+
 			"homepage": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -53,6 +67,11 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 
+			"oauth2_allow_implicit_flow": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"reply_urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -61,30 +80,6 @@ func resourceApplication() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
 				},
-			},
-
-			"available_to_other_tenants": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"oauth2_allow_implicit_flow": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
-			"application_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"group_membership_claims": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"All", "None", "SecurityGroup", "DirectoryRole", "DistributionGroup"},
-					false,
-				),
 			},
 
 			"type": {
@@ -180,12 +175,17 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2Permissions(),
+			"application_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
 		},
 	}
 }

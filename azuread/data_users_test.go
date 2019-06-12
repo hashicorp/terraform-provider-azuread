@@ -5,70 +5,67 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccDataSourceAzureADUser_byUserPrincipalName(t *testing.T) {
-	dataSourceName := "data.azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+func TestAccAzureADUsersDataSource_byUserPrincipalNames(t *testing.T) {
+	dsn := "data.azuread_users.test"
+	id := tf.AccRandTimeInt()
+	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADUserDataSource_byUserPrincipalName(id, password),
+				Config: testAccAzureADUsersDataSource_byUserPrincipalNames(id, password),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "mail_nickname"),
+					resource.TestCheckResourceAttr(dsn, "user_principal_names.#", "2"),
+					resource.TestCheckResourceAttr(dsn, "object_ids.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAzureADUser_byObjectId(t *testing.T) {
-	dataSourceName := "data.azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+func TestAccAzureADUsersDataSource_byObjectIds(t *testing.T) {
+	dsn := "data.azuread_users.test"
+	id := tf.AccRandTimeInt()
+	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADUserDataSource_byObjectId(id, password),
+				Config: testAccAzureADUsersDataSource_byObjectIds(id, password),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "mail_nickname"),
+					resource.TestCheckResourceAttr(dsn, "user_principal_names.#", "2"),
+					resource.TestCheckResourceAttr(dsn, "object_ids.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAzureADUserDataSource_byUserPrincipalName(id, password string) string {
+func testAccAzureADUsersDataSource_byUserPrincipalNames(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_user" "test" {
-	user_principal_name = "${azuread_user.test.user_principal_name}"
+data "azuread_users" "test" {
+	user_principal_names = ["${azuread_user.testA.user_principal_name}", "${azuread_user.testB.user_principal_name}"]
 }
-`, testAccADUser_basic(id, password))
+`, testAccADUser_multiple(id, password))
 }
 
-func testAccAzureADUserDataSource_byObjectId(id, password string) string {
+func testAccAzureADUsersDataSource_byObjectIds(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_user" "test" {
-	user_principal_name = "${azuread_user.test.user_principal_name}"
+data "azuread_users" "test" {
+	object_ids = ["${azuread_user.testA.object_id}", "${azuread_user.testB.object_id}"]
 }
-`, testAccADUser_basic(id, password))
+`, testAccADUser_multiple(id, password))
 }

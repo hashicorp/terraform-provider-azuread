@@ -1,11 +1,14 @@
 package azuread
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
@@ -22,6 +25,7 @@ func dataSourceUsers() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
+				MinItems:      1,
 				ConflictsWith: []string{"user_principal_names"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -33,6 +37,7 @@ func dataSourceUsers() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
+				MinItems:      1,
 				ConflictsWith: []string{"object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -47,58 +52,53 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).usersClient
 	ctx := meta.(*ArmClient).StopContext
 
-	var user graphrbac.User
+	var users []graphrbac.User
+	expectedCount := 0
 
-	if oId, ok := d.GetOk("user_principal_name"); ok {
-		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, oId.(string))
-		if err != nil {
-			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD User with ID %q was not found", oId.(string))
+	if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
+		expectedCount = len(upns)
+		for _, v := range upns {
+			resp, err := client.Get(ctx, v.(string))
+			if err != nil {
+				return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", v.(string), err)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", oId.(string), err)
+			users = append(users, resp)
 		}
-
-		user = resp
-	} else if name, ok := d.Get("object_id").(string); ok {
-		filter := fmt.Sprintf("objectId eq '%s'", name)
-
-		resp, err := client.ListComplete(ctx, filter)
-		if err != nil {
-			return fmt.Errorf("Error listing Azure AD Users for filter %q: %+v", filter, err)
-		}
-
-		values := resp.Response().Value
-		if values == nil {
-			return fmt.Errorf("nil values for AD Users matching %q", filter)
-		}
-		if len(*values) == 0 {
-			return fmt.Errorf("Found no AD Users matching %q", filter)
-		}
-		if len(*values) > 2 {
-			return fmt.Errorf("Found multiple AD Users matching %q", filter)
-		}
-
-		user = (*values)[0]
-		if user.DisplayName == nil {
-			return fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
-		}
-		if *user.DisplayName != name {
-			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, name)
+	} else if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
+		expectedCount = len(oids)
+		for _, v := range oids {
+			u, err := graph.UserGetByObjectId(&client, ctx, v.(string))
+			if err != nil {
+				return fmt.Errorf("Error finding Azure AD User with object ID %q: %+v", v.(string), err)
+			}
+			users = append(users, *u)
 		}
 	} else {
-		return fmt.Errorf("one of `object_id` or `user_principal_name` must be supplied")
+		return fmt.Errorf("one of `object_ids` or `user_principal_names` must be supplied")
 	}
 
-	if user.ObjectID == nil {
-		return fmt.Errorf("Group objectId is nil")
+	if len(users) != expectedCount {
+		return fmt.Errorf("Unexpected number of users returns (%d != %d)", len(users), expectedCount)
 	}
 
-	d.SetId(*user.ObjectID)
-	d.SetId(*user.ObjectID)
-	d.Set("object_id", user.ObjectID)
+	var upns, oids []string
+	for _, u := range users {
+		if u.ObjectID == nil || u.UserPrincipalName == nil {
+			return fmt.Errorf("User with nil ObjectId or UPN was found: %v", u)
+		}
 
+		oids = append(oids, *u.ObjectID)
+		upns = append(upns, *u.UserPrincipalName)
+	}
 
+	h := sha1.New()
+	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
+		return fmt.Errorf("Unable to compute hash for upns: %v", err)
+	}
+
+	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
+	d.Set("object_ids", oids)
+	d.Set("user_principal_names", upns)
 	return nil
 }
