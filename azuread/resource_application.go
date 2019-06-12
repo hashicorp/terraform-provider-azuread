@@ -195,7 +195,7 @@ func resourceApplication() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice(
 									[]string{"User", "Application"},
-									false, // force case sensitivity
+									false,
 								),
 							},
 						},
@@ -254,10 +254,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
-	}
-
-	if v, ok := d.GetOk("app_role"); ok {
-		properties.AppRoles = expandADApplicationAppRoles(v.(*schema.Set).List())
+		AppRoles:                expandADApplicationAppRoles(d.Get("app_role")),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -355,7 +352,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		// with no other changes before it can be edited or deleted
 		var appRolesProperties graphrbac.ApplicationUpdateParameters
 		oldAppRolesRaw, newAppRolesRaw := d.GetChange("app_role")
-		appRolesProperties.AppRoles = expandADApplicationAppRoles(oldAppRolesRaw.(*schema.Set).List())
+		appRolesProperties.AppRoles = expandADApplicationAppRoles(oldAppRolesRaw)
 		for _, appRole := range *appRolesProperties.AppRoles {
 			*appRole.IsEnabled = false
 		}
@@ -364,7 +361,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// now we can set the new state of the app role
-		properties.AppRoles = expandADApplicationAppRoles(newAppRolesRaw.(*schema.Set).List())
+		properties.AppRoles = expandADApplicationAppRoles(newAppRolesRaw)
 	}
 
 	if d.HasChange("group_membership_claims") {
@@ -591,7 +588,8 @@ func flattenADApplicationOauth2Permissions(in *[]graphrbac.OAuth2Permission) []m
 	return result
 }
 
-func expandADApplicationAppRoles(input []interface{}) *[]graphrbac.AppRole {
+func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
+	input := i.(*schema.Set).List()
 	if len(input) == 0 {
 		return nil
 	}
