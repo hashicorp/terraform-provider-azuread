@@ -69,7 +69,7 @@ func testAccDataSourceAzureADGroup_objectId(id string) string {
 %s
 
 data "azuread_group" "test" {
-  object_id = "${azuread_group.test.id}"
+  object_id = "${azuread_group.test.object_id}"
 }
 `, testAccAzureADGroup(id))
 }

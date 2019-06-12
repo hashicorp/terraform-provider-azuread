@@ -3,19 +3,16 @@ package azuread
 import (
 	"fmt"
 	"log"
-	"time"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
-
-	"github.com/hashicorp/go-azure-helpers/response"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/terraform/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -37,6 +34,18 @@ func resourceServicePrincipal() *schema.Resource {
 				ValidateFunc: validate.UUID,
 			},
 
+			"display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
+
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -45,11 +54,6 @@ func resourceServicePrincipal() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},
-
-			"display_name": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -80,15 +84,11 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	d.SetId(*sp.ObjectID)
 
-	// mimicking the behaviour of az tool retry until a successful get
-	if err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		if _, err := client.Get(ctx, *sp.ObjectID); err != nil {
-			return resource.RetryableError(err)
-		}
-
-		return nil
-	}); err != nil {
-		return fmt.Errorf("Error waiting for Service Principal %q to become available: %+v", applicationId, err)
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, *sp.ObjectID)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)
@@ -112,14 +112,14 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("application_id", app.AppID)
 	d.Set("display_name", app.DisplayName)
-
+	d.Set("object_id", app.ObjectID)
 	// tags doesn't exist as a property, so extract it
-	if iTags, ok := app.AdditionalProperties["tags"]; ok {
-		if tags, ok := iTags.([]interface{}); ok {
-			if err := d.Set("tags", tf.ExpandStringSlicePtr(tags)); err != nil {
-				return fmt.Errorf("Error setting `tags`: %+v", err)
-			}
-		}
+	if err := d.Set("tags", app.Tags); err != nil {
+		return fmt.Errorf("Error setting `tags`: %+v", err)
+	}
+
+	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
+		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
 
 	return nil

@@ -27,6 +27,10 @@ The following arguments are supported:
 
 * `user_principal_name` - (Required) The User Principal Name of the Azure AD User.
 
+* `object_id` - (Optional) Specifies the Object ID of the Application within Azure Active Directory.
+
+-> **NOTE:** Either a `user_principal_name` or an `object_id` must be specified.
+
 ## Attributes Reference
 
 The following attributes are exported:

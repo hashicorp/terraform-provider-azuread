@@ -5,6 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -62,20 +63,21 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	var user graphrbac.User
 
-	if oId, ok := d.GetOk("user_principal_name"); ok {
+	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
+
 		// use the object_id to find the Azure AD application
-		resp, err := client.Get(ctx, oId.(string))
+		resp, err := client.Get(ctx, upn)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD User with ID %q was not found", oId.(string))
+				return fmt.Errorf("Error: AzureAD User with ID %q was not found", upn)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", oId.(string), err)
+			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", upn, err)
 		}
 
 		user = resp
-	} else if name, ok := d.Get("object_id").(string); ok {
-		filter := fmt.Sprintf("objectId eq '%s'", name)
+	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
+		filter := fmt.Sprintf("objectId eq '%s'", oId)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
@@ -97,8 +99,8 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		if user.DisplayName == nil {
 			return fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
 		}
-		if *user.DisplayName != name {
-			return fmt.Errorf("displayname for AD Users matching %q does is does not match(%q!=%q)", filter, *user.DisplayName, name)
+		if *user.ObjectID != oId {
+			return fmt.Errorf("objectID for AD Users matching %q does is does not match(%q!=%q)", filter, *user.ObjectID, oId)
 		}
 	} else {
 		return fmt.Errorf("one of `object_id` or `user_principal_name` must be supplied")

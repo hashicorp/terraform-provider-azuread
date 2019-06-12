@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
@@ -28,6 +29,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
@@ -57,6 +59,7 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{

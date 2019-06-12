@@ -48,7 +48,31 @@ The following attributes are exported:
 
 * `application_id` - The Application ID (appId) for the Service Principal.
 
+* `object_id` - The Service Principal's Object ID.
+
 * `display_name` - The Display Name of the Azure Active Directory Application associated with this Service Principal.
+
+* `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated application. Each permission is covered by a `oauth2_permission` block as documented below.
+
+---
+
+`oauth2_permission` block exports the following:
+
+* `id` - The unique identifier for one of the `OAuth2Permission`.
+
+* `type` - The type of the permission.
+
+* `admin_consent_description` - The description of the admin consent.
+
+* `admin_consent_display_name` - The display name of the admin consent.
+
+* `is_enabled` - Is this permission enabled?
+
+* `user_consent_description` - The description of the user consent.
+
+* `user_consent_display_name` - The display name of the user consent.
+
+* `value` - The name of this permission.
 
 ## Import
 

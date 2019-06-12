@@ -26,6 +26,9 @@ func TestAccAzureADServicePrincipal_basic(t *testing.T) {
 					testCheckADServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestspa%s", id))),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{
@@ -51,6 +54,7 @@ func TestAccAzureADServicePrincipal_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADServicePrincipalExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
 			{

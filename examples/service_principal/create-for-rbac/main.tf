@@ -1,7 +1,7 @@
 ## This example creates a basic application and Service Principal and then assigns a role
 ## this mimics the behaviour of `az ad sp create-for-rbac --years 2`
 
-# WARNING: the service pricipal password will be presisted to state
+# WARNING: the service principal password will be presisted to state
 
 data "azurerm_subscription" "main" {}
 

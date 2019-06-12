@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
@@ -26,6 +27,7 @@ func TestAccAzureADUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
@@ -59,6 +61,7 @@ func TestAccAzureADUser_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestupdate%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestupdate%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "false"),
@@ -93,6 +96,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
@@ -103,6 +107,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestupdate%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestupdate%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "account_enabled", "false"),

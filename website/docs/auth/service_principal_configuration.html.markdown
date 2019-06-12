@@ -92,7 +92,7 @@ if ($role -eq $null) {
     $role = Get-AzureADDirectoryRole | Where-Object {$_.displayName -eq 'Company Administrator'}
 }
 
-$sp = Get-AzureADServicePrincipal | Where-Object {$_.displayName -eq 'Service Pricipal Name'}
+$sp = Get-AzureADServicePrincipal | Where-Object {$_.displayName -eq 'Service Principal Name'}
 $sp.ObjectId
 
 Add-AzureADDirectoryRoleMember -ObjectId $role.ObjectId -RefObjectId $sp.ObjectId
