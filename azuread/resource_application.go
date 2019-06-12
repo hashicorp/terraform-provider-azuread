@@ -93,6 +93,56 @@ func resourceApplication() *schema.Resource {
 				Default:      "webapp/api",
 			},
 
+			"app_role": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"allowed_member_types": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice(
+									[]string{"User", "Application"},
+									false,
+								),
+							},
+						},
+
+						"description": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"display_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
+						"value": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -130,56 +180,6 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"oauth2_permissions": graph.SchemaOauth2Permissions(),
-
-			"app_role": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"allowed_member_types": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringInSlice(
-									[]string{"User", "Application"},
-									false,
-								),
-							},
-						},
-
-						"value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-
-						"description": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-
-						"display_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-
-						"is_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-					},
-				},
-			},
 
 			"object_id": {
 				Type:     schema.TypeString,
@@ -563,19 +563,19 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 			appRoleAllowedMemberTypes = append(appRoleAllowedMemberTypes, appRoleAllowedMemberType.(string))
 		}
 
-		appRoleValue := appRole["value"].(string)
 		appRoleDescription := appRole["description"].(string)
 		appRoleDisplayName := appRole["display_name"].(string)
 		appRoleIsEnabled := appRole["is_enabled"].(bool)
+		appRoleValue := appRole["value"].(string)
 
 		output = append(output,
 			graphrbac.AppRole{
 				ID:                 &appRoleID,
 				AllowedMemberTypes: &appRoleAllowedMemberTypes,
-				Value:              &appRoleValue,
 				Description:        &appRoleDescription,
 				DisplayName:        &appRoleDisplayName,
 				IsEnabled:          &appRoleIsEnabled,
+				Value:              &appRoleValue,
 			},
 		)
 	}
@@ -597,9 +597,6 @@ func flattenADApplicationAppRoles(in *[]graphrbac.AppRole) []interface{} {
 		if role.AllowedMemberTypes != nil {
 			appRole["allowed_member_types"] = *role.AllowedMemberTypes
 		}
-		if role.Value != nil {
-			appRole["value"] = *role.Value
-		}
 		if role.Description != nil {
 			appRole["description"] = *role.Description
 		}
@@ -608,6 +605,9 @@ func flattenADApplicationAppRoles(in *[]graphrbac.AppRole) []interface{} {
 		}
 		if role.IsEnabled != nil {
 			appRole["is_enabled"] = *role.IsEnabled
+		}
+		if role.Value != nil {
+			appRole["value"] = *role.Value
 		}
 		appRoles = append(appRoles, appRole)
 	}

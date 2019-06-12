@@ -58,10 +58,10 @@ resource "azuread_application" "test" {
       "Application",
     ]
 
-    value        = "Admin"
     description  = "Admins can manage roles and perform all task actions"
     display_name = "Admin"
     is_enabled   = true
+    value        = "Admin"
   }
 }
 ```
@@ -114,13 +114,13 @@ The following arguments are supported:
 
 * `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in daemon service scenarios) by setting to `Application`, or to both.
 
-* `value` - (Required) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
-
 * `description` - (Required) Permission help text that appears in the admin app assignment and consent experiences.
 
 * `display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
 
 * `is_enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
+
+* `value` - (Required) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 
 ## Attributes Reference
 
