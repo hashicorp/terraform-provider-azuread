@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-
 	"github.com/hashicorp/terraform/helper/resource"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
 func TestAccAzureADUsersDataSource_byUserPrincipalNames(t *testing.T) {
