@@ -304,18 +304,27 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("app_role") {
 		// if the app role already exists then it must be disabled
 		// with no other changes before it can be edited or deleted
+		var app graphrbac.Application
 		var appRolesProperties graphrbac.ApplicationUpdateParameters
-		oldAppRolesRaw, newAppRolesRaw := d.GetChange("app_role")
-		appRolesProperties.AppRoles = expandADApplicationAppRoles(oldAppRolesRaw)
-		for _, appRole := range *appRolesProperties.AppRoles {
+		resp, err := client.Get(ctx, d.Id())
+		if err != nil {
+			if ar.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", d.Id())
+			}
+
+			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
+		}
+		app = resp
+		for _, appRole := range *app.AppRoles {
 			*appRole.IsEnabled = false
 		}
+		appRolesProperties.AppRoles = app.AppRoles
 		if _, err := client.Patch(ctx, d.Id(), appRolesProperties); err != nil {
 			return fmt.Errorf("Error disabling App Roles for Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 
 		// now we can set the new state of the app role
-		properties.AppRoles = expandADApplicationAppRoles(newAppRolesRaw)
+		properties.AppRoles = expandADApplicationAppRoles(d.Get("app_role"))
 	}
 
 	if d.HasChange("group_membership_claims") {
