@@ -129,53 +129,7 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 
-			"oauth2_permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_consent_description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"admin_consent_display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"is_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"user_consent_description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"user_consent_display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
 
 			"object_id": {
 				Type:     schema.TypeString,
@@ -365,7 +319,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
-	if err := d.Set("oauth2_permissions", flattenADApplicationOauth2Permissions(app.Oauth2Permissions)); err != nil {
+	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
 		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
 
@@ -476,43 +430,4 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
-}
-
-func flattenADApplicationOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
-	if in == nil {
-		return []map[string]interface{}{}
-	}
-
-	result := make([]map[string]interface{}, 0)
-	for _, p := range *in {
-		permission := make(map[string]interface{})
-		if v := p.AdminConsentDescription; v != nil {
-			permission["admin_consent_description"] = v
-		}
-		if v := p.AdminConsentDisplayName; v != nil {
-			permission["admin_consent_display_name"] = v
-		}
-		if v := p.ID; v != nil {
-			permission["id"] = v
-		}
-		if v := p.IsEnabled; v != nil {
-			permission["is_enabled"] = *v
-		}
-		if v := p.Type; v != nil {
-			permission["type"] = v
-		}
-		if v := p.UserConsentDescription; v != nil {
-			permission["user_consent_description"] = v
-		}
-		if v := p.UserConsentDisplayName; v != nil {
-			permission["user_consent_display_name"] = v
-		}
-		if v := p.Value; v != nil {
-			permission["value"] = v
-		}
-
-		result = append(result, permission)
-	}
-
-	return result
 }

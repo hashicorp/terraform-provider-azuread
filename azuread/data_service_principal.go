@@ -3,6 +3,10 @@ package azuread
 import (
 	"fmt"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
+
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
 
@@ -38,6 +42,8 @@ func dataServicePrincipal() *schema.Resource {
 				ValidateFunc:  validate.UUID,
 				ConflictsWith: []string{"object_id", "display_name"},
 			},
+
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
 		},
 	}
 }
@@ -125,6 +131,10 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 	d.Set("application_id", sp.AppID)
 	d.Set("display_name", sp.DisplayName)
 	d.Set("object_id", sp.ObjectID)
+
+	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
+		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
+	}
 
 	return nil
 }
