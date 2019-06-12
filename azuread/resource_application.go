@@ -512,45 +512,6 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	return accesses
 }
 
-func flattenADApplicationOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
-	if in == nil {
-		return []map[string]interface{}{}
-	}
-
-	result := make([]map[string]interface{}, 0)
-	for _, p := range *in {
-		permission := make(map[string]interface{})
-		if v := p.AdminConsentDescription; v != nil {
-			permission["admin_consent_description"] = v
-		}
-		if v := p.AdminConsentDisplayName; v != nil {
-			permission["admin_consent_display_name"] = v
-		}
-		if v := p.ID; v != nil {
-			permission["id"] = v
-		}
-		if v := p.IsEnabled; v != nil {
-			permission["is_enabled"] = *v
-		}
-		if v := p.Type; v != nil {
-			permission["type"] = v
-		}
-		if v := p.UserConsentDescription; v != nil {
-			permission["user_consent_description"] = v
-		}
-		if v := p.UserConsentDisplayName; v != nil {
-			permission["user_consent_display_name"] = v
-		}
-		if v := p.Value; v != nil {
-			permission["value"] = v
-		}
-
-		result = append(result, permission)
-	}
-
-	return result
-}
-
 func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	input := i.(*schema.Set).List()
 	if len(input) == 0 {
