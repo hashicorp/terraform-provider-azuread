@@ -98,7 +98,7 @@ output "azure_ad_object_id" {
 
 * `id` - The unique identifier of the `app_role`.
 
-* `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios). Possible values are: `User` and `Application`, or to both.
+* `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios). Possible values are: `User` and `Application`, or both.
 
 * `description` - Permission help text that appears in the admin app assignment and consent experiences.
 
