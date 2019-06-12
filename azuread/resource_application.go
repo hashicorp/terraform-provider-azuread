@@ -395,7 +395,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
-	if err := d.Set("app_role", flattenADApplicationAppRoles(app.AppRoles)); err != nil {
+	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
 		return fmt.Errorf("Error setting `app_role`: %+v", err)
 	}
 
@@ -551,36 +551,4 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	}
 
 	return &output
-}
-
-func flattenADApplicationAppRoles(in *[]graphrbac.AppRole) []interface{} {
-	if in == nil {
-		return []interface{}{}
-	}
-
-	appRoles := make([]interface{}, 0)
-	for _, role := range *in {
-		appRole := make(map[string]interface{})
-		if role.ID != nil {
-			appRole["id"] = *role.ID
-		}
-		if role.AllowedMemberTypes != nil {
-			appRole["allowed_member_types"] = *role.AllowedMemberTypes
-		}
-		if role.Description != nil {
-			appRole["description"] = *role.Description
-		}
-		if role.DisplayName != nil {
-			appRole["display_name"] = *role.DisplayName
-		}
-		if role.IsEnabled != nil {
-			appRole["is_enabled"] = *role.IsEnabled
-		}
-		if role.Value != nil {
-			appRole["value"] = *role.Value
-		}
-		appRoles = append(appRoles, appRole)
-	}
-
-	return appRoles
 }
