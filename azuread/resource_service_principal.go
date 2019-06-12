@@ -39,12 +39,12 @@ func resourceServicePrincipal() *schema.Resource {
 				Computed: true,
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2Permissions(),
-
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"oauth2_permissions": graph.SchemaOauth2Permissions(),
 
 			"tags": {
 				Type:     schema.TypeSet,
@@ -113,6 +113,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("application_id", app.AppID)
 	d.Set("display_name", app.DisplayName)
 	d.Set("object_id", app.ObjectID)
+
 	// tags doesn't exist as a property, so extract it
 	if err := d.Set("tags", app.Tags); err != nil {
 		return fmt.Errorf("Error setting `tags`: %+v", err)
