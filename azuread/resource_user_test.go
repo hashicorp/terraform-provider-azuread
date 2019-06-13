@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
 func TestAccAzureADUser_basic(t *testing.T) {
-	resourceName := "azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+	rn := "azuread_user.test"
+	id := tf.AccRandTimeInt()
+	pw := "p@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,18 +23,18 @@ func TestAccAzureADUser_basic(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADUser_basic(id, password),
+				Config: testAccADUser_basic(id, pw),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADUserExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
+					testCheckADUserExists(rn),
+					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(rn, "object_id"),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -46,9 +47,9 @@ func TestAccAzureADUser_basic(t *testing.T) {
 }
 
 func TestAccAzureADUser_complete(t *testing.T) {
-	resourceName := "azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+	rn := "azuread_user.test"
+	id := tf.AccRandTimeInt()
+	pw := "p@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -56,18 +57,18 @@ func TestAccAzureADUser_complete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADUser_complete(id, password),
+				Config: testAccADUser_complete(id, pw),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADUserExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestupdate%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestupdate%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "account_enabled", "false"),
+					testCheckADUserExists(rn),
+					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(rn, "object_id"),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -80,10 +81,10 @@ func TestAccAzureADUser_complete(t *testing.T) {
 }
 
 func TestAccAzureADUser_update(t *testing.T) {
-	resourceName := "azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wRd"
-	updatedPassword := id + "p@$$wRd2"
+	rn := "azuread_user.test"
+	id := tf.AccRandTimeInt()
+	pw1 := "p@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	pw2 := "p@$$wRd2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -91,38 +92,38 @@ func TestAccAzureADUser_update(t *testing.T) {
 		CheckDestroy: testCheckADUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADUser_basic(id, password),
+				Config: testAccADUser_basic(id, pw1),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADUserExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "account_enabled", "true"),
+					testCheckADUserExists(rn),
+					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(rn, "object_id"),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
 			{
-				Config: testAccADUser_complete(id, updatedPassword),
+				Config: testAccADUser_complete(id, pw2),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADUserExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", fmt.Sprintf("acctestupdate%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "mail_nickname", fmt.Sprintf("acctestupdate%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "account_enabled", "false"),
+					testCheckADUserExists(rn),
+					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(rn, "object_id"),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccADUser_multiple(id, password),
+				Config: testAccADUser_multiple(id, pw1),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists("azuread_user.testA"),
 					testCheckADUserExists("azuread_user.testB"),
 					resource.TestCheckResourceAttrSet("azuread_user.testA", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestA%s", id)),
-					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestA%s", id)),
+					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestA%d", id)),
+					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestA%d", id)),
 					resource.TestCheckResourceAttrSet("azuread_user.testB", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctest_display%s", id)),
-					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctest_mail%s", id)),
+					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctest_display%d", id)),
+					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctest_mail%d", id)),
 				),
 			},
 		},
@@ -175,7 +176,7 @@ func testCheckADUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccADUser_basic(id string, password string) string {
+func testAccADUser_basic(id int, password string) string {
 	return fmt.Sprintf(`
 
 data "azuread_domains" "tenant_domain" {
@@ -183,14 +184,14 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctest%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctest%[1]s"
+	user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctest%[1]d"
 	password              = "%[2]s"
 }
 `, id, password)
 }
 
-func testAccADUser_complete(id string, password string) string {
+func testAccADUser_complete(id int, password string) string {
 	return fmt.Sprintf(`
 
 data "azuread_domains" "tenant_domain" {
@@ -198,9 +199,9 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctest%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestupdate%[1]s"
-	mail_nickname         = "acctestupdate%[1]s"
+	user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestupdate%[1]d"
+	mail_nickname         = "acctestupdate%[1]d"
 	account_enabled       = false
 	password              = "%[2]s"
 	force_password_change = true
@@ -208,7 +209,7 @@ resource "azuread_user" "test" {
 `, id, password)
 }
 
-func testAccADUser_multiple(id string, password string) string {
+func testAccADUser_multiple(id int, password string) string {
 	return fmt.Sprintf(`
 
 data "azuread_domains" "tenant_domain" {
@@ -216,15 +217,15 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "testA" {
-	user_principal_name   = "acctestA%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestA%[1]s"
+	user_principal_name   = "acctestA%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestA%[1]d"
 	password              = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-	user_principal_name   = "acctestB%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctest_display%[1]s"
-	mail_nickname         = "acctest_mail%[1]s"
+	user_principal_name   = "acctestB%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctest_display%[1]d"
+	mail_nickname         = "acctest_mail%[1]d"
 	password              = "%[2]s"
 }
 `, id, password)

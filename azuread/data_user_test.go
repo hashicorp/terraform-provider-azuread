@@ -6,12 +6,14 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
-func TestAccDataSourceAzureADUser_byUserPrincipalName(t *testing.T) {
-	dataSourceName := "data.azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+func TestAccAzureADUserDataSource_byUserPrincipalName(t *testing.T) {
+	dsn := "data.azuread_user.test"
+	id := tf.AccRandTimeInt()
+	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -20,20 +22,20 @@ func TestAccDataSourceAzureADUser_byUserPrincipalName(t *testing.T) {
 			{
 				Config: testAccAzureADUserDataSource_byUserPrincipalName(id, password),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "mail_nickname"),
+					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
+					resource.TestCheckResourceAttrSet(dsn, "display_name"),
+					resource.TestCheckResourceAttrSet(dsn, "mail_nickname"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDataSourceAzureADUser_byObjectId(t *testing.T) {
-	dataSourceName := "data.azuread_user.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+func TestAccAzureADUserDataSource_byObjectId(t *testing.T) {
+	dsn := "data.azuread_user.test"
+	id := tf.AccRandTimeInt()
+	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -42,17 +44,17 @@ func TestAccDataSourceAzureADUser_byObjectId(t *testing.T) {
 			{
 				Config: testAccAzureADUserDataSource_byObjectId(id, password),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "mail_nickname"),
+					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
+					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
+					resource.TestCheckResourceAttrSet(dsn, "display_name"),
+					resource.TestCheckResourceAttrSet(dsn, "mail_nickname"),
 				),
 			},
 		},
 	})
 }
 
-func testAccAzureADUserDataSource_byUserPrincipalName(id, password string) string {
+func testAccAzureADUserDataSource_byUserPrincipalName(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -62,7 +64,7 @@ data "azuread_user" "test" {
 `, testAccADUser_basic(id, password))
 }
 
-func testAccAzureADUserDataSource_byObjectId(id, password string) string {
+func testAccAzureADUserDataSource_byObjectId(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 

@@ -17,7 +17,7 @@ Gets information about an Azure Active Directory user.
 
 ```hcl
 data "azuread_user" "test_user" {
-  user_principal_name = "john@hashicorp.com"
+  user_principal_name = "user@hashicorp.com"
 }
 ```
 
