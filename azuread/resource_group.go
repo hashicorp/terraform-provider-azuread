@@ -1,7 +1,6 @@
 package azuread
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -83,7 +82,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 
 		for _, memberUuid := range *members {
-			if err := addMember(*group.ObjectID, memberUuid, client, ctx); err != nil {
+			if err := graph.GroupAddMember(*group.ObjectID, memberUuid, client, ctx); err != nil {
 				return err
 			}
 		}
@@ -151,7 +150,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, newMember := range membersToAdd {
-			if err := addMember(d.Id(), newMember, client, ctx); err != nil {
+			if err := graph.GroupAddMember(d.Id(), newMember, client, ctx); err != nil {
 				return err
 			}
 		}
@@ -168,21 +167,6 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		if !ar.ResponseWasNotFound(resp) {
 			return fmt.Errorf("Error Deleting Azure AD Group with ID %q: %+v", d.Id(), err)
 		}
-	}
-
-	return nil
-}
-
-func addMember(groupId string, member string, client graphrbac.GroupsClient, ctx context.Context) error {
-	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
-
-	properties := graphrbac.GroupAddMemberParameters{
-		URL: &memberGraphURL,
-	}
-
-	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
-	if _, err := client.AddMember(ctx, groupId, properties); err != nil {
-		return err
 	}
 
 	return nil

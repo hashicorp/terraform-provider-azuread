@@ -29,3 +29,18 @@ func GroupAllMembers(groupId string, client graphrbac.GroupsClient, ctx context.
 
 	return existingMembers, nil
 }
+
+func GroupAddMember(groupId string, member string, client graphrbac.GroupsClient, ctx context.Context) error {
+	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
+
+	properties := graphrbac.GroupAddMemberParameters{
+		URL: &memberGraphURL,
+	}
+
+	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
+	if _, err := client.AddMember(ctx, groupId, properties); err != nil {
+		return err
+	}
+
+	return nil
+}
