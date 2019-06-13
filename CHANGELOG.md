@@ -1,5 +1,9 @@
 ## 0.5.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `azuread_users` [GH-109]
+
 IMPROVEMENTS:
 
 * Data Source `azuread_application` - support for the `app_roles` property [GH-110]
