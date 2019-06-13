@@ -130,7 +130,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	if v, ok := d.GetOk("members"); ok && d.HasChange("members") {
+	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") {
 		existingMembers, err := graph.GroupAllMembers(d.Id(), client, ctx)
 		if err != nil {
 			return err
