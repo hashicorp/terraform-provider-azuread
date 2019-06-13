@@ -54,6 +54,8 @@ output "azure_ad_object_id" {
 
 * `oauth2_permissions` - A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by a `oauth2_permission` block as documented below.
 
+* `app_roles` - A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
+
 ---
 
 `required_resource_access` block exports the following:
@@ -89,3 +91,19 @@ output "azure_ad_object_id" {
 * `user_consent_display_name` - The display name of the user consent
 
 * `value` - The name of this permission
+
+---
+
+`app_role` block exports the following:
+
+* `id` - The unique identifier of the `app_role`.
+
+* `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios). Possible values are: `User` and `Application`, or both.
+
+* `description` - Permission help text that appears in the admin app assignment and consent experiences.
+
+* `display_name` - Display name for the permission that appears in the admin consent and app assignment experiences.
+
+* `is_enabled` - Determines if the app role is enabled.
+
+* `value` - Specifies the value of the roles claim that the application should expect in the authentication and access tokens.

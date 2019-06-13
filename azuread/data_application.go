@@ -79,6 +79,8 @@ func dataApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"app_roles": graph.SchemaAppRoles(),
+
 			"required_resource_access": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -191,6 +193,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("type", "native")
 	} else {
 		d.Set("type", "webapp/api")
+	}
+
+	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
+		return fmt.Errorf("Error setting `app_roles`: %+v", err)
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {

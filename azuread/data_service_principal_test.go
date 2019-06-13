@@ -24,6 +24,7 @@ func TestAccAzureADServicePrincipalDataSource_byApplicationId(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "object_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "display_name"),
+					resource.TestCheckResourceAttr(dataSourceName, "app_roles.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestspa%s", id))),
 				),

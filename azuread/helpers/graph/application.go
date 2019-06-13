@@ -5,6 +5,50 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+func SchemaAppRoles() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"allowed_member_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"is_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+
+				"value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
 func SchemaOauth2Permissions() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -54,6 +98,38 @@ func SchemaOauth2Permissions() *schema.Schema {
 			},
 		},
 	}
+}
+
+func FlattenAppRoles(in *[]graphrbac.AppRole) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	appRoles := make([]interface{}, 0)
+	for _, role := range *in {
+		appRole := make(map[string]interface{})
+		if role.ID != nil {
+			appRole["id"] = *role.ID
+		}
+		if role.AllowedMemberTypes != nil {
+			appRole["allowed_member_types"] = *role.AllowedMemberTypes
+		}
+		if role.Description != nil {
+			appRole["description"] = *role.Description
+		}
+		if role.DisplayName != nil {
+			appRole["display_name"] = *role.DisplayName
+		}
+		if role.IsEnabled != nil {
+			appRole["is_enabled"] = *role.IsEnabled
+		}
+		if role.Value != nil {
+			appRole["value"] = *role.Value
+		}
+		appRoles = append(appRoles, appRole)
+	}
+
+	return appRoles
 }
 
 func FlattenOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
