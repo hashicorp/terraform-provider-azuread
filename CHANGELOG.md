@@ -2,9 +2,10 @@
 
 IMPROVEMENTS:
 
+* Data Source `azuread_application` - support for the `app_roles` property [GH-110]
+* Data Source `azuread_service_principal` - export the `app_roles` property [GH-110]
 * `azuread_application` - support for the `app_roles` property [GH-98]
 * `azuread_application_password` - deprecation of `application_id` in favour of `application_object_id` [GH-107]
-
 * `azuread_service_principal` - export the `oauth2_permissions` property [GH-103]
 
 ## 0.4.0 (June 06, 2019)
