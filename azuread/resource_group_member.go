@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -42,15 +43,8 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
-	tenantID := client.TenantID
 
-	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", tenantID, memberID)
-
-	properties := graphrbac.GroupAddMemberParameters{
-		URL: &memberGraphURL,
-	}
-
-	if _, err := client.AddMember(ctx, groupID, properties); err != nil {
+	if err := graph.GroupAddMember(groupID, memberID, client, ctx); err != nil {
 		return err
 	}
 
@@ -72,48 +66,16 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	groupID := id[0]
 	memberID := id[1]
 
-	members, err := client.GetGroupMembersComplete(ctx, groupID)
+	members, err := graph.GroupAllMembers(groupID, client, ctx)
 	if err != nil {
 		return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", groupID, err)
 	}
 
 	var memberObjectID string
-	for members.NotDone() {
-		// possible members are users, groups or service principals
-		// we try to 'cast' each result as the corresponding type and diff
-		// if we found the object we're looking for
-		user, _ := members.Value().AsUser()
-		if user != nil {
-			if *user.ObjectID == memberID {
-				memberObjectID = *user.ObjectID
-				// we successfully found the directory object we're looking for, we can stop looping
-				// through the results
-				break
-			}
-		}
 
-		group, _ := members.Value().AsADGroup()
-		if group != nil {
-			if *group.ObjectID == memberID {
-				memberObjectID = *group.ObjectID
-				// we successfully found the directory object we're looking for, we can stop looping
-				// through the results
-				break
-			}
-		}
-
-		servicePrincipal, _ := members.Value().AsServicePrincipal()
-		if servicePrincipal != nil {
-			if *servicePrincipal.ObjectID == memberID {
-				memberObjectID = *servicePrincipal.ObjectID
-				// we successfully found the directory object we're looking for, we can stop looping
-				// through the results
-				break
-			}
-		}
-
-		if err = members.NextWithContext(ctx); err != nil {
-			return fmt.Errorf("Error listing Azure AD Group Members: %s", err)
+	for _, objectID := range members {
+		if objectID == memberID {
+			memberObjectID = objectID
 		}
 	}
 

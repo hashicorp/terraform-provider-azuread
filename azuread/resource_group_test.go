@@ -171,7 +171,7 @@ resource "azuread_group" "test" {
 func testAccAzureADGroupWithMembers(id string, members []string) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
-  name = "acctest%s"
+  name   = "acctest%s"
   members = [ %s ]
 }
 `, id, strings.Join(members, ", "))

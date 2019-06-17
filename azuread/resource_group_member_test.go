@@ -174,8 +174,8 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.test.id}"
-	member_object_id 	= "${azuread_user.test.id}"
+	group_object_id 	= "${azuread_group.test.object_id}"
+	member_object_id 	= "${azuread_user.test.object_id}"
 }
 
 `, id, password)
@@ -193,8 +193,8 @@ resource "azuread_group" "testB" {
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.testA.id}"
-	member_object_id 	= "${azuread_group.testB.id}"
+	group_object_id 	= "${azuread_group.testA.object_id}"
+	member_object_id 	= "${azuread_group.testB.object_id}"
 }
 
 `, id)
@@ -216,8 +216,8 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.test.id}"
-	member_object_id 	= "${azuread_service_principal.test.id}"
+	group_object_id 	= "${azuread_group.test.object_id}"
+	member_object_id 	= "${azuread_service_principal.test.object_id}"
 }
 
 `, id)

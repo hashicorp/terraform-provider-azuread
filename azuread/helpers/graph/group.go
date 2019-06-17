@@ -17,9 +17,27 @@ func GroupAllMembers(groupId string, client graphrbac.GroupsClient, ctx context.
 
 	existingMembers := make([]string, 0)
 
+	var memberObjectID string
 	for it.NotDone() {
-		currUser, _ := it.Value().AsUser()
-		existingMembers = append(existingMembers, *currUser.ObjectID)
+		// possible members are users, groups or service principals
+		// we try to 'cast' each result as the corresponding type and diff
+		// if we found the object we're looking for
+		user, _ := it.Value().AsUser()
+		if user != nil {
+			memberObjectID = *user.ObjectID
+		}
+
+		group, _ := it.Value().AsADGroup()
+		if group != nil {
+			memberObjectID = *group.ObjectID
+		}
+
+		servicePrincipal, _ := it.Value().AsServicePrincipal()
+		if servicePrincipal != nil {
+			memberObjectID = *servicePrincipal.ObjectID
+		}
+
+		existingMembers = append(existingMembers, memberObjectID)
 		if err := it.NextWithContext(ctx); err != nil {
 			return nil, fmt.Errorf("Error during pagination of group members from Azure AD Group with ID %q: %+v", groupId, err)
 		}

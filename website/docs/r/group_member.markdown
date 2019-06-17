@@ -3,13 +3,13 @@ layout: "azuread"
 page_title: "Azure Active Directory: azuread_group_member"
 sidebar_current: "docs-azuread-resource-azuread-group-member"
 description: |-
-  Manages a Group Membership within Azure Active Directory.
+  Manages a single Group Membership within Azure Active Directory.
 
 ---
 
 # azuread_group_member
 
-Manages a Group Membership within Azure Active Directory.
+Manages a single Group Membership within Azure Active Directory. Do not use this resource at the same time as `azuread_group.members`.
 
 ## Example Usage
 

@@ -34,7 +34,7 @@ resource "azuread_user" "my_user" {
 
 resource "azuread_group" "my_group" {
   name = "MyGroup"
-  members = [ azuread_user.my_user.id /*, more users */ ]
+  members = [ azuread_user.my_user.object_id /*, more users */ ]
 }
 ```
 
@@ -43,7 +43,7 @@ resource "azuread_group" "my_group" {
 The following arguments are supported:
 
 * `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
-* `members` (Optional) A set of users who should be members of this Group.
+* `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals. Do not use `azuread_group_member` at the same time as this argument.
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
 
@@ -55,7 +55,7 @@ The following attributes are exported:
 
 * `name` - The Display Name of the Group.
 
-* `members` - The Group Members in the Group.
+* `members` - The Members of the Group.
 
 ## Import
 

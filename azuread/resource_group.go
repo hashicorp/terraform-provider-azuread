@@ -82,7 +82,9 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 
 		for _, memberUuid := range *members {
-			if err := graph.GroupAddMember(*group.ObjectID, memberUuid, client, ctx); err != nil {
+			err := graph.GroupAddMember(*group.ObjectID, memberUuid, client, ctx)
+
+			if err != nil {
 				return err
 			}
 		}
