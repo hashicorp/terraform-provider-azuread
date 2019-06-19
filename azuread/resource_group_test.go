@@ -30,7 +30,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "members"),
+					resource.TestCheckResourceAttr(resourceName, "members.#", "0"),
 				),
 			},
 			{
@@ -44,6 +44,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 
 func TestAccAzureADGroup_members(t *testing.T) {
 	resourceName := "azuread_group.test"
+
 	id, err := uuid.GenerateUUID()
 	if err != nil {
 		t.Fatal(err)
@@ -52,11 +53,8 @@ func TestAccAzureADGroup_members(t *testing.T) {
 	members := make([]string, 0)
 
 	for i := 0; i < 5; i++ {
-		memberUuid, err := uuid.GenerateUUID()
-		if err != nil {
-			t.Fatal(err)
-		}
-		members = append(members, "\""+memberUuid+"\"")
+		memberUuid, _ := uuid.GenerateUUID()
+		members = append(members, memberUuid)
 	}
 
 	config := testAccAzureADGroupWithMembers(id, members)
@@ -72,7 +70,7 @@ func TestAccAzureADGroup_members(t *testing.T) {
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-					resource.TestCheckResourceAttr(resourceName, "members", fmt.Sprintf("[ %s ]", strings.Join(members, ", "))),
+					resource.TestCheckResourceAttr(resourceName, "members.#", "5"),
 				),
 			},
 			{
@@ -103,6 +101,7 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 					testCheckAzureADGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+					resource.TestCheckResourceAttr(resourceName, "members.#", "0"),
 				),
 			},
 			{
@@ -169,10 +168,37 @@ resource "azuread_group" "test" {
 }
 
 func testAccAzureADGroupWithMembers(id string, members []string) string {
-	return fmt.Sprintf(`
+	var sb strings.Builder
+
+	sb.WriteString(`
+data "azuread_domains" "tenant_domain" {
+	only_initial = true
+}`)
+
+	for _, member := range members {
+		fmt.Fprintf(&sb, `
+resource "azuread_user" "acctest_user_%[1]s" {
+	user_principal_name   = "acctest.%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctest-%[1]s"
+	password              = "%[1]s"
+}
+`, member)
+	}
+
+	fmt.Fprintf(&sb, `
 resource "azuread_group" "test" {
   name   = "acctest%s"
   members = [ %s ]
 }
-`, id, strings.Join(members, ", "))
+`, id, strings.Join(formatMembersAsUser(members), ", "))
+
+	return sb.String()
+}
+
+func formatMembersAsUser(members []string) []string {
+	vsm := make([]string, len(members))
+	for i, v := range members {
+		vsm[i] = "azuread_user.acctest_user_" + v + ".id"
+	}
+	return vsm
 }
