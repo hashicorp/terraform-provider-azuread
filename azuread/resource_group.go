@@ -44,6 +44,7 @@ func resourceGroup() *schema.Resource {
 			"members": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Set:      schema.HashString,
 				ForceNew: false,
 				Elem: &schema.Schema{
