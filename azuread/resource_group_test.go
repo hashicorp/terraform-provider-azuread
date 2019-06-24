@@ -148,7 +148,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with 1 member
 			{
-				Config: user(id) + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.id", id)),
+				Config: user(id) + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id", id)),
 				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
@@ -158,7 +158,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with multiple members
 			{
-				Config: user(id+"a") + user(id+"b") + user(id+"c") + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.id, azuread_user.acctest_user_%[2]s.id, azuread_user.acctest_user_%[3]s.id", id+"a", id+"b", id+"c")),
+				Config: user(id+"a") + user(id+"b") + user(id+"c") + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id, azuread_user.acctest_user_%[2]s.object_id, azuread_user.acctest_user_%[3]s.object_id", id+"a", id+"b", id+"c")),
 				Check:  assertResourceWithMemberCount(id, "3"),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with a different member
 			{
-				Config: servicePrincipal(id) + groupWithMembers(id, fmt.Sprintf("azuread_service_principal.test_sp_%[1]s.id", id)),
+				Config: servicePrincipal(id) + groupWithMembers(id, fmt.Sprintf("azuread_service_principal.test_sp_%[1]s.object_id", id)),
 				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
@@ -256,7 +256,7 @@ func testAccAzureADGroupWithDiverseMembers(id string) string {
 	sb.WriteString(servicePrincipal(id))
 	sb.WriteString(group(id))
 	sb.WriteString(user(id))
-	sb.WriteString(groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.id, azuread_group.test_g_%[1]s.id, azuread_service_principal.test_sp_%[1]s.id", id)))
+	sb.WriteString(groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id, azuread_group.test_g_%[1]s.object_id, azuread_service_principal.test_sp_%[1]s.object_id", id)))
 
 	return sb.String()
 }
@@ -292,7 +292,7 @@ resource "azuread_group" "test" {
 func formatMembersAsUser(members []string) []string {
 	vsm := make([]string, len(members))
 	for i, v := range members {
-		vsm[i] = "azuread_user.acctest_user_" + v + ".id"
+		vsm[i] = "azuread_user.acctest_user_" + v + ".object_id"
 	}
 	return vsm
 }
