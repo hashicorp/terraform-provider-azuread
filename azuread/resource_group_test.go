@@ -26,7 +26,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  assertResourceWithMemberCount(id, resourceName, "0"),
+				Check:  assertResourceWithMemberCount(id, "0"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -61,7 +61,7 @@ func TestAccAzureADGroup_members(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  assertResourceWithMemberCount(id, resourceName, "5"),
+				Check:  assertResourceWithMemberCount(id, "5"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -87,7 +87,7 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  assertResourceWithMemberCount(id, resourceName, "0"),
+				Check:  assertResourceWithMemberCount(id, "0"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -113,7 +113,7 @@ func TestAccAzureADGroup_diverse(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check:  assertResourceWithMemberCount(id, resourceName, "3"),
+				Check:  assertResourceWithMemberCount(id, "3"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -139,7 +139,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Empty group with 0 members
 			{
 				Config: groupWithMembers(id, ""),
-				Check:  assertResourceWithMemberCount(id, resourceName, "0"),
+				Check:  assertResourceWithMemberCount(id, "0"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -149,7 +149,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Group with 1 member
 			{
 				Config: user(id) + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.id", id)),
-				Check:  assertResourceWithMemberCount(id, resourceName, "1"),
+				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -159,7 +159,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Group with multiple members
 			{
 				Config: user(id+"a") + user(id+"b") + user(id+"c") + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.id, azuread_user.acctest_user_%[2]s.id, azuread_user.acctest_user_%[3]s.id", id+"a", id+"b", id+"c")),
-				Check:  assertResourceWithMemberCount(id, resourceName, "3"),
+				Check:  assertResourceWithMemberCount(id, "3"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -169,7 +169,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Group with a different member
 			{
 				Config: servicePrincipal(id) + groupWithMembers(id, fmt.Sprintf("azuread_service_principal.test_sp_%[1]s.id", id)),
-				Check:  assertResourceWithMemberCount(id, resourceName, "1"),
+				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
 				ResourceName:      resourceName,
@@ -179,7 +179,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Empty group with 0 members
 			{
 				Config: groupWithMembers(id, ""),
-				Check:  assertResourceWithMemberCount(id, resourceName, "0"),
+				Check:  assertResourceWithMemberCount(id, "0"),
 			},
 		},
 	})
@@ -231,7 +231,9 @@ func testCheckAzureADGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func assertResourceWithMemberCount(id string, resourceName string, memberCount string) resource.TestCheckFunc {
+func assertResourceWithMemberCount(id string, memberCount string) resource.TestCheckFunc {
+	resourceName := "azuread_group.test"
+
 	return resource.ComposeTestCheckFunc(
 		testCheckAzureADGroupExists(resourceName),
 		resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
