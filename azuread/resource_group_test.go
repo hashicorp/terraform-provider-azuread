@@ -148,7 +148,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with 1 member
 			{
-				Config: user(id) + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id", id)),
+				Config: groupWithOneMember(id),
 				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
@@ -158,7 +158,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with multiple members
 			{
-				Config: user(id+"a") + user(id+"b") + user(id+"c") + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id, azuread_user.acctest_user_%[2]s.object_id, azuread_user.acctest_user_%[3]s.object_id", id+"a", id+"b", id+"c")),
+				Config: groupWithThreeMembers(id),
 				Check:  assertResourceWithMemberCount(id, "3"),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with a different member
 			{
-				Config: servicePrincipal(id) + groupWithMembers(id, fmt.Sprintf("azuread_service_principal.test_sp_%[1]s.object_id", id)),
+				Config: groupWithServicePrincipal(id),
 				Check:  assertResourceWithMemberCount(id, "1"),
 			},
 			{
@@ -339,4 +339,16 @@ resource "azuread_user" "acctest_user_%[1]s" {
 	password              = "%[1]s"
 }
 `, id)
+}
+
+func groupWithOneMember(id string) string {
+	return user(id) + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id", id))
+}
+
+func groupWithThreeMembers(id string) string {
+	return user(id+"a") + user(id+"b") + user(id+"c") + groupWithMembers(id, fmt.Sprintf("azuread_user.acctest_user_%[1]s.object_id, azuread_user.acctest_user_%[2]s.object_id, azuread_user.acctest_user_%[3]s.object_id", id+"a", id+"b", id+"c"))
+}
+
+func groupWithServicePrincipal(id string) string {
+	return servicePrincipal(id) + groupWithMembers(id, fmt.Sprintf("azuread_service_principal.test_sp_%[1]s.object_id", id))
 }
