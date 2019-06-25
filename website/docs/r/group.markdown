@@ -43,9 +43,11 @@ resource "azuread_group" "my_group" {
 The following arguments are supported:
 
 * `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
-* `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals. Do not use `azuread_group_member` at the same time as this argument.
+* `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
+
+-> **NOTE:** Do not use `azuread_group_member` at the same time as the `members` argument.
 
 ## Attributes Reference
 

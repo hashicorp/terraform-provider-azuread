@@ -9,7 +9,9 @@ description: |-
 
 # azuread_group_member
 
-Manages a single Group Membership within Azure Active Directory. Do not use this resource at the same time as `azuread_group.members`.
+Manages a single Group Membership within Azure Active Directory.
+
+-> **NOTE:** Do not use this resource at the same time as `azuread_group.members`.
 
 ## Example Usage
 
