@@ -62,3 +62,15 @@ func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId 
 
 	return nil
 }
+
+func GroupAddMembers(client graphrbac.GroupsClient, ctx context.Context, groupId string, members []string) error {
+	for _, memberUuid := range members {
+		err := GroupAddMember(client, ctx, groupId, memberUuid)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
