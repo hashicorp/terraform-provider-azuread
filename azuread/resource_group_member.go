@@ -48,7 +48,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	id := fmt.Sprintf("%s/%s", groupID, memberID)
+	id := fmt.Sprintf("%s/member/%s", groupID, memberID)
 	d.SetId(id)
 
 	return resourceGroupMemberRead(d, meta)
@@ -58,9 +58,9 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/")
+	id := strings.Split(d.Id(), "/member/")
 	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {groupObjectId}/{memberObjectId} - but got %q", d.Id())
+		return fmt.Errorf("ID should be in the format {groupObjectId}/member/{memberObjectId} - but got %q", d.Id())
 	}
 
 	groupID := id[0]
@@ -94,9 +94,9 @@ func resourceGroupMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/")
+	id := strings.Split(d.Id(), "/member/")
 	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {groupObjectId}/{memberObjectId} - but got %q", d.Id())
+		return fmt.Errorf("ID should be in the format {groupObjectId}/member/{memberObjectId} - but got %q", d.Id())
 	}
 
 	groupID := id[0]
