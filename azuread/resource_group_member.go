@@ -44,7 +44,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
 
-	if err := graph.GroupAddMember(groupID, memberID, client, ctx); err != nil {
+	if err := graph.GroupAddMember(client, ctx, groupID, memberID); err != nil {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	groupID := id[0]
 	memberID := id[1]
 
-	members, err := graph.GroupAllMembers(groupID, client, ctx)
+	members, err := graph.GroupAllMembers(client, ctx, groupID)
 	if err != nil {
 		return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", groupID, err)
 	}

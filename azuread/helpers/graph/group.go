@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 )
 
-func GroupAllMembers(groupId string, client graphrbac.GroupsClient, ctx context.Context) ([]string, error) {
+func GroupAllMembers(client graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
 	it, err := client.GetGroupMembersComplete(ctx, groupId)
 
 	if err != nil {
@@ -48,7 +48,7 @@ func GroupAllMembers(groupId string, client graphrbac.GroupsClient, ctx context.
 	return existingMembers, nil
 }
 
-func GroupAddMember(groupId string, member string, client graphrbac.GroupsClient, ctx context.Context) error {
+func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId string, member string) error {
 	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
 
 	properties := graphrbac.GroupAddMemberParameters{

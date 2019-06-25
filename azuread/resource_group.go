@@ -83,7 +83,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 
 		for _, memberUuid := range *members {
-			err := graph.GroupAddMember(*group.ObjectID, memberUuid, client, ctx)
+			err := graph.GroupAddMember(client, ctx, *group.ObjectID, memberUuid)
 
 			if err != nil {
 				return err
@@ -119,7 +119,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.DisplayName)
 	d.Set("object_id", resp.ObjectID)
 
-	members, err := graph.GroupAllMembers(d.Id(), client, ctx)
+	members, err := graph.GroupAllMembers(client, ctx, d.Id())
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") {
-		existingMembers, err := graph.GroupAllMembers(d.Id(), client, ctx)
+		existingMembers, err := graph.GroupAllMembers(client, ctx, d.Id())
 		if err != nil {
 			return err
 		}
@@ -153,7 +153,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, newMember := range membersToAdd {
-			if err := graph.GroupAddMember(d.Id(), newMember, client, ctx); err != nil {
+			if err := graph.GroupAddMember(client, ctx, d.Id(), newMember); err != nil {
 				return err
 			}
 		}
