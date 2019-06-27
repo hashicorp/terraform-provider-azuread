@@ -26,9 +26,9 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_application_password" "example" {
-  application_id        = "${azuread_application.example.id}"
-  value                 = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
-  end_date              = "2020-01-01T01:02:03Z"
+  application_id = "${azuread_application.example.id}"
+  value          = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
+  end_date       = "2020-01-01T01:02:03Z"
 }
 ```
 

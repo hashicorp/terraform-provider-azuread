@@ -27,7 +27,7 @@ resource "azuread_application" "test" {
 
 resource "azuread_service_principal" "test" {
   application_id = "${azuread_application.test.application_id}"
-  
+
   tags = ["example", "tags", "here"]
 }
 ```
