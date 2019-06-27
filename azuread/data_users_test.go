@@ -55,7 +55,7 @@ func testAccAzureADUsersDataSource_byUserPrincipalNames(id int, password string)
 %s
 
 data "azuread_users" "test" {
-	user_principal_names = ["${azuread_user.testA.user_principal_name}", "${azuread_user.testB.user_principal_name}"]
+  user_principal_names = ["${azuread_user.testA.user_principal_name}", "${azuread_user.testB.user_principal_name}"]
 }
 `, testAccADUser_multiple(id, password))
 }
@@ -65,7 +65,7 @@ func testAccAzureADUsersDataSource_byObjectIds(id int, password string) string {
 %s
 
 data "azuread_users" "test" {
-	object_ids = ["${azuread_user.testA.object_id}", "${azuread_user.testB.object_id}"]
+  object_ids = ["${azuread_user.testA.object_id}", "${azuread_user.testB.object_id}"]
 }
 `, testAccADUser_multiple(id, password))
 }

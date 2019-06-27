@@ -469,9 +469,8 @@ resource "azuread_application" "test" {
 
 func testAccADApplication_availableToOtherTenants(id string) string {
 	return fmt.Sprintf(`
-
 data "azuread_domains" "tenant_domain" {
-	only_initial = true
+  only_initial = true
 }
 
 resource "azuread_application" "test" {
@@ -485,8 +484,8 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsDirectoryRole(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
-  group_membership_claims    = "DirectoryRole"
+  name                    = "acctest%s"
+  group_membership_claims = "DirectoryRole"
 }
 `, id)
 }
@@ -494,8 +493,8 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsSecurityGroup(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
-  group_membership_claims    = "SecurityGroup"
+  name                    = "acctest%s"
+  group_membership_claims = "SecurityGroup"
 }
 `, id)
 }
@@ -514,17 +513,17 @@ resource "azuread_application" "test" {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
 
     resource_access {
-      id = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
+      id   = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
       type = "Role"
     }
 
     resource_access {
-      id = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
       type = "Scope"
     }
 
     resource_access {
-      id = "06da0dbc-49e2-44d2-8312-53f166ab848a"
+      id   = "06da0dbc-49e2-44d2-8312-53f166ab848a"
       type = "Scope"
     }
   }
@@ -533,7 +532,7 @@ resource "azuread_application" "test" {
     resource_app_id = "00000002-0000-0000-c000-000000000000"
 
     resource_access {
-      id = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+      id   = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
       type = "Scope"
     }
   }
@@ -544,16 +543,18 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRoles(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name     = "acctest%s"
+  name = "acctest%s"
+
   app_role {
     allowed_member_types = [
       "User",
       "Application",
     ]
-    description          = "Admins can manage roles and perform all task actions"
-    display_name         = "Admin"
-    is_enabled           = true
-    value                = "Admin"
+
+    description  = "Admins can manage roles and perform all task actions"
+    display_name = "Admin"
+    is_enabled   = true
+    value        = "Admin"
   }
 }
 `, id)
@@ -562,7 +563,8 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRolesUpdate(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name     = "acctest%s"
+  name = "acctest%s"
+
   app_role {
     allowed_member_types = ["User"]
     description          = "Admins can manage roles and perform all task actions"
