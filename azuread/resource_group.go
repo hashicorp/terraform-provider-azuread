@@ -148,10 +148,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		for _, newMember := range membersToAdd {
-			if err := graph.GroupAddMember(client, ctx, d.Id(), newMember); err != nil {
-				return err
-			}
+		if err := graph.GroupAddMembers(client, ctx, d.Id(), membersToAdd); err != nil {
+			return err
 		}
 	}
 
