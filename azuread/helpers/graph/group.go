@@ -57,7 +57,7 @@ func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId 
 
 	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
 	if _, err := client.AddMember(ctx, groupId, properties); err != nil {
-		return err
+		return fmt.Errorf("Error adding group member %q to Azure AD Group with ID %q: %+v", member, groupId, err)
 	}
 
 	return nil
@@ -68,7 +68,7 @@ func GroupAddMembers(client graphrbac.GroupsClient, ctx context.Context, groupId
 		err := GroupAddMember(client, ctx, groupId, memberUuid)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("Error while adding members to Azure AD Group with ID %q: %+v", groupId, err)
 		}
 	}
 
