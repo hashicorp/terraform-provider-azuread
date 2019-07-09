@@ -42,3 +42,11 @@ The following attributes are exported:
 * `object_id` - The Object ID of the Azure AD User.
 * `id` - The Object ID of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
+
+## Import
+
+Azure Active Directory Users can be imported using the `object id`, e.g.
+
+```shell
+terraform import azuread_user.my_user 00000000-0000-0000-0000-000000000000
+```
