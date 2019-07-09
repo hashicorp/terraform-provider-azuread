@@ -178,55 +178,52 @@ func testCheckADUserDestroy(s *terraform.State) error {
 
 func testAccADUser_basic(id int, password string) string {
 	return fmt.Sprintf(`
-
 data "azuread_domains" "tenant_domain" {
-	only_initial = true
+  only_initial = true
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctest%[1]d"
-	password              = "%[2]s"
+  user_principal_name = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctest%[1]d"
+  password            = "%[2]s"
 }
 `, id, password)
 }
 
 func testAccADUser_complete(id int, password string) string {
 	return fmt.Sprintf(`
-
 data "azuread_domains" "tenant_domain" {
-	only_initial = true
+  only_initial = true
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestupdate%[1]d"
-	mail_nickname         = "acctestupdate%[1]d"
-	account_enabled       = false
-	password              = "%[2]s"
-	force_password_change = true
+  user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name          = "acctestupdate%[1]d"
+  mail_nickname         = "acctestupdate%[1]d"
+  account_enabled       = false
+  password              = "%[2]s"
+  force_password_change = true
 }
 `, id, password)
 }
 
 func testAccADUser_multiple(id int, password string) string {
 	return fmt.Sprintf(`
-
 data "azuread_domains" "tenant_domain" {
-	only_initial = true
+  only_initial = true
 }
 
 resource "azuread_user" "testA" {
-	user_principal_name   = "acctestA%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestA%[1]d"
-	password              = "%[2]s"
+  user_principal_name = "acctestA%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestA%[1]d"
+  password            = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-	user_principal_name   = "acctestB%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctest_display%[1]d"
-	mail_nickname         = "acctest_mail%[1]d"
-	password              = "%[2]s"
+  user_principal_name = "acctestB%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctest_display%[1]d"
+  mail_nickname       = "acctest_mail%[1]d"
+  password            = "%[2]s"
 }
 `, id, password)
 }

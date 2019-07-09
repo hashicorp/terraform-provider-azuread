@@ -27,27 +27,28 @@ resource "azuread_application" "test" {
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
-  
+
     resource_access {
-      id = "..."
+      id   = "..."
       type = "Role"
     }
+
     resource_access {
-      id = "..."
+      id   = "..."
       type = "Scope"
     }
-    
+
     resource_access {
-      id = "..."
+      id   = "..."
       type = "Scope"
     }
   }
-    
+
   required_resource_access {
     resource_app_id = "00000002-0000-0000-c000-000000000000"
-    
+
     resource_access {
-      id = "..."
+      id   = "..."
       type = "Scope"
     }
   }
