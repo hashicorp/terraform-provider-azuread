@@ -58,6 +58,13 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(id.String())
 
+	_, err = graph.WaitForReplication(func() (interface{}, error) {
+		return client.Get(ctx, id.ObjectId)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Password with ObjectId %q: %+v", id.ObjectId, err)
+	}
+
 	return resourceServicePrincipalPasswordRead(d, meta)
 }
 
