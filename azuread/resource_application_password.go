@@ -122,7 +122,14 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("Error creating Application Credentials %q for Object ID %q: %+v", *cred.KeyID, id.ObjectId, err)
+		return fmt.Errorf("Error creating Application Credentials %q for Object ID %q: %+v", id.KeyId, id.ObjectId, err)
+	}
+
+	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, func() (graphrbac.PasswordCredentialListResult, error) {
+		return client.ListPasswordCredentials(ctx, id.ObjectId)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Application password (AppID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
 	}
 
 	d.SetId(id.String())
@@ -138,7 +145,6 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
-
 	// ensure the Application Object exists
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
