@@ -15,6 +15,11 @@ IMPROVEMENTS:
 * `azuread_group` - support for the `members` property [GH-100]
 * `azuread_service_principal` - export the `oauth2_permissions` property [GH-103]
 
+BUG FIXES:
+
+* `azuread_application_password` - will now wait for replication on resource creation [GH-118]
+* `azuread_service_principal_password` - will now wait for replication on resource creation [GH-117]
+
 ## 0.4.0 (June 06, 2019)
 
 NOTES:
