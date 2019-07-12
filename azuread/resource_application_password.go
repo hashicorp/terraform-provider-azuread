@@ -129,7 +129,7 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Application password (AppID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+		return fmt.Errorf("Error waiting for Application Password replication (AppID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
 	}
 
 	d.SetId(id.String())
