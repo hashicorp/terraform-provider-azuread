@@ -58,6 +58,13 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(id.String())
 
+	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, func() (graphrbac.PasswordCredentialListResult, error) {
+		return client.ListPasswordCredentials(ctx, id.ObjectId)
+	})
+	if err != nil {
+		return fmt.Errorf("Error waiting for Service Principal Password replication (SP %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+	}
+
 	return resourceServicePrincipalPasswordRead(d, meta)
 }
 
