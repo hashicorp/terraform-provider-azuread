@@ -15,9 +15,26 @@ Manages a Group within Azure Active Directory.
 
 ## Example Usage
 
+*Basic example*
+
 ```hcl
 resource "azuread_group" "my_group" {
   name = "MyGroup"
+}
+```
+
+*A group with members*
+
+```hcl
+resource "azuread_user" "my_user" {
+  display_name          = "John Doe"
+  password              = "notSecure123"
+  user_principal_name   = "john.doe@terraform.onmicrosoft.com"
+}
+
+resource "azuread_group" "my_group" {
+  name = "MyGroup"
+  members = [ azuread_user.my_user.object_id /*, more users */ ]
 }
 ```
 
@@ -25,9 +42,12 @@ resource "azuread_group" "my_group" {
 
 The following arguments are supported:
 
-* `name` - (Required) The display name for the Group.
+* `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
+* `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
+
+-> **NOTE:** Do not use `azuread_group_member` at the same time as the `members` argument.
 
 ## Attributes Reference
 
@@ -36,6 +56,8 @@ The following attributes are exported:
 * `id` - The Object ID of the Group.
 
 * `name` - The Display Name of the Group.
+
+* `members` - The Members of the Group.
 
 ## Import
 

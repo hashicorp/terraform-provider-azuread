@@ -86,6 +86,7 @@ func Provider() terraform.ResourceProvider {
 			"azuread_application":                resourceApplication(),
 			"azuread_application_password":       resourceApplicationPassword(),
 			"azuread_group":                      resourceGroup(),
+			"azuread_group_member":               resourceGroupMember(),
 			"azuread_service_principal":          resourceServicePrincipal(),
 			"azuread_service_principal_password": resourceServicePrincipalPassword(),
 			"azuread_user":                       resourceUser(),
