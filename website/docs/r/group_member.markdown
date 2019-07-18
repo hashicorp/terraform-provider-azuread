@@ -17,17 +17,17 @@ Manages a single Group Membership within Azure Active Directory.
 
 ```hcl
 
-data "azuread_user" "my_user" {
+data "azuread_user" "example" {
   user_principal_name = "johndoe@hashicorp.com"
 }
 
-resource "azuread_group" "my_group" {
+resource "azuread_group" "example" {
   name = "my_group"
 }
 
-resource "azuread_group_member" "test" {
-  group_object_id   = "${azuread_group.my_group.id}"
-  member_object_id  = "${data.azuread_user.my_user.id}"
+resource "azuread_group_member" "example" {
+  group_object_id   = "${azuread_group.example.id}"
+  member_object_id  = "${data.azuread_user.example.id}"
 }
 ```
 

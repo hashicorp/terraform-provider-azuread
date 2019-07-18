@@ -16,7 +16,7 @@ Manages a Service Principal associated with an Application within Azure Active D
 ## Example Usage
 
 ```hcl
-resource "azuread_application" "test" {
+resource "azuread_application" "example" {
   name                       = "example"
   homepage                   = "http://homepage"
   identifier_uris            = ["http://uri"]
@@ -25,8 +25,8 @@ resource "azuread_application" "test" {
   oauth2_allow_implicit_flow = true
 }
 
-resource "azuread_service_principal" "test" {
-  application_id = "${azuread_application.test.application_id}"
+resource "azuread_service_principal" "example" {
+  application_id = "${azuread_application.example.application_id}"
 
   tags = ["example", "tags", "here"]
 }

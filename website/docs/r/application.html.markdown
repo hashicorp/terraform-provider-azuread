@@ -16,7 +16,7 @@ Manages an Application within Azure Active Directory.
 ## Example Usage
 
 ```hcl
-resource "azuread_application" "test" {
+resource "azuread_application" "example" {
   name                       = "example"
   homepage                   = "https://homepage"
   identifier_uris            = ["https://uri"]

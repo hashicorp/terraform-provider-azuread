@@ -16,10 +16,10 @@ Manages a User within Azure Active Directory.
 ## Example Usage
 
 ```hcl
-resource "azuread_user" "test_user" {
-  user_principal_name = "john@hashicorp.com"
-  display_name        = "John Doe"
-  mail_nickname       = "johnd"
+resource "azuread_user" "example" {
+  user_principal_name = "jdo@hashicorp.com"
+  display_name        = "J. Doe"
+  mail_nickname       = "jdoe"
   password            = "SecretP@sswd99!"
 }
 ```

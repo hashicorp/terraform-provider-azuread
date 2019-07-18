@@ -16,8 +16,8 @@ Gets information about an Azure Active Directory group.
 ## Example Usage (by Group Display Name)
 
 ```hcl
-data "azuread_group" "test_group" {
-  name = "MyTestGroup"
+data "azuread_group" "example" {
+  name = "A-AD-Group"
 }
 ```
 
