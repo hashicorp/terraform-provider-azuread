@@ -72,6 +72,12 @@ func resourceApplication() *schema.Resource {
 				Optional: true,
 			},
 
+			"public_client": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"reply_urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -226,6 +232,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		properties.Oauth2AllowImplicitFlow = p.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("public_client"); ok {
+		properties.PublicClient = p.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("group_membership_claims"); ok {
 		properties.GroupMembershipClaims = v
 	}
@@ -289,13 +299,15 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("available_to_other_tenants") {
-		availableToOtherTenants := d.Get("available_to_other_tenants").(bool)
-		properties.AvailableToOtherTenants = p.Bool(availableToOtherTenants)
+		properties.AvailableToOtherTenants = p.Bool(d.Get("available_to_other_tenants").(bool))
 	}
 
 	if d.HasChange("oauth2_allow_implicit_flow") {
-		oauth := d.Get("oauth2_allow_implicit_flow").(bool)
-		properties.Oauth2AllowImplicitFlow = p.Bool(oauth)
+		properties.Oauth2AllowImplicitFlow = p.Bool(d.Get("oauth2_allow_implicit_flow").(bool))
+	}
+
+	if d.HasChange("public_client") {
+		properties.PublicClient = p.Bool(d.Get("public_client").(bool))
 	}
 
 	if d.HasChange("required_resource_access") {
@@ -372,6 +384,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("homepage", app.Homepage)
 	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	d.Set("public_client", app.PublicClient)
 	d.Set("object_id", app.ObjectID)
 
 	if v := app.PublicClient; v != nil && *v {

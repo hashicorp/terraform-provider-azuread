@@ -27,6 +27,7 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest%s", id))),
@@ -58,6 +59,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
@@ -65,6 +67,31 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_publicClient(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_publicClient(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "public_client", "true"),
 				),
 			},
 			{
@@ -467,6 +494,16 @@ resource "azuread_application" "test" {
 `, id)
 }
 
+func testAccADApplication_publicClient(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name          = "acctest%s"
+  type          = "native"
+  public_client = true
+}
+`, id)
+}
+
 func testAccADApplication_availableToOtherTenants(id string) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
@@ -507,6 +544,7 @@ resource "azuread_application" "test" {
   identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
+  
   group_membership_claims    = "All"
 
   required_resource_access {

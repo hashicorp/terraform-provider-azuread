@@ -81,6 +81,8 @@ The following arguments are supported:
 
 * `available_to_other_tenants` - (Optional) Is this Azure AD Application available to other tenants? Defaults to `false`.
 
+* `public_client` - (Optional) Is this Azure AD Application a public client? Defaults to `false`.
+
 * `oauth2_allow_implicit_flow` - (Optional) Does this Azure AD Application allow OAuth2.0 implicit flow tokens? Defaults to `false`.
 
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Defaults to `SecurityGroup`. Possible values are `None`, `SecurityGroup` or `All`.
