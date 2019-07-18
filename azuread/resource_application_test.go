@@ -489,7 +489,7 @@ func testCheckADApplicationDestroy(s *terraform.State) error {
 func testAccADApplication_basic(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 }
 `, id)
 }
@@ -497,7 +497,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_publicClient(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name          = "acctest%s"
+  name          = "acctestApp-%s"
   type          = "native"
   public_client = true
 }
@@ -511,7 +511,7 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
+  name                       = "acctestApp-%s"
   identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
 }
@@ -521,7 +521,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsDirectoryRole(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest%s"
+  name                    = "acctestApp-%s"
   group_membership_claims = "DirectoryRole"
 }
 `, id)
@@ -530,7 +530,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsSecurityGroup(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest%s"
+  name                    = "acctestApp-%s"
   group_membership_claims = "SecurityGroup"
 }
 `, id)
@@ -539,7 +539,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_complete(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
+  name                       = "acctestApp-%s"
   homepage                   = "https://homepage-%s"
   identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
@@ -581,7 +581,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRoles(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 
   app_role {
     allowed_member_types = [
@@ -601,7 +601,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRolesUpdate(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 
   app_role {
     allowed_member_types = ["User"]
@@ -625,7 +625,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_native(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
   type = "native"
 }
 `, id)
@@ -634,7 +634,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_nativeReplyUrls(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name       = "acctest%s"
+  name       = "acctestApp-%s"
   type       = "native"
   reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
 }
@@ -644,7 +644,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_native_app_does_not_allow_identifier_uris(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name            = "acctest%s"
+  name            = "acctestApp-%s"
   identifier_uris = ["http://%s.hashicorptest.com"]
   type            = "native"
 }

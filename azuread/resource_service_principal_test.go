@@ -115,7 +115,7 @@ func testCheckADServicePrincipalDestroy(s *terraform.State) error {
 func testAccADServicePrincipal_basic(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestspa%s"
+  name = "acctestApp-%s"
 }
 
 resource "azuread_service_principal" "test" {
@@ -127,7 +127,7 @@ resource "azuread_service_principal" "test" {
 func testAccADServicePrincipal_complete(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestspa%s"
+  name = "acctesttApp-%s"
 }
 
 resource "azuread_service_principal" "test" {
