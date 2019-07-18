@@ -8,14 +8,14 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-func dataUsers() *schema.Resource {
+func dataGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUsersRead,
+		Read: dataSourceGroupsRead,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -27,14 +27,14 @@ func dataUsers() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				MinItems:      1,
-				ConflictsWith: []string{"user_principal_names"},
+				ConflictsWith: []string{"names"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.UUID,
 				},
 			},
 
-			"user_principal_names": {
+			"names": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
@@ -49,57 +49,57 @@ func dataUsers() *schema.Resource {
 	}
 }
 
-func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).usersClient
+func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	var users []graphrbac.User
+	var groups []graphrbac.ADGroup
 	expectedCount := 0
 
-	if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
-		expectedCount = len(upns)
-		for _, v := range upns {
-			resp, err := client.Get(ctx, v.(string))
+	if names, ok := d.Get("names").([]interface{}); ok && len(names) > 0 {
+		expectedCount = len(names)
+		for _, v := range names {
+			g, err := graph.GroupGetByDisplayName(&client, ctx, v.(string))
 			if err != nil {
-				return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", v.(string), err)
+				return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", v.(string), err)
 			}
-
-			users = append(users, resp)
+			groups = append(groups, *g)
 		}
 	} else if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
 		expectedCount = len(oids)
 		for _, v := range oids {
-			u, err := graph.UserGetByObjectId(&client, ctx, v.(string))
+			resp, err := client.Get(ctx, v.(string))
 			if err != nil {
-				return fmt.Errorf("Error finding Azure AD User with object ID %q: %+v", v.(string), err)
+				return fmt.Errorf("Error making Read request on AzureAD Group with ID %q: %+v", v.(string), err)
 			}
-			users = append(users, *u)
+
+			groups = append(groups, resp)
 		}
 	} else {
-		return fmt.Errorf("one of `object_ids` or `user_principal_names` must be supplied")
+		return fmt.Errorf("one of `object_ids` or `names` must be supplied")
 	}
 
-	if len(users) != expectedCount {
-		return fmt.Errorf("Unexpected number of users returned (%d != %d)", len(users), expectedCount)
+	if len(groups) != expectedCount {
+		return fmt.Errorf("Unexpected number of groups returned (%d != %d)", len(groups), expectedCount)
 	}
 
-	var upns, oids []string
-	for _, u := range users {
-		if u.ObjectID == nil || u.UserPrincipalName == nil {
+	var names, oids []string
+	for _, u := range groups {
+		if u.ObjectID == nil || u.DisplayName == nil {
 			return fmt.Errorf("User with nil ObjectId or UPN was found: %v", u)
 		}
 
 		oids = append(oids, *u.ObjectID)
-		upns = append(upns, *u.UserPrincipalName)
+		names = append(names, *u.DisplayName)
 	}
 
 	h := sha1.New()
-	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return fmt.Errorf("Unable to compute hash for upns: %v", err)
+	if _, err := h.Write([]byte(strings.Join(names, "-"))); err != nil {
+		return fmt.Errorf("Unable to compute hash for names: %v", err)
 	}
 
-	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
+	d.SetId("groups#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 	d.Set("object_ids", oids)
-	d.Set("user_principal_names", upns)
+	d.Set("names", names)
 	return nil
 }

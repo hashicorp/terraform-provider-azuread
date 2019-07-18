@@ -8,6 +8,37 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 )
 
+func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, displayName string) (*graphrbac.ADGroup, error) {
+
+	filter := fmt.Sprintf("displayName eq '%s'", displayName)
+
+	resp, err := client.ListComplete(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("Error listing Azure AD Groups for filter %q: %+v", filter, err)
+	}
+
+	values := resp.Response().Value
+	if values == nil {
+		return nil, fmt.Errorf("nil values for AD Groups matching %q", filter)
+	}
+	if len(*values) == 0 {
+		return nil, fmt.Errorf("Found no AD Groups matching %q", filter)
+	}
+	if len(*values) > 2 {
+		return nil, fmt.Errorf("Found multiple AD Groups matching %q", filter)
+	}
+
+	group := (*values)[0]
+	if group.DisplayName == nil {
+		return nil, fmt.Errorf("nil DisplayName for AD Groups matching %q", filter)
+	}
+	if *group.DisplayName != displayName {
+		return nil, fmt.Errorf("displayname for AD Groups matching %q does is does not match(%q!=%q)", filter, *group.DisplayName, displayName)
+	}
+
+	return &group, nil
+}
+
 func GroupAllMembers(client graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
 	it, err := client.GetGroupMembersComplete(ctx, groupId)
 
