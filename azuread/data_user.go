@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
-func dataSourceUser() *schema.Resource {
+func dataUser() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceUserRead,
 		Importer: &schema.ResourceImporter{

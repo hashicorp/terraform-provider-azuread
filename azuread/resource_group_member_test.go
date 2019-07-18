@@ -164,13 +164,13 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctestA%[1]s@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestA%[1]s"
+	user_principal_name   = "acctestUser.%[1]s.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestUser-%[1]s-A"
 	password              = "%[2]s"
 }
 	
 resource "azuread_group" "test" {
-	name = "acctest%[1]s"
+	name = "acctestGroup-%[1]s"
 }
 
 resource "azuread_group_member" "test" {
@@ -184,17 +184,17 @@ resource "azuread_group_member" "test" {
 func testAccAzureADGroupMember_Group(id string) string {
 	return fmt.Sprintf(`
 	
-resource "azuread_group" "testA" {
-	name = "acctestA%[1]s"
+resource "azuread_group" "test" {
+	name = "acctestGroup%[1]s"
 }
 
-resource "azuread_group" "testB" {
-	name = "acctestB%[1]s"
+resource "azuread_group" "member" {
+	name = "acctestGroup-%[1]s-Member"
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.testA.object_id}"
-	member_object_id 	= "${azuread_group.testB.object_id}"
+	group_object_id 	= "${azuread_group.test.object_id}"
+	member_object_id 	= "${azuread_group.member.object_id}"
 }
 
 `, id)
@@ -204,7 +204,7 @@ func testAccAzureADGroupMember_ServicePrincipal(id string) string {
 	return fmt.Sprintf(`
 
 resource "azuread_application" "test" {
-	name = "acctest%[1]s"
+	name = "acctestApp%[1]s"
 }
 
 resource "azuread_service_principal" "test" {
@@ -212,12 +212,12 @@ resource "azuread_service_principal" "test" {
 }
 
 resource "azuread_group" "test" {
-	name = "acctestA%[1]s"
+	name = "acctestGroup-%[1]s"
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.test.object_id}"
-	member_object_id 	= "${azuread_service_principal.test.object_id}"
+	group_object_id  = "${azuread_group.test.object_id}"
+	member_object_id = "${azuread_service_principal.test.object_id}"
 }
 
 `, id)

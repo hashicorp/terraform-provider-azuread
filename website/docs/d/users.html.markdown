@@ -29,7 +29,7 @@ The following arguments are supported:
 
 * `object_ids` - (Optional) The Object IDs of the Azure AD Users.
 
--> **NOTE:** Either a `user_principal_names` or an `object_ids` must be specified.
+-> **NOTE:** Either a `user_principal_names` or `object_ids` must be specified.
 
 ## Attributes Reference
 
