@@ -75,6 +75,7 @@ func resourceApplication() *schema.Resource {
 			"public_client": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 
 			"reply_urls": {
