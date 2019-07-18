@@ -8,12 +8,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	`github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf`
 )
 
 func TestAccAzureADGroupMember_User(t *testing.T) {
-	resourceName := "azuread_group_member.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	password := id + "p@$$wR2"
+	rn := "azuread_group_member.test"
+	id := tf.AccRandTimeInt()
+	pw := id + "p@$$wR2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,14 +22,14 @@ func TestAccAzureADGroupMember_User(t *testing.T) {
 		CheckDestroy: testCheckAzureADGroupMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADGroupMember_User(id, password),
+				Config: testAccAzureADGroupMember_User(id, pw),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "member_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -37,8 +38,8 @@ func TestAccAzureADGroupMember_User(t *testing.T) {
 }
 
 func TestAccAzureADGroupMember_Group(t *testing.T) {
-	resourceName := "azuread_group_member.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	rn := "azuread_group_member.test"
+	id := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -48,12 +49,12 @@ func TestAccAzureADGroupMember_Group(t *testing.T) {
 			{
 				Config: testAccAzureADGroupMember_Group(id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "member_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -62,8 +63,8 @@ func TestAccAzureADGroupMember_Group(t *testing.T) {
 }
 
 func TestAccAzureADGroupMember_ServicePrincipal(t *testing.T) {
-	resourceName := "azuread_group_member.test"
-	id := acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	rn := "azuread_group_member.test"
+	id := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -73,12 +74,12 @@ func TestAccAzureADGroupMember_ServicePrincipal(t *testing.T) {
 			{
 				Config: testAccAzureADGroupMember_ServicePrincipal(id),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "member_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
+					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -156,7 +157,7 @@ func testCheckAzureADGroupMemberDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAzureADGroupMember_User(id string, password string) string {
+func testAccAzureADGroupMember_User(id int, password string) string {
 	return fmt.Sprintf(`
 
 data "azuread_domains" "tenant_domain" {
@@ -170,7 +171,7 @@ resource "azuread_user" "test" {
 }
 	
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[1]s"
+	name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_group_member" "test" {
@@ -181,15 +182,15 @@ resource "azuread_group_member" "test" {
 `, id, password)
 }
 
-func testAccAzureADGroupMember_Group(id string) string {
+func testAccAzureADGroupMember_Group(id int) string {
 	return fmt.Sprintf(`
 	
 resource "azuread_group" "test" {
-	name = "acctestGroup%[1]s"
+	name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_group" "member" {
-	name = "acctestGroup-%[1]s-Member"
+	name = "acctestGroup-%[1]d-Member"
 }
 
 resource "azuread_group_member" "test" {
@@ -200,11 +201,11 @@ resource "azuread_group_member" "test" {
 `, id)
 }
 
-func testAccAzureADGroupMember_ServicePrincipal(id string) string {
+func testAccAzureADGroupMember_ServicePrincipal(id int) string {
 	return fmt.Sprintf(`
 
 resource "azuread_application" "test" {
-	name = "acctestApp%[1]s"
+	name = "acctestApp-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
@@ -212,7 +213,7 @@ resource "azuread_service_principal" "test" {
 }
 
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[1]s"
+	name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_group_member" "test" {

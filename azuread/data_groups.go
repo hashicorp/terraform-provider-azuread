@@ -59,11 +59,11 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	if names, ok := d.Get("names").([]interface{}); ok && len(names) > 0 {
 		expectedCount = len(names)
 		for _, v := range names {
-			u, err := graph.GroupGetByDisplayName(&client, ctx, v.(string))
+			g, err := graph.GroupGetByDisplayName(&client, ctx, v.(string))
 			if err != nil {
 				return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", v.(string), err)
 			}
-			groups = append(groups, *u)
+			groups = append(groups, *g)
 		}
 	} else if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
 		expectedCount = len(oids)
