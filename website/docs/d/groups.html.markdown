@@ -29,7 +29,7 @@ The following arguments are supported:
 
 * `object_ids` - (Optional) The Object IDs of the Azure AD Groups.
 
--> **NOTE:** Either a `names` or `object_ids` must be specified.
+-> **NOTE:** Either `names` or `object_ids` must be specified.
 
 ## Attributes Reference
 

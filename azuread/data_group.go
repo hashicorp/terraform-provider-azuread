@@ -5,7 +5,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform/helper/schema"
-	`github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph`
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
@@ -57,9 +57,9 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 
 		group = resp
 	} else if name, ok := d.Get("name").(string); ok && name != "" {
-		g, err := graph.GroupGetByDisplayName(&client, ctx, v.(string))
+		g, err := graph.GroupGetByDisplayName(&client, ctx, name)
 		if err != nil {
-			return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", v.(string), err)
+			return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", name, err)
 		}
 		group = *g
 	} else {

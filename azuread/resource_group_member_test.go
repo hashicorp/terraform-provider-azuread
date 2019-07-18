@@ -8,13 +8,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	`github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf`
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
 func TestAccAzureADGroupMember_User(t *testing.T) {
 	rn := "azuread_group_member.test"
 	id := tf.AccRandTimeInt()
-	pw := id + "p@$$wR2"
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -165,8 +165,8 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctestUser.%[1]s.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]s-A"
+	user_principal_name   = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestUser-%[1]d-A"
 	password              = "%[2]s"
 }
 	
