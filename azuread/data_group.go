@@ -34,6 +34,18 @@ func dataGroup() *schema.Resource {
 				ValidateFunc:  validate.NoEmptyStrings,
 				ConflictsWith: []string{"object_id"},
 			},
+
+			"members": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"owners": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -73,5 +85,18 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("object_id", group.ObjectID)
 	d.Set("name", group.DisplayName)
+
+	members, err := graph.GroupAllMembers(client, ctx, d.Id())
+	if err != nil {
+		return err
+	}
+	d.Set("members", members)
+
+	owners, err := graph.GroupAllOwners(client, ctx, d.Id())
+	if err != nil {
+		return err
+	}
+	d.Set("members", owners)
+
 	return nil
 }

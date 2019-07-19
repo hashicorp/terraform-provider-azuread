@@ -27,6 +27,7 @@ func resourceGroupMember() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validate.UUID,
 			},
+
 			"member_object_id": {
 				Type:         schema.TypeString,
 				Required:     true,

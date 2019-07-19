@@ -47,7 +47,17 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Set:      schema.HashString,
-				ForceNew: false,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validate.UUID,
+				},
+			},
+
+			"owners": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Set:      schema.HashString,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.UUID,
@@ -88,6 +98,15 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// Add owners if specified
+	if v, ok := d.GetOk("owners"); ok {
+		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+
+		if err := graph.GroupAddOwners(client, ctx, *group.ObjectID, *members); err != nil {
+			return err
+		}
+	}
+
 	_, err = graph.WaitForReplication(func() (interface{}, error) {
 		return client.Get(ctx, *group.ObjectID)
 	})
@@ -120,8 +139,13 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	d.Set("members", members)
+
+	owners, err := graph.GroupAllOwners(client, ctx, d.Id())
+	if err != nil {
+		return err
+	}
+	d.Set("owners", owners)
 
 	return nil
 }
@@ -150,6 +174,30 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := graph.GroupAddMembers(client, ctx, d.Id(), membersToAdd); err != nil {
+			return err
+		}
+	}
+
+	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
+		existingOwners, err := graph.GroupAllOwners(client, ctx, d.Id())
+		if err != nil {
+			return err
+		}
+
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		ownersForRemoval := slices.Difference(existingOwners, desiredOwners)
+		ownersToAdd := slices.Difference(desiredOwners, existingOwners)
+
+		for _, ownerToDelete := range ownersForRemoval {
+			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", ownerToDelete, d.Id())
+			if resp, err := client.RemoveOwner(ctx, d.Id(), ownerToDelete); err != nil {
+				if !ar.ResponseWasNotFound(resp) {
+					return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, d.Id(), err)
+				}
+			}
+		}
+
+		if err := graph.GroupAddOwners(client, ctx, d.Id(), ownersToAdd); err != nil {
 			return err
 		}
 	}

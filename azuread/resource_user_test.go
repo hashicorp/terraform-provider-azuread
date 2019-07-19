@@ -114,7 +114,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccADUser_multiple(id, pw1),
+				Config: testAccADUser_threeUsersABC(id, pw1),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADUserExists("azuread_user.testA"),
 					testCheckADUserExists("azuread_user.testB"),
@@ -207,23 +207,29 @@ resource "azuread_user" "test" {
 `, id, password)
 }
 
-func testAccADUser_multiple(id int, password string) string {
+func testAccADUser_threeUsersABC(id int, password string) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
   only_initial = true
 }
 
 resource "azuread_user" "testA" {
-  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctestUser-%[1]d-A"
-  password            = "%[2]s"
+	user_principal_name   = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestUser-%[1]d-A"
+	password              = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctestUser-%[1]d-B"
-  mail_nickname       = "acctestUser-%[1]d-B"
-  password            = "%[2]s"
+	user_principal_name   = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestUser-%[1]d-B"
+    mail_nickname         = "acctestUser-%[1]d-B"
+	password              = "%[2]s"
+}
+
+resource "azuread_user" "testC" {
+	user_principal_name   = "acctestUser.%[1]d.C@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+	display_name          = "acctestUser-%[1]d-C"
+	password              = "%[2]s"
 }
 `, id, password)
 }
