@@ -29,7 +29,7 @@ func TestAccAzureADUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
 					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser.%d", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
 					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser.%d", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
@@ -120,7 +120,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 					testCheckADUserExists("azuread_user.testB"),
 					resource.TestCheckResourceAttrSet("azuread_user.testA", "user_principal_name"),
 					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestUser-%d-A", id)),
-					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestUser-%d-A", id)),
+					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestUser.%d.A", id)),
 					resource.TestCheckResourceAttrSet("azuread_user.testB", "user_principal_name"),
 					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctestUser-%d-B", id)),
 					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctestUser-%d-B", id)),
@@ -214,13 +214,13 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "testA" {
-  user_principal_name = "acctestUser-%[1]d-A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-A"
   password            = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-  user_principal_name = "acctestUser-%[1]d-B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-B"
   mail_nickname       = "acctestUser-%[1]d-B"
   password            = "%[2]s"
