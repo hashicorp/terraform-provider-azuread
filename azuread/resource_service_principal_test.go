@@ -27,7 +27,7 @@ func TestAccAzureADServicePrincipal_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestspa%s", id))),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
 			},
@@ -115,7 +115,7 @@ func testCheckADServicePrincipalDestroy(s *terraform.State) error {
 func testAccADServicePrincipal_basic(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestspa%s"
+  name = "acctestApp-%s"
 }
 
 resource "azuread_service_principal" "test" {
@@ -127,7 +127,7 @@ resource "azuread_service_principal" "test" {
 func testAccADServicePrincipal_complete(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestspa%s"
+  name = "acctesttApp-%s"
 }
 
 resource "azuread_service_principal" "test" {

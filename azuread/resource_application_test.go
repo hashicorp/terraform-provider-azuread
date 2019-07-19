@@ -25,12 +25,12 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 				Config: testAccADApplication_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest%s", id))),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -57,7 +57,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 				Config: testAccADApplication_complete(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
@@ -117,8 +117,8 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				Config: testAccADApplication_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
 				),
@@ -127,7 +127,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				Config: testAccADApplication_complete(updatedId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", updatedId)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
@@ -321,7 +321,7 @@ func TestAccAzureADApplication_native(t *testing.T) {
 				Config: testAccADApplication_native(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
 					resource.TestCheckResourceAttr(resourceName, "type", "native"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
@@ -350,7 +350,7 @@ func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
 				Config: testAccADApplication_nativeReplyUrls(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "type", "native"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
@@ -379,8 +379,8 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 				Config: testAccADApplication_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
@@ -390,8 +390,8 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 				Config: testAccADApplication_native(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "type", "native"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
@@ -406,7 +406,7 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 				Config: testAccADApplication_complete(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
@@ -489,7 +489,7 @@ func testCheckADApplicationDestroy(s *terraform.State) error {
 func testAccADApplication_basic(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 }
 `, id)
 }
@@ -497,7 +497,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_publicClient(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name          = "acctest%s"
+  name          = "acctestApp-%s"
   type          = "native"
   public_client = true
 }
@@ -511,7 +511,7 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
+  name                       = "acctestApp-%s"
   identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
 }
@@ -521,7 +521,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsDirectoryRole(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest%s"
+  name                    = "acctestApp-%s"
   group_membership_claims = "DirectoryRole"
 }
 `, id)
@@ -530,7 +530,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_withGroupMembershipClaimsSecurityGroup(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest%s"
+  name                    = "acctestApp-%s"
   group_membership_claims = "SecurityGroup"
 }
 `, id)
@@ -539,7 +539,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_complete(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                       = "acctest%s"
+  name                       = "acctestApp-%s"
   homepage                   = "https://homepage-%s"
   identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
@@ -581,7 +581,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRoles(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 
   app_role {
     allowed_member_types = [
@@ -601,7 +601,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_appRolesUpdate(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
 
   app_role {
     allowed_member_types = ["User"]
@@ -625,7 +625,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_native(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest%s"
+  name = "acctestApp-%s"
   type = "native"
 }
 `, id)
@@ -634,7 +634,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_nativeReplyUrls(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name       = "acctest%s"
+  name       = "acctestApp-%s"
   type       = "native"
   reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
 }
@@ -644,7 +644,7 @@ resource "azuread_application" "test" {
 func testAccADApplication_native_app_does_not_allow_identifier_uris(id string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name            = "acctest%s"
+  name            = "acctestApp-%s"
   identifier_uris = ["http://%s.hashicorptest.com"]
   type            = "native"
 }

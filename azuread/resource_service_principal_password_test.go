@@ -183,7 +183,7 @@ func TestAccAzureADServicePrincipalPassword_relativeEndDate(t *testing.T) {
 func testAccADServicePrincipalPassword_template(applicationId string) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestspa%s"
+  name = "acctestApp-%s"
 }
 
 resource "azuread_service_principal" "test" {

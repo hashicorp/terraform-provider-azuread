@@ -28,8 +28,8 @@ func TestAccAzureADUser_basic(t *testing.T) {
 					testCheckADUserExists(rn),
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
-					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctest%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser.%d", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
@@ -62,8 +62,8 @@ func TestAccAzureADUser_complete(t *testing.T) {
 					testCheckADUserExists(rn),
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
-					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestupdate%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
 				),
 			},
@@ -97,8 +97,8 @@ func TestAccAzureADUser_update(t *testing.T) {
 					testCheckADUserExists(rn),
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
-					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctest%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctest%d", id)),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser.%d", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "true"),
 				),
 			},
@@ -108,8 +108,8 @@ func TestAccAzureADUser_update(t *testing.T) {
 					testCheckADUserExists(rn),
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
-					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestupdate%d", id)),
-					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestupdate%d", id)),
+					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
 				),
 			},
@@ -119,11 +119,11 @@ func TestAccAzureADUser_update(t *testing.T) {
 					testCheckADUserExists("azuread_user.testA"),
 					testCheckADUserExists("azuread_user.testB"),
 					resource.TestCheckResourceAttrSet("azuread_user.testA", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestA%d", id)),
-					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestA%d", id)),
+					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestUser-%d-A", id)),
+					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestUser.%d.A", id)),
 					resource.TestCheckResourceAttrSet("azuread_user.testB", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctest_display%d", id)),
-					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctest_mail%d", id)),
+					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctestUser-%d-B", id)),
+					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctestUser-%d-B", id)),
 				),
 			},
 		},
@@ -183,8 +183,8 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-  user_principal_name = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctest%[1]d"
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
   password            = "%[2]s"
 }
 `, id, password)
@@ -197,9 +197,9 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-  user_principal_name   = "acctest%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name          = "acctestupdate%[1]d"
-  mail_nickname         = "acctestupdate%[1]d"
+  user_principal_name   = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name          = "acctestUser-%[1]d-Updated"
+  mail_nickname         = "acctestUser-%[1]d-Updated"
   account_enabled       = false
   password              = "%[2]s"
   force_password_change = true
@@ -214,15 +214,15 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "testA" {
-  user_principal_name = "acctestA%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctestA%[1]d"
+  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-A"
   password            = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-  user_principal_name = "acctestB%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctest_display%[1]d"
-  mail_nickname       = "acctest_mail%[1]d"
+  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-B"
+  mail_nickname       = "acctestUser-%[1]d-B"
   password            = "%[2]s"
 }
 `, id, password)
