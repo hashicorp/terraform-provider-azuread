@@ -17,7 +17,7 @@ Gets Object IDs or Display Names for multiple Azure Active Directory groups.
 
 ```hcl
 data "azuread_groups" "groups" {
-  names = ["groupa", "groupb"]
+  names = ["group-a", "group-b"]
 }
 ```
 

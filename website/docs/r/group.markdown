@@ -18,23 +18,23 @@ Manages a Group within Azure Active Directory.
 *Basic example*
 
 ```hcl
-resource "azuread_group" "my_group" {
-  name = "MyGroup"
+resource "azuread_group" "example" {
+  name = "A-AD-Group"
 }
 ```
 
 *A group with members*
 
 ```hcl
-resource "azuread_user" "my_user" {
+resource "azuread_user" "example" {
   display_name          = "John Doe"
   password              = "notSecure123"
   user_principal_name   = "john.doe@terraform.onmicrosoft.com"
 }
 
-resource "azuread_group" "my_group" {
-  name = "MyGroup"
-  members = [ azuread_user.my_user.object_id /*, more users */ ]
+resource "azuread_group" "example" {
+  name = "Group-With-Members"
+  members = [ "${azuread_user.example.object_id}" /*, more users */ ]
 }
 ```
 
