@@ -8,6 +8,60 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 )
 
+type GroupOwnerId struct {
+	ObjectSubResourceId
+	GroupId string
+	OwnerId string
+}
+
+func GroupOwnerIdFrom(groupId, ownerId string) GroupOwnerId {
+	return GroupOwnerId{
+		ObjectSubResourceId: ObjectSubResourceIdFrom(groupId, "owner", ownerId),
+		GroupId:             groupId,
+		OwnerId:             ownerId,
+	}
+}
+
+func ParseGroupOwnerId(idString string) (GroupOwnerId, error) {
+	id, err := ParseObjectSubResourceId(idString, "owner")
+	if err != nil {
+		return GroupOwnerId{}, fmt.Errorf("Unable to parse Owner ID: %v", err)
+	}
+
+	return GroupOwnerId{
+		ObjectSubResourceId: id,
+		GroupId:             id.objectId,
+		OwnerId:             id.subId,
+	}, nil
+}
+
+type GroupMemberId struct {
+	ObjectSubResourceId
+	GroupId  string
+	MemberId string
+}
+
+func GroupMemberIdFrom(groupId, memberId string) GroupMemberId {
+	return GroupMemberId{
+		ObjectSubResourceId: ObjectSubResourceIdFrom(groupId, "member", memberId),
+		GroupId:             groupId,
+		MemberId:            memberId,
+	}
+}
+
+func ParseGroupMemberId(idString string) (GroupMemberId, error) {
+	id, err := ParseObjectSubResourceId(idString, "member")
+	if err != nil {
+		return GroupMemberId{}, fmt.Errorf("Unable to parse Member ID: %v", err)
+	}
+
+	return GroupMemberId{
+		ObjectSubResourceId: id,
+		GroupId:             id.objectId,
+		MemberId:            id.subId,
+	}, nil
+}
+
 func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, displayName string) (*graphrbac.ADGroup, error) {
 
 	filter := fmt.Sprintf("displayName eq '%s'", displayName)

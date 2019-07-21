@@ -2,20 +2,22 @@ package azuread
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
+
+const groupMemberResourceName = "azuread_group_member"
 
 func resourceGroupMember() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGroupMemberCreate,
 		Read:   resourceGroupMemberRead,
 		Delete: resourceGroupMemberDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -45,13 +47,14 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
 
+	tf.LockByName(groupMemberResourceName, groupID)
+	defer tf.UnlockByName(groupMemberResourceName, groupID)
+
 	if err := graph.GroupAddMember(client, ctx, groupID, memberID); err != nil {
 		return err
 	}
 
-	id := fmt.Sprintf("%s/member/%s", groupID, memberID)
-	d.SetId(id)
-
+	d.SetId(graph.GroupMemberIdFrom(groupID, memberID).String())
 	return resourceGroupMemberRead(d, meta)
 }
 
@@ -59,33 +62,29 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/member/")
-	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {groupObjectId}/member/{memberObjectId} - but got %q", d.Id())
+	id, err := graph.ParseGroupMemberId(d.Id())
+	if err != nil {
+		return fmt.Errorf("Unable to parse ID: %v", err)
 	}
 
-	groupID := id[0]
-	memberID := id[1]
-
-	members, err := graph.GroupAllMembers(client, ctx, groupID)
+	members, err := graph.GroupAllMembers(client, ctx, id.GroupId)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", groupID, err)
+		return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", id.GroupId, err)
 	}
 
 	var memberObjectID string
-
 	for _, objectID := range members {
-		if objectID == memberID {
+		if objectID == id.MemberId {
 			memberObjectID = objectID
 		}
 	}
 
 	if memberObjectID == "" {
 		d.SetId("")
-		return fmt.Errorf("Azure AD Group Member not found - groupObjectId:%q / memberObjectId:%q", groupID, memberID)
+		return fmt.Errorf("Azure AD Group Member not found - groupObjectId:%q / memberObjectId:%q", id.GroupId, id.MemberId)
 	}
 
-	d.Set("group_object_id", groupID)
+	d.Set("group_object_id", id.GroupId)
 	d.Set("member_object_id", memberObjectID)
 
 	return nil
@@ -95,18 +94,18 @@ func resourceGroupMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).groupsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id := strings.Split(d.Id(), "/member/")
-	if len(id) != 2 {
-		return fmt.Errorf("ID should be in the format {groupObjectId}/member/{memberObjectId} - but got %q", d.Id())
+	id, err := graph.ParseGroupMemberId(d.Id())
+	if err != nil {
+		return fmt.Errorf("Unable to parse ID: %v", err)
 	}
 
-	groupID := id[0]
-	memberID := id[1]
+	tf.LockByName(groupMemberResourceName, id.GroupId)
+	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
-	resp, err := client.RemoveMember(ctx, groupID, memberID)
+	resp, err := client.RemoveMember(ctx, id.GroupId, id.MemberId)
 	if err != nil {
 		if !ar.ResponseWasNotFound(resp) {
-			return fmt.Errorf("Error removing Member (memberObjectId: %q) from Azure AD Group (groupObjectId: %q): %+v", memberID, groupID, err)
+			return fmt.Errorf("Error removing Member (memberObjectId: %q) from Azure AD Group (groupObjectId: %q): %+v", id.MemberId, id.GroupId, err)
 		}
 	}
 

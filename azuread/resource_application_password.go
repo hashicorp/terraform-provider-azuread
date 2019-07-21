@@ -108,8 +108,8 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	}
 	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
 
-	azureADLockByName(resourceApplicationName, id.ObjectId)
-	defer azureADUnlockByName(resourceApplicationName, id.ObjectId)
+	tf.LockByName(resourceApplicationName, id.ObjectId)
+	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
@@ -194,8 +194,8 @@ func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
 
-	azureADLockByName(resourceApplicationName, id.ObjectId)
-	defer azureADUnlockByName(resourceApplicationName, id.ObjectId)
+	tf.LockByName(resourceApplicationName, id.ObjectId)
+	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
 
 	// ensure the parent Application exists
 	app, err := client.Get(ctx, id.ObjectId)

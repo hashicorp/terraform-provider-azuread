@@ -96,7 +96,7 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	d.Set("members", owners)
+	d.Set("owners", owners)
 
 	return nil
 }
