@@ -27,14 +27,15 @@ resource "azuread_group" "my_group" {
 
 ```hcl
 resource "azuread_user" "my_user" {
-  display_name          = "John Doe"
+  display_name          = "J Doe"
   password              = "notSecure123"
-  user_principal_name   = "john.doe@terraform.onmicrosoft.com"
+  user_principal_name   = "j.doe@terraform.onmicrosoft.com"
 }
 
 resource "azuread_group" "my_group" {
-  name = "MyGroup"
+  name    = "MyGroup"
   members = [ azuread_user.my_user.object_id /*, more users */ ]
+  owners  = [ azuread_user.my_user.object_id /*, more users */ ]
 }
 ```
 
@@ -44,10 +45,13 @@ The following arguments are supported:
 
 * `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
 * `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
+* `owners` (Optional) A set of owners who own this Group. Supported Object types are Users or Service Principals.
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
 
 -> **NOTE:** Do not use `azuread_group_member` at the same time as the `members` argument.
+
+-> **NOTE:** Do not use `azuread_group_owner` at the same time as the `owners` argument.
 
 ## Attributes Reference
 
@@ -58,6 +62,8 @@ The following attributes are exported:
 * `name` - The Display Name of the Group.
 
 * `members` - The Members of the Group.
+
+* `owners` - The Members of the Group.
 
 ## Import
 
