@@ -93,7 +93,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("members"); ok {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 
-		// we could lock here against the group ember resource, but the should not be used together (todo conflicts with at a resource level?)
+		// we could lock here against the group member resource, but they should not be used together (todo conflicts with at a resource level?)
 		if err := graph.GroupAddMembers(client, ctx, *group.ObjectID, *members); err != nil {
 			return err
 		}
@@ -102,8 +102,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	// Add owners if specified
 	if v, ok := d.GetOk("owners"); ok {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-
-		// we could lock here against the group owner resource, but the should not be used together (todo conflicts with at a resource level?)
 		if err := graph.GroupAddOwners(client, ctx, *group.ObjectID, *members); err != nil {
 			return err
 		}
