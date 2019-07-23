@@ -8,33 +8,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 )
 
-type GroupOwnerId struct {
-	ObjectSubResourceId
-	GroupId string
-	OwnerId string
-}
-
-func GroupOwnerIdFrom(groupId, ownerId string) GroupOwnerId {
-	return GroupOwnerId{
-		ObjectSubResourceId: ObjectSubResourceIdFrom(groupId, "owner", ownerId),
-		GroupId:             groupId,
-		OwnerId:             ownerId,
-	}
-}
-
-func ParseGroupOwnerId(idString string) (GroupOwnerId, error) {
-	id, err := ParseObjectSubResourceId(idString, "owner")
-	if err != nil {
-		return GroupOwnerId{}, fmt.Errorf("Unable to parse Owner ID: %v", err)
-	}
-
-	return GroupOwnerId{
-		ObjectSubResourceId: id,
-		GroupId:             id.objectId,
-		OwnerId:             id.subId,
-	}, nil
-}
-
 type GroupMemberId struct {
 	ObjectSubResourceId
 	GroupId  string
