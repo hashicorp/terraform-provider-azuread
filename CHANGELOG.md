@@ -1,25 +1,25 @@
-## 0.5.0 (Unreleased)
+## 0.5.0 (July 24, 2019)
 
 FEATURES:
 
-* **New Data Source:** `azuread_users` [GH-109]
-* **New Resource:** `azuread_group_member` [GH-100]
+* **New Data Source:** `azuread_users` ([#109](https://github.com/terraform-providers/terraform-provider-azuread/issues/109))
+* **New Resource:** `azuread_group_member` ([#100](https://github.com/terraform-providers/terraform-provider-azuread/issues/100))
 
 IMPROVEMENTS:
 
-* Data Source `azuread_application` - support for the `app_roles` property [GH-110]
-* Data Source `azuread_service_principal` - export the `app_roles` property [GH-110]
-* `azuread_application` - support for the `app_roles` property [GH-98]
-* `azuread_application` - the `identifier_uris` property now allows `api`,`urn`, and `ms-appx` URI schemas [GH-115]
-* `azuread_application_password` - deprecation of `application_id` in favour of `application_object_id` [GH-107]
-* `azuread_group` - support for the `members` property [GH-100]
-* `azuread_group` - support for the `owners` property [GH-62]
-* `azuread_service_principal` - export the `oauth2_permissions` property [GH-103]
+* Data Source `azuread_application` - support for the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
+* Data Source `azuread_service_principal` - export the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
+* `azuread_application` - support for the `app_roles` property ([#98](https://github.com/terraform-providers/terraform-provider-azuread/issues/98))
+* `azuread_application` - the `identifier_uris` property now allows `api`,`urn`, and `ms-appx` URI schemas ([#115](https://github.com/terraform-providers/terraform-provider-azuread/issues/115))
+* `azuread_application_password` - deprecation of `application_id` in favour of `application_object_id` ([#107](https://github.com/terraform-providers/terraform-provider-azuread/issues/107))
+* `azuread_group` - support for the `members` property ([#100](https://github.com/terraform-providers/terraform-provider-azuread/issues/100))
+* `azuread_group` - support for the `owners` property ([#62](https://github.com/terraform-providers/terraform-provider-azuread/issues/62))
+* `azuread_service_principal` - export the `oauth2_permissions` property ([#103](https://github.com/terraform-providers/terraform-provider-azuread/issues/103))
 
 BUG FIXES:
 
-* `azuread_application_password` - will now wait for replication on resource creation [GH-118]
-* `azuread_service_principal_password` - will now wait for replication on resource creation [GH-117]
+* `azuread_application_password` - will now wait for replication on resource creation ([#118](https://github.com/terraform-providers/terraform-provider-azuread/issues/118))
+* `azuread_service_principal_password` - will now wait for replication on resource creation ([#117](https://github.com/terraform-providers/terraform-provider-azuread/issues/117))
 
 ## 0.4.0 (June 06, 2019)
 
