@@ -1,8 +1,8 @@
-## 0.5.1 (Unreleased)
+## 0.5.1 (July 24, 2019)
 
 BUG FIXES:
 
-* `azuread_application_password` - fix incorrect conflicts with [GH-129]
+* `azuread_application_password` - fix incorrect conflicts with ([#129](https://github.com/terraform-providers/terraform-provider-azuread/issues/129))
 
 ## 0.5.0 (July 24, 2019)
 
