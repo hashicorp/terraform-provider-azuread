@@ -18,7 +18,7 @@ Manages a single Group Membership within Azure Active Directory.
 ```hcl
 
 data "azuread_user" "example" {
-  user_principal_name = "johndoe@hashicorp.com"
+  user_principal_name = "jdoe@hashicorp.com"
 }
 
 resource "azuread_group" "example" {

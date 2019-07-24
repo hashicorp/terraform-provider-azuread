@@ -105,17 +105,17 @@ func TestStringIsEmailAddress(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "john.doe@hashicorp.com",
+			Value:    "j.doe@hashicorp.com",
 			TestName: "Valid_EmailAddress",
 			ErrCount: 0,
 		},
 		{
-			Value:    "john.doehashicorp.com",
+			Value:    "j.doehashicorp.com",
 			TestName: "Invalid_EmailAddress_NoAtChar",
 			ErrCount: 1,
 		},
 		{
-			Value:    "john/doe@ha$hicorp.com",
+			Value:    "j/doe@ha$hicorp.com",
 			TestName: "Invalid_EmailAddress_InvalidChars",
 			ErrCount: 1,
 		},

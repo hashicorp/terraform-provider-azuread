@@ -4,13 +4,9 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
-	"github.com/hashicorp/terraform/helper/mutexkv"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
-
-// armMutexKV is the instance of MutexKV for ARM resources
-var armMutexKV = mutexkv.NewMutexKV()
 
 // Provider returns a terraform.ResourceProvider.
 func Provider() terraform.ResourceProvider {

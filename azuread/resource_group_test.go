@@ -23,7 +23,52 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAzureADGroup_basic(id),
-				Check:  testCheckAzureAdGroupBasic(id, "0"),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADGroup_complete(t *testing.T) {
+	rn := "azuread_group.test"
+	id := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADGroup_basic(id),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADGroup_owners(t *testing.T) {
+	rn := "azuread_group.test"
+	id := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADGroupWithThreeOwners(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "3"),
 			},
 			{
 				ResourceName:      rn,
@@ -46,7 +91,7 @@ func TestAccAzureADGroup_members(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAzureADGroupWithThreeMembers(id, pw),
-				Check:  testCheckAzureAdGroupBasic(id, "3"),
+				Check:  testCheckAzureAdGroupBasic(id, "3", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -57,9 +102,10 @@ func TestAccAzureADGroup_members(t *testing.T) {
 	})
 }
 
-func TestAccAzureADGroup_complete(t *testing.T) {
+func TestAccAzureADGroup_membersAndOwners(t *testing.T) {
 	rn := "azuread_group.test"
 	id := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,8 +113,8 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 		CheckDestroy: testCheckAzureADGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADGroup_basic(id),
-				Check:  testCheckAzureAdGroupBasic(id, "0"),
+				Config: testAccAzureADGroupWithOwnersAndMembers(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "2", "1"),
 			},
 			{
 				ResourceName:      rn,
@@ -79,7 +125,7 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureADGroup_diverse(t *testing.T) {
+func TestAccAzureADGroup_membersDiverse(t *testing.T) {
 	rn := "azuread_group.test"
 	id := tf.AccRandTimeInt()
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -91,7 +137,7 @@ func TestAccAzureADGroup_diverse(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAzureADGroupWithDiverseMembers(id, pw),
-				Check:  testCheckAzureAdGroupBasic(id, "3"),
+				Check:  testCheckAzureAdGroupBasic(id, "3", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -102,7 +148,30 @@ func TestAccAzureADGroup_diverse(t *testing.T) {
 	})
 }
 
-func TestAccAzureADGroup_progression(t *testing.T) {
+func TestAccAzureADGroup_ownersDiverse(t *testing.T) {
+	rn := "azuread_group.test"
+	id := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADGroupWithDiverseOwners(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "2"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADGroup_membersUpdate(t *testing.T) {
 	rn := "azuread_group.test"
 	id := tf.AccRandTimeInt()
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -115,7 +184,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Empty group with 0 members
 			{
 				Config: testAccAzureADGroup_basic(id),
-				Check:  testCheckAzureAdGroupBasic(id, "0"),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -125,7 +194,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Group with 1 member
 			{
 				Config: testAccAzureADGroupWithOneMember(id, pw),
-				Check:  testCheckAzureAdGroupBasic(id, "1"),
+				Check:  testCheckAzureAdGroupBasic(id, "1", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -135,7 +204,7 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Group with multiple members
 			{
 				Config: testAccAzureADGroupWithThreeMembers(id, pw),
-				Check:  testCheckAzureAdGroupBasic(id, "3"),
+				Check:  testCheckAzureAdGroupBasic(id, "3", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -144,8 +213,8 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			},
 			// Group with a different member
 			{
-				Config: testAccAzureADGroupWithServicePrincipal(id),
-				Check:  testCheckAzureAdGroupBasic(id, "1"),
+				Config: testAccAzureADGroupWithServicePrincipalMember(id),
+				Check:  testCheckAzureAdGroupBasic(id, "1", "0"),
 			},
 			{
 				ResourceName:      rn,
@@ -155,8 +224,63 @@ func TestAccAzureADGroup_progression(t *testing.T) {
 			// Empty group with 0 members
 			{
 				Config: testAccAzureADGroup_basic(id),
-				Check:  testCheckAzureAdGroupBasic(id, "0"),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
 			},
+		},
+	})
+}
+
+func TestAccAzureADGroup_ownersUpdate(t *testing.T) {
+	rn := "azuread_group.test"
+	id := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			// Empty group with 0 owners
+			{
+				Config: testAccAzureADGroup_basic(id),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Group with multiple owners
+			{
+				Config: testAccAzureADGroupWithThreeOwners(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "3"),
+			},
+			// Group with 1 owners
+			{
+				Config: testAccAzureADGroupWithOneOwners(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "1"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Group with a different owners
+			{
+				Config: testAccAzureADGroupWithServicePrincipalOwner(id),
+				Check:  testCheckAzureAdGroupBasic(id, "0", "1"),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Empty group with 0 owners is not possible
 		},
 	})
 }
@@ -207,7 +331,7 @@ func testCheckAzureADGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testCheckAzureAdGroupBasic(id int, memberCount string) resource.TestCheckFunc {
+func testCheckAzureAdGroupBasic(id int, memberCount, ownerCount string) resource.TestCheckFunc {
 	resourceName := "azuread_group.test"
 
 	return resource.ComposeTestCheckFunc(
@@ -215,6 +339,7 @@ func testCheckAzureAdGroupBasic(id int, memberCount string) resource.TestCheckFu
 		resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestGroup-%d", id)),
 		resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 		resource.TestCheckResourceAttr(resourceName, "members.#", memberCount),
+		resource.TestCheckResourceAttr(resourceName, "owners.#", ownerCount),
 	)
 }
 
@@ -227,7 +352,7 @@ resource "azuread_group" "test" {
 `, id)
 }
 
-func testAccAzureADGroupWithDiverseMembers(id int, password string) string {
+func testAccAzureADDiverseDirectoryObjects(id int, password string) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
 	only_initial = true
@@ -250,65 +375,88 @@ resource "azuread_user" "test" {
 	display_name          = "acctestUser-%[1]d"
 	password              = "%[2]s"
 }
+`, id, password)
+}
+
+func testAccAzureADGroupWithDiverseMembers(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
 
 resource "azuread_group" "test" {
-  name   = "acctestGroup-%[1]d"
+  name   = "acctestGroup-%[2]d"
   members = [ azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id ]
 }
-`, id, password)
+`, testAccAzureADDiverseDirectoryObjects(id, password), id)
+}
+
+func testAccAzureADGroupWithDiverseOwners(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name   = "acctestGroup-%[2]d"
+  owners = [ azuread_user.test.object_id, azuread_service_principal.test.object_id ]
+}
+`, testAccAzureADDiverseDirectoryObjects(id, password), id)
 }
 
 func testAccAzureADGroupWithOneMember(id int, password string) string {
 	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
-	only_initial = true
-}
-
-resource "azuread_user" "test" {
-	user_principal_name   = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d"
-	password              = "%[2]s"
-}
+%[1]s
 
 resource "azuread_group" "test" {
-  name   = "acctestGroup-%[1]d"
+  name   = "acctestGroup-%[2]d"
   members = [ azuread_user.test.object_id ]
 }
-`, id, password)
+`, testAccADUser_basic(id, password), id)
+}
+
+func testAccAzureADGroupWithOneOwners(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name   = "acctestGroup-%[2]d"
+  owners = [ azuread_user.test.object_id ]
+}
+`, testAccADUser_basic(id, password), id)
 }
 
 func testAccAzureADGroupWithThreeMembers(id int, password string) string {
 	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
-	only_initial = true
-}
-
-resource "azuread_user" "testA" {
-	user_principal_name   = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]dA"
-	password              = "%[2]s"
-}
-
-resource "azuread_user" "testB" {
-	user_principal_name   = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d-B"
-	password              = "%[2]s"
-}
-
-resource "azuread_user" "testC" {
-	user_principal_name   = "acctestUser.%[1]dC@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]dC"
-	password              = "%[2]s"
-}
+%[1]s
 
 resource "azuread_group" "test" {
-  name    = "acctestGroup-%[1]d"
+  name    = "acctestGroup-%[2]d"
   members = [ azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id ]
 }
-`, id, password)
+`, testAccADUser_threeUsersABC(id, password), id)
 }
 
-func testAccAzureADGroupWithServicePrincipal(id int) string {
+func testAccAzureADGroupWithThreeOwners(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name   = "acctestGroup-%[2]d"
+  owners = [ azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id ]
+}
+`, testAccADUser_threeUsersABC(id, password), id)
+}
+
+func testAccAzureADGroupWithOwnersAndMembers(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name    = "acctestGroup-%[2]d"
+  owners  = [ azuread_user.testA.object_id ]
+  members = [ azuread_user.testB.object_id, azuread_user.testC.object_id ]
+}
+`, testAccADUser_threeUsersABC(id, password), id)
+}
+
+func testAccAzureADGroupWithServicePrincipalMember(id int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctestApp-%[1]d"
@@ -321,6 +469,23 @@ resource "azuread_service_principal" "test" {
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[1]d"
   members = [ azuread_service_principal.test.object_id ]
+}
+`, id)
+}
+
+func testAccAzureADGroupWithServicePrincipalOwner(id int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+
+resource "azuread_group" "test" {
+  name   = "acctestGroup-%[1]d"
+  owners = [ azuread_service_principal.test.object_id ]
 }
 `, id)
 }

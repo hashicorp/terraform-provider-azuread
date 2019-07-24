@@ -90,7 +90,7 @@ func ParsePasswordCredentialId(id string) (PasswordCredentialId, error) {
 	}
 
 	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return PasswordCredentialId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", id[1], err)
+		return PasswordCredentialId{}, fmt.Errorf("Credential ID isn't a valid UUID (%q): %+v", id[1], err)
 	}
 
 	return PasswordCredentialId{
