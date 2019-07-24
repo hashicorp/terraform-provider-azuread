@@ -47,7 +47,7 @@ IMPROVEMENTS:
 * `azuread_service_principal` - will now wait for replication by waiting for 10 successful reads after creation ([#93](https://github.com/terraform-providers/terraform-provider-azuread/issues/93))
 * `azuread_service_principal` - now exports the `object_id` property ([#99](https://github.com/terraform-providers/terraform-provider-azuread/issues/99))
 * `azuread_user` - will now wait for replication by waiting for 10 successful reads after creation ([#91](https://github.com/terraform-providers/terraform-provider-azuread/issues/91))
-* `azuread_user` - increase the maximum allowed lengh of `password` to 256 ([#81](https://github.com/terraform-providers/terraform-provider-azuread/issues/81))
+* `azuread_user` - increase the maximum allowed length of `password` to 256 ([#81](https://github.com/terraform-providers/terraform-provider-azuread/issues/81))
 * `azuread_user` - now exports the `object_id` property ([#99](https://github.com/terraform-providers/terraform-provider-azuread/issues/99))
 
 ## 0.3.1 (April 18, 2019)
