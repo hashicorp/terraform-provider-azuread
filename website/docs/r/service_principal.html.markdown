@@ -27,6 +27,7 @@ resource "azuread_application" "example" {
 
 resource "azuread_service_principal" "example" {
   application_id = "${azuread_application.example.application_id}"
+  app_role_assignment_required  = false
 
   tags = ["example", "tags", "here"]
 }
@@ -37,6 +38,8 @@ resource "azuread_service_principal" "example" {
 The following arguments are supported:
 
 * `application_id` - (Required) The ID of the Azure AD Application for which to create a Service Principal.
+
+* `app_role_assignment_required` - (Optional) Does this Service Principal require an AppRoleAssignment to a user or group before Azure AD will issue a user or access token to the application? Defaults to `false`.
 
 * `tags` - (Optional) A list of tags to apply to the Service Principal.
 
@@ -51,6 +54,8 @@ The following attributes are exported:
 * `object_id` - The Service Principal's Object ID.
 
 * `display_name` - The Display Name of the Azure Active Directory Application associated with this Service Principal.
+
+* `app_role_assignment_required` - Whether this Service Principal requires an AppRoleAssignment to a user or group before Azure AD will issue a user or access token to the application.
 
 * `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated application. Each permission is covered by a `oauth2_permission` block as documented below.
 
