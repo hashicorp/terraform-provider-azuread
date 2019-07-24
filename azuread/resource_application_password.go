@@ -34,7 +34,7 @@ func resourceApplicationPassword() *schema.Resource {
 				Computed:      true,
 				ValidateFunc:  validate.UUID,
 				Deprecated:    "Deprecated in favour of `application_object_id` to prevent confusion",
-				ConflictsWith: []string{"application_id"},
+				ConflictsWith: []string{"application_object_id"},
 			},
 
 			"application_object_id": {
@@ -43,7 +43,7 @@ func resourceApplicationPassword() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"application_object_id"},
+				ConflictsWith: []string{"application_id"},
 			},
 
 			"key_id": {
