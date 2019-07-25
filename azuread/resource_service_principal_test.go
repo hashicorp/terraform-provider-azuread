@@ -68,6 +68,38 @@ func TestAccAzureADServicePrincipal_complete(t *testing.T) {
 	})
 }
 
+func TestAccAzureADServicePrincipal_update(t *testing.T) {
+	resourceName := "azuread_service_principal.test"
+	id := uuid.New().String()
+	updatedId := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADServicePrincipalDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADServicePrincipal_basic(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADServicePrincipalExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttr(resourceName, "app_role_assignment_required", "false"),
+				),
+			},
+			{
+				Config: testAccADServicePrincipal_complete(updatedId),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADServicePrincipalExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "3"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+					resource.TestCheckResourceAttr(resourceName, "app_role_assignment_required", "true"),
+				),
+			},
+		},
+	})
+}
+
 func testCheckADServicePrincipalExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
