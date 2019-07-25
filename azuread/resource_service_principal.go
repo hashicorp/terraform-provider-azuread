@@ -35,6 +35,11 @@ func resourceServicePrincipal() *schema.Resource {
 				ValidateFunc: validate.UUID,
 			},
 
+			"app_role_assignment_required": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -43,11 +48,6 @@ func resourceServicePrincipal() *schema.Resource {
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"app_role_assignment_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 
 			"oauth2_permissions": graph.SchemaOauth2Permissions(),
