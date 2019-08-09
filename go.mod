@@ -7,5 +7,5 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-azure-helpers v0.4.1
 	github.com/hashicorp/go-uuid v1.0.1
-	github.com/hashicorp/terraform v0.12.0
+	github.com/hashicorp/terraform v0.12.6
 )
