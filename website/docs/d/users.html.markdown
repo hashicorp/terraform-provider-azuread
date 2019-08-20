@@ -17,7 +17,7 @@ Gets Object IDs or UPNs for multiple Azure Active Directory users.
 
 ```hcl
 data "azuread_users" "users" {
-  user_principal_name = ["kat@hashicorp.com", "byte@hashicorp.com"]
+  user_principal_names = ["kat@hashicorp.com", "byte@hashicorp.com"]
 }
 ```
 
