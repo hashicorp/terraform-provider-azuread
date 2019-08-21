@@ -1,12 +1,12 @@
-## 0.6.0 (Unreleased)
+## 0.6.0 (August 21, 2019)
 
 IMPROVEMENTS:
 
-* dependencies: upgrading `github.com/Azure/azure-sdk-for-go` to `v32.5.0` [GH-140]
-* dependencies: upgrading `github.com/Azure/go-autorest` to `v13.0.0` [GH-140]
-* dependencies: upgrading `github.com/hashicorp/go-azure-helpers` to `v0.7.0` [GH-140]
-* dependencies: upgrading `github.com/hashicorp/terraform` to `0.12.6` [GH-133]
-* `azuread_service_principal` - support for the `app_role_assignment_required` property [GH-127]
+* dependencies: upgrading `github.com/Azure/azure-sdk-for-go` to `v32.5.0` ([#140](https://github.com/terraform-providers/terraform-provider-azuread/issues/140))
+* dependencies: upgrading `github.com/Azure/go-autorest` to `v13.0.0` ([#140](https://github.com/terraform-providers/terraform-provider-azuread/issues/140))
+* dependencies: upgrading `github.com/hashicorp/go-azure-helpers` to `v0.7.0` ([#140](https://github.com/terraform-providers/terraform-provider-azuread/issues/140))
+* dependencies: upgrading `github.com/hashicorp/terraform` to `0.12.6` ([#133](https://github.com/terraform-providers/terraform-provider-azuread/issues/133))
+* `azuread_service_principal` - support for the `app_role_assignment_required` property ([#127](https://github.com/terraform-providers/terraform-provider-azuread/issues/127))
 
 
 ## 0.5.1 (July 24, 2019)
