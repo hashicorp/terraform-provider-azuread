@@ -3,6 +3,8 @@
 IMPROVEMENTS:
 
 * dependencies: upgrading `github.com/hashicorp/terraform` to `0.12.6` [GH-133]
+* `azuread_service_principal` - support for the `app_role_assignment_required` property [GH-127]
+
 
 ## 0.5.1 (July 24, 2019)
 
