@@ -21,6 +21,7 @@ func resourceServicePrincipal() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServicePrincipalCreate,
 		Read:   resourceServicePrincipalRead,
+		Update: resourceServicePrincipalUpdate,
 		Delete: resourceServicePrincipalDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -32,6 +33,11 @@ func resourceServicePrincipal() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validate.UUID,
+			},
+
+			"app_role_assignment_required": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"display_name": {
@@ -71,6 +77,11 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		// given there's no way to change it - we'll just default this to true
 		AccountEnabled: p.Bool(true),
 	}
+
+	if v, ok := d.GetOk("app_role_assignment_required"); ok {
+		properties.AppRoleAssignmentRequired = p.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("tags"); ok {
 		properties.Tags = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 	}
@@ -89,6 +100,23 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	})
 	if err != nil {
 		return fmt.Errorf("Error waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
+	}
+
+	return resourceServicePrincipalRead(d, meta)
+}
+
+func resourceServicePrincipalUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).servicePrincipalsClient
+	ctx := meta.(*ArmClient).StopContext
+
+	var properties graphrbac.ServicePrincipalUpdateParameters
+
+	if d.HasChange("app_role_assignment_required") {
+		properties.AppRoleAssignmentRequired = p.Bool(d.Get("app_role_assignment_required").(bool))
+	}
+
+	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
+		return fmt.Errorf("Error patching Azure AD Service Principal with ID %q: %+v", d.Id(), err)
 	}
 
 	return resourceServicePrincipalRead(d, meta)
@@ -113,6 +141,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("application_id", app.AppID)
 	d.Set("display_name", app.DisplayName)
 	d.Set("object_id", app.ObjectID)
+	d.Set("app_role_assignment_required", app.AppRoleAssignmentRequired)
 
 	// tags doesn't exist as a property, so extract it
 	if err := d.Set("tags", app.Tags); err != nil {
