@@ -2,6 +2,9 @@
 
 IMPROVEMENTS:
 
+* dependencies: upgrading `github.com/Azure/azure-sdk-for-go` to `v32.5.0` [GH-140]
+* dependencies: upgrading `github.com/Azure/go-autorest` to `v13.0.0` [GH-140]
+* dependencies: upgrading `github.com/hashicorp/go-azure-helpers` to `v0.7.0` [GH-140]
 * dependencies: upgrading `github.com/hashicorp/terraform` to `0.12.6` [GH-133]
 * `azuread_service_principal` - support for the `app_role_assignment_required` property [GH-127]
 
