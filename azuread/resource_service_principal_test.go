@@ -96,6 +96,20 @@ func TestAccAzureADServicePrincipal_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_role_assignment_required", "true"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccADServicePrincipal_basic(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADServicePrincipalExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "display_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttr(resourceName, "app_role_assignment_required", "false"),
+				),
+			},
 		},
 	})
 }
@@ -165,8 +179,8 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-	application_id 								= "${azuread_application.test.application_id}"
-	app_role_assignment_required 	= true
+	application_id               = "${azuread_application.test.application_id}"
+	app_role_assignment_required = true
 
   tags = ["test", "multiple", "CapitalS"]
 }
