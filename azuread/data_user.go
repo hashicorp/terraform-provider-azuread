@@ -53,6 +53,11 @@ func dataUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"usage_location": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -90,6 +95,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("display_name", user.DisplayName)
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
+	d.Set("usage_location", user.UsageLocation)
 
 	return nil
 }
