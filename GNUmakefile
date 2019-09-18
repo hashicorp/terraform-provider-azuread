@@ -53,6 +53,12 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
+
+website-lint:
+	@echo "==> Checking website against linters..."
+	@misspell -error -source=text -i hdinsight website/
+
+
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
