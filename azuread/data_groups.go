@@ -83,7 +83,8 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unexpected number of groups returned (%d != %d)", len(groups), expectedCount)
 	}
 
-	var names, oids []string
+	names := make([]string, 0, len(groups))
+	oids := make([]string, 0, len(groups))
 	for _, u := range groups {
 		if u.ObjectID == nil || u.DisplayName == nil {
 			return fmt.Errorf("User with nil ObjectId or UPN was found: %v", u)

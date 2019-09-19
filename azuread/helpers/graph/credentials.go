@@ -97,7 +97,6 @@ func ParsePasswordCredentialId(id string) (PasswordCredentialId, error) {
 		ObjectId: parts[0],
 		KeyId:    parts[1],
 	}, nil
-
 }
 
 func PasswordCredentialIdFrom(objectId, keyId string) PasswordCredentialId {
