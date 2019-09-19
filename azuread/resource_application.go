@@ -224,7 +224,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		// continue to automatically set the homepage with the type is not native
 		if appType != "native" {
 			properties.Homepage = p.String(fmt.Sprintf("https://%s", name))
-
 		}
 	}
 
@@ -260,7 +259,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	// AAD graph doesn't have the API to create a native app, aka public client, the recommended hack is
 	// to create a web app first, then convert to a native one
 	if appType == "native" {
-
 		properties := graphrbac.ApplicationUpdateParameters{
 			Homepage:       nil,
 			IdentifierUris: &[]string{},
@@ -468,7 +466,7 @@ func expandADApplicationRequiredResourceAccess(d *schema.ResourceData) *[]graphr
 }
 
 func expandADApplicationResourceAccess(in []interface{}) *[]graphrbac.ResourceAccess {
-	var resourceAccesses []graphrbac.ResourceAccess
+	resourceAccesses := make([]graphrbac.ResourceAccess, 0, len(in))
 	for _, resource_access_raw := range in {
 		resource_access := resource_access_raw.(map[string]interface{})
 
