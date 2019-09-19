@@ -530,8 +530,7 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 		return nil
 	}
 
-	var output []graphrbac.AppRole
-
+	output := make([]graphrbac.AppRole, 0, len(input))
 	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
 

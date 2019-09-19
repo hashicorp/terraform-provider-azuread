@@ -67,7 +67,6 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 
 		sp = &app
 	} else if _, ok := d.GetOk("display_name"); ok {
-
 		// use the display_name to find the Azure AD service principal
 		displayName := d.Get("display_name").(string)
 		filter := fmt.Sprintf("displayName eq '%s'", displayName)
@@ -92,7 +91,6 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 			return fmt.Errorf("A Service Principal with the Display Name %q was not found", displayName)
 		}
 	} else {
-
 		// use the application_id to find the Azure AD service principal
 		applicationId := d.Get("application_id").(string)
 		filter := fmt.Sprintf("appId eq '%s'", applicationId)
