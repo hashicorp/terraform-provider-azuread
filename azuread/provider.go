@@ -120,7 +120,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 			return nil, fmt.Errorf("Error building AzureAD Client: %s", err)
 		}
 
-		client, err := getArmClient(config)
+		client, err := getArmClient(config, p.TerraformVersion)
 		if err != nil {
 			return nil, err
 		}
