@@ -54,7 +54,7 @@ func resourceApplication() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validate.URLIsHTTPS,
+				ValidateFunc: validate.URLIsHTTPOrHTTPS,
 			},
 
 			"identifier_uris": {
