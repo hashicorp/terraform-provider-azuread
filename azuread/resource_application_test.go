@@ -44,6 +44,38 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_http_homepage(t *testing.T) {
+	resourceName := "azuread_application.test"
+	id := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_http_homepage(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
 	id := uuid.New().String()
@@ -492,6 +524,15 @@ resource "azuread_application" "test" {
   name = "acctestApp-%s"
 }
 `, id)
+}
+
+func testAccADApplication_http_homepage(id string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name      = "acctestApp-%s"
+  homepage  = "http://homepage-%s"
+}
+`, id, id)
 }
 
 func testAccADApplication_publicClient(id string) string {
