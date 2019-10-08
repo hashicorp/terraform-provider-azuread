@@ -81,7 +81,7 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 				Description: "A two letter country code (ISO standard 3166). " +
 					"Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. " +
-					"Examples include: \"NO\", \"JP\", and \"GB\". Not nullable.",
+					"Examples include: `NO`, `P`, and `GB`. Not nullable.",
 			},
 		},
 	}
