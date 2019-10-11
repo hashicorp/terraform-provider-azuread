@@ -102,6 +102,7 @@ func resourceApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 
