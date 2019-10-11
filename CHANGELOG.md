@@ -3,6 +3,7 @@
 FEATURES:
 
 * `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS [GH-155]
+* `azuread_user` - support for the `usage_location` property [GH-141]
 
 IMPROVEMENTS:
 
