@@ -55,8 +55,8 @@ func resourceServicePrincipal() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      schema.HashString,
 				ForceNew: true,
+				Set:      schema.HashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
