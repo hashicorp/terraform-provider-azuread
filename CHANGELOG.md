@@ -1,4 +1,14 @@
 ## 0.7.0 (Unreleased)
+
+FEATURES:
+
+* `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS [GH-155]
+
+IMPROVEMENTS:
+
+* provider: Migrate to standalone plugin SDK v1.1.0 [GH-154]
+* provider: using the current (rather than the vendored) version of Terraform Core in user agents [GH-154]
+
 ## 0.6.0 (August 21, 2019)
 
 IMPROVEMENTS:
