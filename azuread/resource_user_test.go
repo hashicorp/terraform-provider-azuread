@@ -203,6 +203,7 @@ resource "azuread_user" "test" {
   account_enabled       = false
   password              = "%[2]s"
   force_password_change = true
+  usage_location        = "NO"
 }
 `, id, password)
 }

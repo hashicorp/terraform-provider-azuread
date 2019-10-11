@@ -74,6 +74,15 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"usage_location": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				Description: "A two letter country code (ISO standard 3166). " +
+					"Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. " +
+					"Examples include: `NO`, `JP`, and `GB`. Not nullable.",
+			},
 		},
 	}
 }
@@ -103,6 +112,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 			Password:                     &password,
 		},
 		UserPrincipalName: &upn,
+	}
+
+	if v, ok := d.GetOk("usage_location"); ok {
+		userCreateParameters.UsageLocation = p.String(v.(string))
 	}
 
 	user, err := client.Create(ctx, userCreateParameters)
@@ -146,6 +159,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("account_enabled", user.AccountEnabled)
 	d.Set("object_id", user.ObjectID)
+	d.Set("usage_location", user.UsageLocation)
 	return nil
 }
 
@@ -180,6 +194,11 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		userUpdateParameters.PasswordProfile = passwordProfile
+	}
+
+	if d.HasChange("usage_location") {
+		usageLocation := d.Get("usage_location").(string)
+		userUpdateParameters.UsageLocation = p.String(usageLocation)
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
