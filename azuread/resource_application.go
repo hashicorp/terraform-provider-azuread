@@ -33,7 +33,7 @@ func resourceApplication() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validate.NoEmptyStrings,
 			},
 
 			"available_to_other_tenants": {
@@ -102,6 +102,7 @@ func resourceApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 
@@ -137,9 +138,8 @@ func resourceApplication() *schema.Resource {
 						},
 
 						"value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -215,7 +215,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
-		AppRoles:                expandADApplicationAppRoles(d.Get("app_role")),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -248,7 +247,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	_, err = graph.WaitForReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {
@@ -265,6 +264,18 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 			PublicClient:   p.Bool(true),
 		}
 		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
+			return err
+		}
+	}
+
+	// to use an empty value we need to patch the resource
+	appRoles := expandADApplicationAppRoles(d.Get("app_role"))
+	if appRoles != nil {
+		properties2 := graphrbac.ApplicationUpdateParameters{
+			AppRoles: appRoles,
+		}
+
+		if _, err := client.Patch(ctx, *app.ObjectID, properties2); err != nil {
 			return err
 		}
 	}
@@ -547,7 +558,11 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 		appRoleDescription := appRole["description"].(string)
 		appRoleDisplayName := appRole["display_name"].(string)
 		appRoleIsEnabled := appRole["is_enabled"].(bool)
-		appRoleValue := appRole["value"].(string)
+
+		var appRoleValue *string
+		if v, ok := appRole["value"].(string); ok {
+			appRoleValue = &v
+		}
 
 		output = append(output,
 			graphrbac.AppRole{
@@ -556,7 +571,7 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 				Description:        &appRoleDescription,
 				DisplayName:        &appRoleDisplayName,
 				IsEnabled:          &appRoleIsEnabled,
-				Value:              &appRoleValue,
+				Value:              appRoleValue,
 			},
 		)
 	}

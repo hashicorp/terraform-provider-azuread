@@ -123,7 +123,7 @@ The following arguments are supported:
 
 * `is_enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
 
-* `value` - (Required) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
+* `value` - (Optional) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 
 ## Attributes Reference
 
