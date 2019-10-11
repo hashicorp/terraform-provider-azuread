@@ -107,7 +107,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = graph.WaitForReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
 		return client.Get(ctx, *group.ObjectID)
 	})
 	if err != nil {

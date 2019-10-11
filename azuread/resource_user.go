@@ -114,7 +114,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*user.ObjectID)
 
-	_, err = graph.WaitForReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
 		return client.Get(ctx, *user.ObjectID)
 	})
 	if err != nil {

@@ -95,7 +95,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	d.SetId(*sp.ObjectID)
 
-	_, err = graph.WaitForReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
