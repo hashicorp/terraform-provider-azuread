@@ -5,16 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
 func TestAccAzureADApplication_basic(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,15 +22,15 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_basic(id),
+				Config: testAccADApplication_basic(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -46,7 +46,7 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 
 func TestAccAzureADApplication_http_homepage(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,15 +54,15 @@ func TestAccAzureADApplication_http_homepage(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_http_homepage(id),
+				Config: testAccADApplication_http_homepage(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -78,7 +78,7 @@ func TestAccAzureADApplication_http_homepage(t *testing.T) {
 
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -86,14 +86,14 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_complete(id),
+				Config: testAccADApplication_complete(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", ri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
@@ -112,7 +112,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 
 func TestAccAzureADApplication_publicClient(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -120,7 +120,7 @@ func TestAccAzureADApplication_publicClient(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_publicClient(id),
+				Config: testAccADApplication_publicClient(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "public_client", "true"),
@@ -137,8 +137,8 @@ func TestAccAzureADApplication_publicClient(t *testing.T) {
 
 func TestAccAzureADApplication_update(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
-	updatedId := uuid.New().String()
+	ri := tf.AccRandTimeInt()
+	updatedri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -146,23 +146,23 @@ func TestAccAzureADApplication_update(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_basic(id),
+				Config: testAccADApplication_basic(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
 				),
 			},
 			{
-				Config: testAccADApplication_complete(updatedId),
+				Config: testAccADApplication_complete(updatedri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", updatedId)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", updatedri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%d", updatedri)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedId)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
@@ -174,7 +174,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 
 func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -182,7 +182,7 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_availableToOtherTenants(id),
+				Config: testAccADApplication_availableToOtherTenants(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "available_to_other_tenants", "true"),
@@ -199,7 +199,7 @@ func TestAccAzureADApplication_availableToOtherTenants(t *testing.T) {
 
 func TestAccAzureADApplication_appRoles(t *testing.T) {
 	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -207,7 +207,7 @@ func TestAccAzureADApplication_appRoles(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_appRoles(id),
+				Config: testAccADApplication_appRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
@@ -229,9 +229,9 @@ func TestAccAzureADApplication_appRoles(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_appRolesBlankValue(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+func TestAccAzureADApplication_appRolesNoValue(t *testing.T) {
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -239,14 +239,39 @@ func TestAccAzureADApplication_appRolesBlankValue(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_appRolesNoValue(id),
+				Config: testAccADApplication_appRolesNoValue(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_appRolesCustomID(t *testing.T) {
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_appRolesCustomID(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "1"),
+				),
+			},
+			{
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -255,8 +280,8 @@ func TestAccAzureADApplication_appRolesBlankValue(t *testing.T) {
 }
 
 func TestAccAzureADApplication_appRolesUpdate(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -264,26 +289,26 @@ func TestAccAzureADApplication_appRolesUpdate(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_appRoles(id),
+				Config: testAccADApplication_appRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccADApplication_appRolesUpdate(id),
+				Config: testAccADApplication_appRolesUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "app_role.#", "2"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "2"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -292,8 +317,8 @@ func TestAccAzureADApplication_appRolesUpdate(t *testing.T) {
 }
 
 func TestAccAzureADApplication_appRolesDelete(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -301,17 +326,17 @@ func TestAccAzureADApplication_appRolesDelete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_appRolesUpdate(id),
+				Config: testAccADApplication_appRolesUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "app_role.#", "2"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "2"),
 				),
 			},
 			{
-				Config: testAccADApplication_appRoles(id),
+				Config: testAccADApplication_appRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "1"),
 				),
 			},
 		},
@@ -319,8 +344,8 @@ func TestAccAzureADApplication_appRolesDelete(t *testing.T) {
 }
 
 func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -328,27 +353,27 @@ func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_basic(id),
+				Config: testAccADApplication_basic(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
+					testCheckADApplicationExists(rn),
 				),
 			},
 			{
-				Config: testAccADApplication_withGroupMembershipClaimsDirectoryRole(id),
+				Config: testAccADApplication_withGroupMembershipClaimsDirectoryRole(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "DirectoryRole"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "group_membership_claims", "DirectoryRole"),
 				),
 			},
 			{
-				Config: testAccADApplication_withGroupMembershipClaimsSecurityGroup(id),
+				Config: testAccADApplication_withGroupMembershipClaimsSecurityGroup(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "SecurityGroup"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "group_membership_claims", "SecurityGroup"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -357,8 +382,8 @@ func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
 }
 
 func TestAccAzureADApplication_native(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -366,18 +391,18 @@ func TestAccAzureADApplication_native(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_native(id),
+				Config: testAccADApplication_native(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", ""),
-					resource.TestCheckResourceAttr(resourceName, "type", "native"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(rn, "homepage", ""),
+					resource.TestCheckResourceAttr(rn, "type", "native"),
+					resource.TestCheckResourceAttr(rn, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(rn, "application_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -386,8 +411,8 @@ func TestAccAzureADApplication_native(t *testing.T) {
 }
 
 func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -395,18 +420,18 @@ func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_nativeReplyUrls(id),
+				Config: testAccADApplication_nativeReplyUrls(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "type", "native"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(rn, "type", "native"),
+					resource.TestCheckResourceAttr(rn, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(rn, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
+					resource.TestCheckResourceAttrSet(rn, "application_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -415,8 +440,8 @@ func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
 }
 
 func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
-	resourceName := "azuread_application.test"
-	id := uuid.New().String()
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -424,47 +449,47 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_basic(id),
+				Config: testAccADApplication_basic(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(rn, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
+					resource.TestCheckResourceAttr(rn, "type", "webapp/api"),
+					resource.TestCheckResourceAttr(rn, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(rn, "application_id"),
 				),
 			},
 			{
-				Config: testAccADApplication_native(id),
+				Config: testAccADApplication_native(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "type", "native"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(rn, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
+					resource.TestCheckResourceAttr(rn, "type", "native"),
+					resource.TestCheckResourceAttr(rn, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttrSet(rn, "application_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccADApplication_complete(id),
+				Config: testAccADApplication_complete(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestApp-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%s", id)),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000", id)),
-					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(rn, "homepage", fmt.Sprintf("https://homepage-%d", ri)),
+					resource.TestCheckResourceAttr(rn, "identifier_uris.#", "1"),
+					resource.TestCheckResourceAttr(rn, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", ri)),
+					resource.TestCheckResourceAttr(rn, "reply_urls.#", "1"),
+					resource.TestCheckResourceAttr(rn, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttrSet(rn, "application_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
+				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -473,7 +498,7 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 }
 
 func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
-	id := uuid.New().String()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -481,7 +506,7 @@ func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *test
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccADApplication_native_app_does_not_allow_identifier_uris(id),
+				Config:      testAccADApplication_native_app_does_not_allow_identifier_uris(ri),
 				ExpectError: regexp.MustCompile("identifier_uris is not required for a native application"),
 			},
 		},
@@ -534,71 +559,71 @@ func testCheckADApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccADApplication_basic(id string) string {
+func testAccADApplication_basic(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctest-APP-%[1]d"
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_http_homepage(id string) string {
+func testAccADApplication_http_homepage(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name      = "acctestApp-%s"
-  homepage  = "http://homepage-%s"
+  name      = "acctest-APP-%[1]d"
+  homepage  = "http://homepage-%[1]d"
 }
-`, id, id)
+`, ri)
 }
 
-func testAccADApplication_publicClient(id string) string {
+func testAccADApplication_publicClient(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name          = "acctestApp-%s"
+  name          = "acctest-APP-%[1]d"
   type          = "native"
   public_client = true
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_availableToOtherTenants(id string) string {
+func testAccADApplication_availableToOtherTenants(ri int) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
   only_initial = true
 }
 
 resource "azuread_application" "test" {
-  name                       = "acctestApp-%s"
-  identifier_uris            = ["https://%s.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
+  name                       = "acctest-APP-%[1]d"
+  identifier_uris            = ["https://%[1]d.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
   available_to_other_tenants = true
 }
-`, id, id)
+`, ri)
 }
 
-func testAccADApplication_withGroupMembershipClaimsDirectoryRole(id string) string {
+func testAccADApplication_withGroupMembershipClaimsDirectoryRole(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctestApp-%s"
+  name                    = "acctest-APP-%[1]d"
   group_membership_claims = "DirectoryRole"
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_withGroupMembershipClaimsSecurityGroup(id string) string {
+func testAccADApplication_withGroupMembershipClaimsSecurityGroup(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctestApp-%s"
+  name                    = "acctest-APP-%[1]d"
   group_membership_claims = "SecurityGroup"
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_complete(id string) string {
+func testAccADApplication_complete(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                       = "acctestApp-%s"
-  homepage                   = "https://homepage-%s"
-  identifier_uris            = ["http://%s.hashicorptest.com/00000000-0000-0000-0000-00000000"]
+  name                       = "acctest-APP-%[1]d"
+  homepage                   = "https://homepage-%[1]d"
+  identifier_uris            = ["http://%[1]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
   
@@ -632,13 +657,13 @@ resource "azuread_application" "test" {
     }
   }
 }
-`, id, id, id)
+`, ri)
 }
 
-func testAccADApplication_appRoles(id string) string {
+func testAccADApplication_appRoles(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = [
@@ -652,13 +677,13 @@ resource "azuread_application" "test" {
     value        = "Admin"
   }
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_appRolesNoValue(id string) string {
+func testAccADApplication_appRolesNoValue(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = ["User"]
@@ -667,13 +692,51 @@ resource "azuread_application" "test" {
     is_enabled           = true
   }
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_appRolesUpdate(id string) string {
+func testAccADApplication_appRolesCustomID(ri int) string {
+	return fmt.Sprintf(`
+
+resource "azuread_group" "test" {
+   name = "acctestGroup-%[1]d"
+}
+
+resource "azuread_application" "test" {
+  name                       = "acctest-APP-%[1]d"
+  homepage                   = "https://signin.aws.amazon.com/all_role"
+  identifier_uris            = ["https://signin.aws.amazon.com/saml#1234567890"]
+  reply_urls                 = ["https://signin.aws.amazon.com/saml"]
+  available_to_other_tenants = false
+  oauth2_allow_implicit_flow = true
+  type                       = "webapp/api"
+
+  required_resource_access {
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+
+    resource_access {
+      id   = "${azuread_group.test.id}"
+      type = "Role"
+    }
+  }
+
+  app_role {
+      id                   = "${azuread_group.test.id}"
+      allowed_member_types = [ "User" ]
+      description          = "Role mapped from AD group AWS-1234567890-role"
+      display_name         = "kt's acceptance test'"
+      is_enabled           = true
+
+      value = "arn:aws:iam::1234567890:role/role,arn:aws:iam::1234567890:saml-provider/Azure-AD"
+  }
+}
+`, ri)
+}
+
+func testAccADApplication_appRolesUpdate(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = ["User"]
@@ -691,34 +754,34 @@ resource "azuread_application" "test" {
     value                = "User"
   }
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_native(id string) string {
+func testAccADApplication_native(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctest-APP-%[1]d"
   type = "native"
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_nativeReplyUrls(id string) string {
+func testAccADApplication_nativeReplyUrls(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name       = "acctestApp-%s"
+  name       = "acctest-APP-%[1]d"
   type       = "native"
   reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
 }
-`, id)
+`, ri)
 }
 
-func testAccADApplication_native_app_does_not_allow_identifier_uris(id string) string {
+func testAccADApplication_native_app_does_not_allow_identifier_uris(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name            = "acctestApp-%s"
-  identifier_uris = ["http://%s.hashicorptest.com"]
+  name            = "acctest-APP-%[1]d"
+  identifier_uris = ["http://%[1]d.hashicorptest.com"]
   type            = "native"
 }
-`, id, id)
+`, ri)
 }
