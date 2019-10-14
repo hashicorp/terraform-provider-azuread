@@ -112,6 +112,14 @@ func dataApplication() *schema.Resource {
 				},
 			},
 
+			"owners": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+				},
+			},
+
 			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 		},
 	}
@@ -205,6 +213,14 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
 		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
+	}
+
+	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
+	if err != nil {
+		return fmt.Errorf("Error getting owners for Application %q: %+v", *app.ObjectID,  err)
+	}
+	if err := d.Set("owners", owners); err != nil {
+		return fmt.Errorf("Error setting `owners`: %+v", err)
 	}
 
 	return nil
