@@ -1,6 +1,7 @@
 package azuread
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/slices"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -181,6 +182,16 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 
+			"owners": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validate.NoEmptyStrings,
+				},
+			},
+
 			"application_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -280,6 +291,14 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// zadd owners, there is a default owner that we must account so use this shared function
+	if v, ok := d.GetOk("owners"); ok {
+		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		if err := adApplicationSetOwnersTo(client, ctx, *app.ObjectID, members); err != nil {
+			return err
+		}
+	}
+
 	return resourceApplicationRead(d, meta)
 }
 
@@ -370,6 +389,13 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
 
+	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		if err := adApplicationSetOwnersTo(client, ctx, d.Id(), desiredOwners); err != nil {
+			return err
+		}
+	}
+
 	return resourceApplicationRead(d, meta)
 }
 
@@ -425,6 +451,12 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
 		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
 	}
+
+	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
+	if err != nil {
+		return err
+	}
+	d.Set("owners", owners)
 
 	return nil
 }
@@ -577,4 +609,25 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	}
 
 	return &output
+}
+
+func adApplicationSetOwnersTo(client graphrbac.ApplicationsClient, ctx context.Context, id string, desiredOwners []string) error {
+	existingOwners, err := graph.ApplicationAllOwners(client, ctx, id)
+	if err != nil {
+		return err
+	}
+
+	ownersForRemoval := slices.Difference(existingOwners, desiredOwners)
+	ownersToAdd := slices.Difference(desiredOwners, existingOwners)
+
+	for _, ownerToDelete := range ownersForRemoval {
+		log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", ownerToDelete, id)
+		if resp, err := client.RemoveOwner(ctx, id, ownerToDelete); err != nil {
+			if !ar.ResponseWasNotFound(resp) {
+				return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, id, err)
+			}
+		}
+	}
+
+	return graph.ApplicationAddOwners(client, ctx, id, ownersToAdd)
 }

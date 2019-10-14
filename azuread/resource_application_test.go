@@ -3,6 +3,7 @@ package azuread
 import (
 	"fmt"
 	"regexp"
+	`strconv`
 	"testing"
 
 	"github.com/google/uuid"
@@ -593,8 +594,14 @@ resource "azuread_application" "test" {
 `, id)
 }
 
-func testAccADApplication_complete(id string) string {
+func testAccADApplication_complete(id int, pw string) string {
 	return fmt.Sprintf(`
+%s 
+
+data "azuread_service_principal" "test" {
+  display_name = "Terraform AzureAD Acceptance Tests"
+}
+
 resource "azuread_application" "test" {
   name                       = "acctestApp-%s"
   homepage                   = "https://homepage-%s"
@@ -631,8 +638,10 @@ resource "azuread_application" "test" {
       type = "Scope"
     }
   }
+
+  owners = [ azuread_user.test.object_id, data.azuread_service_principal.test.object_id ]
 }
-`, id, id, id)
+`, testAccADUser_basic(id, pw), id, id, id)
 }
 
 func testAccADApplication_appRoles(id string) string {
