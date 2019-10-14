@@ -9,10 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func SchemaAppRoles() *schema.Schema {
+func SchemaAppRolesComputed() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
-		Optional: true,
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -53,7 +52,7 @@ func SchemaAppRoles() *schema.Schema {
 	}
 }
 
-func SchemaOauth2Permissions() *schema.Schema {
+func SchemaOauth2PermissionsComputed() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,

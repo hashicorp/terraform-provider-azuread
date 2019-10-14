@@ -79,7 +79,7 @@ func dataApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"app_roles": graph.SchemaAppRoles(),
+			"app_roles": graph.SchemaAppRolesComputed(),
 
 			"required_resource_access": {
 				Type:     schema.TypeList,
@@ -112,7 +112,7 @@ func dataApplication() *schema.Resource {
 				},
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2Permissions(),
+			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 		},
 	}
 }

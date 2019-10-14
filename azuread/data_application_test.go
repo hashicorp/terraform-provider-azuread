@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
@@ -44,6 +45,7 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 	dataSourceName := "data.azuread_application.test"
 	ri := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -51,10 +53,10 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_complete(ri),
+				Config: testAccADApplication_complete(ri, pw),
 			},
 			{
-				Config: testAccAzureADApplicationDataSource_objectIdComplete(ri),
+				Config: testAccAzureADApplicationDataSource_objectIdComplete(ri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("acctestApp-%d", ri)),
@@ -111,8 +113,8 @@ data "azuread_application" "test" {
 `, template)
 }
 
-func testAccAzureADApplicationDataSource_objectIdComplete(ri int) string {
-	template := testAccADApplication_complete(ri)
+func testAccAzureADApplicationDataSource_objectIdComplete(ri int, pw string) string {
+	template := testAccADApplication_complete(ri, pw)
 	return fmt.Sprintf(`
 %s
 

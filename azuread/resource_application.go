@@ -103,7 +103,6 @@ func resourceApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 
@@ -185,6 +184,7 @@ func resourceApplication() *schema.Resource {
 			"owners": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -202,7 +202,7 @@ func resourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2Permissions(),
+			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 		},
 	}
 }
