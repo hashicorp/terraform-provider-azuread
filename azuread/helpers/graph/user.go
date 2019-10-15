@@ -58,9 +58,6 @@ func UserGetByMailNickname(client *graphrbac.UsersClient, ctx context.Context, m
 	if user.DisplayName == nil {
 		return nil, fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
 	}
-	if *user.MailNickname != mailNickname {
-		return nil, fmt.Errorf("mailNickname for AD Users matching %q does not match(%q!=%q)", filter, *user.MailNickname, mailNickname)
-	}
 
 	return &user, nil
 }
