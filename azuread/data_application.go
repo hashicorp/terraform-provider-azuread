@@ -116,7 +116,7 @@ func dataApplication() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 
@@ -217,7 +217,7 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error getting owners for Application %q: %+v", *app.ObjectID,  err)
+		return fmt.Errorf("Error getting owners for Application %q: %+v", *app.ObjectID, err)
 	}
 	if err := d.Set("owners", owners); err != nil {
 		return fmt.Errorf("Error setting `owners`: %+v", err)
