@@ -29,7 +29,9 @@ The following arguments are supported:
 
 * `object_ids` - (Optional) The Object IDs of the Azure AD Users.
 
--> **NOTE:** Either `user_principal_names` or `object_ids` must be specified.
+* `mail_nicknames` - (Optional) The email aliases of the Azure AD Users.
+
+-> **NOTE:** Either `user_principal_names`, `object_ids` or `mail_nicknames` must be specified.
 
 ## Attributes Reference
 
@@ -37,3 +39,4 @@ The following attributes are exported:
 
 * `object_ids` - The Object IDs of the Azure AD Users.
 * `user_principal_names` - The User Principal Names of the Azure AD Users.
+* `mail_nicknames` - The email aliases of the Azure AD Users.

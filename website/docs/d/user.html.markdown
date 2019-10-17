@@ -29,7 +29,9 @@ The following arguments are supported:
 
 * `object_id` - (Optional) Specifies the Object ID of the Application within Azure Active Directory.
 
--> **NOTE:** Either a `user_principal_name` or an `object_id` must be specified.
+* `mail_nickname` - (Optional) The email alias of the Azure AD User.
+
+-> **NOTE:** Either `user_principal_name`, `object_id` or `mail_nickname` must be specified.
 
 ## Attributes Reference
 
