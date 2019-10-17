@@ -4,6 +4,8 @@ IMPROVEMENTS:
 
 * provider: Migrate to standalone plugin SDK v1.1.0 [GH-154]
 * provider: using the current (rather than the vendored) version of Terraform Core in user agents [GH-154]
+* Data Source `azuread_user` - support looking up a user with `mail_nickname` [GH-161]
+* Data Source `azuread_users` - support looking up users with `mail_nicknames` [GH-161]
 * `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS [GH-155]
 * `azuread_application` - allow the `app_role` block `value` property to be nil [GH-157]
 * `azuread_user` - support for the `usage_location` property [GH-141]
