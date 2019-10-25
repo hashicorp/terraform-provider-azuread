@@ -21,8 +21,8 @@ resource "azuread_service_principal" "example" {
   application_id = "${azuread_application.example.application_id}"
 }
 
-# Generate random string to be used for Service Principal password
-resource "random_string" "password" {
+# Generate random password to be used for Service Principal password
+resource "random_password" "password" {
   length  = 32
   special = true
 }
@@ -30,7 +30,7 @@ resource "random_string" "password" {
 # Create Service Principal password
 resource "azuread_service_principal_password" "example" {
   service_principal_id = "${azuread_service_principal.example.id}"
-  value                = "${random_string.password.result}"
+  value                = "${random_password.password.result}"
   end_date_relative    = "17520h" #expire in 2 years
 }
 
