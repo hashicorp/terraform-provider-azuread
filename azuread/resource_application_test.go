@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
@@ -79,6 +80,7 @@ func TestAccAzureADApplication_http_homepage(t *testing.T) {
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -86,7 +88,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_complete(ri),
+				Config: testAccADApplication_complete(ri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
@@ -139,6 +141,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
 	updatedri := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -156,7 +159,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccADApplication_complete(updatedri),
+				Config: testAccADApplication_complete(updatedri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", updatedri)),
@@ -442,6 +445,7 @@ func TestAccAzureADApplication_nativeReplyUrls(t *testing.T) {
 func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 	rn := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -476,7 +480,7 @@ func TestAccAzureADApplication_nativeUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccADApplication_complete(ri),
+				Config: testAccADApplication_complete(ri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(rn),
 					resource.TestCheckResourceAttr(rn, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
@@ -618,12 +622,18 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccADApplication_complete(ri int) string {
+func testAccADApplication_complete(ri int, pw string) string {
 	return fmt.Sprintf(`
+%[1]s 
+
+data "azuread_service_principal" "test" {
+  display_name = "Terraform AzureAD Acceptance Tests"
+}
+
 resource "azuread_application" "test" {
-  name                       = "acctest-APP-%[1]d"
-  homepage                   = "https://homepage-%[1]d"
-  identifier_uris            = ["http://%[1]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
+  name                       = "acctest-APP-%[2]d"
+  homepage                   = "https://homepage-%[2]d"
+  identifier_uris            = ["http://%[2]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
   
@@ -656,8 +666,9 @@ resource "azuread_application" "test" {
       type = "Scope"
     }
   }
+  owners = [ azuread_user.test.object_id, data.azuread_service_principal.test.object_id ]
 }
-`, ri)
+`, testAccADUser_basic(ri, pw), ri)
 }
 
 func testAccADApplication_appRoles(ri int) string {
@@ -695,7 +706,7 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccADApplication_appRolesCustomID(ri int) string {
+func testAccADApplication_appRolesUpdate(ri int) string {
 	return fmt.Sprintf(`
 
 resource "azuread_group" "test" {
@@ -703,13 +714,7 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_application" "test" {
-  name                       = "acctest-APP-%[1]d"
-  homepage                   = "https://signin.aws.amazon.com/all_role"
-  identifier_uris            = ["https://signin.aws.amazon.com/saml#1234567890"]
-  reply_urls                 = ["https://signin.aws.amazon.com/saml"]
-  available_to_other_tenants = false
-  oauth2_allow_implicit_flow = true
-  type                       = "webapp/api"
+  name = "acctestApp-%d"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"

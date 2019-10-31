@@ -50,13 +50,13 @@ func resourceServicePrincipal() *schema.Resource {
 				Computed: true,
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2Permissions(),
+			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 
 			"tags": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      schema.HashString,
 				ForceNew: true,
+				Set:      schema.HashString,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
