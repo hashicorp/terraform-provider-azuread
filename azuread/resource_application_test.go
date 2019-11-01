@@ -549,8 +549,8 @@ resource "azuread_application" "test" {
 func testAccADApplication_http_homepage(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name      = "acctest-APP-%[1]d"
-  homepage  = "http://homepage-%[1]d"
+  name     = "acctest-APP-%[1]d"
+  homepage = "http://homepage-%[1]d"
 }
 `, ri)
 }
@@ -599,7 +599,7 @@ resource "azuread_application" "test" {
 
 func testAccADApplication_complete(ri int, pw string) string {
 	return fmt.Sprintf(`
-%[1]s 
+%[1]s
 
 data "azuread_service_principal" "test" {
   display_name = "Terraform AzureAD Acceptance Tests"
@@ -611,8 +611,8 @@ resource "azuread_application" "test" {
   identifier_uris            = ["http://%[2]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
   oauth2_allow_implicit_flow = true
-  
-  group_membership_claims    = "All"
+
+  group_membership_claims = "All"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
@@ -641,7 +641,7 @@ resource "azuread_application" "test" {
       type = "Scope"
     }
   }
-  owners = [ azuread_user.test.object_id, data.azuread_service_principal.test.object_id ]
+  owners = [azuread_user.test.object_id, data.azuread_service_principal.test.object_id]
 }
 `, testAccADUser_basic(ri, pw), ri)
 }

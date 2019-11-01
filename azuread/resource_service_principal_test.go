@@ -179,8 +179,8 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-	application_id               = "${azuread_application.test.application_id}"
-	app_role_assignment_required = true
+  application_id               = "${azuread_application.test.application_id}"
+  app_role_assignment_required = true
 
   tags = ["test", "multiple", "CapitalS"]
 }
