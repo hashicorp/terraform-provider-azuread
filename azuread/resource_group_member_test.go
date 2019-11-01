@@ -193,14 +193,14 @@ func testCheckAzureADGroupMemberDestroy(s *terraform.State) error {
 func testAccAzureADGroupMember_oneUser(id int, password string) string {
 	return fmt.Sprintf(`
 %[1]s
-	
+
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[2]d"
+  name = "acctestGroup-%[2]d"
 }
 
 resource "azuread_group_member" "testA" {
-	group_object_id 	= "${azuread_group.test.object_id}"
-	member_object_id 	= "${azuread_user.testA.object_id}"
+  group_object_id  = "${azuread_group.test.object_id}"
+  member_object_id = "${azuread_user.testA.object_id}"
 }
 
 `, testAccADUser_threeUsersABC(id, password), id)
@@ -209,19 +209,19 @@ resource "azuread_group_member" "testA" {
 func testAccAzureADGroupMember_twoUsers(id int, password string) string {
 	return fmt.Sprintf(`
 %[1]s
-	
+
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[2]d"
+  name = "acctestGroup-%[2]d"
 }
 
 resource "azuread_group_member" "testA" {
-	group_object_id 	= "${azuread_group.test.object_id}"
-	member_object_id 	= "${azuread_user.testA.object_id}"
+  group_object_id  = "${azuread_group.test.object_id}"
+  member_object_id = "${azuread_user.testA.object_id}"
 }
 
 resource "azuread_group_member" "testB" {
-	group_object_id 	= "${azuread_group.test.object_id}"
-	member_object_id 	= "${azuread_user.testB.object_id}"
+  group_object_id  = "${azuread_group.test.object_id}"
+  member_object_id = "${azuread_user.testB.object_id}"
 }
 
 `, testAccADUser_threeUsersABC(id, password), id)
@@ -229,18 +229,18 @@ resource "azuread_group_member" "testB" {
 
 func testAccAzureADGroupMember_group(id int) string {
 	return fmt.Sprintf(`
-	
+
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_group" "member" {
-	name = "acctestGroup-%[1]d-Member"
+  name = "acctestGroup-%[1]d-Member"
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id 	= "${azuread_group.test.object_id}"
-	member_object_id 	= "${azuread_group.member.object_id}"
+  group_object_id  = "${azuread_group.test.object_id}"
+  member_object_id = "${azuread_group.member.object_id}"
 }
 
 `, id)
@@ -250,20 +250,20 @@ func testAccAzureADGroupMember_servicePrincipal(id int) string {
 	return fmt.Sprintf(`
 
 resource "azuread_application" "test" {
-	name = "acctestApp-%[1]d"
+  name = "acctestApp-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
-	application_id = "${azuread_application.test.application_id}"
+  application_id = "${azuread_application.test.application_id}"
 }
 
 resource "azuread_group" "test" {
-	name = "acctestGroup-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_group_member" "test" {
-	group_object_id  = "${azuread_group.test.object_id}"
-	member_object_id = "${azuread_service_principal.test.object_id}"
+  group_object_id  = "${azuread_group.test.object_id}"
+  member_object_id = "${azuread_service_principal.test.object_id}"
 }
 
 `, id)

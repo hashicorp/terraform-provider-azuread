@@ -355,7 +355,7 @@ resource "azuread_group" "test" {
 func testAccAzureADDiverseDirectoryObjects(id int, password string) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
-	only_initial = true
+  only_initial = true
 }
 
 resource "azuread_application" "test" {
@@ -367,13 +367,13 @@ resource "azuread_service_principal" "test" {
 }
 
 resource "azuread_group" "member" {
-  name   = "acctestGroup-%[1]d-Member"
+  name = "acctestGroup-%[1]d-Member"
 }
 
 resource "azuread_user" "test" {
-	user_principal_name   = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d"
-	password              = "%[2]s"
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = "%[2]s"
 }
 `, id, password)
 }
@@ -383,8 +383,8 @@ func testAccAzureADGroupWithDiverseMembers(id int, password string) string {
 %[1]s
 
 resource "azuread_group" "test" {
-  name   = "acctestGroup-%[2]d"
-  members = [ azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id ]
+  name    = "acctestGroup-%[2]d"
+  members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id]
 }
 `, testAccAzureADDiverseDirectoryObjects(id, password), id)
 }
@@ -395,7 +395,7 @@ func testAccAzureADGroupWithDiverseOwners(id int, password string) string {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [ azuread_user.test.object_id, azuread_service_principal.test.object_id ]
+  owners = [azuread_user.test.object_id, azuread_service_principal.test.object_id]
 }
 `, testAccAzureADDiverseDirectoryObjects(id, password), id)
 }
@@ -405,8 +405,8 @@ func testAccAzureADGroupWithOneMember(id int, password string) string {
 %[1]s
 
 resource "azuread_group" "test" {
-  name   = "acctestGroup-%[2]d"
-  members = [ azuread_user.test.object_id ]
+  name    = "acctestGroup-%[2]d"
+  members = [azuread_user.test.object_id]
 }
 `, testAccADUser_basic(id, password), id)
 }
@@ -417,7 +417,7 @@ func testAccAzureADGroupWithOneOwners(id int, password string) string {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [ azuread_user.test.object_id ]
+  owners = [azuread_user.test.object_id]
 }
 `, testAccADUser_basic(id, password), id)
 }
@@ -428,7 +428,7 @@ func testAccAzureADGroupWithThreeMembers(id int, password string) string {
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
-  members = [ azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id ]
+  members = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
 `, testAccADUser_threeUsersABC(id, password), id)
 }
@@ -439,7 +439,7 @@ func testAccAzureADGroupWithThreeOwners(id int, password string) string {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [ azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id ]
+  owners = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
 `, testAccADUser_threeUsersABC(id, password), id)
 }
@@ -450,8 +450,8 @@ func testAccAzureADGroupWithOwnersAndMembers(id int, password string) string {
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
-  owners  = [ azuread_user.testA.object_id ]
-  members = [ azuread_user.testB.object_id, azuread_user.testC.object_id ]
+  owners  = [azuread_user.testA.object_id]
+  members = [azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
 `, testAccADUser_threeUsersABC(id, password), id)
 }
@@ -468,7 +468,7 @@ resource "azuread_service_principal" "test" {
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[1]d"
-  members = [ azuread_service_principal.test.object_id ]
+  members = [azuread_service_principal.test.object_id]
 }
 `, id)
 }
@@ -485,7 +485,7 @@ resource "azuread_service_principal" "test" {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[1]d"
-  owners = [ azuread_service_principal.test.object_id ]
+  owners = [azuread_service_principal.test.object_id]
 }
 `, id)
 }

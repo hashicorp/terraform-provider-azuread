@@ -215,22 +215,22 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "testA" {
-	user_principal_name   = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d-A"
-	password              = "%[2]s"
+  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-A"
+  password            = "%[2]s"
 }
 
 resource "azuread_user" "testB" {
-	user_principal_name   = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d-B"
-    mail_nickname         = "acctestUser-%[1]d-B"
-	password              = "%[2]s"
+  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-B"
+  mail_nickname       = "acctestUser-%[1]d-B"
+  password            = "%[2]s"
 }
 
 resource "azuread_user" "testC" {
-	user_principal_name   = "acctestUser.%[1]d.C@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-	display_name          = "acctestUser-%[1]d-C"
-	password              = "%[2]s"
+  user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-C"
+  password            = "%[2]s"
 }
 `, id, password)
 }
