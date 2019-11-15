@@ -1,14 +1,14 @@
-## 0.7.0 (Unreleased)
+## 0.7.0 (November 15, 2019)
 
 IMPROVEMENTS:
 
-* provider: igrate to standalone plugin SDK v1.1.0 [GH-154]
-* provider: using the current (rather than the vendored) version of Terraform Core in user agents [GH-154]
-* Data Source `azuread_user` - support looking up a user with `mail_nickname` [GH-161]
-* Data Source `azuread_users` - support looking up users with `mail_nicknames` [GH-161]
-* `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS [GH-155]
-* `azuread_application` - allow the `app_role` block `value` property to be nil [GH-157]
-* `azuread_user` - support for the `usage_location` property [GH-141]
+* provider: igrate to standalone plugin SDK v1.1.0 ([#154](https://github.com/terraform-providers/terraform-provider-azuread/issues/154))
+* provider: using the current (rather than the vendored) version of Terraform Core in user agents ([#154](https://github.com/terraform-providers/terraform-provider-azuread/issues/154))
+* Data Source `azuread_user` - support looking up a user with `mail_nickname` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
+* Data Source `azuread_users` - support looking up users with `mail_nicknames` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
+* `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS ([#155](https://github.com/terraform-providers/terraform-provider-azuread/issues/155))
+* `azuread_application` - allow the `app_role` block `value` property to be nil ([#157](https://github.com/terraform-providers/terraform-provider-azuread/issues/157))
+* `azuread_user` - support for the `usage_location` property ([#141](https://github.com/terraform-providers/terraform-provider-azuread/issues/141))
 
 ## 0.6.0 (August 21, 2019)
 
