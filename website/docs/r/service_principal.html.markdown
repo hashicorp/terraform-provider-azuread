@@ -10,7 +10,7 @@ description: |-
 
 Manages a Service Principal associated with an Application within Azure Active Directory.
 
--> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API. Please see The [Granting a Service Principal permission to manage AAD](../auth/service_principal_configuration.html) for the required steps.
+-> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API. Please see The [Granting a Service Principal permission to manage AAD](../guides/service_principal_configuration.html) for the required steps.
 
 ## Example Usage
 

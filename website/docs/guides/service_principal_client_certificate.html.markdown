@@ -1,6 +1,7 @@
 ---
+subcategory: "Authentication"
 layout: "azuread"
-page_title: "Azure Active Directory Provider: Authenticating via a Service Principal and a Client Certificate"
+page_title: "Authenticating via a Service Principal and a Client Certificate"
 sidebar_current: "docs-azuread-authentication-service-principal-client-certificate"
 description: |-
   This guide will cover how to use a Service Principal (Shared Account) with a Client Certificate as authentication for the Azure Active Directory Provider.
