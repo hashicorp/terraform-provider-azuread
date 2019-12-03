@@ -1,6 +1,7 @@
 ---
+subcategory: "Authentication"
 layout: "azuread"
-page_title: "Azure Active Directory Provider: Authenticating via the Azure CLI"
+page_title: "Authenticating via the Azure CLI"
 sidebar_current: "docs-azuread-authentication-azure-cli"
 description: |-
   This guide will cover how to use the Azure CLI as authentication for the Azure Active Directory Provider.
