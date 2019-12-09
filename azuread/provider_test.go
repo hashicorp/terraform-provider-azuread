@@ -48,6 +48,10 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+func testLocation() string {
+	return os.Getenv("ARM_TEST_LOCATION")
+}
+
 func testRequiresImportError(resourceName string) *regexp.Regexp {
 	message := "to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for %q for more information."
 	return regexp.MustCompile(fmt.Sprintf(message, resourceName))

@@ -8,7 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/services/domainservices/mgmt/2017-06-01/aad"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
@@ -33,6 +35,9 @@ type ArmClient struct {
 	groupsClient            graphrbac.GroupsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
 	usersClient             graphrbac.UsersClient
+
+	domainServicesClient aad.DomainServicesClient
+	vnetClient           network.VirtualNetworksClient
 }
 
 // getArmClient is a helper method which returns a fully instantiated *ArmClient based on the auth Config's current settings.
@@ -58,6 +63,14 @@ func getArmClient(authCfg *authentication.Config, tfVersion string) (*ArmClient,
 		return nil, err
 	}
 
+	// Resource Manager endpoints
+	resourceManagerEndpoint := env.ResourceManagerEndpoint
+	resourceManagerAuthorizer, err := authCfg.GetAuthorizationToken(sender, oauth, env.TokenAudience)
+	if err != nil {
+		return nil, err
+	}
+	client.registerResourceManagerClients(resourceManagerEndpoint, authCfg.SubscriptionID, resourceManagerAuthorizer)
+
 	// Graph Endpoints
 	graphEndpoint := env.GraphEndpoint
 	graphAuthorizer, err := authCfg.GetAuthorizationToken(sender, oauth, graphEndpoint)
@@ -68,6 +81,14 @@ func getArmClient(authCfg *authentication.Config, tfVersion string) (*ArmClient,
 	client.registerGraphRBACClients(graphEndpoint, authCfg.TenantID, graphAuthorizer)
 
 	return &client, nil
+}
+
+func (c *ArmClient) registerResourceManagerClients(endpoint, subscriptionID string, authorizer autorest.Authorizer) {
+	c.domainServicesClient = aad.NewDomainServicesClientWithBaseURI(endpoint, subscriptionID)
+	configureClient(&c.domainServicesClient.Client, authorizer, c.terraformVersion)
+
+	c.vnetClient = network.NewVirtualNetworksClientWithBaseURI(endpoint, subscriptionID)
+	configureClient(&c.vnetClient.Client, authorizer, c.terraformVersion)
 }
 
 func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authorizer autorest.Authorizer) {

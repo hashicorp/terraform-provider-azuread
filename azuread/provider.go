@@ -72,6 +72,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"azuread_application":       dataApplication(),
 			"azuread_domains":           dataDomains(),
+			"azuread_domain_service":    dataDomainService(),
 			"azuread_group":             dataGroup(),
 			"azuread_groups":            dataGroups(),
 			"azuread_service_principal": dataServicePrincipal(),
@@ -82,6 +83,7 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"azuread_application":                resourceApplication(),
 			"azuread_application_password":       resourceApplicationPassword(),
+			"azuread_domain_service":             resourceDomainService(),
 			"azuread_group":                      resourceGroup(),
 			"azuread_group_member":               resourceGroupMember(),
 			"azuread_service_principal":          resourceServicePrincipal(),
