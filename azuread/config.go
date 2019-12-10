@@ -37,7 +37,6 @@ type ArmClient struct {
 	usersClient             graphrbac.UsersClient
 
 	domainServicesClient aad.DomainServicesClient
-	vnetClient           network.VirtualNetworksClient
 }
 
 // getArmClient is a helper method which returns a fully instantiated *ArmClient based on the auth Config's current settings.
@@ -86,9 +85,6 @@ func getArmClient(authCfg *authentication.Config, tfVersion string) (*ArmClient,
 func (c *ArmClient) registerResourceManagerClients(endpoint, subscriptionID string, authorizer autorest.Authorizer) {
 	c.domainServicesClient = aad.NewDomainServicesClientWithBaseURI(endpoint, subscriptionID)
 	configureClient(&c.domainServicesClient.Client, authorizer, c.terraformVersion)
-
-	c.vnetClient = network.NewVirtualNetworksClientWithBaseURI(endpoint, subscriptionID)
-	configureClient(&c.vnetClient.Client, authorizer, c.terraformVersion)
 }
 
 func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authorizer autorest.Authorizer) {

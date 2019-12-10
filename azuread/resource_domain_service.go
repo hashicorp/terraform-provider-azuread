@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/domainservices/mgmt/2017-06-01/aad"
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2019-09-01/network"
 	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -154,7 +153,6 @@ func resourceDomainService() *schema.Resource {
 
 func resourceArmDomainServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).domainServicesClient
-	vnetClient := meta.(*ArmClient).vnetClient
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
@@ -202,28 +200,8 @@ func resourceArmDomainServiceCreate(d *schema.ResourceData, meta interface{}) er
 		Timeout:      1 * time.Hour,
 	}
 
-	if domainControllerIPAddress, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("Error waiting for both Domain Service Controller up, err: %+v", err)
-	} else {
-		// Update DNS server settings of the virtual network
-		parsedId, err := azure.ParseAzureResourceID(subnetId)
-		if err != nil {
-			return err
-		}
-		resourceGroupName := parsedId.ResourceGroup
-		virtualNetworkName := parsedId.Path["virtualNetworks"]
-
-		resp, err := vnetClient.Get(ctx, resourceGroupName, virtualNetworkName, "")
-		if err != nil {
-			return fmt.Errorf("Error readding Virtual Network %q (Resource Group %q): %+v", virtualNetworkName, resourceGroupName, err)
-		}
-		dns := domainControllerIPAddress.([]string)
-		resp.DhcpOptions = &network.DhcpOptions{
-			DNSServers: &dns,
-		}
-		if _, err := vnetClient.CreateOrUpdate(ctx, resourceGroupName, virtualNetworkName, resp); err != nil {
-			return fmt.Errorf("Error updating DNS server to %+v for Virtual Network %q (Resource Group %q): %+v", domainControllerIPAddress, virtualNetworkName, resourceGroupName, err)
-		}
 	}
 
 	resp, err := client.Get(ctx, resourceGroup, name)
@@ -359,9 +337,9 @@ func domainServiceControllerRefreshFunc(ctx context.Context, client *aad.DomainS
 			return nil, "error", err
 		}
 		if resp.DomainControllerIPAddress == nil || len(*resp.DomainControllerIPAddress) < 2 {
-			return *resp.DomainControllerIPAddress, "pending", nil
+			return resp, "pending", nil
 		}
-		return *resp.DomainControllerIPAddress, "available", nil
+		return resp, "available", nil
 	}
 }
 
