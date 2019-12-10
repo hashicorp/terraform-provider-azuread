@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/azure"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
@@ -39,78 +38,36 @@ func resourceDomainService() *schema.Resource {
 
 			"location": azure.SchemaLocation(),
 
-			"resource_group_name": azure.SchemaResourceGroupName(),
+			"resource_group_name": azure.SchemaResourceGroupNameDiffSuppress(),
 
-			"domain_security_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ntlm_v1": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.NtlmV1Enabled),
-								string(aad.NtlmV1Disabled),
-							}, false),
-							Default: string(aad.NtlmV1Enabled),
-						},
-						"sync_ntlm_passwords": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.SyncNtlmPasswordsEnabled),
-								string(aad.SyncNtlmPasswordsDisabled),
-							}, false),
-							Default: string(aad.SyncNtlmPasswordsEnabled),
-						},
-						"tls_v1": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.TLSV1Enabled),
-								string(aad.TLSV1Disabled),
-							}, false),
-							Default: string(aad.TLSV1Enabled),
-						},
-					},
-				},
+			"subnet_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: azure.ValidateResourceID,
 			},
 
 			"filtered_sync": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(aad.FilteredSyncEnabled),
-					string(aad.FilteredSyncDisabled),
-				}, false),
-				Default: string(aad.FilteredSyncEnabled),
+				Default:  false,
 			},
 
-			"ldaps_settings": {
+			"ldaps": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_access": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.Enabled),
-								string(aad.Disabled),
-							}, false),
-							Default: string(aad.Enabled),
+							Default:  false,
 						},
 						"ldaps": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.LdapsEnabled),
-								string(aad.LdapsDisabled),
-							}, false),
-							Default: string(aad.LdapsEnabled),
+							Default:  false,
 						},
 						"pfx_certificate": {
 							Type:         schema.TypeString,
@@ -131,46 +88,57 @@ func resourceDomainService() *schema.Resource {
 				},
 			},
 
-			"notification_settings": {
+			"notifications": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"additional_recipients": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:         schema.TypeString,
+								ValidateFunc: validate.StringIsEmailAddress,
 							},
 						},
 						"notify_dc_admins": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.NotifyDcAdminsEnabled),
-								string(aad.NotifyDcAdminsDisabled),
-							}, false),
-							Default: string(aad.NotifyDcAdminsEnabled),
+							Default:  true,
 						},
 						"notify_global_admins": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(aad.NotifyGlobalAdminsEnabled),
-								string(aad.NotifyGlobalAdminsDisabled),
-							}, false),
-							Default: string(aad.NotifyGlobalAdminsEnabled),
+							Default:  true,
 						},
 					},
 				},
 			},
 
-			"subnet_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: azure.ValidateResourceID,
+			"security": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ntlm_v1": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"sync_ntlm_passwords": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"tls_v1": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+					},
+				},
 			},
 
 			"domain_controller_ip_address": {
@@ -192,20 +160,23 @@ func resourceArmDomainServiceCreate(d *schema.ResourceData, meta interface{}) er
 	name := d.Get("name").(string)
 	resourceGroup := d.Get("resource_group_name").(string)
 	location := azure.NormalizeLocation(d.Get("location").(string))
-	domainSecuritySettings := d.Get("domain_security_settings").([]interface{})
-	filteredSync := d.Get("filtered_sync").(string)
-	ldapsSettings := d.Get("ldaps_settings").([]interface{})
-	notificationSettings := d.Get("notification_settings").([]interface{})
+	security := d.Get("security").([]interface{})
+	ldaps := d.Get("ldaps").([]interface{})
+	notifications := d.Get("notifications").([]interface{})
 	subnetId := d.Get("subnet_id").(string)
+	filteredSync := aad.FilteredSyncDisabled
+	if d.Get("filtered_sync").(bool) {
+		filteredSync = aad.FilteredSyncDisabled
+	}
 
 	domainService := aad.DomainService{
 		Location: &location,
 		DomainServiceProperties: &aad.DomainServiceProperties{
 			DomainName:             &name,
-			DomainSecuritySettings: expandArmDomainServiceDomainSecuritySettings(domainSecuritySettings),
-			FilteredSync:           aad.FilteredSync(filteredSync),
-			LdapsSettings:          expandArmDomainServiceLdapsSettings(ldapsSettings),
-			NotificationSettings:   expandArmDomainServiceNotificationSettings(notificationSettings),
+			DomainSecuritySettings: expandArmDomainServiceSecurity(security),
+			FilteredSync:           filteredSync,
+			LdapsSettings:          expandArmDomainServiceLdapsSettings(ldaps),
+			NotificationSettings:   expandArmDomainServiceNotificationSettings(notifications),
 			SubnetID:               &subnetId,
 		},
 	}
@@ -292,16 +263,22 @@ func resourceArmDomainServiceRead(d *schema.ResourceData, meta interface{}) erro
 		d.Set("location", azure.NormalizeLocation(*location))
 	}
 	if domainServiceProperties := resp.DomainServiceProperties; domainServiceProperties != nil {
-		d.Set("domain_controller_ip_address", tf.FlattenStringSlicePtr(domainServiceProperties.DomainControllerIPAddress))
-		if err := d.Set("domain_security_settings", flattenArmDomainServiceDomainSecuritySettings(domainServiceProperties.DomainSecuritySettings)); err != nil {
-			return fmt.Errorf("Error setting `domain_security_settings`: %+v", err)
+		if err := d.Set("domain_controller_ip_address", tf.FlattenStringSlicePtr(domainServiceProperties.DomainControllerIPAddress)); err != nil {
+			return fmt.Errorf("Error setting `domain_controller_ip_address`: %+v", err)
 		}
-		d.Set("filtered_sync", string(domainServiceProperties.FilteredSync))
-		if err := d.Set("ldaps_settings", flattenArmDomainServiceLdapsSettings(domainServiceProperties.LdapsSettings)); err != nil {
-			return fmt.Errorf("Error setting `ldaps_settings`: %+v", err)
+		if err := d.Set("security", flattenArmDomainServiceSecurity(domainServiceProperties.DomainSecuritySettings)); err != nil {
+			return fmt.Errorf("Error setting `security`: %+v", err)
 		}
-		if err := d.Set("notification_settings", flattenArmDomainServiceNotificationSettings(domainServiceProperties.NotificationSettings)); err != nil {
-			return fmt.Errorf("Error setting `notification_settings`: %+v", err)
+		if err := d.Set("ldaps", flattenArmDomainServiceLdaps(domainServiceProperties.LdapsSettings)); err != nil {
+			return fmt.Errorf("Error setting `ldaps`: %+v", err)
+		}
+		if err := d.Set("notifications", flattenArmDomainServiceNotification(domainServiceProperties.NotificationSettings)); err != nil {
+			return fmt.Errorf("Error setting `notifications`: %+v", err)
+		}
+
+		d.Set("filtered_sync", false)
+		if domainServiceProperties.FilteredSync == aad.FilteredSyncEnabled {
+			d.Set("filtered_sync", true)
 		}
 		d.Set("subnet_id", domainServiceProperties.SubnetID)
 	}
@@ -315,19 +292,22 @@ func resourceArmDomainServiceUpdate(d *schema.ResourceData, meta interface{}) er
 
 	name := d.Get("name").(string)
 	resourceGroup := d.Get("resource_group_name").(string)
-	domainSecuritySettings := d.Get("domain_security_settings").([]interface{})
-	filteredSync := d.Get("filtered_sync").(string)
-	ldapsSettings := d.Get("ldaps_settings").([]interface{})
-	notificationSettings := d.Get("notification_settings").([]interface{})
+	security := d.Get("security").([]interface{})
+	ldaps := d.Get("ldaps").([]interface{})
+	notifications := d.Get("notifications").([]interface{})
 	subnetId := d.Get("subnet_id").(string)
+	filteredSync := aad.FilteredSyncDisabled
+	if d.Get("filtered_sync").(bool) {
+		filteredSync = aad.FilteredSyncDisabled
+	}
 
 	domainService := aad.DomainService{
 		DomainServiceProperties: &aad.DomainServiceProperties{
 			DomainName:             &name,
-			DomainSecuritySettings: expandArmDomainServiceDomainSecuritySettings(domainSecuritySettings),
-			FilteredSync:           aad.FilteredSync(filteredSync),
-			LdapsSettings:          expandArmDomainServiceLdapsSettings(ldapsSettings),
-			NotificationSettings:   expandArmDomainServiceNotificationSettings(notificationSettings),
+			DomainSecuritySettings: expandArmDomainServiceSecurity(security),
+			FilteredSync:           filteredSync,
+			LdapsSettings:          expandArmDomainServiceLdapsSettings(ldaps),
+			NotificationSettings:   expandArmDomainServiceNotificationSettings(notifications),
 			SubnetID:               &subnetId,
 		},
 	}
@@ -373,34 +353,43 @@ func resourceArmDomainServiceDelete(d *schema.ResourceData, meta interface{}) er
 
 func domainServiceControllerRefreshFunc(ctx context.Context, client *aad.DomainServicesClient, resourceGroup, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		log.Printf("waiting for both Domain Service Controller up...")
+		log.Printf("[DEBUG] Waiting for both Domain Service Controller deploying...")
 		resp, err := client.Get(ctx, resourceGroup, name)
 		if err != nil {
-			return nil, "pending", err
+			return nil, "error", err
 		}
-		if len(*resp.DomainControllerIPAddress) < 2 {
+		if resp.DomainControllerIPAddress == nil || len(*resp.DomainControllerIPAddress) < 2 {
 			return *resp.DomainControllerIPAddress, "pending", nil
 		}
 		return *resp.DomainControllerIPAddress, "available", nil
 	}
 }
 
-func expandArmDomainServiceDomainSecuritySettings(input []interface{}) *aad.DomainSecuritySettings {
+func expandArmDomainServiceSecurity(input []interface{}) *aad.DomainSecuritySettings {
 	if len(input) == 0 {
 		return nil
 	}
 	v := input[0].(map[string]interface{})
 
-	ntlmV1 := v["ntlm_v1"].(string)
-	tlsV1 := v["tls_v1"].(string)
-	syncNtlmPasswords := v["sync_ntlm_passwords"].(string)
+	ntlmV1 := aad.NtlmV1Disabled
+	syncNtlmPasswords := aad.SyncNtlmPasswordsDisabled
+	tlsV1 := aad.TLSV1Disabled
 
-	result := aad.DomainSecuritySettings{
-		NtlmV1:            aad.NtlmV1(ntlmV1),
-		SyncNtlmPasswords: aad.SyncNtlmPasswords(syncNtlmPasswords),
-		TLSV1:             aad.TLSV1(tlsV1),
+	if v["ntlm_v1"].(bool) {
+		ntlmV1 = aad.NtlmV1Enabled
 	}
-	return &result
+	if v["sync_ntlm_passwords"].(bool) {
+		syncNtlmPasswords = aad.SyncNtlmPasswordsEnabled
+	}
+	if v["tls_v1"].(bool) {
+		tlsV1 = aad.TLSV1Enabled
+	}
+
+	return &aad.DomainSecuritySettings{
+		NtlmV1:            ntlmV1,
+		SyncNtlmPasswords: syncNtlmPasswords,
+		TLSV1:             tlsV1,
+	}
 }
 
 func expandArmDomainServiceLdapsSettings(input []interface{}) *aad.LdapsSettings {
@@ -409,18 +398,23 @@ func expandArmDomainServiceLdapsSettings(input []interface{}) *aad.LdapsSettings
 	}
 	v := input[0].(map[string]interface{})
 
-	ldaps := v["ldaps"].(string)
+	externalAccess := aad.Disabled
+	ldaps := aad.LdapsDisabled
 	pfxCertificate := v["pfx_certificate"].(string)
 	pfxCertificatePassword := v["pfx_certificate_password"].(string)
-	externalAccess := v["external_access"].(string)
 
-	result := aad.LdapsSettings{
-		ExternalAccess:         aad.ExternalAccess(externalAccess),
-		Ldaps:                  aad.Ldaps(ldaps),
+	if v["external_access"].(bool) {
+		externalAccess = aad.Enabled
+	}
+	if v["ldaps"].(bool) {
+		ldaps = aad.LdapsEnabled
+	}
+	return &aad.LdapsSettings{
+		ExternalAccess:         externalAccess,
+		Ldaps:                  ldaps,
 		PfxCertificate:         &pfxCertificate,
 		PfxCertificatePassword: &pfxCertificatePassword,
 	}
-	return &result
 }
 
 func expandArmDomainServiceNotificationSettings(input []interface{}) *aad.NotificationSettings {
@@ -429,41 +423,62 @@ func expandArmDomainServiceNotificationSettings(input []interface{}) *aad.Notifi
 	}
 	v := input[0].(map[string]interface{})
 
-	notifyGlobalAdmins := v["notify_global_admins"].(string)
-	notifyDcAdmins := v["notify_dc_admins"].(string)
 	additionalRecipients := v["additional_recipients"].([]interface{})
-
-	result := aad.NotificationSettings{
-		AdditionalRecipients: tf.ExpandStringSlicePtr(additionalRecipients),
-		NotifyDcAdmins:       aad.NotifyDcAdmins(notifyDcAdmins),
-		NotifyGlobalAdmins:   aad.NotifyGlobalAdmins(notifyGlobalAdmins),
+	notifyDcAdmins := aad.NotifyDcAdminsDisabled
+	notifyGlobalAdmins := aad.NotifyGlobalAdminsDisabled
+	if v["notify_dc_admins"].(bool) {
+		notifyDcAdmins = aad.NotifyDcAdminsEnabled
 	}
-	return &result
+	if v["notify_global_admins"].(bool) {
+		notifyGlobalAdmins = aad.NotifyGlobalAdminsEnabled
+	}
+
+	return &aad.NotificationSettings{
+		AdditionalRecipients: tf.ExpandStringSlicePtr(additionalRecipients),
+		NotifyDcAdmins:       notifyDcAdmins,
+		NotifyGlobalAdmins:   notifyGlobalAdmins,
+	}
 }
 
-func flattenArmDomainServiceDomainSecuritySettings(input *aad.DomainSecuritySettings) []interface{} {
+func flattenArmDomainServiceSecurity(input *aad.DomainSecuritySettings) []interface{} {
 	if input == nil {
 		return make([]interface{}, 0)
 	}
 
-	result := make(map[string]interface{})
-
-	result["ntlm_v1"] = string(input.NtlmV1)
-	result["sync_ntlm_passwords"] = string(input.SyncNtlmPasswords)
-	result["tls_v1"] = string(input.TLSV1)
+	result := map[string]bool{
+		"ntlm_v1":             false,
+		"sync_ntlm_passwords": false,
+		"tls_v1":              false,
+	}
+	if input.NtlmV1 == aad.NtlmV1Enabled {
+		result["ntlm_v1"] = true
+	}
+	if input.SyncNtlmPasswords == aad.SyncNtlmPasswordsEnabled {
+		result["sync_ntlm_passwords"] = true
+	}
+	if input.TLSV1 == aad.TLSV1Enabled {
+		result["tls_v1"] = true
+	}
 
 	return []interface{}{result}
 }
 
-func flattenArmDomainServiceLdapsSettings(input *aad.LdapsSettings) []interface{} {
+func flattenArmDomainServiceLdaps(input *aad.LdapsSettings) []interface{} {
 	if input == nil {
 		return make([]interface{}, 0)
 	}
 
-	result := make(map[string]interface{})
+	result := map[string]interface{}{
+		"external_access": false,
+		"ldaps":           false,
+	}
 
-	result["external_access"] = string(input.ExternalAccess)
-	result["ldaps"] = string(input.Ldaps)
+	if input.ExternalAccess == aad.Enabled {
+		result["external_access"] = true
+	}
+	if input.Ldaps == aad.LdapsEnabled {
+		result["ldaps"] = true
+	}
 	if pfxCertificate := input.PfxCertificate; pfxCertificate != nil {
 		result["pfx_certificate"] = *pfxCertificate
 	}
@@ -477,16 +492,23 @@ func flattenArmDomainServiceLdapsSettings(input *aad.LdapsSettings) []interface{
 	return []interface{}{result}
 }
 
-func flattenArmDomainServiceNotificationSettings(input *aad.NotificationSettings) []interface{} {
+func flattenArmDomainServiceNotification(input *aad.NotificationSettings) []interface{} {
 	if input == nil {
 		return make([]interface{}, 0)
 	}
 
-	result := make(map[string]interface{})
+	result := map[string]interface{}{
+		"notify_dc_admins":     false,
+		"notify_global_admins": false,
+	}
 
 	result["additional_recipients"] = tf.FlattenStringSlicePtr(input.AdditionalRecipients)
-	result["notify_dc_admins"] = string(input.NotifyDcAdmins)
-	result["notify_global_admins"] = string(input.NotifyGlobalAdmins)
+	if input.NotifyDcAdmins == aad.NotifyDcAdminsEnabled {
+		result["notify_dc_admins"] = true
+	}
+	if input.NotifyGlobalAdmins == aad.NotifyGlobalAdminsEnabled {
+		result["notify_global_admins"] = true
+	}
 
 	return []interface{}{result}
 }

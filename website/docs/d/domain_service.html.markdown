@@ -3,12 +3,12 @@ layout: "azuread"
 page_title: "Azure Active Directory: azuread_domain_service"
 sidebar_current: "docs-azuread-resource-domain-service"
 description: |-
-  Gets information about an existing Azure DomainService instance.
+  Gets information about an existing Azure Active Directory DomainService instance.
 ---
 
 # azurerm_domain_service
 
-Use this data source to access information about an existing DomainService instance.
+Use this data source to access information about an existing Active Directory DomainService instance.
 
 ## Example Usage
 
@@ -41,21 +41,21 @@ The following attributes are exported:
 
 * `domain_controller_ip_address` - List of Domain Controller IP Address
 
-* `location` -  Resource location Changing this forces a new resource to be created.
+* `location` -  The Resource location of domain service.
 
-* `domain_security_settings` -  One `domain_security_setting` block defined below.
+* `security` -  One `security` block defined below.
 
 * `filtered_sync` -  Whether turn on Group-based filtered sync.
 
-* `ldaps_settings` -  One `ldaps_setting` block defined below.
+* `ldaps` -  One `ldaps` block defined below.
 
-* `notification_settings` -  One `notification_setting` block defined below.
+* `notifications` -  One `notifications` block defined below.
 
 * `subnet_id` - The id of the subnet that Domain Services will be deployed on.
 
 ---
 
-The `domain_security_setting` block supports the following:
+The `security` block supports the following:
 
 * `ntlm_v1` -  A flag to determine whether or not NtlmV1 is enabled or disabled.
 
@@ -65,23 +65,23 @@ The `domain_security_setting` block supports the following:
 
 ---
 
-The `ldaps_setting` block supports the following:
+The `ldaps` block supports the following:
 
-* `ldaps` -  A flag to determine whether or not Secure LDAP is enabled or disabled. Defaults to `Enabled`.
+* `ldaps` -  A flag to determine whether or not Secure LDAP is enabled or disabled.
 
 * `pfx_certificate` -  The certificate required to configure Secure LDAP. The parameter passed here should be a base64encoded representation of the certificate pfx file.
 
 * `pfx_certificate_password` -  The password to decrypt the provided Secure LDAP certificate pfx file.
 
-* `external_access` -  A flag to determine whether or not Secure LDAP access over the internet is enabled or disabled. Defaults to `Enabled`.
+* `external_access` -  A flag to determine whether or not Secure LDAP access over the internet is enabled or disabled.
 
-* `external_access_ip_address` - the ip address of Secure LDAP access over the internet
+* `external_access_ip_address` - The accessible internet ip address of Secure LDAP
 ---
 
-The `notification_setting` block supports the following:
+The `notifications` block supports the following:
 
-* `notify_global_admins` -  Should global admins be notified Defaults to `Enabled`.
+* `additional_recipients` -  The list of additional recipients.
 
-* `notify_dc_admins` -  Should domain controller admins be notified Defaults to `Enabled`.
+* `notify_dc_admins` -  Should domain controller admins be notified.
 
-* `additional_recipients` -  The list of additional recipients
+* `notify_global_admins` -  Should global admins be notified.

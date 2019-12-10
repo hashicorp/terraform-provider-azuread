@@ -8,11 +8,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func SchemaResourceGroupName() *schema.Schema {
+func SchemaResourceGroupNameDiffSuppress() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Required:     true,
-		ForceNew:     true,
+		Type:     schema.TypeString,
+		Required: true,
+		ForceNew: true,
+		DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+			return strings.EqualFold(old, new)
+		},
 		ValidateFunc: validateResourceGroupName,
 	}
 }

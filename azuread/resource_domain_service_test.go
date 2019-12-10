@@ -11,6 +11,38 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
+func TestAccAzureADDomainService_basic(t *testing.T) {
+	resourceName := "azuread_domain_service.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADDomainServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADDomainService_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADDomainServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "true"),
+					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ldaps",
+					"notifications",
+					"security",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAzureADDomainService_complete(t *testing.T) {
 	resourceName := "azuread_domain_service.test"
 	ri := tf.AccRandTimeInt()
@@ -25,7 +57,7 @@ func TestAccAzureADDomainService_complete(t *testing.T) {
 				Config: testAccAzureADDomainService_complete(ri, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureADDomainServiceExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "false"),
 					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "ldaps_settings.0.external_access_ip_address"),
 				),
@@ -35,9 +67,9 @@ func TestAccAzureADDomainService_complete(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"ldaps_settings.0.pfx_certificate",
-					"ldaps_settings.0.pfx_certificate_password",
-					"notification_settings",
+					"ldaps.0.pfx_certificate",
+					"ldaps.0.pfx_certificate_password",
+					"notifications",
 				},
 			},
 		},
@@ -102,10 +134,50 @@ func testCheckAzureADDomainServiceExists(resourceName string) resource.TestCheck
 	}
 }
 
+func testAccAzureADDomainService_basic(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_domain_service" "test" {
+  name                  = "test.onmicrosoft.com"
+  location              = "${azurerm_resource_group.test.location}"
+  resource_group_name   = "${azurerm_resource_group.test.name}"
+  subnet_id             = "${azurerm_subnet.test.id}"
+}
+`, testAccAzureADDomainService_template(rInt, location))
+}
+
 func testAccAzureADDomainService_complete(rInt int, location string) string {
 	return fmt.Sprintf(`
+%s
+
+resource "azuread_domain_service" "test" {
+  name                  = "test.onmicrosoft.com"
+  location              = "${azurerm_resource_group.test.location}"
+  resource_group_name   = "${azurerm_resource_group.test.name}"
+  subnet_id             = "${azurerm_subnet.test.id}"
+  filtered_sync         = false
+
+  security {
+    ntlm_v1 = true
+    tls_v1 = true
+    sync_ntlm_passwords = true
+  }
+
+  ldaps {
+	external_access = true
+    ldaps = true
+    pfx_certificate = "${filebase64("testdata/domain_service_test.pfx")}"
+    pfx_certificate_password = "test"
+  }
+}
+`, testAccAzureADDomainService_template(rInt, location))
+}
+
+func testAccAzureADDomainService_template(rInt int, location string) string {
+	return fmt.Sprintf(`
 resource "azurerm_resource_group" "test" {
-  name     = "acctestRG-%d"
+  name     = "acctestRG-aadds-%d"
   location = "%s"
 }
 
@@ -180,28 +252,6 @@ resource "azurerm_subnet" "test" {
   resource_group_name = "${azurerm_resource_group.test.name}"
   address_prefix       = "10.0.1.0/24"
   network_security_group_id = "${azurerm_network_security_group.test.id}"
-}
-
-resource "azuread_domain_service" "test" {
-  name                  = "test.onmicrosoft.com"
-  location              = "${azurerm_resource_group.test.location}"
-  resource_group_name   = "${azurerm_resource_group.test.name}"
-  
-  domain_security_settings {
-    ntlm_v1 = "Enabled"
-    tls_v1 = "Disabled"
-    sync_ntlm_passwords = "Enabled"
-  }
-
-  ldaps_settings {
-    ldaps = "Enabled"
-    pfx_certificate = "${filebase64("testdata/domain_service_test.pfx")}"
-    pfx_certificate_password = "test"
-    external_access = "Enabled"
-  }
-
-  subnet_id = "${azurerm_subnet.test.id}"
-  filtered_sync = "Disabled"
 }
 `, rInt, location, rInt, rInt, rInt)
 }

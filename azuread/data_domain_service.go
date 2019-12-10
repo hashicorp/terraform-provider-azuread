@@ -3,6 +3,7 @@ package azuread
 import (
 	"fmt"
 
+	"github.com/Azure/azure-sdk-for-go/services/domainservices/mgmt/2017-06-01/aad"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/azure"
@@ -33,21 +34,21 @@ func dataDomainService() *schema.Resource {
 				},
 			},
 
-			"domain_security_settings": {
+			"security": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ntlm_v1": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"sync_ntlm_passwords": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"tls_v1": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -55,21 +56,21 @@ func dataDomainService() *schema.Resource {
 			},
 
 			"filtered_sync": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
-			"ldaps_settings": {
+			"ldaps": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"external_access": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"ldaps": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"pfx_certificate": {
@@ -88,7 +89,7 @@ func dataDomainService() *schema.Resource {
 				},
 			},
 
-			"notification_settings": {
+			"notifications": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -101,11 +102,11 @@ func dataDomainService() *schema.Resource {
 							},
 						},
 						"notify_dc_admins": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"notify_global_admins": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -143,16 +144,21 @@ func dataSourceArmDomainServiceRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("location", azure.NormalizeLocation(*location))
 	}
 	if domainServiceProperties := resp.DomainServiceProperties; domainServiceProperties != nil {
-		d.Set("domain_controller_ip_address", tf.FlattenStringSlicePtr(domainServiceProperties.DomainControllerIPAddress))
-		if err := d.Set("domain_security_settings", flattenArmDomainServiceDomainSecuritySettings(domainServiceProperties.DomainSecuritySettings)); err != nil {
-			return fmt.Errorf("Error setting `domain_security_settings`: %+v", err)
+		if err := d.Set("domain_controller_ip_address", tf.FlattenStringSlicePtr(domainServiceProperties.DomainControllerIPAddress)); err != nil {
+			return fmt.Errorf("Error setting `domain_controller_ip_address`: %+v", err)
 		}
-		d.Set("filtered_sync", string(domainServiceProperties.FilteredSync))
-		if err := d.Set("ldaps_settings", flattenArmDomainServiceLdapsSettings(domainServiceProperties.LdapsSettings)); err != nil {
+		if err := d.Set("security", flattenArmDomainServiceSecurity(domainServiceProperties.DomainSecuritySettings)); err != nil {
+			return fmt.Errorf("Error setting `security`: %+v", err)
+		}
+		if err := d.Set("ldaps", flattenArmDomainServiceLdaps(domainServiceProperties.LdapsSettings)); err != nil {
 			return fmt.Errorf("Error setting `ldaps_settings`: %+v", err)
 		}
-		if err := d.Set("notification_settings", flattenArmDomainServiceNotificationSettings(domainServiceProperties.NotificationSettings)); err != nil {
+		if err := d.Set("notifications", flattenArmDomainServiceNotification(domainServiceProperties.NotificationSettings)); err != nil {
 			return fmt.Errorf("Error setting `notification_settings`: %+v", err)
+		}
+		d.Set("filtered_sync", false)
+		if domainServiceProperties.FilteredSync == aad.FilteredSyncEnabled {
+			d.Set("filtered_sync", true)
 		}
 		d.Set("subnet_id", domainServiceProperties.SubnetID)
 	}
