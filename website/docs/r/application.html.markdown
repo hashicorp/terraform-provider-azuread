@@ -93,6 +93,8 @@ The following arguments are supported:
 
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
+* `oauth2_permissions` - (Optional) A collection of `oauth2_permission` blocks as documented below.
+
 ---
 
 `required_resource_access` supports the following:
@@ -124,6 +126,24 @@ The following arguments are supported:
 * `is_enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
 
 * `value` - (Optional) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
+
+---
+
+`oauth2_permission` supports the following:
+
+* `admin_consent_description` - (Required) Permission help text that appears in the admin consent and app assignment experiences.
+
+* `admin_consent_display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
+
+* `value` - (Required) The value of the scope claim that the resource application should expect in the OAuth 2.0 access token.
+
+* `type` - (Required) Specifies whether this scope permission can be consented to by an end user, or whether it is a tenant-wide permission that must be consented to by a Company Administrator. Possible values are "User" or "Admin".
+
+* `is_enabled` - (Optional) Determines if the permission is enabled: defaults to `true`.
+
+* `user_consent_description` - (Optional) Permission help text that appears in the end user consent experience.
+
+* `user_consent_display_name` - (Optional) Display name for the permission that appears in the end user consent experience.
 
 ## Attributes Reference
 
