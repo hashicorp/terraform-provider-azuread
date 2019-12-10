@@ -58,11 +58,11 @@ The `ldaps` block supports the following:
 
 The `notifications` block supports the following:
 
-* `additional_recipients` - (Optional) The list of additional recipients.
+* `additional_recipients` - (Optional) The list of additional recipients who can will be notified when there are alerts of warning or critical severity on your managed domain.
 
-* `notify_dc_admins` - (Optional) Should domain controller admins be notified Defaults to `true`.
+* `notify_dc_admins` - (Optional) Should domain controller admins be notified when there are alerts of warning or critical severity on your managed domain. Defaults to `true`.
 
-* `notify_global_admins` - (Optional) Should global admins be notified Defaults to `true`.
+* `notify_global_admins` - (Optional) Should global admins be notified when there are alerts of warning or critical severity on your managed domain. Defaults to `true`.
 
 ## Attributes Reference
 
