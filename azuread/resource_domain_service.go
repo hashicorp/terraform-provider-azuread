@@ -32,7 +32,7 @@ func resourceDomainService() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				ValidateFunc: validate.ValidateDomainServiceName,
 			},
 
 			"location": azure.SchemaLocation(),
@@ -90,6 +90,7 @@ func resourceDomainService() *schema.Resource {
 			"notifications": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -118,6 +119,7 @@ func resourceDomainService() *schema.Resource {
 			"security": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

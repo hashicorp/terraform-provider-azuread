@@ -16,7 +16,7 @@ func TestAccAzureADDomainService_basic(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureADDomainServiceDestroy,
@@ -34,9 +34,8 @@ func TestAccAzureADDomainService_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"ldaps",
-					"notifications",
-					"security",
+					"ldaps.0.pfx_certificate",
+					"ldaps.0.pfx_certificate_password",
 				},
 			},
 		},
@@ -48,7 +47,7 @@ func TestAccAzureADDomainService_complete(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureADDomainServiceDestroy,
@@ -59,7 +58,9 @@ func TestAccAzureADDomainService_complete(t *testing.T) {
 					testCheckAzureADDomainServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "false"),
 					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
-					resource.TestCheckResourceAttrSet(resourceName, "ldaps_settings.0.external_access_ip_address"),
+					resource.TestCheckResourceAttr(resourceName, "ldaps.0.ldaps", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ldaps.0.external_access", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "ldaps.0.external_access_ip_address"),
 				),
 			},
 			{
@@ -69,7 +70,56 @@ func TestAccAzureADDomainService_complete(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"ldaps.0.pfx_certificate",
 					"ldaps.0.pfx_certificate_password",
-					"notifications",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAzureADDomainService_update(t *testing.T) {
+	resourceName := "azuread_domain_service.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADDomainServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADDomainService_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADDomainServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "true"),
+					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
+				),
+			},
+			{
+				Config: testAccAzureADDomainService_complete(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADDomainServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "false"),
+					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ldaps.0.ldaps", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ldaps.0.external_access", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "ldaps.0.external_access_ip_address"),
+				),
+			},
+			{
+				Config: testAccAzureADDomainService_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADDomainServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "filtered_sync", "true"),
+					resource.TestCheckResourceAttr(resourceName, "domain_controller_ip_address.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ldaps.0.pfx_certificate",
+					"ldaps.0.pfx_certificate_password",
 				},
 			},
 		},
@@ -81,7 +131,7 @@ func testCheckAzureADDomainServiceDestroy(s *terraform.State) error {
 	ctx := testAccProvider.Meta().(*ArmClient).StopContext
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "azurerm_domain_service" {
+		if rs.Type != "azuread_domain_service" {
 			continue
 		}
 
