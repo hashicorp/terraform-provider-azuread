@@ -86,7 +86,11 @@ In order to test the provider, you can simply run `make test`.
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+The majority of tests in the provider are Acceptance Tests - which provisions real resources in Azure. It's possible to run the entire acceptance test suite by running `make testacc` - however it's likely you'll want to run a subset, which you can do using a prefix, by running:
+
+```
+make testacc TESTARGS='-run=TestAccAzureADApplication'
+```
 
 The following ENV variables must be set in your shell prior to running acceptance tests:
 - ARM_CLIENT_ID
@@ -97,7 +101,3 @@ The following ENV variables must be set in your shell prior to running acceptanc
 - ARM_TEST_LOCATION_ALT
 
 *Note:* Acceptance tests create real resources, and often cost money to run.
-
-```sh
-$ make testacc
-```
