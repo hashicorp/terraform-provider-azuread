@@ -95,7 +95,7 @@ func TestAccAzureADServicePrincipalPassword_basic(t *testing.T) {
 					testCheckADServicePrincipalPasswordExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
 		},
@@ -149,7 +149,7 @@ func TestAccAzureADServicePrincipalPassword_customKeyId(t *testing.T) {
 					testCheckADServicePrincipalPasswordExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", keyId),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
 		},
@@ -199,7 +199,7 @@ func testAccADServicePrincipalPassword_basic(applicationId, value string) string
 resource "azuread_service_principal_password" "test" {
   service_principal_id = "${azuread_service_principal.test.id}"
   value                = "%s"
-  end_date             = "2020-01-01T01:02:03Z"
+  end_date             = "2099-01-01T01:02:03Z"
 }
 `, testAccADServicePrincipalPassword_template(applicationId), value)
 }
@@ -226,7 +226,7 @@ resource "azuread_service_principal_password" "test" {
   service_principal_id = "${azuread_service_principal.test.id}"
   key_id               = "%s"
   value                = "%s"
-  end_date             = "2020-01-01T01:02:03Z"
+  end_date             = "2099-01-01T01:02:03Z"
 }
 `, testAccADServicePrincipalPassword_template(applicationId), keyId, value)
 }
