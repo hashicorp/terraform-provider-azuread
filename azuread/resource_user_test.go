@@ -204,6 +204,7 @@ resource "azuread_user" "test" {
   password              = "%[2]s"
   force_password_change = true
   usage_location        = "NO"
+  immutable_id          = "%[1]d"
 }
 `, id, password)
 }

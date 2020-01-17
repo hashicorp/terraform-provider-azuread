@@ -105,6 +105,7 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("usage_location", user.UsageLocation)
+	d.Set("immutable_id", user.ImmutableID)
 
 	return nil
 }

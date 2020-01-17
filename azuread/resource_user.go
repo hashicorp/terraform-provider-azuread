@@ -70,6 +70,11 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 			},
 
+			"immutable_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,6 +102,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	accountEnabled := d.Get("account_enabled").(bool)
 	password := d.Get("password").(string)
 	forcePasswordChange := d.Get("force_password_change").(bool)
+	immutableID := d.Get("immutable_id").(string)
+	var pImmutableID *string
+	if immutableID != "" {
+		pImmutableID = &immutableID
+	}
 
 	//default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
@@ -112,6 +122,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 			Password:                     &password,
 		},
 		UserPrincipalName: &upn,
+		ImmutableID:       pImmutableID,
 	}
 
 	if v, ok := d.GetOk("usage_location"); ok {
@@ -160,6 +171,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("account_enabled", user.AccountEnabled)
 	d.Set("object_id", user.ObjectID)
 	d.Set("usage_location", user.UsageLocation)
+	d.Set("immutable_id", user.ImmutableID)
 	return nil
 }
 
@@ -199,6 +211,11 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("usage_location") {
 		usageLocation := d.Get("usage_location").(string)
 		userUpdateParameters.UsageLocation = p.String(usageLocation)
+	}
+
+	if d.HasChange("immutable_id") {
+		immutableID := d.Get("immutable_id").(string)
+		userUpdateParameters.ImmutableID = p.String(immutableID)
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
