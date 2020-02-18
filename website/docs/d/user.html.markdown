@@ -31,6 +31,8 @@ The following arguments are supported:
 
 * `mail_nickname` - (Optional) The email alias of the Azure AD User.
 
+* `immutable_id` - (Optional) The immutable_id of user federated account.
+
 -> **NOTE:** Either `user_principal_name`, `object_id` or `mail_nickname` must be specified.
 
 ## Attributes Reference
@@ -44,3 +46,4 @@ The following attributes are exported:
 * `mail` - The primary email address of the Azure AD User.
 * `mail_nickname` - The email alias of the Azure AD User.
 * `usage_location` - The usage location of the Azure AD User.
+* `immutable_id` - Associate federated domain user account with their Azure AD user object.

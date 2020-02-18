@@ -61,6 +61,11 @@ func dataUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"immutable_id": {
+				Type: schema.TypeString,
+				Computed: false,
+			}
 		},
 	}
 }

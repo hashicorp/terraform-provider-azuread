@@ -73,6 +73,8 @@ func resourceUser() *schema.Resource {
 			"immutable_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Description: "This must be specified if you are using a federated domain for the user's userPrincipalName (UPN) property when creating a new user account. " +
+					"It is used to associate an on-premises Active Directory user account with their Azure AD user object."
 			},
 
 			"object_id": {
