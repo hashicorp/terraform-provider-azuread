@@ -36,4 +36,5 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The Object ID of the Azure AD Group.
+* `description` - The description of the group
 
