@@ -40,9 +40,11 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `object_id` - The Object ID of the Azure AD User.
 * `id` - The Object ID of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
+* `onpremises_sam_account_name` - The on premise sam account name of the Azure AD User.
+* `onpremises_user_principal_name` - The on premise user principal name of the Azure AD User.
+* `object_id` - The Object ID of the Azure AD User.
 
 ## Import
 
