@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 

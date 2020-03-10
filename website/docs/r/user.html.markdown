@@ -1,7 +1,7 @@
 ---
+subcategory: "Users"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_user"
-sidebar_current: "docs-azuread-resource-azuread-user"
 description: |-
   Manages a User within Azure Active Directory.
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Domains"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_domains"
-sidebar_current: "docs-azuread-datasource-azuread-domains"
 description: |-
   Gets information about an existing Domains within Azure Active Directory.
 ---
