@@ -31,9 +31,7 @@ The following arguments are supported:
 
 * `mail_nickname` - (Optional) The email alias of the Azure AD User.
 
-* `immutable_id` - (Optional) The immutable_id of user federated account.
-
--> **NOTE:** Either `user_principal_name`, `object_id` or `mail_nickname` must be specified.
+-> **NOTE:** One of `user_principal_name`, `object_id` or `mail_nickname` must be specified.
 
 ## Attributes Reference
 
@@ -49,4 +47,4 @@ The following attributes are exported:
 * `onpremises_sam_account_name` - The on premise sam account name of the Azure AD User.
 * `onpremises_user_principal_name` - The on premise user principal name of the Azure AD User.
 * `usage_location` - The usage location of the Azure AD User.
-* `immutable_id` - Associate federated domain user account with their Azure AD user object.
+* `immutable_id` - The value used to associate an on-premises Active Directory user account with their Azure AD user object.

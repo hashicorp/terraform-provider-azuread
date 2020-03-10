@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -65,7 +66,7 @@ func TestAccAzureADUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
-					resource.TestCheckResourceAttr(rn, "immutable_id", id),
+					resource.TestCheckResourceAttr(rn, "immutable_id", strconv.Itoa(id)),
 				),
 			},
 			{
@@ -112,7 +113,7 @@ func TestAccAzureADUser_update(t *testing.T) {
 					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
-					resource.TestCheckResourceAttr(rn, "immutable_id", id),
+					resource.TestCheckResourceAttr(rn, "immutable_id", strconv.Itoa(id)),
 				),
 			},
 			{

@@ -83,6 +83,7 @@ func resourceUser() *schema.Resource {
 			"immutable_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "This must be specified if you are using a federated domain for the user's userPrincipalName (UPN) property when creating a new user account. " +
 					"It is used to associate an on-premises Active Directory user account with their Azure AD user object.",
 			},
@@ -154,6 +155,46 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceUserRead(d, meta)
 }
 
+func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).usersClient
+	ctx := meta.(*ArmClient).StopContext
+
+	var userUpdateParameters graphrbac.UserUpdateParameters
+
+	if d.HasChange("display_name") {
+		userUpdateParameters.DisplayName = p.StringI(d.Get("display_name"))
+	}
+
+	if d.HasChange("mail_nickname") {
+		userUpdateParameters.MailNickname = p.StringI(d.Get("mail_nickname"))
+	}
+
+	if d.HasChange("account_enabled") {
+		userUpdateParameters.AccountEnabled = p.BoolI(d.Get("account_enabled"))
+	}
+
+	if d.HasChange("password") {
+		userUpdateParameters.PasswordProfile = &graphrbac.PasswordProfile{
+			ForceChangePasswordNextLogin: p.BoolI(d.Get("force_password_change")),
+			Password:                     p.StringI(d.Get("password")),
+		}
+	}
+
+	if d.HasChange("usage_location") {
+		userUpdateParameters.UsageLocation = p.StringI(d.Get("usage_location"))
+	}
+
+	if d.HasChange("immutable_id") {
+		userUpdateParameters.ImmutableID = p.StringI(d.Get("immutable_id"))
+	}
+
+	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
+		return fmt.Errorf("Error updating User with ID %q: %+v", d.Id(), err)
+	}
+
+	return resourceUserRead(d, meta)
+}
+
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).usersClient
 	ctx := meta.(*ArmClient).StopContext
@@ -183,56 +224,6 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
 
 	return nil
-}
-
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).usersClient
-	ctx := meta.(*ArmClient).StopContext
-
-	var userUpdateParameters graphrbac.UserUpdateParameters
-
-	if d.HasChange("display_name") {
-		displayName := d.Get("display_name").(string)
-		userUpdateParameters.DisplayName = p.String(displayName)
-	}
-
-	if d.HasChange("mail_nickname") {
-		mailNickName := d.Get("mail_nickname").(string)
-		userUpdateParameters.MailNickname = p.String(mailNickName)
-	}
-
-	if d.HasChange("account_enabled") {
-		accountEnabled := d.Get("account_enabled").(bool)
-		userUpdateParameters.AccountEnabled = p.Bool(accountEnabled)
-	}
-
-	if d.HasChange("password") {
-		password := d.Get("password").(string)
-		forcePasswordChange := d.Get("force_password_change").(bool)
-
-		passwordProfile := &graphrbac.PasswordProfile{
-			ForceChangePasswordNextLogin: &forcePasswordChange,
-			Password:                     &password,
-		}
-
-		userUpdateParameters.PasswordProfile = passwordProfile
-	}
-
-	if d.HasChange("usage_location") {
-		usageLocation := d.Get("usage_location").(string)
-		userUpdateParameters.UsageLocation = p.String(usageLocation)
-	}
-
-	if d.HasChange("immutable_id") {
-		immutableID := d.Get("immutable_id").(string)
-		userUpdateParameters.ImmutableID = p.String(immutableID)
-	}
-
-	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
-		return fmt.Errorf("Error updating User with ID %q: %+v", d.Id(), err)
-	}
-
-	return resourceUserRead(d, meta)
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
