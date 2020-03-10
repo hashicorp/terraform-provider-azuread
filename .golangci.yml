@@ -36,3 +36,5 @@ linters-settings:
     ignore: github.com/hashicorp/terraform-plugin-sdk/helper/schema:ForceNew|Set,fmt:.*,io:Close
   misspell:
     locale: UK
+  goimports:
+    local-prefixes: github.com/terraform-providers/terraform-provider-azuread/azuread
