@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Principals"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_service_principal_password"
-sidebar_current: "docs-azuread-resource-azuread-service-principal-password"
 description: |-
   Manages a Password associated with a Service Principal within Azure Active Directory.
 

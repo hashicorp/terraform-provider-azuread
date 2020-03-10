@@ -1,7 +1,6 @@
 ---
 layout: "azuread"
 page_title: "Provider: Azure Active Directory"
-sidebar_current: "docs-azuread-index"
 description: |-
   The AzureAD Provider is used to interact with the many resources supported by Azure Active Directory.
 

@@ -2,7 +2,6 @@
 subcategory: "Authentication"
 layout: "azuread"
 page_title: "Authenticating via a Service Principal and a Client Secret"
-sidebar_current: "docs-azuread-authentication-service-principal-client-secret"
 description: |-
   This guide will cover how to use a Service Principal (Shared Account) with a Client Secret as authentication for the Azure Active Directory Provider.
 

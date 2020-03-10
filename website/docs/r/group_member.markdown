@@ -1,7 +1,7 @@
 ---
+subcategory: "Groups"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_group_member"
-sidebar_current: "docs-azuread-resource-azuread-group-member"
 description: |-
   Manages a single Group Membership within Azure Active Directory.
 
