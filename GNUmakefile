@@ -89,7 +89,7 @@ website-lint:
 	@echo "==> Checking documentation spelling..."
 	@misspell -error -source=text -i hdinsight -locale UK website/
 	@echo "==> Checking documentation for errors..."
-	@tfproviderdocs check -provider-name=azurerm -require-resource-subcategory \
+	@tfproviderdocs check -provider-name=azuread -require-resource-subcategory \
 		-allowed-resource-subcategories-file website/allowed-subcategories
 	@sh -c "'$(CURDIR)/scripts/terrafmt-website.sh'"
 
