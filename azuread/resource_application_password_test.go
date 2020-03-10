@@ -94,7 +94,7 @@ func TestAccAzureADApplicationPassword_basic(t *testing.T) {
 					testCheckADApplicationPasswordExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
 		},
@@ -118,7 +118,7 @@ func TestAccAzureADApplicationPassword_basicOld(t *testing.T) {
 					testCheckADApplicationPasswordExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func TestAccAzureADApplicationPassword_customKeyId(t *testing.T) {
 					testCheckADApplicationPasswordExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, "key_id", keyId),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2020-01-01T01:02:03Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
 		},
@@ -217,7 +217,7 @@ func testAccADObjectPasswordApplication_basic(applicationId, value string) strin
 resource "azuread_application_password" "test" {
   application_object_id = "${azuread_application.test.id}"
   value                 = "%s"
-  end_date              = "2020-01-01T01:02:03Z"
+  end_date              = "2099-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), value)
 }
@@ -229,7 +229,7 @@ func testAccADObjectPasswordApplication_basicOld(applicationId, value string) st
 resource "azuread_application_password" "test" {
   application_id = "${azuread_application.test.id}"
   value          = "%s"
-  end_date       = "2020-01-01T01:02:03Z"
+  end_date       = "2099-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), value)
 }
@@ -256,7 +256,7 @@ resource "azuread_application_password" "test" {
   application_object_id = "${azuread_application.test.id}"
   key_id                = "%s"
   value                 = "%s"
-  end_date              = "2020-01-01T01:02:03Z"
+  end_date              = "2099-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), keyId, value)
 }

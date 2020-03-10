@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# Data Source: azuread_user
+# Data Source: azuread_groups
 
 Gets Object IDs or Display Names for multiple Azure Active Directory groups.
 
