@@ -52,6 +52,11 @@ func dataUser() *schema.Resource {
 				Computed: true,
 			},
 
+			"immutable_id": {
+				Type:     schema.TypeString,
+				Computed: false,
+			},
+
 			"mail": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -61,11 +66,6 @@ func dataUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"immutable_id": {
-				Type: schema.TypeString,
-				Computed: false,
-			}
 		},
 	}
 }

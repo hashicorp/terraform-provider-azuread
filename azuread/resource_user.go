@@ -74,7 +74,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Description: "This must be specified if you are using a federated domain for the user's userPrincipalName (UPN) property when creating a new user account. " +
-					"It is used to associate an on-premises Active Directory user account with their Azure AD user object."
+					"It is used to associate an on-premises Active Directory user account with their Azure AD user object.",
 			},
 
 			"object_id": {
@@ -99,16 +99,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	upn := d.Get("user_principal_name").(string)
-	displayName := d.Get("display_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
-	accountEnabled := d.Get("account_enabled").(bool)
-	password := d.Get("password").(string)
-	forcePasswordChange := d.Get("force_password_change").(bool)
-	immutableID := d.Get("immutable_id").(string)
-	var pImmutableID *string
-	if immutableID != "" {
-		pImmutableID = &immutableID
-	}
 
 	//default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
@@ -116,19 +107,22 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	userCreateParameters := graphrbac.UserCreateParameters{
-		AccountEnabled: &accountEnabled,
-		DisplayName:    &displayName,
+		AccountEnabled: p.BoolI(d.Get("account_enabled")),
+		DisplayName:    p.StringI(d.Get("display_name")),
 		MailNickname:   &mailNickName,
 		PasswordProfile: &graphrbac.PasswordProfile{
-			ForceChangePasswordNextLogin: &forcePasswordChange,
-			Password:                     &password,
+			ForceChangePasswordNextLogin: p.BoolI(d.Get("force_password_change")),
+			Password:                     p.StringI(d.Get("password")),
 		},
 		UserPrincipalName: &upn,
-		ImmutableID:       pImmutableID,
 	}
 
 	if v, ok := d.GetOk("usage_location"); ok {
-		userCreateParameters.UsageLocation = p.String(v.(string))
+		userCreateParameters.UsageLocation = p.StringI(v)
+	}
+
+	if v, ok := d.GetOk("immutable_id"); ok {
+		userCreateParameters.ImmutableID = p.StringI(v)
 	}
 
 	user, err := client.Create(ctx, userCreateParameters)
