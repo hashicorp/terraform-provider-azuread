@@ -30,7 +30,7 @@ resource "azuread_service_principal" "example" {
 }
 
 resource "azuread_service_principal_password" "example" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = "${azuread_service_principal.example.id}"
   value                = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
   end_date             = "2099-01-01T01:02:03Z"
 }
