@@ -39,16 +39,6 @@ lint:
 	@echo "==> Checking source code against linters..."
 	golangci-lint run ./... -v
 
-depscheck:
-	@echo "==> Checking source code with go mod tidy..."
-	@go mod tidy
-	@git diff --exit-code -- go.mod go.sum || \
-		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
-	@echo "==> Checking source code with go mod vendor..."
-	@go mod vendor
-	@git diff --compact-summary --exit-code -- vendor || \
-		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
-
 tflint:
 	@echo "==> Checking source code against terraform provider linters..."
 	@tfproviderlintx \
@@ -64,6 +54,17 @@ tflint:
 whitespace:
 	@echo "==> Fixing source code with whitespace linter..."
 	golangci-lint run ./... --no-config --disable-all --enable=whitespace --fix
+
+depscheck:
+	@echo "==> Checking source code with go mod tidy..."
+	@go mod tidy
+	@git diff --exit-code -- go.mod go.sum || \
+		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+	@echo "==> Checking source code with go mod vendor..."
+	@go mod vendor
+	@git diff --compact-summary --exit-code -- vendor || \
+		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
+
 
 test: fmtcheck
 	go test -i $(TEST) || exit 1
@@ -84,10 +85,9 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-
 website-lint:
 	@echo "==> Checking documentation spelling..."
-	@misspell -error -source=text -i hdinsight website/
+	@misspell -error -source=text -i hdinsight -locale UK website/
 	@echo "==> Checking documentation for errors..."
 	@tfproviderdocs check -provider-name=azurerm -require-resource-subcategory \
 		-allowed-resource-subcategories-file website/allowed-subcategories
