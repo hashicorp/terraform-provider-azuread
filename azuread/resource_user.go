@@ -70,6 +70,16 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 			},
 
+			"onpremises_sam_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"onpremises_user_principal_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"immutable_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -168,6 +178,10 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_id", user.ObjectID)
 	d.Set("usage_location", user.UsageLocation)
 	d.Set("immutable_id", user.ImmutableID)
+
+	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
+	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
+
 	return nil
 }
 
