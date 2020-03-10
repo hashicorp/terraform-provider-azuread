@@ -1,4 +1,10 @@
 ## 0.8.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
+* `azuread_user` - support for the `immutable_id` property [GH-207]
+
 ## 0.7.0 (November 15, 2019)
 
 IMPROVEMENTS:

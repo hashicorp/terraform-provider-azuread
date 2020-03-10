@@ -52,7 +52,22 @@ func dataUser() *schema.Resource {
 				Computed: true,
 			},
 
+			"immutable_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"mail": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"onpremises_sam_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"onpremises_user_principal_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,9 +117,13 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_principal_name", user.UserPrincipalName)
 	d.Set("account_enabled", user.AccountEnabled)
 	d.Set("display_name", user.DisplayName)
+	d.Set("immutable_id", user.ImmutableID)
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("usage_location", user.UsageLocation)
+
+	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
+	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
 
 	return nil
 }
