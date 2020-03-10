@@ -43,4 +43,7 @@ The following attributes are exported:
 * `display_name` - The Display Name of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
 * `mail_nickname` - The email alias of the Azure AD User.
+* `mail_nickname` - The email alias of the Azure AD User.
+* `onpremises_sam_account_name` - The on premise sam account name of the Azure AD User.
+* `onpremises_user_principal_name` - The on premise user principal name of the Azure AD User.
 * `usage_location` - The usage location of the Azure AD User.
