@@ -89,12 +89,12 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 	}
 	d.SetId(*group.ObjectID)
 
+	d.Set("object_id", group.ObjectID)
+	d.Set("name", group.DisplayName)
+
 	if v, ok := group.AdditionalProperties["Properties"]; ok {
 		d.Set("description", v.(string))
 	}
-
-	d.Set("object_id", group.ObjectID)
-	d.Set("name", group.DisplayName)
 
 	members, err := graph.GroupAllMembers(client, ctx, d.Id())
 	if err != nil {

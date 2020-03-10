@@ -87,9 +87,9 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:          &name,
-		MailEnabled:          p.Bool(false),                 // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
+		MailEnabled:          p.Bool(false),           // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
 		MailNickname:         p.String(uuid.New().String()), // this matches the portal behaviour
-		SecurityEnabled:      p.Bool(true),                  // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
+		SecurityEnabled:      p.Bool(true),            // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
 		AdditionalProperties: additionalProperties,
 	}
 
@@ -100,6 +100,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if group.ObjectID == nil {
 		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
 	}
+
 	d.SetId(*group.ObjectID)
 
 	// Add members if specified

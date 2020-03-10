@@ -61,7 +61,7 @@ The following attributes are exported:
 
 * `name` - The Display Name of the Group.
 
-*  `description` - The Description of the Group.
+* `description` - The Description of the Group.
 
 * `members` - The Members of the Group.
 
