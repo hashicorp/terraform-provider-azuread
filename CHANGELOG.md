@@ -1,4 +1,9 @@
 ## 0.8.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_user` - add `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
+
 ## 0.7.0 (November 15, 2019)
 
 IMPROVEMENTS:
