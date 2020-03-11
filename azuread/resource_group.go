@@ -38,7 +38,7 @@ func resourceGroup() *schema.Resource {
 
 			"description": {
 				Type:     schema.TypeString,
-				ForceNew: true, // there is no update method availible in the SDK
+				ForceNew: true, // there is no update method available in the SDK
 				Optional: true,
 			},
 
