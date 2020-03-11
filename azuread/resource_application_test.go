@@ -45,38 +45,6 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_http_homepage(t *testing.T) {
-	resourceName := "azuread_application.test"
-	ri := tf.AccRandTimeInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADApplication_http_homepage(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAzureADApplication_complete(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
@@ -112,31 +80,6 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_publicClient(t *testing.T) {
-	resourceName := "azuread_application.test"
-	ri := tf.AccRandTimeInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADApplication_publicClient(ri),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "public_client", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAzureADApplication_update(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
@@ -159,6 +102,11 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccADApplication_complete(updatedri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
@@ -170,6 +118,82 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccADApplication_basic(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_http_homepage(t *testing.T) {
+	resourceName := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_http_homepage(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
+					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureADApplication_publicClient(t *testing.T) {
+	resourceName := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_publicClient(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "public_client", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -610,6 +634,7 @@ resource "azuread_application" "test" {
   homepage                   = "https://homepage-%[2]d"
   identifier_uris            = ["http://%[2]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
   reply_urls                 = ["http://unittest.hashicorptest.com"]
+  logout_url                 = "http://log.me.out"
   oauth2_allow_implicit_flow = true
 
   group_membership_claims = "All"

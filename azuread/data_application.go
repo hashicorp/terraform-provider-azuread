@@ -54,6 +54,11 @@ func dataApplication() *schema.Resource {
 				},
 			},
 
+			"logout_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"available_to_other_tenants": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -182,6 +187,7 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", app.DisplayName)
 	d.Set("application_id", app.AppID)
 	d.Set("homepage", app.Homepage)
+	d.Set("logout_url", app.LogoutURL)
 	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
 
