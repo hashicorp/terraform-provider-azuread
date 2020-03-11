@@ -36,15 +36,10 @@ func resourceGroup() *schema.Resource {
 				ValidateFunc: validation.NoZeroValues,
 			},
 
-			"object_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"description": {
 				Type:     schema.TypeString,
+				ForceNew: true, // there is no update method availible in the SDK
 				Optional: true,
-				ForceNew: true,
 			},
 
 			"members": {
@@ -68,6 +63,11 @@ func resourceGroup() *schema.Resource {
 					ValidateFunc: validate.UUID,
 				},
 			},
+
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -78,18 +78,16 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	additionalProperties := make(map[string]interface{})
-
-	if v, ok := d.GetOk("description"); ok {
-		additionalProperties["Description"] = v.(string)
-	}
-
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:          &name,
-		MailEnabled:          p.Bool(false),           // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
+		MailEnabled:          p.Bool(false),                 // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
 		MailNickname:         p.String(uuid.New().String()), // this matches the portal behaviour
-		SecurityEnabled:      p.Bool(true),            // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
-		AdditionalProperties: additionalProperties,
+		SecurityEnabled:      p.Bool(true),                  // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
+		AdditionalProperties: make(map[string]interface{}),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		properties.AdditionalProperties["description"] = v.(string)
 	}
 
 	group, err := client.Create(ctx, properties)
@@ -145,11 +143,12 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error retrieving Azure AD Group with ID %q: %+v", d.Id(), err)
 	}
 
-	if v, ok := resp.AdditionalProperties["Properties"]; ok {
-		d.Set("description", v.(string))
-	}
 	d.Set("name", resp.DisplayName)
 	d.Set("object_id", resp.ObjectID)
+
+	if v, ok := resp.AdditionalProperties["description"]; ok {
+		d.Set("description", v.(string))
+	}
 
 	members, err := graph.GroupAllMembers(client, ctx, d.Id())
 	if err != nil {

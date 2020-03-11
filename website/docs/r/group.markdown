@@ -59,14 +59,6 @@ The following attributes are exported:
 
 * `id` - The Object ID of the Group.
 
-* `name` - The Display Name of the Group.
-
-* `description` - The Description of the Group.
-
-* `members` - The Members of the Group.
-
-* `owners` - The Members of the Group.
-
 ## Import
 
 Azure Active Directory Groups can be imported using the `object id`, e.g.

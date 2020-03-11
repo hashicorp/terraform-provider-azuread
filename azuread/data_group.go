@@ -29,7 +29,6 @@ func dataGroup() *schema.Resource {
 
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 
@@ -92,7 +91,7 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("object_id", group.ObjectID)
 	d.Set("name", group.DisplayName)
 
-	if v, ok := group.AdditionalProperties["Properties"]; ok {
+	if v, ok := group.AdditionalProperties["description"]; ok {
 		d.Set("description", v.(string))
 	}
 
