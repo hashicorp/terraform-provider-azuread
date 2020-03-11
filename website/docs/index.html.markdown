@@ -1,7 +1,6 @@
 ---
 layout: "azuread"
 page_title: "Provider: Azure Active Directory"
-sidebar_current: "docs-azuread-index"
 description: |-
   The AzureAD Provider is used to interact with the many resources supported by Azure Active Directory.
 
@@ -49,7 +48,7 @@ resource "azuread_service_principal" "example" {
 
 The Azure Active Directory provider's bugs and feature requests can be found in the [GitHub repo issues](https://github.com/terraform-providers/terraform-provider-azuread/issues).
 Please avoid "me too" or "+1" comments. Instead, use a thumbs up [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/)
-on enhancement requests. Provider maintainers will often prioritize work based on the number of thumbs on an issue.
+on enhancement requests. Provider maintainers will often prioritise work based on the number of thumbs on an issue.
 
 Community input is appreciated on outstanding issues! We love to hear what use
 cases you have for new features, and want to provide the best possible

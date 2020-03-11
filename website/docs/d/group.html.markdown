@@ -1,7 +1,7 @@
 ---
+subcategory: "Groups"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_group"
-sidebar_current: "docs-azuread-datasource-azuread-group"
 description: |-
   Gets information about an Azure Active Directory group.
 

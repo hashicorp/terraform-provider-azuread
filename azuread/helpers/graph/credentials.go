@@ -11,8 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -48,7 +48,7 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			Optional:     true,
 			Computed:     true,
 			ForceNew:     true,
-			ValidateFunc: validation.ValidateRFC3339TimeString,
+			ValidateFunc: validation.IsRFC3339Time,
 		},
 
 		"end_date": {
@@ -57,7 +57,7 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			Computed:      true,
 			ForceNew:      true,
 			ConflictsWith: []string{"end_date_relative"},
-			ValidateFunc:  validation.ValidateRFC3339TimeString,
+			ValidateFunc:  validation.IsRFC3339Time,
 		},
 
 		"end_date_relative": {

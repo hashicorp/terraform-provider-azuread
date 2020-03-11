@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Principals"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_service_principal"
-sidebar_current: "docs-azuread-resource-azuread-service-principal-x"
 description: |-
   Manages a Service Principal associated with an Application within Azure Active Directory.
 ---

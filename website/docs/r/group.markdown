@@ -1,7 +1,7 @@
 ---
+subcategory: "Groups"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_group"
-sidebar_current: "docs-azuread-resource-azuread-group"
 description: |-
   Manages a Group within Azure Active Directory.
 

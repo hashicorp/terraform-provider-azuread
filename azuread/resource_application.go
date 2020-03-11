@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
@@ -45,10 +46,12 @@ func resourceApplication() *schema.Resource {
 			"group_membership_claims": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"All", "None", "SecurityGroup", "DirectoryRole", "DistributionGroup"},
-					false,
-				),
+				ValidateFunc: validation.StringInSlice([]string{
+					string(graphrbac.All),
+					string(graphrbac.None),
+					string(graphrbac.SecurityGroup),
+					"DirectoryRole", // missing from sdk: https://github.com/Azure/azure-sdk-for-go/issues/7857
+				}, false),
 			},
 
 			"homepage": {
@@ -245,7 +248,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("group_membership_claims"); ok {
-		properties.GroupMembershipClaims = v
+		properties.GroupMembershipClaims = graphrbac.GroupMembershipClaimTypes(v.(string))
 	}
 
 	app, err := client.Create(ctx, properties)
@@ -368,7 +371,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("group_membership_claims") {
-		properties.GroupMembershipClaims = d.Get("group_membership_claims")
+		properties.GroupMembershipClaims = graphrbac.GroupMembershipClaimTypes(d.Get("group_membership_claims").(string))
 	}
 
 	if d.HasChange("type") {

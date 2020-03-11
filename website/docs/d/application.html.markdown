@@ -1,7 +1,7 @@
 ---
+subcategory: "Application"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_application"
-sidebar_current: "docs-azuread-datasource-azuread-application"
 description: |-
   Gets information about an existing Application within Azure Active Directory.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Application"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_application"
-sidebar_current: "docs-azuread-resource-azuread-application"
 description: |-
   Manages an Application within Azure Active Directory.
 

@@ -2,7 +2,6 @@
 subcategory: "Authentication"
 layout: "azuread"
 page_title: "Configuring a Service Principal to manage an Azure Active Directory"
-sidebar_current: "docs-azuread-authentication-configuring-service-principal"
 description: |-
   This guide will cover how to use grant permissions to a Service Principal (Shared Account) to manage objects within an Azure Active Directory .
 
