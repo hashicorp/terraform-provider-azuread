@@ -112,8 +112,14 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Add owners if specified
 	if v, ok := d.GetOk("owners"); ok {
-		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		if err := graph.GroupAddOwners(client, ctx, *group.ObjectID, *members); err != nil {
+		existingOwners, err := graph.GroupAllOwners(client, ctx, *group.ObjectID)
+		if err != nil {
+			return err
+		}
+		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		ownersToAdd := slices.Difference(members, existingOwners)
+
+		if err := graph.GroupAddOwners(client, ctx, *group.ObjectID, ownersToAdd); err != nil {
 			return err
 		}
 	}
