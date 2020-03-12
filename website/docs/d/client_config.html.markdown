@@ -1,4 +1,5 @@
 ---
+subcategory: "Base"
 layout: "azurerm"
 page_title: "Azure Active Directory: azuread_client_config"
 description: |-
