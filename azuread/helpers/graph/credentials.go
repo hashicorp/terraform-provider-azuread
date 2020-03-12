@@ -40,7 +40,7 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			Required:     true,
 			ForceNew:     true,
 			Sensitive:    true,
-			ValidateFunc: validate.NoEmptyStrings,
+			ValidateFunc: validation.StringLenBetween(1, 863), // Encrypted secret cannot be empty and can be at most 1024 bytes.
 		},
 
 		"start_date": {
