@@ -1,7 +1,7 @@
 ---
+subcategory: "Application"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_application"
-sidebar_current: "docs-azuread-resource-azuread-application"
 description: |-
   Manages an Application within Azure Active Directory.
 
@@ -79,6 +79,8 @@ The following arguments are supported:
 * `identifier_uris` - (Optional) A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 
 * `reply_urls` - (Optional) A list of URLs that user tokens are sent to for sign in, or the redirect URIs that OAuth 2.0 authorization codes and access tokens are sent to.
+
+* `logout_url` - (Optional) The URL of the logout page.
 
 * `available_to_other_tenants` - (Optional) Is this Azure AD Application available to other tenants? Defaults to `false`.
 

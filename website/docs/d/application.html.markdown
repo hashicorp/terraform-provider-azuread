@@ -1,7 +1,7 @@
 ---
+subcategory: "Application"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_application"
-sidebar_current: "docs-azuread-datasource-azuread-application"
 description: |-
   Gets information about an existing Application within Azure Active Directory.
 ---
@@ -34,6 +34,8 @@ output "azure_ad_object_id" {
 
 ## Attributes Reference
 
+The following attributes are exported:
+
 * `id` - the Object ID of the Azure Active Directory Application.
 
 * `application_id` - the Application ID of the Azure Active Directory Application.
@@ -41,6 +43,8 @@ output "azure_ad_object_id" {
 * `available_to_other_tenants` - Is this Azure AD Application available to other tenants?
 
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+
+* `logout_url` - The URL of the logout page.
 
 * `oauth2_allow_implicit_flow` - Does this Azure AD Application allow OAuth2.0 implicit flow tokens?
 

@@ -2,7 +2,21 @@
 
 IMPROVEMENTS:
 
-* `azuread_user` - add `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
+* dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` [GH-225]
+* dependencies: upgrade `go-autorest/autorest` to `v0.10.0` [GH-225]
+* dependencies: upgrade `terraform-plugin-sdk` to `v1.6.0` [GH-225]
+* `azuread_application` - supportfor the `logout_url` property [GH-226]
+* `azuread_group` - support for the `description` property [GH-216]
+* `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
+* `azuread_user` - support for the `immutable_id` property [GH-207]
+
+BUG FIXES:
+
+* `azuread_application` - ensure all owners are added before removed [GH-226]
+* `azuread_application_password` - validate the `length` property is less then `863` [GH-228]
+* `azuread_group` - the `owners` property is now additive during creation allowing an existing owner to be provided [GH-211]
+* `azuread_group_member` - mark as missing when member cannot be found instead of erroring [GH-227]
+* `azuread_service_principal_password` - validate the `length` property is less then `863` [GH-228]
 
 ## 0.7.0 (November 15, 2019)
 

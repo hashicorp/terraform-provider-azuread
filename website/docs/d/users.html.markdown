@@ -1,7 +1,7 @@
 ---
+subcategory: "Users"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_users"
-sidebar_current: "docs-azuread-datasource-azuread-users"
 description: |-
   Gets information about Azure Active Directory users.
 

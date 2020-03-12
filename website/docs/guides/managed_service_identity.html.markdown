@@ -2,7 +2,6 @@
 subcategory: "Authentication"
 layout: "azuread"
 page_title: "Authenticating via Managed Service Identity"
-sidebar_current: "docs-azuread-authentication-managed-service-identity"
 description: |-
   This guide will cover how to use Managed Service Identity as authentication for the Azure Active Directory Provider.
 

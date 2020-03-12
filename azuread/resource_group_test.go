@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
 func TestAccAzureADGroup_basic(t *testing.T) {
@@ -37,6 +37,7 @@ func TestAccAzureADGroup_basic(t *testing.T) {
 func TestAccAzureADGroup_complete(t *testing.T) {
 	rn := "azuread_group.test"
 	id := tf.AccRandTimeInt()
+	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -44,8 +45,8 @@ func TestAccAzureADGroup_complete(t *testing.T) {
 		CheckDestroy: testCheckAzureADGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADGroup_basic(id),
-				Check:  testCheckAzureAdGroupBasic(id, "0", "0"),
+				Config: testAccAzureADGroup_complete(id, pw),
+				Check:  testCheckAzureAdGroupBasic(id, "1", "1"),
 			},
 			{
 				ResourceName:      rn,
@@ -350,6 +351,19 @@ resource "azuread_group" "test" {
   members = []
 }
 `, id)
+}
+
+func testAccAzureADGroup_complete(id int, password string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_group" "test" {
+  name        = "acctestGroup-%d"
+  description = "Please delete me as this is a test AD group!"
+  members     = [azuread_user.test.object_id]
+  owners      = [azuread_user.test.object_id]
+}
+`, testAccADUser_basic(id, password), id)
 }
 
 func testAccAzureADDiverseDirectoryObjects(id int, password string) string {

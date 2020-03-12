@@ -1,7 +1,7 @@
 ---
+subcategory: "Groups"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_group"
-sidebar_current: "docs-azuread-resource-azuread-group"
 description: |-
   Manages a Group within Azure Active Directory.
 
@@ -43,6 +43,7 @@ resource "azuread_group" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
+* `description` - (Optional) The description for the Group.  Changing this forces a new resource to be created.
 * `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
 * `owners` (Optional) A set of owners who own this Group. Supported Object types are Users or Service Principals.
 
@@ -57,12 +58,6 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` - The Object ID of the Group.
-
-* `name` - The Display Name of the Group.
-
-* `members` - The Members of the Group.
-
-* `owners` - The Members of the Group.
 
 ## Import
 
