@@ -80,6 +80,8 @@ The following arguments are supported:
 
 * `reply_urls` - (Optional) A list of URLs that user tokens are sent to for sign in, or the redirect URIs that OAuth 2.0 authorization codes and access tokens are sent to.
 
+* `logout_url` - (Optional) The URL of the logout page.
+
 * `available_to_other_tenants` - (Optional) Is this Azure AD Application available to other tenants? Defaults to `false`.
 
 * `public_client` - (Optional) Is this Azure AD Application a public client? Defaults to `false`.
