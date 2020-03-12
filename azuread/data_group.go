@@ -27,6 +27,11 @@ func dataGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 			},
 
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -85,6 +90,10 @@ func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("object_id", group.ObjectID)
 	d.Set("name", group.DisplayName)
+
+	if v, ok := group.AdditionalProperties["description"]; ok {
+		d.Set("description", v.(string))
+	}
 
 	members, err := graph.GroupAllMembers(client, ctx, d.Id())
 	if err != nil {

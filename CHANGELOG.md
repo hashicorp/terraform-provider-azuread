@@ -5,8 +5,13 @@ IMPROVEMENTS:
 * dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` [GH-225]
 * dependencies: upgrade `go-autorest/autorest` to `v0.10.0` [GH-225]
 * dependencies: upgrade `terraform-plugin-sdk` to `v1.6.0` [GH-225]
+* `azuread_group` - support for the `description` property [GH-216]
 * `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
 * `azuread_user` - support for the `immutable_id` property [GH-207]
+
+BUG FIXES:
+
+* `azuread_group` - the `owners` property is now additive during creation allowing an existing owner to be provided [GH-211]
 
 ## 0.7.0 (November 15, 2019)
 
