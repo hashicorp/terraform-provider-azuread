@@ -1,6 +1,6 @@
 ---
 subcategory: "Base"
-layout: "azurerm"
+layout: "azuread"
 page_title: "Azure Active Directory: azuread_client_config"
 description: |-
   Gets information about the configuration of the azuread provider.
