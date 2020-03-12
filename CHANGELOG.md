@@ -11,8 +11,10 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* `azuread_application_password` - validate the `length` property is less then `863` [GH-228]
 * `azuread_group` - the `owners` property is now additive during creation allowing an existing owner to be provided [GH-211]
 * `azuread_group_member` - mark as missing when member cannot be found instead of erroring [GH-227]
+* `azuread_service_principal_password` - validate the `length` property is less then `863` [GH-228]
 
 ## 0.7.0 (November 15, 2019)
 
