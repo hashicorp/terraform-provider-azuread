@@ -44,7 +44,7 @@ The following attributes are exported:
 
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 
-* `logout_url` - (Optional) The URL of the logout page.
+* `logout_url` - The URL of the logout page.
 
 * `oauth2_allow_implicit_flow` - Does this Azure AD Application allow OAuth2.0 implicit flow tokens?
 
