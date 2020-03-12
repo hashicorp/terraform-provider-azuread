@@ -573,9 +573,10 @@ resource "azuread_application" "test" {
 func testAccADApplication_basicEmpty(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name            = "acctest-APP-%[1]d"
-  identifier_uris = []
-  reply_urls      = []
+  name                    = "acctest-APP-%[1]d"
+  identifier_uris         = []
+  reply_urls              = []
+  group_membership_claims = "None"
 }
 `, ri)
 }

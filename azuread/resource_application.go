@@ -330,8 +330,8 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.Homepage = p.StringI(d.Get("homepage"))
 	}
 
-	if v, ok := d.GetOk("logout_url"); ok {
-		properties.LogoutURL = p.StringI(v)
+	if d.HasChange("logout_url") {
+		properties.LogoutURL = p.StringI(d.Get("logout_url"))
 	}
 
 	if d.HasChange("identifier_uris") {
