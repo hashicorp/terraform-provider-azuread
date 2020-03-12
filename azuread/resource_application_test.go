@@ -125,7 +125,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccADApplication_basic(ri),
+				Config: testAccADApplication_basicEmpty(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
@@ -566,6 +566,16 @@ func testAccADApplication_basic(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctest-APP-%[1]d"
+}
+`, ri)
+}
+
+func testAccADApplication_basicEmpty(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name            = "acctest-APP-%[1]d"
+  identifier_uris = []
+  reply_urls      = []
 }
 `, ri)
 }
