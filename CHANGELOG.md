@@ -1,5 +1,9 @@
 ## 0.8.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `azuread_client_config` [GH-229]
+
 IMPROVEMENTS:
 
 * dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` [GH-225]
