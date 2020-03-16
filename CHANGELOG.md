@@ -1,26 +1,26 @@
-## 0.8.0 (Unreleased)
+## 0.8.0 (March 16, 2020)
 
 FEATURES:
 
-* **New Data Source:** `azuread_client_config` [GH-229]
+* **New Data Source:** `azuread_client_config` ([#229](https://github.com/terraform-providers/terraform-provider-azuread/issues/229))
 
 IMPROVEMENTS:
 
-* dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` [GH-225]
-* dependencies: upgrade `go-autorest/autorest` to `v0.10.0` [GH-225]
-* dependencies: upgrade `terraform-plugin-sdk` to `v1.6.0` [GH-225]
-* `azuread_application` - supportfor the `logout_url` property [GH-226]
-* `azuread_group` - support for the `description` property [GH-216]
-* `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties [GH-222]
-* `azuread_user` - support for the `immutable_id` property [GH-207]
+* dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
+* dependencies: upgrade `go-autorest/autorest` to `v0.10.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
+* dependencies: upgrade `terraform-plugin-sdk` to `v1.6.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
+* `azuread_application` - supportfor the `logout_url` property ([#226](https://github.com/terraform-providers/terraform-provider-azuread/issues/226))
+* `azuread_group` - support for the `description` property ([#216](https://github.com/terraform-providers/terraform-provider-azuread/issues/216))
+* `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties ([#222](https://github.com/terraform-providers/terraform-provider-azuread/issues/222))
+* `azuread_user` - support for the `immutable_id` property ([#207](https://github.com/terraform-providers/terraform-provider-azuread/issues/207))
 
 BUG FIXES:
 
-* `azuread_application` - ensure all owners are added before removed [GH-226]
-* `azuread_application_password` - validate the `length` property is less then `863` [GH-228]
-* `azuread_group` - the `owners` property is now additive during creation allowing an existing owner to be provided [GH-211]
-* `azuread_group_member` - mark as missing when member cannot be found instead of erroring [GH-227]
-* `azuread_service_principal_password` - validate the `length` property is less then `863` [GH-228]
+* `azuread_application` - ensure all owners are added before removed ([#226](https://github.com/terraform-providers/terraform-provider-azuread/issues/226))
+* `azuread_application_password` - validate the `length` property is less then `863` ([#228](https://github.com/terraform-providers/terraform-provider-azuread/issues/228))
+* `azuread_group` - the `owners` property is now additive during creation allowing an existing owner to be provided ([#211](https://github.com/terraform-providers/terraform-provider-azuread/issues/211))
+* `azuread_group_member` - mark as missing when member cannot be found instead of erroring ([#227](https://github.com/terraform-providers/terraform-provider-azuread/issues/227))
+* `azuread_service_principal_password` - validate the `length` property is less then `863` ([#228](https://github.com/terraform-providers/terraform-provider-azuread/issues/228))
 
 ## 0.7.0 (November 15, 2019)
 
