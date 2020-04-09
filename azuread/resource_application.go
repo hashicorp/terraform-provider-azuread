@@ -51,6 +51,7 @@ func resourceApplication() *schema.Resource {
 					string(graphrbac.None),
 					string(graphrbac.SecurityGroup),
 					"DirectoryRole", // missing from sdk: https://github.com/Azure/azure-sdk-for-go/issues/7857
+					"ApplicationGroup", //missing from sdk:https://github.com/Azure/azure-sdk-for-go/issues/8244
 				}, false),
 			},
 
