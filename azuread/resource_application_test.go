@@ -66,6 +66,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", ri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "ApplicationGroup"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
