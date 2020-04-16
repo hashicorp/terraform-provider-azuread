@@ -62,6 +62,8 @@ The following attributes are exported:
 
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
+* `public_client` - Is this Azure AD Application available publically?
+
 ---
 
 `required_resource_access` block exports the following:
