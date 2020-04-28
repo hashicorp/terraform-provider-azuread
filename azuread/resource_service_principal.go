@@ -16,7 +16,6 @@ import (
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
-
 func resourceServicePrincipal() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServicePrincipalCreate,
