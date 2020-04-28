@@ -64,6 +64,7 @@ func resourceServicePrincipal() *schema.Resource {
 	}
 }
 
+
 func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
