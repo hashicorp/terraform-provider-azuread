@@ -16,6 +16,7 @@ import (
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
+
 func resourceServicePrincipal() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceServicePrincipalCreate,
@@ -62,7 +63,6 @@ func resourceServicePrincipal() *schema.Resource {
 		},
 	}
 }
-
 
 func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).servicePrincipalsClient
