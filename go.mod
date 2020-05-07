@@ -1,7 +1,7 @@
 module github.com/terraform-providers/terraform-provider-azuread
 
 require (
-	github.com/Azure/azure-sdk-for-go v40.3.0+incompatible
+	github.com/Azure/azure-sdk-for-go v42.1.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.10.0
 	github.com/Azure/go-autorest/autorest/date v0.2.0
 	github.com/google/uuid v1.1.1
