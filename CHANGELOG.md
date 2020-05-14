@@ -7,6 +7,7 @@ DEPENDENCIES:
 IMPROVEMENTS:
 
 * `azuread_application` - the `group_membership_claims` now supports `ApplicationGroup` [GH-238]
+* `azuread_service_principal` - changeing the `tags` property no longer forces a new resource [GH-245]
 
 ## 0.8.0 (March 16, 2020)
 
