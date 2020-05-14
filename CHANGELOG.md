@@ -1,4 +1,13 @@
 ## 0.9.0 (Unreleased)
+
+DEPENDENCIES:
+
+* upgrade `azure-sdk-for-go` to `v42.1.0` [GH-247]
+
+IMPROVEMENTS:
+
+* `azuread_application` - the `group_membership_claims` now supports `ApplicationGroup` [GH-238]
+
 ## 0.8.0 (March 16, 2020)
 
 FEATURES:
