@@ -10,7 +10,7 @@ IMPROVEMENTS:
 * dependencies: upgrade `azure-sdk-for-go` to `v40.3.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
 * dependencies: upgrade `go-autorest/autorest` to `v0.10.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
 * dependencies: upgrade `terraform-plugin-sdk` to `v1.6.0` ([#225](https://github.com/terraform-providers/terraform-provider-azuread/issues/225))
-* `azuread_application` - supportfor the `logout_url` property ([#226](https://github.com/terraform-providers/terraform-provider-azuread/issues/226))
+* `azuread_application` - support for the `logout_url` property ([#226](https://github.com/terraform-providers/terraform-provider-azuread/issues/226))
 * `azuread_group` - support for the `description` property ([#216](https://github.com/terraform-providers/terraform-provider-azuread/issues/216))
 * `azuread_user` - support for the `onpremises_sam_account_name` and `onpremises_user_principal_name` properties ([#222](https://github.com/terraform-providers/terraform-provider-azuread/issues/222))
 * `azuread_user` - support for the `immutable_id` property ([#207](https://github.com/terraform-providers/terraform-provider-azuread/issues/207))
