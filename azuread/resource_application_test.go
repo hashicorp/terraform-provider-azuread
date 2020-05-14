@@ -375,6 +375,13 @@ func TestAccAzureADApplication_groupMembershipClaimsUpdate(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccADApplication_withGroupMembershipClaimsApplicationGroup(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "group_membership_claims", "ApplicationGroup"),
+				),
+			},
+			{
 				ResourceName:      rn,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -628,6 +635,15 @@ func testAccADApplication_withGroupMembershipClaimsSecurityGroup(ri int) string 
 resource "azuread_application" "test" {
   name                    = "acctest-APP-%[1]d"
   group_membership_claims = "SecurityGroup"
+}
+`, ri)
+}
+
+func testAccADApplication_withGroupMembershipClaimsApplicationGroup(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                    = "acctest-APP-%[1]d"
+  group_membership_claims = "ApplicationGroup"
 }
 `, ri)
 }
