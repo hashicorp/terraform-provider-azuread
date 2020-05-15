@@ -1,18 +1,18 @@
-## 0.9.0 (Unreleased)
+## 0.9.0 (May 15, 2020)
 
 DEPENDENCIES:
 
-* upgrade `azure-sdk-for-go` to `v42.1.0` [GH-247]
+* upgrade `azure-sdk-for-go` to `v42.1.0` ([#247](https://github.com/terraform-providers/terraform-provider-azuread/issues/247))
 
 IMPROVEMENTS:
 
-* `azuread_application` - the `group_membership_claims` property now supports `ApplicationGroup` [GH-238]
-* `azuread_service_principal` - changing the `tags` property no longer forces a new resource [GH-245]
+* `azuread_application` - the `group_membership_claims` property now supports `ApplicationGroup` ([#238](https://github.com/terraform-providers/terraform-provider-azuread/issues/238))
+* `azuread_service_principal` - changing the `tags` property no longer forces a new resource ([#245](https://github.com/terraform-providers/terraform-provider-azuread/issues/245))
 
 BUG FIXES:
 
-* `data.azuread_user` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` [GH-251]
-* `data.azuread_users` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` [GH-251]
+* `data.azuread_user` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` ([#251](https://github.com/terraform-providers/terraform-provider-azuread/issues/251))
+* `data.azuread_users` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` ([#251](https://github.com/terraform-providers/terraform-provider-azuread/issues/251))
 
 ## 0.8.0 (March 16, 2020)
 
