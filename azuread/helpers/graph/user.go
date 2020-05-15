@@ -37,7 +37,7 @@ func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objec
 }
 
 func UserGetByMailNickname(client *graphrbac.UsersClient, ctx context.Context, mailNickname string) (*graphrbac.User, error) {
-	filter := fmt.Sprintf("startswith(mailNickname,'%s')", mailNickname)
+	filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 	resp, err := client.ListComplete(ctx, filter, "")
 	if err != nil {
 		return nil, fmt.Errorf("Error listing Azure AD Users for filter %q: %+v", filter, err)
