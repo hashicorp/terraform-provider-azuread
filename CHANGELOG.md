@@ -9,6 +9,11 @@ IMPROVEMENTS:
 * `azuread_application` - the `group_membership_claims` now supports `ApplicationGroup` [GH-238]
 * `azuread_service_principal` - changeing the `tags` property no longer forces a new resource [GH-245]
 
+BUG FIXES:
+
+* `data.azuread_user` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` [GH-251]
+* `data.azuread_users` - use `equals` instead of `startsWith` when looking uo users by `mailNickname` [GH-251]
+
 ## 0.8.0 (March 16, 2020)
 
 FEATURES:
@@ -39,11 +44,11 @@ IMPROVEMENTS:
 
 * provider: migrate to standalone plugin SDK v1.1.0 ([#154](https://github.com/terraform-providers/terraform-provider-azuread/issues/154))
 * provider: using the current (rather than the vendored) version of Terraform Core in user agents ([#154](https://github.com/terraform-providers/terraform-provider-azuread/issues/154))
-* Data Source `azuread_user` - support looking up a user with `mail_nickname` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
-* Data Source `azuread_users` - support looking up users with `mail_nicknames` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
 * `azuread_application` - adds ability to build homepage with HTTP in addition to HTTPS ([#155](https://github.com/terraform-providers/terraform-provider-azuread/issues/155))
 * `azuread_application` - allow the `app_role` block `value` property to be nil ([#157](https://github.com/terraform-providers/terraform-provider-azuread/issues/157))
 * `azuread_user` - support for the `usage_location` property ([#141](https://github.com/terraform-providers/terraform-provider-azuread/issues/141))
+* `data.azuread_user` - support looking up a user with `mail_nickname` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
+* `data.azuread_users` - support looking up users with `mail_nicknames` ([#161](https://github.com/terraform-providers/terraform-provider-azuread/issues/161))
 
 ## 0.6.0 (August 21, 2019)
 
@@ -71,14 +76,14 @@ FEATURES:
 
 IMPROVEMENTS:
 
-* Data Source `azuread_application` - support for the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
-* Data Source `azuread_service_principal` - export the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
 * `azuread_application` - support for the `app_roles` property ([#98](https://github.com/terraform-providers/terraform-provider-azuread/issues/98))
 * `azuread_application` - the `identifier_uris` property now allows `api`,`urn`, and `ms-appx` URI schemas ([#115](https://github.com/terraform-providers/terraform-provider-azuread/issues/115))
 * `azuread_application_password` - deprecation of `application_id` in favour of `application_object_id` ([#107](https://github.com/terraform-providers/terraform-provider-azuread/issues/107))
 * `azuread_group` - support for the `members` property ([#100](https://github.com/terraform-providers/terraform-provider-azuread/issues/100))
 * `azuread_group` - support for the `owners` property ([#62](https://github.com/terraform-providers/terraform-provider-azuread/issues/62))
 * `azuread_service_principal` - export the `oauth2_permissions` property ([#103](https://github.com/terraform-providers/terraform-provider-azuread/issues/103))
+* `data.azuread_application` - support for the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
+* `data.azuread_service_principal` - export the `app_roles` property ([#110](https://github.com/terraform-providers/terraform-provider-azuread/issues/110))
 
 BUG FIXES:
 
@@ -98,8 +103,6 @@ FEATURES:
 IMPROVEMENTS:
 
 * dependencies: upgrading to `v0.12.0` of `github.com/hashicorp/terraform` ([#82](https://github.com/terraform-providers/terraform-provider-azuread/issues/82))
-* Data Source `azuread_application` - now exports the `group_membership_claims` property ([#78](https://github.com/terraform-providers/terraform-provider-azuread/issues/78))
-* Data Source `azuread_application` - now exports the `oauth2_permissions` property ([#79](https://github.com/terraform-providers/terraform-provider-azuread/issues/79))
 * `azuread_application` - support for the `group_membership_claims` property ([#78](https://github.com/terraform-providers/terraform-provider-azuread/issues/78))
 * `azuread_application` - now exports the `oauth2_permissions` property ([#79](https://github.com/terraform-providers/terraform-provider-azuread/issues/79))
 * `azuread_application` - now exports the `object_id` property ([#99](https://github.com/terraform-providers/terraform-provider-azuread/issues/99))
@@ -112,6 +115,8 @@ IMPROVEMENTS:
 * `azuread_user` - will now wait for replication by waiting for 10 successful reads after creation ([#91](https://github.com/terraform-providers/terraform-provider-azuread/issues/91))
 * `azuread_user` - increase the maximum allowed length of `password` to 256 ([#81](https://github.com/terraform-providers/terraform-provider-azuread/issues/81))
 * `azuread_user` - now exports the `object_id` property ([#99](https://github.com/terraform-providers/terraform-provider-azuread/issues/99))
+* `data.azuread_application` - now exports the `group_membership_claims` property ([#78](https://github.com/terraform-providers/terraform-provider-azuread/issues/78))
+* `data.azuread_application` - now exports the `oauth2_permissions` property ([#79](https://github.com/terraform-providers/terraform-provider-azuread/issues/79))
 
 ## 0.3.1 (April 18, 2019)
 
