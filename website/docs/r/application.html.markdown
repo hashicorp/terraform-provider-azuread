@@ -65,6 +65,24 @@ resource "azuread_application" "example" {
     is_enabled   = true
     value        = "Admin"
   }
+
+  oauth2_permissions {
+    admin_consent_description  = "Allow the application to access example on behalf of the signed-in user."
+    admin_consent_display_name = "Access example"
+    is_enabled                 = true
+    type                       = "User"
+    user_consent_description   = "Allow the application to access example on your behalf."
+    user_consent_display_name  = "Access example"
+    value                      = "user_impersonation"
+  }
+
+  oauth2_permissions {
+    admin_consent_description  = "Administer the example application"
+    admin_consent_display_name = "Administer"
+    is_enabled                 = true
+    type                       = "Admin"
+    value                      = "administer"
+  }
 }
 ```
 
@@ -98,7 +116,7 @@ The following arguments are supported:
 
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
-* `oauth2_permissions` - (Optional) A collection of `oauth2_permission` blocks as documented below.
+* `oauth2_permissions` - (Optional) A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by `oauth2_permissions` blocks as documented below.
 
 ---
 
@@ -134,7 +152,7 @@ The following arguments are supported:
 
 ---
 
-`oauth2_permission` supports the following:
+`oauth2_permissions` supports the following:
 
 * `admin_consent_description` - (Required) Permission help text that appears in the admin consent and app assignment experiences.
 
@@ -150,6 +168,8 @@ The following arguments are supported:
 
 * `user_consent_display_name` - (Optional) Display name for the permission that appears in the end user consent experience.
 
+If you don't specify any `oauth2_permissions` blocks, your Application will be assigned the default `user_impersonation` scope by Azure Active Directory. However, due to the declarative nature of Terraform configuration, if you do specify any `oauth2_permissions` blocks, you will need to include a block for the `user_impersonation` scope if you need it, or it will be removed (see the example above). To ensure that no OAuth 2.0 permission scopes are present for your Application, specify `oauth2_permissions = []` in your Application resource.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -157,28 +177,6 @@ The following attributes are exported:
 * `application_id` - The Application ID.
 
 * `object_id` - The Application's Object ID.
-
-* `oauth2_permissions` - A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by a `oauth2_permission` block as documented below.
-
----
-
-`oauth2_permission` block exports the following:
-
-* `id` - The unique identifier for one of the `OAuth2Permission`.
-
-* `type` - The type of the permission.
-
-* `admin_consent_description` - The description of the admin consent.
-
-* `admin_consent_display_name` - The display name of the admin consent.
-
-* `is_enabled` - Is this permission enabled?
-
-* `user_consent_description` - The description of the user consent.
-
-* `user_consent_display_name` - The display name of the user consent.
-
-* `value` - The name of this permission.
 
 ## Import
 

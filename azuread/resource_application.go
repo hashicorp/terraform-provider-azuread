@@ -212,19 +212,23 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"oauth2_permissions": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admin_consent_description": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validate.NoEmptyStrings,
 						},
 
 						"admin_consent_display_name": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validate.NoEmptyStrings,
 						},
 
@@ -236,7 +240,7 @@ func resourceApplication() *schema.Resource {
 						"is_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Computed: true,
 						},
 
 						"type": {
@@ -260,7 +264,8 @@ func resourceApplication() *schema.Resource {
 
 						"value": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validate.NoEmptyStrings,
 						},
 					},
@@ -283,13 +288,15 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// We don't send Oauth2Permissions here because applications tend to get a default `user_impersonation` scope
+	// defined, which will either conflict if we also define it, or create an unwanted diff if we don't
+	// After creating the application, we update it later before this function returns, including any Oauth2Permissions
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.BoolI(d.Get("available_to_other_tenants")),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
-		Oauth2Permissions:       expandADApplicationOAuth2Permissions(d.Get("oauth2_permissions")),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -367,7 +374,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceApplicationRead(d, meta)
+	// After creating the application, we immediately update it to ensure we overwrite any default properties
+	// such as the `user_impersonation` scope the application may get, whether we define such a scope or not
+	return resourceApplicationUpdate(d, meta)
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
