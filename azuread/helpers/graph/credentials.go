@@ -35,6 +35,13 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			ValidateFunc: validate.UUID,
 		},
 
+		"description": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+			ForceNew: true,
+		},
+
 		"value": {
 			Type:         schema.TypeString,
 			Required:     true,
@@ -139,6 +146,11 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		KeyID:   p.String(keyId),
 		Value:   p.String(value),
 		EndDate: &date.Time{Time: endDate},
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		customIdentifier := []byte(v.(string))
+		credential.CustomKeyIdentifier = &customIdentifier
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
