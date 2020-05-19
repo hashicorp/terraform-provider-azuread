@@ -264,6 +264,31 @@ func TestAccAzureADApplication_appRoles(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_appRolesManualID(t *testing.T) {
+	rn := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_appRolesManualID(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(rn),
+					resource.TestCheckResourceAttr(rn, "app_role.#", "1"),
+				),
+			},
+			{
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_appRolesNoValue(t *testing.T) {
 	rn := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
@@ -822,6 +847,23 @@ resource "azuread_application" "test" {
     display_name = "Admin"
     is_enabled   = true
     value        = "Admin"
+  }
+}
+`, ri)
+}
+
+func testAccADApplication_appRolesManualID(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctest-APP-%[1]d"
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    id                   = "10000000-2000-3000-4000-500000000000"
+    is_enabled           = true
+    value                = "Admin"
   }
 }
 `, ri)
