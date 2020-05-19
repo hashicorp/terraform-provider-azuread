@@ -180,7 +180,7 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("application_object_id", id.ObjectId)
 	d.Set("application_id", id.ObjectId) //todo remove in 2.0
 	d.Set("key_id", id.KeyId)
-	d.Set("description", credential.CustomKeyIdentifier)
+	d.Set("description", string(*credential.CustomKeyIdentifier))
 
 	if endDate := credential.EndDate; endDate != nil {
 		d.Set("end_date", endDate.Format(time.RFC3339))
