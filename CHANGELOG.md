@@ -2,7 +2,9 @@
 
 IMPROVEMENTS:
 
-* `application` - support for setting `oauth2_permissions` [GH-252]
+* `azuread_application` - support for setting `oauth2_permissions` [GH-252]
+* `azuread_application_password` - support setting a `description` [GH-253]
+* `azuread_service_principal_password` - support setting a `description` [GH-253]
 
 ## 0.9.0 (May 15, 2020)
 
