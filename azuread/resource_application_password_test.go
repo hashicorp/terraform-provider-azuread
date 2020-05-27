@@ -178,6 +178,29 @@ func TestAccAzureADApplicationPassword_customKeyId(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplicationPassword_description(t *testing.T) {
+	resourceName := "azuread_application_password.test"
+	applicationId := uuid.New().String()
+	value := uuid.New().String()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationPasswordCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplicationPassword_description(applicationId, value),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationPasswordExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "start_date"),
+					resource.TestCheckResourceAttr(resourceName, "description", "terraform"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplicationPassword_relativeEndDate(t *testing.T) {
 	resourceName := "azuread_application_password.test"
 	applicationId := uuid.New().String()
@@ -259,6 +282,19 @@ resource "azuread_application_password" "test" {
   end_date              = "2099-01-01T01:02:03Z"
 }
 `, testAccADApplicationPassword_template(applicationId), keyId, value)
+}
+
+func testAccADApplicationPassword_description(applicationId, value string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_application_password" "test" {
+  application_object_id = "${azuread_application.test.id}"
+  description           = "terraform"
+  value                 = "%s"
+  end_date              = "2099-01-01T01:02:03Z"
+}
+`, testAccADApplicationPassword_template(applicationId), value)
 }
 
 func testAccADApplicationPassword_relativeEndDate(applicationId, value string) string {

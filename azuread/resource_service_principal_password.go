@@ -105,6 +105,10 @@ func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface
 	d.Set("key_id", credential.KeyID)
 	d.Set("service_principal_id", id.ObjectId)
 
+	if description := credential.CustomKeyIdentifier; description != nil {
+		d.Set("description", string(*description))
+	}
+
 	if endDate := credential.EndDate; endDate != nil {
 		d.Set("end_date", endDate.Format(time.RFC3339))
 	}

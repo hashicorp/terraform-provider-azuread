@@ -31,6 +31,7 @@ resource "azuread_service_principal" "example" {
 
 resource "azuread_service_principal_password" "example" {
   service_principal_id = "${azuread_service_principal.example.id}"
+  description          = "My managed password"
   value                = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
   end_date             = "2099-01-01T01:02:03Z"
 }
@@ -43,6 +44,10 @@ The following arguments are supported:
 * `service_principal_id` - (Required) The ID of the Service Principal for which this password should be created. Changing this field forces a new resource to be created.
 
 * `value` - (Required) The Password for this Service Principal.
+
+* `description` - (Optional) A description for the Password.
+
+-> **NOTE:** `description` maps to the `CustomKeyIdentifier` property of the `PasswordCredentials` API resource.
 
 * `end_date` - (Optional) The End Date which the Password is valid until, formatted as a RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
 

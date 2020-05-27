@@ -54,6 +54,13 @@ func resourceApplicationPassword() *schema.Resource {
 				ValidateFunc: validate.UUID,
 			},
 
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
 			"value": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -173,6 +180,10 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("application_object_id", id.ObjectId)
 	d.Set("application_id", id.ObjectId) //todo remove in 2.0
 	d.Set("key_id", id.KeyId)
+
+	if description := credential.CustomKeyIdentifier; description != nil {
+		d.Set("description", string(*description))
+	}
 
 	if endDate := credential.EndDate; endDate != nil {
 		d.Set("end_date", endDate.Format(time.RFC3339))
