@@ -1,4 +1,9 @@
 ## 0.10.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `application` - support for setting `oauth2_permissions` [GH-252]
+
 ## 0.9.0 (May 15, 2020)
 
 DEPENDENCIES:
