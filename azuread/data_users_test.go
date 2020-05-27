@@ -71,6 +71,25 @@ func TestAccAzureADUsersDataSource_byMailNicknames(t *testing.T) {
 	})
 }
 
+func TestAccAzureADUsersDataSource_noNames(t *testing.T) {
+	dsn := "data.azuread_users.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureADUsersDataSource_noNames(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dsn, "user_principal_names.#", "0"),
+					resource.TestCheckResourceAttr(dsn, "object_ids.#", "0"),
+					resource.TestCheckResourceAttr(dsn, "mail_nicknames.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAzureADUsersDataSource_byUserPrincipalNames(id int, password string) string {
 	return fmt.Sprintf(`
 %s
@@ -99,4 +118,12 @@ data "azuread_users" "test" {
   mail_nicknames = ["${azuread_user.testA.mail_nickname}", "${azuread_user.testB.mail_nickname}"]
 }
 `, testAccADUser_threeUsersABC(id, password))
+}
+
+func testAccAzureADUsersDataSource_noNames() string {
+	return `
+data "azuread_users" "test" {
+  user_principal_names = []
+}
+`
 }

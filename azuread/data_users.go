@@ -26,7 +26,6 @@ func dataUsers() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				MinItems:      1,
 				ConflictsWith: []string{"user_principal_names"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -38,7 +37,6 @@ func dataUsers() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				MinItems:      1,
 				ConflictsWith: []string{"object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -50,7 +48,6 @@ func dataUsers() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				MinItems:      1,
 				ConflictsWith: []string{"object_ids", "user_principal_names"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -96,8 +93,6 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			users = append(users, *u)
 		}
-	} else {
-		return fmt.Errorf("one of `object_ids`, `user_principal_names` or `mail_nicknames` must be supplied")
 	}
 
 	if len(users) != expectedCount {
