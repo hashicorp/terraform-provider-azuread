@@ -211,7 +211,66 @@ func resourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
-			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
+			"oauth2_permissions": {
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"admin_consent_display_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Admin", "User"}, false),
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -229,6 +288,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	// We don't send Oauth2Permissions here because applications tend to get a default `user_impersonation` scope
+	// defined, which will either conflict if we also define it, or create an unwanted diff if we don't
+	// After creating the application, we update it later before this function returns, including any Oauth2Permissions
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
@@ -312,7 +374,9 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceApplicationRead(d, meta)
+	// After creating the application, we immediately update it to ensure we overwrite any default properties
+	// such as the `user_impersonation` scope the application may get, whether we define such a scope or not
+	return resourceApplicationUpdate(d, meta)
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -357,6 +421,32 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("required_resource_access") {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
+	}
+
+	if d.HasChange("oauth2_permissions") {
+		// if the permission already exists then it must be disabled
+		// with no other changes before it can be edited or deleted
+		var app graphrbac.Application
+		var appProperties graphrbac.ApplicationUpdateParameters
+		resp, err := client.Get(ctx, d.Id())
+		if err != nil {
+			if ar.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", d.Id())
+			}
+
+			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
+		}
+		app = resp
+		for _, OAuth2Permission := range *app.Oauth2Permissions {
+			*OAuth2Permission.IsEnabled = false
+		}
+		appProperties.Oauth2Permissions = app.Oauth2Permissions
+		if _, err := client.Patch(ctx, d.Id(), appProperties); err != nil {
+			return fmt.Errorf("Error disabling OAuth2 permissions for Azure AD Application with ID %q: %+v", d.Id(), err)
+		}
+
+		// now we can set the new state of the permission
+		properties.Oauth2Permissions = expandADApplicationOAuth2Permissions(d.Get("oauth2_permissions"))
 	}
 
 	if d.HasChange("app_role") {
@@ -629,6 +719,42 @@ func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	}
 
 	return &output
+}
+
+func expandADApplicationOAuth2Permissions(i interface{}) *[]graphrbac.OAuth2Permission {
+	input := i.(*schema.Set).List()
+	result := make([]graphrbac.OAuth2Permission, 0)
+
+	for _, raw := range input {
+		OAuth2Permissions := raw.(map[string]interface{})
+
+		AdminConsentDescription := OAuth2Permissions["admin_consent_description"].(string)
+		AdminConsentDisplayName := OAuth2Permissions["admin_consent_display_name"].(string)
+		ID := OAuth2Permissions["id"].(string)
+		if ID == "" {
+			ID = uuid.New().String()
+		}
+
+		IsEnabled := OAuth2Permissions["is_enabled"].(bool)
+		Type := OAuth2Permissions["type"].(string)
+		UserConsentDescription := OAuth2Permissions["user_consent_description"].(string)
+		UserConsentDisplayName := OAuth2Permissions["user_consent_display_name"].(string)
+		Value := OAuth2Permissions["value"].(string)
+
+		result = append(result,
+			graphrbac.OAuth2Permission{
+				AdminConsentDescription: &AdminConsentDescription,
+				AdminConsentDisplayName: &AdminConsentDisplayName,
+				ID:                      &ID,
+				IsEnabled:               &IsEnabled,
+				Type:                    &Type,
+				UserConsentDescription:  &UserConsentDescription,
+				UserConsentDisplayName:  &UserConsentDisplayName,
+				Value:                   &Value,
+			},
+		)
+	}
+	return &result
 }
 
 func adApplicationSetOwnersTo(client graphrbac.ApplicationsClient, ctx context.Context, id string, desiredOwners []string) error {

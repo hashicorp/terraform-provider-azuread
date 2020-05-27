@@ -16,6 +16,7 @@ import (
 func TestAccAzureADApplication_basic(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
+	appName := fmt.Sprintf("acctest-APP-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -26,12 +27,11 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 				Config: testAccADApplication_basic(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "name", appName),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://%s", appName)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -67,6 +67,7 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -117,6 +118,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "2"),
 				),
 			},
 			{
@@ -160,7 +162,6 @@ func TestAccAzureADApplication_http_homepage(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctest-APP-%[1]d", ri))),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -523,6 +524,59 @@ func TestAccAzureADApplication_native_app_does_not_allow_identifier_uris(t *test
 	})
 }
 
+func TestAccAzureADApplication_oauth2PermissionsUpdate(t *testing.T) {
+	resourceName := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					//resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccADApplication_oauth2Permissions(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccADApplication_oauth2PermissionsEmpty(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testCheckADApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -652,10 +706,6 @@ func testAccADApplication_complete(ri int, pw string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-data "azuread_service_principal" "test" {
-  display_name = "Terraform AzureAD Acceptance Tests"
-}
-
 resource "azuread_application" "test" {
   name                       = "acctest-APP-%[2]d"
   homepage                   = "https://homepage-%[2]d"
@@ -693,7 +743,27 @@ resource "azuread_application" "test" {
       type = "Scope"
     }
   }
-  owners = [azuread_user.test.object_id, data.azuread_service_principal.test.object_id]
+
+  oauth2_permissions {
+    admin_consent_description  = "Administer the application"
+    admin_consent_display_name = "Administer"
+    is_enabled                 = true
+    type                       = "Admin"
+    value                      = "administer"
+  }
+
+  oauth2_permissions {
+    admin_consent_description  = "Allow the application to access acctest-APP-%[2]d on behalf of the signed-in user."
+    admin_consent_display_name = "Access acctest-APP-%[2]d"
+    is_enabled                 = true
+    type                       = "User"
+    user_consent_description   = "Allow the application to access acctest-APP-%[2]d on your behalf."
+    user_consent_display_name  = "Access acctest-APP-%[2]d"
+    value                      = "user_impersonation"
+  }
+
+
+  owners = [azuread_user.test.object_id]
 }
 `, testAccADUser_basic(ri, pw), ri)
 }
@@ -753,6 +823,41 @@ resource "azuread_application" "test" {
     is_enabled           = true
     value                = "User"
   }
+}
+`, ri)
+}
+
+func testAccADApplication_oauth2Permissions(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctest-APP-%[1]d"
+
+  oauth2_permissions {
+    admin_consent_description  = "Administer the application"
+    admin_consent_display_name = "Administer"
+    is_enabled                 = true
+    type                       = "Admin"
+    value                      = "administer"
+  }
+
+  oauth2_permissions {
+    admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+    admin_consent_display_name = "Access acctest-APP-%[1]d"
+    is_enabled                 = true
+    type                       = "User"
+    user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+    user_consent_display_name  = "Access acctest-APP-%[1]d"
+    value                      = "user_impersonation"
+  }
+}
+`, ri)
+}
+
+func testAccADApplication_oauth2PermissionsEmpty(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name               = "acctest-APP-%[1]d"
+  oauth2_permissions = []
 }
 `, ri)
 }
