@@ -150,6 +150,7 @@ func resourceApplication() *schema.Resource {
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
