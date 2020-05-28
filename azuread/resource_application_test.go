@@ -833,7 +833,7 @@ resource "azuread_application" "test" {
   app_role {
     allowed_member_types = [
       "User",
-      "Application",
+      //"Application",
     ]
 
     description  = "Admins can manage roles and perform all task actions"
