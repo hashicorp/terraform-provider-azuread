@@ -66,6 +66,9 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", ri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "group_membership_claims", "All"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.0.access_token.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.0.id_token.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
@@ -117,6 +120,9 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.0.access_token.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.0.id_token.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "required_resource_access.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "2"),
 				),
@@ -133,6 +139,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "optional_claims.#", "0"),
 				),
 			},
 			{
@@ -762,6 +769,22 @@ resource "azuread_application" "test" {
     value                      = "user_impersonation"
   }
 
+  optional_claims {
+    access_token {
+      name = "myclaim"
+    }
+
+    access_token {
+      name = "otherclaim"
+    }
+
+    id_token {
+      name                  = "userclaim"
+      source                = "user"
+      essential             = true
+      additional_properties = ["emit_as_roles"]
+    }
+  }
 
   owners = [azuread_user.test.object_id]
 }

@@ -20,6 +20,51 @@ import (
 
 const resourceApplicationName = "azuread_application"
 
+func applicationOptionalClaimSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				"source": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice(
+						[]string{"user"},
+						false,
+					),
+				},
+				"essential": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"additional_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.StringInSlice(
+							[]string{
+								"dns_domain_and_sam_account_name",
+								"emit_as_roles",
+								"netbios_domain_and_sam_account_name",
+								"sam_account_name",
+							},
+							false,
+						),
+					},
+				},
+			},
+		},
+	}
+}
+
 func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceApplicationCreate,
@@ -150,6 +195,20 @@ func resourceApplication() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+					},
+				},
+			},
+
+			"optional_claims": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_token": applicationOptionalClaimSchema(),
+						"id_token":     applicationOptionalClaimSchema(),
+						// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+						//"saml_token": applicationOptionalClaimSchema(),
 					},
 				},
 			},
@@ -297,6 +356,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.BoolI(d.Get("available_to_other_tenants")),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
+		OptionalClaims:          expandADApplicationOptionalClaims(d),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -421,6 +481,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("required_resource_access") {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
+	}
+
+	if d.HasChange("optional_claims") {
+		properties.OptionalClaims = expandADApplicationOptionalClaims(d)
 	}
 
 	if d.HasChange("oauth2_permissions") {
@@ -552,6 +616,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
 	}
 
+	if err := d.Set("optional_claims", flattenADApplicationOptionalClaims(app.OptionalClaims)); err != nil {
+		return fmt.Errorf("Error setting `optional_claims`: %+v", err)
+	}
+
 	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
 		return fmt.Errorf("Error setting `app_role`: %+v", err)
 	}
@@ -675,6 +743,100 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
+}
+
+func expandADApplicationOptionalClaims(d *schema.ResourceData) *graphrbac.OptionalClaims {
+	result := graphrbac.OptionalClaims{}
+
+	for _, raw := range d.Get("optional_claims").([]interface{}) {
+		optionalClaims := raw.(map[string]interface{})
+		result.AccessToken = expandADApplicationOptionalClaim(optionalClaims["access_token"].([]interface{}))
+		result.IDToken = expandADApplicationOptionalClaim(optionalClaims["id_token"].([]interface{}))
+		// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+		//result.SamlToken = expandADApplicationOptionalClaim(optionalClaims["saml_token"].([]interface{}))
+	}
+	return &result
+}
+
+func expandADApplicationOptionalClaim(in []interface{}) *[]graphrbac.OptionalClaim {
+	optionalClaims := make([]graphrbac.OptionalClaim, 0, len(in))
+	for _, optionalClaimRaw := range in {
+		optionalClaim := optionalClaimRaw.(map[string]interface{})
+
+		name := optionalClaim["name"].(string)
+		essential := optionalClaim["essential"].(bool)
+		additionalProps := make([]string, 0)
+
+		if props := optionalClaim["additional_properties"]; props != nil {
+			for _, prop := range props.([]interface{}) {
+				additionalProps = append(additionalProps, prop.(string))
+			}
+		}
+
+		newClaim := graphrbac.OptionalClaim{
+			Name:                 &name,
+			Essential:            &essential,
+			AdditionalProperties: &additionalProps,
+		}
+
+		if source := optionalClaim["source"].(string); source != "" {
+			newClaim.Source = &source
+		}
+
+		optionalClaims = append(optionalClaims, newClaim)
+	}
+
+	return &optionalClaims
+}
+
+func flattenADApplicationOptionalClaims(in *graphrbac.OptionalClaims) interface{} {
+	optionalClaims := make(map[string]interface{})
+	if claims := flattenADApplicationOptionalClaimsList(in.AccessToken); len(claims) > 0 {
+		optionalClaims["access_token"] = claims
+	}
+	if claims := flattenADApplicationOptionalClaimsList(in.IDToken); len(claims) > 0 {
+		optionalClaims["id_token"] = claims
+	}
+	// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+	//if claims := flattenADApplicationOptionalClaimsList(in.SamlToken); len(claims) > 0 {
+	//	optionalClaims["saml_token"] = claims
+	//}
+	var result []map[string]interface{}
+	if len(optionalClaims) == 0 {
+		return result
+	}
+	result = append(result, optionalClaims)
+	return result
+}
+
+func flattenADApplicationOptionalClaimsList(in *[]graphrbac.OptionalClaim) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	optionalClaims := make([]interface{}, 0)
+	for _, claim := range *in {
+		optionalClaim := make(map[string]interface{})
+		if claim.Name != nil {
+			optionalClaim["name"] = *claim.Name
+		}
+		if claim.Source != nil {
+			optionalClaim["source"] = *claim.Source
+		}
+		if claim.Essential != nil {
+			optionalClaim["essential"] = *claim.Essential
+		}
+		additionalProperties := make([]string, 0)
+		if props := claim.AdditionalProperties; props != nil {
+			for _, prop := range props.([]interface{}) {
+				additionalProperties = append(additionalProperties, prop.(string))
+			}
+		}
+		optionalClaim["additional_properties"] = additionalProperties
+		optionalClaims = append(optionalClaims, optionalClaim)
+	}
+
+	return optionalClaims
 }
 
 func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
