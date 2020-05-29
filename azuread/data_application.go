@@ -86,6 +86,20 @@ func dataApplication() *schema.Resource {
 
 			"app_roles": graph.SchemaAppRolesComputed(),
 
+			"optional_claims": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_token": graph.SchemaOptionalClaims(),
+						"id_token":     graph.SchemaOptionalClaims(),
+						// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+						//"saml_token": graph.SchemaOptionalClaims(),
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -201,6 +215,10 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
 		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+	}
+
+	if err := d.Set("optional_claims", flattenADApplicationOptionalClaims(app.OptionalClaims)); err != nil {
+		return fmt.Errorf("setting `optional_claims`: %+v", err)
 	}
 
 	if v := app.PublicClient; v != nil && *v {
