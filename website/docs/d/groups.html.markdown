@@ -25,11 +25,11 @@ data "azuread_groups" "groups" {
 
 The following arguments are supported:
 
-* `names` - (optional) The Display Names of the Azure AD Groups.
+* `names` - (Optional) The Display Names of the Azure AD Groups.
 
 * `object_ids` - (Optional) The Object IDs of the Azure AD Groups.
 
--> **NOTE:** Either `names` or `object_ids` must be specified.
+-> **NOTE:** Either `names` or `object_ids` should be specified. Either of these _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 

@@ -26,7 +26,6 @@ func dataGroups() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				MinItems:      1,
 				ConflictsWith: []string{"names"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -38,7 +37,6 @@ func dataGroups() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				MinItems:      1,
 				ConflictsWith: []string{"object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -75,8 +73,6 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 
 			groups = append(groups, resp)
 		}
-	} else {
-		return fmt.Errorf("one of `object_ids` or `names` must be supplied")
 	}
 
 	if len(groups) != expectedCount {
