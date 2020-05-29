@@ -25,13 +25,13 @@ data "azuread_users" "users" {
 
 The following arguments are supported:
 
-* `user_principal_names` - (optional) The User Principal Names of the Azure AD Users.
+* `user_principal_names` - (Optional) The User Principal Names of the Azure AD Users.
 
 * `object_ids` - (Optional) The Object IDs of the Azure AD Users.
 
 * `mail_nicknames` - (Optional) The email aliases of the Azure AD Users.
 
--> **NOTE:** Either `user_principal_names`, `object_ids` or `mail_nicknames` must be specified.
+-> **NOTE:** Either `user_principal_names`, `object_ids` or `mail_nicknames` should be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 
