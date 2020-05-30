@@ -63,7 +63,7 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"end_date_relative"},
+			ExactlyOneOf:  []string{"end_date_relative"},
 			ValidateFunc:  validation.IsRFC3339Time,
 		},
 
@@ -71,7 +71,7 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			Type:          schema.TypeString,
 			Optional:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"end_date"},
+			ExactlyOneOf:  []string{"end_date"},
 			ValidateFunc:  validate.NoEmptyStrings,
 		},
 	}
