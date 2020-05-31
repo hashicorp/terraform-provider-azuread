@@ -113,7 +113,7 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("Error generating Application Credentials for Object ID %q: %+v", objectId, err)
 	}
-	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
 	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
@@ -148,14 +148,14 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	client := meta.(*ArmClient).applicationsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id, err := graph.ParsePasswordCredentialId(d.Id())
+	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
 	// ensure the Application Object exists
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
-		// the parent Service Principal has been removed - skip it
+		// the parent Application has been removed - skip it
 		if ar.ResponseWasNotFound(app.Response) {
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			d.SetId("")
@@ -200,7 +200,7 @@ func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{})
 	client := meta.(*ArmClient).applicationsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id, err := graph.ParsePasswordCredentialId(d.Id())
+	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
@@ -211,7 +211,7 @@ func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{})
 	// ensure the parent Application exists
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
-		// the parent Service Principal has been removed - skip it
+		// the parent Application has been removed - skip it
 		if ar.ResponseWasNotFound(app.Response) {
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
