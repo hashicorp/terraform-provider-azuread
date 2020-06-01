@@ -132,6 +132,7 @@ func TestAccAzureADApplicationCertificate_complete(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
 	value := testCertificateApplication
 
@@ -141,7 +142,7 @@ func TestAccAzureADApplicationCertificate_complete(t *testing.T) {
 		CheckDestroy: testCheckADApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplicationCertificate_complete(ri, keyId, keyType, endDate, value),
+				Config: testAccADApplicationCertificate_complete(ri, keyId, keyType, startDate, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationKeyExists(resourceName),
 				),
@@ -245,7 +246,7 @@ EOT
 `, testAccADApplicationCertificate_template(ri), keyType, endDate, value)
 }
 
-func testAccADApplicationCertificate_complete(ri int, keyId, keyType, endDate, value string) string {
+func testAccADApplicationCertificate_complete(ri int, keyId, keyType, startDate, endDate, value string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -253,12 +254,13 @@ resource "azuread_application_certificate" "test" {
   application_object_id = "${azuread_application.test.id}"
   key_id                = "%s"
   type                  = "%s"
+  start_date            = "%s"
   end_date              = "%s"
   value                 = <<EOT
 %s
 EOT
 }
-`, testAccADApplicationCertificate_template(ri), keyId, keyType, endDate, value)
+`, testAccADApplicationCertificate_template(ri), keyId, keyType, startDate, endDate, value)
 }
 
 func testAccADApplicationCertificate_relativeEndDate(ri int, keyType, value string) string {

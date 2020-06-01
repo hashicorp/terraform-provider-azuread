@@ -132,6 +132,7 @@ func TestAccAzureADServicePrincipalCertificate_complete(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
 	value := testCertificateServicePrincipal
 
@@ -141,7 +142,7 @@ func TestAccAzureADServicePrincipalCertificate_complete(t *testing.T) {
 		CheckDestroy: testCheckADServicePrincipalKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADServicePrincipalCertificate_complete(ri, keyId, keyType, endDate, value),
+				Config: testAccADServicePrincipalCertificate_complete(ri, keyId, keyType, startDate, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADServicePrincipalKeyExists(resourceName),
 				),
@@ -249,7 +250,7 @@ EOT
 `, testAccADServicePrincipalCertificate_template(ri), keyType, endDate, value)
 }
 
-func testAccADServicePrincipalCertificate_complete(ri int, keyId, keyType, endDate, value string) string {
+func testAccADServicePrincipalCertificate_complete(ri int, keyId, keyType, startDate, endDate, value string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -257,12 +258,13 @@ resource "azuread_service_principal_certificate" "test" {
   service_principal_id = "${azuread_service_principal.test.id}"
   key_id               = "%s"
   type                 = "%s"
+  start_date           = "%s"
   end_date             = "%s"
   value                = <<EOT
 %s
 EOT
 }
-`, testAccADServicePrincipalCertificate_template(ri), keyId, keyType, endDate, value)
+`, testAccADServicePrincipalCertificate_template(ri), keyId, keyType, startDate, endDate, value)
 }
 
 func testAccADServicePrincipalCertificate_relativeEndDate(ri int, keyType, value string) string {
