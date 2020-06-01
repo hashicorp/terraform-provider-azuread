@@ -105,7 +105,7 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 	d.Set("key_id", id.KeyId)
 
 	if keyType := credential.Type; keyType != nil {
-		d.Set("type", *keyType)
+		d.Set("type", keyType)
 	}
 
 	if endDate := credential.EndDate; endDate != nil {
