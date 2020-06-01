@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 )
 
-const testCertificateApplication string = `-----BEGIN CERTIFICATE-----
+const testCertificateServicePrincipal string = `-----BEGIN CERTIFICATE-----
 MIIDGjCCAgICCQDAQlCA1jw1BjANBgkqhkiG9w0BAQsFADBPMQswCQYDVQQGEwJV
 UzELMAkGA1UECAwCQ0ExFzAVBgNVBAoMDkhhc2hpQ29ycCwgSW5jMRowGAYDVQQD
 DBFoYXNoaWNvcnB0ZXN0LmNvbTAeFw0yMDA1MzEyMDI2MTFaFw0yMTA1MzEyMDI2
@@ -34,9 +34,9 @@ HraQzsK7BNxC5NSwwirT95JH+Xd8rvWu+bCveJz3mnZ3sgolCoxL6Hv1uD2UOZb5
 rCHdW31vp5PYNJaSkYL0j259Ogb8crkIzDr3Z8YF
 -----END CERTIFICATE-----`
 
-func testCheckADApplicationKeyExists(name string) resource.TestCheckFunc { //nolint unparam
+func testCheckADServicePrincipalKeyExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
-		client := testAccProvider.Meta().(*ArmClient).applicationsClient
+		client := testAccProvider.Meta().(*ArmClient).servicePrincipalsClient
 		ctx := testAccProvider.Meta().(*ArmClient).StopContext
 
 		rs, ok := s.RootModule().Resources[name]
@@ -46,19 +46,19 @@ func testCheckADApplicationKeyExists(name string) resource.TestCheckFunc { //nol
 
 		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("parsing Application Key Credential ID: %v", err)
+			return fmt.Errorf("parsing Service Principal Key Credential ID: %v", err)
 		}
 		resp, err := client.Get(ctx, id.ObjectId)
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Application %q does not exist", id.ObjectId)
+				return fmt.Errorf("Bad: Azure AD Service Principal %q does not exist", id.ObjectId)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD applicationsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on Azure AD servicePrincipalsClient: %+v", err)
 		}
 
 		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 		if err != nil {
-			return fmt.Errorf("Error Listing Key Credentials for Application %q: %+v", id.ObjectId, err)
+			return fmt.Errorf("Error Listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
 		}
 
 		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -66,22 +66,22 @@ func testCheckADApplicationKeyExists(name string) resource.TestCheckFunc { //nol
 			return nil
 		}
 
-		return fmt.Errorf("Key Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
+		return fmt.Errorf("Key Credential %q was not found in Service Principal %q", id.KeyId, id.ObjectId)
 	}
 }
 
-func testCheckADApplicationKeyCheckDestroy(s *terraform.State) error {
+func testCheckADServicePrincipalKeyCheckDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		client := testAccProvider.Meta().(*ArmClient).applicationsClient
+		client := testAccProvider.Meta().(*ArmClient).servicePrincipalsClient
 		ctx := testAccProvider.Meta().(*ArmClient).StopContext
 
-		if rs.Type != "azuread_application_certificate" {
+		if rs.Type != "azuread_service_principal_certificate" {
 			continue
 		}
 
 		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing Application Credential ID: %v", err)
+			return fmt.Errorf("error parsing Service Principal Credential ID: %v", err)
 		}
 
 		resp, err := client.Get(ctx, id.ObjectId)
@@ -93,28 +93,28 @@ func testCheckADApplicationKeyCheckDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Azure AD Application Key Credential still exists:\n%#v", resp)
+		return fmt.Errorf("Azure AD Service Principal Key Credential still exists:\n%#v", resp)
 	}
 
 	return nil
 }
 
-func TestAccAzureADApplicationCertificate_basic(t *testing.T) {
-	resourceName := "azuread_application_certificate.test"
+func TestAccAzureADServicePrincipalCertificate_basic(t *testing.T) {
+	resourceName := "azuread_service_principal_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	value := testCertificateServicePrincipal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationKeyCheckDestroy,
+		CheckDestroy: testCheckADServicePrincipalKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADObjectCertificateApplication_basic(ri, keyType, endDate, value),
+				Config: testAccADObjectCertificateServicePrincipal_basic(ri, keyType, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationKeyExists(resourceName),
+					testCheckADServicePrincipalKeyExists(resourceName),
 				),
 			},
 			{
@@ -127,23 +127,23 @@ func TestAccAzureADApplicationCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationCertificate_complete(t *testing.T) {
-	resourceName := "azuread_application_certificate.test"
+func TestAccAzureADServicePrincipalCertificate_complete(t *testing.T) {
+	resourceName := "azuread_service_principal_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	value := testCertificateServicePrincipal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationKeyCheckDestroy,
+		CheckDestroy: testCheckADServicePrincipalKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplicationCertificate_complete(ri, keyId, keyType, endDate, value),
+				Config: testAccADServicePrincipalCertificate_complete(ri, keyId, keyType, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationKeyExists(resourceName),
+					testCheckADServicePrincipalKeyExists(resourceName),
 				),
 			},
 			{
@@ -156,22 +156,22 @@ func TestAccAzureADApplicationCertificate_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationCertificate_relativeEndDate(t *testing.T) {
-	resourceName := "azuread_application_certificate.test"
+func TestAccAzureADServicePrincipalCertificate_relativeEndDate(t *testing.T) {
+	resourceName := "azuread_service_principal_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyType := "AsymmetricX509Cert"
-	value := testCertificateApplication
+	value := testCertificateServicePrincipal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationKeyCheckDestroy,
+		CheckDestroy: testCheckADServicePrincipalKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplicationCertificate_relativeEndDate(ri, keyType, value),
+				Config: testAccADServicePrincipalCertificate_relativeEndDate(ri, keyType, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
-					testCheckADApplicationKeyExists(resourceName),
+					testCheckADServicePrincipalKeyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "end_date"),
 				),
 			},
@@ -185,27 +185,27 @@ func TestAccAzureADApplicationCertificate_relativeEndDate(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationCertificate_requiresImport(t *testing.T) {
+func TestAccAzureADServicePrincipalCertificate_requiresImport(t *testing.T) {
 	if !requireResourcesToBeImported {
 		t.Skip("Skipping since resources aren't required to be imported")
 		return
 	}
 
-	resourceName := "azuread_application_certificate.test"
+	resourceName := "azuread_service_principal_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	value := testCertificateServicePrincipal
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testCheckADApplicationKeyCheckDestroy,
+		CheckDestroy: testCheckADServicePrincipalKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADObjectCertificateApplication_basic(ri, keyType, endDate, value),
+				Config: testAccADObjectCertificateServicePrincipal_basic(ri, keyType, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckADApplicationKeyExists(resourceName),
+					testCheckADServicePrincipalKeyExists(resourceName),
 				),
 			},
 			{
@@ -215,78 +215,82 @@ func TestAccAzureADApplicationCertificate_requiresImport(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"value"},
 			},
 			{
-				Config:      testAccADApplicationCertificate_requiresImport(ri, keyType, endDate, value),
-				ExpectError: testRequiresImportError("azuread_application_certificate"),
+				Config:      testAccADServicePrincipalCertificate_requiresImport(ri, keyType, endDate, value),
+				ExpectError: testRequiresImportError("azuread_service_principal_certificate"),
 			},
 		},
 	})
 }
 
-func testAccADApplicationCertificate_template(ri int) string {
+func testAccADServicePrincipalCertificate_template(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctestApp-%d"
 }
+
+resource "azuread_service_principal" "test" {
+  application_id = "${azuread_application.test.application_id}"
+}
 `, ri)
 }
 
-func testAccADObjectCertificateApplication_basic(ri int, keyType, endDate, value string) string {
+func testAccADObjectCertificateServicePrincipal_basic(ri int, keyType, endDate, value string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
-  type                  = "%s"
-  end_date              = "%s"
-  value                 = <<EOT
+resource "azuread_service_principal_certificate" "test" {
+  service_principal_id = "${azuread_service_principal.test.id}"
+  type                 = "%s"
+  end_date             = "%s"
+  value                = <<EOT
 %s
 EOT
 }
-`, testAccADApplicationCertificate_template(ri), keyType, endDate, value)
+`, testAccADServicePrincipalCertificate_template(ri), keyType, endDate, value)
 }
 
-func testAccADApplicationCertificate_complete(ri int, keyId, keyType, endDate, value string) string {
+func testAccADServicePrincipalCertificate_complete(ri int, keyId, keyType, endDate, value string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
-  key_id                = "%s"
-  type                  = "%s"
-  end_date              = "%s"
-  value                 = <<EOT
+resource "azuread_service_principal_certificate" "test" {
+  service_principal_id = "${azuread_service_principal.test.id}"
+  key_id               = "%s"
+  type                 = "%s"
+  end_date             = "%s"
+  value                = <<EOT
 %s
 EOT
 }
-`, testAccADApplicationCertificate_template(ri), keyId, keyType, endDate, value)
+`, testAccADServicePrincipalCertificate_template(ri), keyId, keyType, endDate, value)
 }
 
-func testAccADApplicationCertificate_relativeEndDate(ri int, keyType, value string) string {
+func testAccADServicePrincipalCertificate_relativeEndDate(ri int, keyType, value string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
-  end_date_relative     = "8736h"
-  type                  = "%s"
-  value                 = <<EOT
+resource "azuread_service_principal_certificate" "test" {
+  service_principal_id = "${azuread_service_principal.test.id}"
+  end_date_relative    = "8736h"
+  type                 = "%s"
+  value                = <<EOT
 %s
 EOT
 }
-`, testAccADApplicationCertificate_template(ri), keyType, value)
+`, testAccADServicePrincipalCertificate_template(ri), keyType, value)
 }
 
-func testAccADApplicationCertificate_requiresImport(ri int, keyType, endDate, value string) string {
-	template := testAccADObjectCertificateApplication_basic(ri, keyType, endDate, value)
+func testAccADServicePrincipalCertificate_requiresImport(ri int, keyType, endDate, value string) string {
+	template := testAccADObjectCertificateServicePrincipal_basic(ri, keyType, endDate, value)
 	return fmt.Sprintf(`
 %s
 
-resource "azuread_application_certificate" "import" {
-  application_object_id = "${azuread_application_certificate.test.application_object_id}"
-  key_id                = "${azuread_application_certificate.test.key_id}"
-  type                  = "${azuread_application_certificate.test.type}"
-  end_date              = "${azuread_application_certificate.test.end_date}"
-  value                 = "${azuread_application_certificate.test.value}"
+resource "azuread_service_principal_certificate" "import" {
+  service_principal_id = "${azuread_service_principal_certificate.test.service_principal_id}"
+  key_id               = "${azuread_service_principal_certificate.test.key_id}"
+  type                 = "${azuread_service_principal_certificate.test.type}"
+  end_date             = "${azuread_service_principal_certificate.test.end_date}"
+  value                = "${azuread_service_principal_certificate.test.value}"
 }
 `, template)
 }

@@ -12,25 +12,25 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
-func resourceApplicationCertificate() *schema.Resource {
+func resourceServicePrincipalCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationCertificateCreate,
-		Read:   resourceApplicationCertificateRead,
-		Delete: resourceApplicationCertificateDelete,
+		Create: resourceServicePrincipalCertificateCreate,
+		Read:   resourceServicePrincipalCertificateRead,
+		Delete: resourceServicePrincipalCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: graph.CertificateResourceSchema("application"),
+		Schema: graph.CertificateResourceSchema("service_principal"),
 	}
 }
 
-func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).applicationsClient
+func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	objectId := d.Get("application_object_id").(string)
+	objectId := d.Get("service_principal_id").(string)
 
 	cred, err := graph.KeyCredentialForResource(d)
 	if err != nil {
@@ -38,58 +38,58 @@ func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface
 	}
 	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
 
-	tf.LockByName(resourceApplicationName, id.ObjectId)
-	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
+	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
+	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
 	existingCreds, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for application with object ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing certificate credentials for service principal with ID %q: %+v", id.ObjectId, err)
 	}
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred, true)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_certificate", id.String())
+		return tf.ImportAsExistsError("azuread_service_principal_certificate", id.String())
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("creating certificate credentials %q for application with object ID %q: %+v", id.KeyId, id.ObjectId, err)
+		return fmt.Errorf("creating certificate credentials %q for service principal with ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
 	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for certificate credential replication for application (AppID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+		return fmt.Errorf("waiting for certificate credential replication for service principal (ID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
 	}
 
 	d.SetId(id.String())
 
-	return resourceApplicationCertificateRead(d, meta)
+	return resourceServicePrincipalCertificateRead(d, meta)
 }
 
-func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).applicationsClient
+func resourceServicePrincipalCertificateRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing certificate credential with ID: %v", err)
 	}
-	// ensure the Application Object exists
-	app, err := client.Get(ctx, id.ObjectId)
+	// ensure the Service Principal Object exists
+	sp, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
-		// the parent Application has been removed - skip it
-		if ar.ResponseWasNotFound(app.Response) {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
+		// the parent Service Principal has been removed - skip it
+		if ar.ResponseWasNotFound(sp.Response) {
+			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving application with ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("retrieving service principal with ID %q: %+v", id.ObjectId, err)
 	}
 
 	credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for application with object ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing certificate credentials for service principal with ID %q: %+v", id.ObjectId, err)
 	}
 
 	credential := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -100,7 +100,7 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// todo, move this into a graph helper function?
-	d.Set("application_object_id", id.ObjectId)
+	d.Set("service_principal_id", id.ObjectId)
 	d.Set("key_id", id.KeyId)
 
 	if keyType := credential.Type; keyType != nil {
@@ -118,8 +118,8 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceApplicationCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ArmClient).applicationsClient
+func resourceServicePrincipalCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
@@ -127,28 +127,28 @@ func resourceApplicationCertificateDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("parsing certificate credential with ID: %v", err)
 	}
 
-	tf.LockByName(resourceApplicationName, id.ObjectId)
-	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
+	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
+	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	// ensure the parent Application exists
-	app, err := client.Get(ctx, id.ObjectId)
+	// ensure the parent Service Principal exists
+	sp, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
-		// the parent Application has been removed - skip it
-		if ar.ResponseWasNotFound(app.Response) {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
+		// the parent Service Principal has been removed - skip it
+		if ar.ResponseWasNotFound(sp.Response) {
+			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("retrieving application with ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("retrieving service principal with ID %q: %+v", id.ObjectId, err)
 	}
 
 	existing, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for application %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing certificate credentials for service principal %q: %+v", id.ObjectId, err)
 	}
 
 	newCreds := graph.KeyCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("removing certificate credentials %q from application with object ID %q: %+v", id.KeyId, id.ObjectId, err)
+		return fmt.Errorf("removing certificate credentials %q from service principal with ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
 	return nil

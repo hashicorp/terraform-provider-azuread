@@ -19,6 +19,77 @@ import (
 )
 
 // valid types are `application` and `service_principal`
+func CertificateResourceSchema(object_type string) map[string]*schema.Schema {
+	var idAttribute string
+
+	switch object_type {
+	case "application":
+		idAttribute = "application_object_id"
+	case "service_principal":
+		idAttribute = "service_principal_id"
+	}
+
+	return map[string]*schema.Schema{
+		idAttribute: {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+		},
+
+		"key_id": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+		},
+
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+			ValidateFunc: validation.StringInSlice([]string{
+				"AsymmetricX509Cert",
+				"Symmetric",
+			}, false),
+		},
+
+		"value": {
+			Type:      schema.TypeString,
+			Required:  true,
+			ForceNew:  true,
+			Sensitive: true,
+		},
+
+		"start_date": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.IsRFC3339Time,
+		},
+
+		"end_date": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			Computed:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"end_date_relative"},
+			ValidateFunc:  validation.IsRFC3339Time,
+		},
+
+		"end_date_relative": {
+			Type:          schema.TypeString,
+			Optional:      true,
+			ForceNew:      true,
+			ConflictsWith: []string{"end_date"},
+			ValidateFunc:  validate.NoEmptyStrings,
+		},
+	}
+}
+
+// valid types are `application` and `service_principal`
 func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		object_type + "_id": {
