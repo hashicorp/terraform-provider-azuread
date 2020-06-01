@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
@@ -104,7 +105,7 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 	d.Set("key_id", id.KeyId)
 
 	if keyType := credential.Type; keyType != nil {
-		d.Set("type", string(*keyType))
+		d.Set("type", *keyType)
 	}
 
 	if endDate := credential.EndDate; endDate != nil {

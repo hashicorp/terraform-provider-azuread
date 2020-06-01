@@ -2,7 +2,6 @@ package azuread
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"testing"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 )
 
 const testCertificateApplication string = `-----BEGIN CERTIFICATE-----
