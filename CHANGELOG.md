@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+* `azuread_application` - support setting `optional_claims` for access tokens and ID tokens [GH-260]
 * `azuread_application` - support for setting `oauth2_permissions` [GH-252]
 * `azuread_application_password` - support setting a `description` [GH-253]
 * `azuread_service_principal_password` - support setting a `description` [GH-253]
