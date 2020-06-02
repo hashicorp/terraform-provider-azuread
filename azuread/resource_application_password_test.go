@@ -22,7 +22,7 @@ func testCheckADApplicationPasswordExists(name string) resource.TestCheckFunc { 
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		id, err := graph.ParsePasswordCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
 		}
@@ -57,7 +57,7 @@ func testCheckADApplicationPasswordCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id, err := graph.ParsePasswordCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
 		}
@@ -263,7 +263,7 @@ func testAccADApplicationPassword_requiresImport(applicationId, value string) st
 %s
 
 resource "azuread_application_password" "import" {
-  application_object_id = "${azuread_application_password.test.application_id}"
+  application_object_id = "${azuread_application_password.test.application_object_id}"
   key_id                = "${azuread_application_password.test.key_id}"
   value                 = "${azuread_application_password.test.value}"
   end_date              = "${azuread_application_password.test.end_date}"

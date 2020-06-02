@@ -37,7 +37,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("Error generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
 	}
-	id := graph.PasswordCredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
@@ -72,7 +72,7 @@ func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface
 	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id, err := graph.ParsePasswordCredentialId(d.Id())
+	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
@@ -124,7 +124,7 @@ func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interfa
 	client := meta.(*ArmClient).servicePrincipalsClient
 	ctx := meta.(*ArmClient).StopContext
 
-	id, err := graph.ParsePasswordCredentialId(d.Id())
+	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
 		return fmt.Errorf("Error parsing Application Password ID: %v", err)
 	}
