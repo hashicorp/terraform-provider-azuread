@@ -103,7 +103,7 @@ func TestAccAzureADApplicationCertificate_basic(t *testing.T) {
 	resourceName := "azuread_application_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 0, 360).UTC().Format(time.RFC3339)
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +133,7 @@ func TestAccAzureADApplicationCertificate_complete(t *testing.T) {
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 0, 360).UTC().Format(time.RFC3339)
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -195,7 +195,7 @@ func TestAccAzureADApplicationCertificate_requiresImport(t *testing.T) {
 	resourceName := "azuread_application_certificate.test"
 	ri := tf.AccRandTimeInt()
 	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 0, 364).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 0, 360).UTC().Format(time.RFC3339)
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -269,7 +269,7 @@ func testAccADApplicationCertificate_relativeEndDate(ri int, keyType, value stri
 
 resource "azuread_application_certificate" "test" {
   application_object_id = "${azuread_application.test.id}"
-  end_date_relative     = "8736h"
+  end_date_relative     = "8640h"
   type                  = "%s"
   value                 = <<EOT
 %s
