@@ -26,10 +26,10 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_application_password" "example" {
-  application_id = "${azuread_application.example.id}"
-  description    = "My managed password"
-  value          = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
-  end_date       = "2099-01-01T01:02:03Z"
+  application_object_id = "${azuread_application.example.id}"
+  description           = "My managed password"
+  value                 = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
+  end_date              = "2099-01-01T01:02:03Z"
 }
 ```
 

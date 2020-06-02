@@ -59,20 +59,20 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 		},
 
 		"end_date": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			Computed:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"end_date_relative"},
-			ValidateFunc:  validation.IsRFC3339Time,
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ExactlyOneOf: []string{"end_date_relative"},
+			ValidateFunc: validation.IsRFC3339Time,
 		},
 
 		"end_date_relative": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"end_date"},
-			ValidateFunc:  validate.NoEmptyStrings,
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ExactlyOneOf: []string{"end_date"},
+			ValidateFunc: validate.NoEmptyStrings,
 		},
 	}
 }
