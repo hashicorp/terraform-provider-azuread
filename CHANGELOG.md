@@ -9,6 +9,10 @@ IMPROVEMENTS:
 * `data.azuread_users` - support empty lists for `user_principal_names`/`object_ids`/`mail_nicknames` arguments [GH-258]
 * `data.azuread_groups` - support empty lists for `names`/`object_ids` arguments [GH-257]
 
+BUG FIXES:
+
+* `azuread_application_password` and `azuread_service_principal_password` - Plan-time validation for `end_date` / `end_date_relative`
+
 ## 0.9.0 (May 15, 2020)
 
 DEPENDENCIES:
