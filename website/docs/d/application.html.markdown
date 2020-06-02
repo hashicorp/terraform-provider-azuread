@@ -54,6 +54,8 @@ The following attributes are exported:
 
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 
+* `optional_claims` - A collection of `access_token` or `id_token` blocks as documented below which list the optional claims configured for each token type. For more information see https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-optional-claims
+
 * `owners` - A list of User Object IDs that are assigned ownership of the application registration.
 
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
@@ -79,6 +81,15 @@ The following attributes are exported:
 * `id` - The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes. 
 
 * `type` - Specifies whether the id property references an `OAuth2Permission` or an `AppRole`.
+
+---
+
+`access_token` and/or `id_token` blocks export the following:
+
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `additional_properties` - List of Additional Properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim.
 
 ---
 

@@ -154,6 +154,20 @@ func resourceApplication() *schema.Resource {
 				},
 			},
 
+			"optional_claims": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_token": graph.SchemaOptionalClaims(),
+						"id_token":     graph.SchemaOptionalClaims(),
+						// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+						//"saml_token": graph.SchemaOptionalClaims(),
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -297,6 +311,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: p.BoolI(d.Get("available_to_other_tenants")),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
+		OptionalClaims:          expandADApplicationOptionalClaims(d),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -337,7 +352,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Application with ObjectId %q: %+v", *app.ObjectID, err)
+		return fmt.Errorf("waiting for Application with ObjectId %q: %+v", *app.ObjectID, err)
 	}
 
 	// follow suggested hack for azure-cli
@@ -423,6 +438,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.RequiredResourceAccess = expandADApplicationRequiredResourceAccess(d)
 	}
 
+	if d.HasChange("optional_claims") {
+		properties.OptionalClaims = expandADApplicationOptionalClaims(d)
+	}
+
 	if d.HasChange("oauth2_permissions") {
 		// if the permission already exists then it must be disabled
 		// with no other changes before it can be edited or deleted
@@ -431,10 +450,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		resp, err := client.Get(ctx, d.Id())
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", d.Id())
+				return fmt.Errorf("AzureAD Application with ID %q was not found", d.Id())
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
 		}
 		app = resp
 		for _, OAuth2Permission := range *app.Oauth2Permissions {
@@ -442,7 +461,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		appProperties.Oauth2Permissions = app.Oauth2Permissions
 		if _, err := client.Patch(ctx, d.Id(), appProperties); err != nil {
-			return fmt.Errorf("Error disabling OAuth2 permissions for Azure AD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("disabling OAuth2 permissions for Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 
 		// now we can set the new state of the permission
@@ -457,10 +476,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		resp, err := client.Get(ctx, d.Id())
 		if err != nil {
 			if ar.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", d.Id())
+				return fmt.Errorf("AzureAD Application with ID %q was not found", d.Id())
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("making Read request on AzureAD Application with ID %q: %+v", d.Id(), err)
 		}
 		app = resp
 		for _, appRole := range *app.AppRoles {
@@ -468,7 +487,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		appRolesProperties.AppRoles = app.AppRoles
 		if _, err := client.Patch(ctx, d.Id(), appRolesProperties); err != nil {
-			return fmt.Errorf("Error disabling App Roles for Azure AD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("disabling App Roles for Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 
 		// now we can set the new state of the app role
@@ -488,12 +507,12 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			properties.PublicClient = p.Bool(true)
 			properties.IdentifierUris = &[]string{}
 		default:
-			return fmt.Errorf("Error paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
+			return fmt.Errorf("paching Azure AD Application with ID %q: Unknow application type %v. Supported types are [webapp/api, native]", d.Id(), appType)
 		}
 	}
 
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-		return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
+		return fmt.Errorf("patching Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
 
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
@@ -518,7 +537,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return fmt.Errorf("Error retrieving Azure AD Application with ID %q: %+v", d.Id(), err)
+		return fmt.Errorf("retrieving Azure AD Application with ID %q: %+v", d.Id(), err)
 	}
 
 	d.Set("name", app.DisplayName)
@@ -537,35 +556,39 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return fmt.Errorf("Error setting `group_membership_claims`: %+v", err)
+		return fmt.Errorf("setting `group_membership_claims`: %+v", err)
 	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
+		return fmt.Errorf("setting `identifier_uris`: %+v", err)
 	}
 
 	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
+		return fmt.Errorf("setting `reply_urls`: %+v", err)
 	}
 
 	if err := d.Set("required_resource_access", flattenADApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+		return fmt.Errorf("setting `required_resource_access`: %+v", err)
+	}
+
+	if err := d.Set("optional_claims", flattenADApplicationOptionalClaims(app.OptionalClaims)); err != nil {
+		return fmt.Errorf("setting `optional_claims`: %+v", err)
 	}
 
 	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return fmt.Errorf("Error setting `app_role`: %+v", err)
+		return fmt.Errorf("setting `app_role`: %+v", err)
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
+		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
 	}
 
 	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error getting owners for Application %q: %+v", *app.ObjectID, err)
+		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("Error setting `owners`: %+v", err)
+		return fmt.Errorf("setting `owners`: %+v", err)
 	}
 
 	return nil
@@ -584,14 +607,14 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-			return fmt.Errorf("Error patching Azure AD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("patching Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 	}
 
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !ar.ResponseWasNotFound(resp) {
-			return fmt.Errorf("Error Deleting Azure AD Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("Deleting Azure AD Application with ID %q: %+v", d.Id(), err)
 		}
 	}
 
@@ -675,6 +698,100 @@ func flattenADApplicationResourceAccess(in *[]graphrbac.ResourceAccess) []interf
 	}
 
 	return accesses
+}
+
+func expandADApplicationOptionalClaims(d *schema.ResourceData) *graphrbac.OptionalClaims {
+	result := graphrbac.OptionalClaims{}
+
+	for _, raw := range d.Get("optional_claims").([]interface{}) {
+		optionalClaims := raw.(map[string]interface{})
+		result.AccessToken = expandADApplicationOptionalClaim(optionalClaims["access_token"].([]interface{}))
+		result.IDToken = expandADApplicationOptionalClaim(optionalClaims["id_token"].([]interface{}))
+		// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+		//result.SamlToken = expandADApplicationOptionalClaim(optionalClaims["saml_token"].([]interface{}))
+	}
+	return &result
+}
+
+func expandADApplicationOptionalClaim(in []interface{}) *[]graphrbac.OptionalClaim {
+	optionalClaims := make([]graphrbac.OptionalClaim, 0, len(in))
+	for _, optionalClaimRaw := range in {
+		optionalClaim := optionalClaimRaw.(map[string]interface{})
+
+		name := optionalClaim["name"].(string)
+		essential := optionalClaim["essential"].(bool)
+		additionalProps := make([]string, 0)
+
+		if props := optionalClaim["additional_properties"]; props != nil {
+			for _, prop := range props.([]interface{}) {
+				additionalProps = append(additionalProps, prop.(string))
+			}
+		}
+
+		newClaim := graphrbac.OptionalClaim{
+			Name:                 &name,
+			Essential:            &essential,
+			AdditionalProperties: &additionalProps,
+		}
+
+		if source := optionalClaim["source"].(string); source != "" {
+			newClaim.Source = &source
+		}
+
+		optionalClaims = append(optionalClaims, newClaim)
+	}
+
+	return &optionalClaims
+}
+
+func flattenADApplicationOptionalClaims(in *graphrbac.OptionalClaims) interface{} {
+	optionalClaims := make(map[string]interface{})
+	if claims := flattenADApplicationOptionalClaimsList(in.AccessToken); len(claims) > 0 {
+		optionalClaims["access_token"] = claims
+	}
+	if claims := flattenADApplicationOptionalClaimsList(in.IDToken); len(claims) > 0 {
+		optionalClaims["id_token"] = claims
+	}
+	// TODO: enable when https://github.com/Azure/azure-sdk-for-go/issues/9714 resolved
+	//if claims := flattenADApplicationOptionalClaimsList(in.SamlToken); len(claims) > 0 {
+	//	optionalClaims["saml_token"] = claims
+	//}
+	var result []map[string]interface{}
+	if len(optionalClaims) == 0 {
+		return result
+	}
+	result = append(result, optionalClaims)
+	return result
+}
+
+func flattenADApplicationOptionalClaimsList(in *[]graphrbac.OptionalClaim) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	optionalClaims := make([]interface{}, 0)
+	for _, claim := range *in {
+		optionalClaim := make(map[string]interface{})
+		if claim.Name != nil {
+			optionalClaim["name"] = *claim.Name
+		}
+		if claim.Source != nil {
+			optionalClaim["source"] = *claim.Source
+		}
+		if claim.Essential != nil {
+			optionalClaim["essential"] = *claim.Essential
+		}
+		additionalProperties := make([]string, 0)
+		if props := claim.AdditionalProperties; props != nil {
+			for _, prop := range props.([]interface{}) {
+				additionalProperties = append(additionalProperties, prop.(string))
+			}
+		}
+		optionalClaim["additional_properties"] = additionalProperties
+		optionalClaims = append(optionalClaims, optionalClaim)
+	}
+
+	return optionalClaims
 }
 
 func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
@@ -775,7 +892,7 @@ func adApplicationSetOwnersTo(client graphrbac.ApplicationsClient, ctx context.C
 		log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", ownerToDelete, id)
 		if resp, err := client.RemoveOwner(ctx, id, ownerToDelete); err != nil {
 			if !ar.ResponseWasNotFound(resp) {
-				return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, id, err)
+				return fmt.Errorf("Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, id, err)
 			}
 		}
 	}

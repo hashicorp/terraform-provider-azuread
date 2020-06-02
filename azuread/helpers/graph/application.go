@@ -7,6 +7,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func SchemaAppRolesComputed() *schema.Schema {
@@ -97,6 +98,51 @@ func SchemaOauth2PermissionsComputed() *schema.Schema {
 				"value": {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func SchemaOptionalClaims() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+
+				"source": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.StringInSlice(
+						[]string{"user"},
+						false,
+					),
+				},
+				"essential": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"additional_properties": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.StringInSlice(
+							[]string{
+								"dns_domain_and_sam_account_name",
+								"emit_as_roles",
+								"netbios_domain_and_sam_account_name",
+								"sam_account_name",
+							},
+							false,
+						),
+					},
 				},
 			},
 		},

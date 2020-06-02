@@ -83,6 +83,23 @@ resource "azuread_application" "example" {
     type                       = "Admin"
     value                      = "administer"
   }
+
+  optional_claims {
+    access_token {
+      name = "myclaim"
+    }
+
+    access_token {
+      name = "otherclaim"
+    }
+
+    id_token {
+      name                  = "userclaim"
+      source                = "user"
+      essential             = true
+      additional_properties = ["emit_as_roles"]
+    }
+  }
 }
 ```
 
@@ -107,6 +124,8 @@ The following arguments are supported:
 * `oauth2_allow_implicit_flow` - (Optional) Does this Azure AD Application allow OAuth2.0 implicit flow tokens? Defaults to `false`.
 
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Defaults to `SecurityGroup`. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
+
+* `optional_claims` - A collection of `access_token` or `id_token` blocks as documented below which list the optional claims configured for each token type. For more information see https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-optional-claims
 
 * `owners` - (Optional) A list of Azure AD Object IDs that will be granted ownership of the application. Defaults to the Object ID of the caller creating the application. If a list is specified the caller Object ID will no longer be included unless explicitly added to the list. 
 
@@ -133,6 +152,15 @@ The following arguments are supported:
 * `id` - (Required) The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes.
 
 * `type` - (Required) Specifies whether the id property references an `OAuth2Permission` or an `AppRole`. Possible values are `Scope` or `Role`.
+
+---
+
+`access_token` and/or `id_token` blocks support the following:
+
+* `name` - The name of the optional claim.
+* `source` - The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object.
+* `essential` - Whether the claim specified by the client is necessary to ensure a smooth authorization experience.
+* `additional_properties` - List of Additional Properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim.
 
 ---
 
