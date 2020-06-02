@@ -1,5 +1,10 @@
 ## 0.10.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `azuread_application_certificate` [GH-262]
+* **New Resource:** `azuread_service_principal_certificate` [GH-262]
+
 IMPROVEMENTS:
 
 * `azuread_application` - support setting `optional_claims` for access tokens and ID tokens [GH-260]
