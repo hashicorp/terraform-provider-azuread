@@ -57,10 +57,10 @@ The following attributes are exported:
 
 ## Import
 
-Certificates can be imported using the `object id` of an Application, e.g.
+Certificates can be imported using the `object id` of an Application and the `key id` of the certificate, e.g.
 
 ```shell
-terraform import azuread_application_certificate.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
+terraform import azuread_application_certificate.test 00000000-0000-0000-0000-000000000000/certificate/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the Certificate's Key ID in the format `{ObjectId}/{CertificateKeyId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID, the string "certificate" and the Certificate's Key ID in the format `{ObjectId}/certificate/{CertificateKeyId}`.

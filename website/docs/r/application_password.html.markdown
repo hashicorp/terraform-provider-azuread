@@ -64,10 +64,10 @@ The following attributes are exported:
 
 ## Import
 
-Passwords can be imported using the `object id` of an Application, e.g.
+Passwords can be imported using the `object id` of an Application and the `key id` of the password, e.g.
 
 ```shell
-terraform import azuread_application_password.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
+terraform import azuread_application_password.test 00000000-0000-0000-0000-000000000000/password/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the Password's Key ID in the format `{ObjectId}/{PasswordKeyId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID, the string "password" and the Password's Key ID in the format `{ObjectId}/password/{PasswordKeyId}`.

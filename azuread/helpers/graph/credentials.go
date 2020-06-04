@@ -90,15 +90,8 @@ func CertificateResourceSchema(object_type string) map[string]*schema.Schema {
 }
 
 // valid types are `application` and `service_principal`
-func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		object_type + "_id": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
-		},
-
+func PasswordResourceSchema(objectType string) map[string]*schema.Schema {
+	theSchema := map[string]*schema.Schema{
 		"key_id": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -147,40 +140,87 @@ func PasswordResourceSchema(object_type string) map[string]*schema.Schema {
 			ValidateFunc: validate.NoEmptyStrings,
 		},
 	}
+
+	switch objectType {
+	case "application":
+		theSchema["application_id"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			Computed:     true,
+			ValidateFunc: validate.UUID,
+			Deprecated:   "Deprecated in favour of `application_object_id` to prevent confusion",
+			ExactlyOneOf: []string{"application_object_id"},
+		}
+		theSchema["application_object_id"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+			ExactlyOneOf: []string{"application_id"},
+		}
+	case "service_principal":
+		theSchema["service_principal_id"] = &schema.Schema{
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+		}
+	}
+
+	return theSchema
 }
 
 type CredentialId struct {
 	ObjectId string
+	KeyType  string
 	KeyId    string
 }
 
 func (id CredentialId) String() string {
-	return id.ObjectId + "/" + id.KeyId
+	return id.ObjectId + "/" + id.KeyType + "/" + id.KeyId
 }
 
 func ParseCredentialId(id string) (CredentialId, error) {
 	parts := strings.Split(id, "/")
-	if len(parts) != 2 {
-		return CredentialId{}, fmt.Errorf("Password Credential ID should be in the format {objectId}/{keyId} - but got %q", id)
+	if len(parts) != 3 {
+		return CredentialId{}, fmt.Errorf("Credential ID should be in the format {objectId}/{keyType}/{keyId} - but got %q", id)
 	}
 
 	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return CredentialId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", id[0], err)
+		return CredentialId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
 	}
 
-	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return CredentialId{}, fmt.Errorf("Credential ID isn't a valid UUID (%q): %+v", id[1], err)
+	if parts[1] != "certificate" && parts[1] != "password" {
+		return CredentialId{}, fmt.Errorf("Key type should be one of: certificate, password. Got: %q", parts[1])
+	}
+
+	if _, err := uuid.ParseUUID(parts[2]); err != nil {
+		return CredentialId{}, fmt.Errorf("Key ID isn't a valid UUID (%q): %+v", parts[2], err)
 	}
 
 	return CredentialId{
 		ObjectId: parts[0],
-		KeyId:    parts[1],
+		KeyType:  parts[1],
+		KeyId:    parts[2],
 	}, nil
 }
 
-func CredentialIdFrom(objectId, keyId string) CredentialId {
+func ParseOldCredentialId(id, keyType string) (CredentialId, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return CredentialId{}, fmt.Errorf("Credential ID expected to be in the format {objectId}/{keyId} - but got %q", id)
+	}
+
+	newId := parts[0] + "/" + keyType + "/" + parts[1]
+	return ParseCredentialId(newId)
+}
+
+func CredentialIdFrom(objectId, keyType, keyId string) CredentialId {
 	return CredentialId{
 		ObjectId: objectId,
+		KeyType:  keyType,
 		KeyId:    keyId,
 	}
 }

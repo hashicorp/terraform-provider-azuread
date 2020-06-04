@@ -24,6 +24,15 @@ func resourceServicePrincipalPassword() *schema.Resource {
 		},
 
 		Schema: graph.PasswordResourceSchema("service_principal"),
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceServicePrincipalPasswordInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceServicePrincipalPasswordInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 	}
 }
 
@@ -37,7 +46,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("Error generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
 	}
-	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
@@ -154,4 +163,21 @@ func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interfa
 	}
 
 	return nil
+}
+
+func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: graph.PasswordResourceSchema("service_principal"),
+	}
+}
+
+func resourceServicePrincipalPasswordInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
+	newId, err := graph.ParseOldCredentialId(rawState["id"].(string), "password")
+	if err != nil {
+		return rawState, fmt.Errorf("generating new ID: %s", err)
+	}
+
+	rawState["id"] = newId.String()
+	return rawState, nil
 }

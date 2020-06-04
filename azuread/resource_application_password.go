@@ -7,12 +7,9 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
 
 func resourceApplicationPassword() *schema.Resource {
@@ -25,73 +22,14 @@ func resourceApplicationPassword() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		// Schema: graph.PasswordResourceSchema("application_object"), //todo switch back to this in 1.0
-		Schema: map[string]*schema.Schema{
-			"application_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				Deprecated:    "Deprecated in favour of `application_object_id` to prevent confusion",
-				ConflictsWith: []string{"application_object_id"},
-			},
+		Schema: graph.PasswordResourceSchema("application"),
 
-			"application_object_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"application_id"},
-			},
-
-			"key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-
-			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 863), // Encrypted secret cannot be empty and can be at most 1024 bytes.
-			},
-
-			"start_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsRFC3339Time,
-			},
-
-			"end_date": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date_relative"},
-				ValidateFunc:  validation.IsRFC3339Time,
-			},
-
-			"end_date_relative": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"end_date"},
-				ValidateFunc:  validate.NoEmptyStrings,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceApplicationPasswordInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceApplicationPasswordInstanceStateUpgradeV0,
+				Version: 0,
 			},
 		},
 	}
@@ -105,15 +43,12 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 	if objectId == "" { // todo remove in 1.0
 		objectId = d.Get("application_id").(string)
 	}
-	if objectId == "" {
-		return fmt.Errorf("one of `application_object_id` or `application_id` must be specified")
-	}
 
 	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
 		return fmt.Errorf("Error generating Application Credentials for Object ID %q: %+v", objectId, err)
 	}
-	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
 	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
@@ -230,4 +165,21 @@ func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	return nil
+}
+
+func resourceApplicationPasswordInstanceResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: graph.PasswordResourceSchema("application"),
+	}
+}
+
+func resourceApplicationPasswordInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
+	newId, err := graph.ParseOldCredentialId(rawState["id"].(string), "password")
+	if err != nil {
+		return rawState, fmt.Errorf("generating new ID: %s", err)
+	}
+
+	rawState["id"] = newId.String()
+	return rawState, nil
 }

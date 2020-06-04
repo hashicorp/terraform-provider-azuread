@@ -37,7 +37,7 @@ func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta inte
 	if err != nil {
 		return fmt.Errorf("generating certificate credentials for object ID %q: %+v", objectId, err)
 	}
-	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, "certificate", *cred.KeyID)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
