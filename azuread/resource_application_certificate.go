@@ -37,7 +37,7 @@ func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("generating certificate credentials for object ID %q: %+v", objectId, err)
 	}
-	id := graph.CredentialIdFrom(objectId, *cred.KeyID)
+	id := graph.CredentialIdFrom(objectId, "certificate", *cred.KeyID)
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
 	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)

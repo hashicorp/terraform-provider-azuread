@@ -745,6 +745,12 @@ func expandADApplicationOptionalClaim(in []interface{}) *[]graphrbac.OptionalCla
 }
 
 func flattenADApplicationOptionalClaims(in *graphrbac.OptionalClaims) interface{} {
+	var result []map[string]interface{}
+
+	if in == nil {
+		return result
+	}
+
 	optionalClaims := make(map[string]interface{})
 	if claims := flattenADApplicationOptionalClaimsList(in.AccessToken); len(claims) > 0 {
 		optionalClaims["access_token"] = claims
@@ -756,7 +762,6 @@ func flattenADApplicationOptionalClaims(in *graphrbac.OptionalClaims) interface{
 	//if claims := flattenADApplicationOptionalClaimsList(in.SamlToken); len(claims) > 0 {
 	//	optionalClaims["saml_token"] = claims
 	//}
-	var result []map[string]interface{}
 	if len(optionalClaims) == 0 {
 		return result
 	}

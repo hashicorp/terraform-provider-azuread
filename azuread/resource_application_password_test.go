@@ -97,6 +97,12 @@ func TestAccAzureADApplicationPassword_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"value"},
+			},
 		},
 	})
 }
@@ -120,6 +126,12 @@ func TestAccAzureADApplicationPassword_basicOld(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"value"},
 			},
 		},
 	})
@@ -174,6 +186,12 @@ func TestAccAzureADApplicationPassword_customKeyId(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"value"},
+			},
 		},
 	})
 }
@@ -196,6 +214,12 @@ func TestAccAzureADApplicationPassword_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"value"},
 			},
 		},
 	})
@@ -220,6 +244,12 @@ func TestAccAzureADApplicationPassword_relativeEndDate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_date"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"end_date_relative", "value"},
 			},
 		},
 	})
