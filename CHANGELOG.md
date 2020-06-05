@@ -16,7 +16,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* `azuread_application_password` and `azuread_service_principal_password` - Plan-time validation for `end_date` / `end_date_relative`
+* `azuread_application_password` and `azuread_service_principal_password` - Plan-time validation for `end_date` / `end_date_relative` [GH-261]
+* `azuread_application_password` and `azuread_service_principal_password` - Change the resource ID format to mitigate potential UUID collision [GH-264]
 
 ## 0.9.0 (May 15, 2020)
 
