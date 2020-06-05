@@ -1,23 +1,23 @@
-## 0.10.0 (Unreleased)
+## 0.10.0 (June 05, 2020)
 
 FEATURES:
 
-* **New Resource:** `azuread_application_certificate` [GH-262]
-* **New Resource:** `azuread_service_principal_certificate` [GH-262]
+* **New Resource:** `azuread_application_certificate` ([#262](https://github.com/terraform-providers/terraform-provider-azuread/issues/262))
+* **New Resource:** `azuread_service_principal_certificate` ([#262](https://github.com/terraform-providers/terraform-provider-azuread/issues/262))
 
 IMPROVEMENTS:
 
-* `azuread_application` - support for the `optional_claims` property, for access tokens and ID tokens [GH-260]
-* `azuread_application` - support for the `oauth2_permissions` property [GH-252]
-* `azuread_application_password` - support the `description` property [GH-253]
-* `azuread_service_principal_password` - support the `description` property [GH-253]
-* `data.azuread_users` - support empty lists for `user_principal_names`/`object_ids`/`mail_nicknames` properties [GH-258]
-* `data.azuread_groups` - support empty lists for `names`/`object_ids` properties [GH-257]
+* `azuread_application` - support for the `optional_claims` property, for access tokens and ID tokens ([#260](https://github.com/terraform-providers/terraform-provider-azuread/issues/260))
+* `azuread_application` - support for the `oauth2_permissions` property ([#252](https://github.com/terraform-providers/terraform-provider-azuread/issues/252))
+* `azuread_application_password` - support the `description` property ([#253](https://github.com/terraform-providers/terraform-provider-azuread/issues/253))
+* `azuread_service_principal_password` - support the `description` property ([#253](https://github.com/terraform-providers/terraform-provider-azuread/issues/253))
+* `data.azuread_users` - support empty lists for `user_principal_names`/`object_ids`/`mail_nicknames` properties ([#258](https://github.com/terraform-providers/terraform-provider-azuread/issues/258))
+* `data.azuread_groups` - support empty lists for `names`/`object_ids` properties ([#257](https://github.com/terraform-providers/terraform-provider-azuread/issues/257))
 
 BUG FIXES:
 
-* `azuread_application_password` and `azuread_service_principal_password` - Plan-time validation for `end_date` / `end_date_relative` [GH-261]
-* `azuread_application_password` and `azuread_service_principal_password` - Change the resource ID format to mitigate potential UUID collision [GH-264]
+* `azuread_application_password` and `azuread_service_principal_password` - Plan-time validation for `end_date` / `end_date_relative` ([#261](https://github.com/terraform-providers/terraform-provider-azuread/issues/261))
+* `azuread_application_password` and `azuread_service_principal_password` - Change the resource ID format to mitigate potential UUID collision ([#264](https://github.com/terraform-providers/terraform-provider-azuread/issues/264))
 
 ## 0.9.0 (May 15, 2020)
 
