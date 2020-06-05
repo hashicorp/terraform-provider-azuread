@@ -7,12 +7,12 @@ FEATURES:
 
 IMPROVEMENTS:
 
-* `azuread_application` - support setting `optional_claims` for access tokens and ID tokens [GH-260]
-* `azuread_application` - support for setting `oauth2_permissions` [GH-252]
-* `azuread_application_password` - support setting a `description` [GH-253]
-* `azuread_service_principal_password` - support setting a `description` [GH-253]
-* `data.azuread_users` - support empty lists for `user_principal_names`/`object_ids`/`mail_nicknames` arguments [GH-258]
-* `data.azuread_groups` - support empty lists for `names`/`object_ids` arguments [GH-257]
+* `azuread_application` - support for the `optional_claims` property, for access tokens and ID tokens [GH-260]
+* `azuread_application` - support for the `oauth2_permissions` property [GH-252]
+* `azuread_application_password` - support the `description` property [GH-253]
+* `azuread_service_principal_password` - support the `description` property [GH-253]
+* `data.azuread_users` - support empty lists for `user_principal_names`/`object_ids`/`mail_nicknames` properties [GH-258]
+* `data.azuread_groups` - support empty lists for `names`/`object_ids` properties [GH-257]
 
 BUG FIXES:
 
