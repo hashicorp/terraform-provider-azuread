@@ -1,6 +1,20 @@
 ## 0.11.0 (Unreleased)
 ## 0.10.0 (June 05, 2020)
 
+BREAKING CHANGES:
+
+* `azuread_application` - the `oauth2_permissions` attribute has changed from a list to a set. If you are referencing this attribute with explicit list indexes, you will need to update your configuration to use a `for` expression. For example:
+
+    ```hcl
+    id = azuread_application.example.oauth2_permissions[0].id
+    ```
+
+    becomes
+
+    ```hcl
+    id = [for permission in azuread_application.example.oauth2_permissions : permission.id][0]
+    ```
+
 FEATURES:
 
 * **New Resource:** `azuread_application_certificate` ([#262](https://github.com/terraform-providers/terraform-provider-azuread/issues/262))
