@@ -140,6 +140,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "optional_claims.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "0"),
 				),
 			},
 			{
@@ -677,6 +678,7 @@ func testAccADApplication_basicEmpty(ri int) string {
 resource "azuread_application" "test" {
   name                    = "acctest-APP-%[1]d"
   identifier_uris         = []
+  oauth2_permissions      = []
   reply_urls              = []
   group_membership_claims = "None"
 }
@@ -831,15 +833,15 @@ resource "azuread_application" "test" {
   name = "acctest-APP-%[1]d"
 
   app_role {
-    allowed_member_types = [
-      "User",
-      //"Application",
-    ]
-
-    description  = "Admins can manage roles and perform all task actions"
-    display_name = "Admin"
-    is_enabled   = true
-    value        = "Admin"
+   allowed_member_types = [
+     "User",
+     //"Application",
+   ]
+  
+   description  = "Admins can manage roles and perform all task actions"
+   display_name = "Admin"
+   is_enabled   = true
+   value        = "Admin"
   }
 }
 `, ri)
