@@ -22,8 +22,7 @@ We recommend using either a Service Principal or Managed Service Identity when r
 
 ## Important Notes about Authenticating using the Azure CLI
 
-* Prior to version 1.20 the AzureAD Provider used a different method of authorizing via the Azure CLI where credentials reset after an hour - as such we'd recommend upgrading to version 1.20 or later of the AzureAD Provider.
-* Terraform only supports authenticating using the `az` CLI (and this must be available on your PATH) - authenticating using the older `azure` CLI or PowerShell Cmdlets is not supported.
+* Terraform only supports authenticating using the `az` CLI (and this must be available on your PATH) - authenticating using the older `azure` CLI or PowerShell Az / AzureRM Cmdlets is not supported.
 * Authenticating via the Azure CLI is only supported when using a User Account. If you're using a Service Principal (for example via `az login --service-principal`) you should instead authenticate via the Service Principal directly (either using a [Client Secret](service_principal_client_secret.html) or a [Client Certificate](service_principal_client_certificate.html)).
 
 ---
@@ -44,13 +43,13 @@ Firstly, login to the Azure CLI using:
 $ az login
 ```
 
-Once logged in - it's possible to list the Subscriptions associated with the account via:
+Once logged in - it's possible to list the Subscriptions and Tenants associated with the account via:
 
 ```shell
 $ az account list
 ```
 
-The output (similar to below) will display one or more Subscriptions - with the `id` field being the `subscription_id` field referenced above.
+The output (similar to below) will display one or more Subscriptions - with the `tenantId` field being the `tenant_id` field referenced above.
 
 ```json
 [
@@ -69,59 +68,39 @@ The output (similar to below) will display one or more Subscriptions - with the 
 ]
 ```
 
-Should you have more than one Subscription, you can specify the Subscription to use via the following command:
+Should your account exist in more than one tenant (e.g. as a guest user), you can specify the tenant at login time:
 
 ```bash
-$ az account set --subscription="SUBSCRIPTION_ID"
+$ az login --tenant "TENANT_ID_OR_DOMAIN"
+```
+
+If your tenant does not have any subscriptions associated with it, for example if you are administering an Azure Active Directory B2C tenant, you will need to inform the CLI tools to permit signing in without one:
+
+```bash
+$ az login --tenant "TENANT_ID_OR_DOMAIN" --allow-no-subscriptions
 ```
 
 ---
 
 ## Configuring Azure CLI authentication in Terraform
 
-Now that we're logged into the Azure CLI - we can configure Terraform to use these credentials.
-
-To configure Terraform to use the Default Subscription defined in the Azure CLI - we can use the following Provider block:
+No specific configuration is required for the provider to use Azure CLI authentication. A Provider block is _technically_ optional, however we'd strongly recommend defining one to be able to pin the version of the Provider being used:
 
 ```hcl
 provider "azuread" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.1.0"
+  version = "=0.10.0"
 }
 ```
 
-More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
-
-At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Azure CLI to authenticate.
-
----
-
-It's also possible to configure Terraform to use a specific Subscription - for example:
+If you're looking to use Terraform across Tenants - it's possible to do this by configuring the `tenant_id` field in the Provider block, as shown below:
 
 ```hcl
 provider "azuread" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.1.0"
+  version = "=0.10.0"
 
-  subscription_id = "00000000-0000-0000-0000-000000000000"
-}
-```
-
-More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
-
-At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Azure CLI to authenticate.
-
----
-
-If you're looking to use Terraform across Tenants - it's possible to do this by configuring the Tenant ID field in the Provider block, as shown below:
-
-```hcl
-provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.1.0"
-
-  subscription_id = "00000000-0000-0000-0000-000000000000"
-  tenant_id       = "11111111-1111-1111-1111-111111111111"
+  tenant_id = "10000000-2000-3000-4000-500000000000"
 }
 ```
 

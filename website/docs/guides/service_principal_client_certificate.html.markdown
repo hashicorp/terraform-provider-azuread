@@ -24,15 +24,15 @@ Further steps must be taken to grant a Service Principal permission to manage ob
 
 We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
-Beyond authentication and managing Azure AAD resources further steps are required to make so a Service principal can make changes to Azure Active Directory objects such as users and groups. The [Granting a Service Principal permission to manage AAD](service_principal_configuration.html) guide contains the required steps. 
+Once you have configured a Service Principal as described in this guide, you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
 ---
 
-## Creating a Service Principal
+## Setting up an Application and Service Principal
 
-A Service Principal is an application within Azure Active Directory which can be used as a means of authentication, either [using a Client Secret](service_principal_client_secret.html) or a Client Certificate (which is documented in this guide) and can be created though the Azure Portal.
+A Service Principal is a security principal within Azure Active Directory which can be granted permissions to manage objects in Azure Active Directory. To authenticate with a Service Principal, you will need to create an Application object within Azure Active Directory, which you will use as a means of authentication, either [using a Client Secret](service_principal_client_secret.html) or a Client Certificate (which is documented in this guide). This can be done using the Azure Portal.
 
-This guide will cover how to generate a client certificate, how to create a Service Principal and then how to assign the Client Certificate to the Service Principal so that it can be used for authentication. Once that's done finally we're going to grant the Service Principal permission to manage resources in the Subscription - to do this we're going to assign `Contributor` rights to the Subscription - however [it's possible to assign other permissions](https://azure.microsoft.com/en-gb/documentation/articles/role-based-access-built-in-roles/) depending on your configuration.
+This guide will cover how to generate a client certificate, how to create an Application and linked Service Principal, and then how to assign the Client Certificate to the Application so that it can be used for authentication.
 
 ---
 
@@ -58,37 +58,27 @@ Finally we can generate a PFX file which can be used to authenticate with Azure:
 $ openssl pkcs12 -export -out "service-principal.pfx" -inkey "service-principal.key" -in "service-principal.crt"
 ```
 
-Now that we've generated a certificate, we can create the Azure Active Directory application.
+Now that we've generated a certificate, we can create the Azure Active Directory Application.
 
 ---
 
-### Creating the Service Principal
+### Creating the Application and Service Principal
 
-We're going to create the Service Principal in the Azure Portal - to do this navigate to [the **Azure Active Directory** overview](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview) within the Azure Portal - [then select the **App Registration** blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps/RegisteredApps/Overview) and click **Endpoints** at the top of the **App Registration** blade. A list of URIs will be displayed and you need to locate the URI for **OAUTH 2.0 AUTHORIZATION ENDPOINT** which contains a GUID. This GUID is your Tenant ID (the `tenant_id` field mentioned above).
-
-Next, navigate back to [the **App Registration** blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps/RegisteredApps/Overview) - from here we'll create the Application in Azure Active Directory. To do this click **New application registration** at the top to add a new Application within Azure Active Directory. On this page, set the following values then press **Create**:
+We're going to create the Application in the Azure Portal - to do this navigate to the [**Azure Active Directory** overview][azure-portal-aad-overview] within the [Azure Portal][azure-portal] - then select the [**App Registrations** blade][azure-portal-applications-blade]. Click the **New registration** button at the top to add a new Application within Azure Active Directory. On this page, set the following values then press **Create**:
 
 - **Name** - this is a friendly identifier and can be anything (e.g. "Terraform")
-- **Application Type** - this should be set to "Web app / API"
-- **Sign-on URL** - this can be anything, providing it's a valid URI (e.g. https://terra.form)
+- **Supported Account Types** - this should be set to "Accounts in this organisational directory only (single tenant)"
+- **Redirect URI** - you should choose "Web" in for the URI type. the actual value can be left blank
 
-At this point the newly created Azure Active Directory application should be visible on-screen - if it's not, navigate to the [the **App Registration** blade](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps/RegisteredApps/Overview) and select the Azure Active Directory application. At the top of this page, the "Application ID" GUID is the `client_id` you'll need.
+At this point the newly created Azure Active Directory application should be visible on-screen - if it's not, navigate to the [**App Registration** blade][azure-portal-applications-blade] and select the newly created Azure Active Directory application.
 
-### Assigning the Client Certificate to the Service Principal
+At the top of this page, you'll need to take note of the "Application (client) ID" and the "Directory (tenant) ID", which you can use for the values of `client_id` and `tenant_id` respectively.
 
-To associate the public portion of the Client Certificate (the `*.crt` file) with the Azure Active Directory Application - to do this select **Settings** and then **Keys**. This screen displays the Passwords (Client Secrets) and Public Keys (Client Certificates) which are associated with this Azure Active Directory Application.
+### Assigning the Client Certificate to the Azure Active Directory Application
 
-The Public Key associated with the generated Certificate can be uploaded by selecting **Upload Public Key**, selecting the file which should be uploaded (in the example above, this'd be `service-principal.crt`) - and then hitting **Save**.
+To associate the public portion of the Client Certificate (the `*.crt` file) with the Azure Active Directory Application - to do this select **Certificates & secrets**. This screen displays the Certificates and Client Secrets (i.e. passwords) which are associated with this Azure Active Directory Application.
 
-### Allowing the Service Principal to manage the Subscription
-
-Now that we've created the Application within Azure Active Directory and assigned the certificate we're using for authentication, we can now grant the Application permissions to manage the Subscription. To do this, [navigate to the **Subscriptions** blade within the Azure Portal](https://portal.azure.com/#blade/Microsoft_Azure_Billing/SubscriptionsBlade), select the Subscription you wish to use, then click **Access Control (IAM)** and finally **Add role assignment**.
-
-Firstly, specify a Role which grants the appropriate permissions needed for the Service Principal (for example, `Contributor` will grant Read/Write on all resources in the Subscription). More information about [the built in roles can be found here](https://azure.microsoft.com/en-gb/documentation/articles/role-based-access-built-in-roles/).
-
-Secondly, search for and select the name of the Application created in Azure Active Directory to assign it this role - then press **Save**.
-
-At this point the newly created Azure Active Directory Application should be associated with the Certificate that we generated earlier (which can be used as a Client Certificate) - and should have permissions to the Azure Subscription.
+The Public Key associated with the generated Certificate can be uploaded by selecting **Upload Certificate**, selecting the file which should be uploaded (in the example above, this'd be `service-principal.crt`) - and then hitting **Add**.
 
 ---
 
@@ -102,22 +92,23 @@ When storing the credentials as Environment Variables, for example:
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_CLIENT_CERTIFICATE_PATH="/path/to/my/client/certificate.pfx"
 $ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
-$ export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
-$ export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
+$ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 ```
 
-The following Provider block can be specified - where `1.20.0` is the version of the Azure Provider that you'd like to use:
+The following Provider block can be specified - where `0.10.0` is the version of the AzureAD Provider that you'd like to use:
 
 ```hcl
 provider "azuread" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.1.0"
+  version = "=0.10.0"
 }
 ```
 
 More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Service Principal to authenticate.
+
+Next you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
 ---
 
@@ -131,13 +122,12 @@ variable "client_certificate_password" {}
 
 provider "azuread" {
   # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.1.0"
+  version = "=0.10.0"
 
-  subscription_id             = "00000000-0000-0000-0000-000000000000"
   client_id                   = "00000000-0000-0000-0000-000000000000"
   client_certificate_path     = "${var.client_certificate_path}"
   client_certificate_password = "${var.client_certificate_password}"
-  tenant_id                   = "00000000-0000-0000-0000-000000000000"
+  tenant_id                   = "10000000-2000-3000-4000-500000000000"
 }
 ```
 
@@ -145,4 +135,8 @@ More information on [the fields supported in the Provider block can be found her
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Service Principal to authenticate.
 
-Next you may want to follow the [Granting a Service Principal permission to manage AAD](service_principal_configuration.html) guide to grant the Service Ability permission to create and modify Azure Active Directory objects such as users and groups. 
+Next you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
+
+[azure-portal]: https://portal.azure.com/
+[azure-portal-aad-overview]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview
+[azure-portal-applications-blade]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps/RegisteredApps/Overview
