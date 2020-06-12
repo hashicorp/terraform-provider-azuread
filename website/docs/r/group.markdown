@@ -29,12 +29,15 @@ resource "azuread_group" "example" {
 resource "azuread_user" "example" {
   display_name          = "J Doe"
   password              = "notSecure123"
-  user_principal_name   = "j.doe@terraform.onmicrosoft.com"
+  user_principal_name   = "jdoe@hashicorp.com"
 }
 
 resource "azuread_group" "example" {
   name    = "MyGroup"
-  members = [ "${azuread_user.example.object_id}" /*, more users */ ]
+  members = [
+    azuread_user.example.object_id,
+    /* more users */
+  ]
 }
 ```
 

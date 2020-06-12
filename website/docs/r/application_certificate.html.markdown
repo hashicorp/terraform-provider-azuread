@@ -21,9 +21,9 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_application_certificate" "example" {
-  application_object_id = "${azuread_application.example.id}"
+  application_object_id = azuread_application.example.id
   type                  = "AsymmetricX509Cert"
-  value                 = "${file("cert.pem")}"
+  value                 = file("cert.pem")
   end_date              = "2021-05-01T01:02:03Z"
 }
 ```
