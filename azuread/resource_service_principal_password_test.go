@@ -235,7 +235,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = "${azuread_application.test.application_id}"
+  application_id = azuread_application.test.application_id
 }
 `, applicationId)
 }
@@ -245,7 +245,7 @@ func testAccADServicePrincipalPassword_basic(applicationId, value string) string
 %s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   value                = "%s"
   end_date             = "2099-01-01T01:02:03Z"
 }
@@ -258,10 +258,10 @@ func testAccADServicePrincipalPassword_requiresImport(applicationId, value strin
 %s
 
 resource "azuread_service_principal_password" "import" {
-  key_id               = "${azuread_service_principal_password.test.key_id}"
-  service_principal_id = "${azuread_service_principal_password.test.service_principal_id}"
-  value                = "${azuread_service_principal_password.test.value}"
-  end_date             = "${azuread_service_principal_password.test.end_date}"
+  key_id               = azuread_service_principal_password.test.key_id
+  service_principal_id = azuread_service_principal_password.test.service_principal_id
+  value                = azuread_service_principal_password.test.value
+  end_date             = azuread_service_principal_password.test.end_date
 }
 `, template)
 }
@@ -271,7 +271,7 @@ func testAccADServicePrincipalPassword_customKeyId(applicationId, keyId, value s
 %s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   key_id               = "%s"
   value                = "%s"
   end_date             = "2099-01-01T01:02:03Z"
@@ -284,7 +284,7 @@ func testAccADServicePrincipalPassword_description(applicationId, value string) 
 %s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   description          = "terraform"
   value                = "%s"
   end_date             = "2099-01-01T01:02:03Z"
@@ -297,7 +297,7 @@ func testAccADServicePrincipalPassword_relativeEndDate(applicationId, value stri
 %s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   value                = "%s"
   end_date_relative    = "8760h"
 }

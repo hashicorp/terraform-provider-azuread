@@ -83,7 +83,7 @@ func testAccAzureADServicePrincipalDataSource_byApplicationId(id string) string 
 %s
 
 data "azuread_service_principal" "test" {
-  application_id = "${azuread_service_principal.test.application_id}"
+  application_id = azuread_service_principal.test.application_id
 }
 `, template)
 }
@@ -94,7 +94,7 @@ func testAccAzureADServicePrincipalDataSource_byDisplayName(id string) string {
 %s
 
 data "azuread_service_principal" "test" {
-  display_name = "${azuread_service_principal.test.display_name}"
+  display_name = azuread_service_principal.test.display_name
 }
 `, template)
 }
@@ -105,7 +105,7 @@ func testAccAzureADServicePrincipalDataSource_byObjectId(id string) string {
 %s
 
 data "azuread_service_principal" "test" {
-  object_id = "${azuread_service_principal.test.object_id}"
+  object_id = azuread_service_principal.test.object_id
 }
 `, template)
 }

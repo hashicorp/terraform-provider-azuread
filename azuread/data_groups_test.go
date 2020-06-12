@@ -84,7 +84,7 @@ func testAccAzureADGroupsDataSource_byDisplayNames(id int) string {
 %s
 
 data "azuread_groups" "test" {
-  names = ["${azuread_group.testA.name}", "${azuread_group.testB.name}"]
+  names = [azuread_group.testA.name, azuread_group.testB.name]
 }
 `, testAccAzureADGroup_multiple(id))
 }
@@ -94,7 +94,7 @@ func testAccAzureADGroupsDataSource_byObjectIds(id int) string {
 %s
 
 data "azuread_groups" "test" {
-  object_ids = ["${azuread_group.testA.object_id}", "${azuread_group.testB.object_id}"]
+  object_ids = [azuread_group.testA.object_id, azuread_group.testB.object_id]
 }
 `, testAccAzureADGroup_multiple(id))
 }

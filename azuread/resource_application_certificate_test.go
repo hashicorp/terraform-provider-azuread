@@ -236,7 +236,7 @@ func testAccADObjectCertificateApplication_basic(ri int, keyType, endDate, value
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   type                  = "%s"
   end_date              = "%s"
   value                 = <<EOT
@@ -251,7 +251,7 @@ func testAccADApplicationCertificate_complete(ri int, keyId, keyType, startDate,
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   key_id                = "%s"
   type                  = "%s"
   start_date            = "%s"
@@ -268,7 +268,7 @@ func testAccADApplicationCertificate_relativeEndDate(ri int, keyType, value stri
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   end_date_relative     = "4320h"
   type                  = "%s"
   value                 = <<EOT
@@ -284,11 +284,11 @@ func testAccADApplicationCertificate_requiresImport(ri int, keyType, endDate, va
 %s
 
 resource "azuread_application_certificate" "import" {
-  application_object_id = "${azuread_application_certificate.test.application_object_id}"
-  key_id                = "${azuread_application_certificate.test.key_id}"
-  type                  = "${azuread_application_certificate.test.type}"
-  end_date              = "${azuread_application_certificate.test.end_date}"
-  value                 = "${azuread_application_certificate.test.value}"
+  application_object_id = azuread_application_certificate.test.application_object_id
+  key_id                = azuread_application_certificate.test.key_id
+  type                  = azuread_application_certificate.test.type
+  end_date              = azuread_application_certificate.test.end_date
+  value                 = azuread_application_certificate.test.value
 }
 `, template)
 }
