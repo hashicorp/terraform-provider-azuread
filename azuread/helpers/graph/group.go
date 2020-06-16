@@ -182,3 +182,31 @@ func GroupAddOwners(client graphrbac.GroupsClient, ctx context.Context, groupId 
 
 	return nil
 }
+
+func GroupFindByName(client graphrbac.GroupsClient, ctx context.Context, name string) (*graphrbac.ADGroup, error) {
+	nameFilter := fmt.Sprintf("displayName eq '%s'", name)
+	resp, err := client.List(ctx, nameFilter)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to list Groups with filter %q: %+v", nameFilter, err)
+	}
+
+	for _, group := range resp.Values() {
+		if *group.DisplayName == name {
+			return &group, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func GroupCheckNameAvailability(client graphrbac.GroupsClient, ctx context.Context, name string) error {
+	existingGroup, err := GroupFindByName(client, ctx, name)
+	if err != nil {
+		return err
+	}
+	if existingGroup != nil {
+		return fmt.Errorf("existing Azure Active Directory Group with name %q (ObjID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
+	}
+	return nil
+}

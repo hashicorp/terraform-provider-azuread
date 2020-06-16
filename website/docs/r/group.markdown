@@ -49,6 +49,7 @@ The following arguments are supported:
 * `description` - (Optional) The description for the Group.  Changing this forces a new resource to be created.
 * `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
 * `owners` (Optional) A set of owners who own this Group. Supported Object types are Users or Service Principals.
+* `prevent_duplicate_names` - (Optional) If `true`, will return an error when an existing Group is found with the same name. Defaults to `false`.
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
 
