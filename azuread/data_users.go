@@ -26,8 +26,8 @@ func dataUsers() *schema.Resource {
 			"object_ids": {
 				Type:         schema.TypeList,
 				Optional:     true,
-				Computed:      true,
-				ConflictsWith: []string{"user_principal_names"},
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.UUID,
@@ -37,8 +37,8 @@ func dataUsers() *schema.Resource {
 			"user_principal_names": {
 				Type:         schema.TypeList,
 				Optional:     true,
-				Computed:      true,
-				ConflictsWith: []string{"object_ids"},
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
@@ -46,10 +46,10 @@ func dataUsers() *schema.Resource {
 			},
 
 			"mail_nicknames": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"object_ids", "user_principal_names"},
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
