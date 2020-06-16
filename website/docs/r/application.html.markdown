@@ -109,7 +109,9 @@ The following arguments are supported:
 
 * `name` - (Required) The display name for the application.
 
-* `homepage` - (optional) The URL to the application's home page. If no homepage is specified this defaults to `https://{name}`.
+* `homepage` - (optional) The URL to the application's home page. This property is now also known as `signInUrl`.
+
+-> **NOTE:** The `homepage` (`signInUrl`) property no longer has a default value and must be set explicitly if needed. Also, due to API/SDK limitations, this property cannot be unset by Terraform once it has been set for an Application. This operation must be done manually in the Azure Portal, via the "Branding" blade for the Application.
 
 * `identifier_uris` - (Optional) A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 

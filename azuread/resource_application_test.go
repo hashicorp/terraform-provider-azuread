@@ -28,7 +28,6 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", appName),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://%s", appName)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
@@ -60,7 +59,6 @@ func TestAccAzureADApplication_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "true"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", ri)),
@@ -100,7 +98,6 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "0"),
 				),
@@ -115,7 +112,6 @@ func TestAccAzureADApplication_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", updatedri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%d", updatedri)),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedri)),
 					resource.TestCheckResourceAttr(resourceName, "reply_urls.#", "1"),
@@ -151,7 +147,7 @@ func TestAccAzureADApplication_update(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplication_http_homepage(t *testing.T) {
+func TestAccAzureADApplication_https_homepage(t *testing.T) {
 	resourceName := "azuread_application.test"
 	ri := tf.AccRandTimeInt()
 
@@ -161,11 +157,11 @@ func TestAccAzureADApplication_http_homepage(t *testing.T) {
 		CheckDestroy: testCheckADApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccADApplication_http_homepage(ri),
+				Config: testAccADApplication_https_homepage(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
-					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("http://homepage-%d", ri)),
+					resource.TestCheckResourceAttr(resourceName, "homepage", fmt.Sprintf("https://homepage-%d", ri)),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
@@ -642,6 +638,7 @@ func testAccADApplication_basicEmpty(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name                    = "acctest-APP-%[1]d"
+  homepage                = "https://homepage-%[1]d" // Cannot be unset once set, see https://github.com/Azure/azure-sdk-for-go/issues/10463
   identifier_uris         = []
   reply_urls              = []
   group_membership_claims = "None"
@@ -649,11 +646,11 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccADApplication_http_homepage(ri int) string {
+func testAccADApplication_https_homepage(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name     = "acctest-APP-%[1]d"
-  homepage = "http://homepage-%[1]d"
+  homepage = "https://homepage-%[1]d"
 }
 `, ri)
 }

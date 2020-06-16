@@ -58,7 +58,6 @@ func resourceApplication() *schema.Resource {
 			"homepage": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validate.URLIsHTTPOrHTTPS,
 			},
 
@@ -316,11 +315,6 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("homepage"); ok {
 		properties.Homepage = p.StringI(v)
-	} else {
-		// continue to automatically set the homepage with the type is not native
-		if appType != "native" {
-			properties.Homepage = p.String(fmt.Sprintf("https://%s", name))
-		}
 	}
 
 	if v, ok := d.GetOk("logout_url"); ok {
