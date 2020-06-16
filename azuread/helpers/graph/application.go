@@ -262,3 +262,31 @@ func ApplicationAddOwners(client graphrbac.ApplicationsClient, ctx context.Conte
 
 	return nil
 }
+
+func ApplicationFindByName(client graphrbac.ApplicationsClient, ctx context.Context, name string) (*graphrbac.Application, error) {
+	nameFilter := fmt.Sprintf("displayName eq '%s'", name)
+	resp, err := client.List(ctx, nameFilter)
+
+	if err != nil {
+		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", nameFilter, err)
+	}
+
+	for _, app := range resp.Values() {
+		if *app.DisplayName == name {
+			return &app, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func ApplicationCheckNameAvailability(client graphrbac.ApplicationsClient, ctx context.Context, name string) error {
+	existingApp, err := ApplicationFindByName(client, ctx, name)
+	if err != nil {
+		return err
+	}
+	if existingApp != nil {
+		return fmt.Errorf("existing Application with name %q (AppID: %q) was found and `prevent_duplicate_names` was specified", name, *existingApp.AppID)
+	}
+	return nil
+}

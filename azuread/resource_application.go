@@ -285,6 +285,11 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"prevent_duplicate_names": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -294,6 +299,14 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
+
+	if d.Get("prevent_duplicate_names").(bool) {
+		err := graph.ApplicationCheckNameAvailability(client, ctx, name)
+		if err != nil {
+			return err
+		}
+	}
+
 	appType := d.Get("type")
 	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
 	if appType == "native" {
@@ -399,6 +412,13 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
+
+	if d.Get("prevent_duplicate_names").(bool) {
+		err := graph.ApplicationCheckNameAvailability(client, ctx, name)
+		if err != nil {
+			return err
+		}
+	}
 
 	var properties graphrbac.ApplicationUpdateParameters
 
@@ -589,6 +609,10 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	if err := d.Set("owners", owners); err != nil {
 		return fmt.Errorf("setting `owners`: %+v", err)
+	}
+
+	if preventDuplicates := d.Get("prevent_duplicate_names").(bool); !preventDuplicates {
+		d.Set("prevent_duplicate_names", false)
 	}
 
 	return nil
