@@ -12,6 +12,7 @@ import (
 func Provider() terraform.ResourceProvider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
+			// TODO: remove subscription_id field at next major version
 			"subscription_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -100,11 +101,21 @@ func Provider() terraform.ResourceProvider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 	return func(d *schema.ResourceData) (interface{}, error) {
+		// TODO: drop subscription_id in v1.0
+		// When constructing the Builder, we default to using the tenant ID for the subscription ID.
+		// Although this has no effect since we never consume it, this practise mimics
+		// the Azure CLI and it seems the most sensible value to use after a nonsense string.
+		// However, if subscription_id _is_ configured for the provider, we'll use that since it's
+		// currently exposed via data.azuread_client_config.
+		subscriptionId := d.Get("subscription_id").(string)
+		if subscriptionId == "" {
+			subscriptionId = d.Get("tenant_id").(string)
+		}
+
 		builder := &authentication.Builder{
-			// TODO: remove the requirement on the Subscription ID
-			SubscriptionID:     d.Get("subscription_id").(string),
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
+			SubscriptionID:     subscriptionId,
 			TenantID:           d.Get("tenant_id").(string),
 			Environment:        d.Get("environment").(string),
 			MsiEndpoint:        d.Get("msi_endpoint").(string),
