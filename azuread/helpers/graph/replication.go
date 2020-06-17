@@ -34,3 +34,28 @@ func WaitForCreationReplication(f func() (interface{}, error)) (interface{}, err
 		},
 	}).WaitForState()
 }
+
+func WaitForListMember(member string, f func() ([]string, error)) (interface{}, error) {
+	return (&resource.StateChangeConf{
+		Pending:                   []string{"404"},
+		Target:                    []string{"Found"},
+		Timeout:                   5 * time.Minute,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 10,
+		Refresh: func() (interface{}, string, error) {
+			members, err := f()
+
+			if err != nil {
+				return members, "Error", err
+			}
+
+			for _, v := range members {
+				if v == member {
+					return members, "Found", nil
+				}
+			}
+
+			return members, "404", nil
+		},
+	}).WaitForState()
+}
