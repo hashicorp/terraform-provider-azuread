@@ -134,7 +134,7 @@ func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId 
 		time.Sleep(time.Second * 2)
 	}
 
-	if _, err := WaitForListMember(member, func() ([]string, error) {
+	if _, err := WaitForListAdd(member, func() ([]string, error) {
 		return GroupAllMembers(client, ctx, groupId)
 	}); err != nil {
 		return fmt.Errorf("Error waiting for group membership: %+v", err)

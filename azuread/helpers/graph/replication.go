@@ -35,7 +35,7 @@ func WaitForCreationReplication(f func() (interface{}, error)) (interface{}, err
 	}).WaitForState()
 }
 
-func WaitForListMember(member string, f func() ([]string, error)) (interface{}, error) {
+func WaitForListAdd(item string, f func() ([]string, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
@@ -43,19 +43,44 @@ func WaitForListMember(member string, f func() ([]string, error)) (interface{}, 
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {
-			members, err := f()
+			listItems, err := f()
 
 			if err != nil {
-				return members, "Error", err
+				return listItems, "Error", err
 			}
 
-			for _, v := range members {
-				if v == member {
-					return members, "Found", nil
+			for _, v := range listItems {
+				if v == item {
+					return listItems, "Found", nil
 				}
 			}
 
-			return members, "404", nil
+			return listItems, "404", nil
+		},
+	}).WaitForState()
+}
+
+func WaitForListRemove(item string, f func() ([]string, error)) (interface{}, error) {
+	return (&resource.StateChangeConf{
+		Pending:                   []string{"Found"},
+		Target:                    []string{"404"},
+		Timeout:                   5 * time.Minute,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 10,
+		Refresh: func() (interface{}, string, error) {
+			listItems, err := f()
+
+			if err != nil {
+				return listItems, "Error", err
+			}
+
+			for _, v := range listItems {
+				if v == item {
+					return listItems, "Found", nil
+				}
+			}
+
+			return listItems, "404", nil
 		},
 	}).WaitForState()
 }
