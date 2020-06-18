@@ -4,6 +4,7 @@ IMPROVEMENTS:
 
 * Provider: no longer require configuring `subscription_id` (configuration value) / `ARM_SUBSCRIPTION_ID` (environment variable). [GH-271]
 * `data.azuread_client_config` - deprecate the `subscription_id` property. For compatibility, still populates `subscription_id` if the provider is configured with a subscription ID [GH-271]
+* `data.azuread_application` - support for the `application_id` property [GH-274]
 
 ## 0.10.0 (June 05, 2020)
 
