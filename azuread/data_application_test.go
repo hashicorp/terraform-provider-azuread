@@ -78,6 +78,36 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplicationDataSource_byApplicationId(t *testing.T) {
+	dataSourceName := "data.azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(ri),
+			},
+			{
+				Config: testAccAzureADApplicationDataSource_applicationId(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(dataSourceName),
+					resource.TestCheckResourceAttr(dataSourceName, "name", fmt.Sprintf("acctest-APP-%d", ri)),
+					resource.TestCheckResourceAttr(dataSourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", ri)),
+					resource.TestCheckResourceAttr(dataSourceName, "identifier_uris.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "reply_urls.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "optional_claims.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "required_resource_access.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "oauth2_allow_implicit_flow", "false"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "application_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplicationDataSource_byName(t *testing.T) {
 	dataSourceName := "data.azuread_application.test"
 	ri := tf.AccRandTimeInt()
@@ -114,7 +144,7 @@ func testAccAzureADApplicationDataSource_objectId(ri int) string {
 %s
 
 data "azuread_application" "test" {
-  object_id = "${azuread_application.test.object_id}"
+  object_id = azuread_application.test.object_id
 }
 `, template)
 }
@@ -125,7 +155,18 @@ func testAccAzureADApplicationDataSource_objectIdComplete(ri int, pw string) str
 %s
 
 data "azuread_application" "test" {
-  object_id = "${azuread_application.test.object_id}"
+  object_id = azuread_application.test.object_id
+}
+`, template)
+}
+
+func testAccAzureADApplicationDataSource_applicationId(ri int) string {
+	template := testAccADApplication_basic(ri)
+	return fmt.Sprintf(`
+%s
+
+data "azuread_application" "test" {
+  application_id = azuread_application.test.application_id
 }
 `, template)
 }
@@ -136,7 +177,7 @@ func testAccAzureADApplicationDataSource_name(ri int) string {
 %s
 
 data "azuread_application" "test" {
-  name = "${azuread_application.test.name}"
+  name = azuread_application.test.name
 }
 `, template)
 }

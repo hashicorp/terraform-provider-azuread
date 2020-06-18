@@ -268,7 +268,7 @@ func testAccADObjectPasswordApplication_basic(applicationId, value string) strin
 %s
 
 resource "azuread_application_password" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   value                 = "%s"
   end_date              = "2099-01-01T01:02:03Z"
 }
@@ -280,7 +280,7 @@ func testAccADObjectPasswordApplication_basicOld(applicationId, value string) st
 %s
 
 resource "azuread_application_password" "test" {
-  application_id = "${azuread_application.test.id}"
+  application_id = azuread_application.test.id
   value          = "%s"
   end_date       = "2099-01-01T01:02:03Z"
 }
@@ -293,10 +293,10 @@ func testAccADApplicationPassword_requiresImport(applicationId, value string) st
 %s
 
 resource "azuread_application_password" "import" {
-  application_object_id = "${azuread_application_password.test.application_object_id}"
-  key_id                = "${azuread_application_password.test.key_id}"
-  value                 = "${azuread_application_password.test.value}"
-  end_date              = "${azuread_application_password.test.end_date}"
+  application_object_id = azuread_application_password.test.application_object_id
+  key_id                = azuread_application_password.test.key_id
+  value                 = azuread_application_password.test.value
+  end_date              = azuread_application_password.test.end_date
 }
 `, template)
 }
@@ -306,7 +306,7 @@ func testAccADApplicationPassword_customKeyId(applicationId, keyId, value string
 %s
 
 resource "azuread_application_password" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   key_id                = "%s"
   value                 = "%s"
   end_date              = "2099-01-01T01:02:03Z"
@@ -319,7 +319,7 @@ func testAccADApplicationPassword_description(applicationId, value string) strin
 %s
 
 resource "azuread_application_password" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   description           = "terraform"
   value                 = "%s"
   end_date              = "2099-01-01T01:02:03Z"
@@ -332,7 +332,7 @@ func testAccADApplicationPassword_relativeEndDate(applicationId, value string) s
 %s
 
 resource "azuread_application_password" "test" {
-  application_object_id = "${azuread_application.test.id}"
+  application_object_id = azuread_application.test.id
   value                 = "%s"
   end_date_relative     = "8760h"
 }

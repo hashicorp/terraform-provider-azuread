@@ -99,7 +99,7 @@ func testAccDataSourceAzureADGroup_name(id int) string {
 %s
 
 data "azuread_group" "test" {
-  name = "${azuread_group.test.name}"
+  name = azuread_group.test.name
 }
 `, testAccAzureADGroup_basic(id))
 }
@@ -109,7 +109,7 @@ func testAccDataSourceAzureADGroup_objectId(id int) string {
 %s
 
 data "azuread_group" "test" {
-  object_id = "${azuread_group.test.object_id}"
+  object_id = azuread_group.test.object_id
 }
 `, testAccAzureADGroup_basic(id))
 }
@@ -119,7 +119,7 @@ func testAccDataSourceAzureADGroup_members(id int, password string) string {
 %s
 
 data "azuread_group" "test" {
-  object_id = "${azuread_group.test.object_id}"
+  object_id = azuread_group.test.object_id
 }
 `, testAccAzureADGroupWithThreeMembers(id, password))
 }
@@ -129,7 +129,7 @@ func testAccDataSourceAzureADGroup_owners(id int, password string) string {
 %s
 
 data "azuread_group" "test" {
-  object_id = "${azuread_group.test.object_id}"
+  object_id = azuread_group.test.object_id
 }
 `, testAccAzureADGroupWithThreeOwners(id, password))
 }

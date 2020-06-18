@@ -17,20 +17,15 @@ Manages a Password associated with a Service Principal within Azure Active Direc
 
 ```hcl
 resource "azuread_application" "example" {
-  name                       = "example"
-  homepage                   = "http://homepage"
-  identifier_uris            = ["http://uri"]
-  reply_urls                 = ["http://replyurl"]
-  available_to_other_tenants = false
-  oauth2_allow_implicit_flow = true
+  name = "example"
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = "${azuread_application.example.application_id}"
+  application_id = azuread_application.example.application_id
 }
 
 resource "azuread_service_principal_password" "example" {
-  service_principal_id = "${azuread_service_principal.example.id}"
+  service_principal_id = azuread_service_principal.example.id
   description          = "My managed password"
   value                = "VT=uSgbTanZhyz@%nL9Hpd+Tfay_MRV#"
   end_date             = "2099-01-01T01:02:03Z"

@@ -25,7 +25,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id               = "${azuread_application.example.application_id}"
+  application_id               = azuread_application.example.application_id
   app_role_assignment_required = false
 
   tags = ["example", "tags", "here"]

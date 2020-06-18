@@ -21,13 +21,13 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = "${azuread_application.example.application_id}"
+  application_id = azuread_application.example.application_id
 }
 
 resource "azuread_service_principal_certificate" "example" {
-  service_principal_id = "${azuread_service_principal.example.id}"
+  service_principal_id = azuread_service_principal.example.id
   type                 = "AsymmetricX509Cert"
-  value                = "${file("cert.pem")}"
+  value                = file("cert.pem")
   end_date             = "2021-05-01T01:02:03Z"
 }
 ```

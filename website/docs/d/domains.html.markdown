@@ -18,7 +18,7 @@ Use this data source to access information about an existing Domains within Azur
 data "azuread_domains" "aad_domains" {}
 
 output "domains" {
-  value = "${data.azuread_domains.aad_domains.domains}"
+  value = data.azuread_domains.aad_domains.domains
 }
 ```
 

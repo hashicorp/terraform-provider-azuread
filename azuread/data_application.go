@@ -18,19 +18,27 @@ func dataApplication() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"name"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"application_id", "name", "object_id"},
+				ValidateFunc: validate.UUID,
+			},
+
+			"application_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"application_id", "name", "object_id"},
+				ValidateFunc: validate.UUID,
 			},
 
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.NoEmptyStrings,
-				ConflictsWith: []string{"object_id"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"application_id", "name", "object_id"},
+				ValidateFunc: validate.NoEmptyStrings,
 			},
 
 			"homepage": {
@@ -66,11 +74,6 @@ func dataApplication() *schema.Resource {
 
 			"oauth2_allow_implicit_flow": {
 				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"application_id": {
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 
@@ -162,8 +165,19 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		app = resp
-	} else if name, ok := d.Get("name").(string); ok {
-		filter := fmt.Sprintf("displayName eq '%s'", name)
+	} else {
+		var fieldName, fieldValue string
+		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
+			fieldName = "appId"
+			fieldValue = applicationId
+		} else if name, ok := d.Get("name").(string); ok && name != "" {
+			fieldName = "displayName"
+			fieldValue = name
+		} else {
+			return fmt.Errorf("one of `object_id` or `name` must be supplied")
+		}
+
+		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
@@ -182,18 +196,26 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		app = (*values)[0]
-		if app.DisplayName == nil {
-			return fmt.Errorf("nil DisplayName for AD Applications matching %q", filter)
+		switch fieldName {
+		case "appId":
+			if app.AppID == nil {
+				return fmt.Errorf("nil AppID for AD Applications matching %q", filter)
+			}
+			if *app.AppID != fieldValue {
+				return fmt.Errorf("AppID for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.AppID, fieldValue)
+			}
+		case "displayName":
+			if app.DisplayName == nil {
+				return fmt.Errorf("nil DisplayName for AD Applications matching %q", filter)
+			}
+			if *app.DisplayName != fieldValue {
+				return fmt.Errorf("DisplayName for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
+			}
 		}
-		if *app.DisplayName != name {
-			return fmt.Errorf("displayname for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, name)
-		}
-	} else {
-		return fmt.Errorf("one of `object_id` or `name` must be supplied")
 	}
 
 	if app.ObjectID == nil {
-		return fmt.Errorf("Application objectId is nil")
+		return fmt.Errorf("Application ObjectId is nil")
 	}
 	d.SetId(*app.ObjectID)
 

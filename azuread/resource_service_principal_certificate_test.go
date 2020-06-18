@@ -230,7 +230,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = "${azuread_application.test.application_id}"
+  application_id = azuread_application.test.application_id
 }
 `, ri)
 }
@@ -240,7 +240,7 @@ func testAccADObjectCertificateServicePrincipal_basic(ri int, keyType, endDate, 
 %s
 
 resource "azuread_service_principal_certificate" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   type                 = "%s"
   end_date             = "%s"
   value                = <<EOT
@@ -255,7 +255,7 @@ func testAccADServicePrincipalCertificate_complete(ri int, keyId, keyType, start
 %s
 
 resource "azuread_service_principal_certificate" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   key_id               = "%s"
   type                 = "%s"
   start_date           = "%s"
@@ -272,7 +272,7 @@ func testAccADServicePrincipalCertificate_relativeEndDate(ri int, keyType, value
 %s
 
 resource "azuread_service_principal_certificate" "test" {
-  service_principal_id = "${azuread_service_principal.test.id}"
+  service_principal_id = azuread_service_principal.test.id
   end_date_relative    = "4320h"
   type                 = "%s"
   value                = <<EOT
@@ -288,11 +288,11 @@ func testAccADServicePrincipalCertificate_requiresImport(ri int, keyType, endDat
 %s
 
 resource "azuread_service_principal_certificate" "import" {
-  service_principal_id = "${azuread_service_principal_certificate.test.service_principal_id}"
-  key_id               = "${azuread_service_principal_certificate.test.key_id}"
-  type                 = "${azuread_service_principal_certificate.test.type}"
-  end_date             = "${azuread_service_principal_certificate.test.end_date}"
-  value                = "${azuread_service_principal_certificate.test.value}"
+  service_principal_id = azuread_service_principal_certificate.test.service_principal_id
+  key_id               = azuread_service_principal_certificate.test.key_id
+  type                 = azuread_service_principal_certificate.test.type
+  end_date             = azuread_service_principal_certificate.test.end_date
+  value                = azuread_service_principal_certificate.test.value
 }
 `, template)
 }

@@ -20,7 +20,7 @@ data "azuread_application" "example" {
 }
 
 output "azure_ad_object_id" {
-  value = "${data.azuread_application.example.id}"
+  value = data.azuread_application.example.id
 }
 ```
 
@@ -28,9 +28,11 @@ output "azure_ad_object_id" {
 
 * `object_id` - (Optional) Specifies the Object ID of the Application within Azure Active Directory.
 
+* `application_id` - (Optional) Specifies the Application ID of the Azure Active Directory Application.
+
 * `name` - (Optional) Specifies the name of the Application within Azure Active Directory.
 
--> **NOTE:** Either an `object_id` or `name` must be specified.
+-> **NOTE:** One of `object_id`, `application_id` or `name` must be specified.
 
 ## Attributes Reference
 
