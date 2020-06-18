@@ -37,6 +37,8 @@ The following arguments are supported:
 * `force_password_change` - (Optional) `true` if the User is forced to change the password during the next sign-in. Defaults to `false`.
 * `immutable_id` - (Optional) The value used to associate an on-premises Active Directory user account with their Azure AD user object. This must be specified if you are using a federated domain for the user's userPrincipalName (UPN) property when creating a new user account. 
 * `usage_location` - (Optional) The usage location of the User. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set. 
+* `given_name` - (Optional) The given name (first name) of the user.
+* `surname` - (Optional) The user's surname (family name or last name).
 * `job_title` - (Optional) The user’s job title.
 * `department` - (Optional) The name for the department in which the user works.
 * `company_name` - (Optional) The company name which the user is associated. This property can be useful for describing the company that an external user comes from.

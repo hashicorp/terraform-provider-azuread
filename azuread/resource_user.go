@@ -108,6 +108,18 @@ func resourceUser() *schema.Resource {
 				Description: "The user’s job title.",
 			},
 
+			"given_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The given name (first name) of the user.",
+			},
+
+			"surname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The user's surname (family name or last name).",
+			},
+
 			"department": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -255,6 +267,14 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	if d.HasChange("given_name") {
+		userUpdateParameters.GivenName = getStringOrNil("given_name")
+	}
+
+	if d.HasChange("surname") {
+		userUpdateParameters.Surname = getStringOrNil("surname")
+	}
+
 	if d.HasChange("job_title") {
 		userUpdateParameters.AdditionalProperties["jobTitle"] = getStringOrNil("job_title")
 	}
@@ -316,6 +336,8 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("user_principal_name", user.UserPrincipalName)
 	d.Set("display_name", user.DisplayName)
+	d.Set("given_name", user.GivenName)
+	d.Set("surname", user.Surname)
 	d.Set("mail", user.Mail)
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("account_enabled", user.AccountEnabled)
