@@ -9,7 +9,7 @@ description: |-
 
 # azuread_application_password
 
-Manages a Password associated with an Application within Azure Active Directory.
+Manages a Password associated with an Application within Azure Active Directory. Also can be referred to as Client secrets.
 
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API.
 
