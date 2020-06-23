@@ -139,7 +139,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
 					break
 				}
-				return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", v.(string), err)
+				return fmt.Errorf("making Read request on AzureAD User with ID %q: %+v", v.(string), err)
 			}
 			users = append(users, &u)
 		}
@@ -151,7 +151,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
 					break
 				}
-				return fmt.Errorf("Error finding Azure AD User with object ID %q: %+v", v.(string), err)
+				return fmt.Errorf("finding Azure AD User with object ID %q: %+v", v.(string), err)
 			}
 			users = append(users, u)
 		}
@@ -163,52 +163,51 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
 					break
 				}
-				return fmt.Errorf("Error finding Azure AD User with email alias %q: %+v", v.(string), err)
+				return fmt.Errorf("finding Azure AD User with email alias %q: %+v", v.(string), err)
 			}
 			users = append(users, u)
 		}
 	}
 
 	if !ignoreMissing && len(users) != expectedCount {
-		return fmt.Errorf("Unexpected number of users returned (%d != %d)", len(users), expectedCount)
+		return fmt.Errorf("unexpected number of users returned (%d != %d)", len(users), expectedCount)
 	}
 
-	if ignoreMissing && len(users) == 0 {
-		return fmt.Errorf("No users were returned")
-	}
+	// TODO: consider disallowing no results in v1.0
+	//if len(users) == 0 {
+	//	return fmt.Errorf("no users were returned")
+	//}
 
 	upns := make([]string, 0, len(users))
 	oids := make([]string, 0, len(users))
 	mailNicknames := make([]string, 0, len(users))
-	var userList []map[string]interface{}
+	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return fmt.Errorf("User with nil ObjectId or UPN was found: %v", u)
+			return fmt.Errorf("user with nil ObjectId or UPN was found: %v", u)
 		}
 
-		if u.ObjectID != nil || u.UserPrincipalName != nil {
-			oids = append(oids, *u.ObjectID)
-			upns = append(upns, *u.UserPrincipalName)
-			mailNicknames = append(mailNicknames, *u.MailNickname)
+		oids = append(oids, *u.ObjectID)
+		upns = append(upns, *u.UserPrincipalName)
+		mailNicknames = append(mailNicknames, *u.MailNickname)
 
-			user := make(map[string]interface{})
-			user["account_enabled"] = u.AccountEnabled
-			user["display_name"] = u.DisplayName
-			user["immutable_id"] = u.ImmutableID
-			user["mail"] = u.Mail
-			user["mail_nickname"] = u.MailNickname
-			user["object_id"] = u.ObjectID
-			user["onpremises_sam_account_name"] = u.AdditionalProperties["onPremisesSamAccountName"]
-			user["onpremises_user_principal_name"] = u.AdditionalProperties["onPremisesUserPrincipalName"]
-			user["usage_location"] = u.UsageLocation
-			user["user_principal_name"] = u.UserPrincipalName
-			userList = append(userList, user)
-		}
+		user := make(map[string]interface{})
+		user["account_enabled"] = u.AccountEnabled
+		user["display_name"] = u.DisplayName
+		user["immutable_id"] = u.ImmutableID
+		user["mail"] = u.Mail
+		user["mail_nickname"] = u.MailNickname
+		user["object_id"] = u.ObjectID
+		user["onpremises_sam_account_name"] = u.AdditionalProperties["onPremisesSamAccountName"]
+		user["onpremises_user_principal_name"] = u.AdditionalProperties["onPremisesUserPrincipalName"]
+		user["usage_location"] = u.UsageLocation
+		user["user_principal_name"] = u.UserPrincipalName
+		userList = append(userList, user)
 	}
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return fmt.Errorf("Unable to compute hash for upns: %v", err)
+		return fmt.Errorf("unable to compute hash for UPNs: %v", err)
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
