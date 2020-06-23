@@ -584,6 +584,22 @@ func TestAccAzureADApplication_oauth2PermissionsUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_preventDuplicateNames(t *testing.T) {
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccADApplication_duplicateName(ri),
+				ExpectError: regexp.MustCompile("existing Application .+ was found"),
+			},
+		},
+	})
+}
+
 func testCheckADApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -912,4 +928,15 @@ resource "azuread_application" "test" {
   type            = "native"
 }
 `, ri)
+}
+
+func testAccADApplication_duplicateName(ri int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_application" "duplicate" {
+  name                    = azuread_application.test.name
+  prevent_duplicate_names = true
+}
+`, testAccADApplication_basic(ri))
 }

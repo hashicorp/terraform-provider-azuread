@@ -2,6 +2,7 @@ package azuread
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -286,6 +287,22 @@ func TestAccAzureADGroup_ownersUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAzureADGroup_preventDuplicateNames(t *testing.T) {
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAzureADGroup_duplicateName(ri),
+				ExpectError: regexp.MustCompile("existing Azure Active Directory Group .+ was found"),
+			},
+		},
+	})
+}
+
 func testCheckAzureADGroupExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -502,4 +519,15 @@ resource "azuread_group" "test" {
   owners = [azuread_service_principal.test.object_id]
 }
 `, id)
+}
+
+func testAccAzureADGroup_duplicateName(id int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_group" "duplicate" {
+  name                    = azuread_group.test.name
+  prevent_duplicate_names = true
+}
+`, testAccAzureADGroup_basic(id))
 }

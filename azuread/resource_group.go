@@ -68,6 +68,11 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"prevent_duplicate_names": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -77,6 +82,13 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*ArmClient).StopContext
 
 	name := d.Get("name").(string)
+
+	if d.Get("prevent_duplicate_names").(bool) {
+		err := graph.GroupCheckNameAvailability(client, ctx, name)
+		if err != nil {
+			return err
+		}
+	}
 
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:          &name,
@@ -167,6 +179,10 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	d.Set("owners", owners)
+
+	if preventDuplicates := d.Get("prevent_duplicate_names").(bool); !preventDuplicates {
+		d.Set("prevent_duplicate_names", false)
+	}
 
 	return nil
 }
