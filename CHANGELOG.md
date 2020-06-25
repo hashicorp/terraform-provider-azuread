@@ -8,6 +8,10 @@ IMPROVEMENTS:
 * `azuread_application` - support the `prevent_duplicate_names` property [GH-279]
 * `azuread_group` - support the `prevent_duplicate_names` property [GH-279]
 
+BUG FIXES:
+
+* `azuread_group` - remediate AAD replication delays when adding/removing group members [GH-283]
+
 ## 0.10.0 (June 05, 2020)
 
 BREAKING CHANGES:
