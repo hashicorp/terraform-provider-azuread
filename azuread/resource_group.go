@@ -3,8 +3,10 @@ package azuread
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -202,11 +204,26 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		membersToAdd := slices.Difference(desiredMembers, existingMembers)
 
 		for _, existingMember := range membersForRemoval {
+			var err error
+			var resp autorest.Response
 			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", existingMember, d.Id())
-			if resp, err := client.RemoveMember(ctx, d.Id(), existingMember); err != nil {
-				if !ar.ResponseWasNotFound(resp) {
+			attempts := 10
+			for i := 0; i <= attempts; i++ {
+				if resp, err = client.RemoveMember(ctx, d.Id(), existingMember); err != nil {
+					if ar.ResponseWasNotFound(resp) {
+						break
+					}
+				}
+				if i == attempts {
 					return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", existingMember, d.Id(), err)
 				}
+				time.Sleep(time.Second * 2)
+			}
+
+			if _, err := graph.WaitForListRemove(existingMember, func() ([]string, error) {
+				return graph.GroupAllMembers(client, ctx, d.Id())
+			}); err != nil {
+				return fmt.Errorf("Error waiting for group membership removal: %+v", err)
 			}
 		}
 

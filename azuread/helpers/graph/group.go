@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 )
@@ -121,8 +122,22 @@ func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId 
 	}
 
 	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
-	if _, err := client.AddMember(ctx, groupId, properties); err != nil {
-		return fmt.Errorf("Error adding group member %q to Azure AD Group with ID %q: %+v", member, groupId, err)
+	var err error
+	attempts := 10
+	for i := 0; i <= attempts; i++ {
+		if _, err = client.AddMember(ctx, groupId, properties); err == nil {
+			break
+		}
+		if i == attempts {
+			return fmt.Errorf("Error adding group member %q to Azure AD Group with ID %q: %+v", member, groupId, err)
+		}
+		time.Sleep(time.Second * 2)
+	}
+
+	if _, err := WaitForListAdd(member, func() ([]string, error) {
+		return GroupAllMembers(client, ctx, groupId)
+	}); err != nil {
+		return fmt.Errorf("Error waiting for group membership: %+v", err)
 	}
 
 	return nil
