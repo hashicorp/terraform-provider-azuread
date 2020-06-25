@@ -3,12 +3,11 @@ package azuread
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"log"
 
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
@@ -106,7 +105,7 @@ func resourceApplication() *schema.Resource {
 			},
 
 			"app_role": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -409,6 +408,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	// After creating the application, we immediately update it to ensure we overwrite any default properties
 	// such as the `user_impersonation` scope the application may get, whether we define such a scope or not
 	return resourceApplicationUpdate(d, meta)
+	//return resourceApplicationRead(d, meta)
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -599,7 +599,8 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting `optional_claims`: %+v", err)
 	}
 
-	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
+	currentAppRoles := d.Get("app_role").([]interface{})
+	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles, &currentAppRoles)); err != nil {
 		return fmt.Errorf("setting `app_role`: %+v", err)
 	}
 
@@ -828,7 +829,7 @@ func flattenADApplicationOptionalClaimsList(in *[]graphrbac.OptionalClaim) []int
 }
 
 func expandADApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
-	input := i.(*schema.Set).List()
+	input := i.([]interface{})
 	if len(input) == 0 {
 		return nil
 	}

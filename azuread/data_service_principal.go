@@ -125,7 +125,7 @@ func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta 
 	d.Set("display_name", sp.DisplayName)
 	d.Set("object_id", sp.ObjectID)
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
+	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles, nil)); err != nil {
 		return fmt.Errorf("Error setting `app_roles`: %+v", err)
 	}
 

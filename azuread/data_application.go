@@ -249,7 +249,7 @@ func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("type", "webapp/api")
 	}
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
+	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles, nil)); err != nil {
 		return fmt.Errorf("Error setting `app_roles`: %+v", err)
 	}
 

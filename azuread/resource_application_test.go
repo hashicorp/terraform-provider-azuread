@@ -246,14 +246,14 @@ func TestAccAzureADApplication_appRoles(t *testing.T) {
 				Config: testAccADApplication_appRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckADApplicationExists(resourceName),
-					//resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_role.#", "1"),
 				),
 			},
-			//{
-			//	ResourceName:      resourceName,
-			//	ImportState:       true,
-			//	ImportStateVerify: true,
-			//},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -833,15 +833,15 @@ resource "azuread_application" "test" {
   name = "acctest-APP-%[1]d"
 
   app_role {
-   allowed_member_types = [
-     "User",
-     //"Application",
-   ]
+    allowed_member_types = [
+      "User",
+      "Application",
+    ]
   
-   description  = "Admins can manage roles and perform all task actions"
-   display_name = "Admin"
-   is_enabled   = true
-   value        = "Admin"
+    description  = "Admins can manage roles and perform all task actions"
+    display_name = "Admin"
+    is_enabled   = true
+    value        = "Admin"
   }
 }
 `, ri)
