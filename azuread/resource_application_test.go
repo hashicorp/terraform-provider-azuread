@@ -600,6 +600,22 @@ func TestAccAzureADApplication_preventDuplicateNames(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccADApplication_duplicateAppRolesOauth2PermissionsValues(ri),
+				ExpectError: regexp.MustCompile("validation failed: duplicate app_role / oauth2_permissions value found:"),
+			},
+		},
+	})
+}
+
 func testCheckADApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -939,4 +955,28 @@ resource "azuread_application" "duplicate" {
   prevent_duplicate_names = true
 }
 `, testAccADApplication_basic(ri))
+}
+
+func testAccADApplication_duplicateAppRolesOauth2PermissionsValues(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctest-APP-%[1]d"
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = "administer"
+  }
+
+  oauth2_permissions {
+    admin_consent_description  = "Administer the application"
+    admin_consent_display_name = "Administer"
+    is_enabled                 = true
+    type                       = "Admin"
+    value                      = "administer"
+  }
+}
+`, ri)
 }
