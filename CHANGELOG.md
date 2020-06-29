@@ -5,6 +5,8 @@ IMPROVEMENTS:
 * Provider: no longer require configuring `subscription_id` (configuration value) / `ARM_SUBSCRIPTION_ID` (environment variable). [GH-271]
 * `data.azuread_client_config` - deprecate the `subscription_id` property. For compatibility, still populates `subscription_id` if the provider is configured with a subscription ID [GH-271]
 * `data.azuread_application` - support for the `application_id` property [GH-274]
+* `data.azuread_users` - support the `ignore_missing` property [GH-256]
+* `data.azuread_users` - export the `users` attribute containing a list of users with additional properties [GH-256]
 * `azuread_application` - support the `prevent_duplicate_names` property [GH-279]
 * `azuread_group` - support the `prevent_duplicate_names` property [GH-279]
 
