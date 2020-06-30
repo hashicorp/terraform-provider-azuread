@@ -137,6 +137,8 @@ The following arguments are supported:
 
 * `oauth2_permissions` - (Optional) A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by `oauth2_permissions` blocks as documented below.
 
+-> **Note on roles and scopes/permissions:** in Azure Active Directory, roles (`app_role`) and scopes/permissions (`oauth2_permissions`) exported by an Application share the same namespace and cannot contain duplicate values. Terraform will attempt to detect this at plan time.
+
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error when an existing Application is found with the same name. Defaults to `false`.
 
 ---

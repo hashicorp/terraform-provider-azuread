@@ -307,6 +307,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if err := adApplicationValidateRolesScopes(d.Get("app_role"), d.Get("oauth2_permissions")); err != nil {
+		return err
+	}
+
 	appType := d.Get("type")
 	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
 	if appType == "native" {
@@ -418,6 +422,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := adApplicationValidateRolesScopes(d.Get("app_role"), d.Get("oauth2_permissions")); err != nil {
+		return err
 	}
 
 	var properties graphrbac.ApplicationUpdateParameters
@@ -924,6 +932,40 @@ func adApplicationSetOwnersTo(client graphrbac.ApplicationsClient, ctx context.C
 				return fmt.Errorf("Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, id, err)
 			}
 		}
+	}
+
+	return nil
+}
+
+func adApplicationValidateRolesScopes(appRoles, oauth2Permissions interface{}) error {
+	var values []string
+
+	if appRoles != nil {
+		for _, roleRaw := range appRoles.(*schema.Set).List() {
+			role := roleRaw.(map[string]interface{})
+			if val := role["value"].(string); val != "" {
+				values = append(values, val)
+			}
+		}
+	}
+
+	if oauth2Permissions != nil {
+		for _, scopeRaw := range oauth2Permissions.(*schema.Set).List() {
+			scope := scopeRaw.(map[string]interface{})
+			if val := scope["value"].(string); val != "" {
+				values = append(values, val)
+			}
+		}
+	}
+
+	encountered := make([]string, len(values))
+	for _, val := range values {
+		for _, en := range encountered {
+			if en == val {
+				return fmt.Errorf("validation failed: duplicate app_role / oauth2_permissions value found: %q", val)
+			}
+		}
+		encountered = append(encountered, val)
 	}
 
 	return nil
