@@ -8,6 +8,7 @@ IMPROVEMENTS:
 * `data.azuread_users` - support the `ignore_missing` property [GH-256]
 * `data.azuread_users` - export the `users` attribute containing a list of users with additional properties [GH-256]
 * `azuread_application` - support the `prevent_duplicate_names` property [GH-279]
+* `azuread_application` - validate `app_roles` and `oauth2_permissions` to check for duplicate `value`s [GH-287]
 * `azuread_group` - support the `prevent_duplicate_names` property [GH-279]
 
 BUG FIXES:
