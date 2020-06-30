@@ -5,13 +5,18 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 )
 
 func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objectId string) (*graphrbac.User, error) {
 	filter := fmt.Sprintf("objectId eq '%s'", objectId)
 	resp, err := client.ListComplete(ctx, filter, "")
 	if err != nil {
-		return nil, fmt.Errorf("Error listing Azure AD Users for filter %q: %+v", filter, err)
+		if ar.ResponseWasNotFound(resp.Response().Response) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("listing Azure AD Users for filter %q: %+v", filter, err)
 	}
 
 	values := resp.Response().Value
@@ -19,10 +24,10 @@ func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objec
 		return nil, fmt.Errorf("nil values for AD Users matching %q", filter)
 	}
 	if len(*values) == 0 {
-		return nil, fmt.Errorf("Found no AD Users matching %q", filter)
+		return nil, nil
 	}
 	if len(*values) > 2 {
-		return nil, fmt.Errorf("Found multiple AD Users matching %q", filter)
+		return nil, fmt.Errorf("found multiple AD Users matching %q", filter)
 	}
 
 	user := (*values)[0]
@@ -40,7 +45,7 @@ func UserGetByMailNickname(client *graphrbac.UsersClient, ctx context.Context, m
 	filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 	resp, err := client.ListComplete(ctx, filter, "")
 	if err != nil {
-		return nil, fmt.Errorf("Error listing Azure AD Users for filter %q: %+v", filter, err)
+		return nil, fmt.Errorf("listing Azure AD Users for filter %q: %+v", filter, err)
 	}
 
 	values := resp.Response().Value
@@ -48,10 +53,10 @@ func UserGetByMailNickname(client *graphrbac.UsersClient, ctx context.Context, m
 		return nil, fmt.Errorf("nil values for AD Users matching %q", filter)
 	}
 	if len(*values) == 0 {
-		return nil, fmt.Errorf("Found no AD Users matching %q", filter)
+		return nil, nil
 	}
 	if len(*values) > 2 {
-		return nil, fmt.Errorf("Found multiple AD Users matching %q", filter)
+		return nil, fmt.Errorf("found multiple AD Users matching %q", filter)
 	}
 
 	user := (*values)[0]

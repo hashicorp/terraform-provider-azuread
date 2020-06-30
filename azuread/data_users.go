@@ -143,29 +143,39 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			users = append(users, &u)
 		}
-	} else if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
-		expectedCount = len(oids)
-		for _, v := range oids {
-			u, err := graph.UserGetByObjectId(&client, ctx, v.(string))
-			if err != nil {
-				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
-					break
+	} else {
+		if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
+			expectedCount = len(oids)
+			for _, v := range oids {
+				u, err := graph.UserGetByObjectId(&client, ctx, v.(string))
+				if err != nil {
+					return fmt.Errorf("finding Azure AD User with object ID %q: %+v", v.(string), err)
 				}
-				return fmt.Errorf("finding Azure AD User with object ID %q: %+v", v.(string), err)
-			}
-			users = append(users, u)
-		}
-	} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
-		expectedCount = len(mailNicknames)
-		for _, v := range mailNicknames {
-			u, err := graph.UserGetByMailNickname(&client, ctx, v.(string))
-			if err != nil {
-				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
-					break
+				if u == nil {
+					if ignoreMissing {
+						break
+					} else {
+						return fmt.Errorf("found no AD Users with object ID %q", v.(string))
+					}
 				}
-				return fmt.Errorf("finding Azure AD User with email alias %q: %+v", v.(string), err)
+				users = append(users, u)
 			}
-			users = append(users, u)
+		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
+			expectedCount = len(mailNicknames)
+			for _, v := range mailNicknames {
+				u, err := graph.UserGetByMailNickname(&client, ctx, v.(string))
+				if err != nil {
+					return fmt.Errorf("finding Azure AD User with email alias %q: %+v", v.(string), err)
+				}
+				if u == nil {
+					if ignoreMissing {
+						break
+					} else {
+						return fmt.Errorf("found no AD Users with email alias %q", v.(string))
+					}
+				}
+				users = append(users, u)
+			}
 		}
 	}
 
