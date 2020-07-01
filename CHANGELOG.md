@@ -14,6 +14,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * `azuread_group` - remediate AAD replication delays when adding/removing group members [GH-283]
+* `azuread_group` - remediate AAD replication delays after group creation, before setting owners/members [GH-290]
 
 ## 0.10.0 (June 05, 2020)
 
