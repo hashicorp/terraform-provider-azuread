@@ -106,13 +106,17 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := client.Create(ctx, properties)
 	if err != nil {
-		return fmt.Errorf("Error creating Group (%q): %+v", name, err)
+		return fmt.Errorf("creating Group (%q): %+v", name, err)
 	}
 	if group.ObjectID == nil {
 		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
 	}
 
 	d.SetId(*group.ObjectID)
+
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
+		return client.Get(ctx, *group.ObjectID)
+	})
 
 	// Add members if specified
 	if v, ok := d.GetOk("members"); ok {
@@ -138,11 +142,8 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
-		return client.Get(ctx, *group.ObjectID)
-	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Group (%s) with ObjectId %q: %+v", name, *group.ObjectID, err)
+		return fmt.Errorf("waiting for Group (%s) with ObjectId %q: %+v", name, *group.ObjectID, err)
 	}
 
 	return resourceGroupRead(d, meta)
@@ -160,7 +161,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return fmt.Errorf("Error retrieving Azure AD Group with ID %q: %+v", d.Id(), err)
+		return fmt.Errorf("retrieving Azure AD Group with ID %q: %+v", d.Id(), err)
 	}
 
 	d.Set("name", resp.DisplayName)
@@ -215,7 +216,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 				if i == attempts {
-					return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", existingMember, d.Id(), err)
+					return fmt.Errorf("deleting group member %q from Azure AD Group with ID %q: %+v", existingMember, d.Id(), err)
 				}
 				time.Sleep(time.Second * 2)
 			}
@@ -223,7 +224,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			if _, err := graph.WaitForListRemove(existingMember, func() ([]string, error) {
 				return graph.GroupAllMembers(client, ctx, d.Id())
 			}); err != nil {
-				return fmt.Errorf("Error waiting for group membership removal: %+v", err)
+				return fmt.Errorf("waiting for group membership removal: %+v", err)
 			}
 		}
 
@@ -246,7 +247,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", ownerToDelete, d.Id())
 			if resp, err := client.RemoveOwner(ctx, d.Id(), ownerToDelete); err != nil {
 				if !ar.ResponseWasNotFound(resp) {
-					return fmt.Errorf("Error Deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, d.Id(), err)
+					return fmt.Errorf("deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, d.Id(), err)
 				}
 			}
 		}
@@ -265,7 +266,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if resp, err := client.Delete(ctx, d.Id()); err != nil {
 		if !ar.ResponseWasNotFound(resp) {
-			return fmt.Errorf("Error Deleting Azure AD Group with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("deleting Azure AD Group with ID %q: %+v", d.Id(), err)
 		}
 	}
 
