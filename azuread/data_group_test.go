@@ -30,6 +30,26 @@ func TestAccDataSourceAzureADGroup_byName(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAzureADGroup_byCaseInsensitiveName(t *testing.T) {
+	dsn := "data.azuread_group.test"
+	id := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureADGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAzureADGroup_caseInsensitiveName(id),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureADGroupExists(dsn),
+					resource.TestCheckResourceAttr(dsn, "name", fmt.Sprintf("acctestGroup-%d", id)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAzureADGroup_byObjectId(t *testing.T) {
 	dsn := "data.azuread_group.test"
 	id := tf.AccRandTimeInt()
@@ -100,6 +120,16 @@ func testAccDataSourceAzureADGroup_name(id int) string {
 
 data "azuread_group" "test" {
   name = azuread_group.test.name
+}
+`, testAccAzureADGroup_basic(id))
+}
+
+func testAccDataSourceAzureADGroup_caseInsensitiveName(id int) string {
+	return fmt.Sprintf(`
+%s
+
+data "azuread_group" "test" {
+  name = upper(azuread_group.test.name)
 }
 `, testAccAzureADGroup_basic(id))
 }
