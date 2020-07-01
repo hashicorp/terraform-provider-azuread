@@ -6,6 +6,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 )
@@ -89,19 +90,28 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		resp, err := client.Get(ctx, upn)
 		if err != nil {
-			return fmt.Errorf("Error making Read request on AzureAD User with ID %q: %+v", upn, err)
+			if ar.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Azure AD User not found with UPN: %q", upn)
+			}
+			return fmt.Errorf("making Read request on AzureAD User with ID %q: %+v", upn, err)
 		}
 		user = resp
 	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		u, err := graph.UserGetByObjectId(&client, ctx, oId)
 		if err != nil {
-			return fmt.Errorf("Error finding Azure AD User with object ID %q: %+v", oId, err)
+			return fmt.Errorf("finding Azure AD User with object ID %q: %+v", oId, err)
+		}
+		if u == nil {
+			return fmt.Errorf("Azure AD User not found with object ID: %q", oId)
 		}
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		u, err := graph.UserGetByMailNickname(&client, ctx, mailNickname)
 		if err != nil {
-			return fmt.Errorf("Error finding Azure AD User with email alias %q: %+v", mailNickname, err)
+			return fmt.Errorf("finding Azure AD User with email alias %q: %+v", mailNickname, err)
+		}
+		if u == nil {
+			return fmt.Errorf("Azure AD User not found with email alias: %q", mailNickname)
 		}
 		user = *u
 	} else {
