@@ -114,6 +114,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*group.ObjectID)
 
+	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
+		return client.Get(ctx, *group.ObjectID)
+	})
+
 	// Add members if specified
 	if v, ok := d.GetOk("members"); ok {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
@@ -138,9 +142,6 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
-		return client.Get(ctx, *group.ObjectID)
-	})
 	if err != nil {
 		return fmt.Errorf("Error waiting for Group (%s) with ObjectId %q: %+v", name, *group.ObjectID, err)
 	}
