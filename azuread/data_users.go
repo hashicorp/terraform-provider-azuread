@@ -137,7 +137,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 			u, err := client.Get(ctx, v.(string))
 			if err != nil {
 				if ignoreMissing && ar.ResponseWasNotFound(u.Response) {
-					break
+					continue
 				}
 				return fmt.Errorf("making Read request on AzureAD User with ID %q: %+v", v.(string), err)
 			}
@@ -153,7 +153,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 				}
 				if u == nil {
 					if ignoreMissing {
-						break
+						continue
 					} else {
 						return fmt.Errorf("found no AD Users with object ID %q", v.(string))
 					}
@@ -169,7 +169,7 @@ func dataSourceUsersRead(d *schema.ResourceData, meta interface{}) error {
 				}
 				if u == nil {
 					if ignoreMissing {
-						break
+						continue
 					} else {
 						return fmt.Errorf("found no AD Users with email alias %q", v.(string))
 					}
