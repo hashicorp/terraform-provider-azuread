@@ -1,20 +1,20 @@
-## 0.11.0 (Unreleased)
+## 0.11.0 (July 09, 2020)
 
 IMPROVEMENTS:
 
-* Provider: no longer require configuring `subscription_id` (configuration value) / `ARM_SUBSCRIPTION_ID` (environment variable). [GH-271]
-* `data.azuread_client_config` - deprecate the `subscription_id` property. For compatibility, still populates `subscription_id` if the provider is configured with a subscription ID [GH-271]
-* `data.azuread_application` - support for the `application_id` property [GH-274]
-* `data.azuread_users` - support the `ignore_missing` property [GH-256]
-* `data.azuread_users` - export the `users` attribute containing a list of users with additional properties [GH-256]
-* `azuread_application` - support the `prevent_duplicate_names` property [GH-279]
-* `azuread_application` - validate `app_roles` and `oauth2_permissions` to check for duplicate `value`s [GH-287]
-* `azuread_group` - support the `prevent_duplicate_names` property [GH-279]
+* Provider: no longer require configuring `subscription_id` (configuration value) / `ARM_SUBSCRIPTION_ID` (environment variable). ([#271](https://github.com/terraform-providers/terraform-provider-azuread/issues/271))
+* `data.azuread_client_config` - deprecate the `subscription_id` property. For compatibility, still populates `subscription_id` if the provider is configured with a subscription ID ([#271](https://github.com/terraform-providers/terraform-provider-azuread/issues/271))
+* `data.azuread_application` - support for the `application_id` property ([#274](https://github.com/terraform-providers/terraform-provider-azuread/issues/274))
+* `data.azuread_users` - support the `ignore_missing` property ([#256](https://github.com/terraform-providers/terraform-provider-azuread/issues/256))
+* `data.azuread_users` - export the `users` attribute containing a list of users with additional properties ([#256](https://github.com/terraform-providers/terraform-provider-azuread/issues/256))
+* `azuread_application` - support the `prevent_duplicate_names` property ([#279](https://github.com/terraform-providers/terraform-provider-azuread/issues/279))
+* `azuread_application` - validate `app_roles` and `oauth2_permissions` to check for duplicate `value`s ([#287](https://github.com/terraform-providers/terraform-provider-azuread/issues/287))
+* `azuread_group` - support the `prevent_duplicate_names` property ([#279](https://github.com/terraform-providers/terraform-provider-azuread/issues/279))
 
 BUG FIXES:
 
-* `azuread_group` - remediate AAD replication delays when adding/removing group members [GH-283]
-* `azuread_group` - remediate AAD replication delays after group creation, before setting owners/members [GH-290]
+* `azuread_group` - remediate AAD replication delays when adding/removing group members ([#283](https://github.com/terraform-providers/terraform-provider-azuread/issues/283))
+* `azuread_group` - remediate AAD replication delays after group creation, before setting owners/members ([#290](https://github.com/terraform-providers/terraform-provider-azuread/issues/290))
 
 ## 0.10.0 (June 05, 2020)
 
