@@ -47,6 +47,7 @@ The following arguments are supported:
 * `city` - (Optional) The city in which the user is located.
 * `state` - (Optional) The state or province in the user's address.
 * `country` - (Optional) The country/region in which the user is located; for example, “US” or “UK”.
+* `mobile` - (Optional) The primary cellular telephone number for the user.
 * `postal_code` - (Optional) The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code.
 
 ## Attributes Reference

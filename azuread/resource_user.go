@@ -157,6 +157,12 @@ func resourceUser() *schema.Resource {
 				Description: "The office location in the user's place of business.",
 			},
 
+			"mobile": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The primary cellular telephone number for the user.",
+			},
+
 			"postal_code": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -311,6 +317,10 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		userUpdateParameters.AdditionalProperties["postalCode"] = getStringOrNil("postal_code")
 	}
 
+	if d.HasChange("mobile") {
+		userUpdateParameters.AdditionalProperties["mobile"] = getStringOrNil("mobile")
+	}
+
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
 		return fmt.Errorf("Error updating User with ID %q: %+v", d.Id(), err)
 	}
@@ -354,6 +364,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("country", user.AdditionalProperties["country"])
 	d.Set("physical_delivery_office_name", user.AdditionalProperties["physicalDeliveryOfficeName"])
 	d.Set("postal_code", user.AdditionalProperties["postalCode"])
+	d.Set("mobile", user.AdditionalProperties["mobile"])
 	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
 	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
 
