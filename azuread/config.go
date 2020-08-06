@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/services/graph/1.0/graph"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform-plugin-sdk/httpclient"
@@ -36,6 +38,7 @@ type ArmClient struct {
 	groupsClient            graphrbac.GroupsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
 	usersClient             graphrbac.UsersClient
+	guestUsersClient        graph.GuestUserClient
 }
 
 // getArmClient is a helper method which returns a fully instantiated *ArmClient based on the auth Config's current settings.
@@ -83,6 +86,14 @@ func getArmClient(authCfg *authentication.Config, tfVersion string, ctx context.
 
 	client.registerGraphRBACClients(graphEndpoint, authCfg.TenantID, graphAuthorizer)
 
+	// dedicated guest part
+
+	guestAuthorizer, err := auth.NewAuthorizerFromEnvironmentWithResource("https://graph.microsoft.com")
+	if err != nil {
+		return nil, err
+	}
+	client.registerGraphClients(guestAuthorizer)
+
 	return &client, nil
 }
 
@@ -101,6 +112,12 @@ func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authoriz
 
 	c.usersClient = graphrbac.NewUsersClientWithBaseURI(endpoint, tenantID)
 	configureClient(&c.usersClient.Client, authorizer, c.terraformVersion)
+
+}
+
+func (c *ArmClient) registerGraphClients(authorizer autorest.Authorizer) {
+	c.guestUsersClient = graph.NewGuestUserClient()
+	configureClient(&c.guestUsersClient, authorizer, c.terraformVersion)
 }
 
 func configureClient(client *autorest.Client, auth autorest.Authorizer, tfVersion string) {
