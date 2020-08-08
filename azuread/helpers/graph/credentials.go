@@ -19,10 +19,10 @@ import (
 )
 
 // valid types are `application` and `service_principal`
-func CertificateResourceSchema(object_type string) map[string]*schema.Schema {
+func CertificateResourceSchema(objectType string) map[string]*schema.Schema {
 	var idAttribute string
 
-	switch object_type {
+	switch objectType {
 	case "application":
 		idAttribute = "application_object_id"
 	case "service_principal":
@@ -91,7 +91,23 @@ func CertificateResourceSchema(object_type string) map[string]*schema.Schema {
 
 // valid types are `application` and `service_principal`
 func PasswordResourceSchema(objectType string) map[string]*schema.Schema {
-	theSchema := map[string]*schema.Schema{
+	var idAttribute string
+
+	switch objectType {
+	case "application":
+		idAttribute = "application_object_id"
+	case "service_principal":
+		idAttribute = "service_principal_id"
+	}
+
+	return map[string]*schema.Schema{
+		idAttribute: {
+			Type:         schema.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validate.UUID,
+		},
+
 		"key_id": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -140,36 +156,6 @@ func PasswordResourceSchema(objectType string) map[string]*schema.Schema {
 			ValidateFunc: validate.NoEmptyStrings,
 		},
 	}
-
-	switch objectType {
-	case "application":
-		theSchema["application_id"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			Computed:     true,
-			ValidateFunc: validate.UUID,
-			Deprecated:   "Deprecated in favour of `application_object_id` to prevent confusion",
-			ExactlyOneOf: []string{"application_object_id"},
-		}
-		theSchema["application_object_id"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
-			ExactlyOneOf: []string{"application_id"},
-		}
-	case "service_principal":
-		theSchema["service_principal_id"] = &schema.Schema{
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
-		}
-	}
-
-	return theSchema
 }
 
 type CredentialId struct {

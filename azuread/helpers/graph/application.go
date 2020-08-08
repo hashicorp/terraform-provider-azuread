@@ -149,33 +149,33 @@ func SchemaOptionalClaims() *schema.Schema {
 	}
 }
 
-func FlattenAppRoles(in *[]graphrbac.AppRole) []interface{} {
+func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {
 	if in == nil {
-		return []interface{}{}
+		return []map[string]interface{}{}
 	}
 
-	appRoles := make([]interface{}, 0)
-	for _, role := range *in {
+	appRoles := make([]map[string]interface{}, len(*in))
+	for i, role := range *in {
 		appRole := make(map[string]interface{})
-		if role.ID != nil {
-			appRole["id"] = *role.ID
+		if v := role.ID; v != nil {
+			appRole["_id"] = *v
 		}
-		if role.AllowedMemberTypes != nil {
-			appRole["allowed_member_types"] = *role.AllowedMemberTypes
+		if v := role.AllowedMemberTypes; v != nil {
+			appRole["allowed_member_types"] = *v
 		}
-		if role.Description != nil {
-			appRole["description"] = *role.Description
+		if v := role.Description; v != nil {
+			appRole["description"] = *v
 		}
-		if role.DisplayName != nil {
-			appRole["display_name"] = *role.DisplayName
+		if v := role.DisplayName; v != nil {
+			appRole["display_name"] = *v
 		}
-		if role.IsEnabled != nil {
-			appRole["is_enabled"] = *role.IsEnabled
+		if v := role.IsEnabled; v != nil {
+			appRole["is_enabled"] = *v
 		}
-		if role.Value != nil {
-			appRole["value"] = *role.Value
+		if v := role.Value; v != nil {
+			appRole["value"] = *v
 		}
-		appRoles = append(appRoles, appRole)
+		appRoles[i] = appRole
 	}
 
 	return appRoles
