@@ -2,10 +2,10 @@ package azuread
 
 import (
 	"fmt"
+	"github.com/Azure/azure-sdk-for-go/services/graph/1.0/graph"
 	"log"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/graph/1.0/graph"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
