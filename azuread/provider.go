@@ -91,6 +91,7 @@ func Provider() terraform.ResourceProvider {
 			"azuread_service_principal_certificate": resourceServicePrincipalCertificate(),
 			"azuread_service_principal_password":    resourceServicePrincipalPassword(),
 			"azuread_user":                          resourceUser(),
+			"azuread_guest_user":                    resourceGuestUser(),
 		},
 	}
 

@@ -117,7 +117,7 @@ func (c *ArmClient) registerGraphRBACClients(endpoint, tenantID string, authoriz
 
 func (c *ArmClient) registerGraphClients(authorizer autorest.Authorizer) {
 	c.guestUsersClient = graph.NewGuestUserClient()
-	configureClient(&c.guestUsersClient, authorizer, c.terraformVersion)
+	configureClient(&c.guestUsersClient.Client, authorizer, c.terraformVersion)
 }
 
 func configureClient(client *autorest.Client, auth autorest.Authorizer, tfVersion string) {
