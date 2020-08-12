@@ -1,5 +1,5 @@
 ---
-subcategory: "Guest Users"
+subcategory: "Users"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_guest_user"
 description: |-
