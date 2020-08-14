@@ -66,7 +66,7 @@ func ResourceServicePrincipal() *schema.Resource {
 }
 
 func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Get("application_id").(string)
@@ -106,7 +106,7 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceServicePrincipalUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	var properties graphrbac.ServicePrincipalUpdateParameters
@@ -132,7 +132,7 @@ func resourceServicePrincipalUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
@@ -165,7 +165,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceServicePrincipalDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Id()

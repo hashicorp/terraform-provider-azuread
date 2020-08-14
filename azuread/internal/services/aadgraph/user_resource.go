@@ -107,7 +107,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).UsersClient
+	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	upn := d.Get("user_principal_name").(string)
@@ -157,7 +157,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).UsersClient
+	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	var userUpdateParameters graphrbac.UserUpdateParameters
@@ -197,7 +197,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).UsersClient
+	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
@@ -228,7 +228,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).UsersClient
+	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	resp, err := client.Delete(ctx, d.Id())

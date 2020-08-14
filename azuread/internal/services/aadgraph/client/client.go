@@ -16,7 +16,6 @@ type Client struct {
 }
 
 func BuildClient(o *services.ClientOptions, endpoint string, authorizer autorest.Authorizer) *Client {
-
 	applicationsClient := graphrbac.NewApplicationsClientWithBaseURI(endpoint, o.TenantID)
 	o.ConfigureClient(&applicationsClient.Client, authorizer)
 

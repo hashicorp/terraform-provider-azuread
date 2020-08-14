@@ -49,7 +49,7 @@ func DataServicePrincipal() *schema.Resource {
 }
 
 func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	var sp *graphrbac.ServicePrincipal

@@ -529,7 +529,7 @@ func testCheckApplicationExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ApplicationsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 
@@ -550,7 +550,7 @@ func testCheckApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ApplicationsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 

@@ -220,7 +220,7 @@ func FlattenOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]int
 	return result
 }
 
-func ApplicationAllOwners(client graphrbac.ApplicationsClient, ctx context.Context, groupId string) ([]string, error) {
+func ApplicationAllOwners(client *graphrbac.ApplicationsClient, ctx context.Context, groupId string) ([]string, error) {
 	owners, err := client.ListOwnersComplete(ctx, groupId)
 
 	if err != nil {
@@ -236,7 +236,7 @@ func ApplicationAllOwners(client graphrbac.ApplicationsClient, ctx context.Conte
 	return existingMembers, nil
 }
 
-func ApplicationAddOwner(client graphrbac.ApplicationsClient, ctx context.Context, groupId string, owner string) error {
+func ApplicationAddOwner(client *graphrbac.ApplicationsClient, ctx context.Context, groupId string, owner string) error {
 	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
@@ -251,7 +251,7 @@ func ApplicationAddOwner(client graphrbac.ApplicationsClient, ctx context.Contex
 	return nil
 }
 
-func ApplicationAddOwners(client graphrbac.ApplicationsClient, ctx context.Context, groupId string, owner []string) error {
+func ApplicationAddOwners(client *graphrbac.ApplicationsClient, ctx context.Context, groupId string, owner []string) error {
 	for _, ownerUuid := range owner {
 		err := ApplicationAddOwner(client, ctx, groupId, ownerUuid)
 
@@ -263,7 +263,7 @@ func ApplicationAddOwners(client graphrbac.ApplicationsClient, ctx context.Conte
 	return nil
 }
 
-func ApplicationFindByName(client graphrbac.ApplicationsClient, ctx context.Context, name string) (*graphrbac.Application, error) {
+func ApplicationFindByName(client *graphrbac.ApplicationsClient, ctx context.Context, name string) (*graphrbac.Application, error) {
 	nameFilter := fmt.Sprintf("displayName eq '%s'", name)
 	resp, err := client.List(ctx, nameFilter)
 
@@ -280,7 +280,7 @@ func ApplicationFindByName(client graphrbac.ApplicationsClient, ctx context.Cont
 	return nil, nil
 }
 
-func ApplicationCheckNameAvailability(client graphrbac.ApplicationsClient, ctx context.Context, name string) error {
+func ApplicationCheckNameAvailability(client *graphrbac.ApplicationsClient, ctx context.Context, name string) error {
 	existingApp, err := ApplicationFindByName(client, ctx, name)
 	if err != nil {
 		return err

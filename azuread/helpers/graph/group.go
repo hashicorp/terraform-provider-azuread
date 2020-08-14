@@ -97,7 +97,7 @@ func DirectoryObjectListToIDs(objects graphrbac.DirectoryObjectListResultIterato
 	return ids, nil
 }
 
-func GroupAllMembers(client graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
+func GroupAllMembers(client *graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
 	members, err := client.GetGroupMembersComplete(ctx, groupId)
 
 	if err != nil {
@@ -114,7 +114,7 @@ func GroupAllMembers(client graphrbac.GroupsClient, ctx context.Context, groupId
 	return existingMembers, nil
 }
 
-func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId string, member string) error {
+func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId string, member string) error {
 	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
 
 	properties := graphrbac.GroupAddMemberParameters{
@@ -143,7 +143,7 @@ func GroupAddMember(client graphrbac.GroupsClient, ctx context.Context, groupId 
 	return nil
 }
 
-func GroupAddMembers(client graphrbac.GroupsClient, ctx context.Context, groupId string, members []string) error {
+func GroupAddMembers(client *graphrbac.GroupsClient, ctx context.Context, groupId string, members []string) error {
 	for _, memberUuid := range members {
 		err := GroupAddMember(client, ctx, groupId, memberUuid)
 
@@ -155,7 +155,7 @@ func GroupAddMembers(client graphrbac.GroupsClient, ctx context.Context, groupId
 	return nil
 }
 
-func GroupAllOwners(client graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
+func GroupAllOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
 	owners, err := client.ListOwnersComplete(ctx, groupId)
 
 	if err != nil {
@@ -171,7 +171,7 @@ func GroupAllOwners(client graphrbac.GroupsClient, ctx context.Context, groupId 
 	return existingMembers, nil
 }
 
-func GroupAddOwner(client graphrbac.GroupsClient, ctx context.Context, groupId string, owner string) error {
+func GroupAddOwner(client *graphrbac.GroupsClient, ctx context.Context, groupId string, owner string) error {
 	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
@@ -186,7 +186,7 @@ func GroupAddOwner(client graphrbac.GroupsClient, ctx context.Context, groupId s
 	return nil
 }
 
-func GroupAddOwners(client graphrbac.GroupsClient, ctx context.Context, groupId string, owner []string) error {
+func GroupAddOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId string, owner []string) error {
 	for _, ownerUuid := range owner {
 		err := GroupAddOwner(client, ctx, groupId, ownerUuid)
 
@@ -198,7 +198,7 @@ func GroupAddOwners(client graphrbac.GroupsClient, ctx context.Context, groupId 
 	return nil
 }
 
-func GroupFindByName(client graphrbac.GroupsClient, ctx context.Context, name string) (*graphrbac.ADGroup, error) {
+func GroupFindByName(client *graphrbac.GroupsClient, ctx context.Context, name string) (*graphrbac.ADGroup, error) {
 	nameFilter := fmt.Sprintf("displayName eq '%s'", name)
 	resp, err := client.List(ctx, nameFilter)
 
@@ -215,7 +215,7 @@ func GroupFindByName(client graphrbac.GroupsClient, ctx context.Context, name st
 	return nil, nil
 }
 
-func GroupCheckNameAvailability(client graphrbac.GroupsClient, ctx context.Context, name string) error {
+func GroupCheckNameAvailability(client *graphrbac.GroupsClient, ctx context.Context, name string) error {
 	existingGroup, err := GroupFindByName(client, ctx, name)
 	if err != nil {
 		return err

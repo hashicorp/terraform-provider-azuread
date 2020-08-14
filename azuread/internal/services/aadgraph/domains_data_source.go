@@ -64,7 +64,7 @@ func DataDomains() *schema.Resource {
 
 func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface{}) error {
 	tenantId := meta.(*clients.AadClient).TenantID
-	client := meta.(*clients.AadClient).DomainsClient
+	client := meta.(*clients.AadClient).AadGraph.DomainsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	includeUnverified := d.Get("include_unverified").(bool)

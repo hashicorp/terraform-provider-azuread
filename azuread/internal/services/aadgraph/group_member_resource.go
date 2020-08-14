@@ -43,7 +43,7 @@ func ResourceGroupMember() *schema.Resource {
 }
 
 func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	groupID := d.Get("group_object_id").(string)
@@ -61,7 +61,7 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())
@@ -93,7 +93,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())

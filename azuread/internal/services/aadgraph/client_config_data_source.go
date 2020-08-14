@@ -41,7 +41,7 @@ func dataSourceArmClientConfigRead(d *schema.ResourceData, meta interface{}) err
 	ctx := meta.(*clients.AadClient).StopContext
 
 	if client.AuthenticatedAsAServicePrincipal {
-		spClient := client.ServicePrincipalsClient
+		spClient := client.AadGraph.ServicePrincipalsClient
 		// Application & Service Principal is 1:1 per tenant. Since we know the appId (client_id)
 		// here, we can query for the Service Principal whose appId matches.
 		filter := fmt.Sprintf("appId eq '%s'", client.ClientID)

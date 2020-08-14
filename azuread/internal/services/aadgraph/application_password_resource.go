@@ -38,7 +38,7 @@ func ResourceApplicationPassword() *schema.Resource {
 }
 
 func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
@@ -79,7 +79,7 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
@@ -130,7 +130,7 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())

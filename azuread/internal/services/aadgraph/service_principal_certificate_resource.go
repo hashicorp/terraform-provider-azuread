@@ -29,7 +29,7 @@ func ResourceServicePrincipalCertificate() *schema.Resource {
 }
 
 func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
@@ -70,7 +70,7 @@ func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceServicePrincipalCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
@@ -121,7 +121,7 @@ func resourceServicePrincipalCertificateRead(d *schema.ResourceData, meta interf
 }
 
 func resourceServicePrincipalCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())

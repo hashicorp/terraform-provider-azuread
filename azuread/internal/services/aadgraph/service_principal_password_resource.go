@@ -38,7 +38,7 @@ func ResourceServicePrincipalPassword() *schema.Resource {
 }
 
 func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
@@ -79,7 +79,7 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
@@ -131,7 +131,7 @@ func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface
 }
 
 func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ServicePrincipalsClient
+	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())

@@ -29,7 +29,7 @@ func ResourceApplicationCertificate() *schema.Resource {
 }
 
 func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
@@ -70,7 +70,7 @@ func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())
@@ -121,7 +121,7 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceApplicationCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCredentialId(d.Id())

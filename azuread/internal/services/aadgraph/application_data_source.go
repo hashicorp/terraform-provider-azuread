@@ -149,7 +149,7 @@ func DataApplication() *schema.Resource {
 }
 
 func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	var app graphrbac.Application

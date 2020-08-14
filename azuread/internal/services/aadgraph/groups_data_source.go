@@ -49,7 +49,7 @@ func DataGroups() *schema.Resource {
 }
 
 func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	var groups []graphrbac.ADGroup
@@ -58,7 +58,7 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	if names, ok := d.Get("names").([]interface{}); ok && len(names) > 0 {
 		expectedCount = len(names)
 		for _, v := range names {
-			g, err := graph.GroupGetByDisplayName(&client, ctx, v.(string))
+			g, err := graph.GroupGetByDisplayName(client, ctx, v.(string))
 			if err != nil {
 				return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", v.(string), err)
 			}

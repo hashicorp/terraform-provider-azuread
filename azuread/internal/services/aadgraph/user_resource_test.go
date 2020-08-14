@@ -156,7 +156,7 @@ func testCheckUserExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).UsersClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.UsersClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 
@@ -177,7 +177,7 @@ func testCheckUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).UsersClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.UsersClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 

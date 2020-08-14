@@ -158,7 +158,7 @@ func testCheckGroupMemberDestroy(s *terraform.State) error {
 			continue
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).GroupsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.GroupsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 
 		groupID := rs.Primary.Attributes["group_object_id"]

@@ -16,7 +16,7 @@ import (
 
 func testCheckServicePrincipalPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ServicePrincipalsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 
 		rs, ok := s.RootModule().Resources[name]
@@ -53,7 +53,7 @@ func testCheckServicePrincipalPasswordExists(name string) resource.TestCheckFunc
 
 func testCheckServicePrincipalPasswordCheckDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ApplicationsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 
 		if rs.Type != "azuread_service_principal_password" {

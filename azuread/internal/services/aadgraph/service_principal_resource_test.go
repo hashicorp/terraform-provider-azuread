@@ -113,7 +113,7 @@ func testCheckServicePrincipalExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ServicePrincipalsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 
@@ -134,7 +134,7 @@ func testCheckServicePrincipalDestroy(s *terraform.State) error {
 			continue
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ServicePrincipalsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 		resp, err := client.Get(ctx, rs.Primary.ID)
 

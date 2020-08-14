@@ -5,8 +5,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/azure"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/services"
-
 	aad "github.com/terraform-providers/terraform-provider-azuread/azuread/internal/services/aadgraph/client"
 )
 

@@ -37,7 +37,7 @@ rCHdW31vp5PYNJaSkYL0j259Ogb8crkIzDr3Z8YF
 
 func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolint unparam
 	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ApplicationsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 
 		rs, ok := s.RootModule().Resources[name]
@@ -73,7 +73,7 @@ func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolin
 
 func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).ApplicationsClient
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
 
 		if rs.Type != "azuread_application_certificate" {

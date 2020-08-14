@@ -81,7 +81,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	name := d.Get("name").(string)
@@ -151,7 +151,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	resp, err := client.Get(ctx, d.Id())
@@ -192,7 +192,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") {
@@ -262,7 +262,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).GroupsClient
+	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	if resp, err := client.Delete(ctx, d.Id()); err != nil {

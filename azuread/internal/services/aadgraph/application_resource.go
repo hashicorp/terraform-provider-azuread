@@ -416,7 +416,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	name := d.Get("name").(string)
@@ -558,7 +558,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	app, err := client.Get(ctx, d.Id())
@@ -631,7 +631,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).ApplicationsClient
+	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	// in order to delete an application which is available to other tenants, we first have to disable this setting
@@ -918,7 +918,7 @@ func expandApplicationOAuth2Permissions(i interface{}) *[]graphrbac.OAuth2Permis
 	return &result
 }
 
-func applicationSetOwnersTo(client graphrbac.ApplicationsClient, ctx context.Context, id string, desiredOwners []string) error {
+func applicationSetOwnersTo(client *graphrbac.ApplicationsClient, ctx context.Context, id string, desiredOwners []string) error {
 	existingOwners, err := graph.ApplicationAllOwners(client, ctx, id)
 	if err != nil {
 		return err
