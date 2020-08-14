@@ -1,4 +1,4 @@
-package tests
+package aadgraph_test
 
 import (
 	"fmt"
