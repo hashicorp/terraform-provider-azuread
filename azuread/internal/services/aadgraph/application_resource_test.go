@@ -725,7 +725,7 @@ resource "azuread_application" "test" {
     }
   }
 
-  owners = [azuread_user.tests.object_id]
+  owners = [azuread_user.test.object_id]
 }
 `, testAccUser_basic(ri, pw), ri)
 }

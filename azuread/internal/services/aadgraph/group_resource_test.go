@@ -366,7 +366,7 @@ func testAccGroupWithDiverseMembers(id int, password string) string {
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
-  members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.tests.object_id]
+  members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id]
 }
 `, testAccDiverseDirectoryObjects(id, password), id)
 }
@@ -377,7 +377,7 @@ func testAccGroupWithDiverseOwners(id int, password string) string {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [azuread_user.test.object_id, azuread_service_principal.tests.object_id]
+  owners = [azuread_user.test.object_id, azuread_service_principal.test.object_id]
 }
 `, testAccDiverseDirectoryObjects(id, password), id)
 }

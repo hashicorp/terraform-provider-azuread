@@ -204,7 +204,7 @@ func testAccADObjectCertificateApplication_basic(ri int, keyType, endDate, value
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   type                  = "%s"
   end_date              = "%s"
   value                 = <<EOT
@@ -219,7 +219,7 @@ func testAccApplicationCertificate_complete(ri int, keyId, keyType, startDate, e
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   key_id                = "%s"
   type                  = "%s"
   start_date            = "%s"
@@ -236,7 +236,7 @@ func testAccApplicationCertificate_relativeEndDate(ri int, keyType, value string
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   end_date_relative     = "4320h"
   type                  = "%s"
   value                 = <<EOT

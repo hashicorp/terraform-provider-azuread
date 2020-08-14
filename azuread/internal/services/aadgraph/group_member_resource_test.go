@@ -202,7 +202,7 @@ resource "azuread_group" "tests" {
 }
 
 resource "azuread_group_member" "testA" {
-  group_object_id  = azuread_group.tests.object_id
+  group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testA.object_id
 }
 
@@ -218,12 +218,12 @@ resource "azuread_group" "tests" {
 }
 
 resource "azuread_group_member" "testA" {
-  group_object_id  = azuread_group.tests.object_id
+  group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testA.object_id
 }
 
 resource "azuread_group_member" "testB" {
-  group_object_id  = azuread_group.tests.object_id
+  group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testB.object_id
 }
 
@@ -242,7 +242,7 @@ resource "azuread_group" "member" {
 }
 
 resource "azuread_group_member" "tests" {
-  group_object_id  = azuread_group.tests.object_id
+  group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_group.member.object_id
 }
 
@@ -257,7 +257,7 @@ resource "azuread_application" "tests" {
 }
 
 resource "azuread_service_principal" "tests" {
-  application_id = azuread_application.tests.application_id
+  application_id = azuread_application.test.application_id
 }
 
 resource "azuread_group" "tests" {
@@ -265,8 +265,8 @@ resource "azuread_group" "tests" {
 }
 
 resource "azuread_group_member" "tests" {
-  group_object_id  = azuread_group.tests.object_id
-  member_object_id = azuread_service_principal.tests.object_id
+  group_object_id  = azuread_group.test.object_id
+  member_object_id = azuread_service_principal.test.object_id
 }
 
 `, id)
