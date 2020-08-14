@@ -100,7 +100,7 @@ func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccAzureApplicationCertificate_basic(t *testing.T) {
+func TestAccApplicationCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
@@ -122,7 +122,7 @@ func TestAccAzureApplicationCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_complete(t *testing.T) {
+func TestAccApplicationCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
@@ -146,7 +146,7 @@ func TestAccAzureApplicationCertificate_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_relativeEndDate(t *testing.T) {
+func TestAccApplicationCertificate_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	value := testCertificateApplication
@@ -169,7 +169,7 @@ func TestAccAzureApplicationCertificate_relativeEndDate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_requiresImport(t *testing.T) {
+func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
@@ -204,7 +204,7 @@ func testAccADObjectCertificateApplication_basic(ri int, keyType, endDate, value
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   type                  = "%s"
   end_date              = "%s"
   value                 = <<EOT
@@ -219,7 +219,7 @@ func testAccApplicationCertificate_complete(ri int, keyId, keyType, startDate, e
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   key_id                = "%s"
   type                  = "%s"
   start_date            = "%s"
@@ -236,7 +236,7 @@ func testAccApplicationCertificate_relativeEndDate(ri int, keyType, value string
 %s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.tests.id
+  application_object_id = azuread_application.test.id
   end_date_relative     = "4320h"
   type                  = "%s"
   value                 = <<EOT

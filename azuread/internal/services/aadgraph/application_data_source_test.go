@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
 )
 
-func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
+func TestAccApplicationDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,7 +22,7 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 				Config: testAccApplication_basic(data.RandomInteger),
 			},
 			{
-				Config: testAccAzureADApplicationDataSource_objectId(data.RandomInteger),
+				Config: testAccApplicationDataSource_objectId(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
@@ -43,7 +43,7 @@ func TestAccAzureADApplicationDataSource_byObjectId(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
+func TestAccApplicationDataSource_byObjectIdComplete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -56,7 +56,7 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 				Config: testAccApplication_complete(data.RandomInteger, pw),
 			},
 			{
-				Config: testAccAzureADApplicationDataSource_objectIdComplete(data.RandomInteger, pw),
+				Config: testAccApplicationDataSource_objectIdComplete(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
@@ -76,7 +76,7 @@ func TestAccAzureADApplicationDataSource_byObjectIdComplete(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationDataSource_byApplicationId(t *testing.T) {
+func TestAccApplicationDataSource_byApplicationId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,7 +88,7 @@ func TestAccAzureADApplicationDataSource_byApplicationId(t *testing.T) {
 				Config: testAccApplication_basic(data.RandomInteger),
 			},
 			{
-				Config: testAccAzureADApplicationDataSource_applicationId(data.RandomInteger),
+				Config: testAccApplicationDataSource_applicationId(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
@@ -105,7 +105,7 @@ func TestAccAzureADApplicationDataSource_byApplicationId(t *testing.T) {
 	})
 }
 
-func TestAccAzureADApplicationDataSource_byName(t *testing.T) {
+func TestAccApplicationDataSource_byName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -117,7 +117,7 @@ func TestAccAzureADApplicationDataSource_byName(t *testing.T) {
 				Config: testAccApplication_basic(data.RandomInteger),
 			},
 			{
-				Config: testAccAzureADApplicationDataSource_name(data.RandomInteger),
+				Config: testAccApplicationDataSource_name(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
@@ -134,7 +134,7 @@ func TestAccAzureADApplicationDataSource_byName(t *testing.T) {
 	})
 }
 
-func testAccAzureADApplicationDataSource_objectId(ri int) string {
+func testAccApplicationDataSource_objectId(ri int) string {
 	template := testAccApplication_basic(ri)
 	return fmt.Sprintf(`
 %s
@@ -145,7 +145,7 @@ data "azuread_application" "test" {
 `, template)
 }
 
-func testAccAzureADApplicationDataSource_objectIdComplete(ri int, pw string) string {
+func testAccApplicationDataSource_objectIdComplete(ri int, pw string) string {
 	template := testAccApplication_complete(ri, pw)
 	return fmt.Sprintf(`
 %s
@@ -156,7 +156,7 @@ data "azuread_application" "test" {
 `, template)
 }
 
-func testAccAzureADApplicationDataSource_applicationId(ri int) string {
+func testAccApplicationDataSource_applicationId(ri int) string {
 	template := testAccApplication_basic(ri)
 	return fmt.Sprintf(`
 %s
@@ -167,7 +167,7 @@ data "azuread_application" "test" {
 `, template)
 }
 
-func testAccAzureADApplicationDataSource_name(ri int) string {
+func testAccApplicationDataSource_name(ri int) string {
 	template := testAccApplication_basic(ri)
 	return fmt.Sprintf(`
 %s

@@ -15,7 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func TestAccAzureApplication_basic(t *testing.T) {
+func TestAccApplication_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	appName := fmt.Sprintf("acctest-APP-%d", data.RandomInteger)
 
@@ -42,7 +42,7 @@ func TestAccAzureApplication_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_complete(t *testing.T) {
+func TestAccApplication_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -76,7 +76,7 @@ func TestAccAzureApplication_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_update(t *testing.T) {
+func TestAccApplication_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	updatedri := tf.AccRandTimeInt()
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -131,7 +131,7 @@ func TestAccAzureApplication_update(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_http_homepage(t *testing.T) {
+func TestAccApplication_http_homepage(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -157,7 +157,7 @@ func TestAccAzureApplication_http_homepage(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_publicClient(t *testing.T) {
+func TestAccApplication_publicClient(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,7 +177,7 @@ func TestAccAzureApplication_publicClient(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_availableToOtherTenants(t *testing.T) {
+func TestAccApplication_availableToOtherTenants(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -197,7 +197,7 @@ func TestAccAzureApplication_availableToOtherTenants(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_appRoles(t *testing.T) {
+func TestAccApplication_appRoles(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -217,7 +217,7 @@ func TestAccAzureApplication_appRoles(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_appRolesNoValue(t *testing.T) {
+func TestAccApplication_appRolesNoValue(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -237,7 +237,7 @@ func TestAccAzureApplication_appRolesNoValue(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_appRolesUpdate(t *testing.T) {
+func TestAccApplication_appRolesUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -265,7 +265,7 @@ func TestAccAzureApplication_appRolesUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_appRolesDelete(t *testing.T) {
+func TestAccApplication_appRolesDelete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -293,7 +293,7 @@ func TestAccAzureApplication_appRolesDelete(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_groupMembershipClaimsUpdate(t *testing.T) {
+func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -336,7 +336,7 @@ func TestAccAzureApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_native(t *testing.T) {
+func TestAccApplication_native(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -360,7 +360,7 @@ func TestAccAzureApplication_native(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_nativeReplyUrls(t *testing.T) {
+func TestAccApplication_nativeReplyUrls(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -384,7 +384,7 @@ func TestAccAzureApplication_nativeReplyUrls(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_nativeUpdate(t *testing.T) {
+func TestAccApplication_nativeUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -435,7 +435,7 @@ func TestAccAzureApplication_nativeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
+func TestAccApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -451,7 +451,7 @@ func TestAccAzureApplication_native_app_does_not_allow_identifier_uris(t *testin
 	})
 }
 
-func TestAccAzureApplication_oauth2PermissionsUpdate(t *testing.T) {
+func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -490,7 +490,7 @@ func TestAccAzureApplication_oauth2PermissionsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_preventDuplicateNames(t *testing.T) {
+func TestAccApplication_preventDuplicateNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -506,7 +506,7 @@ func TestAccAzureApplication_preventDuplicateNames(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
+func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -725,7 +725,7 @@ resource "azuread_application" "test" {
     }
   }
 
-  owners = [azuread_user.tests.object_id]
+  owners = [azuread_user.test.object_id]
 }
 `, testAccUser_basic(ri, pw), ri)
 }
