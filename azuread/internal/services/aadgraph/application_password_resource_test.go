@@ -79,7 +79,7 @@ func testCheckApplicationPasswordCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccAzureApplicationPassword_basic(t *testing.T) {
+func TestAccApplicationPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	applicationId := uuid.New().String()
 	value := uuid.New().String()
@@ -103,7 +103,7 @@ func TestAccAzureApplicationPassword_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationPassword_requiresImport(t *testing.T) {
+func TestAccApplicationPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	applicationId := uuid.New().String()
 	value := uuid.New().String()
@@ -124,7 +124,7 @@ func TestAccAzureApplicationPassword_requiresImport(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationPassword_customKeyId(t *testing.T) {
+func TestAccApplicationPassword_customKeyId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	applicationId := uuid.New().String()
 	keyId := uuid.New().String()
@@ -149,7 +149,7 @@ func TestAccAzureApplicationPassword_customKeyId(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationPassword_description(t *testing.T) {
+func TestAccApplicationPassword_description(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	applicationId := uuid.New().String()
 	value := uuid.New().String()
@@ -173,7 +173,7 @@ func TestAccAzureApplicationPassword_description(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationPassword_relativeEndDate(t *testing.T) {
+func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	applicationId := uuid.New().String()
 	value := uuid.New().String()

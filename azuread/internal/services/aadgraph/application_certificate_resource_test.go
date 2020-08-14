@@ -100,7 +100,7 @@ func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccAzureApplicationCertificate_basic(t *testing.T) {
+func TestAccApplicationCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
@@ -122,7 +122,7 @@ func TestAccAzureApplicationCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_complete(t *testing.T) {
+func TestAccApplicationCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
@@ -146,7 +146,7 @@ func TestAccAzureApplicationCertificate_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_relativeEndDate(t *testing.T) {
+func TestAccApplicationCertificate_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	value := testCertificateApplication
@@ -169,7 +169,7 @@ func TestAccAzureApplicationCertificate_relativeEndDate(t *testing.T) {
 	})
 }
 
-func TestAccAzureApplicationCertificate_requiresImport(t *testing.T) {
+func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
 	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)

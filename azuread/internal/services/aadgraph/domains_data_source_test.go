@@ -8,7 +8,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
 )
 
-func TestAccDataSourceDomains_basic(t *testing.T) {
+func TestAccDomainsDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -16,7 +16,7 @@ func TestAccDataSourceDomains_basic(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDomains_basic,
+				Config: testAccDomainsDataSource_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.authentication_type"),
@@ -29,7 +29,7 @@ func TestAccDataSourceDomains_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceDomains_onlyDefault(t *testing.T) {
+func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -37,7 +37,7 @@ func TestAccDataSourceDomains_onlyDefault(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDomains_onlyDefault,
+				Config: testAccDomainsDataSource_onlyDefault,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_default"),
@@ -49,7 +49,7 @@ func TestAccDataSourceDomains_onlyDefault(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceDomains_onlyInitial(t *testing.T) {
+func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -57,7 +57,7 @@ func TestAccDataSourceDomains_onlyInitial(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDomains_onlyInitial,
+				Config: testAccDomainsDataSource_onlyInitial,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_default"),
@@ -69,17 +69,17 @@ func TestAccDataSourceDomains_onlyInitial(t *testing.T) {
 	})
 }
 
-const testAccDataSourceDomains_basic = `
+const testAccDomainsDataSource_basic = `
 data "azuread_domains" "test" {}
 `
 
-const testAccDataSourceDomains_onlyDefault = `
+const testAccDomainsDataSource_onlyDefault = `
 data "azuread_domains" "test" {
   only_default = true
 }
 `
 
-const testAccDataSourceDomains_onlyInitial = `
+const testAccDomainsDataSource_onlyInitial = `
 data "azuread_domains" "test" {
   only_initial = true
 }

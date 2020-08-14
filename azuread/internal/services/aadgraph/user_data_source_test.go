@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
 )
 
-func TestAccAzureADUserDataSource_byUserPrincipalName(t *testing.T) {
+func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
 	dsn := "data.azuread_user.tests"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -22,7 +22,7 @@ func TestAccAzureADUserDataSource_byUserPrincipalName(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADUserDataSource_byUserPrincipalName(id, password),
+				Config: testAccUserDataSource_byUserPrincipalName(id, password),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
@@ -34,7 +34,7 @@ func TestAccAzureADUserDataSource_byUserPrincipalName(t *testing.T) {
 	})
 }
 
-func TestAccAzureADUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
+func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,14 +42,14 @@ func TestAccAzureADUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAzureADUserDataSource_byUserPrincipalNameNonexistent(ri),
+				Config:      testAccUserDataSource_byUserPrincipalNameNonexistent(ri),
 				ExpectError: regexp.MustCompile("Azure AD User not found with UPN:"),
 			},
 		},
 	})
 }
 
-func TestAccAzureADUserDataSource_byObjectId(t *testing.T) {
+func TestAccUserDataSource_byObjectId(t *testing.T) {
 	dsn := "data.azuread_user.tests"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -59,7 +59,7 @@ func TestAccAzureADUserDataSource_byObjectId(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADUserDataSource_byObjectId(id, password),
+				Config: testAccUserDataSource_byObjectId(id, password),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
@@ -71,20 +71,20 @@ func TestAccAzureADUserDataSource_byObjectId(t *testing.T) {
 	})
 }
 
-func TestAccAzureADUserDataSource_byObjectIdNonexistent(t *testing.T) {
+func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { acceptance.PreCheck(t) },
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAzureADUserDataSource_byObjectIdNonexistent(),
+				Config:      testAccUserDataSource_byObjectIdNonexistent(),
 				ExpectError: regexp.MustCompile("Azure AD User not found with object ID:"),
 			},
 		},
 	})
 }
 
-func TestAccAzureADUserDataSource_byMailNickname(t *testing.T) {
+func TestAccUserDataSource_byMailNickname(t *testing.T) {
 	dsn := "data.azuread_user.tests"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
@@ -94,7 +94,7 @@ func TestAccAzureADUserDataSource_byMailNickname(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureADUserDataSource_byMailNickname(id, password),
+				Config: testAccUserDataSource_byMailNickname(id, password),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
@@ -106,7 +106,7 @@ func TestAccAzureADUserDataSource_byMailNickname(t *testing.T) {
 	})
 }
 
-func TestAccAzureADUserDataSource_byMailNicknameNonexistent(t *testing.T) {
+func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,14 +114,14 @@ func TestAccAzureADUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAzureADUserDataSource_byMailNicknameNonexistent(ri),
+				Config:      testAccUserDataSource_byMailNicknameNonexistent(ri),
 				ExpectError: regexp.MustCompile("Azure AD User not found with email alias:"),
 			},
 		},
 	})
 }
 
-func testAccAzureADUserDataSource_byUserPrincipalName(id int, password string) string {
+func testAccUserDataSource_byUserPrincipalName(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -131,7 +131,7 @@ data "azuread_user" "tests" {
 `, testAccUser_basic(id, password))
 }
 
-func testAccAzureADUserDataSource_byUserPrincipalNameNonexistent(ri int) string {
+func testAccUserDataSource_byUserPrincipalNameNonexistent(ri int) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
   only_initial = true
@@ -143,7 +143,7 @@ data "azuread_user" "tests" {
 `, ri)
 }
 
-func testAccAzureADUserDataSource_byObjectId(id int, password string) string {
+func testAccUserDataSource_byObjectId(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -153,7 +153,7 @@ data "azuread_user" "tests" {
 `, testAccUser_basic(id, password))
 }
 
-func testAccAzureADUserDataSource_byObjectIdNonexistent() string {
+func testAccUserDataSource_byObjectIdNonexistent() string {
 	return `
 data "azuread_user" "tests" {
   object_id = "00000000-0000-0000-0000-000000000000"
@@ -161,7 +161,7 @@ data "azuread_user" "tests" {
 `
 }
 
-func testAccAzureADUserDataSource_byMailNickname(id int, password string) string {
+func testAccUserDataSource_byMailNickname(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -171,7 +171,7 @@ data "azuread_user" "tests" {
 `, testAccUser_basic(id, password))
 }
 
-func testAccAzureADUserDataSource_byMailNicknameNonexistent(ri int) string {
+func testAccUserDataSource_byMailNicknameNonexistent(ri int) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "tenant_domain" {
   only_initial = true

@@ -21,18 +21,18 @@ func TestAccClientConfigDataSource_basic(t *testing.T) {
 		Providers: acceptance.SupportedProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckArmClientConfig_basic,
+				Config: testAccClientConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dsn, "client_id", clientId),
 					resource.TestCheckResourceAttr(dsn, "tenant_id", tenantId),
-					testAzureRMClientConfigGUIDAttr(dsn, "object_id"),
+					testClientConfigGUIDAttr(dsn, "object_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAzureRMClientConfigGUIDAttr(name, key string) resource.TestCheckFunc {
+func testClientConfigGUIDAttr(name, key string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r, err := regexp.Compile("^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$")
 		if err != nil {
@@ -43,6 +43,6 @@ func testAzureRMClientConfigGUIDAttr(name, key string) resource.TestCheckFunc {
 	}
 }
 
-const testAccCheckArmClientConfig_basic = `
+const testAccClientConfig_basic = `
 data "azuread_client_config" "current" {}
 `

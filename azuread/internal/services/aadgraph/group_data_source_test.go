@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
 )
 
-func TestAccDataSourceGroup_byName(t *testing.T) {
+func TestAccGroupDataSource_byName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -19,7 +19,7 @@ func TestAccDataSourceGroup_byName(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceGroup_name(data.RandomInteger),
+				Config: testAccGroupDataSource_name(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckGroupExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
@@ -29,7 +29,7 @@ func TestAccDataSourceGroup_byName(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceGroup_byObjectId(t *testing.T) {
+func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +38,7 @@ func TestAccDataSourceGroup_byObjectId(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceGroup_objectId(data.RandomInteger),
+				Config: testAccGroupDataSource_objectId(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckGroupExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
@@ -48,7 +48,7 @@ func TestAccDataSourceGroup_byObjectId(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceGroup_members(t *testing.T) {
+func TestAccGroupDataSource_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -58,7 +58,7 @@ func TestAccDataSourceGroup_members(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceGroup_members(data.RandomInteger, pw),
+				Config: testAccGroupDataSource_members(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckGroupExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
@@ -69,7 +69,7 @@ func TestAccDataSourceGroup_members(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceGroup_owners(t *testing.T) {
+func TestAccGroupDataSource_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -79,7 +79,7 @@ func TestAccDataSourceGroup_owners(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceGroup_owners(data.RandomInteger, pw),
+				Config: testAccGroupDataSource_owners(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckGroupExists(data.ResourceName),
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
@@ -90,7 +90,7 @@ func TestAccDataSourceGroup_owners(t *testing.T) {
 	})
 }
 
-func testAccDataSourceGroup_name(id int) string {
+func testAccGroupDataSource_name(id int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -100,7 +100,7 @@ data "azuread_group" "test" {
 `, testAccGroup_basic(id))
 }
 
-func testAccDataSourceGroup_objectId(id int) string {
+func testAccGroupDataSource_objectId(id int) string {
 	return fmt.Sprintf(`
 %s
 
@@ -110,7 +110,7 @@ data "azuread_group" "test" {
 `, testAccGroup_basic(id))
 }
 
-func testAccDataSourceGroup_members(id int, password string) string {
+func testAccGroupDataSource_members(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -120,7 +120,7 @@ data "azuread_group" "test" {
 `, testAccGroupWithThreeMembers(id, password))
 }
 
-func testAccDataSourceGroup_owners(id int, password string) string {
+func testAccGroupDataSource_owners(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
