@@ -12,9 +12,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataUser() *schema.Resource {
+func UserData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		Read: userDataRead,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -82,7 +82,7 @@ func DataUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
+func userDataRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 

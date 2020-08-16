@@ -9,9 +9,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataClientConfig() *schema.Resource {
+func ClientConfigData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceArmClientConfigRead,
+		Read: clientConfigDataRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(5 * time.Minute),
@@ -36,7 +36,7 @@ func DataClientConfig() *schema.Resource {
 	}
 }
 
-func dataSourceArmClientConfigRead(d *schema.ResourceData, meta interface{}) error {
+func clientConfigDataRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient)
 	ctx := meta.(*clients.AadClient).StopContext
 

@@ -21,28 +21,28 @@ func (r Registration) WebsiteCategories() []string {
 // SupportedDataSources returns the supported Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_application":       DataApplication(),
-		"azuread_domains":           DataDomains(),
-		"azuread_client_config":     DataClientConfig(),
-		"azuread_group":             DataGroup(),
-		"azuread_groups":            DataGroups(),
-		"azuread_service_principal": DataServicePrincipal(),
-		"azuread_user":              DataUser(),
-		"azuread_users":             DataUsers(),
+		"azuread_application":       ApplicationData(),
+		"azuread_domains":           DomainsData(),
+		"azuread_client_config":     ClientConfigData(),
+		"azuread_group":             GroupData(),
+		"azuread_groups":            GroupsData(),
+		"azuread_service_principal": ServicePrincipalData(),
+		"azuread_user":              UserData(),
+		"azuread_users":             UsersData(),
 	}
 }
 
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_application":                   ResourceApplication(),
-		"azuread_application_certificate":       ResourceApplicationCertificate(),
-		"azuread_application_password":          ResourceApplicationPassword(),
-		"azuread_group":                         ResourceGroup(),
-		"azuread_group_member":                  ResourceGroupMember(),
-		"azuread_service_principal":             ResourceServicePrincipal(),
-		"azuread_service_principal_certificate": ResourceServicePrincipalCertificate(),
-		"azuread_service_principal_password":    ResourceServicePrincipalPassword(),
-		"azuread_user":                          ResourceUser(),
+		"azuread_application":                   ApplicationResource(),
+		"azuread_application_certificate":       ApplicationCertificateResource(),
+		"azuread_application_password":          ApplicationPasswordResource(),
+		"azuread_group":                         GroupResource(),
+		"azuread_group_member":                  GroupMemberResource(),
+		"azuread_service_principal":             ServicePrincipalResource(),
+		"azuread_service_principal_certificate": ServicePrincipalCertificateResource(),
+		"azuread_service_principal_password":    ServicePrincipalPasswordResource(),
+		"azuread_user":                          UserResource(),
 	}
 }

@@ -18,12 +18,12 @@ import (
 
 const servicePrincipalResourceName = "azuread_service_principal"
 
-func ResourceServicePrincipal() *schema.Resource {
+func ServicePrincipalResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServicePrincipalCreate,
-		Read:   resourceServicePrincipalRead,
-		Update: resourceServicePrincipalUpdate,
-		Delete: resourceServicePrincipalDelete,
+		Create: servicePrincipalResourceCreate,
+		Read:   servicePrincipalResourceRead,
+		Update: servicePrincipalResourceUpdate,
+		Delete: servicePrincipalResourceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -65,7 +65,7 @@ func ResourceServicePrincipal() *schema.Resource {
 	}
 }
 
-func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -102,10 +102,10 @@ func resourceServicePrincipalCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
 	}
 
-	return resourceServicePrincipalRead(d, meta)
+	return servicePrincipalResourceRead(d, meta)
 }
 
-func resourceServicePrincipalUpdate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -128,10 +128,10 @@ func resourceServicePrincipalUpdate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("patching Azure AD Service Principal with ID %q: %+v", d.Id(), err)
 	}
 
-	return resourceServicePrincipalRead(d, meta)
+	return servicePrincipalResourceRead(d, meta)
 }
 
-func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -164,7 +164,7 @@ func resourceServicePrincipalRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceServicePrincipalDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

@@ -12,9 +12,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataGroup() *schema.Resource {
+func GroupData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceActiveDirectoryGroupRead,
+		Read: groupDataRead,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -56,7 +56,7 @@ func DataGroup() *schema.Resource {
 	}
 }
 
-func dataSourceActiveDirectoryGroupRead(d *schema.ResourceData, meta interface{}) error {
+func groupDataRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

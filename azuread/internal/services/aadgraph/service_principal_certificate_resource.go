@@ -14,11 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceServicePrincipalCertificate() *schema.Resource {
+func ServicePrincipalCertificateResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServicePrincipalCertificateCreate,
-		Read:   resourceServicePrincipalCertificateRead,
-		Delete: resourceServicePrincipalCertificateDelete,
+		Create: servicePrincipalCertificateResourceCreate,
+		Read:   servicePrincipalCertificateResourceRead,
+		Delete: servicePrincipalCertificateResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -28,7 +28,7 @@ func ResourceServicePrincipalCertificate() *schema.Resource {
 	}
 }
 
-func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -66,10 +66,10 @@ func resourceServicePrincipalCertificateCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(id.String())
 
-	return resourceServicePrincipalCertificateRead(d, meta)
+	return servicePrincipalCertificateResourceRead(d, meta)
 }
 
-func resourceServicePrincipalCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -120,7 +120,7 @@ func resourceServicePrincipalCertificateRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceServicePrincipalCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

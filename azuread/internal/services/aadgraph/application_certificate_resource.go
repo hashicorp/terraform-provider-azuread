@@ -14,11 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceApplicationCertificate() *schema.Resource {
+func ApplicationCertificateResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationCertificateCreate,
-		Read:   resourceApplicationCertificateRead,
-		Delete: resourceApplicationCertificateDelete,
+		Create: applicationCertificateResourceCreate,
+		Read:   applicationCertificateResourceRead,
+		Delete: applicationCertificateResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -28,7 +28,7 @@ func ResourceApplicationCertificate() *schema.Resource {
 	}
 }
 
-func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationCertificateResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -66,10 +66,10 @@ func resourceApplicationCertificateCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(id.String())
 
-	return resourceApplicationCertificateRead(d, meta)
+	return applicationCertificateResourceRead(d, meta)
 }
 
-func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func applicationCertificateResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -120,7 +120,7 @@ func resourceApplicationCertificateRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceApplicationCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationCertificateResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

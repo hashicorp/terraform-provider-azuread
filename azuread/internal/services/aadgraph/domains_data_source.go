@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataDomains() *schema.Resource {
+func DomainsData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceActiveDirectoryDomainsRead,
+		Read: domainsDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"include_unverified": {
@@ -62,7 +62,7 @@ func DataDomains() *schema.Resource {
 	}
 }
 
-func dataSourceActiveDirectoryDomainsRead(d *schema.ResourceData, meta interface{}) error {
+func domainsDataRead(d *schema.ResourceData, meta interface{}) error {
 	tenantId := meta.(*clients.AadClient).TenantID
 	client := meta.(*clients.AadClient).AadGraph.DomainsClient
 	ctx := meta.(*clients.AadClient).StopContext

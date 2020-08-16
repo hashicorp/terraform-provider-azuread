@@ -14,11 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceServicePrincipalPassword() *schema.Resource {
+func ServicePrincipalPasswordResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServicePrincipalPasswordCreate,
-		Read:   resourceServicePrincipalPasswordRead,
-		Delete: resourceServicePrincipalPasswordDelete,
+		Create: servicePrincipalPasswordResourceCreate,
+		Read:   servicePrincipalPasswordResourceRead,
+		Delete: servicePrincipalPasswordResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,7 +37,7 @@ func ResourceServicePrincipalPassword() *schema.Resource {
 	}
 }
 
-func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -75,10 +75,10 @@ func resourceServicePrincipalPasswordCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error waiting for Service Principal Password replication (SP %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
 	}
 
-	return resourceServicePrincipalPasswordRead(d, meta)
+	return servicePrincipalPasswordResourceRead(d, meta)
 }
 
-func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -130,7 +130,7 @@ func resourceServicePrincipalPasswordRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceServicePrincipalPasswordDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

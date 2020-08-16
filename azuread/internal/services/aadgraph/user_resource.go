@@ -16,12 +16,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceUser() *schema.Resource {
+func UserResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		Create: userResourceCreate,
+		Read:   userResourceRead,
+		Update: userResourceUpdate,
+		Delete: userResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -106,7 +106,7 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
+func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -153,10 +153,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("waiting for User (%s) with ObjectId %q: %+v", upn, *user.ObjectID, err)
 	}
 
-	return resourceUserRead(d, meta)
+	return userResourceRead(d, meta)
 }
 
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -193,10 +193,10 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("updating User with ID %q: %+v", d.Id(), err)
 	}
 
-	return resourceUserRead(d, meta)
+	return userResourceRead(d, meta)
 }
 
-func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
+func userResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -227,7 +227,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
+func userResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
 	ctx := meta.(*clients.AadClient).StopContext
 

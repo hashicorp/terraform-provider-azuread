@@ -21,12 +21,12 @@ import (
 
 const resourceApplicationName = "azuread_application"
 
-func ResourceApplication() *schema.Resource {
+func ApplicationResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationCreate,
-		Read:   resourceApplicationRead,
-		Update: resourceApplicationUpdate,
-		Delete: resourceApplicationDelete,
+		Create: applicationResourceCreate,
+		Read:   applicationResourceRead,
+		Update: applicationResourceUpdate,
+		Delete: applicationResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -298,7 +298,7 @@ func ResourceApplication() *schema.Resource {
 	}
 }
 
-func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -412,10 +412,10 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// After creating the application, we immediately update it to ensure we overwrite any default properties
 	// such as the `user_impersonation` scope the application may get, whether we define such a scope or not
-	return resourceApplicationUpdate(d, meta)
+	return applicationResourceUpdate(d, meta)
 }
 
-func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -554,10 +554,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceApplicationRead(d, meta)
+	return applicationResourceRead(d, meta)
 }
 
-func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func applicationResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -630,7 +630,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

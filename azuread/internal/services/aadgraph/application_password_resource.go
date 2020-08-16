@@ -14,11 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceApplicationPassword() *schema.Resource {
+func ApplicationPasswordResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationPasswordCreate,
-		Read:   resourceApplicationPasswordRead,
-		Delete: resourceApplicationPasswordDelete,
+		Create: applicationPasswordResourceCreate,
+		Read:   applicationPasswordResourceRead,
+		Delete: applicationPasswordResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -37,7 +37,7 @@ func ResourceApplicationPassword() *schema.Resource {
 	}
 }
 
-func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationPasswordResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -75,10 +75,10 @@ func resourceApplicationPasswordCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(id.String())
 
-	return resourceApplicationPasswordRead(d, meta)
+	return applicationPasswordResourceRead(d, meta)
 }
 
-func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) error {
+func applicationPasswordResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -129,7 +129,7 @@ func resourceApplicationPasswordRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceApplicationPasswordDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationPasswordResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

@@ -12,9 +12,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataServicePrincipal() *schema.Resource {
+func ServicePrincipalData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceActiveDirectoryServicePrincipalRead,
+		Read: servicePrincipalDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
@@ -48,7 +48,7 @@ func DataServicePrincipal() *schema.Resource {
 	}
 }
 
-func dataSourceActiveDirectoryServicePrincipalRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

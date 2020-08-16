@@ -13,9 +13,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func DataApplication() *schema.Resource {
+func ApplicationData() *schema.Resource {
 	return &schema.Resource{
-		Read: dataApplicationRead,
+		Read: applicationDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
@@ -148,7 +148,7 @@ func DataApplication() *schema.Resource {
 	}
 }
 
-func dataApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

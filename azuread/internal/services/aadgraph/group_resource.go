@@ -20,12 +20,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 
-func ResourceGroup() *schema.Resource {
+func GroupResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		Create: groupResourceCreate,
+		Read:   groupResourceRead,
+		Update: groupResourceUpdate,
+		Delete: groupResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -80,7 +80,7 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -147,10 +147,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("waiting for Group (%s) with ObjectId %q: %+v", name, *group.ObjectID, err)
 	}
 
-	return resourceGroupRead(d, meta)
+	return groupResourceRead(d, meta)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func groupResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -191,7 +191,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -258,10 +258,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceGroupRead(d, meta)
+	return groupResourceRead(d, meta)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func groupResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 

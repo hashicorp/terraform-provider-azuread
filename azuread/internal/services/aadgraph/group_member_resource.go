@@ -14,11 +14,11 @@ import (
 
 const groupMemberResourceName = "azuread_group_member"
 
-func ResourceGroupMember() *schema.Resource {
+func GroupMemberResource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupMemberCreate,
-		Read:   resourceGroupMemberRead,
-		Delete: resourceGroupMemberDelete,
+		Create: groupMemberResourceCreate,
+		Read:   groupMemberResourceRead,
+		Delete: groupMemberResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -42,7 +42,7 @@ func ResourceGroupMember() *schema.Resource {
 	}
 }
 
-func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -57,10 +57,10 @@ func resourceGroupMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(graph.GroupMemberIdFrom(groupID, memberID).String())
-	return resourceGroupMemberRead(d, meta)
+	return groupMemberResourceRead(d, meta)
 }
 
-func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
@@ -92,7 +92,7 @@ func resourceGroupMemberRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceGroupMemberDelete(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
