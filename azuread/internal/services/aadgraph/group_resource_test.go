@@ -184,7 +184,7 @@ func TestAccGroup_membersUpdate(t *testing.T) {
 }
 
 func TestAccGroup_ownersUpdate(t *testing.T) {
-	rn := "azuread_group.tests"
+	rn := "azuread_group.test"
 	id := tf.AccRandTimeInt()
 	pw := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 

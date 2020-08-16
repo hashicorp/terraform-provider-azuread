@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
-	dsn := "data.azuread_user.tests"
+	dsn := "data.azuread_user.test"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -50,7 +50,7 @@ func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 }
 
 func TestAccUserDataSource_byObjectId(t *testing.T) {
-	dsn := "data.azuread_user.tests"
+	dsn := "data.azuread_user.test"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -85,7 +85,7 @@ func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
 }
 
 func TestAccUserDataSource_byMailNickname(t *testing.T) {
-	dsn := "data.azuread_user.tests"
+	dsn := "data.azuread_user.test"
 	id := tf.AccRandTimeInt()
 	password := "p@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
@@ -125,7 +125,7 @@ func testAccUserDataSource_byUserPrincipalName(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   user_principal_name = azuread_user.test.user_principal_name
 }
 `, testAccUser_basic(id, password))
@@ -137,7 +137,7 @@ data "azuread_domains" "tenant_domain" {
   only_initial = true
 }
 
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   user_principal_name = "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}"
 }
 `, ri)
@@ -147,7 +147,7 @@ func testAccUserDataSource_byObjectId(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   object_id = azuread_user.test.object_id
 }
 `, testAccUser_basic(id, password))
@@ -155,7 +155,7 @@ data "azuread_user" "tests" {
 
 func testAccUserDataSource_byObjectIdNonexistent() string {
 	return `
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   object_id = "00000000-0000-0000-0000-000000000000"
 }
 `
@@ -165,7 +165,7 @@ func testAccUserDataSource_byMailNickname(id int, password string) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   mail_nickname = azuread_user.test.mail_nickname
 }
 `, testAccUser_basic(id, password))
@@ -177,7 +177,7 @@ data "azuread_domains" "tenant_domain" {
   only_initial = true
 }
 
-data "azuread_user" "tests" {
+data "azuread_user" "test" {
   mail_nickname = "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}"
 }
 `, ri)

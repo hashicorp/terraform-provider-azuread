@@ -77,7 +77,7 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 			{
 				Config: testAccGroupMember_twoUsers(id, pw),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("azuread_group.tests", "members.#", "2"),
+					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "2"),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 			{
 				Config: testAccGroupMember_oneUser(id, pw),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("azuread_group.tests", "members.#", "1"),
+					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "1"),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 }
 
 func TestAccGroupMember_group(t *testing.T) {
-	rn := "azuread_group_member.tests"
+	rn := "azuread_group_member.test"
 	id := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,7 +128,7 @@ func TestAccGroupMember_group(t *testing.T) {
 }
 
 func TestAccGroupMember_servicePrincipal(t *testing.T) {
-	rn := "azuread_group_member.tests"
+	rn := "azuread_group_member.test"
 	id := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -197,7 +197,7 @@ func testAccGroupMember_oneUser(id int, password string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azuread_group" "tests" {
+resource "azuread_group" "test" {
   name = "acctestGroup-%[2]d"
 }
 
@@ -213,7 +213,7 @@ func testAccGroupMember_twoUsers(id int, password string) string {
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azuread_group" "tests" {
+resource "azuread_group" "test" {
   name = "acctestGroup-%[2]d"
 }
 
@@ -233,7 +233,7 @@ resource "azuread_group_member" "testB" {
 func testAccGroupMember_group(id int) string {
 	return fmt.Sprintf(`
 
-resource "azuread_group" "tests" {
+resource "azuread_group" "test" {
   name = "acctestGroup-%[1]d"
 }
 
@@ -241,7 +241,7 @@ resource "azuread_group" "member" {
   name = "acctestGroup-%[1]d-Member"
 }
 
-resource "azuread_group_member" "tests" {
+resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_group.member.object_id
 }
@@ -252,19 +252,19 @@ resource "azuread_group_member" "tests" {
 func testAccGroupMember_servicePrincipal(id int) string {
 	return fmt.Sprintf(`
 
-resource "azuread_application" "tests" {
+resource "azuread_application" "test" {
   name = "acctestApp-%[1]d"
 }
 
-resource "azuread_service_principal" "tests" {
+resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 }
 
-resource "azuread_group" "tests" {
+resource "azuread_group" "test" {
   name = "acctestGroup-%[1]d"
 }
 
-resource "azuread_group_member" "tests" {
+resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_service_principal.test.object_id
 }

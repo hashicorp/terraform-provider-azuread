@@ -81,7 +81,7 @@ func testAccGroupsDataSource_byDisplayNames(id int) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_groups" "tests" {
+data "azuread_groups" "test" {
   names = [azuread_group.testA.name, azuread_group.testB.name]
 }
 `, testAccGroup_multiple(id))
@@ -91,14 +91,14 @@ func testAccGroupsDataSource_byObjectIds(id int) string {
 	return fmt.Sprintf(`
 %s
 
-data "azuread_groups" "tests" {
+data "azuread_groups" "test" {
   object_ids = [azuread_group.testA.object_id, azuread_group.testB.object_id]
 }
 `, testAccGroup_multiple(id))
 }
 func testAccGroupsDataSource_noNames() string {
 	return `
-data "azuread_groups" "tests" {
+data "azuread_groups" "test" {
   names = []
 }
 `

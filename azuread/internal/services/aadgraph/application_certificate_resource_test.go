@@ -193,7 +193,7 @@ func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 
 func testAccApplicationCertificate_template(ri int) string {
 	return fmt.Sprintf(`
-resource "azuread_application" "tests" {
+resource "azuread_application" "test" {
   name = "acctestApp-%d"
 }
 `, ri)
