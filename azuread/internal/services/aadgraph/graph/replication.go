@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/ar"
 )
 
 func WaitForCreationReplication(f func() (interface{}, error)) (interface{}, error) {

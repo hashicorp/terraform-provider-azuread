@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
 )
 

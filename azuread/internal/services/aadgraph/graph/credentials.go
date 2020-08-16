@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/ar"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/validate"
 )
 
 // valid types are `application` and `service_principal`

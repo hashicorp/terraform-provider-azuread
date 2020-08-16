@@ -8,8 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/tf"
 )
 
 func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {

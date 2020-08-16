@@ -9,9 +9,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/validate"
 )
 
 func GroupsData() *schema.Resource {

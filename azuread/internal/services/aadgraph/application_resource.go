@@ -10,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/graph"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/p"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/slices"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/tf"
-	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/validate"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/ar"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/p"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/slices"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/azuread/internal/validate"
 )
 
 const resourceApplicationName = "azuread_application"
