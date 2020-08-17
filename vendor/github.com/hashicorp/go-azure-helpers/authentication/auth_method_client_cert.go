@@ -20,7 +20,6 @@ type servicePrincipalClientCertificateAuth struct {
 	clientCertPassword string
 	subscriptionId     string
 	tenantId           string
-	tenantOnly         bool
 }
 
 func (a servicePrincipalClientCertificateAuth) build(b Builder) (authMethod, error) {
@@ -30,7 +29,6 @@ func (a servicePrincipalClientCertificateAuth) build(b Builder) (authMethod, err
 		clientCertPassword: b.ClientCertPassword,
 		subscriptionId:     b.SubscriptionID,
 		tenantId:           b.TenantID,
-		tenantOnly:         b.TenantOnly,
 	}
 	return method, nil
 }
@@ -86,7 +84,7 @@ func (a servicePrincipalClientCertificateAuth) validate() error {
 
 	fmtErrorMessage := "A %s must be configured when authenticating as a Service Principal using a Client Certificate."
 
-	if a.subscriptionId == "" && !a.tenantOnly {
+	if a.subscriptionId == "" {
 		err = multierror.Append(err, fmt.Errorf(fmtErrorMessage, "Subscription ID"))
 	}
 

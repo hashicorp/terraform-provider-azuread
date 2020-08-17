@@ -17,7 +17,6 @@ type Builder struct {
 	ClientID       string
 	SubscriptionID string
 	TenantID       string
-	TenantOnly     bool
 	Environment    string
 	MetadataURL    string
 

@@ -21,7 +21,6 @@ type azureCLIProfile struct {
 	environment    string
 	subscriptionId string
 	tenantId       string
-	tenantOnly     bool
 }
 
 type azureCliTokenAuth struct {
@@ -34,16 +33,9 @@ func (a azureCliTokenAuth) build(b Builder) (authMethod, error) {
 		profile: &azureCLIProfile{
 			subscriptionId: b.SubscriptionID,
 			tenantId:       b.TenantID,
-			tenantOnly:     b.TenantOnly,
 			clientId:       "04b07795-8ddb-461a-bbee-02f9e1bf7b46", // fixed first party client id for Az CLI
 		},
 		servicePrincipalAuthDocsLink: b.ClientSecretDocsLink,
-	}
-
-	// If tenantOnly requested, set the subscriptionId to be the tenantId
-	// Requires `az login --allow-no-subscriptions`
-	if auth.profile.tenantOnly && auth.profile.subscriptionId == "" && auth.profile.tenantId != "" {
-		auth.profile.subscriptionId = auth.profile.tenantId
 	}
 
 	sub, err := obtainSubscription(b.SubscriptionID)
