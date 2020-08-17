@@ -2,7 +2,7 @@
 
 echo "==> Checking acceptance test terraform blocks are formatted..."
 
-files=$(find ./azuread -type f -name "*_test.go")
+files=$(find ./internal -type f -name "*_test.go")
 error=false
 
 for f in $files; do
@@ -16,10 +16,10 @@ if ${error}; then
   echo "You can fix this by running make tools and then terrafmt on them."
   echo ""
   echo "format a single file:"
-  echo "$ terrafmt fmt -f ./azuread/resource_user.go"
+  echo "$ terrafmt fmt -f ./internal/services/aadgraph/resource_user.go"
   echo ""
   echo "format all website files:"
-  echo "$ find azurerm | egrep \"_test.go\" | sort | while read f; do terrafmt fmt -f \$f; done"
+  echo "$ find ./internal | egrep \"_test.go\" | sort | while read f; do terrafmt fmt -f \$f; done"
   echo ""
   echo "on windows:"
   echo "$ Get-ChildItem -Path . -Recurse -Filter \"*_test.go\" | foreach {terrafmt fmt -f $_.fullName}"

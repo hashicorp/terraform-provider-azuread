@@ -2,7 +2,6 @@ package aadgraph
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,6 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 

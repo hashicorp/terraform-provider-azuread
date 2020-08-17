@@ -3,9 +3,10 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objectId string) (*graphrbac.User, error) {

@@ -2,7 +2,6 @@ package aadgraph_test
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"testing"
 
 	"github.com/google/uuid"
@@ -12,6 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func testCheckApplicationPasswordExists(name string) resource.TestCheckFunc { //nolint unparam

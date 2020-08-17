@@ -2,7 +2,6 @@ package aadgraph_test
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"regexp"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func TestAccApplication_basic(t *testing.T) {

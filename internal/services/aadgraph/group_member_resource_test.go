@@ -2,7 +2,6 @@ package aadgraph_test
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -13,6 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func TestAccGroupMember_user(t *testing.T) {
