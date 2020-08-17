@@ -221,7 +221,7 @@ func GroupCheckNameAvailability(client graphrbac.GroupsClient, ctx context.Conte
 		return err
 	}
 	if existingGroup != nil {
-		return fmt.Errorf("existing Azure Active Directory Group with name %q (ObjID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
+		return fmt.Warnf("existing Azure Active Directory Group with name %q (ObjID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
 	}
 	return nil
 }
