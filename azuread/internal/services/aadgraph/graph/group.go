@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -59,7 +60,7 @@ func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, 
 	if group.DisplayName == nil {
 		return nil, fmt.Errorf("nil DisplayName for AD Groups matching %q", filter)
 	}
-	if *group.DisplayName != displayName {
+	if !strings.EqualFold(*group.DisplayName, displayName) {
 		return nil, fmt.Errorf("displayname for AD Groups matching %q does is does not match(%q!=%q)", filter, *group.DisplayName, displayName)
 	}
 

@@ -29,6 +29,25 @@ func TestAccGroupDataSource_byName(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_byCaseInsensitiveName(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupDataSource_caseInsensitiveName(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckGroupExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
@@ -96,6 +115,15 @@ func testAccGroupDataSource_name(id int) string {
 
 data "azuread_group" "test" {
   name = azuread_group.test.name
+}
+`, testAccGroup_basic(id))
+}
+
+func testAccGroupDataSource_caseInsensitiveName(id int) string {
+	return fmt.Sprintf(`
+%s
+data "azuread_group" "test" {
+  name = upper(azuread_group.test.name)
 }
 `, testAccGroup_basic(id))
 }
