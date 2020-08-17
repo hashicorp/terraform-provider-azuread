@@ -14,9 +14,6 @@ import (
 
 type ClientBuilder struct {
 	AuthConfig                *authentication.Config
-	DisableTerraformPartnerID bool
-	PartnerId                 string
-	SkipProviderRegistration  bool
 	TerraformVersion          string
 }
 
@@ -58,10 +55,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 
 	o := &services.ClientOptions{
 		TenantID:                  b.AuthConfig.TenantID,
-		PartnerID:                 b.PartnerId,
 		TerraformVersion:          b.TerraformVersion,
-		SkipProviderReg:           b.SkipProviderRegistration,
-		DisableTerraformPartnerID: b.DisableTerraformPartnerID,
 		Environment:               *env,
 	}
 
