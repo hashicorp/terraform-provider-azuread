@@ -158,7 +158,7 @@ func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {
 	for i, role := range *in {
 		appRole := make(map[string]interface{})
 		if v := role.ID; v != nil {
-			appRole["_id"] = *v
+			appRole["id"] = *v
 		}
 		if v := role.AllowedMemberTypes; v != nil {
 			appRole["allowed_member_types"] = *v

@@ -845,11 +845,8 @@ func expandApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
 
-		manualID := appRole["id"].(string)
-		appRoleID := appRole["_id"].(string)
-		if manualID != "" {
-			appRoleID = manualID
-		} else if appRoleID == "" {
+		appRoleID := appRole["id"].(string)
+		if appRoleID == "" {
 			appRoleID = uuid.New().String()
 		}
 
