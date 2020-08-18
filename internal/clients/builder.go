@@ -13,8 +13,8 @@ import (
 )
 
 type ClientBuilder struct {
-	AuthConfig                *authentication.Config
-	TerraformVersion          string
+	AuthConfig       *authentication.Config
+	TerraformVersion string
 }
 
 // Build is a helper method which returns a fully instantiated *AadClient based on the auth Config's current settings.
@@ -54,9 +54,9 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 	}
 
 	o := &services.ClientOptions{
-		TenantID:                  b.AuthConfig.TenantID,
-		TerraformVersion:          b.TerraformVersion,
-		Environment:               *env,
+		TenantID:         b.AuthConfig.TenantID,
+		TerraformVersion: b.TerraformVersion,
+		Environment:      *env,
 	}
 
 	// Graph Endpoints

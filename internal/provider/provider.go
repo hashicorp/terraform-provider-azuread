@@ -117,7 +117,6 @@ func AzureADProvider() terraform.ResourceProvider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
 			},
-
 		},
 
 		ResourcesMap:   resources,
@@ -163,8 +162,8 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		}
 
 		clientBuilder := clients.ClientBuilder{
-			AuthConfig:                config,
-			TerraformVersion:          terraformVersion,
+			AuthConfig:       config,
+			TerraformVersion: terraformVersion,
 		}
 
 		client, err := clientBuilder.Build(p.StopContext())
