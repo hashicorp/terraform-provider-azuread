@@ -2,7 +2,7 @@ package azuread
 
 import (
 	"fmt"
-	"github.com/Azure/azure-sdk-for-go/services/graph/1.0/graph"
+	"github.com/Azure/azure-sdk-for-go/services/preview/graph/v1.0/graph"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azuread/azuread/helpers/ar"
