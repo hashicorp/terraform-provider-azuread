@@ -1,4 +1,4 @@
-# Terraform AzureAD / AzureRM Application Example
+# Terraform AzureAD Application Example
 
 Create some Application registrations in Azure Active Directory for use in a Widgets application that utilises OAuth2 on the Microsoft Identity Platform.
 

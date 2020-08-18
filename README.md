@@ -14,6 +14,7 @@
 # Configure the Azure AD Provider
 provider "azuread" {
   version = "~> 1.0.0"
+
   # NOTE: Environment Variables can also be used for Service Principal authentication
   # Terraform also supports authenticating via the Azure CLI too.
   # see here for more info: https://terraform.io/docs/providers/azuread/
