@@ -24,9 +24,9 @@ func GroupsData() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"object_ids": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
@@ -35,9 +35,9 @@ func GroupsData() *schema.Resource {
 			},
 
 			"names": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
