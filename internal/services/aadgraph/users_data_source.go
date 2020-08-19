@@ -184,10 +184,6 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unexpected number of users returned (%d != %d)", len(users), expectedCount)
 	}
 
-	if len(users) == 0 {
-		return fmt.Errorf("no users were returned")
-	}
-
 	upns := make([]string, 0, len(users))
 	oids := make([]string, 0, len(users))
 	mailNicknames := make([]string, 0, len(users))
