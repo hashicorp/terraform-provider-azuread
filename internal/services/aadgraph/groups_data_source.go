@@ -27,7 +27,7 @@ func GroupsData() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"names"},
+				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.UUID,
@@ -38,7 +38,7 @@ func GroupsData() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"object_ids"},
+				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
