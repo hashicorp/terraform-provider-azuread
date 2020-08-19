@@ -66,12 +66,12 @@ func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return fmt.Errorf("Unable to parse ID: %v", err)
+		return fmt.Errorf("unable to parse ID: %v", err)
 	}
 
 	members, err := graph.GroupAllMembers(client, ctx, id.GroupId)
 	if err != nil {
-		return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", id.GroupId, err)
+		return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", id.GroupId, err)
 	}
 
 	var memberObjectID string
@@ -107,7 +107,7 @@ func groupMemberResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	resp, err := client.RemoveMember(ctx, id.GroupId, id.MemberId)
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return fmt.Errorf("Error removing Member (memberObjectId: %q) from Azure AD Group (groupObjectId: %q): %+v", id.MemberId, id.GroupId, err)
+			return fmt.Errorf("removing Member (memberObjectId: %q) from Group (groupObjectId: %q): %+v", id.MemberId, id.GroupId, err)
 		}
 	}
 

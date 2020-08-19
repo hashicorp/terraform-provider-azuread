@@ -48,11 +48,11 @@ func clientConfigDataRead(d *schema.ResourceData, meta interface{}) error {
 		listResult, listErr := spClient.List(ctx, filter)
 
 		if listErr != nil {
-			return fmt.Errorf("Error listing Service Principals: %#v", listErr)
+			return fmt.Errorf("listing Service Principals: %#v", listErr)
 		}
 
 		if listResult.Values() == nil || len(listResult.Values()) != 1 {
-			return fmt.Errorf("Unexpected Service Principal query result: %#v", listResult.Values())
+			return fmt.Errorf("unexpected Service Principal query result: %#v", listResult.Values())
 		}
 	}
 

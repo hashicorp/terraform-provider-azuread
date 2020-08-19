@@ -170,12 +170,12 @@ func testCheckGroupMemberDestroy(s *terraform.State) error {
 				continue
 			}
 
-			return fmt.Errorf("Error retrieving Azure AD Group with ID %q: %+v", groupID, err)
+			return fmt.Errorf("retrieving Group with ID %q: %+v", groupID, err)
 		}
 
 		members, err := graph.GroupAllMembers(client, ctx, groupID)
 		if err != nil {
-			return fmt.Errorf("Error retrieving Azure AD Group members (groupObjectId: %q): %+v", groupID, err)
+			return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", groupID, err)
 		}
 
 		var memberObjectID string
@@ -186,7 +186,7 @@ func testCheckGroupMemberDestroy(s *terraform.State) error {
 		}
 
 		if memberObjectID != "" {
-			return fmt.Errorf("Azure AD group member still exists:\n%#v", memberObjectID)
+			return fmt.Errorf("Group member still exists:\n%#v", memberObjectID)
 		}
 	}
 

@@ -96,6 +96,7 @@ data "azuread_groups" "test" {
 }
 `, testAccGroup_multiple(id))
 }
+
 func testAccGroupsDataSource_noNames() string {
 	return `
 data "azuread_groups" "test" {

@@ -43,7 +43,7 @@ func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byUserPrincipalNameNonexistent(ri),
-				ExpectError: regexp.MustCompile("Azure AD User not found with UPN:"),
+				ExpectError: regexp.MustCompile("User not found with UPN:"),
 			},
 		},
 	})
@@ -78,7 +78,7 @@ func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byObjectIdNonexistent(),
-				ExpectError: regexp.MustCompile("Azure AD User not found with object ID:"),
+				ExpectError: regexp.MustCompile("User not found with object ID:"),
 			},
 		},
 	})
@@ -115,7 +115,7 @@ func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byMailNicknameNonexistent(ri),
-				ExpectError: regexp.MustCompile("Azure AD User not found with email alias:"),
+				ExpectError: regexp.MustCompile("User not found with email alias:"),
 			},
 		},
 	})

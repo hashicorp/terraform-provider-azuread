@@ -535,9 +535,9 @@ func testCheckApplicationExists(name string) resource.TestCheckFunc {
 
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Application %q does not exist", rs.Primary.ID)
+				return fmt.Errorf("Bad: Application %q does not exist", rs.Primary.ID)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD ApplicationsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on ApplicationsClient: %+v", err)
 		}
 
 		return nil
@@ -562,7 +562,7 @@ func testCheckApplicationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Azure AD Application still exists:\n%#v", resp)
+		return fmt.Errorf("Application still exists:\n%#v", resp)
 	}
 
 	return nil

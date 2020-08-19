@@ -45,7 +45,7 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 
 	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
-		return fmt.Errorf("Error generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
+		return fmt.Errorf("generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
 	}
 	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
@@ -54,7 +54,7 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred, true)
@@ -63,7 +63,7 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("Error creating Password Credential %q for Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
+		return fmt.Errorf("creating Password Credential %q for Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
 	d.SetId(id.String())
@@ -72,7 +72,7 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return fmt.Errorf("Error waiting for Service Principal Password replication (SP %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+		return fmt.Errorf("waiting for Service Principal Password replication (SP %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
 	}
 
 	return servicePrincipalPasswordResourceRead(d, meta)
@@ -84,7 +84,7 @@ func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface
 
 	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
-		return fmt.Errorf("Error parsing Application Password ID: %v", err)
+		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
 	// ensure the parent Service Principal exists
@@ -96,12 +96,12 @@ func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("retrieving Service Principal ID %q: %+v", id.ObjectId, err)
 	}
 
 	credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
 	}
 
 	credential := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -136,7 +136,7 @@ func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interfa
 
 	id, err := graph.ParseCredentialId(d.Id())
 	if err != nil {
-		return fmt.Errorf("Error parsing Application Password ID: %v", err)
+		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -150,17 +150,17 @@ func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interfa
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving Service Principal ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("retrieving Service Principal ID %q: %+v", id.ObjectId, err)
 	}
 
 	existing, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("Error Listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
+		return fmt.Errorf("listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
 	}
 
 	newCreds := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("Error removing Password %q from Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
+		return fmt.Errorf("removing Password %q from Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
 	return nil

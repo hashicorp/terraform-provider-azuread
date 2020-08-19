@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -42,26 +41,26 @@ func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, 
 
 	resp, err := client.ListComplete(ctx, filter)
 	if err != nil {
-		return nil, fmt.Errorf("listing Azure AD Groups for filter %q: %+v", filter, err)
+		return nil, fmt.Errorf("listing Groups for filter %q: %+v", filter, err)
 	}
 
 	values := resp.Response().Value
 	if values == nil {
-		return nil, fmt.Errorf("nil values for AD Groups matching %q", filter)
+		return nil, fmt.Errorf("nil values for Groups matching %q", filter)
 	}
 	if len(*values) == 0 {
-		return nil, fmt.Errorf("found no AD Groups matching %q", filter)
+		return nil, fmt.Errorf("found no Groups matching %q", filter)
 	}
 	if len(*values) > 2 {
-		return nil, fmt.Errorf("found multiple AD Groups matching %q", filter)
+		return nil, fmt.Errorf("found multiple Groups matching %q", filter)
 	}
 
 	group := (*values)[0]
 	if group.DisplayName == nil {
-		return nil, fmt.Errorf("nil DisplayName for AD Groups matching %q", filter)
+		return nil, fmt.Errorf("nil DisplayName for Group matching %q", filter)
 	}
 	if !strings.EqualFold(*group.DisplayName, displayName) {
-		return nil, fmt.Errorf("displayname for AD Groups matching %q does is does not match(%q!=%q)", filter, *group.DisplayName, displayName)
+		return nil, fmt.Errorf("displayname for Group matching %q does not match (%q!=%q)", filter, *group.DisplayName, displayName)
 	}
 
 	return &group, nil
@@ -102,15 +101,13 @@ func GroupAllMembers(client *graphrbac.GroupsClient, ctx context.Context, groupI
 	members, err := client.GetGroupMembersComplete(ctx, groupId)
 
 	if err != nil {
-		return nil, fmt.Errorf("listing existing group members from Azure AD Group with ID %q: %+v", groupId, err)
+		return nil, fmt.Errorf("listing existing group members from Group with ID %q: %+v", groupId, err)
 	}
 
 	existingMembers, err := DirectoryObjectListToIDs(members, ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting objects IDs of group members for Azure AD Group with ID %q: %+v", groupId, err)
+		return nil, fmt.Errorf("getting object IDs of group members for Group with ID %q: %+v", groupId, err)
 	}
-
-	log.Printf("[DEBUG] %d members in Azure AD group with ID: %q", len(existingMembers), groupId)
 
 	return existingMembers, nil
 }
@@ -122,7 +119,6 @@ func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId
 		URL: &memberGraphURL,
 	}
 
-	log.Printf("[DEBUG] Adding member with id %q to Azure AD group with id %q", member, groupId)
 	var err error
 	attempts := 10
 	for i := 0; i <= attempts; i++ {
@@ -130,7 +126,7 @@ func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId
 			break
 		}
 		if i == attempts {
-			return fmt.Errorf("adding group member %q to Azure AD Group with ID %q: %+v", member, groupId, err)
+			return fmt.Errorf("adding group member %q to Group with ID %q: %+v", member, groupId, err)
 		}
 		time.Sleep(time.Second * 2)
 	}
@@ -149,7 +145,7 @@ func GroupAddMembers(client *graphrbac.GroupsClient, ctx context.Context, groupI
 		err := GroupAddMember(client, ctx, groupId, memberUuid)
 
 		if err != nil {
-			return fmt.Errorf("while adding members to Azure AD Group with ID %q: %+v", groupId, err)
+			return fmt.Errorf("while adding members to Group with ID %q: %+v", groupId, err)
 		}
 	}
 
@@ -160,15 +156,14 @@ func GroupAllOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId
 	owners, err := client.ListOwnersComplete(ctx, groupId)
 
 	if err != nil {
-		return nil, fmt.Errorf("listing existing group owners from Azure AD Group with ID %q: %+v", groupId, err)
+		return nil, fmt.Errorf("listing existing group owners from Group with ID %q: %+v", groupId, err)
 	}
 
 	existingMembers, err := DirectoryObjectListToIDs(owners, ctx)
 	if err != nil {
-		return nil, fmt.Errorf("getting objects IDs of group owners for Azure AD Group with ID %q: %+v", groupId, err)
+		return nil, fmt.Errorf("getting objects IDs of group owners for Group with ID %q: %+v", groupId, err)
 	}
 
-	log.Printf("[DEBUG] %d members in Azure AD group with ID: %q", len(existingMembers), groupId)
 	return existingMembers, nil
 }
 
@@ -179,9 +174,8 @@ func GroupAddOwner(client *graphrbac.GroupsClient, ctx context.Context, groupId 
 		URL: &ownerGraphURL,
 	}
 
-	log.Printf("[DEBUG] Adding owner with id %q to Azure AD group with id %q", owner, groupId)
 	if _, err := client.AddOwner(ctx, groupId, properties); err != nil {
-		return fmt.Errorf("adding group owner %q to Azure AD Group with ID %q: %+v", owner, groupId, err)
+		return fmt.Errorf("adding group owner %q to Group with ID %q: %+v", owner, groupId, err)
 	}
 
 	return nil
@@ -192,7 +186,7 @@ func GroupAddOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId
 		err := GroupAddOwner(client, ctx, groupId, ownerUuid)
 
 		if err != nil {
-			return fmt.Errorf("while adding owners to Azure AD Group with ID %q: %+v", groupId, err)
+			return fmt.Errorf("while adding owners to Group with ID %q: %+v", groupId, err)
 		}
 	}
 
@@ -222,7 +216,7 @@ func GroupCheckNameAvailability(client *graphrbac.GroupsClient, ctx context.Cont
 		return err
 	}
 	if existingGroup != nil {
-		return fmt.Errorf("existing Azure Active Directory Group with name %q (ObjID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
+		return fmt.Errorf("existing Group with name %q (ID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
 	}
 	return nil
 }

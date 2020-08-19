@@ -124,7 +124,7 @@ func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
-		return fmt.Errorf("patching Azure AD Service Principal with ID %q: %+v", d.Id(), err)
+		return fmt.Errorf("patching Service Principal with ID %q: %+v", d.Id(), err)
 	}
 
 	return servicePrincipalResourceRead(d, meta)

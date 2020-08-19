@@ -73,18 +73,18 @@ func domainsDataRead(d *schema.ResourceData, meta interface{}) error {
 
 	results, err := client.List(ctx, "")
 	if err != nil {
-		return fmt.Errorf("Error listing Azure AD Domains: %+v", err)
+		return fmt.Errorf("listing Domains: %+v", err)
 	}
 
 	d.SetId("domains-" + tenantId) // todo this should be more unique
 
 	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
-		return fmt.Errorf("Error: No domains were returned based on those filters")
+		return fmt.Errorf("no domains were returned based on those filters")
 	}
 
 	if err = d.Set("domains", domains); err != nil {
-		return fmt.Errorf("Error setting `domains`: %+v", err)
+		return fmt.Errorf("setting `domains`: %+v", err)
 	}
 
 	return nil

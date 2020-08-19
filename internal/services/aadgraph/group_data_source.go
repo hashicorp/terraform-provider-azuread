@@ -63,21 +63,20 @@ func groupDataRead(d *schema.ResourceData, meta interface{}) error {
 	var group graphrbac.ADGroup
 
 	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		// use the object_id to find the Azure AD application
 		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Group with ID %q was not found", oId)
+				return fmt.Errorf("Group with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Group with ID %q: %+v", oId, err)
+			return fmt.Errorf("making Read request on Group with ID %q: %+v", oId, err)
 		}
 
 		group = resp
 	} else if name, ok := d.Get("name").(string); ok && name != "" {
 		g, err := graph.GroupGetByDisplayName(client, ctx, name)
 		if err != nil {
-			return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", name, err)
+			return fmt.Errorf("finding Group with display name %q: %+v", name, err)
 		}
 		group = *g
 	} else {

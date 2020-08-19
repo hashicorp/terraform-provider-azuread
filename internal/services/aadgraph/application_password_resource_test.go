@@ -26,19 +26,19 @@ func testCheckApplicationPasswordExists(name string) resource.TestCheckFunc { //
 
 		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
+			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
 		}
 		resp, err := client.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Application  %q does not exist", id.ObjectId)
+				return fmt.Errorf("Bad: Application  %q does not exist", id.ObjectId)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD applicationsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
 		}
 
 		credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 		if err != nil {
-			return fmt.Errorf("Error Listing Password Credentials for Application %q: %+v", id.ObjectId, err)
+			return fmt.Errorf("listing Password Credentials for Application %q: %+v", id.ObjectId, err)
 		}
 
 		cred := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -61,7 +61,7 @@ func testCheckApplicationPasswordCheckDestroy(s *terraform.State) error {
 
 		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing Application Password Credential ID: %v", err)
+			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
 		}
 
 		resp, err := client.Get(ctx, id.ObjectId)

@@ -155,14 +155,13 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	var app graphrbac.Application
 
 	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		// use the object_id to find the Azure AD application
 		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Error: AzureAD Application with ID %q was not found", oId)
+				return fmt.Errorf("Application with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("Error making Read request on AzureAD Application with ID %q: %+v", oId, err)
+			return fmt.Errorf("making Read request on Application with ID %q: %+v", oId, err)
 		}
 
 		app = resp
@@ -182,35 +181,35 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("Error listing Azure AD Applications for filter %q: %+v", filter, err)
+			return fmt.Errorf("listing Applications for filter %q: %+v", filter, err)
 		}
 
 		values := resp.Response().Value
 		if values == nil {
-			return fmt.Errorf("nil values for AD Applications matching %q", filter)
+			return fmt.Errorf("nil values for Applications matching %q", filter)
 		}
 		if len(*values) == 0 {
-			return fmt.Errorf("Found no AD Applications matching %q", filter)
+			return fmt.Errorf("found no Applications matching %q", filter)
 		}
 		if len(*values) > 2 {
-			return fmt.Errorf("Found multiple AD Applications matching %q", filter)
+			return fmt.Errorf("Found multiple Applications matching %q", filter)
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return fmt.Errorf("nil AppID for AD Applications matching %q", filter)
+				return fmt.Errorf("nil AppID for Applications matching %q", filter)
 			}
 			if *app.AppID != fieldValue {
-				return fmt.Errorf("AppID for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.AppID, fieldValue)
+				return fmt.Errorf("AppID for Applications matching %q does is does not match(%q!=%q)", filter, *app.AppID, fieldValue)
 			}
 		case "displayName":
 			if app.DisplayName == nil {
-				return fmt.Errorf("nil DisplayName for AD Applications matching %q", filter)
+				return fmt.Errorf("nil DisplayName for Applications matching %q", filter)
 			}
 			if *app.DisplayName != fieldValue {
-				return fmt.Errorf("DisplayName for AD Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
+				return fmt.Errorf("DisplayName for Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
 			}
 		}
 	}
@@ -229,15 +228,15 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return fmt.Errorf("Error setting `identifier_uris`: %+v", err)
+		return fmt.Errorf("setting `identifier_uris`: %+v", err)
 	}
 
 	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return fmt.Errorf("Error setting `reply_urls`: %+v", err)
+		return fmt.Errorf("setting `reply_urls`: %+v", err)
 	}
 
 	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return fmt.Errorf("Error setting `required_resource_access`: %+v", err)
+		return fmt.Errorf("setting `required_resource_access`: %+v", err)
 	}
 
 	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
@@ -251,23 +250,23 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return fmt.Errorf("Error setting `app_roles`: %+v", err)
+		return fmt.Errorf("setting `app_roles`: %+v", err)
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return fmt.Errorf("Error setting `group_membership_claims`: %+v", err)
+		return fmt.Errorf("setting `group_membership_claims`: %+v", err)
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("Error setting `oauth2_permissions`: %+v", err)
+		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
 	}
 
 	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("Error getting owners for Application %q: %+v", *app.ObjectID, err)
+		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("Error setting `owners`: %+v", err)
+		return fmt.Errorf("setting `owners`: %+v", err)
 	}
 
 	return nil

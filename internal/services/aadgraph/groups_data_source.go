@@ -60,7 +60,7 @@ func groupsDataRead(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range names {
 			g, err := graph.GroupGetByDisplayName(client, ctx, v.(string))
 			if err != nil {
-				return fmt.Errorf("Error finding Azure AD Group with display name %q: %+v", v.(string), err)
+				return fmt.Errorf("finding Group with display name %q: %+v", v.(string), err)
 			}
 			groups = append(groups, *g)
 		}
@@ -69,7 +69,7 @@ func groupsDataRead(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range oids {
 			resp, err := client.Get(ctx, v.(string))
 			if err != nil {
-				return fmt.Errorf("Error making Read request on AzureAD Group with ID %q: %+v", v.(string), err)
+				return fmt.Errorf("making Read request on Group with ID %q: %+v", v.(string), err)
 			}
 
 			groups = append(groups, resp)

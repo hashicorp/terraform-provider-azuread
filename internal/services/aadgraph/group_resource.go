@@ -155,12 +155,12 @@ func groupResourceRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			log.Printf("[DEBUG] Azure AD group with id %q was not found - removing from state", d.Id())
+			log.Printf("[DEBUG] Group with id %q was not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return fmt.Errorf("retrieving Azure AD Group with ID %q: %+v", d.Id(), err)
+		return fmt.Errorf("retrieving Group with ID %q: %+v", d.Id(), err)
 	}
 
 	d.Set("name", resp.DisplayName)
@@ -206,7 +206,7 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		for _, existingMember := range membersForRemoval {
 			var err error
 			var resp autorest.Response
-			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", existingMember, d.Id())
+			log.Printf("[DEBUG] Removing member with id %q from Group with id %q", existingMember, d.Id())
 			attempts := 10
 			for i := 0; i <= attempts; i++ {
 				if resp, err = client.RemoveMember(ctx, d.Id(), existingMember); err != nil {
@@ -215,7 +215,7 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 				if i == attempts {
-					return fmt.Errorf("deleting group member %q from Azure AD Group with ID %q: %+v", existingMember, d.Id(), err)
+					return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", existingMember, d.Id(), err)
 				}
 				time.Sleep(time.Second * 2)
 			}
@@ -243,10 +243,10 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
 		for _, ownerToDelete := range ownersForRemoval {
-			log.Printf("[DEBUG] Removing member with id %q from Azure AD group with id %q", ownerToDelete, d.Id())
+			log.Printf("[DEBUG] Removing member with id %q from Group with id %q", ownerToDelete, d.Id())
 			if resp, err := client.RemoveOwner(ctx, d.Id(), ownerToDelete); err != nil {
 				if !utils.ResponseWasNotFound(resp) {
-					return fmt.Errorf("deleting group member %q from Azure AD Group with ID %q: %+v", ownerToDelete, d.Id(), err)
+					return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", ownerToDelete, d.Id(), err)
 				}
 			}
 		}
@@ -265,7 +265,7 @@ func groupResourceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if resp, err := client.Delete(ctx, d.Id()); err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return fmt.Errorf("deleting Azure AD Group with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("deleting Group with ID %q: %+v", d.Id(), err)
 		}
 	}
 

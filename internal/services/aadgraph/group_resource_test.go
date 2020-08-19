@@ -248,7 +248,7 @@ func TestAccGroup_preventDuplicateNames(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccGroup_duplicateName(ri),
-				ExpectError: regexp.MustCompile("existing Azure Active Directory Group .+ was found"),
+				ExpectError: regexp.MustCompile("existing Group .+ was found"),
 			},
 		},
 	})
@@ -267,9 +267,9 @@ func testCheckGroupExists(name string) resource.TestCheckFunc {
 
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Group %q does not exist", rs.Primary.ID)
+				return fmt.Errorf("Bad: Group %q does not exist", rs.Primary.ID)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD GroupsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on GroupsClient: %+v", err)
 		}
 
 		return nil
@@ -294,7 +294,7 @@ func testCheckGroupDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Azure AD group still exists:\n%#v", resp)
+		return fmt.Errorf("Group still exists:\n%#v", resp)
 	}
 
 	return nil

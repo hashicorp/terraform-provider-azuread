@@ -119,9 +119,9 @@ func testCheckServicePrincipalExists(name string) resource.TestCheckFunc {
 
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Service Principal %q does not exist", rs.Primary.ID)
+				return fmt.Errorf("Bad: Service Principal %q does not exist", rs.Primary.ID)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD ServicePrincipalsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on ServicePrincipalsClient: %+v", err)
 		}
 
 		return nil
@@ -146,7 +146,7 @@ func testCheckServicePrincipalDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Azure AD Service Principal still exists:\n%#v", resp)
+		return fmt.Errorf("Service Principal still exists:\n%#v", resp)
 	}
 
 	return nil

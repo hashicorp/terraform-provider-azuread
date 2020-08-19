@@ -52,14 +52,14 @@ func testCheckServicePrincipalKeyExists(name string) resource.TestCheckFunc { //
 		resp, err := client.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Azure AD Service Principal %q does not exist", id.ObjectId)
+				return fmt.Errorf("Bad: Service Principal %q does not exist", id.ObjectId)
 			}
-			return fmt.Errorf("Bad: Get on Azure AD ServicePrincipalsClient: %+v", err)
+			return fmt.Errorf("Bad: Get on ServicePrincipalsClient: %+v", err)
 		}
 
 		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 		if err != nil {
-			return fmt.Errorf("Error Listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
+			return fmt.Errorf("listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
 		}
 
 		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -82,7 +82,7 @@ func testCheckServicePrincipalKeyCheckDestroy(s *terraform.State) error {
 
 		id, err := graph.ParseCredentialId(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing Service Principal Credential ID: %v", err)
+			return fmt.Errorf("parsing Service Principal Credential ID: %v", err)
 		}
 
 		resp, err := client.Get(ctx, id.ObjectId)
@@ -94,7 +94,7 @@ func testCheckServicePrincipalKeyCheckDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Azure AD Service Principal Key Credential still exists:\n%#v", resp)
+		return fmt.Errorf("Service Principal Key Credential still exists:\n%#v", resp)
 	}
 
 	return nil
