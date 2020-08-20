@@ -3,11 +3,14 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func SchemaAppRolesComputed() *schema.Schema {
@@ -287,4 +290,144 @@ func ApplicationCheckNameAvailability(ctx context.Context, client *graphrbac.App
 		return fmt.Errorf("existing Application with name %q (AppID: %q) was found and `prevent_duplicate_names` was specified", name, *existingApp.AppID)
 	}
 	return nil
+}
+
+type AppRoleId struct {
+	ObjectId string
+	RoleId   string
+}
+
+func (id AppRoleId) String() string {
+	return id.ObjectId + "/" + id.RoleId
+}
+
+func AppRoleIdFrom(objectId, roleId string) AppRoleId {
+	return AppRoleId{
+		ObjectId: objectId,
+		RoleId:   roleId,
+	}
+}
+
+func ParseAppRoleId(id string) (AppRoleId, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return AppRoleId{}, fmt.Errorf("App Role ID should be in the format {objectId}/{roleId} - but got %q", id)
+	}
+
+	if _, err := uuid.ParseUUID(parts[0]); err != nil {
+		return AppRoleId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
+	}
+
+	if _, err := uuid.ParseUUID(parts[1]); err != nil {
+		return AppRoleId{}, fmt.Errorf("Role ID isn't a valid UUID (%q): %+v", parts[2], err)
+	}
+
+	return AppRoleId{
+		ObjectId: parts[0],
+		RoleId:   parts[1],
+	}, nil
+}
+
+func AppRoleFindByRoleId(app graphrbac.Application, roleId string) (role *graphrbac.AppRole) {
+	for _, r := range *app.AppRoles {
+		if r.ID == nil {
+			continue
+		}
+		if *r.ID == roleId {
+			role = &r
+			break
+		}
+	}
+	return role
+}
+
+func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
+	// errors should be handled by the validation
+	var roleId string
+	if v, ok := d.GetOk("role_id"); ok {
+		roleId = v.(string)
+	} else {
+		rid, err := uuid.GenerateUUID()
+		if err != nil {
+			return nil, err
+		}
+		roleId = rid
+	}
+
+	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
+	allowedMemberTypes := make([]string, len(allowedMemberTypesRaw))
+	for i, a := range allowedMemberTypesRaw {
+		allowedMemberTypes[i] = a.(string)
+	}
+
+	appRole := graphrbac.AppRole{
+		AllowedMemberTypes: &allowedMemberTypes,
+		ID:                 utils.String(roleId),
+		Description:        utils.String(d.Get("description").(string)),
+		DisplayName:        utils.String(d.Get("display_name").(string)),
+		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("value"); ok {
+		appRole.Value = utils.String(v.(string))
+	}
+
+	return &appRole, nil
+}
+
+func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
+	newRoles := make([]graphrbac.AppRole, len(*roles)+1)
+	newRoles[0] = *role
+
+	for i, v := range *roles {
+		if *v.ID == *role.ID {
+			return nil, fmt.Errorf("App Role with ID %q already exists", *role.ID)
+		}
+		newRoles[i+1] = v
+	}
+
+	return &newRoles, nil
+}
+
+func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) *[]graphrbac.AppRole {
+	newRoles := make([]graphrbac.AppRole, len(*roles))
+
+	for i, v := range *roles {
+		if *v.ID == *role.ID {
+			newRoles[i] = *role
+			continue
+		}
+		newRoles[i] = v
+	}
+
+	return &newRoles
+}
+
+func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) *[]graphrbac.AppRole {
+	newRoles := make([]graphrbac.AppRole, len(*existing))
+
+	for i, v := range *existing {
+		if *v.ID == roleId {
+			v.IsEnabled = utils.Bool(false)
+		}
+		newRoles[i] = v
+	}
+
+	return &newRoles
+}
+
+func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]graphrbac.AppRole {
+	newRoles := make([]graphrbac.AppRole, 0)
+
+	for _, v := range *existing {
+		if v.ID == nil {
+			continue
+		}
+		if *v.ID == roleId {
+			continue
+		}
+		newRoles = append(newRoles, v)
+	}
+
+	return &newRoles
 }

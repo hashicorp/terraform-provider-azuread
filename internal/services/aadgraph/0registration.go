@@ -36,6 +36,7 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"azuread_application":                   ApplicationResource(),
+		"azuread_application_app_role":          ApplicationAppRoleResource(),
 		"azuread_application_certificate":       ApplicationCertificateResource(),
 		"azuread_application_password":          ApplicationPasswordResource(),
 		"azuread_group":                         GroupResource(),
