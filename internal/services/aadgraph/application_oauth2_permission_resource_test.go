@@ -205,7 +205,7 @@ resource "azuread_application_oauth2_permission" "import" {
   admin_consent_description  = azuread_application_oauth2_permission.test.admin_consent_description
   admin_consent_display_name = azuread_application_oauth2_permission.test.admin_consent_display_name
   is_enabled                 = azuread_application_oauth2_permission.test.is_enabled
-  permission_id              = azuread_application_oauth2_permission.test.permission_id 
+  permission_id              = azuread_application_oauth2_permission.test.permission_id
   type                       = azuread_application_oauth2_permission.test.type
   value                      = azuread_application_oauth2_permission.test.value
   user_consent_description   = azuread_application_oauth2_permission.test.user_consent_description

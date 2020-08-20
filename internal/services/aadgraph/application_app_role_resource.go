@@ -15,12 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func ApplicationOAuth2PermissionResource() *schema.Resource {
+func ApplicationAppRoleResource() *schema.Resource {
 	return &schema.Resource{
-		Create: applicationOAuth2PermissionResourceCreate,
-		Update: applicationOAuth2PermissionResourceUpdate,
-		Read:   applicationOAuth2PermissionResourceRead,
-		Delete: applicationOAuth2PermissionResourceDelete,
+		Create: applicationAppRoleResourceCreate,
+		Update: applicationAppRoleResourceUpdate,
+		Read:   applicationAppRoleResourceRead,
+		Delete: applicationAppRoleResourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,13 +34,26 @@ func ApplicationOAuth2PermissionResource() *schema.Resource {
 				ValidateFunc: validate.UUID,
 			},
 
-			"admin_consent_description": {
+			"allowed_member_types": {
+				Type:     schema.TypeSet,
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice(
+						[]string{"User", "Application"},
+						false,
+					),
+				},
+			},
+
+			"description": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validate.NoEmptyStrings,
 			},
 
-			"admin_consent_display_name": {
+			"display_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validate.NoEmptyStrings,
@@ -52,54 +65,33 @@ func ApplicationOAuth2PermissionResource() *schema.Resource {
 				Default:  true,
 			},
 
-			"permission_id": {
+			"role_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"Admin", "User"},
-					false,
-				),
-			},
-
-			"user_consent_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
-			},
-
-			"user_consent_display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
-			},
-
 			"value": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
 }
 
-func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
-	permission, err := graph.OAuth2PermissionForResource(d)
+	role, err := graph.AppRoleForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
 
-	id := graph.OAuth2PermissionIdFrom(objectId, *permission.ID)
+	id := graph.AppRoleIdFrom(objectId, *role.ID)
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
 	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
@@ -113,13 +105,13 @@ func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	newRoles, err := graph.OAuth2PermissionAdd(app.Oauth2Permissions, permission)
+	newRoles, err := graph.AppRoleAdd(app.AppRoles, role)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
+		return tf.ImportAsExistsError("azuread_application_app_role", id.String())
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: newRoles,
+		AppRoles: newRoles,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
@@ -127,21 +119,21 @@ func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(id.String())
 
-	return applicationOAuth2PermissionResourceRead(d, meta)
+	return applicationAppRoleResourceRead(d, meta)
 }
 
-func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
-	permission, err := graph.OAuth2PermissionForResource(d)
+	role, err := graph.AppRoleForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
 
-	id := graph.OAuth2PermissionIdFrom(objectId, *permission.ID)
+	id := graph.AppRoleIdFrom(objectId, *role.ID)
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
 	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
@@ -155,12 +147,12 @@ func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	if existing := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
+	if existing := graph.AppRoleFindById(app, id.RoleId); existing == nil {
+		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionUpdate(app.Oauth2Permissions, permission),
+		AppRoles: graph.AppRoleUpdate(app.AppRoles, role),
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
@@ -168,14 +160,14 @@ func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta inte
 
 	d.SetId(id.String())
 
-	return applicationOAuth2PermissionResourceRead(d, meta)
+	return applicationAppRoleResourceRead(d, meta)
 }
 
-func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseOAuth2PermissionId(d.Id())
+	id, err := graph.ParseAppRoleId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing App Role ID: %v", err)
 	}
@@ -192,52 +184,44 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	permission := graph.OAuth2PermissionFindById(app, id.PermissionId)
-	if permission == nil {
-		log.Printf("[DEBUG] App Role %q (ID %q) was not found - removing from state!", id.PermissionId, id.ObjectId)
+	role := graph.AppRoleFindById(app, id.RoleId)
+	if role == nil {
+		log.Printf("[DEBUG] App Role %q (ID %q) was not found - removing from state!", id.RoleId, id.ObjectId)
 		d.SetId("")
 		return nil
 	}
 
 	d.Set("application_object_id", id.ObjectId)
-	d.Set("permission_id", id.PermissionId)
+	d.Set("role_id", id.RoleId)
 
-	if description := permission.AdminConsentDescription; description != nil {
-		d.Set("admin_consent_description", *description)
+	if allowedMemberTypes := role.AllowedMemberTypes; allowedMemberTypes != nil {
+		d.Set("allowed_member_types", allowedMemberTypes)
 	}
 
-	if displayName := permission.AdminConsentDisplayName; displayName != nil {
-		d.Set("admin_consent_display_name", *displayName)
+	if description := role.Description; description != nil {
+		d.Set("description", description)
 	}
 
-	if isEnabled := permission.IsEnabled; isEnabled != nil {
-		d.Set("is_enabled", *isEnabled)
+	if displayName := role.DisplayName; displayName != nil {
+		d.Set("display_name", displayName)
 	}
 
-	if permissionType := permission.Type; permissionType != nil {
-		d.Set("type", *permissionType)
+	if isEnabled := role.IsEnabled; isEnabled != nil {
+		d.Set("is_enabled", isEnabled)
 	}
 
-	if description := permission.UserConsentDescription; description != nil {
-		d.Set("user_consent_description", *description)
-	}
-
-	if displayName := permission.UserConsentDisplayName; displayName != nil {
-		d.Set("user_consent_display_name", *displayName)
-	}
-
-	if value := permission.Value; value != nil {
-		d.Set("value", *value)
+	if value := role.Value; value != nil {
+		d.Set("value", value)
 	}
 
 	return nil
 }
 
-func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseOAuth2PermissionId(d.Id())
+	id, err := graph.ParseAppRoleId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing App Role ID: %v", err)
 	}
@@ -257,14 +241,14 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId),
+		AppRoles: graph.AppRoleResultDisableById(app.AppRoles, id.RoleId),
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
 
 	properties = graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId),
+		AppRoles: graph.AppRoleResultRemoveById(app.AppRoles, id.RoleId),
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)

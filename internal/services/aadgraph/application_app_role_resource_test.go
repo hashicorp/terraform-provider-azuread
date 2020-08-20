@@ -185,10 +185,10 @@ func testAccApplicationAppRole_basic(ri int) string {
 
 resource "azuread_application_app_role" "test" {
   application_object_id = azuread_application.test.id
-  allowed_member_types = ["User"]
-  description          = "Admins can manage roles and perform all task actions"
-  display_name         = "Admin"
-  is_enabled           = true
+  allowed_member_types  = ["User"]
+  description           = "Admins can manage roles and perform all task actions"
+  display_name          = "Admin"
+  is_enabled            = true
 }
 `, testAccApplicationAppRole_template(ri))
 }
@@ -214,12 +214,12 @@ func testAccApplicationAppRole_complete(ri int, id string) string {
 
 resource "azuread_application_app_role" "test" {
   application_object_id = azuread_application.test.id
-  allowed_member_types = ["User"]
-  description          = "Admins can manage roles and perform all task actions"
-  display_name         = "Admin"
-  is_enabled           = true
-  role_id              = "%s"
-  value                = "administer"
+  allowed_member_types  = ["User"]
+  description           = "Admins can manage roles and perform all task actions"
+  display_name          = "Admin"
+  is_enabled            = true
+  role_id               = "%s"
+  value                 = "administer"
 }
 `, testAccApplicationAppRole_template(ri), id)
 }
@@ -230,12 +230,12 @@ func testAccApplicationAppRole_update(ri int, id string) string {
 
 resource "azuread_application_app_role" "test" {
   application_object_id = azuread_application.test.id
-  allowed_member_types = ["Application", "User"]
-  description          = "Administrators can administrate all the things"
-  display_name         = "Administrate"
-  is_enabled           = true
-  role_id              = "%s"
-  value                = "administrate"
+  allowed_member_types  = ["Application", "User"]
+  description           = "Administrators can administrate all the things"
+  display_name          = "Administrate"
+  is_enabled            = true
+  role_id               = "%s"
+  value                 = "administrate"
 }
 `, testAccApplicationAppRole_template(ri), id)
 }
