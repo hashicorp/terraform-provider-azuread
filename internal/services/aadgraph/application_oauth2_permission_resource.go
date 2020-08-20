@@ -53,10 +53,11 @@ func ApplicationOAuth2PermissionResource() *schema.Resource {
 			},
 
 			"permission_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
 			},
 
 			"type": {
@@ -81,8 +82,9 @@ func ApplicationOAuth2PermissionResource() *schema.Resource {
 			},
 
 			"value": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validate.NoEmptyStrings,
 			},
 		},
 	}

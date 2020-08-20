@@ -66,10 +66,11 @@ func ApplicationAppRoleResource() *schema.Resource {
 			},
 
 			"role_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
 			},
 
 			"value": {
