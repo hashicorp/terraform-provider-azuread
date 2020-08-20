@@ -328,7 +328,7 @@ func ParseAppRoleId(id string) (AppRoleId, error) {
 	}, nil
 }
 
-func AppRoleFindByRoleId(app graphrbac.Application, roleId string) (role *graphrbac.AppRole) {
+func AppRoleFindById(app graphrbac.Application, roleId string) (role *graphrbac.AppRole) {
 	for _, r := range *app.AppRoles {
 		if r.ID == nil {
 			continue
@@ -430,4 +430,137 @@ func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]gr
 	}
 
 	return &newRoles
+}
+
+type OAuth2PermissionId struct {
+	ObjectId     string
+	PermissionId string
+}
+
+func (id OAuth2PermissionId) String() string {
+	return id.ObjectId + "/" + id.PermissionId
+}
+
+func OAuth2PermissionIdFrom(objectId, permissionId string) OAuth2PermissionId {
+	return OAuth2PermissionId{
+		ObjectId:     objectId,
+		PermissionId: permissionId,
+	}
+}
+
+func ParseOAuth2PermissionId(id string) (OAuth2PermissionId, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return OAuth2PermissionId{}, fmt.Errorf("App Permission ID should be in the format {objectId}/{permissionId} - but got %q", id)
+	}
+
+	if _, err := uuid.ParseUUID(parts[0]); err != nil {
+		return OAuth2PermissionId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
+	}
+
+	if _, err := uuid.ParseUUID(parts[1]); err != nil {
+		return OAuth2PermissionId{}, fmt.Errorf("Permission ID isn't a valid UUID (%q): %+v", parts[2], err)
+	}
+
+	return OAuth2PermissionId{
+		ObjectId:     parts[0],
+		PermissionId: parts[1],
+	}, nil
+}
+
+func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (permission *graphrbac.OAuth2Permission) {
+	for _, r := range *app.Oauth2Permissions {
+		if r.ID == nil {
+			continue
+		}
+		if *r.ID == permissionId {
+			permission = &r
+			break
+		}
+	}
+	return permission
+}
+
+func OAuth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permission, error) {
+	// errors should be handled by the validation
+	var permissionId string
+	if v, ok := d.GetOk("permission_id"); ok {
+		permissionId = v.(string)
+	} else {
+		pid, err := uuid.GenerateUUID()
+		if err != nil {
+			return nil, err
+		}
+		permissionId = pid
+	}
+
+	permission := graphrbac.OAuth2Permission{
+		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
+		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
+		ID:                      utils.String(permissionId),
+		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
+		Type:                    utils.String(d.Get("type").(string)),
+		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
+		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
+		Value:                   utils.String(d.Get("value").(string)),
+	}
+
+	return &permission, nil
+}
+
+func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
+	newPermissions := make([]graphrbac.OAuth2Permission, len(*permissions)+1)
+	newPermissions[0] = *permission
+
+	for i, v := range *permissions {
+		if *v.ID == *permission.ID {
+			return nil, fmt.Errorf("App Permission with ID %q already exists", *permission.ID)
+		}
+		newPermissions[i+1] = v
+	}
+
+	return &newPermissions, nil
+}
+
+func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) *[]graphrbac.OAuth2Permission {
+	newPermissions := make([]graphrbac.OAuth2Permission, len(*permissions))
+
+	for i, v := range *permissions {
+		if *v.ID == *permission.ID {
+			newPermissions[i] = *permission
+			continue
+		}
+		newPermissions[i] = v
+	}
+
+	return &newPermissions
+}
+
+func OAuth2PermissionResultDisableById(existing *[]graphrbac.OAuth2Permission, permissionId string) *[]graphrbac.OAuth2Permission {
+	newPermissions := make([]graphrbac.OAuth2Permission, len(*existing))
+
+	for i, v := range *existing {
+		if *v.ID == permissionId {
+			v.IsEnabled = utils.Bool(false)
+		}
+		newPermissions[i] = v
+	}
+
+	return &newPermissions
+}
+
+func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, permissionId string) *[]graphrbac.OAuth2Permission {
+	newPermissions := make([]graphrbac.OAuth2Permission, 0)
+
+	for _, v := range *existing {
+		if v.ID == nil {
+			continue
+		}
+		if *v.ID == permissionId {
+			continue
+		}
+		newPermissions = append(newPermissions, v)
+	}
+
+	return &newPermissions
 }

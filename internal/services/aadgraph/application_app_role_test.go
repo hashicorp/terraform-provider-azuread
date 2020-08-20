@@ -36,7 +36,7 @@ func testCheckAppRoleExists(name string) resource.TestCheckFunc { //nolint unpar
 			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
 		}
 
-		role := graph.AppRoleFindByRoleId(resp, id.RoleId)
+		role := graph.AppRoleFindById(resp, id.RoleId)
 		if role != nil {
 			return nil
 		}
@@ -68,7 +68,7 @@ func testCheckAppRoleCheckDestroy(s *terraform.State) error {
 			return err
 		}
 
-		role := graph.AppRoleFindByRoleId(resp, id.RoleId)
+		role := graph.AppRoleFindById(resp, id.RoleId)
 		if role == nil {
 			return nil
 		}

@@ -38,6 +38,7 @@ func (r Registration) SupportedResources() map[string]*schema.Resource {
 		"azuread_application":                   ApplicationResource(),
 		"azuread_application_app_role":          ApplicationAppRoleResource(),
 		"azuread_application_certificate":       ApplicationCertificateResource(),
+		"azuread_application_oauth2_permission": ApplicationOAuth2PermissionResource(),
 		"azuread_application_password":          ApplicationPasswordResource(),
 		"azuread_group":                         GroupResource(),
 		"azuread_group_member":                  GroupMemberResource(),

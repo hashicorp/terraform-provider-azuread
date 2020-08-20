@@ -42,7 +42,7 @@ The following arguments are supported:
 
 * `display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
 
-* `is_enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
+* `is_enabled` - (Optional) Determines if the app role is enabled. Defaults to `true`.
 
 * `role_id` - (Optional) Specifies a custom UUID for the app role. If omitted, a random UUID will be automatically generated. Changing this field forces a new resource to be created.
 
