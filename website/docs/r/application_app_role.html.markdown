@@ -34,7 +34,7 @@ resource "azuread_application_app_role" "example" {
 
 The following arguments are supported:
 
-* `application_object_id` - (Required) The Object ID of the Application for which this password should be created. Changing this field forces a new resource to be created.
+* `application_object_id` - (Required) The Object ID of the Application for which this App Role should be created. Changing this field forces a new resource to be created.
 
 * `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in daemon service scenarios) by setting to `Application`, or to both.
 
@@ -44,7 +44,7 @@ The following arguments are supported:
 
 * `is_enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
 
-* `role_id` - (Optional) Specifies a custom UUID for the app role. If omitted, a random UUID will be automatically generated.
+* `role_id` - (Optional) Specifies a custom UUID for the app role. If omitted, a random UUID will be automatically generated. Changing this field forces a new resource to be created.
 
 * `value` - (Optional) Specifies the value of the roles claim that the application should expect in the authentication and access tokens.
 
@@ -63,4 +63,4 @@ App Roles can be imported using the `object id` of an Application and the `id` o
 terraform import azuread_application_app_role.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the App Role's ID in the format `{ObjectId}/{PasswordKeyId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the App Role's ID in the format `{ApplicationObjectId}/{AppRoleId}`.
