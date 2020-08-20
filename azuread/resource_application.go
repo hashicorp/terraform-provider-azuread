@@ -285,10 +285,18 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+
 			"prevent_duplicate_names": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+
+			"sign_in_audience": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "AzureADMyOrg",
+				ValidateFunc: validation.StringInSlice([]string{"AzureADMyOrg", "AzureADMultipleOrgs", "AzureADandPersonalMicrosoftAccount"}, false),
 			},
 		},
 	}
@@ -329,6 +337,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		AvailableToOtherTenants: p.BoolI(d.Get("available_to_other_tenants")),
 		RequiredResourceAccess:  expandADApplicationRequiredResourceAccess(d),
 		OptionalClaims:          expandADApplicationOptionalClaims(d),
+		SignInAudience:          p.StringI(d.Get("sign_in_audience")),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
@@ -470,6 +479,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.OptionalClaims = expandADApplicationOptionalClaims(d)
 	}
 
+	if d.HasChange("sign_in_audience") {
+		return fmt.Errorf("SignInAudience of an Application can only be changed by recreating it")
+	}
+
 	if d.HasChange("oauth2_permissions") {
 		// if the permission already exists then it must be disabled
 		// with no other changes before it can be edited or deleted
@@ -576,6 +589,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
 	d.Set("public_client", app.PublicClient)
 	d.Set("object_id", app.ObjectID)
+	d.Set("sign_in_audience", app.SignInAudience)
 
 	if v := app.PublicClient; v != nil && *v {
 		d.Set("type", "native")

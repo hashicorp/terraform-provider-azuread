@@ -32,6 +32,7 @@ func TestAccAzureADApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oauth2_allow_implicit_flow", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(resourceName, "oauth2_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sign_in_audience", "AzureADMyOrg"),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "object_id"),
 				),
@@ -600,6 +601,40 @@ func TestAccAzureADApplication_preventDuplicateNames(t *testing.T) {
 	})
 }
 
+func TestAccAzureADApplication_preventUpdatingSignInAudience(t *testing.T) {
+	resourceName := "azuread_application.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckADApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccADApplication_basic(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckADApplicationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", ri)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:      testAccADApplication_preventUpdatingSignInAudience(ri),
+				ExpectError: regexp.MustCompile("SignInAudience of Application can only be changed by recreating the resource"),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAzureADApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
@@ -955,6 +990,15 @@ resource "azuread_application" "duplicate" {
   prevent_duplicate_names = true
 }
 `, testAccADApplication_basic(ri))
+}
+
+func testAccADApplication_preventUpdatingSignInAudience(ri int) string {
+	return fmt.Sprintf(`
+	resource "azuread_application" "test" {
+		name 				= "acctest-APP-%[1]d"
+  		sign_in_audience 	= "AzureADandPersonalMicrosoftAccount"
+}
+`, ri)
 }
 
 func testAccADApplication_duplicateAppRolesOauth2PermissionsValues(ri int) string {

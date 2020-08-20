@@ -141,6 +141,8 @@ The following arguments are supported:
 
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error when an existing Application is found with the same name. Defaults to `false`.
 
+* `sign_in_audience` - (Optional) Type of an audience: `AzureADMyOrg`, `AzureADMultipleOrgs` or `AzureADandPersonalMicrosoftAccount`, will return an error when updated on an existing application due to restrictions per audience. For more information https://docs.microsoft.com/en-us/azure/active-directory/develop/supported-accounts-validation. Defaults to `AzureADMyOrg`.
+
 ---
 
 `required_resource_access` supports the following:
