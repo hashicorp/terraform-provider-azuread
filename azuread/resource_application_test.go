@@ -994,9 +994,9 @@ resource "azuread_application" "duplicate" {
 
 func testAccADApplication_preventUpdatingSignInAudience(ri int) string {
 	return fmt.Sprintf(`
-	resource "azuread_application" "test" {
-		name 				= "acctest-APP-%[1]d"
-  		sign_in_audience 	= "AzureADandPersonalMicrosoftAccount"
+resource "azuread_application" "test" {
+  name             = "acctest-APP-%[1]d"
+  sign_in_audience = "AzureADandPersonalMicrosoftAccount"
 }
 `, ri)
 }
