@@ -22,11 +22,11 @@ resource "azuread_application" "example" {
 
 resource "azuread_application_app_role" "example" {
   application_object_id = azuread_application.example.id
-  allowed_member_types = ["User"]
-  description          = "Admins can manage roles and perform all task actions"
-  display_name         = "Admin"
-  is_enabled           = true
-  value                = "administer"
+  allowed_member_types  = ["User"]
+  description           = "Admins can manage roles and perform all task actions"
+  display_name          = "Admin"
+  is_enabled            = true
+  value                 = "administer"
 }
 ```
 
