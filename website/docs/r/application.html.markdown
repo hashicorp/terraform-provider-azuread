@@ -170,7 +170,7 @@ The following arguments are supported:
 
 `app_role` supports the following:
 
-* `id` - The unique identifier of the `app_role`.
+* `id` - The unique identifier of the app role. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to use the [azuread_application_app_role](application_app_role.html) resource.
 
 * `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in daemon service scenarios) by setting to `Application`, or to both.
 
@@ -185,6 +185,8 @@ The following arguments are supported:
 ---
 
 `oauth2_permissions` supports the following:
+
+* `id` - The unique identifier of the permision. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to use the [azuread_application_oauth2_permission](application_oauth2_permission.html) resource.
 
 * `admin_consent_description` - (Required) Permission help text that appears in the admin consent and app assignment experiences.
 

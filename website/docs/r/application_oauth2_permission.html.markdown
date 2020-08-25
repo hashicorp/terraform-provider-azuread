@@ -9,7 +9,7 @@ description: |-
 
 # azuread_application_oauth2_permission
 
-Manages an OAuth2 Permission (also known as Scopes) associated with an Application within Azure Active Directory.
+Manages an OAuth2 Permission (also known as a Scope) associated with an Application within Azure Active Directory.
 
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API.
 
