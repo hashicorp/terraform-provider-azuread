@@ -9,11 +9,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/services"
-
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph"
 )
+
+type ServiceRegistration interface {
+	// Name is the name of this Service
+	Name() string
+
+	// WebsiteCategories returns a list of categories which can be used for the sidebar
+	WebsiteCategories() []string
+
+	// SupportedDataSources returns the supported Data Sources supported by this Service
+	SupportedDataSources() map[string]*schema.Resource
+
+	// SupportedResources returns the supported Resources supported by this Service
+	SupportedResources() map[string]*schema.Resource
+}
 
 // Provider returns a terraform.ResourceProvider.
 func AzureADProvider() terraform.ResourceProvider {
@@ -32,7 +44,7 @@ func AzureADProvider() terraform.ResourceProvider {
 
 	// only one for now so keeping it simple, eventually we will need a way to differentiate between aadgraph and msgraph?
 	// looks like only an env var will work?
-	services := []services.ServiceRegistration{
+	services := []ServiceRegistration{
 		aadgraph.Registration{},
 	}
 

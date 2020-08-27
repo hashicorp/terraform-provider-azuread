@@ -328,13 +328,13 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
-		AvailableToOtherTenants: utils.BoolI(d.Get("available_to_other_tenants")),
+		AvailableToOtherTenants: utils.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandApplicationRequiredResourceAccess(d),
 		OptionalClaims:          expandApplicationOptionalClaims(d),
 	}
 
 	if v, ok := d.GetOk("homepage"); ok {
-		properties.Homepage = utils.StringI(v)
+		properties.Homepage = utils.String(v.(string))
 	} else {
 		// continue to automatically set the homepage with the type is not native
 		if appType != "native" {
@@ -343,15 +343,15 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("logout_url"); ok {
-		properties.LogoutURL = utils.StringI(v)
+		properties.LogoutURL = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
-		properties.Oauth2AllowImplicitFlow = utils.BoolI(v)
+		properties.Oauth2AllowImplicitFlow = utils.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("public_client"); ok {
-		properties.PublicClient = utils.BoolI(v)
+		properties.PublicClient = utils.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("group_membership_claims"); ok {
@@ -437,11 +437,11 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("homepage") {
-		properties.Homepage = utils.StringI(d.Get("homepage"))
+		properties.Homepage = utils.String(d.Get("homepage").(string))
 	}
 
 	if d.HasChange("logout_url") {
-		properties.LogoutURL = utils.StringI(d.Get("logout_url"))
+		properties.LogoutURL = utils.String(d.Get("logout_url").(string))
 	}
 
 	if d.HasChange("identifier_uris") {
@@ -453,15 +453,15 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("available_to_other_tenants") {
-		properties.AvailableToOtherTenants = utils.BoolI(d.Get("available_to_other_tenants"))
+		properties.AvailableToOtherTenants = utils.Bool(d.Get("available_to_other_tenants").(bool))
 	}
 
 	if d.HasChange("oauth2_allow_implicit_flow") {
-		properties.Oauth2AllowImplicitFlow = utils.BoolI(d.Get("oauth2_allow_implicit_flow"))
+		properties.Oauth2AllowImplicitFlow = utils.Bool(d.Get("oauth2_allow_implicit_flow").(bool))
 	}
 
 	if d.HasChange("public_client") {
-		properties.PublicClient = utils.BoolI(d.Get("public_client").(bool))
+		properties.PublicClient = utils.Bool(d.Get("public_client").(bool))
 	}
 
 	if d.HasChange("required_resource_access") {

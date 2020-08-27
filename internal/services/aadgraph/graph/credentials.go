@@ -167,35 +167,35 @@ func (id CredentialId) String() string {
 	return id.ObjectId + "/" + id.KeyType + "/" + id.KeyId
 }
 
-func ParseCredentialId(id string) (CredentialId, error) {
+func ParseCredentialId(id string) (*CredentialId, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 3 {
-		return CredentialId{}, fmt.Errorf("Credential ID should be in the format {objectId}/{keyType}/{keyId} - but got %q", id)
+		return nil, fmt.Errorf("Credential ID should be in the format {objectId}/{keyType}/{keyId} - but got %q", id)
 	}
 
 	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return CredentialId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
+		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
 	}
 
 	if parts[1] != "certificate" && parts[1] != "password" {
-		return CredentialId{}, fmt.Errorf("Key type should be one of: certificate, password. Got: %q", parts[1])
+		return nil, fmt.Errorf("Key type should be one of: certificate, password. Got: %q", parts[1])
 	}
 
 	if _, err := uuid.ParseUUID(parts[2]); err != nil {
-		return CredentialId{}, fmt.Errorf("Key ID isn't a valid UUID (%q): %+v", parts[2], err)
+		return nil, fmt.Errorf("Key ID isn't a valid UUID (%q): %+v", parts[2], err)
 	}
 
-	return CredentialId{
+	return &CredentialId{
 		ObjectId: parts[0],
 		KeyType:  parts[1],
 		KeyId:    parts[2],
 	}, nil
 }
 
-func ParseOldCredentialId(id, keyType string) (CredentialId, error) {
+func ParseOldCredentialId(id, keyType string) (*CredentialId, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
-		return CredentialId{}, fmt.Errorf("Credential ID expected to be in the format {objectId}/{keyId} - but got %q", id)
+		return nil, fmt.Errorf("Credential ID expected to be in the format {objectId}/{keyId} - but got %q", id)
 	}
 
 	newId := parts[0] + "/" + keyType + "/" + parts[1]
@@ -228,7 +228,11 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 
 	var endDate time.Time
 	if v := d.Get("end_date").(string); v != "" {
-		endDate, _ = time.Parse(time.RFC3339, v)
+		var err error
+		endDate, err = time.Parse(time.RFC3339, v)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse the provided end date %q: %+v", v, err)
+		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
@@ -251,8 +255,10 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
-		// errors will be handled by the validation
-		startDate, _ := time.Parse(time.RFC3339, v.(string))
+		startDate, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse the provided start date %q: %+v", v, err)
+		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}
 
@@ -367,7 +373,11 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 
 	var endDate time.Time
 	if v := d.Get("end_date").(string); v != "" {
-		endDate, _ = time.Parse(time.RFC3339, v)
+		var err error
+		endDate, err = time.Parse(time.RFC3339, v)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse the provided end date %q: %+v", v, err)
+		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
@@ -387,8 +397,10 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
-		// errors will be handled by the validation
-		startDate, _ := time.Parse(time.RFC3339, v.(string))
+		startDate, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse the provided start date %q: %+v", v, err)
+		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}
 
@@ -396,22 +408,18 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 }
 
 func KeyCredentialResultFindByKeyId(creds graphrbac.KeyCredentialListResult, keyId string) *graphrbac.KeyCredential {
-	var cred *graphrbac.KeyCredential
-
 	if creds.Value != nil {
 		for _, c := range *creds.Value {
 			if c.KeyID == nil {
 				continue
 			}
-
 			if *c.KeyID == keyId {
-				cred = &c
-				break
+				return &c
 			}
 		}
 	}
 
-	return cred
+	return nil
 }
 
 func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *graphrbac.KeyCredential, errorOnDuplicate bool) (*[]graphrbac.KeyCredential, error) {

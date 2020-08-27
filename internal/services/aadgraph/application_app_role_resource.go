@@ -152,9 +152,15 @@ func applicationAppRoleResourceUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 	}
 
-	properties := graphrbac.ApplicationUpdateParameters{
-		AppRoles: graph.AppRoleUpdate(app.AppRoles, role),
+	newRoles, err := graph.AppRoleUpdate(app.AppRoles, role)
+	if err != nil {
+		return fmt.Errorf("updating App Role: %s", err)
 	}
+
+	properties := graphrbac.ApplicationUpdateParameters{
+		AppRoles: newRoles,
+	}
+
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
@@ -241,8 +247,13 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
+	newRoles, err := graph.AppRoleResultDisableById(app.AppRoles, id.RoleId)
+	if err != nil {
+		return fmt.Errorf("deleting App Role: %s", err)
+	}
+
 	properties := graphrbac.ApplicationUpdateParameters{
-		AppRoles: graph.AppRoleResultDisableById(app.AppRoles, id.RoleId),
+		AppRoles: newRoles,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)

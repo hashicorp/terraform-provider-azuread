@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -157,28 +158,46 @@ func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {
 		return []map[string]interface{}{}
 	}
 
-	appRoles := make([]map[string]interface{}, len(*in))
-	for i, role := range *in {
-		appRole := make(map[string]interface{})
+	appRoles := make([]map[string]interface{}, 0, len(*in))
+	for _, role := range *in {
+		appRole := map[string]interface{}{
+			"id":                   "",
+			"allowed_member_types": []interface{}{},
+			"description":          "",
+			"display_name":         "",
+			"is_enabled":           false,
+			"value":                "",
+		}
+
 		if v := role.ID; v != nil {
 			appRole["id"] = *v
 		}
+
 		if v := role.AllowedMemberTypes; v != nil {
-			appRole["allowed_member_types"] = *v
+			memberTypes := make([]interface{}, 0, len(*v))
+			for _, m := range *v {
+				memberTypes = append(memberTypes, m)
+			}
+			appRole["allowed_member_types"] = memberTypes
 		}
+
 		if v := role.Description; v != nil {
-			appRole["description"] = *v
+			appRole["description"] = v
 		}
+
 		if v := role.DisplayName; v != nil {
-			appRole["display_name"] = *v
+			appRole["display_name"] = v
 		}
+
 		if v := role.IsEnabled; v != nil {
-			appRole["is_enabled"] = *v
+			appRole["is_enabled"] = v
 		}
+
 		if v := role.Value; v != nil {
-			appRole["value"] = *v
+			appRole["value"] = v
 		}
-		appRoles[i] = appRole
+
+		appRoles = append(appRoles, appRole)
 	}
 
 	return appRoles
@@ -189,30 +208,47 @@ func FlattenOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]int
 		return []map[string]interface{}{}
 	}
 
-	result := make([]map[string]interface{}, 0)
+	result := make([]map[string]interface{}, 0, len(*in))
 	for _, p := range *in {
-		permission := make(map[string]interface{})
+		permission := map[string]interface{}{
+			"admin_consent_description":  "",
+			"admin_consent_display_name": "",
+			"id":                         "",
+			"is_enabled":                 false,
+			"type":                       "",
+			"user_consent_description":   "",
+			"user_consent_display_name":  "",
+			"value":                      "",
+		}
+
 		if v := p.AdminConsentDescription; v != nil {
 			permission["admin_consent_description"] = v
 		}
+
 		if v := p.AdminConsentDisplayName; v != nil {
 			permission["admin_consent_display_name"] = v
 		}
+
 		if v := p.ID; v != nil {
 			permission["id"] = v
 		}
+
 		if v := p.IsEnabled; v != nil {
 			permission["is_enabled"] = *v
 		}
+
 		if v := p.Type; v != nil {
 			permission["type"] = v
 		}
+
 		if v := p.UserConsentDescription; v != nil {
 			permission["user_consent_description"] = v
 		}
+
 		if v := p.UserConsentDisplayName; v != nil {
 			permission["user_consent_display_name"] = v
 		}
+
 		if v := p.Value; v != nil {
 			permission["value"] = v
 		}
@@ -308,37 +344,36 @@ func AppRoleIdFrom(objectId, roleId string) AppRoleId {
 	}
 }
 
-func ParseAppRoleId(id string) (AppRoleId, error) {
+func ParseAppRoleId(id string) (*AppRoleId, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
-		return AppRoleId{}, fmt.Errorf("App Role ID should be in the format {objectId}/{roleId} - but got %q", id)
+		return nil, fmt.Errorf("App Role ID should be in the format {objectId}/{roleId} - but got %q", id)
 	}
 
 	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return AppRoleId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
+		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
 	}
 
 	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return AppRoleId{}, fmt.Errorf("Role ID isn't a valid UUID (%q): %+v", parts[2], err)
+		return nil, fmt.Errorf("Role ID isn't a valid UUID (%q): %+v", parts[2], err)
 	}
 
-	return AppRoleId{
+	return &AppRoleId{
 		ObjectId: parts[0],
 		RoleId:   parts[1],
 	}, nil
 }
 
-func AppRoleFindById(app graphrbac.Application, roleId string) (role *graphrbac.AppRole) {
+func AppRoleFindById(app graphrbac.Application, roleId string) *graphrbac.AppRole {
 	for _, r := range *app.AppRoles {
 		if r.ID == nil {
 			continue
 		}
 		if *r.ID == roleId {
-			role = &r
-			break
+			return &r
 		}
 	}
-	return role
+	return nil
 }
 
 func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
@@ -355,9 +390,9 @@ func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
 	}
 
 	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
-	allowedMemberTypes := make([]string, len(allowedMemberTypesRaw))
-	for i, a := range allowedMemberTypesRaw {
-		allowedMemberTypes[i] = a.(string)
+	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
+	for _, a := range allowedMemberTypesRaw {
+		allowedMemberTypes = append(allowedMemberTypes, a.(string))
 	}
 
 	appRole := graphrbac.AppRole{
@@ -376,44 +411,52 @@ func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
 }
 
 func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
-	newRoles := make([]graphrbac.AppRole, len(*roles)+1)
+	newRoles := make([]graphrbac.AppRole, 0, len(*roles)+1)
 	newRoles[0] = *role
 
-	for i, v := range *roles {
+	for _, v := range *roles {
 		if *v.ID == *role.ID {
 			return nil, fmt.Errorf("App Role with ID %q already exists", *role.ID)
 		}
-		newRoles[i+1] = v
+		newRoles = append(newRoles, v)
 	}
 
 	return &newRoles, nil
 }
 
-func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) *[]graphrbac.AppRole {
+func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
 	newRoles := make([]graphrbac.AppRole, len(*roles))
 
+	if role.ID == nil {
+		return nil, errors.New("ID of role to be updated is null")
+	}
+
 	for i, v := range *roles {
-		if *v.ID == *role.ID {
+		if v.ID != nil && *v.ID == *role.ID {
 			newRoles[i] = *role
 			continue
 		}
 		newRoles[i] = v
 	}
 
-	return &newRoles
+	return &newRoles, nil
 }
 
-func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) *[]graphrbac.AppRole {
+func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]graphrbac.AppRole, error) {
 	newRoles := make([]graphrbac.AppRole, len(*existing))
 
+	if roleId == "" {
+		return nil, errors.New("ID of role to be updated is blank")
+	}
+
 	for i, v := range *existing {
-		if *v.ID == roleId {
+		if v.ID != nil && *v.ID == roleId {
 			v.IsEnabled = utils.Bool(false)
 		}
 		newRoles[i] = v
 	}
 
-	return &newRoles
+	return &newRoles, nil
 }
 
 func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]graphrbac.AppRole {
@@ -448,37 +491,44 @@ func OAuth2PermissionIdFrom(objectId, permissionId string) OAuth2PermissionId {
 	}
 }
 
-func ParseOAuth2PermissionId(id string) (OAuth2PermissionId, error) {
+func ParseOAuth2PermissionId(id string) (*OAuth2PermissionId, error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
-		return OAuth2PermissionId{}, fmt.Errorf("App Permission ID should be in the format {objectId}/{permissionId} - but got %q", id)
+		return nil, fmt.Errorf("App Permission ID should be in the format {objectId}/{permissionId} - but got %q", id)
 	}
 
 	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return OAuth2PermissionId{}, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
+		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
 	}
 
 	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return OAuth2PermissionId{}, fmt.Errorf("Permission ID isn't a valid UUID (%q): %+v", parts[2], err)
+		return nil, fmt.Errorf("Permission ID isn't a valid UUID (%q): %+v", parts[2], err)
 	}
 
-	return OAuth2PermissionId{
+	return &OAuth2PermissionId{
 		ObjectId:     parts[0],
 		PermissionId: parts[1],
 	}, nil
 }
 
-func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (permission *graphrbac.OAuth2Permission) {
+func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (*graphrbac.OAuth2Permission, error) {
+	if app.Oauth2Permissions == nil {
+		return nil, nil
+	}
+
+	if permissionId == "" {
+		return nil, errors.New("specified permission ID is blank")
+	}
+
 	for _, r := range *app.Oauth2Permissions {
 		if r.ID == nil {
 			continue
 		}
-		if *r.ID == permissionId {
-			permission = &r
-			break
+		if r.ID != nil && *r.ID == permissionId {
+			return &r, nil
 		}
 	}
-	return permission
+	return nil, nil
 }
 
 func OAuth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permission, error) {
@@ -509,23 +559,47 @@ func OAuth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permi
 }
 
 func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
-	newPermissions := make([]graphrbac.OAuth2Permission, len(*permissions)+1)
+	if permission == nil {
+		return nil, errors.New("permission to be added is null")
+	} else if permission.ID == nil {
+		return nil, errors.New("ID of new permission is null")
+	}
+
+	cap := 1
+	if permissions != nil {
+		cap += len(*permissions)
+	}
+
+	newPermissions := make([]graphrbac.OAuth2Permission, 0, cap)
 	newPermissions[0] = *permission
 
-	for i, v := range *permissions {
-		if *v.ID == *permission.ID {
-			return nil, fmt.Errorf("App Permission with ID %q already exists", *permission.ID)
+	if permissions != nil {
+		for _, v := range *permissions {
+			if v.ID != nil && *v.ID == *permission.ID {
+				return nil, fmt.Errorf("App Permission with ID %q already exists", *permission.ID)
+			}
+			newPermissions = append(newPermissions, v)
 		}
-		newPermissions[i+1] = v
 	}
 
 	return &newPermissions, nil
 }
 
-func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) *[]graphrbac.OAuth2Permission {
+func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
+	if permission == nil {
+		return nil, errors.New("permission to be added is null")
+	} else if permission.ID == nil {
+		return nil, errors.New("ID of new permission is null")
+	} else if permissions == nil {
+		return nil, errors.New("permissions cannot be null when updating")
+	}
+
 	newPermissions := make([]graphrbac.OAuth2Permission, len(*permissions))
 
 	for i, v := range *permissions {
+		if v.ID == nil {
+			continue
+		}
 		if *v.ID == *permission.ID {
 			newPermissions[i] = *permission
 			continue
@@ -533,23 +607,38 @@ func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permissio
 		newPermissions[i] = v
 	}
 
-	return &newPermissions
+	return &newPermissions, nil
 }
 
-func OAuth2PermissionResultDisableById(existing *[]graphrbac.OAuth2Permission, permissionId string) *[]graphrbac.OAuth2Permission {
+func OAuth2PermissionResultDisableById(existing *[]graphrbac.OAuth2Permission, permissionId string) (*[]graphrbac.OAuth2Permission, error) {
+	if existing == nil {
+		return nil, errors.New("existing permissions are null")
+	} else if permissionId == "" {
+		return nil, errors.New("ID of permission to be disabled is empty")
+	}
+
 	newPermissions := make([]graphrbac.OAuth2Permission, len(*existing))
 
 	for i, v := range *existing {
+		if v.ID == nil {
+			continue
+		}
 		if *v.ID == permissionId {
 			v.IsEnabled = utils.Bool(false)
 		}
 		newPermissions[i] = v
 	}
 
-	return &newPermissions
+	return &newPermissions, nil
 }
 
-func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, permissionId string) *[]graphrbac.OAuth2Permission {
+func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, permissionId string) (*[]graphrbac.OAuth2Permission, error) {
+	if existing == nil {
+		return nil, errors.New("existing permissions are null")
+	} else if permissionId == "" {
+		return nil, errors.New("ID of permission to be disabled is empty")
+	}
+
 	newPermissions := make([]graphrbac.OAuth2Permission, 0)
 
 	for _, v := range *existing {
@@ -562,5 +651,5 @@ func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, pe
 		newPermissions = append(newPermissions, v)
 	}
 
-	return &newPermissions
+	return &newPermissions, nil
 }

@@ -1,30 +1,13 @@
 package utils
 
 import (
-	"net"
 	"net/http"
 
 	"github.com/Azure/go-autorest/autorest"
 )
 
-//todo move to azure helpers
 func ResponseWasNotFound(resp autorest.Response) bool {
 	return ResponseWasStatusCode(resp, http.StatusNotFound)
-}
-
-func ResponseErrorIsRetryable(err error) bool {
-	if arerr, ok := err.(autorest.DetailedError); ok {
-		err = arerr.Original
-	}
-
-	switch e := err.(type) {
-	case net.Error:
-		if e.Temporary() || e.Timeout() {
-			return true
-		}
-	}
-
-	return false
 }
 
 func ResponseWasStatusCode(resp autorest.Response, statusCode int) bool { // nolint: unparam

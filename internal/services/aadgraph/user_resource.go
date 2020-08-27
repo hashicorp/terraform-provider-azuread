@@ -118,22 +118,22 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	userCreateParameters := graphrbac.UserCreateParameters{
-		AccountEnabled: utils.BoolI(d.Get("account_enabled")),
-		DisplayName:    utils.StringI(d.Get("display_name")),
+		AccountEnabled: utils.Bool(d.Get("account_enabled").(bool)),
+		DisplayName:    utils.String(d.Get("display_name").(string)),
 		MailNickname:   &mailNickName,
 		PasswordProfile: &graphrbac.PasswordProfile{
-			ForceChangePasswordNextLogin: utils.BoolI(d.Get("force_password_change")),
-			Password:                     utils.StringI(d.Get("password")),
+			ForceChangePasswordNextLogin: utils.Bool(d.Get("force_password_change").(bool)),
+			Password:                     utils.String(d.Get("password").(string)),
 		},
 		UserPrincipalName: &upn,
 	}
 
 	if v, ok := d.GetOk("usage_location"); ok {
-		userCreateParameters.UsageLocation = utils.StringI(v)
+		userCreateParameters.UsageLocation = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("immutable_id"); ok {
-		userCreateParameters.ImmutableID = utils.StringI(v)
+		userCreateParameters.ImmutableID = utils.String(v.(string))
 	}
 
 	user, err := client.Create(ctx, userCreateParameters)
@@ -162,30 +162,30 @@ func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	var userUpdateParameters graphrbac.UserUpdateParameters
 
 	if d.HasChange("display_name") {
-		userUpdateParameters.DisplayName = utils.StringI(d.Get("display_name"))
+		userUpdateParameters.DisplayName = utils.String(d.Get("display_name").(string))
 	}
 
 	if d.HasChange("mail_nickname") {
-		userUpdateParameters.MailNickname = utils.StringI(d.Get("mail_nickname"))
+		userUpdateParameters.MailNickname = utils.String(d.Get("mail_nickname").(string))
 	}
 
 	if d.HasChange("account_enabled") {
-		userUpdateParameters.AccountEnabled = utils.BoolI(d.Get("account_enabled"))
+		userUpdateParameters.AccountEnabled = utils.Bool(d.Get("account_enabled").(bool))
 	}
 
 	if d.HasChange("password") {
 		userUpdateParameters.PasswordProfile = &graphrbac.PasswordProfile{
-			ForceChangePasswordNextLogin: utils.BoolI(d.Get("force_password_change")),
-			Password:                     utils.StringI(d.Get("password")),
+			ForceChangePasswordNextLogin: utils.Bool(d.Get("force_password_change").(bool)),
+			Password:                     utils.String(d.Get("password").(string)),
 		}
 	}
 
 	if d.HasChange("usage_location") {
-		userUpdateParameters.UsageLocation = utils.StringI(d.Get("usage_location"))
+		userUpdateParameters.UsageLocation = utils.String(d.Get("usage_location").(string))
 	}
 
 	if d.HasChange("immutable_id") {
-		userUpdateParameters.ImmutableID = utils.StringI(d.Get("immutable_id"))
+		userUpdateParameters.ImmutableID = utils.String(d.Get("immutable_id").(string))
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {

@@ -36,8 +36,10 @@ func testCheckOAuth2PermissionExists(name string) resource.TestCheckFunc { //nol
 			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
 		}
 
-		role := graph.OAuth2PermissionFindById(resp, id.PermissionId)
-		if role != nil {
+		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
+		if err != nil {
+			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
+		} else if scope != nil {
 			return nil
 		}
 
@@ -68,8 +70,10 @@ func testCheckOAuth2PermissionCheckDestroy(s *terraform.State) error {
 			return err
 		}
 
-		role := graph.OAuth2PermissionFindById(resp, id.PermissionId)
-		if role == nil {
+		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
+		if err != nil {
+			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
+		} else if scope == nil {
 			return nil
 		}
 

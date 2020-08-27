@@ -157,12 +157,17 @@ func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	if existing := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
+	if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
 		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
 	}
 
+	newPermissions, err := graph.OAuth2PermissionUpdate(app.Oauth2Permissions, permission)
+	if err != nil {
+		return fmt.Errorf("updating OAuth2 Permission: %s", err)
+	}
+
 	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionUpdate(app.Oauth2Permissions, permission),
+		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
@@ -194,7 +199,11 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	permission := graph.OAuth2PermissionFindById(app, id.PermissionId)
+	permission, err := graph.OAuth2PermissionFindById(app, id.PermissionId)
+	if err != nil {
+		return fmt.Errorf("identifying OAuth2 Permission: %s", err)
+	}
+
 	if permission == nil {
 		log.Printf("[DEBUG] App Role %q (ID %q) was not found - removing from state!", id.PermissionId, id.ObjectId)
 		d.SetId("")
