@@ -18,8 +18,8 @@ import (
 
 func ApplicationOAuth2PermissionResource() *schema.Resource {
 	return &schema.Resource{
-		Create: applicationOAuth2PermissionResourceCreate,
-		Update: applicationOAuth2PermissionResourceUpdate,
+		Create: applicationOAuth2PermissionResourceCreateUpdate,
+		Update: applicationOAuth2PermissionResourceCreateUpdate,
 		Read:   applicationOAuth2PermissionResourceRead,
 		Delete: applicationOAuth2PermissionResourceDelete,
 
@@ -91,15 +91,34 @@ func ApplicationOAuth2PermissionResource() *schema.Resource {
 	}
 }
 
-func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
-	permission, err := oauth2PermissionForResource(d)
-	if err != nil {
-		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
+	// errors should be handled by the validation
+	var permissionId string
+
+	if v, ok := d.GetOk("permission_id"); ok {
+		permissionId = v.(string)
+	} else {
+		pid, err := uuid.GenerateUUID()
+		if err != nil {
+			return fmt.Errorf("generating OAuth2 Permission for Object ID %q: %+v", objectId, err)
+		}
+		permissionId = pid
+	}
+
+	permission := graphrbac.OAuth2Permission{
+		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
+		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
+		ID:                      utils.String(permissionId),
+		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
+		Type:                    utils.String(d.Get("type").(string)),
+		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
+		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
+		Value:                   utils.String(d.Get("value").(string)),
 	}
 
 	id := graph.OAuth2PermissionIdFrom(objectId, *permission.ID)
@@ -116,55 +135,22 @@ func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	newRoles, err := graph.OAuth2PermissionAdd(app.Oauth2Permissions, permission)
-	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
-	}
+	var newPermissions *[]graphrbac.OAuth2Permission
 
-	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: newRoles,
-	}
-	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
-	}
-
-	d.SetId(id.String())
-
-	return applicationOAuth2PermissionResourceRead(d, meta)
-}
-
-func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
-
-	objectId := d.Get("application_object_id").(string)
-
-	permission, err := oauth2PermissionForResource(d)
-	if err != nil {
-		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
-	}
-
-	id := graph.OAuth2PermissionIdFrom(objectId, *permission.ID)
-
-	tf.LockByName(resourceApplicationName, id.ObjectId)
-	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
-
-	// ensure the Application Object exists
-	app, err := client.Get(ctx, id.ObjectId)
-	if err != nil {
-		if utils.ResponseWasNotFound(app.Response) {
-			return fmt.Errorf("Application with ID %q was not found", id.ObjectId)
+	if d.IsNewResource() {
+		newPermissions, err = graph.OAuth2PermissionAdd(app.Oauth2Permissions, &permission)
+		if err != nil {
+			return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
-	}
+	} else {
+		if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
+			return fmt.Errorf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
+		}
 
-	if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
-	}
-
-	newPermissions, err := graph.OAuth2PermissionUpdate(app.Oauth2Permissions, permission)
-	if err != nil {
-		return fmt.Errorf("updating OAuth2 Permission: %s", err)
+		newPermissions, err = graph.OAuth2PermissionUpdate(app.Oauth2Permissions, &permission)
+		if err != nil {
+			return fmt.Errorf("updating OAuth2 Permission: %s", err)
+		}
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
@@ -185,7 +171,7 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing App Role ID: %v", err)
+		return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
 	}
 
 	// ensure the Application Object exists
@@ -206,7 +192,7 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 	}
 
 	if permission == nil {
-		log.Printf("[DEBUG] App Role %q (ID %q) was not found - removing from state!", id.PermissionId, id.ObjectId)
+		log.Printf("[DEBUG] OAuth2 Permission %q (ID %q) was not found - removing from state!", id.PermissionId, id.ObjectId)
 		d.SetId("")
 		return nil
 	}
@@ -251,7 +237,7 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing App Role ID: %v", err)
+		return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -270,6 +256,7 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 
 	var newPermissions *[]graphrbac.OAuth2Permission
 
+	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
 		return fmt.Errorf("could not disable OAuth2 Permission prior to removal: %s", err)
@@ -282,6 +269,7 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
 
+	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
 		return fmt.Errorf("could not remove OAuth2 Permission: %s", err)
@@ -295,31 +283,4 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 	}
 
 	return nil
-}
-
-func oauth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permission, error) {
-	// errors should be handled by the validation
-	var permissionId string
-	if v, ok := d.GetOk("permission_id"); ok {
-		permissionId = v.(string)
-	} else {
-		pid, err := uuid.GenerateUUID()
-		if err != nil {
-			return nil, err
-		}
-		permissionId = pid
-	}
-
-	permission := graphrbac.OAuth2Permission{
-		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
-		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
-		ID:                      utils.String(permissionId),
-		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
-		Type:                    utils.String(d.Get("type").(string)),
-		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
-		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
-		Value:                   utils.String(d.Get("value").(string)),
-	}
-
-	return &permission, nil
 }

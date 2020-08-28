@@ -18,8 +18,8 @@ import (
 
 func ApplicationAppRoleResource() *schema.Resource {
 	return &schema.Resource{
-		Create: applicationAppRoleResourceCreate,
-		Update: applicationAppRoleResourceUpdate,
+		Create: applicationAppRoleResourceCreateUpdate,
+		Update: applicationAppRoleResourceCreateUpdate,
 		Read:   applicationAppRoleResourceRead,
 		Delete: applicationAppRoleResourceDelete,
 
@@ -82,15 +82,40 @@ func ApplicationAppRoleResource() *schema.Resource {
 	}
 }
 
-func applicationAppRoleResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
-	role, err := appRoleForResource(d)
-	if err != nil {
-		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
+	// errors should be handled by the validation
+	var roleId string
+	if v, ok := d.GetOk("role_id"); ok {
+		roleId = v.(string)
+	} else {
+		rid, err := uuid.GenerateUUID()
+		if err != nil {
+			return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
+		}
+		roleId = rid
+	}
+
+	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
+	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
+	for _, a := range allowedMemberTypesRaw {
+		allowedMemberTypes = append(allowedMemberTypes, a.(string))
+	}
+
+	role := graphrbac.AppRole{
+		AllowedMemberTypes: &allowedMemberTypes,
+		ID:                 utils.String(roleId),
+		Description:        utils.String(d.Get("description").(string)),
+		DisplayName:        utils.String(d.Get("display_name").(string)),
+		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("value"); ok {
+		role.Value = utils.String(v.(string))
 	}
 
 	id := graph.AppRoleIdFrom(objectId, *role.ID)
@@ -107,61 +132,27 @@ func applicationAppRoleResourceCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
-	newRoles, err := graph.AppRoleAdd(app.AppRoles, role)
-	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_app_role", id.String())
-	}
+	var newRoles *[]graphrbac.AppRole
 
-	properties := graphrbac.ApplicationUpdateParameters{
-		AppRoles: newRoles,
-	}
-	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
-	}
-
-	d.SetId(id.String())
-
-	return applicationAppRoleResourceRead(d, meta)
-}
-
-func applicationAppRoleResourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
-
-	objectId := d.Get("application_object_id").(string)
-
-	role, err := appRoleForResource(d)
-	if err != nil {
-		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
-	}
-
-	id := graph.AppRoleIdFrom(objectId, *role.ID)
-
-	tf.LockByName(resourceApplicationName, id.ObjectId)
-	defer tf.UnlockByName(resourceApplicationName, id.ObjectId)
-
-	// ensure the Application Object exists
-	app, err := client.Get(ctx, id.ObjectId)
-	if err != nil {
-		if utils.ResponseWasNotFound(app.Response) {
-			return fmt.Errorf("Application with ID %q was not found", id.ObjectId)
+	if d.IsNewResource() {
+		newRoles, err = graph.AppRoleAdd(app.AppRoles, &role)
+		if err != nil {
+			return tf.ImportAsExistsError("azuread_application_app_role", id.String())
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
-	}
+	} else {
+		if existing := graph.AppRoleFindById(app, id.RoleId); existing == nil {
+			return fmt.Errorf("App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
+		}
 
-	if existing := graph.AppRoleFindById(app, id.RoleId); existing == nil {
-		return fmt.Errorf("App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
-	}
-
-	newRoles, err := graph.AppRoleUpdate(app.AppRoles, role)
-	if err != nil {
-		return fmt.Errorf("updating App Role: %s", err)
+		newRoles, err = graph.AppRoleUpdate(app.AppRoles, &role)
+		if err != nil {
+			return fmt.Errorf("updating App Role: %s", err)
+		}
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
 		AppRoles: newRoles,
 	}
-
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
@@ -248,6 +239,7 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
+	log.Printf("[DEBUG] Disabling App Role %q for Application %q prior to removal", id.RoleId, id.ObjectId)
 	newRoles, err := graph.AppRoleResultDisableById(app.AppRoles, id.RoleId)
 	if err != nil {
 		return fmt.Errorf("deleting App Role: %s", err)
@@ -260,6 +252,7 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
 
+	log.Printf("[DEBUG] Removing App Role %q for Application %q", id.RoleId, id.ObjectId)
 	properties = graphrbac.ApplicationUpdateParameters{
 		AppRoles: graph.AppRoleResultRemoveById(app.AppRoles, id.RoleId),
 	}
@@ -268,38 +261,4 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
-}
-
-func appRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
-	// errors should be handled by the validation
-	var roleId string
-	if v, ok := d.GetOk("role_id"); ok {
-		roleId = v.(string)
-	} else {
-		rid, err := uuid.GenerateUUID()
-		if err != nil {
-			return nil, err
-		}
-		roleId = rid
-	}
-
-	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
-	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
-	for _, a := range allowedMemberTypesRaw {
-		allowedMemberTypes = append(allowedMemberTypes, a.(string))
-	}
-
-	appRole := graphrbac.AppRole{
-		AllowedMemberTypes: &allowedMemberTypes,
-		ID:                 utils.String(roleId),
-		Description:        utils.String(d.Get("description").(string)),
-		DisplayName:        utils.String(d.Get("display_name").(string)),
-		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
-	}
-
-	if v, ok := d.GetOk("value"); ok {
-		appRole.Value = utils.String(v.(string))
-	}
-
-	return &appRole, nil
 }
