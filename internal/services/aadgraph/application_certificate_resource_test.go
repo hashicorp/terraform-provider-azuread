@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
@@ -124,7 +123,6 @@ func TestAccApplicationCertificate_basic(t *testing.T) {
 
 func TestAccApplicationCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	keyId := uuid.New().String()
 	keyType := "AsymmetricX509Cert"
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
@@ -136,7 +134,7 @@ func TestAccApplicationCertificate_complete(t *testing.T) {
 		CheckDestroy: testCheckApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationCertificate_complete(data.RandomInteger, keyId, keyType, startDate, endDate, value),
+				Config: testAccApplicationCertificate_complete(data.RandomInteger, data.RandomID, keyType, startDate, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationKeyExists(data.ResourceName),
 				),

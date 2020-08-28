@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
@@ -34,7 +33,6 @@ func TestAccGroup_basic(t *testing.T) {
 
 func TestAccGroup_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -42,7 +40,7 @@ func TestAccGroup_complete(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroup_complete(data.RandomInteger, pw),
+				Config: testAccGroup_complete(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "1", "1"),
 			},
 			data.ImportStep(),
@@ -52,7 +50,6 @@ func TestAccGroup_complete(t *testing.T) {
 
 func TestAccGroup_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -60,7 +57,7 @@ func TestAccGroup_owners(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithThreeOwners(data.RandomInteger, pw),
+				Config: testAccGroupWithThreeOwners(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "0", "3"),
 			},
 			data.ImportStep(),
@@ -70,7 +67,6 @@ func TestAccGroup_owners(t *testing.T) {
 
 func TestAccGroup_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -78,7 +74,7 @@ func TestAccGroup_members(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithThreeMembers(data.RandomInteger, pw),
+				Config: testAccGroupWithThreeMembers(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
 			},
 			data.ImportStep(),
@@ -88,7 +84,6 @@ func TestAccGroup_members(t *testing.T) {
 
 func TestAccGroup_membersAndOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -96,7 +91,7 @@ func TestAccGroup_membersAndOwners(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithOwnersAndMembers(data.RandomInteger, pw),
+				Config: testAccGroupWithOwnersAndMembers(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "2", "1"),
 			},
 			data.ImportStep(),
@@ -106,7 +101,6 @@ func TestAccGroup_membersAndOwners(t *testing.T) {
 
 func TestAccGroup_membersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -114,7 +108,7 @@ func TestAccGroup_membersDiverse(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithDiverseMembers(data.RandomInteger, pw),
+				Config: testAccGroupWithDiverseMembers(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
 			},
 			data.ImportStep(),
@@ -124,7 +118,6 @@ func TestAccGroup_membersDiverse(t *testing.T) {
 
 func TestAccGroup_ownersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -132,7 +125,7 @@ func TestAccGroup_ownersDiverse(t *testing.T) {
 		CheckDestroy: testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupWithDiverseOwners(data.RandomInteger, pw),
+				Config: testAccGroupWithDiverseOwners(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "0", "2"),
 			},
 			data.ImportStep(),
@@ -142,7 +135,6 @@ func TestAccGroup_ownersDiverse(t *testing.T) {
 
 func TestAccGroup_membersUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -157,13 +149,13 @@ func TestAccGroup_membersUpdate(t *testing.T) {
 			data.ImportStep(),
 			// Group with 1 member
 			{
-				Config: testAccGroupWithOneMember(data.RandomInteger, pw),
+				Config: testAccGroupWithOneMember(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "1", "0"),
 			},
 			data.ImportStep(),
 			// Group with multiple members
 			{
-				Config: testAccGroupWithThreeMembers(data.RandomInteger, pw),
+				Config: testAccGroupWithThreeMembers(data.RandomInteger, data.RandomPassword),
 				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
 			},
 			data.ImportStep(),
@@ -184,9 +176,7 @@ func TestAccGroup_membersUpdate(t *testing.T) {
 }
 
 func TestAccGroup_ownersUpdate(t *testing.T) {
-	rn := "azuread_group.test"
-	id := tf.AccRandTimeInt()
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -195,44 +185,28 @@ func TestAccGroup_ownersUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Empty group with 0 owners
 			{
-				Config: testAccGroup_basic(id),
-				Check:  testCheckGroupBasic(id, "0", "0"),
+				Config: testAccGroup_basic(data.RandomInteger),
+				Check:  testCheckGroupBasic(data.RandomInteger, "0", "0"),
 			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			data.ImportStep(),
 			// Group with multiple owners
 			{
-				Config: testAccGroupWithThreeOwners(id, pw),
-				Check:  testCheckGroupBasic(id, "0", "3"),
+				Config: testAccGroupWithThreeOwners(data.RandomInteger, data.RandomPassword),
+				Check:  testCheckGroupBasic(data.RandomInteger, "0", "3"),
 			},
+			data.ImportStep(),
 			// Group with 1 owners
 			{
-				Config: testAccGroupWithOneOwners(id, pw),
-				Check:  testCheckGroupBasic(id, "0", "1"),
+				Config: testAccGroupWithOneOwners(data.RandomInteger, data.RandomPassword),
+				Check:  testCheckGroupBasic(data.RandomInteger, "0", "1"),
 			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			data.ImportStep(),
 			// Group with a different owners
 			{
-				Config: testAccGroupWithServicePrincipalOwner(id),
-				Check:  testCheckGroupBasic(id, "0", "1"),
+				Config: testAccGroupWithServicePrincipalOwner(data.RandomInteger),
+				Check:  testCheckGroupBasic(data.RandomInteger, "0", "1"),
 			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			data.ImportStep(),
 			// Empty group with 0 owners is not possible
 		},
 	})

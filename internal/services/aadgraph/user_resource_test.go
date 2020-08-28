@@ -2,22 +2,18 @@ package aadgraph_test
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 func TestAccUser_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
-	pw := "utils@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -25,14 +21,9 @@ func TestAccUser_basic(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUser_basic(data.RandomInteger, pw),
+				Config: testAccUser_basic(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckUserExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "display_name", fmt.Sprintf("acctestUser-%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nickname", fmt.Sprintf("acctestUser.%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "account_enabled", "true"),
 				),
 			},
 			data.ImportStep("force_password_change", "password"),
@@ -42,7 +33,6 @@ func TestAccUser_basic(t *testing.T) {
 
 func TestAccUser_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
-	pw := "utils@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -50,15 +40,9 @@ func TestAccUser_complete(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUser_complete(data.RandomInteger, pw),
+				Config: testAccUser_complete(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckUserExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "display_name", fmt.Sprintf("acctestUser-%d-Updated", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "account_enabled", "false"),
-					resource.TestCheckResourceAttr(data.ResourceName, "immutable_id", strconv.Itoa(data.RandomInteger)),
 				),
 			},
 			data.ImportStep("force_password_change", "password"),
@@ -68,8 +52,6 @@ func TestAccUser_complete(t *testing.T) {
 
 func TestAccUser_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
-	pw1 := "utils@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
-	pw2 := "utils@$$wRd2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -77,27 +59,16 @@ func TestAccUser_update(t *testing.T) {
 		CheckDestroy: testCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUser_basic(data.RandomInteger, pw1),
+				Config: testAccUser_basic(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckUserExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "display_name", fmt.Sprintf("acctestUser-%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nickname", fmt.Sprintf("acctestUser.%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "account_enabled", "true"),
 				),
 			},
 			data.ImportStep("force_password_change", "password"),
 			{
-				Config: testAccUser_complete(data.RandomInteger, pw2),
+				Config: testAccUser_complete(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckUserExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "display_name", fmt.Sprintf("acctestUser-%d-Updated", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "account_enabled", "false"),
-					resource.TestCheckResourceAttr(data.ResourceName, "immutable_id", strconv.Itoa(data.RandomInteger)),
 				),
 			},
 			data.ImportStep("force_password_change", "password"),
@@ -106,8 +77,9 @@ func TestAccUser_update(t *testing.T) {
 }
 
 func TestAccUser_threeUsersABC(t *testing.T) {
-	ri := tf.AccRandTimeInt()
-	pw := "utils@$$wRd" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	dataA := acceptance.BuildTestData(t, "azuread_user", "testA")
+	dataB := acceptance.BuildTestData(t, "azuread_user", "testB")
+	dataC := acceptance.BuildTestData(t, "azuread_user", "testC")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -115,36 +87,16 @@ func TestAccUser_threeUsersABC(t *testing.T) {
 		CheckDestroy: testCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUser_threeUsersABC(ri, pw),
+				Config: testAccUser_threeUsersABC(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
-					testCheckUserExists("azuread_user.testA"),
-					testCheckUserExists("azuread_user.testB"),
-					resource.TestCheckResourceAttrSet("azuread_user.testA", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testA", "display_name", fmt.Sprintf("acctestUser-%d-A", ri)),
-					resource.TestCheckResourceAttr("azuread_user.testA", "mail_nickname", fmt.Sprintf("acctestUser.%d.A", ri)),
-					resource.TestCheckResourceAttrSet("azuread_user.testB", "user_principal_name"),
-					resource.TestCheckResourceAttr("azuread_user.testB", "display_name", fmt.Sprintf("acctestUser-%d-B", ri)),
-					resource.TestCheckResourceAttr("azuread_user.testB", "mail_nickname", fmt.Sprintf("acctestUser-%d-B", ri)),
+					testCheckUserExists(dataA.ResourceName),
+					testCheckUserExists(dataB.ResourceName),
+					testCheckUserExists(dataC.ResourceName),
 				),
 			},
-			{
-				ResourceName:            "azuread_user.testA",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_password_change", "password"},
-			},
-			{
-				ResourceName:            "azuread_user.testB",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_password_change", "password"},
-			},
-			{
-				ResourceName:            "azuread_user.testC",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_password_change", "password"},
-			},
+			dataA.ImportStep("force_password_change", "password"),
+			dataB.ImportStep("force_password_change", "password"),
+			dataC.ImportStep("force_password_change", "password"),
 		},
 	})
 }

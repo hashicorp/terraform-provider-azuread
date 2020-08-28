@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
@@ -82,8 +81,6 @@ func testCheckServicePrincipalPasswordCheckDestroy(s *terraform.State) error {
 
 func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	applicationId := uuid.New().String()
-	value := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -91,7 +88,7 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalPassword_basic(applicationId, value),
+				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalPasswordExists(data.ResourceName),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
@@ -104,10 +101,8 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
+func TestAccServicePrincipalPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	applicationId := uuid.New().String()
-	value := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -115,57 +110,11 @@ func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalPassword_basic(applicationId, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-				),
-			},
-			data.RequiresImportErrorStep(testAccServicePrincipalPassword_requiresImport(applicationId, value)),
-		},
-	})
-}
-
-func TestAccServicePrincipalPassword_customKeyId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	applicationId := uuid.New().String()
-	keyId := uuid.New().String()
-	value := uuid.New().String()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_customKeyId(applicationId, keyId, value),
+				Config: testAccServicePrincipalPassword_complete(data.RandomInteger, data.RandomID, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalPasswordExists(data.ResourceName),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
-					resource.TestCheckResourceAttr(data.ResourceName, "key_id", keyId),
-					resource.TestCheckResourceAttr(data.ResourceName, "end_date", "2099-01-01T01:02:03Z"),
-				),
-			},
-			data.ImportStep("value"),
-		},
-	})
-}
-
-func TestAccServicePrincipalPassword_description(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	applicationId := uuid.New().String()
-	value := uuid.New().String()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_description(applicationId, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
-					resource.TestCheckResourceAttr(data.ResourceName, "description", "terraform"),
+					resource.TestCheckResourceAttr(data.ResourceName, "key_id", data.RandomID),
 					resource.TestCheckResourceAttr(data.ResourceName, "end_date", "2099-01-01T01:02:03Z"),
 				),
 			},
@@ -176,8 +125,6 @@ func TestAccServicePrincipalPassword_description(t *testing.T) {
 
 func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	applicationId := uuid.New().String()
-	value := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -185,7 +132,7 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServicePrincipalPassword_relativeEndDate(applicationId, value),
+				Config: testAccServicePrincipalPassword_relativeEndDate(data.RandomInteger, data.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalPasswordExists(data.ResourceName),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
@@ -198,19 +145,38 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
-func testAccServicePrincipalPassword_template(applicationId string) string {
+func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckServicePrincipalPasswordExists(data.ResourceName),
+				),
+			},
+			data.RequiresImportErrorStep(testAccServicePrincipalPassword_requiresImport(data.RandomInteger, data.RandomPassword)),
+		},
+	})
+}
+
+func testAccServicePrincipalPassword_template(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%s"
+  name = "acctestApp-%d"
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 }
-`, applicationId)
+`, ri)
 }
 
-func testAccServicePrincipalPassword_basic(applicationId, value string) string {
+func testAccServicePrincipalPassword_basic(ri int, value string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -219,11 +185,36 @@ resource "azuread_service_principal_password" "test" {
   value                = "%s"
   end_date             = "2099-01-01T01:02:03Z"
 }
-`, testAccServicePrincipalPassword_template(applicationId), value)
+`, testAccServicePrincipalPassword_template(ri), value)
 }
 
-func testAccServicePrincipalPassword_requiresImport(applicationId, value string) string {
-	template := testAccServicePrincipalPassword_basic(applicationId, value)
+func testAccServicePrincipalPassword_complete(ri int, keyId, value string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = azuread_service_principal.test.id
+  description          = "terraform"
+  key_id               = "%s"
+  value                = "%s"
+  end_date             = "2099-01-01T01:02:03Z"
+}
+`, testAccServicePrincipalPassword_template(ri), keyId, value)
+}
+
+func testAccServicePrincipalPassword_relativeEndDate(ri int, value string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = azuread_service_principal.test.id
+  value                = "%s"
+  end_date_relative    = "8760h"
+}
+`, testAccServicePrincipalPassword_template(ri), value)
+}
+
+func testAccServicePrincipalPassword_requiresImport(ri int, value string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -233,43 +224,5 @@ resource "azuread_service_principal_password" "import" {
   value                = azuread_service_principal_password.test.value
   end_date             = azuread_service_principal_password.test.end_date
 }
-`, template)
-}
-
-func testAccServicePrincipalPassword_customKeyId(applicationId, keyId, value string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.id
-  key_id               = "%s"
-  value                = "%s"
-  end_date             = "2099-01-01T01:02:03Z"
-}
-`, testAccServicePrincipalPassword_template(applicationId), keyId, value)
-}
-
-func testAccServicePrincipalPassword_description(applicationId, value string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.id
-  description          = "terraform"
-  value                = "%s"
-  end_date             = "2099-01-01T01:02:03Z"
-}
-`, testAccServicePrincipalPassword_template(applicationId), value)
-}
-
-func testAccServicePrincipalPassword_relativeEndDate(applicationId, value string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.id
-  value                = "%s"
-  end_date_relative    = "8760h"
-}
-`, testAccServicePrincipalPassword_template(applicationId), value)
+`, testAccServicePrincipalPassword_basic(ri, value))
 }

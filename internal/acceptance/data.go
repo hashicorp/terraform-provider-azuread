@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
@@ -23,11 +24,18 @@ func init() {
 }
 
 type TestData struct {
-	// RandomInteger is a random integer which is unique to this test case
+	// RandomInteger is a random integer which unique to this test case
 	RandomInteger int
 
-	// RandomString is a random 5 character string is unique to this test case
+	// RandomString is a random 5 character string unique to this test case
 	RandomString string
+
+	// RandomID is a random UUID unique to this test case
+	RandomID string
+
+	// RandomPassword is a random password unique to this test case
+	// This is not securely generated and only suitable for ephemeral test cases
+	RandomPassword string
 
 	// ResourceName is the fully qualified resource name, comprising of the
 	// resource type and then the resource label
@@ -63,6 +71,8 @@ func BuildTestData(t *testing.T, resourceType string, resourceLabel string) Test
 	testData := TestData{
 		RandomInteger:   tf.AccRandTimeInt(),
 		RandomString:    acctest.RandString(5),
+		RandomID:        uuid.New().String(),
+		RandomPassword:  fmt.Sprintf("%s%s", "p@$$Wd", acctest.RandString(6)),
 		ResourceName:    fmt.Sprintf("%s.%s", resourceType, resourceLabel),
 		Environment:     *env,
 		EnvironmentName: env.Name,

@@ -435,7 +435,7 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccApplication_native_app_does_not_allow_identifier_uris(t *testing.T) {
+func TestAccApplication_nativeAppDoesNotAllowIdentifierUris(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -444,7 +444,7 @@ func TestAccApplication_native_app_does_not_allow_identifier_uris(t *testing.T) 
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccApplication_native_app_does_not_allow_identifier_uris(data.RandomInteger),
+				Config:      testAccApplication_nativeAppDoesNotAllowIdentifierUris(data.RandomInteger),
 				ExpectError: regexp.MustCompile("identifier_uris is not required for a native application"),
 			},
 		},
@@ -843,7 +843,7 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccApplication_native_app_does_not_allow_identifier_uris(ri int) string {
+func testAccApplication_nativeAppDoesNotAllowIdentifierUris(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name            = "acctest-APP-%[1]d"

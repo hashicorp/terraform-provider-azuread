@@ -15,9 +15,48 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
+func TestAccGroupMember_group(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckGroupMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupMember_group(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
+				),
+			},
+			data.ImportStep(),
+		},
+	})
+}
+
+func TestAccGroupMember_servicePrincipal(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckGroupMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupMember_servicePrincipal(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
+				),
+			},
+			data.ImportStep(),
+		},
+	})
+}
+
 func TestAccGroupMember_user(t *testing.T) {
-	rn := "azuread_group_member.testA"
-	id := tf.AccRandTimeInt()
+	data := acceptance.BuildTestData(t, "azuread_group_member", "testA")
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -26,17 +65,13 @@ func TestAccGroupMember_user(t *testing.T) {
 		CheckDestroy: testCheckGroupMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMember_oneUser(id, pw),
+				Config: testAccGroupMember_oneUser(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
 				),
 			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+			data.ImportStep(),
 		},
 	})
 }
@@ -102,56 +137,6 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 	})
 }
 
-func TestAccGroupMember_group(t *testing.T) {
-	rn := "azuread_group_member.test"
-	id := tf.AccRandTimeInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_group(id),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
-				),
-			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccGroupMember_servicePrincipal(t *testing.T) {
-	rn := "azuread_group_member.test"
-	id := tf.AccRandTimeInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_servicePrincipal(id),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rn, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rn, "member_object_id"),
-				),
-			},
-			{
-				ResourceName:      rn,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func testCheckGroupMemberDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "azuread_group_member" {
@@ -191,43 +176,6 @@ func testCheckGroupMemberDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccGroupMember_oneUser(id int, password string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[2]d"
-}
-
-resource "azuread_group_member" "testA" {
-  group_object_id  = azuread_group.test.object_id
-  member_object_id = azuread_user.testA.object_id
-}
-
-`, testAccUser_threeUsersABC(id, password), id)
-}
-
-func testAccGroupMember_twoUsers(id int, password string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[2]d"
-}
-
-resource "azuread_group_member" "testA" {
-  group_object_id  = azuread_group.test.object_id
-  member_object_id = azuread_user.testA.object_id
-}
-
-resource "azuread_group_member" "testB" {
-  group_object_id  = azuread_group.test.object_id
-  member_object_id = azuread_user.testB.object_id
-}
-
-`, testAccUser_threeUsersABC(id, password), id)
 }
 
 func testAccGroupMember_group(id int) string {
@@ -270,4 +218,41 @@ resource "azuread_group_member" "test" {
 }
 
 `, id)
+}
+
+func testAccGroupMember_oneUser(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name = "acctestGroup-%[2]d"
+}
+
+resource "azuread_group_member" "testA" {
+  group_object_id  = azuread_group.test.object_id
+  member_object_id = azuread_user.testA.object_id
+}
+
+`, testAccUser_threeUsersABC(id, password), id)
+}
+
+func testAccGroupMember_twoUsers(id int, password string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  name = "acctestGroup-%[2]d"
+}
+
+resource "azuread_group_member" "testA" {
+  group_object_id  = azuread_group.test.object_id
+  member_object_id = azuread_user.testA.object_id
+}
+
+resource "azuread_group_member" "testB" {
+  group_object_id  = azuread_group.test.object_id
+  member_object_id = azuread_user.testB.object_id
+}
+
+`, testAccUser_threeUsersABC(id, password), id)
 }

@@ -26,12 +26,6 @@ func TestAccServicePrincipal_basic(t *testing.T) {
 				Config: testAccServicePrincipal_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role_assignment_required", "false"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
 			},
 			data.ImportStep(),
@@ -52,9 +46,6 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 				Config: testAccServicePrincipal_complete(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role_assignment_required", "true"),
-					resource.TestCheckResourceAttr(data.ResourceName, "tags.#", "3"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
 			},
 			data.ImportStep(),
@@ -76,9 +67,6 @@ func TestAccServicePrincipal_update(t *testing.T) {
 				Config: testAccServicePrincipal_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role_assignment_required", "false"),
 				),
 			},
 			data.ImportStep(),
@@ -86,9 +74,6 @@ func TestAccServicePrincipal_update(t *testing.T) {
 				Config: testAccServicePrincipal_complete(updatedId),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "tags.#", "3"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role_assignment_required", "true"),
 				),
 			},
 			data.ImportStep(),
@@ -96,9 +81,6 @@ func TestAccServicePrincipal_update(t *testing.T) {
 				Config: testAccServicePrincipal_basic(id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role_assignment_required", "false"),
 				),
 			},
 			data.ImportStep(),
