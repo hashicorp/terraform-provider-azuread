@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -87,7 +88,7 @@ func applicationAppRoleResourceCreate(d *schema.ResourceData, meta interface{}) 
 
 	objectId := d.Get("application_object_id").(string)
 
-	role, err := graph.AppRoleForResource(d)
+	role, err := appRoleForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
@@ -129,7 +130,7 @@ func applicationAppRoleResourceUpdate(d *schema.ResourceData, meta interface{}) 
 
 	objectId := d.Get("application_object_id").(string)
 
-	role, err := graph.AppRoleForResource(d)
+	role, err := appRoleForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
@@ -267,4 +268,38 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func appRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
+	// errors should be handled by the validation
+	var roleId string
+	if v, ok := d.GetOk("role_id"); ok {
+		roleId = v.(string)
+	} else {
+		rid, err := uuid.GenerateUUID()
+		if err != nil {
+			return nil, err
+		}
+		roleId = rid
+	}
+
+	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
+	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
+	for _, a := range allowedMemberTypesRaw {
+		allowedMemberTypes = append(allowedMemberTypes, a.(string))
+	}
+
+	appRole := graphrbac.AppRole{
+		AllowedMemberTypes: &allowedMemberTypes,
+		ID:                 utils.String(roleId),
+		Description:        utils.String(d.Get("description").(string)),
+		DisplayName:        utils.String(d.Get("display_name").(string)),
+		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("value"); ok {
+		appRole.Value = utils.String(v.(string))
+	}
+
+	return &appRole, nil
 }

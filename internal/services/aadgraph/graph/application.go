@@ -376,40 +376,6 @@ func AppRoleFindById(app graphrbac.Application, roleId string) *graphrbac.AppRol
 	return nil
 }
 
-func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
-	// errors should be handled by the validation
-	var roleId string
-	if v, ok := d.GetOk("role_id"); ok {
-		roleId = v.(string)
-	} else {
-		rid, err := uuid.GenerateUUID()
-		if err != nil {
-			return nil, err
-		}
-		roleId = rid
-	}
-
-	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
-	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
-	for _, a := range allowedMemberTypesRaw {
-		allowedMemberTypes = append(allowedMemberTypes, a.(string))
-	}
-
-	appRole := graphrbac.AppRole{
-		AllowedMemberTypes: &allowedMemberTypes,
-		ID:                 utils.String(roleId),
-		Description:        utils.String(d.Get("description").(string)),
-		DisplayName:        utils.String(d.Get("display_name").(string)),
-		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
-	}
-
-	if v, ok := d.GetOk("value"); ok {
-		appRole.Value = utils.String(v.(string))
-	}
-
-	return &appRole, nil
-}
-
 func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
 	if role == nil {
 		return nil, errors.New("role to be added is null")
