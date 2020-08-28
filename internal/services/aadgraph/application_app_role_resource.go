@@ -192,26 +192,11 @@ func applicationAppRoleResourceRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("application_object_id", id.ObjectId)
 	d.Set("role_id", id.RoleId)
-
-	if allowedMemberTypes := role.AllowedMemberTypes; allowedMemberTypes != nil {
-		d.Set("allowed_member_types", allowedMemberTypes)
-	}
-
-	if description := role.Description; description != nil {
-		d.Set("description", description)
-	}
-
-	if displayName := role.DisplayName; displayName != nil {
-		d.Set("display_name", displayName)
-	}
-
-	if isEnabled := role.IsEnabled; isEnabled != nil {
-		d.Set("is_enabled", isEnabled)
-	}
-
-	if value := role.Value; value != nil {
-		d.Set("value", value)
-	}
+	d.Set("allowed_member_types", role.AllowedMemberTypes)
+	d.Set("description", role.Description)
+	d.Set("display_name", role.DisplayName)
+	d.Set("is_enabled", role.IsEnabled)
+	d.Set("value", role.Value)
 
 	return nil
 }

@@ -199,30 +199,12 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 
 	d.Set("application_object_id", id.ObjectId)
 	d.Set("permission_id", id.PermissionId)
-
-	if description := permission.AdminConsentDescription; description != nil {
-		d.Set("admin_consent_description", description)
-	}
-
-	if displayName := permission.AdminConsentDisplayName; displayName != nil {
-		d.Set("admin_consent_display_name", displayName)
-	}
-
-	if isEnabled := permission.IsEnabled; isEnabled != nil {
-		d.Set("is_enabled", isEnabled)
-	}
-
-	if permissionType := permission.Type; permissionType != nil {
-		d.Set("type", permissionType)
-	}
-
-	if description := permission.UserConsentDescription; description != nil {
-		d.Set("user_consent_description", description)
-	}
-
-	if displayName := permission.UserConsentDisplayName; displayName != nil {
-		d.Set("user_consent_display_name", displayName)
-	}
+	d.Set("admin_consent_description", permission.AdminConsentDescription)
+	d.Set("admin_consent_display_name", permission.AdminConsentDisplayName)
+	d.Set("is_enabled", permission.IsEnabled)
+	d.Set("type", permission.Type)
+	d.Set("user_consent_description", permission.UserConsentDescription)
+	d.Set("user_consent_display_name", permission.UserConsentDisplayName)
 
 	if value := permission.Value; value != nil {
 		d.Set("value", value)
