@@ -422,7 +422,7 @@ func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrb
 		cap += len(*roles)
 	}
 
-	newRoles := make([]graphrbac.AppRole, 0, cap)
+	newRoles := make([]graphrbac.AppRole, 1, cap)
 	newRoles[0] = *role
 
 	for _, v := range *roles {
@@ -587,7 +587,7 @@ func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *
 		cap += len(*permissions)
 	}
 
-	newPermissions := make([]graphrbac.OAuth2Permission, 0, cap)
+	newPermissions := make([]graphrbac.OAuth2Permission, 1, cap)
 	newPermissions[0] = *permission
 
 	if permissions != nil {
