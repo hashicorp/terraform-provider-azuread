@@ -942,21 +942,17 @@ func applicationSetOwnersTo(ctx context.Context, client *graphrbac.ApplicationsC
 func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {
 	var values []string
 
-	if appRoles != nil {
-		for _, roleRaw := range appRoles {
-			role := roleRaw.(map[string]interface{})
-			if val := role["value"].(string); val != "" {
-				values = append(values, val)
-			}
+	for _, roleRaw := range appRoles {
+		role := roleRaw.(map[string]interface{})
+		if val := role["value"].(string); val != "" {
+			values = append(values, val)
 		}
 	}
 
-	if oauth2Permissions != nil {
-		for _, scopeRaw := range oauth2Permissions {
-			scope := scopeRaw.(map[string]interface{})
-			if val := scope["value"].(string); val != "" {
-				values = append(values, val)
-			}
+	for _, scopeRaw := range oauth2Permissions {
+		scope := scopeRaw.(map[string]interface{})
+		if val := scope["value"].(string); val != "" {
+			values = append(values, val)
 		}
 	}
 
