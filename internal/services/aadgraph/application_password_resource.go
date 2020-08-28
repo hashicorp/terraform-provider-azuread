@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func ApplicationPasswordResource() *schema.Resource {
+func applicationPasswordResource() *schema.Resource {
 	return &schema.Resource{
 		Create: applicationPasswordResourceCreate,
 		Read:   applicationPasswordResourceRead,

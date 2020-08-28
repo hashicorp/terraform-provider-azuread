@@ -19,7 +19,7 @@ import (
 
 const resourceApplicationName = "azuread_application"
 
-func ApplicationResource() *schema.Resource {
+func applicationResource() *schema.Resource {
 	return &schema.Resource{
 		Create: applicationResourceCreate,
 		Read:   applicationResourceRead,

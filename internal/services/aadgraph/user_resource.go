@@ -15,7 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func UserResource() *schema.Resource {
+func userResource() *schema.Resource {
 	return &schema.Resource{
 		Create: userResourceCreate,
 		Read:   userResourceRead,

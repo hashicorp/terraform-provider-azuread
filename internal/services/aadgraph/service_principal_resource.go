@@ -17,7 +17,7 @@ import (
 
 const servicePrincipalResourceName = "azuread_service_principal"
 
-func ServicePrincipalResource() *schema.Resource {
+func servicePrincipalResource() *schema.Resource {
 	return &schema.Resource{
 		Create: servicePrincipalResourceCreate,
 		Read:   servicePrincipalResourceRead,

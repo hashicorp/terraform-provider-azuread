@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func GroupData() *schema.Resource {
+func groupData() *schema.Resource {
 	return &schema.Resource{
 		Read: groupDataRead,
 		Importer: &schema.ResourceImporter{

@@ -13,7 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func ApplicationData() *schema.Resource {
+func applicationData() *schema.Resource {
 	return &schema.Resource{
 		Read: applicationDataRead,
 

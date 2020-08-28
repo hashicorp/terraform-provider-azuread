@@ -16,7 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func ApplicationAppRoleResource() *schema.Resource {
+func applicationAppRoleResource() *schema.Resource {
 	return &schema.Resource{
 		Create: applicationAppRoleResourceCreateUpdate,
 		Update: applicationAppRoleResourceCreateUpdate,

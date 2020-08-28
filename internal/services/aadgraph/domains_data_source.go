@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
-func DomainsData() *schema.Resource {
+func domainsData() *schema.Resource {
 	return &schema.Resource{
 		Read: domainsDataRead,
 

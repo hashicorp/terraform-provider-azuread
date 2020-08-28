@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func ServicePrincipalPasswordResource() *schema.Resource {
+func servicePrincipalPasswordResource() *schema.Resource {
 	return &schema.Resource{
 		Create: servicePrincipalPasswordResourceCreate,
 		Read:   servicePrincipalPasswordResourceRead,

@@ -18,7 +18,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func GroupResource() *schema.Resource {
+func groupResource() *schema.Resource {
 	return &schema.Resource{
 		Create: groupResourceCreate,
 		Read:   groupResourceRead,

@@ -14,7 +14,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func ServicePrincipalCertificateResource() *schema.Resource {
+func servicePrincipalCertificateResource() *schema.Resource {
 	return &schema.Resource{
 		Create: servicePrincipalCertificateResourceCreate,
 		Read:   servicePrincipalCertificateResourceRead,

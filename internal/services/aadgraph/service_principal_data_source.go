@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func ServicePrincipalData() *schema.Resource {
+func servicePrincipalData() *schema.Resource {
 	return &schema.Resource{
 		Read: servicePrincipalDataRead,
 

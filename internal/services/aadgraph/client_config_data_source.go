@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
-func ClientConfigData() *schema.Resource {
+func clientConfigData() *schema.Resource {
 	return &schema.Resource{
 		Read: clientConfigDataRead,
 

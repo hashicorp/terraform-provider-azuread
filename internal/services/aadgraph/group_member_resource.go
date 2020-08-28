@@ -14,7 +14,7 @@ import (
 
 const groupMemberResourceName = "azuread_group_member"
 
-func GroupMemberResource() *schema.Resource {
+func groupMemberResource() *schema.Resource {
 	return &schema.Resource{
 		Create: groupMemberResourceCreate,
 		Read:   groupMemberResourceRead,

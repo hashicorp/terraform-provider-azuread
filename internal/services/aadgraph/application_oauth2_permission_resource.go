@@ -16,7 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
-func ApplicationOAuth2PermissionResource() *schema.Resource {
+func applicationOAuth2PermissionResource() *schema.Resource {
 	return &schema.Resource{
 		Create: applicationOAuth2PermissionResourceCreateUpdate,
 		Update: applicationOAuth2PermissionResourceCreateUpdate,
