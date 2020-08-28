@@ -137,7 +137,10 @@ func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interfa
 	if d.IsNewResource() {
 		newRoles, err = graph.AppRoleAdd(app.AppRoles, &role)
 		if err != nil {
-			return tf.ImportAsExistsError("azuread_application_app_role", id.String())
+			if _, ok := err.(*graph.AlreadyExistsError); ok {
+				return tf.ImportAsExistsError("azuread_application_app_role", id.String())
+			}
+			return fmt.Errorf("adding App Role: %+v", err)
 		}
 	} else {
 		if existing := graph.AppRoleFindById(app, id.RoleId); existing == nil {

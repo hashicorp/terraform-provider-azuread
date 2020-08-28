@@ -59,7 +59,10 @@ func applicationPasswordResourceCreate(d *schema.ResourceData, meta interface{})
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_password", id.String())
+		if _, ok := err.(*graph.AlreadyExistsError); ok {
+			return tf.ImportAsExistsError("azuread_application_password", id.String())
+		}
+		return fmt.Errorf("adding Application Password: %+v", err)
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {

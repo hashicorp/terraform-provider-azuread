@@ -140,7 +140,10 @@ func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, met
 	if d.IsNewResource() {
 		newPermissions, err = graph.OAuth2PermissionAdd(app.Oauth2Permissions, &permission)
 		if err != nil {
-			return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
+			if _, ok := err.(*graph.AlreadyExistsError); ok {
+				return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
+			}
+			return fmt.Errorf("adding OAuth2 Permission: %+v", err)
 		}
 	} else {
 		if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {

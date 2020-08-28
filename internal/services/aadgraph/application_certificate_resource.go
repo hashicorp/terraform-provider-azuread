@@ -50,7 +50,10 @@ func applicationCertificateResourceCreate(d *schema.ResourceData, meta interface
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_application_certificate", id.String())
+		if _, ok := err.(*graph.AlreadyExistsError); ok {
+			return tf.ImportAsExistsError("azuread_application_certificate", id.String())
+		}
+		return fmt.Errorf("adding Application Certificate: %+v", err)
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {

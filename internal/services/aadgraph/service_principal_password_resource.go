@@ -59,7 +59,10 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_service_principal_password", id.String())
+		if _, ok := err.(*graph.AlreadyExistsError); ok {
+			return tf.ImportAsExistsError("azuread_service_principal_password", id.String())
+		}
+		return fmt.Errorf("adding Service Principal Password: %+v", err)
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {

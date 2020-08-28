@@ -50,7 +50,10 @@ func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta inte
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
 	if err != nil {
-		return tf.ImportAsExistsError("azuread_service_principal_certificate", id.String())
+		if _, ok := err.(*graph.AlreadyExistsError); ok {
+			return tf.ImportAsExistsError("azuread_service_principal_certificate", id.String())
+		}
+		return fmt.Errorf("adding Service Principal Certificate: %+v", err)
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {

@@ -393,7 +393,7 @@ func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrb
 
 	for _, v := range *roles {
 		if v.ID != nil && *v.ID == *role.ID {
-			return nil, fmt.Errorf("App Role with ID %q already exists", *role.ID)
+			return nil, &AlreadyExistsError{"App Role", *role.ID}
 		}
 		newRoles = append(newRoles, v)
 	}
@@ -532,7 +532,7 @@ func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *
 	if permissions != nil {
 		for _, v := range *permissions {
 			if v.ID != nil && *v.ID == *permission.ID {
-				return nil, fmt.Errorf("App Permission with ID %q already exists", *permission.ID)
+				return nil, &AlreadyExistsError{"App Permission", *permission.ID}
 			}
 			newPermissions = append(newPermissions, v)
 		}

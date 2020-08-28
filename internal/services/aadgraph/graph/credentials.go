@@ -280,7 +280,7 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 				continue
 			}
 			if *v.KeyID == *cred.KeyID {
-				return nil, errors.New("credential already exists")
+				return nil, &AlreadyExistsError{"Password Credential", *cred.KeyID}
 			}
 		}
 
@@ -420,7 +420,7 @@ func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *gr
 			}
 
 			if *v.KeyID == *cred.KeyID {
-				return nil, fmt.Errorf("credential already exists found")
+				return nil, &AlreadyExistsError{"Key Credential", *cred.KeyID}
 			}
 		}
 
