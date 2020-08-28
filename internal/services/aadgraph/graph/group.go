@@ -3,10 +3,14 @@ package graph
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 type GroupMemberId struct {
@@ -157,6 +161,38 @@ func GroupAddMembers(ctx context.Context, client *graphrbac.GroupsClient, groupI
 		if err != nil {
 			return fmt.Errorf("while adding members to Group with ID %q: %+v", groupId, err)
 		}
+	}
+
+	return nil
+}
+
+func GroupRemoveMember(ctx context.Context, client *graphrbac.GroupsClient, timeout time.Duration, groupId, memberId string) error {
+	_, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Removed", "Waiting"},
+		Target:                    []string{"Gone"},
+		Timeout:                   timeout,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := client.RemoveMember(ctx, groupId, memberId)
+
+			// Return a fake result so WaitForState() will pass
+			if utils.ResponseWasNotFound(resp) {
+				return 1, "Gone", nil
+			} else if utils.ResponseWasStatusCode(resp, http.StatusNoContent) {
+				return 1, "Removed", nil
+			}
+
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			return nil, "Waiting", nil
+		},
+	}).WaitForState()
+
+	if err != nil {
+		return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", memberId, groupId, err)
 	}
 
 	return nil

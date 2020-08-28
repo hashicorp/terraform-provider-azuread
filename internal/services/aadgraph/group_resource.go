@@ -3,10 +3,8 @@ package aadgraph
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -204,20 +202,9 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		membersToAdd := utils.Difference(desiredMembers, existingMembers)
 
 		for _, existingMember := range membersForRemoval {
-			var err error
-			var resp autorest.Response
 			log.Printf("[DEBUG] Removing member with id %q from Group with id %q", existingMember, d.Id())
-			attempts := 10
-			for i := 0; i <= attempts; i++ {
-				if resp, err = client.RemoveMember(ctx, d.Id(), existingMember); err != nil {
-					if utils.ResponseWasNotFound(resp) {
-						break
-					}
-				}
-				if i == attempts {
-					return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", existingMember, d.Id(), err)
-				}
-				time.Sleep(time.Second * 2)
+			if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), d.Id(), existingMember); err != nil {
+				return err
 			}
 
 			if _, err := graph.WaitForListRemove(existingMember, func() ([]string, error) {

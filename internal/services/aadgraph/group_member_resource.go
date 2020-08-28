@@ -8,7 +8,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
@@ -104,11 +103,14 @@ func groupMemberResourceDelete(d *schema.ResourceData, meta interface{}) error {
 	tf.LockByName(groupMemberResourceName, id.GroupId)
 	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
-	resp, err := client.RemoveMember(ctx, id.GroupId, id.MemberId)
-	if err != nil {
-		if !utils.ResponseWasNotFound(resp) {
-			return fmt.Errorf("removing Member (memberObjectId: %q) from Group (groupObjectId: %q): %+v", id.MemberId, id.GroupId, err)
-		}
+	if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), id.GroupId, id.MemberId); err != nil {
+		return err
+	}
+
+	if _, err := graph.WaitForListRemove(id.MemberId, func() ([]string, error) {
+		return graph.GroupAllMembers(ctx, client, id.GroupId)
+	}); err != nil {
+		return fmt.Errorf("waiting for group membership removal: %+v", err)
 	}
 
 	return nil

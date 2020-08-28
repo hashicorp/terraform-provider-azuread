@@ -11,7 +11,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
@@ -77,10 +76,8 @@ func TestAccGroupMember_user(t *testing.T) {
 }
 
 func TestAccGroupMember_multipleUser(t *testing.T) {
-	rna := "azuread_group_member.testA"
-	rnb := "azuread_group_member.testB"
-	id := tf.AccRandTimeInt()
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	dataA := acceptance.BuildTestData(t, "azuread_group_member", "testA")
+	dataB := acceptance.BuildTestData(t, "azuread_group_member", "testA")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
@@ -88,47 +85,40 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 		CheckDestroy: testCheckGroupMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupMember_oneUser(id, pw),
+				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rna, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rna, "member_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
 				),
 			},
+			dataA.ImportStep(),
 			{
-				ResourceName:      rna,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccGroupMember_twoUsers(id, pw),
+				Config: testAccGroupMember_twoUsers(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rna, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rna, "member_object_id"),
-					resource.TestCheckResourceAttrSet(rnb, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rnb, "member_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
+					resource.TestCheckResourceAttrSet(dataB.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(dataB.ResourceName, "member_object_id"),
 				),
 			},
 			// we rerun the config so the group resource updates with the number of members
 			{
-				Config: testAccGroupMember_twoUsers(id, pw),
+				Config: testAccGroupMember_twoUsers(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "2"),
 				),
 			},
+			dataA.ImportStep(),
 			{
-				ResourceName:      rna,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccGroupMember_oneUser(id, pw),
+				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(rna, "group_object_id"),
-					resource.TestCheckResourceAttrSet(rna, "member_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
 				),
 			},
+			// we rerun the config so the group resource updates with the number of members
 			{
-				Config: testAccGroupMember_oneUser(id, pw),
+				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "1"),
 				),
