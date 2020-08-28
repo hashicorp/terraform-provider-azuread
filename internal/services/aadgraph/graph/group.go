@@ -123,7 +123,7 @@ func GroupAllMembers(ctx context.Context, client *graphrbac.GroupsClient, groupI
 }
 
 func GroupAddMember(ctx context.Context, client *graphrbac.GroupsClient, groupId string, member string) error {
-	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
+	memberGraphURL := fmt.Sprintf("%s/%s/directoryObjects/%s", strings.TrimRight(client.BaseURI, "/"), client.TenantID, member)
 
 	properties := graphrbac.GroupAddMemberParameters{
 		URL: &memberGraphURL,
@@ -178,7 +178,7 @@ func GroupAllOwners(ctx context.Context, client *graphrbac.GroupsClient, groupId
 }
 
 func GroupAddOwner(ctx context.Context, client *graphrbac.GroupsClient, groupId string, owner string) error {
-	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
+	ownerGraphURL := fmt.Sprintf("%s/%s/directoryObjects/%s", strings.TrimRight(client.BaseURI, "/"), client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
 		URL: &ownerGraphURL,

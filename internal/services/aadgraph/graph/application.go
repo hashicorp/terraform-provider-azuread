@@ -275,7 +275,7 @@ func ApplicationAllOwners(ctx context.Context, client *graphrbac.ApplicationsCli
 }
 
 func ApplicationAddOwner(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, owner string) error {
-	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
+	ownerGraphURL := fmt.Sprintf("%s/%s/directoryObjects/%s", strings.TrimRight(client.BaseURI, "/"), client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
 		URL: &ownerGraphURL,
