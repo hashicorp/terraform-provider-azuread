@@ -57,7 +57,7 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
 	}
 
-	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred, true)
+	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		return tf.ImportAsExistsError("azuread_service_principal_password", id.String())
 	}

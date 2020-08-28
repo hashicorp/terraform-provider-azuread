@@ -57,7 +57,7 @@ func applicationPasswordResourceCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Listing Application Credentials for Object ID %q: %+v", id.ObjectId, err)
 	}
 
-	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred, true)
+	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		return tf.ImportAsExistsError("azuread_application_password", id.String())
 	}

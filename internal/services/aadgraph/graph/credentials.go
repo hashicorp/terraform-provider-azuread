@@ -267,7 +267,7 @@ func PasswordCredentialResultFindByKeyId(creds graphrbac.PasswordCredentialListR
 	return cred
 }
 
-func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult, cred *graphrbac.PasswordCredential, errorOnDuplicate bool) (*[]graphrbac.PasswordCredential, error) {
+func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult, cred *graphrbac.PasswordCredential) (*[]graphrbac.PasswordCredential, error) {
 	if cred == nil {
 		return nil, errors.New("credential to be added is null")
 	}
@@ -275,14 +275,12 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 	newCreds := make([]graphrbac.PasswordCredential, 0)
 
 	if existing.Value != nil {
-		if errorOnDuplicate {
-			for _, v := range *existing.Value {
-				if v.KeyID == nil {
-					continue
-				}
-				if *v.KeyID == *cred.KeyID {
-					return nil, errors.New("credential already exists")
-				}
+		for _, v := range *existing.Value {
+			if v.KeyID == nil {
+				continue
+			}
+			if *v.KeyID == *cred.KeyID {
+				return nil, errors.New("credential already exists")
 			}
 		}
 
@@ -412,19 +410,17 @@ func KeyCredentialResultFindByKeyId(creds graphrbac.KeyCredentialListResult, key
 	return nil
 }
 
-func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *graphrbac.KeyCredential, errorOnDuplicate bool) (*[]graphrbac.KeyCredential, error) {
+func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *graphrbac.KeyCredential) (*[]graphrbac.KeyCredential, error) {
 	newCreds := make([]graphrbac.KeyCredential, 0)
 
 	if existing.Value != nil {
-		if errorOnDuplicate {
-			for _, v := range *existing.Value {
-				if v.KeyID == nil {
-					continue
-				}
+		for _, v := range *existing.Value {
+			if v.KeyID == nil {
+				continue
+			}
 
-				if *v.KeyID == *cred.KeyID {
-					return nil, fmt.Errorf("credential already exists found")
-				}
+			if *v.KeyID == *cred.KeyID {
+				return nil, fmt.Errorf("credential already exists found")
 			}
 		}
 

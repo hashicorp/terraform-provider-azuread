@@ -48,7 +48,7 @@ func applicationCertificateResourceCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("listing certificate credentials for application with object ID %q: %+v", id.ObjectId, err)
 	}
 
-	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred, true)
+	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		return tf.ImportAsExistsError("azuread_application_certificate", id.String())
 	}

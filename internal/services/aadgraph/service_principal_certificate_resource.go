@@ -48,7 +48,7 @@ func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("listing certificate credentials for service principal with ID %q: %+v", id.ObjectId, err)
 	}
 
-	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred, true)
+	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		return tf.ImportAsExistsError("azuread_service_principal_certificate", id.String())
 	}
