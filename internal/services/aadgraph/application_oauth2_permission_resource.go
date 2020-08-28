@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -96,7 +97,7 @@ func applicationOAuth2PermissionResourceCreate(d *schema.ResourceData, meta inte
 
 	objectId := d.Get("application_object_id").(string)
 
-	permission, err := graph.OAuth2PermissionForResource(d)
+	permission, err := oauth2PermissionForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
@@ -138,7 +139,7 @@ func applicationOAuth2PermissionResourceUpdate(d *schema.ResourceData, meta inte
 
 	objectId := d.Get("application_object_id").(string)
 
-	permission, err := graph.OAuth2PermissionForResource(d)
+	permission, err := oauth2PermissionForResource(d)
 	if err != nil {
 		return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
 	}
@@ -294,4 +295,31 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 	}
 
 	return nil
+}
+
+func oauth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permission, error) {
+	// errors should be handled by the validation
+	var permissionId string
+	if v, ok := d.GetOk("permission_id"); ok {
+		permissionId = v.(string)
+	} else {
+		pid, err := uuid.GenerateUUID()
+		if err != nil {
+			return nil, err
+		}
+		permissionId = pid
+	}
+
+	permission := graphrbac.OAuth2Permission{
+		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
+		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
+		ID:                      utils.String(permissionId),
+		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
+		Type:                    utils.String(d.Get("type").(string)),
+		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
+		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
+		Value:                   utils.String(d.Get("value").(string)),
+	}
+
+	return &permission, nil
 }

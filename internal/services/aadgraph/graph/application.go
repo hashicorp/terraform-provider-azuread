@@ -514,33 +514,6 @@ func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (*
 	return nil, nil
 }
 
-func OAuth2PermissionForResource(d *schema.ResourceData) (*graphrbac.OAuth2Permission, error) {
-	// errors should be handled by the validation
-	var permissionId string
-	if v, ok := d.GetOk("permission_id"); ok {
-		permissionId = v.(string)
-	} else {
-		pid, err := uuid.GenerateUUID()
-		if err != nil {
-			return nil, err
-		}
-		permissionId = pid
-	}
-
-	permission := graphrbac.OAuth2Permission{
-		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
-		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
-		ID:                      utils.String(permissionId),
-		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
-		Type:                    utils.String(d.Get("type").(string)),
-		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
-		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
-		Value:                   utils.String(d.Get("value").(string)),
-	}
-
-	return &permission, nil
-}
-
 func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
 	if permission == nil {
 		return nil, errors.New("permission to be added is null")
