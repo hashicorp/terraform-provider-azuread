@@ -161,7 +161,7 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Application with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("making Read request on Application with ID %q: %+v", oId, err)
+			return fmt.Errorf("retrieving Application with ID %q: %+v", oId, err)
 		}
 
 		app = resp
@@ -186,30 +186,30 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		values := resp.Response().Value
 		if values == nil {
-			return fmt.Errorf("nil values for Applications matching %q", filter)
+			return fmt.Errorf("bad API response: nil values for Applications matching %q", filter)
 		}
 		if len(*values) == 0 {
 			return fmt.Errorf("found no Applications matching %q", filter)
 		}
-		if len(*values) > 2 {
-			return fmt.Errorf("Found multiple Applications matching %q", filter)
+		if len(*values) > 1 {
+			return fmt.Errorf("found multiple Applications matching %q", filter)
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return fmt.Errorf("nil AppID for Applications matching %q", filter)
+				return fmt.Errorf("bad API response: nil AppID for Applications matching %q", filter)
 			}
 			if *app.AppID != fieldValue {
-				return fmt.Errorf("AppID for Applications matching %q does is does not match(%q!=%q)", filter, *app.AppID, fieldValue)
+				return fmt.Errorf("AppID for Applications matching %q does not match(%q!=%q)", filter, *app.AppID, fieldValue)
 			}
 		case "displayName":
 			if app.DisplayName == nil {
 				return fmt.Errorf("nil DisplayName for Applications matching %q", filter)
 			}
 			if *app.DisplayName != fieldValue {
-				return fmt.Errorf("DisplayName for Applications matching %q does is does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
+				return fmt.Errorf("DisplayName for Applications matching %q does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
 			}
 		}
 	}
