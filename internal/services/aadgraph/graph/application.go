@@ -411,11 +411,22 @@ func AppRoleForResource(d *schema.ResourceData) (*graphrbac.AppRole, error) {
 }
 
 func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
-	newRoles := make([]graphrbac.AppRole, 0, len(*roles)+1)
+	if role == nil {
+		return nil, errors.New("role to be added is null")
+	} else if role.ID == nil {
+		return nil, errors.New("ID of new role is null")
+	}
+
+	cap := 1
+	if roles != nil {
+		cap += len(*roles)
+	}
+
+	newRoles := make([]graphrbac.AppRole, 0, cap)
 	newRoles[0] = *role
 
 	for _, v := range *roles {
-		if *v.ID == *role.ID {
+		if v.ID != nil && *v.ID == *role.ID {
 			return nil, fmt.Errorf("App Role with ID %q already exists", *role.ID)
 		}
 		newRoles = append(newRoles, v)
@@ -432,7 +443,10 @@ func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]grap
 	}
 
 	for i, v := range *roles {
-		if v.ID != nil && *v.ID == *role.ID {
+		if v.ID == nil {
+			continue
+		}
+		if *v.ID == *role.ID {
 			newRoles[i] = *role
 			continue
 		}
@@ -450,7 +464,10 @@ func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]
 	}
 
 	for i, v := range *existing {
-		if v.ID != nil && *v.ID == roleId {
+		if v.ID == nil {
+			continue
+		}
+		if *v.ID == roleId {
 			v.IsEnabled = utils.Bool(false)
 		}
 		newRoles[i] = v

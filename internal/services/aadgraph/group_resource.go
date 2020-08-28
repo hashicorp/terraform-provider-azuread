@@ -113,7 +113,7 @@ func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(*group.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *group.ObjectID)
 	})
 

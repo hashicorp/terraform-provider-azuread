@@ -67,6 +67,7 @@ func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, 
 }
 
 func DirectoryObjectListToIDs(objects graphrbac.DirectoryObjectListResultIterator, ctx context.Context) ([]string, error) {
+	errBase := "during pagination of directory objects"
 	ids := make([]string, 0)
 	for objects.NotDone() {
 		v := objects.Value()
@@ -76,21 +77,30 @@ func DirectoryObjectListToIDs(objects graphrbac.DirectoryObjectListResultIterato
 		// if we found the object we're looking for
 		user, _ := v.AsUser()
 		if user != nil {
+			if user.ObjectID == nil {
+				return nil, fmt.Errorf("user with null object ID encountered %s", errBase)
+			}
 			ids = append(ids, *user.ObjectID)
 		}
 
 		group, _ := v.AsADGroup()
 		if group != nil {
+			if group.ObjectID == nil {
+				return nil, fmt.Errorf("group with null object ID encountered %s", errBase)
+			}
 			ids = append(ids, *group.ObjectID)
 		}
 
 		servicePrincipal, _ := v.AsServicePrincipal()
 		if servicePrincipal != nil {
+			if servicePrincipal.ObjectID == nil {
+				return nil, fmt.Errorf("service principal with null object ID encountered %s", errBase)
+			}
 			ids = append(ids, *servicePrincipal.ObjectID)
 		}
 
 		if err := objects.NextWithContext(ctx); err != nil {
-			return nil, fmt.Errorf("during pagination of directory objects: %+v", err)
+			return nil, fmt.Errorf("%s: %+v", errBase, err)
 		}
 	}
 
@@ -131,7 +141,8 @@ func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId
 		time.Sleep(time.Second * 2)
 	}
 
-	if _, err := WaitForListAdd(member, func() ([]string, error) {
+	deadline, _ := ctx.Deadline()
+	if _, err := WaitForListAdd(member, deadline.Sub(time.now()), func() ([]string, error) {
 		return GroupAllMembers(client, ctx, groupId)
 	}); err != nil {
 		return fmt.Errorf("waiting for group membership: %+v", err)
@@ -202,7 +213,7 @@ func GroupFindByName(client *graphrbac.GroupsClient, ctx context.Context, name s
 	}
 
 	for _, group := range resp.Values() {
-		if *group.DisplayName == name {
+		if group.DisplayName != nil && *group.DisplayName == name {
 			return &group, nil
 		}
 	}

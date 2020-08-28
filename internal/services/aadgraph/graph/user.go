@@ -34,6 +34,9 @@ func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objec
 	if user.DisplayName == nil {
 		return nil, fmt.Errorf("nil DisplayName for AD Users matching %q", filter)
 	}
+	if user.ObjectID == nil {
+		return nil, fmt.Errorf("nil ObjectID for AD Users matching %q", filter)
+	}
 	if *user.ObjectID != objectId {
 		return nil, fmt.Errorf("objectID for AD Users matching %q does is does not match(%q!=%q)", filter, *user.ObjectID, objectId)
 	}

@@ -10,11 +10,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func WaitForCreationReplication(f func() (interface{}, error)) (interface{}, error) {
+func WaitForCreationReplication(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"404", "BadCast"},
 		Target:                    []string{"Found"},
-		Timeout:                   5 * time.Minute,
+		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {

@@ -24,7 +24,7 @@ func ApplicationCertificateResource() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: graph.CertificateResourceSchema("application"),
+		Schema: graph.CertificateResourceSchema("application_object_id"),
 	}
 }
 
@@ -57,7 +57,7 @@ func applicationCertificateResourceCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("creating certificate credentials %q for application with object ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
-	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, func() (graphrbac.KeyCredentialListResult, error) {
+	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {

@@ -24,7 +24,7 @@ func ApplicationPasswordResource() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: graph.PasswordResourceSchema("application"),
+		Schema: graph.PasswordResourceSchema("application_object_id"),
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -66,7 +66,7 @@ func applicationPasswordResourceCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("creating Application Credentials %q for Object ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
-	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, func() (graphrbac.PasswordCredentialListResult, error) {
+	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
@@ -157,7 +157,11 @@ func applicationPasswordResourceDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Listing Application Credentials for %q: %+v", id.ObjectId, err)
 	}
 
-	newCreds := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
+	newCreds, err := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
+	if err != nil {
+		return fmt.Errorf("could not add new credential: %s", err)
+	}
+
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
 		return fmt.Errorf("removing Application Credentials %q from Application Object ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
@@ -167,7 +171,7 @@ func applicationPasswordResourceDelete(d *schema.ResourceData, meta interface{})
 
 func resourceApplicationPasswordInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
-		Schema: graph.PasswordResourceSchema("application"),
+		Schema: graph.PasswordResourceSchema("application_object_id"),
 	}
 }
 

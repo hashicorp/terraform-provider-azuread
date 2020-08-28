@@ -367,7 +367,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*app.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {

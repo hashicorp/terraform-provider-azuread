@@ -2,6 +2,7 @@ package graph
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -18,16 +19,7 @@ import (
 )
 
 // valid types are `application` and `service_principal`
-func CertificateResourceSchema(objectType string) map[string]*schema.Schema {
-	var idAttribute string
-
-	switch objectType {
-	case "application":
-		idAttribute = "application_object_id"
-	case "service_principal":
-		idAttribute = "service_principal_id"
-	}
-
+func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		idAttribute: {
 			Type:         schema.TypeString,
@@ -89,16 +81,7 @@ func CertificateResourceSchema(objectType string) map[string]*schema.Schema {
 }
 
 // valid types are `application` and `service_principal`
-func PasswordResourceSchema(objectType string) map[string]*schema.Schema {
-	var idAttribute string
-
-	switch objectType {
-	case "application":
-		idAttribute = "application_object_id"
-	case "service_principal":
-		idAttribute = "service_principal_id"
-	}
-
+func PasswordResourceSchema(idAttribute string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		idAttribute: {
 			Type:         schema.TypeString,
@@ -285,6 +268,10 @@ func PasswordCredentialResultFindByKeyId(creds graphrbac.PasswordCredentialListR
 }
 
 func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult, cred *graphrbac.PasswordCredential, errorOnDuplicate bool) (*[]graphrbac.PasswordCredential, error) {
+	if cred == nil {
+		return nil, errors.New("credential to be added is null")
+	}
+
 	newCreds := make([]graphrbac.PasswordCredential, 0)
 
 	if existing.Value != nil {
@@ -293,9 +280,8 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 				if v.KeyID == nil {
 					continue
 				}
-
 				if *v.KeyID == *cred.KeyID {
-					return nil, fmt.Errorf("credential already exists found")
+					return nil, errors.New("credential already exists")
 				}
 			}
 		}
@@ -307,7 +293,11 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 	return &newCreds, nil
 }
 
-func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredentialListResult, keyId string) *[]graphrbac.PasswordCredential {
+func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredentialListResult, keyId string) (*[]graphrbac.PasswordCredential, error) {
+	if keyId == "" {
+		return nil, errors.New("ID of key to be removed is blank")
+	}
+
 	newCreds := make([]graphrbac.PasswordCredential, 0)
 
 	if existing.Value != nil {
@@ -324,14 +314,14 @@ func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredential
 		}
 	}
 
-	return &newCreds
+	return &newCreds, nil
 }
 
-func WaitForPasswordCredentialReplication(keyId string, f func() (graphrbac.PasswordCredentialListResult, error)) (interface{}, error) {
+func WaitForPasswordCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.PasswordCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"404", "BadCast", "NotFound"},
 		Target:                    []string{"Found"},
-		Timeout:                   5 * time.Minute,
+		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {
@@ -465,11 +455,11 @@ func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult
 	return &newCreds
 }
 
-func WaitForKeyCredentialReplication(keyId string, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {
+func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"404", "BadCast", "NotFound"},
 		Target:                    []string{"Found"},
-		Timeout:                   5 * time.Minute,
+		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
 		Refresh: func() (interface{}, string, error) {

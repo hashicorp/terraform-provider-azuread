@@ -267,15 +267,27 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
 	}
 
+	var newPermissions *[]graphrbac.OAuth2Permission
+
+	newPermissions, err = graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
+	if err != nil {
+		return fmt.Errorf("could not disable OAuth2 Permission prior to removal: %s", err)
+	}
+
 	properties := graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId),
+		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
 	}
 
+	newPermissions, err = graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
+	if err != nil {
+		return fmt.Errorf("could not remove OAuth2 Permission: %s", err)
+	}
+
 	properties = graphrbac.ApplicationUpdateParameters{
-		Oauth2Permissions: graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId),
+		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
 		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)

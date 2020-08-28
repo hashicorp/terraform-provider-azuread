@@ -24,7 +24,7 @@ func ServicePrincipalCertificateResource() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: graph.CertificateResourceSchema("service_principal"),
+		Schema: graph.CertificateResourceSchema("service_principal_id"),
 	}
 }
 
@@ -57,7 +57,7 @@ func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("creating certificate credentials %q for service principal with ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
-	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, func() (graphrbac.KeyCredentialListResult, error) {
+	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {

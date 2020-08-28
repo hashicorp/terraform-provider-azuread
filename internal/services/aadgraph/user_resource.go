@@ -145,7 +145,7 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*user.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *user.ObjectID)
 	})
 	if err != nil {
