@@ -319,7 +319,7 @@ func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredential
 
 func WaitForPasswordCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.PasswordCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
-		Pending:                   []string{"404", "BadCast", "NotFound"},
+		Pending:                   []string{"NotFound"},
 		Target:                    []string{"Found"},
 		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
@@ -328,9 +328,9 @@ func WaitForPasswordCredentialReplication(keyId string, timeout time.Duration, f
 			creds, err := f()
 			if err != nil {
 				if utils.ResponseWasNotFound(creds.Response) {
-					return creds, "404", nil
+					return creds, "NotFound", nil
 				}
-				return creds, "Error", fmt.Errorf("Error calling f, response was not 404 (%d): %v", creds.Response.StatusCode, err)
+				return creds, "Error", fmt.Errorf("unable to retrieve object, received response with status %d: %v", creds.Response.StatusCode, err)
 			}
 
 			credential := PasswordCredentialResultFindByKeyId(creds, keyId)
@@ -457,7 +457,7 @@ func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult
 
 func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
-		Pending:                   []string{"404", "BadCast", "NotFound"},
+		Pending:                   []string{"NotFound"},
 		Target:                    []string{"Found"},
 		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
@@ -466,9 +466,9 @@ func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func
 			creds, err := f()
 			if err != nil {
 				if utils.ResponseWasNotFound(creds.Response) {
-					return creds, "404", nil
+					return creds, "NotFound", nil
 				}
-				return creds, "Error", fmt.Errorf("calling f, response was not 404 (%d): %v", creds.Response.StatusCode, err)
+				return creds, "Error", fmt.Errorf("unable to retrieve object, received response with status %d: %v", creds.Response.StatusCode, err)
 			}
 
 			credential := KeyCredentialResultFindByKeyId(creds, keyId)

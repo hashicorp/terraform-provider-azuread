@@ -74,7 +74,7 @@ func groupDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		group = resp
 	} else if name, ok := d.Get("name").(string); ok && name != "" {
-		g, err := graph.GroupGetByDisplayName(client, ctx, name)
+		g, err := graph.GroupGetByDisplayName(ctx, client, name)
 		if err != nil {
 			return fmt.Errorf("finding Group with display name %q: %+v", name, err)
 		}
@@ -95,13 +95,13 @@ func groupDataRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("description", v.(string))
 	}
 
-	members, err := graph.GroupAllMembers(client, ctx, d.Id())
+	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
 		return err
 	}
 	d.Set("members", members)
 
-	owners, err := graph.GroupAllOwners(client, ctx, d.Id())
+	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return err
 	}

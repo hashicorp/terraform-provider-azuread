@@ -58,7 +58,7 @@ func groupsDataRead(d *schema.ResourceData, meta interface{}) error {
 	if names, ok := d.Get("names").([]interface{}); ok && len(names) > 0 {
 		expectedCount = len(names)
 		for _, v := range names {
-			g, err := graph.GroupGetByDisplayName(client, ctx, v.(string))
+			g, err := graph.GroupGetByDisplayName(ctx, client, v.(string))
 			if err != nil {
 				return fmt.Errorf("finding Group with display name %q: %+v", v.(string), err)
 			}

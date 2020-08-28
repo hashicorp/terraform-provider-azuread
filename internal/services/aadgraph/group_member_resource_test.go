@@ -173,7 +173,7 @@ func testCheckGroupMemberDestroy(s *terraform.State) error {
 			return fmt.Errorf("retrieving Group with ID %q: %+v", groupID, err)
 		}
 
-		members, err := graph.GroupAllMembers(client, ctx, groupID)
+		members, err := graph.GroupAllMembers(ctx, client, groupID)
 		if err != nil {
 			return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", groupID, err)
 		}

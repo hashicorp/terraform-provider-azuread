@@ -148,7 +148,7 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 		if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
 			expectedCount = len(oids)
 			for _, v := range oids {
-				u, err := graph.UserGetByObjectId(client, ctx, v.(string))
+				u, err := graph.UserGetByObjectId(ctx, client, v.(string))
 				if err != nil {
 					return fmt.Errorf("finding User with object ID %q: %+v", v.(string), err)
 				}
@@ -164,7 +164,7 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
 			expectedCount = len(mailNicknames)
 			for _, v := range mailNicknames {
-				u, err := graph.UserGetByMailNickname(client, ctx, v.(string))
+				u, err := graph.UserGetByMailNickname(ctx, client, v.(string))
 				if err != nil {
 					return fmt.Errorf("finding User with email alias %q: %+v", v.(string), err)
 				}

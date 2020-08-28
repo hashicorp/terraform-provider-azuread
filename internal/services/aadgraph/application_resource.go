@@ -403,7 +403,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	// zadd owners, there is a default owner that we must account so use this shared function
 	if v, ok := d.GetOk("owners"); ok {
 		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		if err := applicationSetOwnersTo(client, ctx, *app.ObjectID, members); err != nil {
+		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, members); err != nil {
 			return err
 		}
 	}
@@ -547,7 +547,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		if err := applicationSetOwnersTo(client, ctx, d.Id(), desiredOwners); err != nil {
+		if err := applicationSetOwnersTo(ctx, client, d.Id(), desiredOwners); err != nil {
 			return err
 		}
 	}
@@ -613,7 +613,7 @@ func applicationResourceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
 	}
 
-	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
+	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
 	}
@@ -913,8 +913,8 @@ func expandApplicationOAuth2Permissions(i interface{}) *[]graphrbac.OAuth2Permis
 	return &result
 }
 
-func applicationSetOwnersTo(client *graphrbac.ApplicationsClient, ctx context.Context, id string, desiredOwners []string) error {
-	existingOwners, err := graph.ApplicationAllOwners(client, ctx, id)
+func applicationSetOwnersTo(ctx context.Context, client *graphrbac.ApplicationsClient, id string, desiredOwners []string) error {
+	existingOwners, err := graph.ApplicationAllOwners(ctx, client, id)
 	if err != nil {
 		return err
 	}
@@ -923,7 +923,7 @@ func applicationSetOwnersTo(client *graphrbac.ApplicationsClient, ctx context.Co
 	ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
 	// add owners first to prevent a possible situation where terraform revokes its own access before adding it back.
-	if err := graph.ApplicationAddOwners(client, ctx, id, ownersToAdd); err != nil {
+	if err := graph.ApplicationAddOwners(ctx, client, id, ownersToAdd); err != nil {
 		return err
 	}
 

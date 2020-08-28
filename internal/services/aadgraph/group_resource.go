@@ -85,7 +85,7 @@ func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("name").(string)
 
 	if d.Get("prevent_duplicate_names").(bool) {
-		err := graph.GroupCheckNameAvailability(client, ctx, name)
+		err := graph.GroupCheckNameAvailability(ctx, client, name)
 		if err != nil {
 			return err
 		}
@@ -122,21 +122,21 @@ func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		members := tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 
 		// we could lock here against the group member resource, but they should not be used together (todo conflicts with at a resource level?)
-		if err := graph.GroupAddMembers(client, ctx, *group.ObjectID, *members); err != nil {
+		if err := graph.GroupAddMembers(ctx, client, *group.ObjectID, *members); err != nil {
 			return err
 		}
 	}
 
 	// Add owners if specified
 	if v, ok := d.GetOk("owners"); ok {
-		existingOwners, err := graph.GroupAllOwners(client, ctx, *group.ObjectID)
+		existingOwners, err := graph.GroupAllOwners(ctx, client, *group.ObjectID)
 		if err != nil {
 			return err
 		}
 		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		ownersToAdd := utils.Difference(members, existingOwners)
 
-		if err := graph.GroupAddOwners(client, ctx, *group.ObjectID, ownersToAdd); err != nil {
+		if err := graph.GroupAddOwners(ctx, client, *group.ObjectID, ownersToAdd); err != nil {
 			return err
 		}
 	}
@@ -170,13 +170,13 @@ func groupResourceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("description", v.(string))
 	}
 
-	members, err := graph.GroupAllMembers(client, ctx, d.Id())
+	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
 		return err
 	}
 	d.Set("members", members)
 
-	owners, err := graph.GroupAllOwners(client, ctx, d.Id())
+	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*clients.AadClient).StopContext
 
 	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") {
-		existingMembers, err := graph.GroupAllMembers(client, ctx, d.Id())
+		existingMembers, err := graph.GroupAllMembers(ctx, client, d.Id())
 		if err != nil {
 			return err
 		}
@@ -221,19 +221,19 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if _, err := graph.WaitForListRemove(existingMember, func() ([]string, error) {
-				return graph.GroupAllMembers(client, ctx, d.Id())
+				return graph.GroupAllMembers(ctx, client, d.Id())
 			}); err != nil {
 				return fmt.Errorf("waiting for group membership removal: %+v", err)
 			}
 		}
 
-		if err := graph.GroupAddMembers(client, ctx, d.Id(), membersToAdd); err != nil {
+		if err := graph.GroupAddMembers(ctx, client, d.Id(), membersToAdd); err != nil {
 			return err
 		}
 	}
 
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
-		existingOwners, err := graph.GroupAllOwners(client, ctx, d.Id())
+		existingOwners, err := graph.GroupAllOwners(ctx, client, d.Id())
 		if err != nil {
 			return err
 		}
@@ -251,7 +251,7 @@ func groupResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := graph.GroupAddOwners(client, ctx, d.Id(), ownersToAdd); err != nil {
+		if err := graph.GroupAddOwners(ctx, client, d.Id(), ownersToAdd); err != nil {
 			return err
 		}
 	}

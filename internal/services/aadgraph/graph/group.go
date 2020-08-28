@@ -36,7 +36,7 @@ func ParseGroupMemberId(idString string) (*GroupMemberId, error) {
 	}, nil
 }
 
-func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, displayName string) (*graphrbac.ADGroup, error) {
+func GroupGetByDisplayName(ctx context.Context, client *graphrbac.GroupsClient, displayName string) (*graphrbac.ADGroup, error) {
 	filter := fmt.Sprintf("displayName eq '%s'", displayName)
 
 	resp, err := client.ListComplete(ctx, filter)
@@ -66,7 +66,7 @@ func GroupGetByDisplayName(client *graphrbac.GroupsClient, ctx context.Context, 
 	return &group, nil
 }
 
-func DirectoryObjectListToIDs(objects graphrbac.DirectoryObjectListResultIterator, ctx context.Context) ([]string, error) {
+func DirectoryObjectListToIDs(ctx context.Context, objects graphrbac.DirectoryObjectListResultIterator) ([]string, error) {
 	errBase := "during pagination of directory objects"
 	ids := make([]string, 0)
 	for objects.NotDone() {
@@ -107,14 +107,14 @@ func DirectoryObjectListToIDs(objects graphrbac.DirectoryObjectListResultIterato
 	return ids, nil
 }
 
-func GroupAllMembers(client *graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
+func GroupAllMembers(ctx context.Context, client *graphrbac.GroupsClient, groupId string) ([]string, error) {
 	members, err := client.GetGroupMembersComplete(ctx, groupId)
 
 	if err != nil {
 		return nil, fmt.Errorf("listing existing group members from Group with ID %q: %+v", groupId, err)
 	}
 
-	existingMembers, err := DirectoryObjectListToIDs(members, ctx)
+	existingMembers, err := DirectoryObjectListToIDs(ctx, members)
 	if err != nil {
 		return nil, fmt.Errorf("getting object IDs of group members for Group with ID %q: %+v", groupId, err)
 	}
@@ -122,7 +122,7 @@ func GroupAllMembers(client *graphrbac.GroupsClient, ctx context.Context, groupI
 	return existingMembers, nil
 }
 
-func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId string, member string) error {
+func GroupAddMember(ctx context.Context, client *graphrbac.GroupsClient, groupId string, member string) error {
 	memberGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, member)
 
 	properties := graphrbac.GroupAddMemberParameters{
@@ -141,9 +141,8 @@ func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId
 		time.Sleep(time.Second * 2)
 	}
 
-	deadline, _ := ctx.Deadline()
-	if _, err := WaitForListAdd(member, deadline.Sub(time.now()), func() ([]string, error) {
-		return GroupAllMembers(client, ctx, groupId)
+	if _, err := WaitForListAdd(member, func() ([]string, error) {
+		return GroupAllMembers(ctx, client, groupId)
 	}); err != nil {
 		return fmt.Errorf("waiting for group membership: %+v", err)
 	}
@@ -151,9 +150,9 @@ func GroupAddMember(client *graphrbac.GroupsClient, ctx context.Context, groupId
 	return nil
 }
 
-func GroupAddMembers(client *graphrbac.GroupsClient, ctx context.Context, groupId string, members []string) error {
+func GroupAddMembers(ctx context.Context, client *graphrbac.GroupsClient, groupId string, members []string) error {
 	for _, memberUuid := range members {
-		err := GroupAddMember(client, ctx, groupId, memberUuid)
+		err := GroupAddMember(ctx, client, groupId, memberUuid)
 
 		if err != nil {
 			return fmt.Errorf("while adding members to Group with ID %q: %+v", groupId, err)
@@ -163,14 +162,14 @@ func GroupAddMembers(client *graphrbac.GroupsClient, ctx context.Context, groupI
 	return nil
 }
 
-func GroupAllOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId string) ([]string, error) {
+func GroupAllOwners(ctx context.Context, client *graphrbac.GroupsClient, groupId string) ([]string, error) {
 	owners, err := client.ListOwnersComplete(ctx, groupId)
 
 	if err != nil {
 		return nil, fmt.Errorf("listing existing group owners from Group with ID %q: %+v", groupId, err)
 	}
 
-	existingMembers, err := DirectoryObjectListToIDs(owners, ctx)
+	existingMembers, err := DirectoryObjectListToIDs(ctx, owners)
 	if err != nil {
 		return nil, fmt.Errorf("getting objects IDs of group owners for Group with ID %q: %+v", groupId, err)
 	}
@@ -178,7 +177,7 @@ func GroupAllOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId
 	return existingMembers, nil
 }
 
-func GroupAddOwner(client *graphrbac.GroupsClient, ctx context.Context, groupId string, owner string) error {
+func GroupAddOwner(ctx context.Context, client *graphrbac.GroupsClient, groupId string, owner string) error {
 	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
@@ -192,9 +191,9 @@ func GroupAddOwner(client *graphrbac.GroupsClient, ctx context.Context, groupId 
 	return nil
 }
 
-func GroupAddOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId string, owner []string) error {
+func GroupAddOwners(ctx context.Context, client *graphrbac.GroupsClient, groupId string, owner []string) error {
 	for _, ownerUuid := range owner {
-		err := GroupAddOwner(client, ctx, groupId, ownerUuid)
+		err := GroupAddOwner(ctx, client, groupId, ownerUuid)
 
 		if err != nil {
 			return fmt.Errorf("while adding owners to Group with ID %q: %+v", groupId, err)
@@ -204,7 +203,7 @@ func GroupAddOwners(client *graphrbac.GroupsClient, ctx context.Context, groupId
 	return nil
 }
 
-func GroupFindByName(client *graphrbac.GroupsClient, ctx context.Context, name string) (*graphrbac.ADGroup, error) {
+func GroupFindByName(ctx context.Context, client *graphrbac.GroupsClient, name string) (*graphrbac.ADGroup, error) {
 	nameFilter := fmt.Sprintf("displayName eq '%s'", name)
 	resp, err := client.List(ctx, nameFilter)
 
@@ -221,8 +220,8 @@ func GroupFindByName(client *graphrbac.GroupsClient, ctx context.Context, name s
 	return nil, nil
 }
 
-func GroupCheckNameAvailability(client *graphrbac.GroupsClient, ctx context.Context, name string) error {
-	existingGroup, err := GroupFindByName(client, ctx, name)
+func GroupCheckNameAvailability(ctx context.Context, client *graphrbac.GroupsClient, name string) error {
+	existingGroup, err := GroupFindByName(ctx, client, name)
 	if err != nil {
 		return err
 	}

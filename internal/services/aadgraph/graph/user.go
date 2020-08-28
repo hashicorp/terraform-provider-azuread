@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objectId string) (*graphrbac.User, error) {
+func UserGetByObjectId(ctx context.Context, client *graphrbac.UsersClient, objectId string) (*graphrbac.User, error) {
 	filter := fmt.Sprintf("objectId eq '%s'", objectId)
 	resp, err := client.ListComplete(ctx, filter, "")
 	if err != nil {
@@ -44,7 +44,7 @@ func UserGetByObjectId(client *graphrbac.UsersClient, ctx context.Context, objec
 	return &user, nil
 }
 
-func UserGetByMailNickname(client *graphrbac.UsersClient, ctx context.Context, mailNickname string) (*graphrbac.User, error) {
+func UserGetByMailNickname(ctx context.Context, client *graphrbac.UsersClient, mailNickname string) (*graphrbac.User, error) {
 	filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 	resp, err := client.ListComplete(ctx, filter, "")
 	if err != nil {

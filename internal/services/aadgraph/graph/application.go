@@ -259,14 +259,14 @@ func FlattenOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]int
 	return result
 }
 
-func ApplicationAllOwners(client *graphrbac.ApplicationsClient, ctx context.Context, appId string) ([]string, error) {
+func ApplicationAllOwners(ctx context.Context, client *graphrbac.ApplicationsClient, appId string) ([]string, error) {
 	owners, err := client.ListOwnersComplete(ctx, appId)
 
 	if err != nil {
 		return nil, fmt.Errorf("listing existing owners for Application with ID %q: %+v", appId, err)
 	}
 
-	existingMembers, err := DirectoryObjectListToIDs(owners, ctx)
+	existingMembers, err := DirectoryObjectListToIDs(ctx, owners)
 	if err != nil {
 		return nil, fmt.Errorf("getting object IDs of owners for Application with ID %q: %+v", appId, err)
 	}
@@ -274,7 +274,7 @@ func ApplicationAllOwners(client *graphrbac.ApplicationsClient, ctx context.Cont
 	return existingMembers, nil
 }
 
-func ApplicationAddOwner(client *graphrbac.ApplicationsClient, ctx context.Context, appId string, owner string) error {
+func ApplicationAddOwner(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, owner string) error {
 	ownerGraphURL := fmt.Sprintf("https://graph.windows.net/%s/directoryObjects/%s", client.TenantID, owner)
 
 	properties := graphrbac.AddOwnerParameters{
@@ -288,9 +288,9 @@ func ApplicationAddOwner(client *graphrbac.ApplicationsClient, ctx context.Conte
 	return nil
 }
 
-func ApplicationAddOwners(client *graphrbac.ApplicationsClient, ctx context.Context, appId string, owner []string) error {
+func ApplicationAddOwners(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, owner []string) error {
 	for _, ownerUuid := range owner {
-		err := ApplicationAddOwner(client, ctx, appId, ownerUuid)
+		err := ApplicationAddOwner(ctx, client, appId, ownerUuid)
 
 		if err != nil {
 			return fmt.Errorf("adding owners to Application with ID %q: %+v", appId, err)

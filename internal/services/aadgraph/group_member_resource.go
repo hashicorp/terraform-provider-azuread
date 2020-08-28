@@ -52,7 +52,7 @@ func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	tf.LockByName(groupMemberResourceName, groupID)
 	defer tf.UnlockByName(groupMemberResourceName, groupID)
 
-	if err := graph.GroupAddMember(client, ctx, groupID, memberID); err != nil {
+	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
 		return err
 	}
 
@@ -69,7 +69,7 @@ func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("unable to parse ID: %v", err)
 	}
 
-	members, err := graph.GroupAllMembers(client, ctx, id.GroupId)
+	members, err := graph.GroupAllMembers(ctx, client, id.GroupId)
 	if err != nil {
 		return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", id.GroupId, err)
 	}

@@ -12,7 +12,7 @@ import (
 
 func WaitForCreationReplication(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
-		Pending:                   []string{"404", "BadCast"},
+		Pending:                   []string{"NotFound", "BadCast"},
 		Target:                    []string{"Found"},
 		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
@@ -28,9 +28,9 @@ func WaitForCreationReplication(timeout time.Duration, f func() (interface{}, er
 				return i, "BadCast", nil // sometimes the SDK bubbles up an entirely empty object
 			}
 			if utils.ResponseWasNotFound(r) {
-				return i, "404", nil
+				return i, "NotFound", nil
 			}
-			return i, "Error", fmt.Errorf("Error calling f, response was not 404 (%d): %v", r.StatusCode, err)
+			return i, "Error", fmt.Errorf("unable to retrieve object, received response with status %d: %v", r.StatusCode, err)
 		},
 	}).WaitForState()
 }
@@ -63,7 +63,7 @@ func WaitForListAdd(item string, f func() ([]string, error)) (interface{}, error
 func WaitForListRemove(item string, f func() ([]string, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"Found"},
-		Target:                    []string{"404"},
+		Target:                    []string{"NotFound"},
 		Timeout:                   5 * time.Minute,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 10,
@@ -80,7 +80,7 @@ func WaitForListRemove(item string, f func() ([]string, error)) (interface{}, er
 				}
 			}
 
-			return listItems, "404", nil
+			return listItems, "NotFound", nil
 		},
 	}).WaitForState()
 }

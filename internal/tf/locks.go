@@ -6,10 +6,10 @@ import (
 )
 
 // MutexKV is a simple key/value store for arbitrary mutexes. It can be used to
-// serialize changes across arbitrary collaborators that share knowledge of the
-// keys they must serialize on.
+// serialise changes across arbitrary collaborators that share knowledge of the
+// keys they must serialise on.
 //
-// The initial use case is to let aws_security_group_rule resources serialize
+// The initial use case is to let aws_security_group_rule resources serialise
 // their access to individual security groups based on SG ID.
 type MutexKV struct {
 	lock  sync.Mutex
@@ -43,7 +43,7 @@ func (m *MutexKV) get(key string) *sync.Mutex {
 	return mutex
 }
 
-// Returns a properly initalized MutexKV
+// Returns a properly initialised MutexKV
 func NewMutexKV() *MutexKV {
 	return &MutexKV{
 		store: make(map[string]*sync.Mutex),

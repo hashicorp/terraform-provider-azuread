@@ -261,7 +261,7 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
 	}
 
-	owners, err := graph.ApplicationAllOwners(client, ctx, d.Id())
+	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
 	}
