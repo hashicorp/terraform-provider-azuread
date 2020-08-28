@@ -483,7 +483,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Application with ID %q was not found", d.Id())
 			}
 
-			return fmt.Errorf("making Read request on Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("retrieving Application with ID %q: %+v", d.Id(), err)
 		}
 		app = resp
 		for _, OAuth2Permission := range *app.Oauth2Permissions {
@@ -509,7 +509,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Application with ID %q was not found", d.Id())
 			}
 
-			return fmt.Errorf("making Read request on Application with ID %q: %+v", d.Id(), err)
+			return fmt.Errorf("retrieving Application with ID %q: %+v", d.Id(), err)
 		}
 		app = resp
 		for _, appRole := range *app.AppRoles {

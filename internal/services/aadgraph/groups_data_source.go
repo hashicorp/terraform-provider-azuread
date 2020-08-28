@@ -69,7 +69,7 @@ func groupsDataRead(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range oids {
 			resp, err := client.Get(ctx, v.(string))
 			if err != nil {
-				return fmt.Errorf("making Read request on Group with ID %q: %+v", v.(string), err)
+				return fmt.Errorf("retrieving Group with ID %q: %+v", v.(string), err)
 			}
 
 			groups = append(groups, resp)

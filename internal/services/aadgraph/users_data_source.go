@@ -140,7 +140,7 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && utils.ResponseWasNotFound(u.Response) {
 					continue
 				}
-				return fmt.Errorf("making Read request on User with ID %q: %+v", v.(string), err)
+				return fmt.Errorf("retrieving User with ID %q: %+v", v.(string), err)
 			}
 			users = append(users, &u)
 		}

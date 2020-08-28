@@ -94,7 +94,7 @@ func userDataRead(d *schema.ResourceData, meta interface{}) error {
 			if utils.ResponseWasNotFound(resp.Response) {
 				return fmt.Errorf("User not found with UPN: %q", upn)
 			}
-			return fmt.Errorf("making Read request on User with ID %q: %+v", upn, err)
+			return fmt.Errorf("retrieving User with ID %q: %+v", upn, err)
 		}
 		user = resp
 	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {

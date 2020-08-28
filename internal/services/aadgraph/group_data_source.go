@@ -69,7 +69,7 @@ func groupDataRead(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("Group with ID %q was not found", oId)
 			}
 
-			return fmt.Errorf("making Read request on Group with ID %q: %+v", oId, err)
+			return fmt.Errorf("retrieving Group with ID %q: %+v", oId, err)
 		}
 
 		group = resp
