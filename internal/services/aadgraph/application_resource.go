@@ -309,7 +309,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := applicationValidateRolesScopes(d.Get("app_role"), d.Get("oauth2_permissions")); err != nil {
+	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
 		return err
 	}
 
@@ -400,7 +400,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// zadd owners, there is a default owner that we must account so use this shared function
+	// there is a default owner that we must account so use this shared function
 	if v, ok := d.GetOk("owners"); ok {
 		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, members); err != nil {
@@ -426,7 +426,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := applicationValidateRolesScopes(d.Get("app_role"), d.Get("oauth2_permissions")); err != nil {
+	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
 		return err
 	}
 
@@ -939,11 +939,11 @@ func applicationSetOwnersTo(ctx context.Context, client *graphrbac.ApplicationsC
 	return nil
 }
 
-func applicationValidateRolesScopes(appRoles, oauth2Permissions interface{}) error {
+func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {
 	var values []string
 
 	if appRoles != nil {
-		for _, roleRaw := range appRoles.(*schema.Set).List() {
+		for _, roleRaw := range appRoles {
 			role := roleRaw.(map[string]interface{})
 			if val := role["value"].(string); val != "" {
 				values = append(values, val)
@@ -952,7 +952,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions interface{}) err
 	}
 
 	if oauth2Permissions != nil {
-		for _, scopeRaw := range oauth2Permissions.(*schema.Set).List() {
+		for _, scopeRaw := range oauth2Permissions {
 			scope := scopeRaw.(map[string]interface{})
 			if val := scope["value"].(string); val != "" {
 				values = append(values, val)
