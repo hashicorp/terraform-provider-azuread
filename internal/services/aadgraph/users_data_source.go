@@ -190,12 +190,14 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return fmt.Errorf("user with nil ObjectId or UPN was found: %v", u)
+			return fmt.Errorf("User with nil ObjectID or UserPrincipalName was returned: %v", u)
 		}
 
 		oids = append(oids, *u.ObjectID)
 		upns = append(upns, *u.UserPrincipalName)
-		mailNicknames = append(mailNicknames, *u.MailNickname)
+		if u.MailNickname != nil {
+			mailNicknames = append(mailNicknames, *u.MailNickname)
+		}
 
 		user := make(map[string]interface{})
 		user["account_enabled"] = u.AccountEnabled

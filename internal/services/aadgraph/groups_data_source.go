@@ -84,7 +84,7 @@ func groupsDataRead(d *schema.ResourceData, meta interface{}) error {
 	oids := make([]string, 0, len(groups))
 	for _, u := range groups {
 		if u.ObjectID == nil || u.DisplayName == nil {
-			return fmt.Errorf("User with nil ObjectId or UPN was found: %v", u)
+			return fmt.Errorf("Group with nil ObjectID or DisplayName was returned: %v", u)
 		}
 
 		oids = append(oids, *u.ObjectID)
