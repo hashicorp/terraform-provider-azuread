@@ -45,7 +45,7 @@ func testCheckAppRoleExists(name string) resource.TestCheckFunc { //nolint unpar
 	}
 }
 
-func testCheckAppRoleCheckDestroy(s *terraform.State) error {
+func testCheckAppRoleDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
 		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
@@ -85,7 +85,7 @@ func TestAccApplicationAppRole_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
 		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleCheckDestroy,
+		CheckDestroy: testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_basic(data.RandomInteger),
@@ -105,7 +105,7 @@ func TestAccApplicationAppRole_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
 		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleCheckDestroy,
+		CheckDestroy: testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_complete(data.RandomInteger, id),
@@ -125,7 +125,7 @@ func TestAccApplicationAppRole_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
 		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleCheckDestroy,
+		CheckDestroy: testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_complete(data.RandomInteger, id),
@@ -158,7 +158,7 @@ func TestAccApplicationAppRole_requiresImport(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acceptance.PreCheck(t) },
 		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleCheckDestroy,
+		CheckDestroy: testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_basic(data.RandomInteger),
