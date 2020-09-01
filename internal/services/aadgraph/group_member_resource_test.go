@@ -127,6 +127,26 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 	})
 }
 
+func TestAccGroupMember_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckGroupMemberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupMember_group(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
+				),
+			},
+			data.RequiresImportErrorStep(testAccGroupMember_requiresImport(data.RandomInteger)),
+		},
+	})
+}
+
 func testCheckGroupMemberDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "azuread_group_member" {
@@ -245,4 +265,15 @@ resource "azuread_group_member" "testB" {
 }
 
 `, testAccUser_threeUsersABC(id, password), id)
+}
+
+func testAccGroupMember_requiresImport(ri int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azuread_group_member" "import" {
+  group_object_id  = azuread_group_member.test.group_object_id
+  member_object_id = azuread_group_member.test.member_object_id
+}
+`, testAccGroupMember_group(ri))
 }

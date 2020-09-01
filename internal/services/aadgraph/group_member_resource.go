@@ -2,6 +2,7 @@ package aadgraph
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
@@ -48,14 +49,28 @@ func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
 
+	id := graph.GroupMemberIdFrom(groupID, memberID)
+
 	tf.LockByName(groupMemberResourceName, groupID)
 	defer tf.UnlockByName(groupMemberResourceName, groupID)
+
+	existingMembers, err := graph.GroupAllMembers(ctx, client, groupID)
+	if err != nil {
+		return fmt.Errorf("listing existing members for group with ID %q", groupID)
+	}
+	if len(existingMembers) > 0 {
+		for _, v := range existingMembers {
+			if strings.EqualFold(v, memberID) {
+				return tf.ImportAsExistsError("azuread_group_member", id.String())
+			}
+		}
+	}
 
 	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
 		return err
 	}
 
-	d.SetId(graph.GroupMemberIdFrom(groupID, memberID).String())
+	d.SetId(id.String())
 	return groupMemberResourceRead(d, meta)
 }
 
@@ -75,8 +90,9 @@ func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var memberObjectID string
 	for _, objectID := range members {
-		if objectID == id.MemberId {
+		if strings.EqualFold(objectID, id.MemberId) {
 			memberObjectID = objectID
+			break
 		}
 	}
 
