@@ -7,11 +7,13 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
 func servicePrincipalPasswordResource() *schema.Resource {
@@ -175,7 +177,62 @@ func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interfa
 
 func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
-		Schema: graph.PasswordResourceSchema("service_principal_id"),
+		Schema: map[string]*schema.Schema{
+			"service_principal_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
+			},
+
+			"key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validate.UUID,
+			},
+
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+
+			"value": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(1, 863),
+			},
+
+			"start_date": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
+			"end_date": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"end_date_relative"},
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
+			"end_date_relative": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"end_date"},
+				ValidateFunc: validate.NoEmptyStrings,
+			},
+		},
 	}
 }
 
