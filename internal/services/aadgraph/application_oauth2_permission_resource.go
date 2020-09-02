@@ -23,9 +23,10 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 		Read:   applicationOAuth2PermissionResourceRead,
 		Delete: applicationOAuth2PermissionResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := graph.ParseOAuth2PermissionId(id)
+			return err
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {

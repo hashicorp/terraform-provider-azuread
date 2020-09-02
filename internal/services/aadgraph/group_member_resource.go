@@ -20,9 +20,10 @@ func groupMemberResource() *schema.Resource {
 		Read:   groupMemberResourceRead,
 		Delete: groupMemberResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := graph.ParseGroupMemberId(id)
+			return err
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"group_object_id": {

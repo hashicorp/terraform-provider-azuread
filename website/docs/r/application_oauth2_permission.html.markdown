@@ -66,7 +66,7 @@ The following attributes are exported:
 OAuth2 Permissions can be imported using the `object id` of an Application and the `id` of the Permission, e.g.
 
 ```shell
-terraform import azuread_application_oauth2_permission.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
+terraform import azuread_application_oauth2_permission.test 00000000-0000-0000-0000-000000000000/scope/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the Permission's ID in the format `{ApplicationObjectId}/{PermissionId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID, the string "scope" and the Permission's ID in the format `{ApplicationObjectId}/scope/{PermissionId}`.

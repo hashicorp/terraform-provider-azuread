@@ -20,7 +20,7 @@ func (id ObjectSubResourceId) String() string {
 func ParseObjectSubResourceId(idString, expectedType string) (*ObjectSubResourceId, error) {
 	parts := strings.Split(idString, "/")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("Object Resource ID should be in the format {objectId}/{keyId} - but got %q", idString)
+		return nil, fmt.Errorf("Object Resource ID should be in the format {objectId}/{type}/{subId} - but got %q", idString)
 	}
 
 	id := ObjectSubResourceId{

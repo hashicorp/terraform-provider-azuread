@@ -44,7 +44,7 @@ func testCheckServicePrincipalKeyExists(name string) resource.TestCheckFunc { //
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Service Principal Key Credential ID: %v", err)
 		}
@@ -79,7 +79,7 @@ func testCheckServicePrincipalKeyCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Service Principal Credential ID: %v", err)
 		}

@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/google/uuid"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -26,9 +26,12 @@ func applicationResource() *schema.Resource {
 		Update: applicationResourceUpdate,
 		Delete: applicationResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			if _, err := uuid.ParseUUID(id); err != nil {
+				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			}
+			return nil
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -845,7 +848,7 @@ func expandApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 
 		appRoleID := appRole["id"].(string)
 		if appRoleID == "" {
-			appRoleID = uuid.New().String()
+			appRoleID, _ = uuid.GenerateUUID()
 		}
 
 		var appRoleAllowedMemberTypes []string
@@ -888,7 +891,7 @@ func expandApplicationOAuth2Permissions(i interface{}) *[]graphrbac.OAuth2Permis
 		AdminConsentDisplayName := OAuth2Permissions["admin_consent_display_name"].(string)
 		ID := OAuth2Permissions["id"].(string)
 		if ID == "" {
-			ID = uuid.New().String()
+			ID, _ = uuid.GenerateUUID()
 		}
 
 		IsEnabled := OAuth2Permissions["is_enabled"].(bool)

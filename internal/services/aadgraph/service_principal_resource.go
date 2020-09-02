@@ -6,6 +6,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-azure-helpers/response"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -23,9 +24,13 @@ func servicePrincipalResource() *schema.Resource {
 		Read:   servicePrincipalResourceRead,
 		Update: servicePrincipalResourceUpdate,
 		Delete: servicePrincipalResourceDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			if _, err := uuid.ParseUUID(id); err != nil {
+				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			}
+			return nil
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {

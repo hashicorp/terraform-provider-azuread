@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/google/uuid"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -23,9 +23,12 @@ func groupResource() *schema.Resource {
 		Update: groupResourceUpdate,
 		Delete: groupResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			if _, err := uuid.ParseUUID(id); err != nil {
+				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			}
+			return nil
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -89,11 +92,16 @@ func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	mailNickname, err := uuid.GenerateUUID()
+	if err != nil {
+		return fmt.Errorf("failed to generate mailNickname: %s", err)
+	}
+
 	properties := graphrbac.GroupCreateParameters{
 		DisplayName:          &name,
-		MailEnabled:          utils.Bool(false),                 // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
-		MailNickname:         utils.String(uuid.New().String()), // this matches the portal behaviour
-		SecurityEnabled:      utils.Bool(true),                  // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
+		MailEnabled:          utils.Bool(false),          // we're defaulting to false, as the API currently only supports the creation of non-mail enabled security groups.
+		MailNickname:         utils.String(mailNickname), // this matches the portal behaviour
+		SecurityEnabled:      utils.Bool(true),           // we're defaulting to true, as the API currently only supports the creation of non-mail enabled security groups.
 		AdditionalProperties: make(map[string]interface{}),
 	}
 

@@ -60,7 +60,7 @@ The following attributes are exported:
 App Roles can be imported using the `object id` of an Application and the `id` of the App Role, e.g.
 
 ```shell
-terraform import azuread_application_app_role.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
+terraform import azuread_application_app_role.test 00000000-0000-0000-0000-000000000000/role/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID and the App Role's ID in the format `{ApplicationObjectId}/{AppRoleId}`.
+-> **NOTE:** This ID format is unique to Terraform and is composed of the Application's Object ID, the string "role" and the App Role's ID in the format `{ApplicationObjectId}/role/{AppRoleId}`.

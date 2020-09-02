@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
@@ -22,9 +24,12 @@ func userResource() *schema.Resource {
 		Update: userResourceUpdate,
 		Delete: userResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			if _, err := uuid.ParseUUID(id); err != nil {
+				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			}
+			return nil
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"user_principal_name": {

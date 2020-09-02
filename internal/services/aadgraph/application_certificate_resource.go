@@ -20,9 +20,10 @@ func applicationCertificateResource() *schema.Resource {
 		Read:   applicationCertificateResourceRead,
 		Delete: applicationCertificateResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := graph.ParseCertificateId(id)
+			return err
+		}),
 
 		Schema: graph.CertificateResourceSchema("application_object_id"),
 	}
@@ -76,7 +77,7 @@ func applicationCertificateResourceRead(d *schema.ResourceData, meta interface{}
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseCredentialId(d.Id())
+	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing certificate credential with ID: %v", err)
 	}
@@ -127,7 +128,7 @@ func applicationCertificateResourceDelete(d *schema.ResourceData, meta interface
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseCredentialId(d.Id())
+	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing certificate credential with ID: %v", err)
 	}

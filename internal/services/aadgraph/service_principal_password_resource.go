@@ -22,9 +22,10 @@ func servicePrincipalPasswordResource() *schema.Resource {
 		Read:   servicePrincipalPasswordResourceRead,
 		Delete: servicePrincipalPasswordResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := graph.ParsePasswordId(id)
+			return err
+		}),
 
 		Schema: graph.PasswordResourceSchema("service_principal_id"),
 
@@ -87,7 +88,7 @@ func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseCredentialId(d.Id())
+	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
@@ -139,7 +140,7 @@ func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interfa
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
 	ctx := meta.(*clients.AadClient).StopContext
 
-	id, err := graph.ParseCredentialId(d.Id())
+	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
 		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
@@ -238,7 +239,7 @@ func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 
 func resourceServicePrincipalPasswordInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
-	newId, err := graph.ParseOldCredentialId(rawState["id"].(string), "password")
+	newId, err := graph.ParseOldPasswordId(rawState["id"].(string))
 	if err != nil {
 		return rawState, fmt.Errorf("generating new ID: %s", err)
 	}

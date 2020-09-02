@@ -44,7 +44,7 @@ func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolin
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Application Key Credential ID: %v", err)
 		}
@@ -79,7 +79,7 @@ func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Application Credential ID: %v", err)
 		}

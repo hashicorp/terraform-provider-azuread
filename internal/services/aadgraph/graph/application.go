@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
@@ -334,7 +333,7 @@ type AppRoleId struct {
 }
 
 func (id AppRoleId) String() string {
-	return id.ObjectId + "/" + id.RoleId
+	return id.ObjectId + "/role/" + id.RoleId
 }
 
 func AppRoleIdFrom(objectId, roleId string) AppRoleId {
@@ -344,23 +343,15 @@ func AppRoleIdFrom(objectId, roleId string) AppRoleId {
 	}
 }
 
-func ParseAppRoleId(id string) (*AppRoleId, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("App Role ID should be in the format {objectId}/{roleId} - but got %q", id)
-	}
-
-	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
-	}
-
-	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return nil, fmt.Errorf("Role ID isn't a valid UUID (%q): %+v", parts[2], err)
+func ParseAppRoleId(idString string) (*AppRoleId, error) {
+	id, err := ParseObjectSubResourceId(idString, "role")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse App Role ID: %v", err)
 	}
 
 	return &AppRoleId{
-		ObjectId: parts[0],
-		RoleId:   parts[1],
+		ObjectId: id.objectId,
+		RoleId:   id.subId,
 	}, nil
 }
 
@@ -464,7 +455,7 @@ type OAuth2PermissionId struct {
 }
 
 func (id OAuth2PermissionId) String() string {
-	return id.ObjectId + "/" + id.PermissionId
+	return id.ObjectId + "/scope/" + id.PermissionId
 }
 
 func OAuth2PermissionIdFrom(objectId, permissionId string) OAuth2PermissionId {
@@ -474,23 +465,15 @@ func OAuth2PermissionIdFrom(objectId, permissionId string) OAuth2PermissionId {
 	}
 }
 
-func ParseOAuth2PermissionId(id string) (*OAuth2PermissionId, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("App Permission ID should be in the format {objectId}/{permissionId} - but got %q", id)
-	}
-
-	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
-	}
-
-	if _, err := uuid.ParseUUID(parts[1]); err != nil {
-		return nil, fmt.Errorf("Permission ID isn't a valid UUID (%q): %+v", parts[2], err)
+func ParseOAuth2PermissionId(idString string) (*OAuth2PermissionId, error) {
+	id, err := ParseObjectSubResourceId(idString, "scope")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse OAuth2 Permission ID: %v", err)
 	}
 
 	return &OAuth2PermissionId{
-		ObjectId:     parts[0],
-		PermissionId: parts[1],
+		ObjectId:     id.objectId,
+		PermissionId: id.subId,
 	}, nil
 }
 

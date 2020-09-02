@@ -23,7 +23,7 @@ func testCheckApplicationPasswordExists(name string) resource.TestCheckFunc { //
 			return fmt.Errorf("Not found: %q", name)
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParsePasswordId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
 		}
@@ -58,7 +58,7 @@ func testCheckApplicationPasswordCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		id, err := graph.ParseCredentialId(rs.Primary.ID)
+		id, err := graph.ParsePasswordId(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
 		}

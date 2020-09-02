@@ -23,9 +23,10 @@ func applicationAppRoleResource() *schema.Resource {
 		Read:   applicationAppRoleResourceRead,
 		Delete: applicationAppRoleResourceDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := graph.ParseAppRoleId(id)
+			return err
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {

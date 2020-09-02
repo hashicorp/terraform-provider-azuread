@@ -150,39 +150,40 @@ func (id CredentialId) String() string {
 	return id.ObjectId + "/" + id.KeyType + "/" + id.KeyId
 }
 
-func ParseCredentialId(id string) (*CredentialId, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 3 {
-		return nil, fmt.Errorf("Credential ID should be in the format {objectId}/{keyType}/{keyId} - but got %q", id)
-	}
-
-	if _, err := uuid.ParseUUID(parts[0]); err != nil {
-		return nil, fmt.Errorf("Object ID isn't a valid UUID (%q): %+v", parts[0], err)
-	}
-
-	if parts[1] != "certificate" && parts[1] != "password" {
-		return nil, fmt.Errorf("Key type should be one of: certificate, password. Got: %q", parts[1])
-	}
-
-	if _, err := uuid.ParseUUID(parts[2]); err != nil {
-		return nil, fmt.Errorf("Key ID isn't a valid UUID (%q): %+v", parts[2], err)
+func ParseCertificateId(idString string) (*CredentialId, error) {
+	id, err := ParseObjectSubResourceId(idString, "certificate")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse Certificate ID: %v", err)
 	}
 
 	return &CredentialId{
-		ObjectId: parts[0],
-		KeyType:  parts[1],
-		KeyId:    parts[2],
+		ObjectId: id.objectId,
+		KeyType:  id.Type,
+		KeyId:    id.subId,
 	}, nil
 }
 
-func ParseOldCredentialId(id, keyType string) (*CredentialId, error) {
-	parts := strings.Split(id, "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("Credential ID expected to be in the format {objectId}/{keyId} - but got %q", id)
+func ParsePasswordId(idString string) (*CredentialId, error) {
+	id, err := ParseObjectSubResourceId(idString, "password")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse Password ID: %v", err)
 	}
 
-	newId := parts[0] + "/" + keyType + "/" + parts[1]
-	return ParseCredentialId(newId)
+	return &CredentialId{
+		ObjectId: id.objectId,
+		KeyType:  id.Type,
+		KeyId:    id.subId,
+	}, nil
+}
+
+func ParseOldPasswordId(id string) (*CredentialId, error) {
+	parts := strings.Split(id, "/")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("Password ID expected to be in the format {objectId}/{keyId} - but got %q", id)
+	}
+
+	newId := parts[0] + "/password/" + parts[1]
+	return ParsePasswordId(newId)
 }
 
 func CredentialIdFrom(objectId, keyType, keyId string) CredentialId {
