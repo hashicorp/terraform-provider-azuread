@@ -209,10 +209,7 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 	d.Set("type", permission.Type)
 	d.Set("user_consent_description", permission.UserConsentDescription)
 	d.Set("user_consent_display_name", permission.UserConsentDisplayName)
-
-	if value := permission.Value; value != nil {
-		d.Set("value", value)
-	}
+	d.Set("value", permission.Value)
 
 	return nil
 }
