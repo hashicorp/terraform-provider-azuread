@@ -145,8 +145,8 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("creating User (%q): %+v", upn, err)
 	}
-	if user.ObjectID == nil {
-		return fmt.Errorf("nil User ID for %q: %+v", upn, err)
+	if user.ObjectID == nil || *user.ObjectID == "" {
+		return fmt.Errorf("nil/blank User ID for %q: %+v", upn, err)
 	}
 	d.SetId(*user.ObjectID)
 

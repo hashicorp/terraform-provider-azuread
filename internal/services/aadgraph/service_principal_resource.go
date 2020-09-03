@@ -94,8 +94,8 @@ func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("creating Service Principal for application  %q: %+v", applicationId, err)
 	}
-	if sp.ObjectID == nil {
-		return fmt.Errorf("Service Principal	objectID is nil")
+	if sp.ObjectID == nil || *sp.ObjectID == "" {
+		return fmt.Errorf("Service Principal	objectID is nil/blank")
 	}
 	d.SetId(*sp.ObjectID)
 

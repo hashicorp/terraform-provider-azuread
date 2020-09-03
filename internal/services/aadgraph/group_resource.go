@@ -113,8 +113,8 @@ func groupResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("creating Group (%q): %+v", name, err)
 	}
-	if group.ObjectID == nil {
-		return fmt.Errorf("nil Group ID for %q: %+v", name, err)
+	if group.ObjectID == nil || *group.ObjectID == "" {
+		return fmt.Errorf("nil/blank Group ID for %q: %+v", name, err)
 	}
 
 	d.SetId(*group.ObjectID)
