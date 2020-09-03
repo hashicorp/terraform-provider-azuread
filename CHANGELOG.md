@@ -1,4 +1,4 @@
-## 1.0.0 (Unreleased)
+## 1.0.0 (September 03, 2020)
 
 NOTES:
 
@@ -7,14 +7,14 @@ NOTES:
 
 FEATURES:
 
-* New resource: `azuread_application_app_role` [GH-150] [GH-306]
-* New resource: `azuread_application_oauth2_permission` [GH-267]
+* New resource: `azuread_application_app_role` ([#150](https://github.com/terraform-providers/terraform-provider-azuread/issues/150)] [[#306](https://github.com/terraform-providers/terraform-provider-azuread/issues/306))
+* New resource: `azuread_application_oauth2_permission` ([#267](https://github.com/terraform-providers/terraform-provider-azuread/issues/267))
 
 BREAKING CHANGES:
 
-* `azuread_application` - a default value for the `homepage` property is no longer derived when unspecified [GH-268]
+* `azuread_application` - a default value for the `homepage` property is no longer derived when unspecified ([#268](https://github.com/terraform-providers/terraform-provider-azuread/issues/268))
 * `azuread_application_password` - the deprecated `application_id` property has been removed
-* `data.azuread_group` - the `name` property is now case-insensitive [GH-246]
+* `data.azuread_group` - the `name` property is now case-insensitive ([#246](https://github.com/terraform-providers/terraform-provider-azuread/issues/246))
 * `data.azuread_groups` and `data.azuread_users` will not error if no results found
 
 ## 0.11.0 (July 09, 2020)
