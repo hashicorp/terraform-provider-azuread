@@ -1,4 +1,22 @@
-## 0.12.0 (Unreleased)
+## 1.0.0 (Unreleased)
+
+NOTES:
+
+* **Major Version:** This is a major version upgrade which contains some breaking changes as detailed below.
+* **Terraform 0.10/0.11:** This version of the provider requires Terraform 0.12.x or later and will not work with earlier versions.
+
+FEATURES:
+
+* New resource: `azuread_application_app_role` [GH-150] [GH-306]
+* New resource: `azuread_application_oauth2_permission` [GH-267]
+
+BREAKING CHANGES:
+
+* `azuread_application` - a default value for the `homepage` property is no longer derived when unspecified [GH-268]
+* `azuread_application_password` - the deprecated `application_id` property has been removed
+* `data.azuread_group` - the `name` property is now case-insensitive [GH-246]
+* `data.azuread_groups` and `data.azuread_users` will not error if no results found
+
 ## 0.11.0 (July 09, 2020)
 
 IMPROVEMENTS:
