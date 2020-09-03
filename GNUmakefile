@@ -1,6 +1,7 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 WEBSITE_REPO=github.com/hashicorp/terraform-website
-PKG_NAME=azuread
+PKG_NAME=internal
+PROVIDER=azuread
 
 
 .EXPORT_ALL_VARIABLES:
@@ -33,7 +34,7 @@ fmtcheck:
 
 goimports:
 	@echo "==> Fixing imports code with goimports..."
-	goimports -local "github.com/terraform-providers/terraform-provider-azuread/azuread" -w $(PKG_NAME)/
+	goimports -local "github.com/terraform-providers/terraform-provider-azuread" -w $(PKG_NAME)/
 
 lint:
 	@echo "==> Checking source code against linters..."
@@ -74,6 +75,9 @@ test: fmtcheck
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 180m -ldflags="-X=github.com/terraform-providers/terraform-provider-azuread/version.ProviderVersion=acc"
 
+acctests: fmtcheck
+	TF_ACC=1 go test -v ./internal/services/$(SERVICE)/tests/ $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/terraform-providers/terraform-provider-azuread/version.ProviderVersion=acc"
+
 debugacc: fmtcheck
 	TF_ACC=1 dlv test $(TEST) --headless --listen=:2345 --api-version=2 -- -test.v $(TESTARGS)
 
@@ -105,6 +109,6 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
 endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PROVIDER)
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test

@@ -36,3 +36,6 @@ website/vendor
 
 # goenv version file
 .go-version
+
+# built binary
+terraform-provider-azuread
