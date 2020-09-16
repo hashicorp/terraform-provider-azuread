@@ -21,14 +21,15 @@ func (r Registration) WebsiteCategories() []string {
 // SupportedDataSources returns the supported Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_application":       applicationData(),
-		"azuread_domains":           domainsData(),
-		"azuread_client_config":     clientConfigData(),
-		"azuread_group":             groupData(),
-		"azuread_groups":            groupsData(),
-		"azuread_service_principal": servicePrincipalData(),
-		"azuread_user":              userData(),
-		"azuread_users":             usersData(),
+		"azuread_application":        applicationData(),
+		"azuread_domains":            domainsData(),
+		"azuread_client_config":      clientConfigData(),
+		"azuread_group":              groupData(),
+		"azuread_group_availability": groupAvailabilityData(),
+		"azuread_groups":             groupsData(),
+		"azuread_service_principal":  servicePrincipalData(),
+		"azuread_user":               userData(),
+		"azuread_users":              usersData(),
 	}
 }
 
