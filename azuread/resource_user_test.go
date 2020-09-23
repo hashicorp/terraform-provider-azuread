@@ -64,9 +64,22 @@ func TestAccAzureADUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttrSet(rn, "user_principal_name"),
 					resource.TestCheckResourceAttrSet(rn, "object_id"),
 					resource.TestCheckResourceAttr(rn, "display_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "given_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "surname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "mail_nickname", fmt.Sprintf("acctestUser-%d-Updated", id)),
 					resource.TestCheckResourceAttr(rn, "account_enabled", "false"),
 					resource.TestCheckResourceAttr(rn, "immutable_id", strconv.Itoa(id)),
+					resource.TestCheckResourceAttr(rn, "immutable_id", strconv.Itoa(id)),
+					resource.TestCheckResourceAttr(rn, "job_title", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "department", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "company_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "street_address", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "physical_delivery_office_name", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "state", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "country", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "city", fmt.Sprintf("acctestUser-%d-Updated", id)),
+					resource.TestCheckResourceAttr(rn, "postal_code", "111111"),
+					resource.TestCheckResourceAttr(rn, "mobile", "(555) 555-5555"),
 				),
 			},
 			{
@@ -200,14 +213,26 @@ data "azuread_domains" "tenant_domain" {
 }
 
 resource "azuread_user" "test" {
-  user_principal_name   = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name          = "acctestUser-%[1]d-Updated"
-  mail_nickname         = "acctestUser-%[1]d-Updated"
-  account_enabled       = false
-  password              = "%[2]s"
-  force_password_change = true
-  usage_location        = "NO"
-  immutable_id          = "%[1]d"
+  user_principal_name           = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  display_name                  = "acctestUser-%[1]d-Updated"
+  given_name                    = "acctestUser-%[1]d-Updated"
+  surname                       = "acctestUser-%[1]d-Updated"
+  mail_nickname                 = "acctestUser-%[1]d-Updated"
+  account_enabled               = false
+  password                      = "%[2]s"
+  force_password_change         = true
+  usage_location                = "NO"
+  immutable_id                  = "%[1]d"
+  job_title                     = "acctestUser-%[1]d-Updated"
+  department                    = "acctestUser-%[1]d-Updated"
+  company_name                  = "acctestUser-%[1]d-Updated"
+  street_address                = "acctestUser-%[1]d-Updated"
+  physical_delivery_office_name = "acctestUser-%[1]d-Updated"
+  state                         = "acctestUser-%[1]d-Updated"
+  country                       = "acctestUser-%[1]d-Updated"
+  city                          = "acctestUser-%[1]d-Updated"
+  postal_code                   = "111111"
+  mobile                        = "(555) 555-5555"
 }
 `, id, password)
 }
