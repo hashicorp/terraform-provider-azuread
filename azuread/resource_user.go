@@ -105,30 +105,35 @@ func resourceUser() *schema.Resource {
 			"job_title": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The user’s job title.",
 			},
 
 			"given_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The given name (first name) of the user.",
 			},
 
 			"surname": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The user's surname (family name or last name).",
 			},
 
 			"department": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The name for the department in which the user works.",
 			},
 
 			"company_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "The company name which the user is associated. " +
 					"This property can be useful for describing the company that an external user comes from.",
 			},
@@ -136,36 +141,42 @@ func resourceUser() *schema.Resource {
 			"street_address": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The street address of the user's place of business.",
 			},
 
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The state or province in the user's address.",
 			},
 
 			"country": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The country/region in which the user is located; for example, “US” or “UK”.",
 			},
 
 			"physical_delivery_office_name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The office location in the user's place of business.",
 			},
 
 			"mobile": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The primary cellular telephone number for the user.",
 			},
 
 			"postal_code": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: "The postal code for the user's postal address. The postal code is specific to the user's country/region. " +
 					"In the United States of America, this attribute contains the ZIP code.",
 			},
@@ -173,6 +184,7 @@ func resourceUser() *schema.Resource {
 			"city": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The city/region in which the user is located; for example, “US” or “UK”.",
 			},
 		},
