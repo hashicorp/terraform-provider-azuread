@@ -329,7 +329,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	// After creating the application, we update it later before this function returns, including any Oauth2Permissions
 	properties := graphrbac.ApplicationCreateParameters{
 		DisplayName:             &name,
-		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
+		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.(*schema.Set).List()),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
 		AvailableToOtherTenants: utils.Bool(d.Get("available_to_other_tenants").(bool)),
 		RequiredResourceAccess:  expandApplicationRequiredResourceAccess(d),
@@ -448,7 +448,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("identifier_uris") {
-		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
+		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List())
 	}
 
 	if d.HasChange("reply_urls") {
