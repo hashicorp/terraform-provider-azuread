@@ -422,7 +422,7 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	if d.Get("prevent_duplicate_names").(bool) {
+	if d.HasChange("name") && d.Get("prevent_duplicate_names").(bool) {
 		err := graph.ApplicationCheckNameAvailability(ctx, client, name)
 		if err != nil {
 			return err
