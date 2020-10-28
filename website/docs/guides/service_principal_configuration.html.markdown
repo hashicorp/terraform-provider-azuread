@@ -58,7 +58,7 @@ The choice of which directory roles to assign will be specific to your organisat
 
 This method involves granting API scopes to your Application, and then granting consent for your Application to access the APIs in its own capacity (i.e. not on behalf of a user).
 
-Navigate to the [**Azure Active Directory** overview][azure-portal-aad-overview] within the [Azure Portal][azure-portal] and select the [**App Registrations** blade][azure-portal-applications-blade]. Locate your registered Application and click on its display name to manage it.
+Navigate to the [**Azure Active Directory** overview][azure-portal-aad-overview] within the [Azure Portal][azure-portal] and select the [**App Registrations** blade][azure-portal-add-applications-blade]. Locate your registered Application and click on its display name to manage it.
 
 Go to the API Permissions blade for the Application and click the "Add a permission" button. In the pane that opens, select "Azure Active Directory Graph" (under the Supported Legacy APIs subheading). Do not select "Microsoft Graph", as the provider does not currently make use of this API.
 
@@ -78,3 +78,4 @@ The Application now has permission to administer your Azure Active Directory ten
 [azure-portal]: https://portal.azure.com/
 [azure-portal-aad-overview]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview
 [azure-portal-aad-roles-blade]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RolesAndAdministrators
+[azure-portal-add-applications-blade]: https://portal.azure.com#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps
