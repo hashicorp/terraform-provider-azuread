@@ -1,4 +1,9 @@
 ## 1.1.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update.
+
 ## 1.0.0 (September 03, 2020)
 
 NOTES:
