@@ -109,7 +109,7 @@ The following arguments are supported:
 
 * `name` - (Required) The display name for the application.
 
-* `homepage` - (optional) The URL to the application's home page. If no homepage is specified this defaults to `https://{name}`.
+* `homepage` - (optional) The URL to the application's home page.
 
 * `identifier_uris` - (Optional) A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 
