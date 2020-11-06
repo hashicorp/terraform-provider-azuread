@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# Data Source: azuread_user
+# Data Source: azuread_users
 
 Gets Object IDs or UPNs for multiple Azure Active Directory users.
 
@@ -48,7 +48,7 @@ ___
 
 The `user` object consists of:
 
-* `id` - The Object ID of the Azure AD User.
+* `object_id` - The Object ID of the Azure AD User.
 * `user_principal_name` - The User Principal Name of the Azure AD User.
 * `account_enabled` - `True` if the account is enabled; otherwise `False`.
 * `display_name` - The Display Name of the Azure AD User.
