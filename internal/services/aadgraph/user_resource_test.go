@@ -72,6 +72,13 @@ func TestAccUser_update(t *testing.T) {
 				),
 			},
 			data.ImportStep("force_password_change", "password"),
+			{
+				Config: testAccUser_basic(data.RandomInteger, data.RandomPassword),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckUserExists(data.ResourceName),
+				),
+			},
+			data.ImportStep("force_password_change", "password"),
 		},
 	})
 }
@@ -169,13 +176,28 @@ data "azuread_domains" "tenant_domain" {
 
 resource "azuread_user" "test" {
   user_principal_name   = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name          = "acctestUser-%[1]d-Updated"
-  mail_nickname         = "acctestUser-%[1]d-Updated"
-  account_enabled       = false
-  password              = "%[2]s"
   force_password_change = true
-  usage_location        = "NO"
-  immutable_id          = "%[1]d"
+
+  display_name    = "acctestUser-%[1]d-Updated"
+  given_name      = "acctestUser-%[1]d-GivenName"
+  surname         = "acctestUser-%[1]d-Surname"
+  mail_nickname   = "acctestUser-%[1]d-Updated"
+  account_enabled = false
+  password        = "%[2]s"
+  usage_location  = "NO"
+  immutable_id    = "%[1]d"
+
+  job_title      = "acctestUser-%[1]d-Job"
+  department     = "acctestUser-%[1]d-Dept"
+  company_name   = "acctestUser-%[1]d-Company"
+  street_address = "acctestUser-%[1]d-Street"
+  state          = "acctestUser-%[1]d-State"
+  city           = "acctestUser-%[1]d-City"
+  country        = "acctestUser-%[1]d-Country"
+  postal_code    = "111111"
+  mobile         = "(555) 555-5555"
+
+  physical_delivery_office_name = "acctestUser-%[1]d-PDON"
 }
 `, id, password)
 }
