@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -136,6 +137,22 @@ func AzureADProvider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
 				Description: "The path to a custom endpoint for Managed Service Identity - in most circumstances this should be detected automatically. ",
 			},
+
+			// Managed Tracking GUID for User-agent
+			"partner_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.Any(validation.IsUUID, validation.StringIsEmpty),
+				DefaultFunc:  schema.EnvDefaultFunc("ARM_PARTNER_ID", ""),
+				Description:  "A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution.",
+			},
+
+			"disable_terraform_partner_id": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
+				Description: "Disable the Terraform Partner ID which is used if a custom `partner_id` isn't specified.",
+			},
 		},
 
 		ResourcesMap:   resources,
@@ -181,8 +198,10 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		}
 
 		clientBuilder := clients.ClientBuilder{
-			AuthConfig:       config,
-			TerraformVersion: terraformVersion,
+			AuthConfig:                config,
+			PartnerID:                 d.Get("partner_id").(string),
+			DisableTerraformPartnerID: d.Get("disable_terraform_partner_id").(bool),
+			TerraformVersion:          terraformVersion,
 		}
 
 		client, err := clientBuilder.Build(p.StopContext())
