@@ -76,25 +76,28 @@ func AzureADProvider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_ID", ""),
+				Description: "The Client ID which should be used for service principal authentication.",
 			},
 
 			"tenant_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_TENANT_ID", ""),
+				Description: "The Tenant ID which should be used. Works with all authentication methods except MSI.",
 			},
 
 			"metadata_host": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
-				Description: "The Hostname which should be used to fetch environment metadata from.",
+				Description: "The Hostname which should be used for the Azure Metadata Service.",
 			},
 
 			"environment": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
+				Description: "The Cloud Environment which should be used. Possible values are `public`, `usgovernment`, `german`, and `china`. Defaults to `public`.",
 			},
 
 			// Client Certificate specific fields
@@ -108,6 +111,7 @@ func AzureADProvider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PATH", ""),
+				Description: "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate.",
 			},
 
 			// Client Secret specific fields
@@ -115,6 +119,7 @@ func AzureADProvider() terraform.ResourceProvider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
+				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
 			},
 
 			// Managed Service Identity specific fields
@@ -122,12 +127,14 @@ func AzureADProvider() terraform.ResourceProvider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_MSI", false),
+				Description: "Allow Managed Service Identity to be used for Authentication.",
 			},
 
 			"msi_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
+				Description: "The path to a custom endpoint for Managed Service Identity - in most circumstances this should be detected automatically. ",
 			},
 		},
 

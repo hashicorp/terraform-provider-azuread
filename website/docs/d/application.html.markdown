@@ -32,7 +32,7 @@ output "azure_ad_object_id" {
 
 * `name` - (Optional) Specifies the name of the Application within Azure Active Directory.
 
--> **NOTE:** One of `object_id`, `application_id` or `name` must be specified.
+~> **NOTE:** One of `object_id`, `application_id` or `name` must be specified.
 
 ## Attributes Reference
 

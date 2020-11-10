@@ -11,7 +11,7 @@ description: |-
 
 Terraform supports a number of different methods for authenticating to Azure:
 
-* Authenticating to Azure using the Azure CLI (which is covered in this guide)
+* Authenticating to Azure using the Azure CLI (covered in this guide)
 * [Authenticating to Azure using Managed Service Identity](managed_service_identity.html)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
@@ -88,8 +88,8 @@ No specific configuration is required for the provider to use Azure CLI authenti
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 }
 ```
 
@@ -97,8 +97,8 @@ If you're looking to use Terraform across Tenants - it's possible to do this by 
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 
   tenant_id = "10000000-2000-3000-4000-500000000000"
 }

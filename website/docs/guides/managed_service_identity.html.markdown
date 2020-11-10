@@ -12,7 +12,7 @@ description: |-
 Terraform supports a number of different methods for authenticating to Azure:
 
 * [Authenticating to Azure using the Azure CLI](azure_cli.html)
-* Authenticating to Azure using Managed Service Identity (which is covered in this guide)
+* Authenticating to Azure using Managed Service Identity (covered in this guide)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
@@ -22,11 +22,13 @@ We recommend using either a Service Principal or Managed Service Identity when r
 
 Once you have configured a Service Principal as described in this guide, you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
-## What is Managed Service Identity?
+## What is Managed Service Identity?
 
 Certain services within Azure (for example Virtual Machines and Virtual Machine Scale Sets) can be assigned an Azure Active Directory identity. This identity can then be granted permissions to manage objects in Azure Active Directory.
 
 Once a resource is configured with an identity, a local metadata service exposes credentials which can be used by applications such as Terraform.
+
+When using a Managed Service Identity, you can only manage resources in the tenant where the corresponding service principal is homed. If you need to manage multiple tenants from the same location, we suggest using Service Principal Authentication with a [client certificate](service_principal_client_certificate.html) or [client secret](service_principal_client_secret.html) so that you can specify different credentials for each tenant.
 
 ## Configuring Managed Service Identity
 
@@ -68,12 +70,12 @@ $ export ARM_USE_MSI=true
 
 -> **Using a Custom MSI Endpoint?** In the unlikely event you're using a custom endpoint for Managed Service Identity - this can be configured using the `ARM_MSI_ENDPOINT` Environment Variable - however this shouldn't need to be configured in regular use.
 
-Whilst a Provider block is _technically_ optional when using Environment Variables - we'd strongly recommend defining one to be able to pin the version of the Provider being used:
+Whilst a Provider block is _technically_ optional when using Environment Variables - we'd strongly recommend defining one to be able to pin the version of the Provider to be used:
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 }
 ```
 
@@ -85,12 +87,12 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 
 ---
 
-It's also possible to configure Managed Service Identity within the Provider Block:
+It's also possible to enable Managed Service Identity within the Provider Block:
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 
   use_msi = true
 }

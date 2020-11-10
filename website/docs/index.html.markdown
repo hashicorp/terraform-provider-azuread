@@ -79,7 +79,7 @@ If you have configuration questions, or general questions about using the provid
 
 The following arguments are supported:
 
-* `client_id` - (Optional) The Client ID which should be used. This can also be sourced from the `ARM_CLIENT_ID` Environment Variable.
+* `client_id` - (Optional) The Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID` Environment Variable.
 
 * `environment` - (Optional) The Cloud Environment which be used. Possible values are `public`, `usgovernment`, `german` and `china`. Defaults to `public`. This can also be sourced from the `ARM_ENVIRONMENT` environment variable.
 
@@ -114,5 +114,13 @@ When authenticating using Managed Service Identity, the following fields can be 
 More information on [how to configure a Service Principal using Managed Service Identity can be found in this guide](guides/managed_service_identity.html).
 
 ---
+
+## Advanced Usage
+
+For more advanced scenarios, the following additional arguments are supported:
+
+* `metadata_host` - (Optional) The Hostname of the Azure Metadata Service (for example `management.azure.com`), used to obtain the Cloud Environment when using a Custom Azure Environment. This can also be sourced from the `ARM_METADATA_HOST` Environment Variable.
+
+~> **Note:** `environment` must be set to the requested environment name in the list of available environments held in the `metadata_host`.
 
 It's also possible to use multiple Provider blocks within a single Terraform configuration, for example to work with resources across multiple Azure Active Directory Environments - more information can be found [in the documentation for Providers](https://www.terraform.io/docs/configuration/providers.html#multiple-provider-instances).
