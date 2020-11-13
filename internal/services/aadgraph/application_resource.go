@@ -212,7 +212,6 @@ func applicationResource() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				MinItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
@@ -404,9 +403,9 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// there is a default owner that we must account so use this shared function
-	if v, ok := d.GetOk("owners"); ok {
-		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, members); err != nil {
+	if v, ok := d.GetOkExists("owners"); ok {
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, desiredOwners); err != nil {
 			return err
 		}
 	}
