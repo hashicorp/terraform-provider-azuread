@@ -13,7 +13,6 @@ type AadClient struct {
 	// todo move this to an "Account" struct as in azurerm?
 	ClientID         string
 	ObjectID         string
-	SubscriptionID   string
 	TenantID         string
 	TerraformVersion string
 	Environment      azure.Environment

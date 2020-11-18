@@ -13,15 +13,14 @@ import (
 )
 
 type ClientBuilder struct {
-	AuthConfig                *authentication.Config
-	DisableTerraformPartnerID bool
-	PartnerID                 string
-	TerraformVersion          string
+	AuthConfig       *authentication.Config
+	PartnerID        string
+	TerraformVersion string
 }
 
 // Build is a helper method which returns a fully instantiated *AadClient based on the auth Config's current settings.
 func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
-	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, b.AuthConfig.MetadataURL, b.AuthConfig.Environment)
+	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, b.AuthConfig.MetadataHost, b.AuthConfig.Environment)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +37,6 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 
 	// client declarations:
 	client := AadClient{
-		SubscriptionID:   b.AuthConfig.SubscriptionID,
 		ClientID:         b.AuthConfig.ClientID,
 		ObjectID:         objectID,
 		TenantID:         b.AuthConfig.TenantID,
@@ -56,11 +54,10 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 	}
 
 	o := &services.ClientOptions{
-		DisableTerraformPartnerID: b.DisableTerraformPartnerID,
-		PartnerID:                 b.PartnerID,
-		TenantID:                  b.AuthConfig.TenantID,
-		TerraformVersion:          b.TerraformVersion,
-		Environment:               *env,
+		PartnerID:        b.PartnerID,
+		TenantID:         b.AuthConfig.TenantID,
+		TerraformVersion: b.TerraformVersion,
+		Environment:      *env,
 	}
 
 	// Graph Endpoints
