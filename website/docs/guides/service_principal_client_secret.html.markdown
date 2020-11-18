@@ -79,7 +79,7 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 
 It's also possible to configure these variables either in-line or from using variables in Terraform (as the `client_secret` is in this example), like so:
 
-~> **NOTE:** We'd recommend not defining these variables in-line since they could easily be checked into Source Control.
+~> We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
 ```hcl
 variable "client_secret" {}

@@ -16,10 +16,6 @@ Terraform supports a number of different methods for authenticating to Azure:
 * Authenticating to Azure using a Service Principal and a Client Certificate (covered in this guide)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
-Further steps must be taken to grant a Service Principal permission to manage objects in an Azure Active Directory:
- 
-[Granting a Service Principal permission to manage AAD](service_principal_configuration.html)
-
 ---
 
 We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
@@ -114,7 +110,7 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 
 It's also possible to configure these variables either in-line or from using variables in Terraform (as the `client_certificate_path` and `client_certificate_password` are in this example), like so:
 
-~> **NOTE:** We'd recommend not defining these variables in-line since they could easily be checked into Source Control.
+~> We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
 ```hcl
 variable "client_certificate_path" {}
