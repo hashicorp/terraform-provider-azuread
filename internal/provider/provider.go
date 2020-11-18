@@ -14,6 +14,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph"
 )
 
+// Microsoft’s Terraform Partner ID is this specific GUID
+const terraformPartnerId = "222c6c49-1b0a-5959-a213-6608f9eb8820"
+
 type ServiceRegistration interface {
 	// Name is the name of this Service
 	Name() string
@@ -170,8 +173,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
 			TenantID:           d.Get("tenant_id").(string),
-			SubscriptionID:     d.Get("tenant_id").(string), // TODO: delete in v1.1
-			MetadataURL:        d.Get("metadata_host").(string),
+			MetadataHost:       d.Get("metadata_host").(string),
 			Environment:        d.Get("environment").(string),
 			MsiEndpoint:        d.Get("msi_endpoint").(string),
 			ClientCertPassword: d.Get("client_certificate_password").(string),
@@ -182,39 +184,43 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 			SupportsClientSecretAuth:       true,
 			SupportsManagedServiceIdentity: d.Get("use_msi").(bool),
 			SupportsAzureCliToken:          true,
-			//TenantOnly:                     true, // TODO: enable in v1.1
+			TenantOnly:                     true,
 		}
 
-		config, err := builder.Build()
-		if err != nil {
-			return nil, fmt.Errorf("building AzureAD Client: %s", err)
+		// only one pid can be interpreted currently
+		// hence, send partner ID if present, otherwise send Terraform GUID
+		// unless users have opted out
+		partnerId := d.Get("partner_id").(string)
+		if partnerId == "" && !d.Get("disable_terraform_partner_id").(bool) {
+			partnerId = terraformPartnerId
 		}
 
-		terraformVersion := p.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
-
-		clientBuilder := clients.ClientBuilder{
-			AuthConfig:                config,
-			PartnerID:                 d.Get("partner_id").(string),
-			DisableTerraformPartnerID: d.Get("disable_terraform_partner_id").(bool),
-			TerraformVersion:          terraformVersion,
-		}
-
-		client, err := clientBuilder.Build(p.StopContext())
-		if err != nil {
-			return nil, err
-		}
-
-		// replaces the context between tests
-		p.MetaReset = func() error { //nolint unparam
-			client.StopContext = p.StopContext()
-			return nil
-		}
-
-		return client, nil
+		return buildClient(p, builder, partnerId)
 	}
+}
+
+func buildClient(p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.AadClient, error) {
+	config, err := b.Build()
+	if err != nil {
+		return nil, fmt.Errorf("building AzureAD Client: %s", err)
+	}
+
+	clientBuilder := clients.ClientBuilder{
+		AuthConfig:       config,
+		PartnerID:        partnerId,
+		TerraformVersion: p.TerraformVersion,
+	}
+
+	client, err := clientBuilder.Build(p.StopContext())
+	if err != nil {
+		return nil, err
+	}
+
+	// replaces the context between tests
+	p.MetaReset = func() error { //nolint unparam
+		client.StopContext = p.StopContext()
+		return nil
+	}
+
+	return client, nil
 }
