@@ -18,10 +18,16 @@ tools:
 	GO111MODULE=off go get -u github.com/bflad/tfproviderlint/cmd/tfproviderlintx
 	GO111MODULE=off go get -u github.com/bflad/tfproviderdocs
 	GO111MODULE=off go get -u github.com/katbyte/terrafmt
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$GOPATH/bin v1.27.0
+	GO111MODULE=off go get -u mvdan.cc/gofumpt
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH || $$GOPATH)/bin v1.32.0
 
 build: fmtcheck
 	go install
+
+fumpt:
+	@echo "==> Fixing source code with gofmt..."
+	# This logic should match the search logic in scripts/gofmtcheck.sh
+	find . -name '*.go' | grep -v vendor | xargs gofumpt -s -w
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -70,7 +76,7 @@ depscheck:
 test: fmtcheck
 	go test -i $(TEST) || exit 1
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=10
 
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 180m -ldflags="-X=github.com/terraform-providers/terraform-provider-azuread/version.ProviderVersion=acc"
@@ -107,8 +113,12 @@ endif
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
+	git clone https://$(WEBSITE_REPO) $$(go env GOPATH || $$GOPATH)/src/$(WEBSITE_REPO)
 endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PROVIDER)
+	@$(MAKE) -C $$(go env GOPATH || $$GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PROVIDER)
+
+teamcity-test:
+	@$(MAKE) -C .teamcity tools
+	@$(MAKE) -C .teamcity test
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
