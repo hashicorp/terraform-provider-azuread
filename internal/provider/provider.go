@@ -14,6 +14,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph"
 )
 
+var unusedVar string = "Test edit for triggering github actions"
+
 type ServiceRegistration interface {
 	// Name is the name of this Service
 	Name() string
