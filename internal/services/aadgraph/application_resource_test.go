@@ -522,6 +522,51 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	})
 }
 
+func TestAccApplication_ownersUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplication_removeOwners(data.RandomInteger, pw),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "owners.#", "0"),
+				),
+			},
+			data.ImportStep(),
+			{
+				Config: testAccApplication_singleOwner(data.RandomInteger, pw),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "owners.#", "1"),
+				),
+			},
+			data.ImportStep(),
+			{
+				Config: testAccApplication_threeOwners(data.RandomInteger, pw),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "owners.#", "3"),
+				),
+			},
+			data.ImportStep(),
+			{
+				Config: testAccApplication_removeOwners(data.RandomInteger, pw),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "owners.#", "0"),
+				),
+			},
+			data.ImportStep(),
+		},
+	})
+}
+
 func testCheckApplicationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -886,4 +931,43 @@ resource "azuread_application" "test" {
   }
 }
 `, ri)
+}
+
+func testAccApplication_singleOwner(ri int, pw string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "test" {
+  name = "acctest-APP-%[2]d"
+  owners = [
+    azuread_user.testA.object_id,
+  ]
+}
+`, testAccUser_threeUsersABC(ri, pw), ri)
+}
+
+func testAccApplication_threeOwners(ri int, pw string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "test" {
+  name = "acctest-APP-%[2]d"
+  owners = [
+    azuread_user.testA.object_id,
+    azuread_user.testB.object_id,
+    azuread_user.testC.object_id,
+  ]
+}
+`, testAccUser_threeUsersABC(ri, pw), ri)
+}
+
+func testAccApplication_removeOwners(ri int, pw string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "test" {
+  name   = "acctest-APP-%[2]d"
+  owners = []
+}
+`, testAccUser_threeUsersABC(ri, pw), ri)
 }
