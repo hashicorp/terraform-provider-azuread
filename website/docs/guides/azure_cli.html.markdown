@@ -7,6 +7,8 @@ description: |-
 
 ---
 
+TEST
+
 # Azure Active Directory Provider: Authenticating using the Azure CLI
 
 Terraform supports a number of different methods for authenticating to Azure:
