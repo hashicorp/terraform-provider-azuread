@@ -17,6 +17,7 @@ type ClientBuilder struct {
 	DisableTerraformPartnerID bool
 	PartnerID                 string
 	TerraformVersion          string
+	TestField                 bool
 }
 
 // Build is a helper method which returns a fully instantiated *AadClient based on the auth Config's current settings.
