@@ -53,9 +53,7 @@ The following arguments are supported:
 
 -> **NOTE:** Group names are not unique within Azure Active Directory.
 
--> **NOTE:** Do not use `azuread_group_member` at the same time as the `members` argument.
-
--> **NOTE:** Do not use `azuread_group_owner` at the same time as the `owners` argument.
+~> **NOTE:** Do not use the `azuread_group_member` resource at the same time as the `members` argument.
 
 ## Attributes Reference
 

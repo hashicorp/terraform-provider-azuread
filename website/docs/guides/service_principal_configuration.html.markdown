@@ -16,10 +16,6 @@ Terraform supports a number of different methods for authenticating to Azure:
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
-Further steps must be taken to grant a Service Principal permission to manage objects in an Azure Active Directory:
-
-* Granting a Service Principal permission to manage AAD (which is covered in this guide) 
-
 ---
 
 We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
@@ -48,11 +44,13 @@ Click "Add assignments" and type the name of your Service Principal in the searc
 
 The choice of which directory roles to assign will be specific to your organisations Commonly used roles include:
 
-- `Global Administrator` - Effective superuser permissions to administer any object in your AAD tenant. Sometimes called `Company Administrator`.
-- `Global Reader` - Commonly used in conjunction with other roles to allow reading, but not writing, of directory data.
-- `Application Administrator` - Create and manage applications, service principals (enterprise applications) and application proxy.
-- `Groups Administrator` - Create and manage groups.
-- `User Administrator` - Create and manage users _and_ groups.
+Role                        | Description
+--------------------------- | -----------------------------------------------------------------------------------------------------------------------
+`Global Administrator`      | Effective superuser permissions to administer any object in your AAD tenant. Sometimes called `Company Administrator`.
+`Global Reader`             | Commonly used in conjunction with other roles to allow reading, but not writing, of directory data.
+`Application Administrator` | Create and manage applications, service principals (enterprise applications) and application proxy.
+`Groups Administrator`      | Create and manage groups.
+`User Administrator`        | Create and manage users _and_ groups.
 
 ### Method 2: API access with admin consent
 

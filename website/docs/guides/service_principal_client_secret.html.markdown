@@ -14,7 +14,7 @@ Terraform supports a number of different methods for authenticating to Azure:
 * [Authenticating to Azure using the Azure CLI](azure_cli.html)
 * [Authenticating to Azure using Managed Service Identity](managed_service_identity.html)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
-* Authenticating to Azure using a Service Principal and a Client Secret (which is covered in this guide)
+* Authenticating to Azure using a Service Principal and a Client Secret (covered in this guide)
 
 ---
 
@@ -60,12 +60,12 @@ $ export ARM_CLIENT_SECRET="00000000-0000-0000-0000-000000000000"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 ```
 
-The following Provider block can be specified - where `0.10.0` is the version of the AzureAD Provider that you'd like to use:
+The following Provider block can be specified - where `1.1.0` is the version of the AzureAD Provider that you'd like to use:
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 }
 ```
 
@@ -79,17 +79,17 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 
 It's also possible to configure these variables either in-line or from using variables in Terraform (as the `client_secret` is in this example), like so:
 
-~> **NOTE:** We'd recommend not defining these variables in-line since they could easily be checked into Source Control.
+~> We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
 ```hcl
 variable "client_secret" {}
 
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=0.10.0"
+  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
+  version = "=1.1.0"
 
   client_id     = "00000000-0000-0000-0000-000000000000"
-  client_secret = "${var.client_secret}"
+  client_secret = var.client_secret
   tenant_id     = "10000000-2000-3000-4000-500000000000"
 }
 ```

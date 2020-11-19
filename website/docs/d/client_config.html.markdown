@@ -3,12 +3,12 @@ subcategory: "Base"
 layout: "azuread"
 page_title: "Azure Active Directory: azuread_client_config"
 description: |-
-  Gets information about the configuration of the azuread provider.
+  Gets information about the configuration of the AzureAD provider.
 ---
 
 # Data Source: azuread_client_config
 
-Use this data source to access the configuration of the AzureRM provider.
+Use this data source to access the configuration of the AzureAD provider.
 
 ## Example Usage
 
@@ -27,7 +27,6 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-* `client_id` is set to the Azure Client ID (Application Object ID).
-* `tenant_id` is set to the Azure Tenant ID.
-* `subscription_id` is set to the Azure Subscription ID.
-* `object_id` is set to the Azure Object ID.
+* `client_id` is set to the Client ID (Application ID).
+* `tenant_id` is set to the Tenant ID.
+* `object_id` is set to the Object ID of the authenticated principal.

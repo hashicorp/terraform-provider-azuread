@@ -14,6 +14,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/version"
 )
 
+const terraformPartnerID = "222c6c49-1b0a-5959-a213-6608f9eb8820"
+
 type ClientOptions struct {
 	TenantID    string
 	Environment azure.Environment
@@ -48,7 +50,7 @@ func setUserAgent(client *autorest.Client, tfVersion, partnerID string, disableT
 	// unless users have opted out
 	if partnerID == "" && !disableTerraformPartnerID {
 		// Microsoft’s Terraform Partner ID is this specific GUID
-		partnerID = "222c6c49-1b0a-5959-a213-6608f9eb8820"
+		partnerID = terraformPartnerID
 	}
 
 	if partnerID != "" {

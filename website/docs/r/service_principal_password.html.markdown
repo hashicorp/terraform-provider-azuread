@@ -48,7 +48,7 @@ The following arguments are supported:
 
 * `end_date_relative` - (Optional) A relative duration for which the Password is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". Changing this field forces a new resource to be created.
 
--> **NOTE:** One of `end_date` or `end_date_relative` must be set.
+~> **NOTE:** One of `end_date` or `end_date_relative` must be set.
 
 * `key_id` - (Optional) A GUID used to uniquely identify this Key. If not specified a GUID will be created. Changing this field forces a new resource to be created.
 
@@ -63,7 +63,7 @@ The following attributes are exported:
 
 ## Import
 
-PPasswords can be imported using the `object id` of a Service Principal and the `key id` of the password, e.g.
+Passwords can be imported using the `object id` of a Service Principal and the `key id` of the password, e.g.
 
 ```shell
 terraform import azuread_service_principal_password.test 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111

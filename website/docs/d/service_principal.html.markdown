@@ -47,7 +47,7 @@ The following arguments are supported:
 
 * `display_name` - (Optional) The Display Name of the Azure AD Application associated with this Service Principal.
 
--> **NOTE:** At least one of `application_id`, `display_name` or `object_id` must be specified.
+~> **NOTE:** At least one of `application_id`, `display_name` or `object_id` must be specified.
 
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 

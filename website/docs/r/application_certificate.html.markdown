@@ -42,7 +42,7 @@ The following arguments are supported:
 
 * `end_date_relative` - (Optional) A relative duration for which the Certificate is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created.
 
--> **NOTE:** One of `end_date` or `end_date_relative` must be set. The maximum duration is one year.
+~> **NOTE:** One of `end_date` or `end_date_relative` must be set. The maximum duration is one year.
 
 * `key_id` - (Optional) A GUID used to uniquely identify this Certificate. If not specified a GUID will be created. Changing this field forces a new resource to be created.
 

@@ -29,7 +29,7 @@ The following arguments are supported:
 
 * `object_id` - (Optional) Specifies the Object ID of the AD Group within Azure Active Directory.
 
--> **NOTE:** Either a `name` or an `object_id` must be specified.
+~> **NOTE:** One of `name` or an `object_id` must be specified.
 
 ## Attributes Reference
 
