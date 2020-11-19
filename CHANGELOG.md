@@ -1,5 +1,9 @@
 ## 1.1.0 (Unreleased)
 
+FEATURES:
+
+* added a flag to allow users to customize the Partner ID or opt-out of the default Terraform Partner ID [GH-350]
+
 IMPROVEMENTS:
 
 * `data.azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` attribute [GH-351]
