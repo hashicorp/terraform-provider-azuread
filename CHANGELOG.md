@@ -7,7 +7,8 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update.
+* `azuread_application` - enable removal of owners on existing applications, and creation of applications with no owners [GH-355]
+* `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update. [GH-338]
 
 ## 1.0.0 (September 03, 2020)
 
