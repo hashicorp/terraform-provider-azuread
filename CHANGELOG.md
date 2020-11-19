@@ -1,5 +1,10 @@
 ## 1.1.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `data.azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` attribute [GH-351]
+* `azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` properties [GH-351]
+
 BUG FIXES:
 
 * `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update.
