@@ -1,20 +1,20 @@
-## 1.1.0 (Unreleased)
+## 1.1.0 (November 25, 2020)
 
 FEATURES:
 
-* Added a flag to allow users to customize the Partner ID or opt-out of the default Terraform Partner ID [GH-350]
+* Added a flag to allow users to customize the Partner ID or opt-out of the default Terraform Partner ID ([#350](https://github.com/terraform-providers/terraform-provider-azuread/issues/350))
 * This release includes updated support for working directly with tenants using Azure CLI authentication. We recommend the use of `az login --allow-no-subscription` to populate tenant-level accounts (which have no subscriptions).
 
 IMPROVEMENTS:
 
-* `data.azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` attribute [GH-351]
-* `azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` properties [GH-351]
+* `data.azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` attribute ([#351](https://github.com/terraform-providers/terraform-provider-azuread/issues/351))
+* `azuread_user` - support the `given_name`, `surname`, `job_title`, `department`, `company_name`, `physical_delivery_office_name`, `street_address`, `city`, `state`, `country`, `postal_code` and `mobile` properties ([#351](https://github.com/terraform-providers/terraform-provider-azuread/issues/351))
 
 BUG FIXES:
 
-* **Provider:** Fixed an issue where CLI authentication produced a `parsing json result` error during provider initialization [GH-358]
-* `azuread_application` - enable removal of owners on existing applications, and creation of applications with no owners [GH-355]
-* `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update. [GH-338]
+* **Provider:** Fixed an issue where CLI authentication produced a `parsing json result` error during provider initialization ([#358](https://github.com/terraform-providers/terraform-provider-azuread/issues/358))
+* `azuread_application` - enable removal of owners on existing applications, and creation of applications with no owners ([#355](https://github.com/terraform-providers/terraform-provider-azuread/issues/355))
+* `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update. ([#338](https://github.com/terraform-providers/terraform-provider-azuread/issues/338))
 
 ## 1.0.0 (September 03, 2020)
 
