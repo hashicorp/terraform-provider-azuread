@@ -2,7 +2,8 @@
 
 FEATURES:
 
-* added a flag to allow users to customize the Partner ID or opt-out of the default Terraform Partner ID [GH-350]
+* Added a flag to allow users to customize the Partner ID or opt-out of the default Terraform Partner ID [GH-350]
+* This release includes updated support for working directly with tenants using Azure CLI authentication. We recommend the use of `az login --allow-no-subscription` to populate tenant-level accounts (which have no subscriptions).
 
 IMPROVEMENTS:
 
@@ -11,6 +12,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* **Provider:** Fixed an issue where CLI authentication produced a `parsing json result` error during provider initialization [GH-358]
 * `azuread_application` - enable removal of owners on existing applications, and creation of applications with no owners [GH-355]
 * `azuread_application` - fixed a bug where specifying the `prevent_duplicate_names` property would report a false positive on update. [GH-338]
 
