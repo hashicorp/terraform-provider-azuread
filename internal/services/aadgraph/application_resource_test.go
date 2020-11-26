@@ -246,6 +246,14 @@ func TestAccApplication_appRolesUpdate(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccApplication_basic(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "0"),
+				),
+			},
+			data.ImportStep(),
+			{
 				Config: testAccApplication_appRoles(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
@@ -261,31 +269,11 @@ func TestAccApplication_appRolesUpdate(t *testing.T) {
 				),
 			},
 			data.ImportStep(),
-		},
-	})
-}
-
-func TestAccApplication_appRolesDelete(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application", "test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccApplication_appRolesUpdate(data.RandomInteger),
+				Config: testAccApplication_appRolesEmpty(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "2"),
-				),
-			},
-			data.ImportStep(),
-			{
-				Config: testAccApplication_appRoles(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "1"),
+					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "0"),
 				),
 			},
 			data.ImportStep(),
@@ -838,6 +826,16 @@ resource "azuread_application" "test" {
     is_enabled           = true
     value                = "User"
   }
+}
+`, ri)
+}
+
+func testAccApplication_appRolesEmpty(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%d"
+
+  app_role = []
 }
 `, ri)
 }

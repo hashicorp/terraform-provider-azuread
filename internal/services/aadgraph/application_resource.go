@@ -108,9 +108,10 @@ func applicationResource() *schema.Resource {
 			},
 
 			"app_role": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -153,6 +154,67 @@ func applicationResource() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+					},
+				},
+			},
+
+			"oauth2_permissions": {
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"admin_consent_description": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"admin_consent_display_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
+						},
+
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"is_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+
+						"type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Admin", "User"}, false),
+						},
+
+						"user_consent_description": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"user_consent_display_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validate.NoEmptyStrings,
 						},
 					},
 				},
@@ -226,67 +288,6 @@ func applicationResource() *schema.Resource {
 			"object_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"oauth2_permissions": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_consent_description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-
-						"admin_consent_display_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-
-						"is_enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-						},
-
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Admin", "User"}, false),
-						},
-
-						"user_consent_description": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-
-						"user_consent_display_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-
-						"value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
-						},
-					},
-				},
 			},
 
 			"prevent_duplicate_names": {
@@ -402,6 +403,24 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	if v, ok := d.GetOk("app_role"); ok {
+		appRoles := expandApplicationAppRoles(v)
+		if appRoles != nil {
+			if err := graph.AppRolesSet(ctx, client, *app.ObjectID, appRoles); err != nil {
+				return err
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("oauth2_permissions"); ok {
+		oauth2Permissions := expandApplicationOAuth2Permissions(v)
+		if oauth2Permissions != nil {
+			if err := graph.OAuth2PermissionsSet(ctx, client, *app.ObjectID, oauth2Permissions); err != nil {
+				return err
+			}
+		}
+	}
+
 	// there is a default owner that we must account so use this shared function
 	if v, ok := d.GetOk("owners"); ok {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
@@ -410,9 +429,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// After creating the application, we immediately update it to ensure we overwrite any default properties
-	// such as the `user_impersonation` scope the application may get, whether we define such a scope or not
-	return applicationResourceUpdate(d, meta)
+	return applicationResourceRead(d, meta)
 }
 
 func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -474,58 +491,6 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		properties.OptionalClaims = expandApplicationOptionalClaims(d)
 	}
 
-	if d.HasChange("oauth2_permissions") {
-		// if the permission already exists then it must be disabled
-		// with no other changes before it can be edited or deleted
-		var app graphrbac.Application
-		var appProperties graphrbac.ApplicationUpdateParameters
-		resp, err := client.Get(ctx, d.Id())
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Application with ID %q was not found", d.Id())
-			}
-
-			return fmt.Errorf("retrieving Application with ID %q: %+v", d.Id(), err)
-		}
-		app = resp
-		for _, OAuth2Permission := range *app.Oauth2Permissions {
-			*OAuth2Permission.IsEnabled = false
-		}
-		appProperties.Oauth2Permissions = app.Oauth2Permissions
-		if _, err := client.Patch(ctx, d.Id(), appProperties); err != nil {
-			return fmt.Errorf("disabling OAuth2 permissions for Application with ID %q: %+v", d.Id(), err)
-		}
-
-		// now we can set the new state of the permission
-		properties.Oauth2Permissions = expandApplicationOAuth2Permissions(d.Get("oauth2_permissions"))
-	}
-
-	if d.HasChange("app_role") {
-		// if the app role already exists then it must be disabled
-		// with no other changes before it can be edited or deleted
-		var app graphrbac.Application
-		var appRolesProperties graphrbac.ApplicationUpdateParameters
-		resp, err := client.Get(ctx, d.Id())
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Application with ID %q was not found", d.Id())
-			}
-
-			return fmt.Errorf("retrieving Application with ID %q: %+v", d.Id(), err)
-		}
-		app = resp
-		for _, appRole := range *app.AppRoles {
-			*appRole.IsEnabled = false
-		}
-		appRolesProperties.AppRoles = app.AppRoles
-		if _, err := client.Patch(ctx, d.Id(), appRolesProperties); err != nil {
-			return fmt.Errorf("disabling App Roles for Application with ID %q: %+v", d.Id(), err)
-		}
-
-		// now we can set the new state of the app role
-		properties.AppRoles = expandApplicationAppRoles(d.Get("app_role"))
-	}
-
 	if d.HasChange("group_membership_claims") {
 		properties.GroupMembershipClaims = graphrbac.GroupMembershipClaimTypes(d.Get("group_membership_claims").(string))
 	}
@@ -547,6 +512,23 @@ func applicationResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("patching Application with ID %q: %+v", d.Id(), err)
 	}
 
+	if d.HasChange("app_role") {
+		appRoles := expandApplicationAppRoles(d.Get("app_role"))
+		if appRoles != nil {
+			if err := graph.AppRolesSet(ctx, client, d.Id(), appRoles); err != nil {
+				return err
+			}
+		}
+	}
+
+	if d.HasChange("oauth2_permissions") {
+		oauth2Permissions := expandApplicationOAuth2Permissions(d.Get("oauth2_permissions"))
+		if oauth2Permissions != nil {
+			if err := graph.OAuth2PermissionsSet(ctx, client, d.Id(), oauth2Permissions); err != nil {
+				return err
+			}
+		}
+	}
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, d.Id(), desiredOwners); err != nil {
@@ -837,11 +819,8 @@ func flattenApplicationOptionalClaimsList(in *[]graphrbac.OptionalClaim) []inter
 
 func expandApplicationAppRoles(i interface{}) *[]graphrbac.AppRole {
 	input := i.(*schema.Set).List()
-	if len(input) == 0 {
-		return nil
-	}
-
 	output := make([]graphrbac.AppRole, 0, len(input))
+
 	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
 
