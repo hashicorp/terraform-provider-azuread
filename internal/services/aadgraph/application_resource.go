@@ -403,7 +403,7 @@ func applicationResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// there is a default owner that we must account so use this shared function
-	if v, ok := d.GetOkExists("owners"); ok {
+	if v, ok := d.GetOk("owners"); ok {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, desiredOwners); err != nil {
 			return err

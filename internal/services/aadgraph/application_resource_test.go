@@ -532,6 +532,14 @@ func TestAccApplication_ownersUpdate(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccApplication_basic(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "owners.#", "1"),
+				),
+			},
+			data.ImportStep(),
+			{
 				Config: testAccApplication_removeOwners(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
