@@ -605,9 +605,11 @@ func applicationResourceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting `owners`: %+v", err)
 	}
 
-	if preventDuplicates := d.Get("prevent_duplicate_names").(bool); !preventDuplicates {
-		d.Set("prevent_duplicate_names", false)
+	preventDuplicates := false
+	if v := d.Get("prevent_duplicate_names").(bool); v {
+		preventDuplicates = v
 	}
+	d.Set("prevent_duplicate_names", preventDuplicates)
 
 	return nil
 }

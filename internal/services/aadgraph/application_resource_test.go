@@ -478,7 +478,7 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccApplication_preventDuplicateNames(t *testing.T) {
+func TestAccApplication_preventDuplicateNamesOk(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -487,7 +487,27 @@ func TestAccApplication_preventDuplicateNames(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccApplication_duplicateName(data.RandomInteger),
+				Config: testAccApplication_preventDuplicateNamesOk(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
+				),
+			},
+			data.ImportStep("prevent_duplicate_names"),
+		},
+	})
+}
+
+func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccApplication_preventDuplicateNamesFail(data.RandomInteger),
 				ExpectError: regexp.MustCompile("existing Application .+ was found"),
 			},
 		},
@@ -904,7 +924,16 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccApplication_duplicateName(ri int) string {
+func testAccApplication_preventDuplicateNamesOk(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                    = "acctest-APP-%[1]d"
+  prevent_duplicate_names = true
+}
+`, ri)
+}
+
+func testAccApplication_preventDuplicateNamesFail(ri int) string {
 	return fmt.Sprintf(`
 %s
 
