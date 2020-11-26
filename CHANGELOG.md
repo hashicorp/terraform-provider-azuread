@@ -1,9 +1,9 @@
-## 1.1.1 (Unreleased)
+## 1.1.1 (November 26, 2020)
 
 BUG FIXES:
 
-* `azuread_application` - resolves an issue where setting `prevent_duplicate_names = true` causes an error for new applications [GH-367]
-* `azuread_application` - fixes a bug where the default owner for a new application is removed [GH-366]
+* `azuread_application` - resolves an issue where setting `prevent_duplicate_names = true` causes an error for new applications ([#367](https://github.com/terraform-providers/terraform-provider-azuread/issues/367))
+* `azuread_application` - fixes a bug where the default owner for a new application is removed ([#366](https://github.com/terraform-providers/terraform-provider-azuread/issues/366))
 
 ## 1.1.0 (November 25, 2020)
 
