@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -449,6 +450,56 @@ func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]gr
 	return &newRoles
 }
 
+func AppRolesSet(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, newRoles *[]graphrbac.AppRole) error {
+	// don't support setting nil roles, the sdk ignores them
+	// should instead be zero length slice of AppRole
+	if newRoles == nil {
+		return fmt.Errorf("cannot set nil App Roles for Application with ID %q", appId)
+	}
+
+	// Roles must be disabled before they can be edited or removed.
+	// Since we cannot match them by ID, we have to disable all the roles, and replace them in one pass.
+	app, err := client.Get(ctx, appId)
+	if err != nil {
+		if utils.ResponseWasNotFound(app.Response) {
+			return fmt.Errorf("application with ID %q was not found", appId)
+		}
+
+		return fmt.Errorf("retrieving Application with ID %q: %+v", appId, err)
+	}
+
+	// don't update if no changes to be made
+	if app.AppRoles != nil && reflect.DeepEqual(*app.AppRoles, *newRoles) {
+		return nil
+	}
+
+	// first disable any existing permissions
+	properties := graphrbac.ApplicationUpdateParameters{
+		AppRoles: app.AppRoles,
+	}
+
+	if properties.AppRoles != nil {
+		for _, role := range *properties.AppRoles {
+			*role.IsEnabled = false
+		}
+
+		if _, err := client.Patch(ctx, appId, properties); err != nil {
+			return fmt.Errorf("disabling App Roles for Application with ID %q: %+v", appId, err)
+		}
+	}
+
+	// then set the new permissions
+	properties = graphrbac.ApplicationUpdateParameters{
+		AppRoles: newRoles,
+	}
+
+	if _, err := client.Patch(ctx, appId, properties); err != nil {
+		return fmt.Errorf("setting App Roles for Application with ID %q: %+v", appId, err)
+	}
+
+	return nil
+}
+
 type OAuth2PermissionId struct {
 	ObjectId     string
 	PermissionId string
@@ -591,4 +642,54 @@ func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, pe
 	}
 
 	return &newPermissions, nil
+}
+
+func OAuth2PermissionsSet(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, newPermissions *[]graphrbac.OAuth2Permission) error {
+	// don't support setting nil permissions, the sdk ignores them
+	// should instead be zero length slice of OAuth2Permission
+	if newPermissions == nil {
+		return fmt.Errorf("cannot set nil OAuth2 Permissions for Application with ID %q", appId)
+	}
+
+	// Permissions must be disabled before they can be edited or removed.
+	// Since we cannot match them by ID, we have to disable all the permissions, and replace them in one pass.
+	app, err := client.Get(ctx, appId)
+	if err != nil {
+		if utils.ResponseWasNotFound(app.Response) {
+			return fmt.Errorf("application with ID %q was not found", appId)
+		}
+
+		return fmt.Errorf("retrieving Application with ID %q: %+v", appId, err)
+	}
+
+	// don't update if no changes to be made
+	if app.Oauth2Permissions != nil && reflect.DeepEqual(*app.Oauth2Permissions, *newPermissions) {
+		return nil
+	}
+
+	// first disable any existing permissions
+	properties := graphrbac.ApplicationUpdateParameters{
+		Oauth2Permissions: app.Oauth2Permissions,
+	}
+
+	if properties.Oauth2Permissions != nil {
+		for _, permission := range *properties.Oauth2Permissions {
+			*permission.IsEnabled = false
+		}
+
+		if _, err := client.Patch(ctx, appId, properties); err != nil {
+			return fmt.Errorf("disabling OAuth2 Permissions for Application with ID %q: %+v", appId, err)
+		}
+	}
+
+	// then set the new permissions
+	properties = graphrbac.ApplicationUpdateParameters{
+		Oauth2Permissions: newPermissions,
+	}
+
+	if _, err := client.Patch(ctx, appId, properties); err != nil {
+		return fmt.Errorf("setting OAuth2 Permissions for Application with ID %q: %+v", appId, err)
+	}
+
+	return nil
 }

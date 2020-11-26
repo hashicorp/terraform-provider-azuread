@@ -246,6 +246,14 @@ func TestAccApplication_appRolesUpdate(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
+				Config: testAccApplication_basic(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "0"),
+				),
+			},
+			data.ImportStep(),
+			{
 				Config: testAccApplication_appRoles(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
@@ -261,31 +269,11 @@ func TestAccApplication_appRolesUpdate(t *testing.T) {
 				),
 			},
 			data.ImportStep(),
-		},
-	})
-}
-
-func TestAccApplication_appRolesDelete(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application", "test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccApplication_appRolesUpdate(data.RandomInteger),
+				Config: testAccApplication_appRolesEmpty(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "2"),
-				),
-			},
-			data.ImportStep(),
-			{
-				Config: testAccApplication_appRoles(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "1"),
+					resource.TestCheckResourceAttr(data.ResourceName, "app_role.#", "0"),
 				),
 			},
 			data.ImportStep(),
@@ -490,7 +478,7 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccApplication_preventDuplicateNames(t *testing.T) {
+func TestAccApplication_preventDuplicateNamesOk(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -499,7 +487,27 @@ func TestAccApplication_preventDuplicateNames(t *testing.T) {
 		CheckDestroy: testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccApplication_duplicateName(data.RandomInteger),
+				Config: testAccApplication_preventDuplicateNamesOk(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckApplicationExists(data.ResourceName),
+					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
+				),
+			},
+			data.ImportStep("prevent_duplicate_names"),
+		},
+	})
+}
+
+func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acceptance.PreCheck(t) },
+		Providers:    acceptance.SupportedProviders,
+		CheckDestroy: testCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccApplication_preventDuplicateNamesFail(data.RandomInteger),
 				ExpectError: regexp.MustCompile("existing Application .+ was found"),
 			},
 		},
@@ -842,6 +850,16 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
+func testAccApplication_appRolesEmpty(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%d"
+
+  app_role = []
+}
+`, ri)
+}
+
 func testAccApplication_oauth2Permissions(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
@@ -906,7 +924,16 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccApplication_duplicateName(ri int) string {
+func testAccApplication_preventDuplicateNamesOk(ri int) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                    = "acctest-APP-%[1]d"
+  prevent_duplicate_names = true
+}
+`, ri)
+}
+
+func testAccApplication_preventDuplicateNamesFail(ri int) string {
 	return fmt.Sprintf(`
 %s
 
