@@ -1,3 +1,10 @@
+## 1.1.1 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - resolves an issue where setting `prevent_duplicate_names = true` causes an error for new applications [GH-367]
+* `azuread_application` - fixes a bug where the default owner for a new application is removed [GH-366]
+
 ## 1.1.0 (November 25, 2020)
 
 FEATURES:
