@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -13,78 +13,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func testCheckApplicationPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParsePasswordId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Application  %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
-		}
-
-		credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
-		if err != nil {
-			return fmt.Errorf("listing Password Credentials for Application %q: %+v", id.ObjectId, err)
-		}
-
-		cred := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
-		if cred != nil {
-			return nil
-		}
-
-		return fmt.Errorf("Password Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
-	}
-}
-
-func testCheckApplicationPasswordCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_application_password" {
-			continue
-		}
-
-		id, err := graph.ParsePasswordId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Application Password Credential still exists:\n%#v", resp)
-	}
-
-	return nil
-}
-
 func TestAccApplicationPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationPassword_basic(data.RandomInteger, data.RandomPassword),
@@ -101,9 +36,9 @@ func TestAccApplicationPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationPassword_complete(data.RandomInteger, data.RandomID, data.RandomPassword),
@@ -120,9 +55,9 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationPassword_relativeEndDate(data.RandomInteger, data.RandomPassword),
@@ -142,9 +77,9 @@ func TestAccApplicationPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationPassword_basic(data.RandomInteger, data.RandomPassword),
@@ -215,4 +150,69 @@ resource "azuread_application_password" "import" {
   end_date              = azuread_application_password.test.end_date
 }
 `, template)
+}
+
+func testCheckApplicationPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
+	return func(s *terraform.State) error {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %q", name)
+		}
+
+		id, err := graph.ParsePasswordId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
+		}
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Bad: Application  %q does not exist", id.ObjectId)
+			}
+			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
+		}
+
+		credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
+		if err != nil {
+			return fmt.Errorf("listing Password Credentials for Application %q: %+v", id.ObjectId, err)
+		}
+
+		cred := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
+		if cred != nil {
+			return nil
+		}
+
+		return fmt.Errorf("Password Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
+	}
+}
+
+func testCheckApplicationPasswordCheckDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		if rs.Type != "azuread_application_password" {
+			continue
+		}
+
+		id, err := graph.ParsePasswordId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing Application Password Credential ID: %v", err)
+		}
+
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil
+			}
+
+			return err
+		}
+
+		return fmt.Errorf("Application Password Credential still exists:\n%#v", resp)
+	}
+
+	return nil
 }

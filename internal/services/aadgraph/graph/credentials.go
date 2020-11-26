@@ -10,9 +10,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
@@ -215,16 +215,16 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		var err error
 		endDate, err = time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse the provided end date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
+		return nil, CredentialError{str: "one of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
 	credential := graphrbac.PasswordCredential{
@@ -241,7 +241,7 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 	if v, ok := d.GetOk("start_date"); ok {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse the provided start date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}
@@ -365,16 +365,16 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 		var err error
 		endDate, err = time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse the provided end date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse `end_date_relative` (%s) as a duration", v)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, fmt.Errorf("one of `end_date` or `end_date_relative` must be specified")
+		return nil, CredentialError{str: "one of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
 	credential := graphrbac.KeyCredential{
@@ -388,7 +388,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 	if v, ok := d.GetOk("start_date"); ok {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("unable to parse the provided start date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}
@@ -432,7 +432,11 @@ func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *gr
 	return &newCreds, nil
 }
 
-func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult, keyId string) *[]graphrbac.KeyCredential {
+func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult, keyId string) (*[]graphrbac.KeyCredential, error) {
+	if keyId == "" {
+		return nil, errors.New("ID of key to be removed is blank")
+	}
+
 	newCreds := make([]graphrbac.KeyCredential, 0)
 
 	if existing.Value != nil {
@@ -449,7 +453,7 @@ func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult
 		}
 	}
 
-	return &newCreds
+	return &newCreds, nil
 }
 
 func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {

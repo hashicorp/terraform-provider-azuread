@@ -1,13 +1,16 @@
 package aadgraph
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -17,7 +20,7 @@ import (
 
 func usersData() *schema.Resource {
 	return &schema.Resource{
-		Read: usersDataRead,
+		ReadContext: usersDataRead,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -124,9 +127,8 @@ func usersData() *schema.Resource {
 	}
 }
 
-func usersDataRead(d *schema.ResourceData, meta interface{}) error {
+func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var users []*graphrbac.User
 	expectedCount := 0
@@ -140,7 +142,12 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && utils.ResponseWasNotFound(u.Response) {
 					continue
 				}
-				return fmt.Errorf("retrieving User with ID %q: %+v", v.(string), err)
+
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("Retrieving user with UPN: %q", v),
+					Detail:   err.Error(),
+				}}
 			}
 			users = append(users, &u)
 		}
@@ -150,13 +157,22 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 			for _, v := range oids {
 				u, err := graph.UserGetByObjectId(ctx, client, v.(string))
 				if err != nil {
-					return fmt.Errorf("finding User with object ID %q: %+v", v.(string), err)
+					return diag.Diagnostics{diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       fmt.Sprintf("Finding user with object ID: %q", v),
+						Detail:        err.Error(),
+						AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
+					}}
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return fmt.Errorf("found no Users with object ID %q", v.(string))
+						return diag.Diagnostics{diag.Diagnostic{
+							Severity:      diag.Error,
+							Summary:       fmt.Sprintf("User not found with object ID: %q", v),
+							AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
+						}}
 					}
 				}
 				users = append(users, u)
@@ -166,13 +182,22 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 			for _, v := range mailNicknames {
 				u, err := graph.UserGetByMailNickname(ctx, client, v.(string))
 				if err != nil {
-					return fmt.Errorf("finding User with email alias %q: %+v", v.(string), err)
+					return diag.Diagnostics{diag.Diagnostic{
+						Severity:      diag.Error,
+						Summary:       fmt.Sprintf("Finding user with email alias: %q", v),
+						Detail:        err.Error(),
+						AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
+					}}
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return fmt.Errorf("found no Users with email alias %q", v.(string))
+						return diag.Diagnostics{diag.Diagnostic{
+							Severity:      diag.Error,
+							Summary:       fmt.Sprintf("User not found with email alias: %q", v),
+							AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
+						}}
 					}
 				}
 				users = append(users, u)
@@ -181,7 +206,11 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !ignoreMissing && len(users) != expectedCount {
-		return fmt.Errorf("unexpected number of users returned (%d != %d)", len(users), expectedCount)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unexpected number of users returned",
+			Detail:   fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(users)),
+		}}
 	}
 
 	upns := make([]string, 0, len(users))
@@ -190,7 +219,10 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return fmt.Errorf("User with nil ObjectID or UserPrincipalName was returned: %v", u)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "API returned user with nil object ID",
+			}}
 		}
 
 		oids = append(oids, *u.ObjectID)
@@ -215,7 +247,11 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return fmt.Errorf("unable to compute hash for UPNs: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Able to compute hash for UPNs",
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))

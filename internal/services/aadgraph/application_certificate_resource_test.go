@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -34,71 +34,6 @@ HraQzsK7BNxC5NSwwirT95JH+Xd8rvWu+bCveJz3mnZ3sgolCoxL6Hv1uD2UOZb5
 rCHdW31vp5PYNJaSkYL0j259Ogb8crkIzDr3Z8YF
 -----END CERTIFICATE-----`
 
-func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Key Credential ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
-		}
-
-		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
-		if err != nil {
-			return fmt.Errorf("listing Key Credentials for Application %q: %+v", id.ObjectId, err)
-		}
-
-		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
-		if cred != nil {
-			return nil
-		}
-
-		return fmt.Errorf("Key Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
-	}
-}
-
-func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_application_certificate" {
-			continue
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Application Key Credential still exists:\n%#v", resp)
-	}
-
-	return nil
-}
-
 func TestAccApplicationCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	keyType := "AsymmetricX509Cert"
@@ -106,14 +41,15 @@ func TestAccApplicationCertificate_basic(t *testing.T) {
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADObjectCertificateApplication_basic(data.RandomInteger, keyType, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationKeyExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
 				),
 			},
 			data.ImportStep("end_date_relative", "value"),
@@ -129,14 +65,15 @@ func TestAccApplicationCertificate_complete(t *testing.T) {
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationCertificate_complete(data.RandomInteger, data.RandomID, keyType, startDate, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationKeyExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
 				),
 			},
 			data.ImportStep("end_date_relative", "value"),
@@ -150,15 +87,16 @@ func TestAccApplicationCertificate_relativeEndDate(t *testing.T) {
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationCertificate_relativeEndDate(data.RandomInteger, keyType, value),
 				Check: resource.ComposeTestCheckFunc(
 					// can't assert on Value since it's not returned
 					testCheckApplicationKeyExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "end_date"),
 				),
 			},
@@ -174,14 +112,15 @@ func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	value := testCertificateApplication
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationKeyCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccADObjectCertificateApplication_basic(data.RandomInteger, keyType, endDate, value),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationKeyExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
 				),
 			},
 			data.RequiresImportErrorStep(testAccApplicationCertificate_requiresImport(data.RandomInteger, keyType, endDate, value)),
@@ -257,4 +196,69 @@ resource "azuread_application_certificate" "import" {
   value                 = azuread_application_certificate.test.value
 }
 `, template)
+}
+
+func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolint unparam
+	return func(s *terraform.State) error {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %q", name)
+		}
+
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing Application Key Credential ID: %v", err)
+		}
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
+			}
+			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
+		}
+
+		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
+		if err != nil {
+			return fmt.Errorf("listing Key Credentials for Application %q: %+v", id.ObjectId, err)
+		}
+
+		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
+		if cred != nil {
+			return nil
+		}
+
+		return fmt.Errorf("Key Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
+	}
+}
+
+func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		if rs.Type != "azuread_application_certificate" {
+			continue
+		}
+
+		id, err := graph.ParseCertificateId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing Application Credential ID: %v", err)
+		}
+
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil
+			}
+
+			return err
+		}
+
+		return fmt.Errorf("Application Key Credential still exists:\n%#v", resp)
+	}
+
+	return nil
 }

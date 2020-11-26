@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var AzureADProvider *schema.Provider
-var SupportedProviders map[string]terraform.ResourceProvider
+var ProviderFactories map[string]func() (*schema.Provider, error)
+var SupportedProviders map[string]*schema.Provider // TODO deprecated
 
 func PreCheck(t *testing.T) {
 	variables := []string{
@@ -48,6 +49,7 @@ func Environment() (*azure.Environment, error) {
 }
 
 func RequiresImportError(resourceName string) *regexp.Regexp {
-	message := "to be managed via Terraform this resource needs to be imported into the State. Please see the resource documentation for %q for more information."
+	message := "To be managed via Terraform, this resource needs to be imported into the State. Please see the resource documentation for %q for more information."
+	message = strings.Replace(message, " ", "\\s+", -1)
 	return regexp.MustCompile(fmt.Sprintf(message, resourceName))
 }

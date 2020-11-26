@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
@@ -18,8 +18,8 @@ func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSource_byUserPrincipalName(id, password),
@@ -38,12 +38,12 @@ func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byUserPrincipalNameNonexistent(ri),
-				ExpectError: regexp.MustCompile("User not found with UPN:"),
+				ExpectError: regexp.MustCompile("User with UPN \"[^\"]+\" was not found"),
 			},
 		},
 	})
@@ -55,8 +55,8 @@ func TestAccUserDataSource_byObjectId(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSource_byObjectId(id, password),
@@ -73,8 +73,8 @@ func TestAccUserDataSource_byObjectId(t *testing.T) {
 
 func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byObjectIdNonexistent(),
@@ -90,8 +90,8 @@ func TestAccUserDataSource_byMailNickname(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSource_byMailNickname(id, password),
@@ -110,8 +110,8 @@ func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSource_byMailNicknameNonexistent(ri),

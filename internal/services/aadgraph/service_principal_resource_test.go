@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -18,9 +18,9 @@ func TestAccServicePrincipal_basic(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipal_basic(id),
@@ -38,9 +38,9 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipal_complete(id),
@@ -59,9 +59,9 @@ func TestAccServicePrincipal_update(t *testing.T) {
 	updatedId := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipal_basic(id),

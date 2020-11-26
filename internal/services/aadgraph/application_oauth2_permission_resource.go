@@ -1,13 +1,16 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -18,10 +21,10 @@ import (
 
 func applicationOAuth2PermissionResource() *schema.Resource {
 	return &schema.Resource{
-		Create: applicationOAuth2PermissionResourceCreateUpdate,
-		Update: applicationOAuth2PermissionResourceCreateUpdate,
-		Read:   applicationOAuth2PermissionResourceRead,
-		Delete: applicationOAuth2PermissionResourceDelete,
+		CreateContext: applicationOAuth2PermissionResourceCreateUpdate,
+		UpdateContext: applicationOAuth2PermissionResourceCreateUpdate,
+		ReadContext:   applicationOAuth2PermissionResourceRead,
+		DeleteContext: applicationOAuth2PermissionResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParseOAuth2PermissionId(id)
@@ -92,9 +95,8 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 	}
 }
 
-func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, meta interface{}) error {
+func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
@@ -106,7 +108,11 @@ func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, met
 	} else {
 		pid, err := uuid.GenerateUUID()
 		if err != nil {
-			return fmt.Errorf("generating OAuth2 Permission for Object ID %q: %+v", objectId, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Generating App Role for application with object ID %q", objectId),
+				Detail:   err.Error(),
+			}}
 		}
 		permissionId = pid
 	}
@@ -131,9 +137,18 @@ func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, met
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(app.Response) {
-			return fmt.Errorf("Application with ID %q was not found", id.ObjectId)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Application with object ID %q was not found", objectId),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+			}}
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Retrieving application with object ID %q", objectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -142,18 +157,30 @@ func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, met
 		newPermissions, err = graph.OAuth2PermissionAdd(app.Oauth2Permissions, &permission)
 		if err != nil {
 			if _, ok := err.(*graph.AlreadyExistsError); ok {
-				return tf.ImportAsExistsError("azuread_application_oauth2_permission", id.String())
+				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission", id.String())
 			}
-			return fmt.Errorf("adding OAuth2 Permission: %+v", err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Failed to add OAuth2 Permission"),
+				Detail:   err.Error(),
+			}}
 		}
 	} else {
 		if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-			return fmt.Errorf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "role_id"}},
+			}}
 		}
 
 		newPermissions, err = graph.OAuth2PermissionUpdate(app.Oauth2Permissions, &permission)
 		if err != nil {
-			return fmt.Errorf("updating OAuth2 Permission: %s", err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Updating App Role with ID %q", *permission.ID),
+				Detail:   err.Error(),
+			}}
 		}
 	}
 
@@ -161,21 +188,30 @@ func applicationOAuth2PermissionResourceCreateUpdate(d *schema.ResourceData, met
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
 	d.SetId(id.String())
 
-	return applicationOAuth2PermissionResourceRead(d, meta)
+	return applicationOAuth2PermissionResourceRead(ctx, d, meta)
 }
 
-func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interface{}) error {
+func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
 
 	// ensure the Application Object exists
@@ -187,12 +223,22 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
 	}
 
 	permission, err := graph.OAuth2PermissionFindById(app, id.PermissionId)
 	if err != nil {
-		return fmt.Errorf("identifying OAuth2 Permission: %s", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Identifying OAuth2 Permission",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "permission_id"}},
+		}}
 	}
 
 	if permission == nil {
@@ -214,13 +260,17 @@ func applicationOAuth2PermissionResourceRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -234,7 +284,12 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -242,27 +297,43 @@ func applicationOAuth2PermissionResourceDelete(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return fmt.Errorf("could not disable OAuth2 Permission prior to removal: %s", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return fmt.Errorf("could not remove OAuth2 Permission: %s", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	properties = graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	return nil

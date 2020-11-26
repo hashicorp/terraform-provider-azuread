@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -14,9 +14,9 @@ func TestAccGroupDataSource_byName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSource_name(data.RandomInteger),
@@ -33,9 +33,9 @@ func TestAccGroupDataSource_byCaseInsensitiveName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSource_caseInsensitiveName(data.RandomInteger),
@@ -52,9 +52,9 @@ func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSource_objectId(data.RandomInteger),
@@ -72,9 +72,9 @@ func TestAccGroupDataSource_members(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSource_members(data.RandomInteger, pw),
@@ -93,9 +93,9 @@ func TestAccGroupDataSource_owners(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSource_owners(data.RandomInteger, pw),

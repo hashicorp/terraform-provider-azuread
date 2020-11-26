@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -17,8 +17,8 @@ func TestAccClientConfigDataSource_basic(t *testing.T) {
 	tenantId := os.Getenv("ARM_TENANT_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientConfig_basic,
@@ -43,6 +43,4 @@ func testClientConfigGUIDAttr(name, key string) resource.TestCheckFunc {
 	}
 }
 
-const testAccClientConfig_basic = `
-data "azuread_client_config" "current" {}
-`
+const testAccClientConfig_basic = `data "azuread_client_config" "current" {}`

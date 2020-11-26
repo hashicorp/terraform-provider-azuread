@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -83,9 +83,9 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),
@@ -105,9 +105,9 @@ func TestAccServicePrincipalPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalPassword_complete(data.RandomInteger, data.RandomID, data.RandomPassword),
@@ -127,9 +127,9 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalPassword_relativeEndDate(data.RandomInteger, data.RandomPassword),
@@ -149,9 +149,9 @@ func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalPasswordCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),

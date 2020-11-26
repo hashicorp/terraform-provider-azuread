@@ -1,18 +1,19 @@
 package aadgraph
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
 func domainsData() *schema.Resource {
 	return &schema.Resource{
-		Read: domainsDataRead,
+		ReadContext: domainsDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"include_unverified": {
@@ -62,10 +63,9 @@ func domainsData() *schema.Resource {
 	}
 }
 
-func domainsDataRead(d *schema.ResourceData, meta interface{}) error {
+func domainsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	tenantId := meta.(*clients.AadClient).TenantID
 	client := meta.(*clients.AadClient).AadGraph.DomainsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	includeUnverified := d.Get("include_unverified").(bool)
 	onlyDefault := d.Get("only_default").(bool)
@@ -73,18 +73,29 @@ func domainsDataRead(d *schema.ResourceData, meta interface{}) error {
 
 	results, err := client.List(ctx, "")
 	if err != nil {
-		return fmt.Errorf("listing Domains: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Listing domains",
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.SetId("domains-" + tenantId) // todo this should be more unique
 
 	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
-		return fmt.Errorf("no domains were returned based on those filters")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "No domains were return based on the provided filters",
+		}}
 	}
 
 	if err = d.Set("domains", domains); err != nil {
-		return fmt.Errorf("setting `domains`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Setting domains",
+			Detail:   err.Error(),
+		}}
 	}
 
 	return nil

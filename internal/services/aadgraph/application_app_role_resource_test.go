@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -14,83 +14,19 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func testCheckAppRoleExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParseAppRoleId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing App Role ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
-		}
-
-		role := graph.AppRoleFindById(resp, id.RoleId)
-		if role != nil {
-			return nil
-		}
-
-		return fmt.Errorf("App Role %q was not found in Application %q", id.RoleId, id.ObjectId)
-	}
-}
-
-func testCheckAppRoleDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_application_app_role" {
-			continue
-		}
-
-		id, err := graph.ParseAppRoleId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing App Role ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		role := graph.AppRoleFindById(resp, id.RoleId)
-		if role == nil {
-			return nil
-		}
-
-		return fmt.Errorf("App Role still exists:\n%#v", resp)
-	}
-
-	return nil
-}
-
 func TestAccApplicationAppRole_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_app_role", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_basic(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAppRoleExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "role_id"),
 				),
 			},
 			data.ImportStep(),
@@ -103,14 +39,15 @@ func TestAccApplicationAppRole_complete(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_complete(data.RandomInteger, id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAppRoleExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "role_id"),
 				),
 			},
 			data.ImportStep(),
@@ -123,14 +60,15 @@ func TestAccApplicationAppRole_update(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_complete(data.RandomInteger, id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAppRoleExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "role_id"),
 				),
 			},
 			data.ImportStep(),
@@ -138,6 +76,7 @@ func TestAccApplicationAppRole_update(t *testing.T) {
 				Config: testAccApplicationAppRole_update(data.RandomInteger, id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAppRoleExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "role_id"),
 				),
 			},
 			data.ImportStep(),
@@ -145,6 +84,7 @@ func TestAccApplicationAppRole_update(t *testing.T) {
 				Config: testAccApplicationAppRole_complete(data.RandomInteger, id),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAppRoleExists(data.ResourceName),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "role_id"),
 				),
 			},
 			data.ImportStep(),
@@ -156,9 +96,9 @@ func TestAccApplicationAppRole_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_app_role", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckAppRoleDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckAppRoleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationAppRole_basic(data.RandomInteger),
@@ -238,4 +178,73 @@ resource "azuread_application_app_role" "test" {
   value                 = "administrate"
 }
 `, testAccApplicationAppRole_template(ri), id)
+}
+
+func testCheckAppRoleExists(name string) resource.TestCheckFunc { //nolint unparam
+	return func(s *terraform.State) error {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %q", name)
+		}
+
+		id, err := graph.ParseAppRoleId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing App Role ID: %v", err)
+		}
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
+			}
+			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
+		}
+
+		role, err := graph.AppRoleFindById(resp, id.RoleId)
+		if err != nil {
+			return fmt.Errorf("failed to identity App Role: %s", err)
+		} else if role != nil {
+			return nil
+		}
+
+		return fmt.Errorf("App Role %q was not found in Application %q", id.RoleId, id.ObjectId)
+	}
+}
+
+func testCheckAppRoleDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		if rs.Type != "azuread_application_app_role" {
+			continue
+		}
+
+		id, err := graph.ParseAppRoleId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing App Role ID: %v", err)
+		}
+
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil
+			}
+
+			return err
+		}
+
+		role, err := graph.AppRoleFindById(resp, id.RoleId)
+		if err != nil {
+			return fmt.Errorf("failed to identity App Role: %s", err)
+		} else if role == nil {
+			return nil
+		}
+
+		return fmt.Errorf("App Role still exists:\n%#v", resp)
+	}
+
+	return nil
 }

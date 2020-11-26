@@ -1,10 +1,13 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -15,7 +18,7 @@ import (
 
 func applicationData() *schema.Resource {
 	return &schema.Resource{
-		Read: applicationDataRead,
+		ReadContext: applicationDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
@@ -148,20 +151,27 @@ func applicationData() *schema.Resource {
 	}
 }
 
-func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
+func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var app graphrbac.Application
 
-	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		resp, err := client.Get(ctx, oId)
+	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
+		resp, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Application with ID %q was not found", oId)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("Application with ID %q was not found", objectId),
+				}}
 			}
 
-			return fmt.Errorf("retrieving Application with ID %q: %+v", oId, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Retrieving application with object ID: %q", objectId),
+				Detail:        err.Error(),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+			}}
 		}
 
 		app = resp
@@ -174,48 +184,88 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 			fieldName = "displayName"
 			fieldValue = name
 		} else {
-			return fmt.Errorf("one of `object_id` or `name` must be supplied")
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "One of `object_id`, `application_id` or `name` must be specified",
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+			}}
 		}
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Applications for filter %q: %+v", filter, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Listing applications for filter %q", filter),
+				Detail:   err.Error(),
+			}}
 		}
 
 		values := resp.Response().Value
 		if values == nil {
-			return fmt.Errorf("bad API response: nil values for Applications matching %q", filter)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Bad API response",
+				Detail:   fmt.Sprintf("nil values for applications matching filter: %q", filter),
+			}}
 		}
 		if len(*values) == 0 {
-			return fmt.Errorf("found no Applications matching %q", filter)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Application not found",
+				Detail:   fmt.Sprintf("No applications found matching filter: %q", filter),
+			}}
 		}
 		if len(*values) > 1 {
-			return fmt.Errorf("found multiple Applications matching %q", filter)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Multiple applications found",
+				Detail:   fmt.Sprintf("Found multiple applications matching filter: %q", filter),
+			}}
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return fmt.Errorf("bad API response: nil AppID for Applications matching %q", filter)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Bad API response",
+					Detail:   fmt.Sprintf("nil AppID for applications matching filter: %q", filter),
+				}}
 			}
 			if *app.AppID != fieldValue {
-				return fmt.Errorf("AppID for Applications matching %q does not match(%q!=%q)", filter, *app.AppID, fieldValue)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Bad API response",
+					Detail:   fmt.Sprintf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter),
+				}}
 			}
 		case "displayName":
 			if app.DisplayName == nil {
-				return fmt.Errorf("nil DisplayName for Applications matching %q", filter)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Bad API response",
+					Detail:   fmt.Sprintf("nil displayName for applications matching filter: %q", filter),
+				}}
 			}
 			if *app.DisplayName != fieldValue {
-				return fmt.Errorf("DisplayName for Applications matching %q does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Bad API response",
+					Detail:   fmt.Sprintf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter),
+				}}
 			}
 		}
 	}
 
 	if app.ObjectID == nil {
-		return fmt.Errorf("Application ObjectId is nil")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Bad API response",
+			Detail:   "ObjectID returned for application is nil",
+		}}
 	}
 	d.SetId(*app.ObjectID)
 
@@ -228,19 +278,39 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return fmt.Errorf("setting `identifier_uris`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "identifier_uris"}},
+		}}
 	}
 
 	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return fmt.Errorf("setting `reply_urls`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "reply_urls"}},
+		}}
 	}
 
 	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return fmt.Errorf("setting `required_resource_access`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "required_resource_access"}},
+		}}
 	}
 
 	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return fmt.Errorf("setting `optional_claims`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "optional_claims"}},
+		}}
 	}
 
 	if v := app.PublicClient; v != nil && *v {
@@ -250,23 +320,48 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return fmt.Errorf("setting `app_roles`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
+		}}
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return fmt.Errorf("setting `group_membership_claims`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "group_membership_claims"}},
+		}}
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
+		}}
 	}
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Could not retrieve owners for application with object ID %q", *app.ObjectID),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
+		}}
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("setting `owners`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
+		}}
 	}
 
 	return nil

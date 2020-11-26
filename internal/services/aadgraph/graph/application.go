@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
@@ -356,16 +356,24 @@ func ParseAppRoleId(idString string) (*AppRoleId, error) {
 	}, nil
 }
 
-func AppRoleFindById(app graphrbac.Application, roleId string) *graphrbac.AppRole {
+func AppRoleFindById(app graphrbac.Application, roleId string) (*graphrbac.AppRole, error) {
+	if app.AppRoles == nil {
+		return nil, nil
+	}
+
+	if roleId == "" {
+		return nil, errors.New("specified role ID is blank")
+	}
+
 	for _, r := range *app.AppRoles {
 		if r.ID == nil {
 			continue
 		}
 		if *r.ID == roleId {
-			return &r
+			return &r, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
@@ -415,11 +423,13 @@ func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]grap
 }
 
 func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]graphrbac.AppRole, error) {
-	newRoles := make([]graphrbac.AppRole, len(*existing))
-
-	if roleId == "" {
+	if existing == nil {
+		return nil, errors.New("existing roles are null")
+	} else if roleId == "" {
 		return nil, errors.New("ID of role to be updated is blank")
 	}
+
+	newRoles := make([]graphrbac.AppRole, len(*existing))
 
 	for i, v := range *existing {
 		if v.ID == nil {
@@ -434,7 +444,13 @@ func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]
 	return &newRoles, nil
 }
 
-func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]graphrbac.AppRole {
+func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) (*[]graphrbac.AppRole, error) {
+	if existing == nil {
+		return nil, errors.New("existing roles are null")
+	} else if roleId == "" {
+		return nil, errors.New("ID of role to be disabled is empty")
+	}
+
 	newRoles := make([]graphrbac.AppRole, 0)
 
 	for _, v := range *existing {
@@ -447,7 +463,7 @@ func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) *[]gr
 		newRoles = append(newRoles, v)
 	}
 
-	return &newRoles
+	return &newRoles, nil
 }
 
 func AppRolesSet(ctx context.Context, client *graphrbac.ApplicationsClient, appId string, newRoles *[]graphrbac.AppRole) error {

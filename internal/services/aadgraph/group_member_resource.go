@@ -1,10 +1,13 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -16,9 +19,9 @@ const groupMemberResourceName = "azuread_group_member"
 
 func groupMemberResource() *schema.Resource {
 	return &schema.Resource{
-		Create: groupMemberResourceCreate,
-		Read:   groupMemberResourceRead,
-		Delete: groupMemberResourceDelete,
+		CreateContext: groupMemberResourceCreate,
+		ReadContext:   groupMemberResourceRead,
+		DeleteContext: groupMemberResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParseGroupMemberId(id)
@@ -43,9 +46,8 @@ func groupMemberResource() *schema.Resource {
 	}
 }
 
-func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
@@ -57,36 +59,52 @@ func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	existingMembers, err := graph.GroupAllMembers(ctx, client, groupID)
 	if err != nil {
-		return fmt.Errorf("listing existing members for group with ID %q", groupID)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Listing existing members for group with object ID: %q", id.GroupId),
+			Detail:   err.Error(),
+		}}
 	}
 	if len(existingMembers) > 0 {
 		for _, v := range existingMembers {
 			if strings.EqualFold(v, memberID) {
-				return tf.ImportAsExistsError("azuread_group_member", id.String())
+				return tf.ImportAsExistsDiag("azuread_group_member", id.String())
 			}
 		}
 	}
 
 	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
-		return err
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Adding group member",
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.SetId(id.String())
-	return groupMemberResourceRead(d, meta)
+	return groupMemberResourceRead(ctx, d, meta)
 }
 
-func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return fmt.Errorf("unable to parse ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing Group Member ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, id.GroupId)
 	if err != nil {
-		return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", id.GroupId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Retrieving members for group with object ID: %q", id.GroupId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	var memberObjectID string
@@ -108,26 +126,38 @@ func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func groupMemberResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return fmt.Errorf("Unable to parse ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing Group Member ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
 
 	tf.LockByName(groupMemberResourceName, id.GroupId)
 	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
 	if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), id.GroupId, id.MemberId); err != nil {
-		return err
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Removing member %q from group with object ID: %q", id.MemberId, id.GroupId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	if _, err := graph.WaitForListRemove(id.MemberId, func() ([]string, error) {
 		return graph.GroupAllMembers(ctx, client, id.GroupId)
 	}); err != nil {
-		return fmt.Errorf("waiting for group membership removal: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Waiting for group membership removal",
+			Detail:   err.Error(),
+		}}
 	}
 
 	return nil

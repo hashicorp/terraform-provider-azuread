@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -15,8 +15,8 @@ func TestAccUsersDataSource_byUserPrincipalNames(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byUserPrincipalNames(data.RandomInteger, password),
@@ -35,8 +35,8 @@ func TestAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(data.RandomInteger, password),
@@ -55,8 +55,8 @@ func TestAccUsersDataSource_byObjectIds(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byObjectIds(data.RandomInteger, password),
@@ -75,8 +75,8 @@ func TestAccUsersDataSource_byObjectIdsIgnoreMissing(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byObjectIdsIgnoreMissing(data.RandomInteger, password),
@@ -95,8 +95,8 @@ func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byMailNicknames(data.RandomInteger, password),
@@ -116,8 +116,8 @@ func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_byMailNicknamesIgnoreMissing(data.RandomInteger, password),
@@ -136,8 +136,8 @@ func TestAccUsersDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsersDataSource_noNames(),

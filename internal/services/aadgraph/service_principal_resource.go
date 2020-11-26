@@ -1,13 +1,16 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -20,10 +23,10 @@ const servicePrincipalResourceName = "azuread_service_principal"
 
 func servicePrincipalResource() *schema.Resource {
 	return &schema.Resource{
-		Create: servicePrincipalResourceCreate,
-		Read:   servicePrincipalResourceRead,
-		Update: servicePrincipalResourceUpdate,
-		Delete: servicePrincipalResourceDelete,
+		CreateContext: servicePrincipalResourceCreate,
+		ReadContext:   servicePrincipalResourceRead,
+		UpdateContext: servicePrincipalResourceUpdate,
+		DeleteContext: servicePrincipalResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
@@ -69,9 +72,8 @@ func servicePrincipalResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Get("application_id").(string)
 
@@ -92,10 +94,18 @@ func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) er
 
 	sp, err := client.Create(ctx, properties)
 	if err != nil {
-		return fmt.Errorf("creating Service Principal for application  %q: %+v", applicationId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Could not create service principal",
+			Detail:   err.Error(),
+		}}
 	}
 	if sp.ObjectID == nil || *sp.ObjectID == "" {
-		return fmt.Errorf("Service Principal	objectID is nil/blank")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Bad API response",
+			Detail:   "ObjectID returned for service principal is nil",
+		}}
 	}
 	d.SetId(*sp.ObjectID)
 
@@ -103,15 +113,18 @@ func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) er
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Waiting for service principal with object ID: %q", *sp.ObjectID),
+			Detail:   err.Error(),
+		}}
 	}
 
-	return servicePrincipalResourceRead(d, meta)
+	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var properties graphrbac.ServicePrincipalUpdateParameters
 
@@ -129,15 +142,18 @@ func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
-		return fmt.Errorf("patching Service Principal with ID %q: %+v", d.Id(), err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Updating service principal with object ID: %q", d.Id()),
+			Detail:   err.Error(),
+		}}
 	}
 
-	return servicePrincipalResourceRead(d, meta)
+	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
 
@@ -148,7 +164,12 @@ func servicePrincipalResourceRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Service Principal ID %q: %+v", objectId, err)
+
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("retrieving service principal with object ID: %q", d.Id()),
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.Set("application_id", app.AppID)
@@ -158,25 +179,38 @@ func servicePrincipalResourceRead(d *schema.ResourceData, meta interface{}) erro
 
 	// tags doesn't exist as a property, so extract it
 	if err := d.Set("tags", app.Tags); err != nil {
-		return fmt.Errorf("setting `tags`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "tags"}},
+		}}
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
+		}}
 	}
 
 	return nil
 }
 
-func servicePrincipalResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Id()
 	app, err := client.Delete(ctx, applicationId)
 	if err != nil {
 		if !response.WasNotFound(app.Response) {
-			return fmt.Errorf("deleting Service Principal ID %q: %+v", applicationId, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Deleting service principal with object ID: %q", d.Id()),
+				Detail:   err.Error(),
+			}}
 		}
 	}
 

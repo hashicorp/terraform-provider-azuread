@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -18,9 +18,9 @@ func TestAccGroup_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroup_basic(data.RandomInteger),
@@ -35,9 +35,9 @@ func TestAccGroup_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroup_complete(data.RandomInteger, data.RandomPassword),
@@ -52,9 +52,9 @@ func TestAccGroup_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithThreeOwners(data.RandomInteger, data.RandomPassword),
@@ -69,9 +69,9 @@ func TestAccGroup_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithThreeMembers(data.RandomInteger, data.RandomPassword),
@@ -86,9 +86,9 @@ func TestAccGroup_membersAndOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithOwnersAndMembers(data.RandomInteger, data.RandomPassword),
@@ -103,9 +103,9 @@ func TestAccGroup_membersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithDiverseMembers(data.RandomInteger, data.RandomPassword),
@@ -120,9 +120,9 @@ func TestAccGroup_ownersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupWithDiverseOwners(data.RandomInteger, data.RandomPassword),
@@ -137,9 +137,9 @@ func TestAccGroup_membersUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			// Empty group with 0 members
 			{
@@ -179,9 +179,9 @@ func TestAccGroup_ownersUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckGroupDestroy,
 		Steps: []resource.TestStep{
 			// Empty group with 0 owners
 			{
@@ -212,16 +212,35 @@ func TestAccGroup_ownersUpdate(t *testing.T) {
 	})
 }
 
-func TestAccGroup_preventDuplicateNames(t *testing.T) {
+func TestAccGroup_preventDuplicateNamesOk(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroup_preventDuplicateNamesOk(data.RandomInteger),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				),
+			},
+			data.ImportStep("prevent_duplicate_names"),
+		},
+	})
+}
+
+func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGroup_duplicateName(ri),
+				Config:      testAccGroup_preventDuplicateNamesFail(ri),
 				ExpectError: regexp.MustCompile("existing Group .+ was found"),
 			},
 		},
@@ -446,7 +465,16 @@ resource "azuread_group" "test" {
 `, id)
 }
 
-func testAccGroup_duplicateName(id int) string {
+func testAccGroup_preventDuplicateNamesOk(id int) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name                    = "acctestGroup-%d"
+  prevent_duplicate_names = true
+}
+`, id)
+}
+
+func testAccGroup_preventDuplicateNamesFail(id int) string {
 	return fmt.Sprintf(`
 %s
 

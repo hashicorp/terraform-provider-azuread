@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -15,9 +15,9 @@ func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalDataSource_byApplicationId(id),
@@ -40,9 +40,9 @@ func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalDataSource_byDisplayName(id),
@@ -62,9 +62,9 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckServicePrincipalDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServicePrincipalDataSource_byObjectId(id),

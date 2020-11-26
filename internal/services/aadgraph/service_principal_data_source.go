@@ -1,10 +1,13 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -14,7 +17,7 @@ import (
 
 func servicePrincipalData() *schema.Resource {
 	return &schema.Resource{
-		Read: servicePrincipalDataRead,
+		ReadContext: servicePrincipalDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
@@ -48,9 +51,8 @@ func servicePrincipalData() *schema.Resource {
 	}
 }
 
-func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var sp *graphrbac.ServicePrincipal
 
@@ -60,10 +62,18 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		app, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(app.Response) {
-				return fmt.Errorf("Service Principal with Object ID %q was not found!", objectId)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("Service Principal with object ID %q was not found", objectId),
+				}}
 			}
 
-			return fmt.Errorf("retrieving Service Principal ID %q: %+v", objectId, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Retrieving service principal with object ID: %q", objectId),
+				Detail:        err.Error(),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+			}}
 		}
 
 		sp = &app
@@ -74,7 +84,11 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Service Principals: %+v", err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Listing service principals for filter %q", filter),
+				Detail:   err.Error(),
+			}}
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -89,7 +103,11 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if sp == nil {
-			return fmt.Errorf("A Service Principal with the Display Name %q was not found", displayName)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Service principal not found",
+				Detail:   fmt.Sprintf("No service principal found matching display name: %q", displayName),
+			}}
 		}
 	} else {
 		// use the application_id to find the Azure AD service principal
@@ -98,7 +116,11 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Service Principals: %+v", err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Listing service principals for filter %q", filter),
+				Detail:   err.Error(),
+			}}
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -113,13 +135,22 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if sp == nil {
-			return fmt.Errorf("A Service Principal for Application ID %q was not found", applicationId)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Service principal not found",
+				Detail:   fmt.Sprintf("No service principal found for application ID: %q", applicationId),
+			}}
 		}
 	}
 
 	if sp.ObjectID == nil {
-		return fmt.Errorf("Service Principal objectId is nil")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Bad API response",
+			Detail:   "ObjectID returned for service principal is nil",
+		}}
 	}
+
 	d.SetId(*sp.ObjectID)
 
 	d.Set("application_id", sp.AppID)
@@ -127,11 +158,21 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_id", sp.ObjectID)
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return fmt.Errorf("setting `app_roles`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
+		}}
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
+		}}
 	}
 
 	return nil

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -13,8 +13,8 @@ func TestAccGroupsDataSource_byUserPrincipalNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSource_byDisplayNames(data.RandomInteger),
@@ -31,8 +31,8 @@ func TestAccGroupsDataSource_byObjectIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSource_byObjectIds(data.RandomInteger),
@@ -49,8 +49,8 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSource_noNames(),

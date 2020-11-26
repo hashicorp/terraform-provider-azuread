@@ -1,12 +1,15 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -16,9 +19,9 @@ import (
 
 func servicePrincipalCertificateResource() *schema.Resource {
 	return &schema.Resource{
-		Create: servicePrincipalCertificateResourceCreate,
-		Read:   servicePrincipalCertificateResourceRead,
-		Delete: servicePrincipalCertificateResourceDelete,
+		CreateContext: servicePrincipalCertificateResourceCreate,
+		ReadContext:   servicePrincipalCertificateResourceRead,
+		DeleteContext: servicePrincipalCertificateResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParseCertificateId(id)
@@ -29,16 +32,24 @@ func servicePrincipalCertificateResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
 
 	cred, err := graph.KeyCredentialForResource(d)
 	if err != nil {
-		return fmt.Errorf("generating certificate credentials for object ID %q: %+v", objectId, err)
+		di := diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Generating certificate credentials for service principal with object ID %q", objectId),
+			Detail:   err.Error(),
+		}
+		if kerr, ok := err.(graph.CredentialError); ok {
+			di.AttributePath = cty.Path{cty.GetAttrStep{Name: kerr.Attr()}}
+		}
+		return diag.Diagnostics{di}
 	}
+
 	id := graph.CredentialIdFrom(objectId, "certificate", *cred.KeyID)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -46,41 +57,63 @@ func servicePrincipalCertificateResourceCreate(d *schema.ResourceData, meta inte
 
 	existingCreds, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for service principal with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Listing certificate credentials for service principal with ID %q", objectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
 	}
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
-			return tf.ImportAsExistsError("azuread_service_principal_certificate", id.String())
+			return tf.ImportAsExistsDiag("azuread_service_principal_certificate", id.String())
 		}
-		return fmt.Errorf("adding Service Principal Certificate: %+v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Adding service principal certificate",
+			Detail:   err.Error(),
+		}}
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("creating certificate credentials %q for service principal with ID %q: %+v", id.KeyId, id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Creating certificate credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for certificate credential replication for service principal (ID %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.SetId(id.String())
 
-	return servicePrincipalCertificateResourceRead(d, meta)
+	return servicePrincipalCertificateResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalCertificateResourceRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing certificate credential with ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
+
 	// ensure the Service Principal Object exists
 	sp, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
@@ -90,12 +123,22 @@ func servicePrincipalCertificateResourceRead(d *schema.ResourceData, meta interf
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving service principal with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
 	credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for service principal with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Listing certificate credentials for service principal with object ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
 	credential := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -105,7 +148,6 @@ func servicePrincipalCertificateResourceRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	// todo, move this into a graph helper function?
 	d.Set("service_principal_id", id.ObjectId)
 	d.Set("key_id", id.KeyId)
 
@@ -124,13 +166,17 @@ func servicePrincipalCertificateResourceRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func servicePrincipalCertificateResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing certificate credential with ID: %v", err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
+		}}
 	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -144,17 +190,41 @@ func servicePrincipalCertificateResourceDelete(d *schema.ResourceData, meta inte
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("retrieving service principal with ID %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
 	existing, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing certificate credentials for service principal %q: %+v", id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Listing certificate credentials for service principal with object ID %q", id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
-	newCreds := graph.KeyCredentialResultRemoveByKeyId(existing, id.KeyId)
+	newCreds, err := graph.KeyCredentialResultRemoveByKeyId(existing, id.KeyId)
+	if err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
+	}
+
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("removing certificate credentials %q from service principal with ID %q: %+v", id.KeyId, id.ObjectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       fmt.Sprintf("Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId),
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
 	}
 
 	return nil

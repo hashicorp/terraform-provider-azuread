@@ -5,9 +5,9 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -17,22 +17,16 @@ import (
 
 func TestAccApplication_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
-	appName := fmt.Sprintf("acctest-APP-%d", data.RandomInteger)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", appName),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://%s", appName)),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_allow_implicit_flow", "false"),
-					resource.TestCheckResourceAttr(data.ResourceName, "type", "webapp/api"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
@@ -47,26 +41,14 @@ func TestAccApplication_complete(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_complete(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_allow_implicit_flow", "true"),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "group_membership_claims", "All"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.0.access_token.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.0.id_token.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "2"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
@@ -82,18 +64,16 @@ func TestAccApplication_update(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "0"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
 			},
 			data.ImportStep(),
@@ -101,17 +81,8 @@ func TestAccApplication_update(t *testing.T) {
 				Config: testAccApplication_complete(updatedri, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", updatedri)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://homepage-%d", updatedri)),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", updatedri)),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.3714513888", "http://unittest.hashicorptest.com"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.0.access_token.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.0.id_token.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "2"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
 			},
 			data.ImportStep(),
@@ -119,35 +90,6 @@ func TestAccApplication_update(t *testing.T) {
 				Config: testAccApplication_basicEmpty(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "optional_claims.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "0"),
-				),
-			},
-			data.ImportStep(),
-		},
-	})
-}
-
-func TestAccApplication_http_homepage(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application", "test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplication_http_homepage(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("http://homepage-%d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_allow_implicit_flow", "false"),
-					resource.TestCheckResourceAttr(data.ResourceName, "type", "webapp/api"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "1"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
 				),
@@ -161,35 +103,14 @@ func TestAccApplication_publicClient(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_publicClient(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "public_client", "true"),
-				),
-			},
-			data.ImportStep(),
-		},
-	})
-}
-
-func TestAccApplication_availableToOtherTenants(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application", "test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplication_availableToOtherTenants(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "available_to_other_tenants", "true"),
 				),
 			},
 			data.ImportStep(),
@@ -201,9 +122,9 @@ func TestAccApplication_appRoles(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_appRoles(data.RandomInteger),
@@ -221,9 +142,9 @@ func TestAccApplication_appRolesNoValue(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_appRolesNoValue(data.RandomInteger),
@@ -241,9 +162,9 @@ func TestAccApplication_appRolesUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
@@ -285,9 +206,9 @@ func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
@@ -328,9 +249,9 @@ func TestAccApplication_native(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_native(data.RandomInteger),
@@ -340,7 +261,6 @@ func TestAccApplication_native(t *testing.T) {
 					resource.TestCheckResourceAttr(data.ResourceName, "homepage", ""),
 					resource.TestCheckResourceAttr(data.ResourceName, "type", "native"),
 					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 				),
 			},
 			data.ImportStep(),
@@ -352,9 +272,9 @@ func TestAccApplication_nativeReplyUrls(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_nativeReplyUrls(data.RandomInteger),
@@ -363,8 +283,6 @@ func TestAccApplication_nativeReplyUrls(t *testing.T) {
 					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "type", "native"),
 					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.3637476042", "urn:ietf:wg:oauth:2.0:oob"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 				),
 			},
 			data.ImportStep(),
@@ -377,19 +295,16 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 				),
 			},
 			data.ImportStep(),
@@ -397,11 +312,8 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 				Config: testAccApplication_native(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://acctest-APP-%d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "type", "native"),
 					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "0"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 				),
 			},
 			data.ImportStep(),
@@ -409,13 +321,8 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 				Config: testAccApplication_complete(data.RandomInteger, pw),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "homepage", fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
+					resource.TestCheckResourceAttr(data.ResourceName, "type", "webapp/api"),
 					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "identifier_uris.0", fmt.Sprintf("http://%d.hashicorptest.com/00000000-0000-0000-0000-00000000", data.RandomInteger)),
-					resource.TestCheckResourceAttr(data.ResourceName, "reply_urls.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "required_resource_access.#", "2"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
 				),
 			},
 			data.ImportStep(),
@@ -427,13 +334,13 @@ func TestAccApplication_nativeAppDoesNotAllowIdentifierUris(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApplication_nativeAppDoesNotAllowIdentifierUris(data.RandomInteger),
-				ExpectError: regexp.MustCompile("identifier_uris is not required for a native application"),
+				ExpectError: regexp.MustCompile("not required for a native application"),
 			},
 		},
 	})
@@ -443,15 +350,14 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "1"),
 				),
 			},
@@ -460,7 +366,6 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 				Config: testAccApplication_oauth2Permissions(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "2"),
 				),
 			},
@@ -469,7 +374,6 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 				Config: testAccApplication_oauth2PermissionsEmpty(data.RandomInteger),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckApplicationExists(data.ResourceName),
-					resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctest-APP-%[1]d", data.RandomInteger)),
 					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "0"),
 				),
 			},
@@ -482,9 +386,9 @@ func TestAccApplication_preventDuplicateNamesOk(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_preventDuplicateNamesOk(data.RandomInteger),
@@ -502,9 +406,9 @@ func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApplication_preventDuplicateNamesFail(data.RandomInteger),
@@ -518,9 +422,9 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccApplication_duplicateAppRolesOauth2PermissionsValues(data.RandomInteger),
@@ -535,9 +439,9 @@ func TestAccApplication_ownersUpdate(t *testing.T) {
 	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplication_basic(data.RandomInteger),
@@ -649,35 +553,12 @@ resource "azuread_application" "test" {
 `, ri)
 }
 
-func testAccApplication_http_homepage(ri int) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  name     = "acctest-APP-%[1]d"
-  homepage = "http://homepage-%[1]d"
-}
-`, ri)
-}
-
 func testAccApplication_publicClient(ri int) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name          = "acctest-APP-%[1]d"
   type          = "native"
   public_client = true
-}
-`, ri)
-}
-
-func testAccApplication_availableToOtherTenants(ri int) string {
-	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
-  only_initial = true
-}
-
-resource "azuread_application" "test" {
-  name                       = "acctest-APP-%[1]d"
-  identifier_uris            = ["https://%[1]d.${data.azuread_domains.tenant_domain.domains.0.domain_name}"]
-  available_to_other_tenants = true
 }
 `, ri)
 }
@@ -716,12 +597,13 @@ func testAccApplication_complete(ri int, pw string) string {
 resource "azuread_application" "test" {
   name                       = "acctest-APP-%[2]d"
   homepage                   = "https://homepage-%[2]d"
-  identifier_uris            = ["http://%[2]d.hashicorptest.com/00000000-0000-0000-0000-00000000"]
-  reply_urls                 = ["http://unittest.hashicorptest.com"]
-  logout_url                 = "http://log.me.out"
+  identifier_uris            = ["api://hashicorptestapp-%[2]d"]
+  reply_urls                 = ["https://unittest.hashicorptest.com"]
+  logout_url                 = "https://log.me.out"
+  available_to_other_tenants = true
+  group_membership_claims    = "All"
   oauth2_allow_implicit_flow = true
-
-  group_membership_claims = "All"
+  type                       = "webapp/api"
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"

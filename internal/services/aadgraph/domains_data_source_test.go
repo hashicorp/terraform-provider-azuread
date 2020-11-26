@@ -3,7 +3,7 @@ package aadgraph_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 )
@@ -12,8 +12,8 @@ func TestAccDomainsDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainsDataSource_basic,
@@ -33,8 +33,8 @@ func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainsDataSource_onlyDefault,
@@ -53,8 +53,8 @@ func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainsDataSource_onlyInitial,
@@ -69,18 +69,18 @@ func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	})
 }
 
-const testAccDomainsDataSource_basic = `
-data "azuread_domains" "test" {}
-`
+const (
+	testAccDomainsDataSource_basic = `data "azuread_domains" "test" {}`
 
-const testAccDomainsDataSource_onlyDefault = `
+	testAccDomainsDataSource_onlyDefault = `
 data "azuread_domains" "test" {
   only_default = true
 }
 `
 
-const testAccDomainsDataSource_onlyInitial = `
+	testAccDomainsDataSource_onlyInitial = `
 data "azuread_domains" "test" {
   only_initial = true
 }
 `
+)

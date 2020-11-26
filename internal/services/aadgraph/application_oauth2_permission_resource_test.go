@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -14,82 +14,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func testCheckOAuth2PermissionExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParseOAuth2PermissionId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
-		}
-
-		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
-		if err != nil {
-			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
-		} else if scope != nil {
-			return nil
-		}
-
-		return fmt.Errorf("OAuth2 Permission %q was not found in Application %q", id.PermissionId, id.ObjectId)
-	}
-}
-
-func testCheckOAuth2PermissionCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_application_oauth2_permission" {
-			continue
-		}
-
-		id, err := graph.ParseOAuth2PermissionId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
-		if err != nil {
-			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
-		} else if scope == nil {
-			return nil
-		}
-
-		return fmt.Errorf("OAuth2 Permission still exists:\n%#v", resp)
-	}
-
-	return nil
-}
-
 func TestAccApplicationOAuth2Permission_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckOAuth2PermissionCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckOAuth2PermissionCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationOAuth2Permission_basic(data.RandomInteger),
@@ -107,9 +38,9 @@ func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckOAuth2PermissionCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckOAuth2PermissionCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationOAuth2Permission_complete(data.RandomInteger, id),
@@ -127,9 +58,9 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 	id := uuid.New().String()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckOAuth2PermissionCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckOAuth2PermissionCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationOAuth2Permission_complete(data.RandomInteger, id),
@@ -160,9 +91,9 @@ func TestAccApplicationOAuth2Permission_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckOAuth2PermissionCheckDestroy,
+		PreCheck:          func() { acceptance.PreCheck(t) },
+		ProviderFactories: acceptance.ProviderFactories,
+		CheckDestroy:      testCheckOAuth2PermissionCheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationOAuth2Permission_basic(data.RandomInteger),
@@ -252,4 +183,73 @@ resource "azuread_application_oauth2_permission" "test" {
   value                      = "administrate"
 }
 `, testAccApplicationOAuth2Permission_template(ri), id)
+}
+
+func testCheckOAuth2PermissionExists(name string) resource.TestCheckFunc { //nolint unparam
+	return func(s *terraform.State) error {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %q", name)
+		}
+
+		id, err := graph.ParseOAuth2PermissionId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
+		}
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
+			}
+			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
+		}
+
+		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
+		if err != nil {
+			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
+		} else if scope != nil {
+			return nil
+		}
+
+		return fmt.Errorf("OAuth2 Permission %q was not found in Application %q", id.PermissionId, id.ObjectId)
+	}
+}
+
+func testCheckOAuth2PermissionCheckDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
+		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+
+		if rs.Type != "azuread_application_oauth2_permission" {
+			continue
+		}
+
+		id, err := graph.ParseOAuth2PermissionId(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
+		}
+
+		resp, err := client.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil
+			}
+
+			return err
+		}
+
+		scope, err := graph.OAuth2PermissionFindById(resp, id.PermissionId)
+		if err != nil {
+			return fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
+		} else if scope == nil {
+			return nil
+		}
+
+		return fmt.Errorf("OAuth2 Permission still exists:\n%#v", resp)
+	}
+
+	return nil
 }

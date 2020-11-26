@@ -1,14 +1,16 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -19,10 +21,10 @@ import (
 
 func userResource() *schema.Resource {
 	return &schema.Resource{
-		Create: userResourceCreate,
-		Read:   userResourceRead,
-		Update: userResourceUpdate,
-		Delete: userResourceDelete,
+		CreateContext: userResourceCreate,
+		ReadContext:   userResourceRead,
+		UpdateContext: userResourceUpdate,
+		DeleteContext: userResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
@@ -196,14 +198,13 @@ func userResource() *schema.Resource {
 	}
 }
 
-func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	upn := d.Get("user_principal_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
 
-	//default mail nickname to the first part of the UPN (matches the portal)
+	// default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
 		mailNickName = strings.Split(upn, "@")[0]
 	}
@@ -278,26 +279,39 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return fmt.Errorf("creating User (%q): %+v", upn, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Creating user %q", upn),
+			Detail:   err.Error(),
+		}}
 	}
+
 	if user.ObjectID == nil || *user.ObjectID == "" {
-		return fmt.Errorf("nil/blank User ID for %q: %+v", upn, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "API returned group with nil object ID",
+		}}
 	}
+
 	d.SetId(*user.ObjectID)
 
 	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *user.ObjectID)
 	})
+
 	if err != nil {
-		return fmt.Errorf("waiting for User (%s) with ObjectId %q: %+v", upn, *user.ObjectID, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Waiting for user %q with object ID: %q", upn, *user.ObjectID),
+			Detail:   err.Error(),
+		}}
 	}
 
-	return userResourceRead(d, meta)
+	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var userUpdateParameters graphrbac.UserUpdateParameters
 
@@ -383,15 +397,18 @@ func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
-		return fmt.Errorf("updating User with ID %q: %+v", d.Id(), err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Updating User with object ID: %q", d.Id()),
+			Detail:   err.Error(),
+		}}
 	}
 
-	return userResourceRead(d, meta)
+	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceRead(d *schema.ResourceData, meta interface{}) error {
+func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
 
@@ -402,7 +419,11 @@ func userResourceRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving User with ID %q: %+v", objectId, err)
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  fmt.Sprintf("Retrieving user with object ID: %q", objectId),
+			Detail:   err.Error(),
+		}}
 	}
 
 	d.Set("user_principal_name", user.UserPrincipalName)
@@ -462,14 +483,17 @@ func userResourceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func userResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return fmt.Errorf("deleting User with ID %q: %+v", d.Id(), err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Deleting user with object ID: %q", d.Id()),
+				Detail:   err.Error(),
+			}}
 		}
 	}
 

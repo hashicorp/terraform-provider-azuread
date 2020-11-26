@@ -1,10 +1,13 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -14,7 +17,8 @@ import (
 
 func userData() *schema.Resource {
 	return &schema.Resource{
-		Read: userDataRead,
+		ReadContext: userDataRead,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -156,9 +160,8 @@ func userData() *schema.Resource {
 	}
 }
 
-func userDataRead(d *schema.ResourceData, meta interface{}) error {
+func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var user graphrbac.User
 
@@ -166,36 +169,70 @@ func userDataRead(d *schema.ResourceData, meta interface{}) error {
 		resp, err := client.Get(ctx, upn)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("User not found with UPN: %q", upn)
+				return diag.Diagnostics{diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  fmt.Sprintf("User with UPN %q was not found", upn),
+				}}
 			}
-			return fmt.Errorf("retrieving User with ID %q: %+v", upn, err)
+
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Retrieving user with UPN: %q", upn),
+				Detail:   err.Error(),
+			}}
 		}
 		user = resp
 	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		u, err := graph.UserGetByObjectId(ctx, client, oId)
 		if err != nil {
-			return fmt.Errorf("finding User with object ID %q: %+v", oId, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Finding user with object ID: %q", oId),
+				Detail:        err.Error(),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+			}}
 		}
 		if u == nil {
-			return fmt.Errorf("User not found with object ID: %q", oId)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("User not found with object ID: %q", oId),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+			}}
 		}
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		u, err := graph.UserGetByMailNickname(ctx, client, mailNickname)
 		if err != nil {
-			return fmt.Errorf("finding User with email alias %q: %+v", mailNickname, err)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("Finding user with email alias: %q", mailNickname),
+				Detail:        err.Error(),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
+			}}
 		}
 		if u == nil {
-			return fmt.Errorf("User not found with email alias: %q", mailNickname)
+			return diag.Diagnostics{diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       fmt.Sprintf("User not found with email alias: %q", mailNickname),
+				AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
+			}}
 		}
 		user = *u
 	} else {
-		return fmt.Errorf("one of `object_id`, `user_principal_name` and `mail_nickname` must be supplied")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "One of `object_id`, `user_principal_name` and `mail_nickname` must be supplied",
+		}}
 	}
 
 	if user.ObjectID == nil {
-		return fmt.Errorf("User objectId is nil")
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Bad API response",
+			Detail:   "ObjectID returned for user is nil",
+		}}
 	}
+
 	d.SetId(*user.ObjectID)
 
 	d.Set("object_id", user.ObjectID)

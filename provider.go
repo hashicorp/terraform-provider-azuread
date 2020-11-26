@@ -1,11 +1,10 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/provider"
 )
 
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return provider.AzureADProvider()
 }

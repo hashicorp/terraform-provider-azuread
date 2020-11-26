@@ -1,14 +1,15 @@
 package provider
 
 import (
+	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"os"
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph"
@@ -32,7 +33,7 @@ type ServiceRegistration interface {
 }
 
 // Provider returns a terraform.ResourceProvider.
-func AzureADProvider() terraform.ResourceProvider {
+func AzureADProvider() *schema.Provider {
 	// avoids this showing up in test output
 	var debugLog = func(f string, v ...interface{}) {
 		if os.Getenv("TF_LOG") == "" {
@@ -162,13 +163,13 @@ func AzureADProvider() terraform.ResourceProvider {
 		DataSourcesMap: dataSources,
 	}
 
-	p.ConfigureFunc = providerConfigure(p)
+	p.ConfigureContextFunc = providerConfigure(p)
 
 	return p
 }
 
-func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
-	return func(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		builder := &authentication.Builder{
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
@@ -195,14 +196,18 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 			partnerId = terraformPartnerId
 		}
 
-		return buildClient(p, builder, partnerId)
+		return buildClient(ctx, p, builder, partnerId)
 	}
 }
 
-func buildClient(p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.AadClient, error) {
+func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.AadClient, diag.Diagnostics) {
 	config, err := b.Build()
 	if err != nil {
-		return nil, fmt.Errorf("building AzureAD Client: %s", err)
+		return nil, diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Building AzureAD Client",
+			Detail:   err.Error(),
+		}}
 	}
 
 	clientBuilder := clients.ClientBuilder{
@@ -211,15 +216,17 @@ func buildClient(p *schema.Provider, b *authentication.Builder, partnerId string
 		TerraformVersion: p.TerraformVersion,
 	}
 
-	client, err := clientBuilder.Build(p.StopContext())
-	if err != nil {
-		return nil, err
+	stopCtx, ok := schema.StopContext(ctx)
+	if !ok {
+		stopCtx = ctx
 	}
 
-	// replaces the context between tests
-	p.MetaReset = func() error { //nolint unparam
-		client.StopContext = p.StopContext()
-		return nil
+	client, err := clientBuilder.Build(stopCtx)
+	if err != nil {
+		return nil, diag.Diagnostics{diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  err.Error(),
+		}}
 	}
 
 	return client, nil
