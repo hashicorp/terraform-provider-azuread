@@ -326,9 +326,9 @@ func (GroupResource) withOneMember(data acceptance.TestData) string {
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
-  members = [azuread_user.test.object_id]
+  members = [azuread_user.testA.object_id]
 }
-`, UserResource{}.basic(data), data.RandomInteger)
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
 }
 
 func (GroupResource) withOneOwner(data acceptance.TestData) string {
@@ -337,9 +337,9 @@ func (GroupResource) withOneOwner(data acceptance.TestData) string {
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [azuread_user.test.object_id]
+  owners = [azuread_user.testA.object_id]
 }
-`, UserResource{}.basic(data), data.RandomInteger)
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
 }
 
 func (GroupResource) withThreeMembers(data acceptance.TestData) string {
@@ -378,19 +378,13 @@ resource "azuread_group" "test" {
 
 func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
-}
-
-resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-}
+%[1]s
 
 resource "azuread_group" "test" {
-  name    = "acctestGroup-%[1]d"
+  name    = "acctestGroup-%[2]d"
   members = [azuread_service_principal.test.object_id]
 }
-`, data.RandomInteger)
+`, ServicePrincipalResource{}.basic(data), data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {

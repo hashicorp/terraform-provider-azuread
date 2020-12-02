@@ -176,11 +176,20 @@ func GroupRemoveMember(ctx context.Context, client *graphrbac.GroupsClient, time
 		Refresh: func() (interface{}, string, error) {
 			resp, err := client.RemoveMember(ctx, groupId, memberId)
 
-			// Return a fake result so WaitForState() will pass
-			if utils.ResponseWasNotFound(resp) {
-				return 1, "Gone", nil
-			} else if utils.ResponseWasStatusCode(resp, http.StatusNoContent) {
+			switch {
+			case utils.ResponseWasStatusCode(resp, http.StatusNoContent):
 				return 1, "Removed", nil
+
+			case utils.ResponseWasNotFound(resp):
+				return 1, "Gone", nil
+
+			// Member removal is inconsistent and sometimes member objects are already removed when
+			// we make the request, so try to handle that error state and consider it a success.
+			case utils.ResponseWasStatusCode(resp, http.StatusBadRequest):
+				odata, _ := NewOdataError(resp)
+				if OdataErrorContains(odata, "object references do not exist") {
+					return 2, "Gone", nil
+				}
 			}
 
 			if err != nil {
