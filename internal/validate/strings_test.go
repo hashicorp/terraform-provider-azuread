@@ -2,6 +2,8 @@ package validate
 
 import (
 	"testing"
+
+	"github.com/hashicorp/go-cty/cty"
 )
 
 func TestNoEmptyStrings(t *testing.T) {
@@ -89,10 +91,10 @@ func TestNoEmptyStrings(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			_, errors := NoEmptyStrings(tc.Value, tc.TestName)
+			diags := NoEmptyStrings(tc.Value, cty.Path{})
 
-			if len(errors) != tc.ErrCount {
-				t.Fatalf("Expected NoEmptyStrings to have %d not %d errors for %q", tc.ErrCount, len(errors), tc.TestName)
+			if len(diags) != tc.ErrCount {
+				t.Fatalf("Expected NoEmptyStrings to have %d not %d errors for %q", tc.ErrCount, len(diags), tc.TestName)
 			}
 		})
 	}
@@ -123,10 +125,10 @@ func TestStringIsEmailAddress(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			_, errors := StringIsEmailAddress(tc.Value, tc.TestName)
+			diags := StringIsEmailAddress(tc.Value, cty.Path{})
 
-			if len(errors) != tc.ErrCount {
-				t.Fatalf("Expected StringIsEmailAddress to have %d not %d errors for %q", tc.ErrCount, len(errors), tc.TestName)
+			if len(diags) != tc.ErrCount {
+				t.Fatalf("Expected StringIsEmailAddress to have %d not %d errors for %q", tc.ErrCount, len(diags), tc.TestName)
 			}
 		})
 	}

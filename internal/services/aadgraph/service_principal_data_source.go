@@ -21,27 +21,27 @@ func servicePrincipalData() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"display_name", "application_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ConflictsWith:    []string{"display_name", "application_id"},
 			},
 
 			"display_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.NoEmptyStrings,
-				ConflictsWith: []string{"object_id", "application_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+				ConflictsWith:    []string{"object_id", "application_id"},
 			},
 
 			"application_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"object_id", "display_name"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ConflictsWith:    []string{"object_id", "display_name"},
 			},
 
 			"app_roles": graph.SchemaAppRolesComputed(),
@@ -153,9 +153,32 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(*sp.ObjectID)
 
-	d.Set("application_id", sp.AppID)
-	d.Set("display_name", sp.DisplayName)
-	d.Set("object_id", sp.ObjectID)
+	if err := d.Set("object_id", sp.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
+
+	if err := d.Set("application_id", sp.AppID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
+		}}
+	}
+
+	if err := d.Set("display_name", sp.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
+		}}
+	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
 		return diag.Diagnostics{diag.Diagnostic{

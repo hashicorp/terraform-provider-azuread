@@ -5,11 +5,11 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -22,7 +22,7 @@ func groupsData() *schema.Resource {
 		ReadContext: groupsDataRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,8 +32,8 @@ func groupsData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.UUID,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -43,8 +43,8 @@ func groupsData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"names", "object_ids"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 		},
@@ -119,8 +119,24 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 
 	d.SetId("groups#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
-	d.Set("object_ids", oids)
-	d.Set("names", names)
+
+	if err := d.Set("object_ids", oids); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
+		}}
+	}
+
+	if err := d.Set("names", names); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "names"}},
+		}}
+	}
 
 	return nil
 }

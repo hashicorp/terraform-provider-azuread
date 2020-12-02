@@ -20,16 +20,16 @@ func groupData() *schema.Resource {
 		ReadContext: groupDataRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validate.UUID,
-				ExactlyOneOf: []string{"name"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ExactlyOneOf:     []string{"name"},
 			},
 
 			"description": {
@@ -38,11 +38,11 @@ func groupData() *schema.Resource {
 			},
 
 			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validate.NoEmptyStrings,
-				ExactlyOneOf: []string{"object_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+				ExactlyOneOf:     []string{"object_id"},
 			},
 
 			"members": {
@@ -108,13 +108,38 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			Summary:  "API returned group with nil object ID",
 		}}
 	}
+
 	d.SetId(*group.ObjectID)
 
-	d.Set("object_id", group.ObjectID)
-	d.Set("name", group.DisplayName)
+	if err := d.Set("object_id", group.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
 
+	if err := d.Set("name", group.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
+	}
+
+	description := ""
 	if v, ok := group.AdditionalProperties["description"]; ok {
-		d.Set("description", v.(string))
+		description = v.(string)
+	}
+	if err := d.Set("description", description); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
+		}}
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
@@ -125,7 +150,15 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			Detail:   err.Error(),
 		}}
 	}
-	d.Set("members", members)
+
+	if err := d.Set("members", members); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "members"}},
+		}}
+	}
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
@@ -135,7 +168,15 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			Detail:   err.Error(),
 		}}
 	}
-	d.Set("owners", owners)
+
+	if err := d.Set("owners", owners); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
+		}}
+	}
 
 	return nil
 }

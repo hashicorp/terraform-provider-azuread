@@ -3,11 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"os"
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -216,6 +216,7 @@ func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Buil
 		TerraformVersion: p.TerraformVersion,
 	}
 
+	//nolint:SA1019
 	stopCtx, ok := schema.StopContext(ctx)
 	if !ok {
 		stopCtx = ctx

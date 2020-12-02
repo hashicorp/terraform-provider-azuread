@@ -3,15 +3,15 @@ package aadgraph_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
 type UserResource struct{}

@@ -145,7 +145,7 @@ func GroupAddMember(ctx context.Context, client *graphrbac.GroupsClient, groupId
 		time.Sleep(time.Second * 2)
 	}
 
-	if _, err := WaitForListAdd(member, func() ([]string, error) {
+	if _, err := WaitForListAdd(ctx, member, func() ([]string, error) {
 		return GroupAllMembers(ctx, client, groupId)
 	}); err != nil {
 		return fmt.Errorf("waiting for group membership: %+v", err)
@@ -189,7 +189,7 @@ func GroupRemoveMember(ctx context.Context, client *graphrbac.GroupsClient, time
 
 			return nil, "Waiting", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 
 	if err != nil {
 		return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", memberId, groupId, err)

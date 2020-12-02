@@ -3,12 +3,13 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -35,16 +36,16 @@ func userResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"user_principal_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.StringIsEmailAddress,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.StringIsEmailAddress,
 			},
 
 			"display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"given_name": {
@@ -295,7 +296,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(*user.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *user.ObjectID)
 	})
 
@@ -426,59 +427,243 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}}
 	}
 
-	d.Set("user_principal_name", user.UserPrincipalName)
-	d.Set("display_name", user.DisplayName)
-	d.Set("given_name", user.GivenName)
-	d.Set("surname", user.Surname)
-	d.Set("mail", user.Mail)
-	d.Set("mail_nickname", user.MailNickname)
-	d.Set("account_enabled", user.AccountEnabled)
-	d.Set("object_id", user.ObjectID)
-	d.Set("usage_location", user.UsageLocation)
-	d.Set("immutable_id", user.ImmutableID)
+	if err := d.Set("object_id", user.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
 
+	if err := d.Set("immutable_id", user.ImmutableID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "immutable_id"}},
+		}}
+	}
+
+	if err := d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_sam_account_name"}},
+		}}
+	}
+
+	if err := d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_user_principal_name"}},
+		}}
+	}
+
+	if err := d.Set("user_principal_name", user.UserPrincipalName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_principal_name"}},
+		}}
+	}
+
+	if err := d.Set("account_enabled", user.AccountEnabled); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "account_enabled"}},
+		}}
+	}
+
+	if err := d.Set("display_name", user.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
+		}}
+	}
+
+	if err := d.Set("given_name", user.GivenName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "given_name"}},
+		}}
+	}
+
+	if err := d.Set("surname", user.Surname); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "surname"}},
+		}}
+	}
+
+	if err := d.Set("mail", user.Mail); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail"}},
+		}}
+	}
+
+	if err := d.Set("mail_nickname", user.MailNickname); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
+		}}
+	}
+
+	if err := d.Set("usage_location", user.UsageLocation); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "usage_location"}},
+		}}
+	}
+
+	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
-		d.Set("job_title", v.(string))
+		jobTitle = v.(string)
+	}
+	if err := d.Set("job_title", jobTitle); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "job_title"}},
+		}}
 	}
 
+	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
-		d.Set("department", v.(string))
+		dept = v.(string)
+	}
+	if err := d.Set("department", dept); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "department"}},
+		}}
 	}
 
+	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
-		d.Set("company_name", v.(string))
+		companyName = v.(string)
+	}
+	if err := d.Set("company_name", companyName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "company_name"}},
+		}}
 	}
 
+	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
-		d.Set("physical_delivery_office_name", v.(string))
+		physDelivOfficeName = v.(string)
+	}
+	if err := d.Set("physical_delivery_office_name", physDelivOfficeName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "physical_delivery_office_name"}},
+		}}
 	}
 
+	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
-		d.Set("street_address", v.(string))
+		streetAddress = v.(string)
+	}
+	if err := d.Set("street_address", streetAddress); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "street_address"}},
+		}}
 	}
 
+	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
-		d.Set("city", v.(string))
+		city = v.(string)
+	}
+	if err := d.Set("city", city); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "city"}},
+		}}
 	}
 
+	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
-		d.Set("state", v.(string))
+		state = v.(string)
+	}
+	if err := d.Set("state", state); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "state"}},
+		}}
 	}
 
+	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
-		d.Set("country", v.(string))
+		country = v.(string)
+	}
+	if err := d.Set("country", country); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "country"}},
+		}}
 	}
 
+	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
-		d.Set("postal_code", v.(string))
+		postalCode = v.(string)
+	}
+	if err := d.Set("postal_code", postalCode); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "postal_code"}},
+		}}
 	}
 
+	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
-		d.Set("mobile", v.(string))
+		mobile = v.(string)
 	}
-
-	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
-	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
+	if err := d.Set("mobile", mobile); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "mobile"}},
+		}}
+	}
 
 	return nil
 }

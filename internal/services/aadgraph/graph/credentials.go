@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -22,18 +23,18 @@ import (
 func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		idAttribute: {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: validate.UUID,
 		},
 
 		"key_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: validate.UUID,
 		},
 
 		"type": {
@@ -71,11 +72,11 @@ func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
 		},
 
 		"end_date_relative": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"end_date"},
-			ValidateFunc:  validate.NoEmptyStrings,
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ConflictsWith:    []string{"end_date"},
+			ValidateDiagFunc: validate.NoEmptyStrings,
 		},
 	}
 }
@@ -84,18 +85,18 @@ func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
 func PasswordResourceSchema(idAttribute string) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		idAttribute: {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
+			Type:             schema.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: validate.UUID,
 		},
 
 		"key_id": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ValidateFunc: validate.UUID,
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: validate.UUID,
 		},
 
 		"description": {
@@ -131,11 +132,11 @@ func PasswordResourceSchema(idAttribute string) map[string]*schema.Schema {
 		},
 
 		"end_date_relative": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ForceNew:     true,
-			ExactlyOneOf: []string{"end_date"},
-			ValidateFunc: validate.NoEmptyStrings,
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			ExactlyOneOf:     []string{"end_date"},
+			ValidateDiagFunc: validate.NoEmptyStrings,
 		},
 	}
 }
@@ -316,7 +317,7 @@ func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredential
 	return &newCreds, nil
 }
 
-func WaitForPasswordCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.PasswordCredentialListResult, error)) (interface{}, error) {
+func WaitForPasswordCredentialReplication(ctx context.Context, keyId string, timeout time.Duration, f func() (graphrbac.PasswordCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"NotFound"},
 		Target:                    []string{"Found"},
@@ -339,7 +340,7 @@ func WaitForPasswordCredentialReplication(keyId string, timeout time.Duration, f
 
 			return creds, "Found", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 }
 
 func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential, error) {
@@ -456,7 +457,7 @@ func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult
 	return &newCreds, nil
 }
 
-func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {
+func WaitForKeyCredentialReplication(ctx context.Context, keyId string, timeout time.Duration, f func() (graphrbac.KeyCredentialListResult, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"NotFound"},
 		Target:                    []string{"Found"},
@@ -479,5 +480,5 @@ func WaitForKeyCredentialReplication(keyId string, timeout time.Duration, f func
 
 			return creds, "Found", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 }

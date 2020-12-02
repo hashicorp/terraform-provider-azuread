@@ -53,8 +53,8 @@ func groupResource() *schema.Resource {
 				Computed: true,
 				Set:      schema.HashString,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.UUID,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -64,8 +64,8 @@ func groupResource() *schema.Resource {
 				Computed: true,
 				Set:      schema.HashString,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.UUID,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -137,7 +137,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *group.ObjectID)
 	})
 
@@ -206,11 +206,35 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}}
 	}
 
-	d.Set("name", resp.DisplayName)
-	d.Set("object_id", resp.ObjectID)
+	if err := d.Set("object_id", resp.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
 
+	if err := d.Set("name", resp.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
+	}
+
+	description := ""
 	if v, ok := resp.AdditionalProperties["description"]; ok {
-		d.Set("description", v.(string))
+		description = v.(string)
+	}
+	if err := d.Set("description", description); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
+		}}
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
@@ -221,7 +245,14 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			Detail:   err.Error(),
 		}}
 	}
-	d.Set("members", members)
+	if err := d.Set("members", members); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "members"}},
+		}}
+	}
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
@@ -231,13 +262,27 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			Detail:   err.Error(),
 		}}
 	}
-	d.Set("owners", owners)
+	if err := d.Set("owners", owners); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
+		}}
+	}
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
 	}
-	d.Set("prevent_duplicate_names", preventDuplicates)
+	if err := d.Set("prevent_duplicate_names", preventDuplicates); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "prevent_duplicate_names"}},
+		}}
+	}
 
 	return nil
 }
@@ -245,7 +290,7 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
 
-	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") {
+	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") { //nolint:SA1019
 		existingMembers, err := graph.GroupAllMembers(ctx, client, d.Id())
 		if err != nil {
 			return diag.Diagnostics{diag.Diagnostic{
@@ -269,7 +314,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				}}
 			}
 
-			if _, err := graph.WaitForListRemove(existingMember, func() ([]string, error) {
+			if _, err := graph.WaitForListRemove(ctx, existingMember, func() ([]string, error) {
 				return graph.GroupAllMembers(ctx, client, d.Id())
 			}); err != nil {
 				return diag.Diagnostics{diag.Diagnostic{
@@ -289,7 +334,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") {
+	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") { //nolint:SA1019
 		existingOwners, err := graph.GroupAllOwners(ctx, client, d.Id())
 		if err != nil {
 			return diag.Diagnostics{diag.Diagnostic{

@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func WaitForCreationReplication(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+func WaitForCreationReplication(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"NotFound", "BadCast"},
 		Target:                    []string{"Found"},
@@ -32,10 +33,10 @@ func WaitForCreationReplication(timeout time.Duration, f func() (interface{}, er
 			}
 			return i, "Error", fmt.Errorf("unable to retrieve object, received response with status %d: %v", r.StatusCode, err)
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 }
 
-func WaitForListAdd(item string, f func() ([]string, error)) (interface{}, error) {
+func WaitForListAdd(ctx context.Context, item string, f func() ([]string, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"404"},
 		Target:                    []string{"Found"},
@@ -57,10 +58,10 @@ func WaitForListAdd(item string, f func() ([]string, error)) (interface{}, error
 
 			return listItems, "404", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 }
 
-func WaitForListRemove(item string, f func() ([]string, error)) (interface{}, error) {
+func WaitForListRemove(ctx context.Context, item string, f func() ([]string, error)) (interface{}, error) {
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"Found"},
 		Target:                    []string{"NotFound"},
@@ -82,5 +83,5 @@ func WaitForListRemove(item string, f func() ([]string, error)) (interface{}, er
 
 			return listItems, "NotFound", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 }

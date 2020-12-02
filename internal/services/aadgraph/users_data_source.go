@@ -5,11 +5,11 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -23,7 +23,7 @@ func usersData() *schema.Resource {
 		ReadContext: usersDataRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,8 +33,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.UUID,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -44,8 +44,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -55,8 +55,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -255,10 +255,42 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
-	d.Set("object_ids", oids)
-	d.Set("user_principal_names", upns)
-	d.Set("mail_nicknames", mailNicknames)
-	d.Set("users", userList)
+
+	if err := d.Set("object_ids", oids); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
+		}}
+	}
+
+	if err := d.Set("user_principal_names", upns); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_principal_name"}},
+		}}
+	}
+
+	if err := d.Set("mail_nicknames", mailNicknames); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
+		}}
+	}
+
+	if err := d.Set("users", userList); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "users"}},
+		}}
+	}
 
 	return nil
 }

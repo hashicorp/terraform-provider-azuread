@@ -3,12 +3,12 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -33,10 +33,10 @@ func applicationAppRoleResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"allowed_member_types": {
@@ -53,15 +53,15 @@ func applicationAppRoleResource() *schema.Resource {
 			},
 
 			"description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"is_enabled": {
@@ -71,11 +71,11 @@ func applicationAppRoleResource() *schema.Resource {
 			},
 
 			"role_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"value": {
@@ -158,7 +158,7 @@ func applicationAppRoleResourceCreateUpdate(ctx context.Context, d *schema.Resou
 			}
 			return diag.Diagnostics{diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Failed to add App Role"),
+				Summary:  "Failed to add App Role",
 				Detail:   err.Error(),
 			}}
 		}
@@ -242,13 +242,68 @@ func applicationAppRoleResourceRead(ctx context.Context, d *schema.ResourceData,
 		return nil
 	}
 
-	d.Set("application_object_id", id.ObjectId)
-	d.Set("role_id", id.RoleId)
-	d.Set("allowed_member_types", role.AllowedMemberTypes)
-	d.Set("description", role.Description)
-	d.Set("display_name", role.DisplayName)
-	d.Set("is_enabled", role.IsEnabled)
-	d.Set("value", role.Value)
+	if err := d.Set("application_object_id", id.ObjectId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
+	}
+
+	if err := d.Set("role_id", id.RoleId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "role_id"}},
+		}}
+	}
+
+	if err := d.Set("allowed_member_types", role.AllowedMemberTypes); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "allowed_member_types"}},
+		}}
+	}
+
+	if err := d.Set("description", role.Description); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
+		}}
+	}
+
+	if err := d.Set("display_name", role.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
+		}}
+	}
+
+	if err := d.Set("is_enabled", role.IsEnabled); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "is_enabled"}},
+		}}
+	}
+
+	if err := d.Set("value", role.Value); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "value"}},
+		}}
+	}
 
 	return nil
 }

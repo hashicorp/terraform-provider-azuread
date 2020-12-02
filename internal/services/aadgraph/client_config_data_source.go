@@ -3,9 +3,10 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -66,9 +67,33 @@ func clientConfigDataRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ObjectID, client.ClientID))
-	d.Set("client_id", client.ClientID)
-	d.Set("object_id", client.ObjectID)
-	d.Set("tenant_id", client.TenantID)
+
+	if err := d.Set("client_id", client.ClientID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "client_id"}},
+		}}
+	}
+
+	if err := d.Set("object_id", client.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
+
+	if err := d.Set("tenant_id", client.TenantID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "tenant_id"}},
+		}}
+	}
 
 	return nil
 }

@@ -3,10 +3,10 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -22,27 +22,27 @@ func applicationData() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"application_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"homepage": {
@@ -267,15 +267,71 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 			Detail:   "ObjectID returned for application is nil",
 		}}
 	}
+
 	d.SetId(*app.ObjectID)
 
-	d.Set("object_id", app.ObjectID)
-	d.Set("name", app.DisplayName)
-	d.Set("application_id", app.AppID)
-	d.Set("homepage", app.Homepage)
-	d.Set("logout_url", app.LogoutURL)
-	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
-	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	if err := d.Set("object_id", app.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
+
+	if err := d.Set("application_id", app.AppID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
+		}}
+	}
+
+	if err := d.Set("name", app.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
+	}
+
+	if err := d.Set("homepage", app.Homepage); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "homepage"}},
+		}}
+	}
+
+	if err := d.Set("logout_url", app.LogoutURL); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "logout_url"}},
+		}}
+	}
+
+	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "available_to_other_tenants"}},
+		}}
+	}
+
+	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_allow_implicit_flow"}},
+		}}
+	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
 		return diag.Diagnostics{diag.Diagnostic{
@@ -313,10 +369,20 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}}
 	}
 
+	var appType string
 	if v := app.PublicClient; v != nil && *v {
-		d.Set("type", "native")
+		appType = "native"
 	} else {
-		d.Set("type", "webapp/api")
+		appType = "webapp/api"
+	}
+
+	if err := d.Set("type", appType); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
+		}}
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {

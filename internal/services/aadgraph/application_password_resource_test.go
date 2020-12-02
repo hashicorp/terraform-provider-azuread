@@ -3,7 +3,6 @@ package aadgraph_test
 import (
 	"context"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
@@ -20,12 +20,12 @@ type ApplicationPasswordResource struct{}
 
 func TestAccApplicationPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ApplicationPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -37,12 +37,13 @@ func TestAccApplicationPassword_basic(t *testing.T) {
 
 func TestAccApplicationPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ApplicationPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, startDate, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").HasValue(data.RandomID),
@@ -71,18 +72,18 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 
 func TestAccApplicationPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ApplicationPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
 		},
-		data.RequiresImportErrorStep(r.requiresImport(data)),
+		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
 	})
 }
 
@@ -113,7 +114,7 @@ func (a ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	return nil, fmt.Errorf("Password Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
 }
 
-func (ApplicationPasswordResource) basic(data acceptance.TestData) string {
+func (ApplicationPasswordResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -122,10 +123,10 @@ resource "azuread_application_password" "test" {
   value                 = "%[2]s"
   end_date              = "%[3]s"
 }
-`, ApplicationResource{}.basic(data), data.RandomPassword, data.AdditionalData["end_date"])
+`, ApplicationResource{}.basic(data), data.RandomPassword, endDate)
 }
 
-func (ApplicationPasswordResource) complete(data acceptance.TestData) string {
+func (ApplicationPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -133,10 +134,11 @@ resource "azuread_application_password" "test" {
   application_object_id = azuread_application.test.id
   description           = "terraform"
   key_id                = "%[2]s"
-  value                 = "%[3]s"
+  start_date            = "%[3]s"
   end_date              = "%[4]s"
+  value                 = "%[5]s"
 }
-`, ApplicationResource{}.basic(data), data.RandomID, data.RandomPassword, data.AdditionalData["end_date"])
+`, ApplicationResource{}.basic(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
 func (ApplicationPasswordResource) relativeEndDate(data acceptance.TestData) string {
@@ -151,7 +153,7 @@ resource "azuread_application_password" "test" {
 `, ApplicationResource{}.basic(data), data.RandomPassword)
 }
 
-func (ApplicationPasswordResource) requiresImport(data acceptance.TestData) string {
+func (ApplicationPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -161,5 +163,5 @@ resource "azuread_application_password" "import" {
   value                 = azuread_application_password.test.value
   end_date              = azuread_application_password.test.end_date
 }
-`, ApplicationPasswordResource{}.basic(data))
+`, ApplicationPasswordResource{}.basic(data, endDate))
 }

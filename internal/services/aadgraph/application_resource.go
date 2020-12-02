@@ -45,9 +45,9 @@ func applicationResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"available_to_other_tenants": {
@@ -68,10 +68,10 @@ func applicationResource() *schema.Resource {
 			},
 
 			"homepage": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validate.URLIsHTTPOrHTTPS,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
 			},
 
 			"identifier_uris": {
@@ -79,14 +79,15 @@ func applicationResource() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.URLIsAppURI,
 				},
 			},
 
 			"logout_url": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validate.URLIsHTTPOrHTTPS,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
 			},
 
 			"oauth2_allow_implicit_flow": {
@@ -105,8 +106,8 @@ func applicationResource() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -143,15 +144,15 @@ func applicationResource() *schema.Resource {
 						},
 
 						"description": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
 						"display_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
 						"is_enabled": {
@@ -177,17 +178,17 @@ func applicationResource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admin_consent_description": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
 						"admin_consent_display_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
 						"id": {
@@ -221,10 +222,10 @@ func applicationResource() *schema.Resource {
 						},
 
 						"value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validate.NoEmptyStrings,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 					},
 				},
@@ -260,9 +261,9 @@ func applicationResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validate.UUID,
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validate.UUID,
 									},
 
 									"type": {
@@ -285,8 +286,8 @@ func applicationResource() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -394,7 +395,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.SetId(*app.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {
@@ -618,19 +619,92 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		}}
 	}
 
-	d.Set("name", app.DisplayName)
-	d.Set("application_id", app.AppID)
-	d.Set("homepage", app.Homepage)
-	d.Set("logout_url", app.LogoutURL)
-	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
-	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
-	d.Set("public_client", app.PublicClient)
-	d.Set("object_id", app.ObjectID)
+	if err := d.Set("object_id", app.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
 
+	if err := d.Set("application_id", app.AppID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
+		}}
+	}
+
+	if err := d.Set("name", app.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
+		}}
+	}
+
+	if err := d.Set("homepage", app.Homepage); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "homepage"}},
+		}}
+	}
+
+	if err := d.Set("logout_url", app.LogoutURL); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "logout_url"}},
+		}}
+	}
+
+	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "available_to_other_tenants"}},
+		}}
+	}
+
+	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_allow_implicit_flow"}},
+		}}
+	}
+
+	if err := d.Set("public_client", app.PublicClient); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "public_client"}},
+		}}
+	}
+
+	var appType string
 	if v := app.PublicClient; v != nil && *v {
-		d.Set("type", "native")
+		appType = "public"
 	} else {
-		d.Set("type", "webapp/api")
+		appType = "webapp/api"
+	}
+
+	if err := d.Set("type", appType); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
+		}}
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
@@ -717,7 +791,14 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
 	}
-	d.Set("prevent_duplicate_names", preventDuplicates)
+	if err := d.Set("prevent_duplicate_names", preventDuplicates); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "prevent_duplicate_names"}},
+		}}
+	}
 
 	return nil
 }

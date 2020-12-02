@@ -3,13 +3,13 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-azure-helpers/response"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -37,10 +37,10 @@ func servicePrincipalResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"app_role_assignment_required": {
@@ -57,6 +57,8 @@ func servicePrincipalResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"app_roles": graph.SchemaAppRolesComputed(),
 
 			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 
@@ -109,7 +111,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.SetId(*sp.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
@@ -157,9 +159,9 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 
 	objectId := d.Id()
 
-	app, err := client.Get(ctx, objectId)
+	sp, err := client.Get(ctx, objectId)
 	if err != nil {
-		if utils.ResponseWasNotFound(app.Response) {
+		if utils.ResponseWasNotFound(sp.Response) {
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
 			d.SetId("")
 			return nil
@@ -172,13 +174,43 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	d.Set("application_id", app.AppID)
-	d.Set("display_name", app.DisplayName)
-	d.Set("object_id", app.ObjectID)
-	d.Set("app_role_assignment_required", app.AppRoleAssignmentRequired)
+	if err := d.Set("object_id", sp.ObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
+		}}
+	}
 
-	// tags doesn't exist as a property, so extract it
-	if err := d.Set("tags", app.Tags); err != nil {
+	if err := d.Set("application_id", sp.AppID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
+		}}
+	}
+
+	if err := d.Set("display_name", sp.DisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
+		}}
+	}
+
+	if err := d.Set("app_role_assignment_required", sp.AppRoleAssignmentRequired); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role_assignment_required"}},
+		}}
+	}
+
+	if err := d.Set("tags", sp.Tags); err != nil {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Could not set attribute",
@@ -187,7 +219,16 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 		}}
 	}
 
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
+	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
+		}}
+	}
+
+	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
 		return diag.Diagnostics{diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Could not set attribute",

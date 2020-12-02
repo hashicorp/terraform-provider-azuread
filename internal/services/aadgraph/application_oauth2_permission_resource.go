@@ -3,12 +3,12 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -33,22 +33,22 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"admin_consent_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"admin_consent_display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"is_enabled": {
@@ -58,11 +58,11 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 			},
 
 			"permission_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"type": {
@@ -75,21 +75,21 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 			},
 
 			"user_consent_description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"user_consent_display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},
 	}
@@ -161,7 +161,7 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 			}
 			return diag.Diagnostics{diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Failed to add OAuth2 Permission"),
+				Summary:  "Failed to add OAuth2 Permission",
 				Detail:   err.Error(),
 			}}
 		}
@@ -247,15 +247,86 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 		return nil
 	}
 
-	d.Set("application_object_id", id.ObjectId)
-	d.Set("permission_id", id.PermissionId)
-	d.Set("admin_consent_description", permission.AdminConsentDescription)
-	d.Set("admin_consent_display_name", permission.AdminConsentDisplayName)
-	d.Set("is_enabled", permission.IsEnabled)
-	d.Set("type", permission.Type)
-	d.Set("user_consent_description", permission.UserConsentDescription)
-	d.Set("user_consent_display_name", permission.UserConsentDisplayName)
-	d.Set("value", permission.Value)
+	if err := d.Set("application_object_id", id.ObjectId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
+	}
+
+	if err := d.Set("permission_id", id.PermissionId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "permission_id"}},
+		}}
+	}
+
+	if err := d.Set("admin_consent_description", permission.AdminConsentDescription); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "admin_consent_description"}},
+		}}
+	}
+
+	if err := d.Set("admin_consent_display_name", permission.AdminConsentDisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "admin_consent_display_name"}},
+		}}
+	}
+
+	if err := d.Set("is_enabled", permission.IsEnabled); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "is_enabled"}},
+		}}
+	}
+
+	if err := d.Set("type", permission.Type); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
+		}}
+	}
+
+	if err := d.Set("user_consent_description", permission.UserConsentDescription); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_consent_description"}},
+		}}
+	}
+
+	if err := d.Set("user_consent_display_name", permission.UserConsentDisplayName); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_consent_display_name"}},
+		}}
+	}
+
+	if err := d.Set("value", permission.Value); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "value"}},
+		}}
+	}
 
 	return nil
 }

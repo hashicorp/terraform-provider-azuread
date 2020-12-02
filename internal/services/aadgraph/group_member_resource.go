@@ -3,10 +3,10 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
@@ -30,17 +30,17 @@ func groupMemberResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"group_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"member_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 		},
 	}
@@ -120,8 +120,23 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 
-	d.Set("group_object_id", id.GroupId)
-	d.Set("member_object_id", memberObjectID)
+	if err := d.Set("group_object_id", id.GroupId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "group_object_id"}},
+		}}
+	}
+
+	if err := d.Set("member_object_id", memberObjectID); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "member_object_id"}},
+		}}
+	}
 
 	return nil
 }
@@ -150,7 +165,7 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 		}}
 	}
 
-	if _, err := graph.WaitForListRemove(id.MemberId, func() ([]string, error) {
+	if _, err := graph.WaitForListRemove(ctx, id.MemberId, func() ([]string, error) {
 		return graph.GroupAllMembers(ctx, client, id.GroupId)
 	}); err != nil {
 		return diag.Diagnostics{diag.Diagnostic{

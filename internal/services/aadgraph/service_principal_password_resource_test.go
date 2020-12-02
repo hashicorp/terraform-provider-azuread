@@ -3,7 +3,6 @@ package aadgraph_test
 import (
 	"context"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
@@ -20,12 +20,12 @@ type ServicePrincipalPasswordResource struct{}
 
 func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -37,12 +37,13 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 
 func TestAccServicePrincipalPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, startDate, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").HasValue(data.RandomID),
@@ -70,17 +71,17 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 
 func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.RequiresImportErrorStep(r.requiresImport(data)),
+		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
 	})
 }
 
@@ -111,7 +112,7 @@ func (a ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 	return nil, fmt.Errorf("Password Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
 
-func (ServicePrincipalPasswordResource) basic(data acceptance.TestData) string {
+func (ServicePrincipalPasswordResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -120,10 +121,10 @@ resource "azuread_service_principal_password" "test" {
   value                = "%[2]s"
   end_date             = "%[3]s"
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomPassword, data.AdditionalData["end_date"])
+`, ServicePrincipalResource{}.basic(data), data.RandomPassword, endDate)
 }
 
-func (ServicePrincipalPasswordResource) complete(data acceptance.TestData) string {
+func (ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -131,10 +132,11 @@ resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
   description          = "terraform"
   key_id               = "%[2]s"
-  value                = "%[3]s"
+  start_date           = "%[3]s"
   end_date             = "%[4]s"
+  value                = "%[5]s"
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomID, data.RandomPassword, data.AdditionalData["end_date"])
+`, ServicePrincipalResource{}.basic(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
 func (ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
@@ -149,7 +151,7 @@ resource "azuread_service_principal_password" "test" {
 `, ServicePrincipalResource{}.basic(data), data.RandomPassword)
 }
 
-func (ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData) string {
+func (ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -159,5 +161,5 @@ resource "azuread_service_principal_password" "import" {
   value                = azuread_service_principal_password.test.value
   end_date             = azuread_service_principal_password.test.end_date
 }
-`, ServicePrincipalPasswordResource{}.basic(data))
+`, ServicePrincipalPasswordResource{}.basic(data, endDate))
 }

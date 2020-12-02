@@ -3,12 +3,12 @@ package aadgraph
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
@@ -97,7 +97,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(id.String())
 
-	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
+	_, err = graph.WaitForPasswordCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
@@ -158,20 +158,61 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		return nil
 	}
 
-	// value is available in the SDK but isn't returned from the API
-	d.Set("key_id", credential.KeyID)
-	d.Set("service_principal_id", id.ObjectId)
-
-	if description := credential.CustomKeyIdentifier; description != nil {
-		d.Set("description", string(*description))
+	if err := d.Set("service_principal_id", id.ObjectId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "service_principal_id"}},
+		}}
 	}
 
-	if endDate := credential.EndDate; endDate != nil {
-		d.Set("end_date", endDate.Format(time.RFC3339))
+	if err := d.Set("key_id", id.KeyId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "key_id"}},
+		}}
 	}
 
-	if startDate := credential.StartDate; startDate != nil {
-		d.Set("start_date", startDate.Format(time.RFC3339))
+	description := ""
+	if v := credential.CustomKeyIdentifier; v != nil {
+		description = string(*v)
+	}
+	if err := d.Set("description", description); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
+		}}
+	}
+
+	startDate := ""
+	if v := credential.StartDate; v != nil {
+		startDate = v.Format(time.RFC3339)
+	}
+	if err := d.Set("start_date", startDate); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "start_date"}},
+		}}
+	}
+
+	endDate := ""
+	if v := credential.EndDate; v != nil {
+		endDate = v.Format(time.RFC3339)
+	}
+	if err := d.Set("end_date", endDate); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "end_date"}},
+		}}
 	}
 
 	return nil
@@ -245,18 +286,18 @@ func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"description": {
@@ -292,11 +333,11 @@ func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 			},
 
 			"end_date_relative": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"end_date"},
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ExactlyOneOf:     []string{"end_date"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},
 	}

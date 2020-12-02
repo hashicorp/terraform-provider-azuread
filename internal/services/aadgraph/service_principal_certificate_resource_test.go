@@ -3,7 +3,6 @@ package aadgraph_test
 import (
 	"context"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"testing"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
@@ -40,12 +40,12 @@ type ServicePrincipalCertificateResource struct{}
 
 func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -57,13 +57,13 @@ func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 
 func TestAccServicePrincipalCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	data.AdditionalData["start_date"] = time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, startDate, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -92,18 +92,18 @@ func TestAccServicePrincipalCertificate_relativeEndDate(t *testing.T) {
 
 func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basic(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
 		},
-		data.RequiresImportErrorStep(r.requiresImport(data)),
+		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
 	})
 }
 
@@ -134,7 +134,7 @@ func (a ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 	return nil, fmt.Errorf("Key Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
 
-func (ServicePrincipalCertificateResource) basic(data acceptance.TestData) string {
+func (ServicePrincipalCertificateResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -146,10 +146,10 @@ resource "azuread_service_principal_certificate" "test" {
 %[3]s
 EOT
 }
-`, ServicePrincipalResource{}.basic(data), data.AdditionalData["end_date"], testCertificateServicePrincipal)
+`, ServicePrincipalResource{}.basic(data), endDate, testCertificateServicePrincipal)
 }
 
-func (ServicePrincipalCertificateResource) complete(data acceptance.TestData) string {
+func (ServicePrincipalCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -163,7 +163,7 @@ resource "azuread_service_principal_certificate" "test" {
 %[5]s
 EOT
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomID, data.AdditionalData["start_date"], data.AdditionalData["end_date"], testCertificateServicePrincipal)
+`, ServicePrincipalResource{}.basic(data), data.RandomID, startDate, endDate, testCertificateServicePrincipal)
 }
 
 func (ServicePrincipalCertificateResource) relativeEndDate(data acceptance.TestData) string {
@@ -181,7 +181,7 @@ EOT
 `, ServicePrincipalResource{}.basic(data), testCertificateServicePrincipal)
 }
 
-func (ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData) string {
+func (ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -192,5 +192,5 @@ resource "azuread_service_principal_certificate" "import" {
   end_date             = azuread_service_principal_certificate.test.end_date
   value                = azuread_service_principal_certificate.test.value
 }
-`, ServicePrincipalCertificateResource{}.basic(data))
+`, ServicePrincipalCertificateResource{}.basic(data, endDate))
 }

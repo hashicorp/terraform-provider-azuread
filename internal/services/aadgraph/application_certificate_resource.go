@@ -85,7 +85,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 		}}
 	}
 
-	_, err = graph.WaitForKeyCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
+	_, err = graph.WaitForKeyCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
@@ -148,19 +148,61 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		return nil
 	}
 
-	d.Set("application_object_id", id.ObjectId)
-	d.Set("key_id", id.KeyId)
-
-	if keyType := credential.Type; keyType != nil {
-		d.Set("type", keyType)
+	if err := d.Set("application_object_id", id.ObjectId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
+		}}
 	}
 
-	if endDate := credential.EndDate; endDate != nil {
-		d.Set("end_date", endDate.Format(time.RFC3339))
+	if err := d.Set("key_id", id.KeyId); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "key_id"}},
+		}}
 	}
 
-	if startDate := credential.StartDate; startDate != nil {
-		d.Set("start_date", startDate.Format(time.RFC3339))
+	keyType := ""
+	if v := credential.Type; v != nil {
+		keyType = *v
+	}
+	if err := d.Set("type", keyType); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
+		}}
+	}
+
+	startDate := ""
+	if v := credential.StartDate; v != nil {
+		startDate = v.Format(time.RFC3339)
+	}
+	if err := d.Set("start_date", startDate); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "start_date"}},
+		}}
+	}
+
+	endDate := ""
+	if v := credential.EndDate; v != nil {
+		endDate = v.Format(time.RFC3339)
+	}
+	if err := d.Set("end_date", endDate); err != nil {
+		return diag.Diagnostics{diag.Diagnostic{
+			Severity:      diag.Error,
+			Summary:       "Could not set attribute",
+			Detail:        err.Error(),
+			AttributePath: cty.Path{cty.GetAttrStep{Name: "end_date"}},
+		}}
 	}
 
 	return nil
