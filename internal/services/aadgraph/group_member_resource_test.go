@@ -1,258 +1,211 @@
 package aadgraph_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
+type GroupMemberResource struct{}
+
 func TestAccGroupMember_group(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+	r := GroupMemberResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_group(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
-				),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.group(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroupMember_servicePrincipal(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+	r := GroupMemberResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_servicePrincipal(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
-				),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.servicePrincipal(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroupMember_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_member", "testA")
-	pw := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	r := GroupMemberResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_oneUser(data.RandomInteger, pw),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
-				),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.oneUser(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroupMember_multipleUser(t *testing.T) {
 	dataA := acceptance.BuildTestData(t, "azuread_group_member", "testA")
-	dataB := acceptance.BuildTestData(t, "azuread_group_member", "testA")
+	dataB := acceptance.BuildTestData(t, "azuread_group_member", "testB")
+	r := GroupMemberResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
-				),
-			},
-			dataA.ImportStep(),
-			{
-				Config: testAccGroupMember_twoUsers(dataA.RandomInteger, dataA.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
-					resource.TestCheckResourceAttrSet(dataB.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(dataB.ResourceName, "member_object_id"),
-				),
-			},
-			// we rerun the config so the group resource updates with the number of members
-			{
-				Config: testAccGroupMember_twoUsers(dataA.RandomInteger, dataA.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "2"),
-				),
-			},
-			dataA.ImportStep(),
-			{
-				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(dataA.ResourceName, "member_object_id"),
-				),
-			},
-			// we rerun the config so the group resource updates with the number of members
-			{
-				Config: testAccGroupMember_oneUser(dataA.RandomInteger, dataA.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("azuread_group.test", "members.#", "1"),
-				),
-			},
+	dataA.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.oneUser(dataA),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(dataA.ResourceName).ExistsInAzure(r),
+				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+			),
+		},
+		dataA.ImportStep(),
+		{
+			Config: r.twoUsers(dataA),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(dataA.ResourceName).ExistsInAzure(r),
+				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(dataB.ResourceName).ExistsInAzure(r),
+				check.That(dataB.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(dataB.ResourceName).Key("member_object_id").IsGuid(),
+			),
+		},
+		// we rerun the config so the group resource updates with the number of members
+		{
+			Config: r.twoUsers(dataA),
+			Check: resource.ComposeTestCheckFunc(
+				check.That("azuread_group.test").Key("members.#").HasValue("2"),
+			),
+		},
+		dataA.ImportStep(),
+		{
+			Config: r.oneUser(dataA),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(dataA.ResourceName).ExistsInAzure(r),
+				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+			),
+		},
+		// we rerun the config so the group resource updates with the number of members
+		{
+			Config: r.oneUser(dataA),
+			Check: resource.ComposeTestCheckFunc(
+				check.That("azuread_group.test").Key("members.#").HasValue("1"),
+			),
 		},
 	})
 }
 
 func TestAccGroupMember_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_member", "test")
+	r := GroupMemberResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckGroupMemberDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupMember_group(data.RandomInteger),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "group_object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "member_object_id"),
-				),
-			},
-			data.RequiresImportErrorStep(testAccGroupMember_requiresImport(data.RandomInteger)),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.group(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.RequiresImportErrorStep(r.requiresImport(data)),
 	})
 }
 
-func testCheckGroupMemberDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "azuread_group_member" {
-			continue
+func (a GroupMemberResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+	id, err := graph.ParseGroupMemberId(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("parsing Group Member ID: %v", err)
+	}
+
+	if resp, err := clients.AadGraph.GroupsClient.Get(ctx, id.GroupId); err != nil {
+		if utils.ResponseWasNotFound(resp.Response) {
+			return nil, fmt.Errorf("Group with object ID %q does not exist", id.GroupId)
 		}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.GroupsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
+		return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", id.GroupId, err)
+	}
 
-		groupID := rs.Primary.Attributes["group_object_id"]
-		memberID := rs.Primary.Attributes["member_object_id"]
+	members, err := graph.GroupAllMembers(ctx, clients.AadGraph.GroupsClient, id.GroupId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve Group members (groupId: %q): %+v", id.GroupId, err)
+	}
 
-		// see if group exists
-		if resp, err := client.Get(ctx, groupID); err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				continue
-			}
-
-			return fmt.Errorf("retrieving Group with ID %q: %+v", groupID, err)
-		}
-
-		members, err := graph.GroupAllMembers(ctx, client, groupID)
-		if err != nil {
-			return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", groupID, err)
-		}
-
-		var memberObjectID string
-		for _, objectID := range members {
-			if objectID == memberID {
-				memberObjectID = objectID
-			}
-		}
-
-		if memberObjectID != "" {
-			return fmt.Errorf("Group member still exists:\n%#v", memberObjectID)
+	for _, memberId := range members {
+		if memberId == id.MemberId {
+			return utils.Bool(true), nil
 		}
 	}
 
-	return nil
+	return nil, fmt.Errorf("Member %q was not found in Group %q", id.MemberId, id.GroupId)
 }
 
-func testAccGroupMember_group(id int) string {
+func (GroupMemberResource) group(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[1]d"
-}
+%[1]s
 
 resource "azuread_group" "member" {
-  name = "acctestGroup-%[1]d-Member"
+  name = "acctestGroup-%[2]d-Member"
 }
 
 resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_group.member.object_id
 }
-
-`, id)
+`, GroupResource{}.basic(data), data.RandomInteger)
 }
 
-func testAccGroupMember_servicePrincipal(id int) string {
+func (GroupMemberResource) servicePrincipal(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
-}
-
-resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-}
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[1]d"
-}
+%[1]s
+%[2]s
 
 resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_service_principal.test.object_id
 }
-
-`, id)
+`, GroupResource{}.basic(data), ServicePrincipalResource{}.basic(data))
 }
 
-func testAccGroupMember_oneUser(id int, password string) string {
+func (GroupMemberResource) oneUser(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[2]d"
-}
+%[2]s
 
 resource "azuread_group_member" "testA" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testA.object_id
 }
-
-`, testAccUser_threeUsersABC(id, password), id)
+`, GroupResource{}.basic(data), UserResource{}.threeUsersABC(data))
 }
 
-func testAccGroupMember_twoUsers(id int, password string) string {
+func (GroupMemberResource) twoUsers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
-
-resource "azuread_group" "test" {
-  name = "acctestGroup-%[2]d"
-}
+%[2]s
 
 resource "azuread_group_member" "testA" {
   group_object_id  = azuread_group.test.object_id
@@ -263,17 +216,16 @@ resource "azuread_group_member" "testB" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testB.object_id
 }
-
-`, testAccUser_threeUsersABC(id, password), id)
+`, GroupResource{}.basic(data), UserResource{}.threeUsersABC(data))
 }
 
-func testAccGroupMember_requiresImport(ri int) string {
+func (GroupMemberResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_group_member" "import" {
   group_object_id  = azuread_group_member.test.group_object_id
   member_object_id = azuread_group_member.test.member_object_id
 }
-`, testAccGroupMember_group(ri))
+`, GroupMemberResource{}.group(data))
 }

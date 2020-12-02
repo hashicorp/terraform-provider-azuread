@@ -3,13 +3,14 @@ package helpers
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance/types"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/types"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
-func ExistsInAzure(client *clients.Client, testResource types.TestResource, resourceName string) resource.TestCheckFunc {
+func ExistsInAzure(client *clients.AadClient, testResource types.TestResource, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ctx := client.StopContext
 

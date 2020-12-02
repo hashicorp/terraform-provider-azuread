@@ -246,45 +246,65 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 	d.Set("mail_nickname", user.MailNickname)
 	d.Set("usage_location", user.UsageLocation)
 
+	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
-		d.Set("job_title", v.(string))
+		jobTitle = v.(string)
 	}
+	d.Set("job_title", jobTitle)
 
+	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
-		d.Set("department", v.(string))
+		dept = v.(string)
 	}
+	d.Set("department", dept)
 
+	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
-		d.Set("company_name", v.(string))
+		companyName = v.(string)
 	}
+	d.Set("company_name", companyName)
 
+	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
-		d.Set("physical_delivery_office_name", v.(string))
+		physDelivOfficeName = v.(string)
 	}
+	d.Set("physical_delivery_office_name", physDelivOfficeName)
 
+	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
-		d.Set("street_address", v.(string))
+		streetAddress = v.(string)
 	}
+	d.Set("street_address", streetAddress)
 
+	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
-		d.Set("city", v.(string))
+		city = v.(string)
 	}
+	d.Set("city", city)
 
+	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
-		d.Set("state", v.(string))
+		state = v.(string)
 	}
+	d.Set("state", state)
 
+	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
-		d.Set("country", v.(string))
+		country = v.(string)
 	}
+	d.Set("country", country)
 
+	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
-		d.Set("postal_code", v.(string))
+		postalCode = v.(string)
 	}
+	d.Set("postal_code", postalCode)
 
+	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
-		d.Set("mobile", v.(string))
+		mobile = v.(string)
 	}
+	d.Set("mobile", mobile)
 
 	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
 	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])

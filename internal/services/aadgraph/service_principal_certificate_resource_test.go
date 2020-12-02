@@ -1,7 +1,9 @@
 package aadgraph_test
 
 import (
+	"context"
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"testing"
 	"time"
 
@@ -34,163 +36,154 @@ HraQzsK7BNxC5NSwwirT95JH+Xd8rvWu+bCveJz3mnZ3sgolCoxL6Hv1uD2UOZb5
 rCHdW31vp5PYNJaSkYL0j259Ogb8crkIzDr3Z8YF
 -----END CERTIFICATE-----`
 
+type ServicePrincipalCertificateResource struct{}
+
 func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateServicePrincipal
+	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalCertificate_basic(data.RandomInteger, keyType, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalKeyExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-				),
-			},
-			data.ImportStep("value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("value"),
 	})
 }
 
 func TestAccServicePrincipalCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateServicePrincipal
+	data.AdditionalData["start_date"] = time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalCertificate_complete(data.RandomInteger, data.RandomID, keyType, startDate, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalKeyExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccServicePrincipalCertificate_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	value := testCertificateServicePrincipal
+	r := ServicePrincipalCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalCertificate_relativeEndDate(data.RandomInteger, keyType, value),
-				Check: resource.ComposeTestCheckFunc(
-					// can't assert on Value since it's not returned
-					testCheckServicePrincipalKeyExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "end_date"),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.relativeEndDate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateServicePrincipal
+	data.AdditionalData["end_date"] = time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalCertificate_basic(data.RandomInteger, keyType, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalKeyExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-				),
-			},
-			data.RequiresImportErrorStep(testAccServicePrincipalCertificate_requiresImport(data.RandomInteger, keyType, endDate, value)),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.RequiresImportErrorStep(r.requiresImport(data)),
 	})
 }
 
-func testAccServicePrincipalCertificate_template(ri int) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  name = "acctestApp-%d"
+func (a ServicePrincipalCertificateResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+	id, err := graph.ParseCertificateId(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("parsing Service Principal Certificate ID: %v", err)
+	}
+
+	resp, err := clients.AadGraph.ServicePrincipalsClient.Get(ctx, id.ObjectId)
+	if err != nil {
+		if utils.ResponseWasNotFound(resp.Response) {
+			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+		}
+		return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+	}
+
+	credentials, err := clients.AadGraph.ServicePrincipalsClient.ListKeyCredentials(ctx, id.ObjectId)
+	if err != nil {
+		return nil, fmt.Errorf("listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
+	}
+
+	cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
+	if cred != nil {
+		return utils.Bool(true), nil
+	}
+
+	return nil, fmt.Errorf("Key Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
 
-resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-}
-`, ri)
-}
-
-func testAccServicePrincipalCertificate_basic(ri int, keyType, endDate, value string) string {
+func (ServicePrincipalCertificateResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
-  type                 = "%s"
-  end_date             = "%s"
+  type                 = "AsymmetricX509Cert"
+  end_date             = "%[2]s"
   value                = <<EOT
-%s
+%[3]s
 EOT
 }
-`, testAccServicePrincipalCertificate_template(ri), keyType, endDate, value)
+`, ServicePrincipalResource{}.basic(data), data.AdditionalData["end_date"], testCertificateServicePrincipal)
 }
 
-func testAccServicePrincipalCertificate_complete(ri int, keyId, keyType, startDate, endDate, value string) string {
+func (ServicePrincipalCertificateResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
-  key_id               = "%s"
-  type                 = "%s"
-  start_date           = "%s"
-  end_date             = "%s"
+  key_id               = "%[2]s"
+  type                 = "AsymmetricX509Cert"
+  start_date           = "%[3]s"
+  end_date             = "%[4]s"
   value                = <<EOT
-%s
+%[5]s
 EOT
 }
-`, testAccServicePrincipalCertificate_template(ri), keyId, keyType, startDate, endDate, value)
+`, ServicePrincipalResource{}.basic(data), data.RandomID, data.AdditionalData["start_date"], data.AdditionalData["end_date"], testCertificateServicePrincipal)
 }
 
-func testAccServicePrincipalCertificate_relativeEndDate(ri int, keyType, value string) string {
+func (ServicePrincipalCertificateResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
   end_date_relative    = "4320h"
-  type                 = "%s"
+  type                 = "AsymmetricX509Cert"
   value                = <<EOT
-%s
+%[2]s
 EOT
 }
-`, testAccServicePrincipalCertificate_template(ri), keyType, value)
+`, ServicePrincipalResource{}.basic(data), testCertificateServicePrincipal)
 }
 
-func testAccServicePrincipalCertificate_requiresImport(ri int, keyType, endDate, value string) string {
-	template := testAccServicePrincipalCertificate_basic(ri, keyType, endDate, value)
+func (ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_certificate" "import" {
   service_principal_id = azuread_service_principal_certificate.test.service_principal_id
@@ -199,70 +192,5 @@ resource "azuread_service_principal_certificate" "import" {
   end_date             = azuread_service_principal_certificate.test.end_date
   value                = azuread_service_principal_certificate.test.value
 }
-`, template)
-}
-
-func testCheckServicePrincipalKeyExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Service Principal Key Credential ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Service Principal %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on ServicePrincipalsClient: %+v", err)
-		}
-
-		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
-		if err != nil {
-			return fmt.Errorf("listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
-		}
-
-		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
-		if cred != nil {
-			return nil
-		}
-
-		return fmt.Errorf("Key Credential %q was not found in Service Principal %q", id.KeyId, id.ObjectId)
-	}
-}
-
-func testCheckServicePrincipalKeyCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_service_principal_certificate" {
-			continue
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Service Principal Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Service Principal Key Credential still exists:\n%#v", resp)
-	}
-
-	return nil
+`, ServicePrincipalCertificateResource{}.basic(data))
 }

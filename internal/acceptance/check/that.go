@@ -3,12 +3,13 @@ package check
 import (
 	"regexp"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance/helpers"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance/types"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/helpers"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/types"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
 type thatType struct {
@@ -26,7 +27,7 @@ func That(resourceName string) thatType {
 // ExistsInAzure validates that the specified resource exists within Azure
 func (t thatType) ExistsInAzure(testResource types.TestResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acceptance.AzureProvider.Meta().(*clients.Client)
+		client := acceptance.AzureADProvider.Meta().(*clients.AadClient)
 		return helpers.ExistsInAzure(client, testResource, t.resourceName)(s)
 	}
 }
@@ -61,6 +62,12 @@ func (t thatWithKeyType) Exists() resource.TestCheckFunc {
 // IsEmpty returns a TestCheckFunc which validates that the specific key is empty on the resource
 func (t thatWithKeyType) IsEmpty() resource.TestCheckFunc {
 	return resource.TestCheckResourceAttr(t.resourceName, t.key, "")
+}
+
+// IsGuid returns a TestCheckFunc which validates that the specific key is empty on the resource
+func (t thatWithKeyType) IsGuid() resource.TestCheckFunc {
+	r, _ := regexp.Compile(`^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`)
+	return t.MatchesRegex(r)
 }
 
 // HasValue returns a TestCheckFunc which validates that the specific key has the

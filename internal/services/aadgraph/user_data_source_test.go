@@ -2,158 +2,130 @@ package aadgraph_test
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
-func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
-	dsn := "data.azuread_user.test"
-	id := tf.AccRandTimeInt()
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+type UserDataSource struct{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSource_byUserPrincipalName(id, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dsn, "display_name"),
-					resource.TestCheckResourceAttrSet(dsn, "mail_nickname"),
-				),
-			},
-		},
-	})
+func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byUserPrincipalName(data),
+		Check:  r.testCheckFunc(data),
+	}})
 }
 
 func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
-	ri := tf.AccRandTimeInt()
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSource_byUserPrincipalNameNonexistent(ri),
-				ExpectError: regexp.MustCompile("User with UPN \"[^\"]+\" was not found"),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byUserPrincipalNameNonexistent(data),
+		ExpectError: regexp.MustCompile("User with UPN \"[^\"]+\" was not found"),
+	}})
 }
 
 func TestAccUserDataSource_byObjectId(t *testing.T) {
-	dsn := "data.azuread_user.test"
-	id := tf.AccRandTimeInt()
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSource_byObjectId(id, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dsn, "display_name"),
-					resource.TestCheckResourceAttrSet(dsn, "mail_nickname"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byObjectId(data),
+		Check:  r.testCheckFunc(data),
+	}})
 }
 
 func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSource_byObjectIdNonexistent(),
-				ExpectError: regexp.MustCompile("User not found with object ID:"),
-			},
-		},
-	})
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byObjectIdNonexistent(),
+		ExpectError: regexp.MustCompile("User not found with object ID:"),
+	}})
 }
 
 func TestAccUserDataSource_byMailNickname(t *testing.T) {
-	dsn := "data.azuread_user.test"
-	id := tf.AccRandTimeInt()
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserDataSource_byMailNickname(id, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dsn, "user_principal_name"),
-					resource.TestCheckResourceAttrSet(dsn, "account_enabled"),
-					resource.TestCheckResourceAttrSet(dsn, "display_name"),
-					resource.TestCheckResourceAttrSet(dsn, "mail_nickname"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byMailNickname(data),
+		Check:  r.testCheckFunc(data),
+	}})
 }
 
 func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
-	ri := tf.AccRandTimeInt()
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSource_byMailNicknameNonexistent(ri),
-				ExpectError: regexp.MustCompile("User not found with email alias:"),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byMailNicknameNonexistent(data),
+		ExpectError: regexp.MustCompile("User not found with email alias:"),
+	}})
 }
 
-func testAccUserDataSource_byUserPrincipalName(id int, password string) string {
+func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		check.That(data.ResourceName).Key("object_id").IsGuid(),
+		check.That(data.ResourceName).Key("immutable_id").Exists(),
+		check.That(data.ResourceName).Key("user_principal_name").Exists(),
+		check.That(data.ResourceName).Key("account_enabled").Exists(),
+		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestUser-%d-DisplayName", data.RandomInteger)),
+		check.That(data.ResourceName).Key("given_name").HasValue(fmt.Sprintf("acctestUser-%d-GivenName", data.RandomInteger)),
+		check.That(data.ResourceName).Key("surname").HasValue(fmt.Sprintf("acctestUser-%d-Surname", data.RandomInteger)),
+		//check.That(data.ResourceName).Key("mail").Exists(), // TODO only set for O365 domains
+		check.That(data.ResourceName).Key("mail_nickname").HasValue(fmt.Sprintf("acctestUser-%d-MailNickname", data.RandomInteger)),
+		check.That(data.ResourceName).Key("usage_location").HasValue("NO"),
+		check.That(data.ResourceName).Key("job_title").HasValue(fmt.Sprintf("acctestUser-%d-Job", data.RandomInteger)),
+		check.That(data.ResourceName).Key("department").HasValue(fmt.Sprintf("acctestUser-%d-Dept", data.RandomInteger)),
+		check.That(data.ResourceName).Key("company_name").HasValue(fmt.Sprintf("acctestUser-%d-Company", data.RandomInteger)),
+		check.That(data.ResourceName).Key("physical_delivery_office_name").HasValue(fmt.Sprintf("acctestUser-%d-PDON", data.RandomInteger)),
+		check.That(data.ResourceName).Key("street_address").HasValue(fmt.Sprintf("acctestUser-%d-Street", data.RandomInteger)),
+		check.That(data.ResourceName).Key("city").HasValue(fmt.Sprintf("acctestUser-%d-City", data.RandomInteger)),
+		check.That(data.ResourceName).Key("state").HasValue(fmt.Sprintf("acctestUser-%d-State", data.RandomInteger)),
+		check.That(data.ResourceName).Key("country").HasValue(fmt.Sprintf("acctestUser-%d-Country", data.RandomInteger)),
+		check.That(data.ResourceName).Key("postal_code").HasValue("111111"),
+		check.That(data.ResourceName).Key("mobile").HasValue("(555) 555-5555"),
+	)
+}
+
+func (UserDataSource) byUserPrincipalName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_user" "test" {
   user_principal_name = azuread_user.test.user_principal_name
 }
-`, testAccUser_basic(id, password))
+`, UserResource{}.complete(data))
 }
 
-func testAccUserDataSource_byUserPrincipalNameNonexistent(ri int) string {
+func (UserDataSource) byUserPrincipalNameNonexistent(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
-  only_initial = true
-}
+%[1]s
 
 data "azuread_user" "test" {
-  user_principal_name = "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  user_principal_name = "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}"
 }
-`, ri)
+`, DomainsDataSource{}.onlyInitial(), data.RandomInteger)
 }
 
-func testAccUserDataSource_byObjectId(id int, password string) string {
+func (UserDataSource) byObjectId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_user" "test" {
   object_id = azuread_user.test.object_id
 }
-`, testAccUser_basic(id, password))
+`, UserResource{}.complete(data))
 }
 
-func testAccUserDataSource_byObjectIdNonexistent() string {
+func (UserDataSource) byObjectIdNonexistent() string {
 	return `
 data "azuread_user" "test" {
   object_id = "00000000-0000-0000-0000-000000000000"
@@ -161,24 +133,22 @@ data "azuread_user" "test" {
 `
 }
 
-func testAccUserDataSource_byMailNickname(id int, password string) string {
+func (UserDataSource) byMailNickname(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_user" "test" {
   mail_nickname = azuread_user.test.mail_nickname
 }
-`, testAccUser_basic(id, password))
+`, UserResource{}.complete(data))
 }
 
-func testAccUserDataSource_byMailNicknameNonexistent(ri int) string {
+func (UserDataSource) byMailNicknameNonexistent(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
-  only_initial = true
-}
+%[1]s
 
 data "azuread_user" "test" {
-  mail_nickname = "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+  mail_nickname = "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}"
 }
-`, ri)
+`, DomainsDataSource{}.onlyInitial(), data.RandomInteger)
 }

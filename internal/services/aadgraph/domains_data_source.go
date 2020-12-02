@@ -19,7 +19,7 @@ func domainsData() *schema.Resource {
 			"include_unverified": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"only_default", "only_initial"}, //default or initial domains have to be verified
+				ConflictsWith: []string{"only_default", "only_initial"}, // default or initial domains have to be verified
 			},
 			"only_default": {
 				Type:          schema.TypeBool,

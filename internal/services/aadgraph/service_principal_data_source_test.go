@@ -4,110 +4,103 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 )
+
+type ServicePrincipalDataSource struct{}
 
 func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
-	id := uuid.New().String()
+	r := ServicePrincipalDataSource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalDataSource_byApplicationId(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-					resource.TestCheckResourceAttr(data.ResourceName, "app_roles.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.#", "1"),
-					resource.TestCheckResourceAttr(data.ResourceName, "oauth2_permissions.0.admin_consent_description", fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", fmt.Sprintf("acctestApp-%s", id))),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.byApplicationId(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("display_name").Exists(),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
+					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
+						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+			),
 		},
 	})
 }
 
 func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
-	id := uuid.New().String()
+	r := ServicePrincipalDataSource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalDataSource_byDisplayName(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.byDisplayName(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("display_name").Exists(),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
+					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
+						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+			),
 		},
 	})
 }
 
 func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
-	id := uuid.New().String()
+	r := ServicePrincipalDataSource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acceptance.PreCheck(t) },
-		ProviderFactories: acceptance.ProviderFactories,
-		CheckDestroy:      testCheckServicePrincipalDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalDataSource_byObjectId(id),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "object_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "display_name"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.byObjectId(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("display_name").Exists(),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
+					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
+						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+			),
 		},
 	})
 }
 
-func testAccServicePrincipalDataSource_byApplicationId(id string) string {
-	template := testAccServicePrincipal_basic(id)
+func (ServicePrincipalDataSource) byApplicationId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_service_principal" "test" {
   application_id = azuread_service_principal.test.application_id
 }
-`, template)
+`, ServicePrincipalResource{}.basic(data))
 }
 
-func testAccServicePrincipalDataSource_byDisplayName(id string) string {
-	template := testAccServicePrincipal_basic(id)
+func (ServicePrincipalDataSource) byDisplayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_service_principal" "test" {
   display_name = azuread_service_principal.test.display_name
 }
-`, template)
+`, ServicePrincipalResource{}.basic(data))
 }
 
-func testAccServicePrincipalDataSource_byObjectId(id string) string {
-	template := testAccServicePrincipal_basic(id)
+func (ServicePrincipalDataSource) byObjectId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_service_principal" "test" {
   object_id = azuread_service_principal.test.object_id
 }
-`, template)
+`, ServicePrincipalResource{}.basic(data))
 }

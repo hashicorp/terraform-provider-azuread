@@ -55,6 +55,9 @@ type TestData struct {
 	// MetadataURL is the url of the endpoint where the environment is obtained
 	MetadataURL string
 
+	// AdditionalData is a map for storing extra properties unique to a particular test case
+	AdditionalData map[string]interface{}
+
 	// resourceLabel is the local used for the resource - generally "test""
 	resourceLabel string
 }
@@ -77,6 +80,7 @@ func BuildTestData(t *testing.T, resourceType string, resourceLabel string) Test
 		Environment:     *env,
 		EnvironmentName: env.Name,
 		MetadataURL:     os.Getenv("ARM_METADATA_HOST"),
+		AdditionalData:  make(map[string]interface{}),
 
 		ResourceType:  resourceType,
 		resourceLabel: resourceLabel,
