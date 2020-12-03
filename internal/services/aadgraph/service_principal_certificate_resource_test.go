@@ -172,7 +172,7 @@ func (ServicePrincipalCertificateResource) relativeEndDate(data acceptance.TestD
 
 resource "azuread_service_principal_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
-  end_date_relative    = "4320h"
+  end_date_relative    = "4248h"
   type                 = "AsymmetricX509Cert"
   value                = <<EOT
 %[2]s

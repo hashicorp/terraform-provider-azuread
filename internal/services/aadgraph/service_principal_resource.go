@@ -134,6 +134,14 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiag(fmt.Sprintf("Updating service principal with object ID: %q", d.Id()), err.Error(), "")
 	}
 
+	// Wait for replication delay after updating
+	_, err := graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return client.Get(ctx, d.Id())
+	})
+	if err != nil {
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for service principal with object ID: %q", d.Id()), err.Error(), "")
+	}
+
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 

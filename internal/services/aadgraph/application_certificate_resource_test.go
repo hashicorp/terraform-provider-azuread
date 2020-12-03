@@ -172,7 +172,7 @@ func (ApplicationCertificateResource) relativeEndDate(data acceptance.TestData) 
 
 resource "azuread_application_certificate" "test" {
   application_object_id = azuread_application.test.id
-  end_date_relative     = "4320h"
+  end_date_relative     = "4248h"
   type                  = "AsymmetricX509Cert"
   value                 = <<EOT
 %[2]s

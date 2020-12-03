@@ -242,8 +242,6 @@ func TestAccApplication_nativeReplyUrls(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("homepage").HasValue(""),
-				check.That(data.ResourceName).Key("reply_urls.#").HasValue("1"),
-				check.That(data.ResourceName).Key("type").HasValue("native"),
 			),
 		},
 		data.ImportStep(),

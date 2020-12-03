@@ -497,7 +497,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			properties.IdentifierUris = &[]string{}
 		default:
 			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
-				fmt.Sprintf("Unknown application type %v. Supported types are: [webapp/api, native]", appType), "type")
+				fmt.Sprintf("Unknown application type %v. Supported types are: webapp/api, native", appType), "type")
 		}
 	}
 
@@ -581,7 +581,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	var appType string
 	if v := app.PublicClient; v != nil && *v {
-		appType = "public"
+		appType = "native"
 	} else {
 		appType = "webapp/api"
 	}
