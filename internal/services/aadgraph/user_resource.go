@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -280,18 +279,11 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Creating user %q", upn),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Creating user %q", upn), err.Error(), "")
 	}
 
 	if user.ObjectID == nil || *user.ObjectID == "" {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "API returned group with nil object ID",
-		}}
+		return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
 	}
 
 	d.SetId(*user.ObjectID)
@@ -301,11 +293,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for user %q with object ID: %q", upn, *user.ObjectID),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for user %q with object ID: %q", upn, *user.ObjectID), err.Error(), "")
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -398,11 +386,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Updating User with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating User with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -420,119 +404,55 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Retrieving user with object ID: %q", objectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving user with object ID: %q", objectId), err.Error(), "")
 	}
 
 	if err := d.Set("object_id", user.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("immutable_id", user.ImmutableID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "immutable_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "immutable_id")
 	}
 
 	if err := d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_sam_account_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_sam_account_name")
 	}
 
 	if err := d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_user_principal_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_user_principal_name")
 	}
 
 	if err := d.Set("user_principal_name", user.UserPrincipalName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_principal_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
 	}
 
 	if err := d.Set("account_enabled", user.AccountEnabled); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "account_enabled"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "account_enabled")
 	}
 
 	if err := d.Set("display_name", user.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
 	}
 
 	if err := d.Set("given_name", user.GivenName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "given_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "given_name")
 	}
 
 	if err := d.Set("surname", user.Surname); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "surname"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "surname")
 	}
 
 	if err := d.Set("mail", user.Mail); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail")
 	}
 
 	if err := d.Set("mail_nickname", user.MailNickname); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nickname")
 	}
 
 	if err := d.Set("usage_location", user.UsageLocation); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "usage_location"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "usage_location")
 	}
 
 	jobTitle := ""
@@ -540,12 +460,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		jobTitle = v.(string)
 	}
 	if err := d.Set("job_title", jobTitle); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "job_title"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "job_title")
 	}
 
 	dept := ""
@@ -553,12 +468,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		dept = v.(string)
 	}
 	if err := d.Set("department", dept); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "department"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "department")
 	}
 
 	companyName := ""
@@ -566,12 +476,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		companyName = v.(string)
 	}
 	if err := d.Set("company_name", companyName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "company_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "company_name")
 	}
 
 	physDelivOfficeName := ""
@@ -579,12 +484,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		physDelivOfficeName = v.(string)
 	}
 	if err := d.Set("physical_delivery_office_name", physDelivOfficeName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "physical_delivery_office_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "physical_delivery_office_name")
 	}
 
 	streetAddress := ""
@@ -592,12 +492,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		streetAddress = v.(string)
 	}
 	if err := d.Set("street_address", streetAddress); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "street_address"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "street_address")
 	}
 
 	city := ""
@@ -605,12 +500,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		city = v.(string)
 	}
 	if err := d.Set("city", city); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "city"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "city")
 	}
 
 	state := ""
@@ -618,12 +508,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		state = v.(string)
 	}
 	if err := d.Set("state", state); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "state"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "state")
 	}
 
 	country := ""
@@ -631,12 +516,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		country = v.(string)
 	}
 	if err := d.Set("country", country); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "country"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "country")
 	}
 
 	postalCode := ""
@@ -644,12 +524,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		postalCode = v.(string)
 	}
 	if err := d.Set("postal_code", postalCode); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "postal_code"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "postal_code")
 	}
 
 	mobile := ""
@@ -657,12 +532,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		mobile = v.(string)
 	}
 	if err := d.Set("mobile", mobile); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mobile"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mobile")
 	}
 
 	return nil
@@ -674,11 +544,7 @@ func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Deleting user with object ID: %q", d.Id()),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Deleting user with object ID: %q", d.Id()), err.Error(), "")
 		}
 	}
 

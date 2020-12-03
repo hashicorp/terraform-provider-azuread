@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
 func clientConfigData() *schema.Resource {
@@ -50,49 +50,26 @@ func clientConfigDataRead(ctx context.Context, d *schema.ResourceData, meta inte
 		result, err := spClient.List(ctx, filter)
 
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Listing Service Principals",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Listing Service Principals", err.Error(), "")
 		}
 
 		if result.Values() == nil || len(result.Values()) != 1 {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unexpected Service Principal query result",
-				Detail:   fmt.Sprintf("%#v", result.Values()),
-			}}
+			return tf.ErrorDiag("Unexpected Service Principal query result", fmt.Sprintf("%#v", result.Values()), "")
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ObjectID, client.ClientID))
 
 	if err := d.Set("client_id", client.ClientID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "client_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "client_id")
 	}
 
 	if err := d.Set("object_id", client.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("tenant_id", client.TenantID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "tenant_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "tenant_id")
 	}
 
 	return nil

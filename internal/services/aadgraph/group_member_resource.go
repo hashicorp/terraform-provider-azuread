@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -59,11 +58,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	existingMembers, err := graph.GroupAllMembers(ctx, client, groupID)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Listing existing members for group with object ID: %q", id.GroupId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing existing members for group with object ID: %q", id.GroupId), err.Error(), "")
 	}
 	if len(existingMembers) > 0 {
 		for _, v := range existingMembers {
@@ -74,11 +69,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Adding group member",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Adding group member", err.Error(), "")
 	}
 
 	d.SetId(id.String())
@@ -90,21 +81,12 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing Group Member ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing Group Member ID %q", d.Id()), err.Error(), "id")
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, id.GroupId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Retrieving members for group with object ID: %q", id.GroupId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving members for group with object ID: %q", id.GroupId), err.Error(), "")
 	}
 
 	var memberObjectID string
@@ -121,21 +103,11 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err := d.Set("group_object_id", id.GroupId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "group_object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_object_id")
 	}
 
 	if err := d.Set("member_object_id", memberObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "member_object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "member_object_id")
 	}
 
 	return nil
@@ -146,33 +118,20 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing Group Member ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing Group Member ID %q", d.Id()), err.Error(), "id")
 	}
 
 	tf.LockByName(groupMemberResourceName, id.GroupId)
 	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
 	if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), id.GroupId, id.MemberId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Removing member %q from group with object ID: %q", id.MemberId, id.GroupId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing member %q from group with object ID: %q", id.MemberId, id.GroupId), err.Error(), "")
 	}
 
 	if _, err := graph.WaitForListRemove(ctx, id.MemberId, func() ([]string, error) {
 		return graph.GroupAllMembers(ctx, client, id.GroupId)
 	}); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Waiting for group membership removal",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Waiting for group membership removal", err.Error(), "")
 	}
 
 	return nil

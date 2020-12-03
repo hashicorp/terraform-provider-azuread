@@ -7,7 +7,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-azure-helpers/response"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -96,18 +95,10 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 	sp, err := client.Create(ctx, properties)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Could not create service principal",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not create service principal", err.Error(), "")
 	}
 	if sp.ObjectID == nil || *sp.ObjectID == "" {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Bad API response",
-			Detail:   "ObjectID returned for service principal is nil",
-		}}
+		return tf.ErrorDiag("Bad API response", "ObjectID returned for service principal is nil", "")
 	}
 	d.SetId(*sp.ObjectID)
 
@@ -115,11 +106,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for service principal with object ID: %q", *sp.ObjectID),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for service principal with object ID: %q", *sp.ObjectID), err.Error(), "")
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
@@ -144,11 +131,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Updating service principal with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating service principal with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
@@ -167,74 +150,35 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 			return nil
 		}
 
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("retrieving service principal with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("retrieving service principal with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if err := d.Set("object_id", sp.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("application_id", sp.AppID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
 	}
 
 	if err := d.Set("display_name", sp.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
 	}
 
 	if err := d.Set("app_role_assignment_required", sp.AppRoleAssignmentRequired); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role_assignment_required"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_role_assignment_required")
 	}
 
 	if err := d.Set("tags", sp.Tags); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "tags"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "tags")
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
 	}
 
 	return nil
@@ -247,11 +191,7 @@ func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData,
 	app, err := client.Delete(ctx, applicationId)
 	if err != nil {
 		if !response.WasNotFound(app.Response) {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Deleting service principal with object ID: %q", d.Id()),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Deleting service principal with object ID: %q", d.Id()), err.Error(), "")
 		}
 	}
 

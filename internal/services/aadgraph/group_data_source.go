@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
@@ -69,64 +69,35 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 		resp, err := client.Get(ctx, oId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       fmt.Sprintf("No group found with object ID: %q", oId),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("No group found with object ID: %q", oId), "", "object_id")
 			}
 
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Retrieving group with object ID: %q", oId),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Retrieving group with object ID: %q", oId), err.Error(), "")
 		}
 
 		group = resp
 	} else if name, ok := d.Get("name").(string); ok && name != "" {
 		g, err := graph.GroupGetByDisplayName(ctx, client, name)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("No group found with display name: %q", name),
-				Detail:        err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("No group found with display name: %q", name), err.Error(), "name")
 		}
 		group = *g
 	} else {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "One of `object)id` or `name` must be specified",
-		}}
+		return tf.ErrorDiag("One of `object_id` or `name` must be specified", "", "")
 	}
 
 	if group.ObjectID == nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "API returned group with nil object ID",
-		}}
+		return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
 	}
 
 	d.SetId(*group.ObjectID)
 
 	if err := d.Set("object_id", group.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("name", group.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
 	}
 
 	description := ""
@@ -134,48 +105,25 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 		description = v.(string)
 	}
 	if err := d.Set("description", description); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "description")
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Could not retrieve group members for group with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Could not retrieve group members for group with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if err := d.Set("members", members); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "members"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "members")
 	}
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Could not retrieve group owners for group with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Could not retrieve group owners for group with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if err := d.Set("owners", owners); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
 	}
 
 	return nil

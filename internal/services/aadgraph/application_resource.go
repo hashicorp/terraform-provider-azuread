@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -318,31 +317,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if d.Get("prevent_duplicate_names").(bool) {
 		err := graph.ApplicationCheckNameAvailability(ctx, client, name)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-			}}
+			return tf.ErrorDiag(err.Error(), "", "name")
 		}
 	}
 
 	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role"}},
-		}}
+		return tf.ErrorDiag(err.Error(), "", "app_role")
 	}
 
 	appType := d.Get("type")
 	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
 	if appType == "native" {
 		if hasIdentUrls {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Property is not required for a native application",
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "identifier_uris"}},
-			}}
+			return tf.ErrorDiag("Property is not required for a native application", "", "identifier_uris")
 		}
 	}
 
@@ -380,30 +367,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	app, err := client.Create(ctx, properties)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Could not create application",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not create application", err.Error(), "")
 	}
 	if app.ObjectID == nil || *app.ObjectID == "" {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Bad API response",
-			Detail:   "ObjectID returned for application is nil",
-		}}
+		return tf.ErrorDiag("Bad API response", "ObjectID returned for application is nil", "")
 	}
+
 	d.SetId(*app.ObjectID)
 
 	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for Application with object ID: %q", *app.ObjectID),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for Application with object ID: %q", *app.ObjectID), err.Error(), "")
 	}
 
 	// follow suggested hack for azure-cli
@@ -416,11 +392,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			PublicClient:   utils.Bool(true),
 		}
 		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Updating Application with object ID: %q", *app.ObjectID),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", *app.ObjectID), err.Error(), "")
 		}
 	}
 
@@ -428,11 +400,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		appRoles := expandApplicationAppRoles(v)
 		if appRoles != nil {
 			if err := graph.AppRolesSet(ctx, client, *app.ObjectID, appRoles); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       err.Error(),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role"}},
-				}}
+				return tf.ErrorDiag(err.Error(), "", "app_role")
 			}
 		}
 	}
@@ -441,11 +409,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		oauth2Permissions := expandApplicationOAuth2Permissions(v)
 		if oauth2Permissions != nil {
 			if err := graph.OAuth2PermissionsSet(ctx, client, *app.ObjectID, oauth2Permissions); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       err.Error(),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-				}}
+				return tf.ErrorDiag(err.Error(), "", "oauth2_permissions")
 			}
 		}
 	}
@@ -453,11 +417,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("owners"); ok {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, desiredOwners); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-			}}
+			return tf.ErrorDiag(err.Error(), "", "owners")
 		}
 	}
 
@@ -472,20 +432,12 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("name") && d.Get("prevent_duplicate_names").(bool) {
 		err := graph.ApplicationCheckNameAvailability(ctx, client, name)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-			}}
+			return tf.ErrorDiag(err.Error(), "", "name")
 		}
 	}
 
 	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role"}},
-		}}
+		return tf.ErrorDiag(err.Error(), "", "app_role")
 	}
 
 	var properties graphrbac.ApplicationUpdateParameters
@@ -544,32 +496,20 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			properties.PublicClient = utils.Bool(true)
 			properties.IdentifierUris = &[]string{}
 		default:
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
-				Detail:        fmt.Sprintf("Unknown application type %v. Supported types are: [webapp/api, native]", appType),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
+				fmt.Sprintf("Unknown application type %v. Supported types are: [webapp/api, native]", appType), "type")
 		}
 	}
 
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if d.HasChange("app_role") {
 		appRoles := expandApplicationAppRoles(d.Get("app_role"))
 		if appRoles != nil {
 			if err := graph.AppRolesSet(ctx, client, d.Id(), appRoles); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       err.Error(),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role"}},
-				}}
+				return tf.ErrorDiag(err.Error(), "", "app_role")
 			}
 		}
 	}
@@ -578,11 +518,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oauth2Permissions := expandApplicationOAuth2Permissions(d.Get("oauth2_permissions"))
 		if oauth2Permissions != nil {
 			if err := graph.OAuth2PermissionsSet(ctx, client, d.Id(), oauth2Permissions); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       err.Error(),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-				}}
+				return tf.ErrorDiag(err.Error(), "", "oauth2_permissions")
 			}
 		}
 	}
@@ -590,11 +526,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("owners") {
 		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, d.Id(), desiredOwners); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-			}}
+			return tf.ErrorDiag(err.Error(), "", "owners")
 		}
 	}
 
@@ -612,83 +544,39 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 			return nil
 		}
 
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("retrieving Application with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("retrieving Application with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if err := d.Set("object_id", app.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("application_id", app.AppID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
 	}
 
 	if err := d.Set("name", app.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
 	}
 
 	if err := d.Set("homepage", app.Homepage); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "homepage"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "homepage")
 	}
 
 	if err := d.Set("logout_url", app.LogoutURL); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "logout_url"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "logout_url")
 	}
 
 	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "available_to_other_tenants"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "available_to_other_tenants")
 	}
 
 	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_allow_implicit_flow"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_allow_implicit_flow")
 	}
 
 	if err := d.Set("public_client", app.PublicClient); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "public_client"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "public_client")
 	}
 
 	var appType string
@@ -699,92 +587,43 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err := d.Set("type", appType); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "group_membership_claims"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_membership_claims")
 	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "identifier_uris"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "identifier_uris")
 	}
 
 	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "reply_urls"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "reply_urls")
 	}
 
 	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "required_resource_access"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "required_resource_access")
 	}
 
 	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "optional_claims"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "optional_claims")
 	}
 
 	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_role"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_role")
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
 	}
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Could not retrieve application owners",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not retrieve application owners", err.Error(), "")
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
 	}
 
 	preventDuplicates := false
@@ -792,12 +631,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		preventDuplicates = v
 	}
 	if err := d.Set("prevent_duplicate_names", preventDuplicates); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "prevent_duplicate_names"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "prevent_duplicate_names")
 	}
 
 	return nil
@@ -815,22 +649,14 @@ func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()), err.Error(), "")
 		}
 	}
 
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Deleting Application with object ID: %q", d.Id()),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Deleting Application with object ID: %q", d.Id()), err.Error(), "")
 		}
 	}
 

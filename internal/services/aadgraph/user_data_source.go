@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
@@ -169,178 +169,86 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		resp, err := client.Get(ctx, upn)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("User with UPN %q was not found", upn),
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("User with UPN %q was not found", upn), "", "")
 			}
 
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Retrieving user with UPN: %q", upn),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Retrieving user with UPN: %q", upn), err.Error(), "")
 		}
 		user = resp
 	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
 		u, err := graph.UserGetByObjectId(ctx, client, oId)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Finding user with object ID: %q", oId),
-				Detail:        err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Finding user with object ID: %q", oId), err.Error(), "object_id")
 		}
 		if u == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("User not found with object ID: %q", oId),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("User not found with object ID: %q", oId), "", "object_id")
 		}
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		u, err := graph.UserGetByMailNickname(ctx, client, mailNickname)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Finding user with email alias: %q", mailNickname),
-				Detail:        err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Finding user with email alias: %q", mailNickname), err.Error(), "mail_nickname")
 		}
 		if u == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("User not found with email alias: %q", mailNickname),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("User not found with email alias: %q", mailNickname), "", "mail_nickname")
 		}
 		user = *u
 	} else {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "One of `object_id`, `user_principal_name` and `mail_nickname` must be supplied",
-		}}
+		return tf.ErrorDiag("One of `object_id`, `user_principal_name` and `mail_nickname` must be supplied", "", "")
 	}
 
 	if user.ObjectID == nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Bad API response",
-			Detail:   "ObjectID returned for user is nil",
-		}}
+		return tf.ErrorDiag("Bad API response", "Object ID returned for user is nil", "")
 	}
 
 	d.SetId(*user.ObjectID)
 
 	if err := d.Set("object_id", user.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("immutable_id", user.ImmutableID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "immutable_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "immutable_id")
 	}
 
 	if err := d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_sam_account_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_sam_account_name")
 	}
 
 	if err := d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "onpremises_user_principal_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_user_principal_name")
 	}
 
 	if err := d.Set("user_principal_name", user.UserPrincipalName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_principal_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
 	}
 
 	if err := d.Set("account_enabled", user.AccountEnabled); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "account_enabled"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "account_enabled")
 	}
 
 	if err := d.Set("display_name", user.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
 	}
 
 	if err := d.Set("given_name", user.GivenName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "given_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "given_name")
 	}
 
 	if err := d.Set("surname", user.Surname); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "surname"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "surname")
 	}
 
 	if err := d.Set("mail", user.Mail); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail")
 	}
 
 	if err := d.Set("mail_nickname", user.MailNickname); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nickname"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nickname")
 	}
 
 	if err := d.Set("usage_location", user.UsageLocation); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "usage_location"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "usage_location")
 	}
 
 	jobTitle := ""
@@ -348,12 +256,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		jobTitle = v.(string)
 	}
 	if err := d.Set("job_title", jobTitle); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "job_title"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "job_title")
 	}
 
 	dept := ""
@@ -361,12 +264,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		dept = v.(string)
 	}
 	if err := d.Set("department", dept); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "department"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "department")
 	}
 
 	companyName := ""
@@ -374,12 +272,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		companyName = v.(string)
 	}
 	if err := d.Set("company_name", companyName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "company_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "company_name")
 	}
 
 	physDelivOfficeName := ""
@@ -387,12 +280,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		physDelivOfficeName = v.(string)
 	}
 	if err := d.Set("physical_delivery_office_name", physDelivOfficeName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "physical_delivery_office_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "physical_delivery_office_name")
 	}
 
 	streetAddress := ""
@@ -400,12 +288,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		streetAddress = v.(string)
 	}
 	if err := d.Set("street_address", streetAddress); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "street_address"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "street_address")
 	}
 
 	city := ""
@@ -413,12 +296,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		city = v.(string)
 	}
 	if err := d.Set("city", city); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "city"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "city")
 	}
 
 	state := ""
@@ -426,12 +304,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		state = v.(string)
 	}
 	if err := d.Set("state", state); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "state"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "state")
 	}
 
 	country := ""
@@ -439,12 +312,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		country = v.(string)
 	}
 	if err := d.Set("country", country); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "country"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "country")
 	}
 
 	postalCode := ""
@@ -452,12 +320,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		postalCode = v.(string)
 	}
 	if err := d.Set("postal_code", postalCode); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "postal_code"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "postal_code")
 	}
 
 	mobile := ""
@@ -465,12 +328,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		mobile = v.(string)
 	}
 	if err := d.Set("mobile", mobile); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mobile"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mobile")
 	}
 
 	return nil

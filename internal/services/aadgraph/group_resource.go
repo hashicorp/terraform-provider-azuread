@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -90,21 +89,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.Get("prevent_duplicate_names").(bool) {
 		err := graph.GroupCheckNameAvailability(ctx, client, name)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-			}}
+			return tf.ErrorDiag(err.Error(), "", "name")
 		}
 	}
 
 	mailNickname, err := uuid.GenerateUUID()
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Failed to generate mailNickname",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Failed to generate mailNickname", err.Error(), "")
 	}
 
 	properties := graphrbac.GroupCreateParameters{
@@ -121,18 +112,11 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	group, err := client.Create(ctx, properties)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Creating group %q", name),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Creating group %q", name), err.Error(), "")
 	}
 
 	if group.ObjectID == nil || *group.ObjectID == "" {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "API returned group with nil object ID",
-		}}
+		return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
 	}
 
 	d.SetId(*group.ObjectID)
@@ -142,11 +126,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for Group with object ID: %q", *group.ObjectID),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for Group with object ID: %q", *group.ObjectID), err.Error(), "")
 	}
 
 	// Add members if specified
@@ -155,11 +135,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// we could lock here against the group member resource, but they should not be used together (todo conflicts with at a resource level?)
 		if err := graph.GroupAddMembers(ctx, client, *group.ObjectID, *members); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Adding group members",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Adding group members", err.Error(), "")
 		}
 	}
 
@@ -167,21 +143,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("owners"); ok {
 		existingOwners, err := graph.GroupAllOwners(ctx, client, *group.ObjectID)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Could not retrieve group owners",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Could not retrieve group owners", err.Error(), "")
 		}
 		members := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		ownersToAdd := utils.Difference(members, existingOwners)
 
 		if err := graph.GroupAddOwners(ctx, client, *group.ObjectID, ownersToAdd); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Adding group owners",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Adding group owners", err.Error(), "")
 		}
 	}
 
@@ -199,29 +167,15 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return nil
 		}
 
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Retrieving group with object ID: %q", d.Id()),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving group with object ID: %q", d.Id()), err.Error(), "")
 	}
 
 	if err := d.Set("object_id", resp.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("name", resp.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
 	}
 
 	description := ""
@@ -229,46 +183,23 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		description = v.(string)
 	}
 	if err := d.Set("description", description); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "description")
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Could not retrieve group members",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not retrieve group members", err.Error(), "")
 	}
 	if err := d.Set("members", members); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "members"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "members")
 	}
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Could not retrieve group owners",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not retrieve group owners", err.Error(), "")
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
 	}
 
 	preventDuplicates := false
@@ -276,12 +207,7 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		preventDuplicates = v
 	}
 	if err := d.Set("prevent_duplicate_names", preventDuplicates); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "prevent_duplicate_names"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "prevent_duplicate_names")
 	}
 
 	return nil
@@ -293,11 +219,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOkExists("members"); ok && d.HasChange("members") { //nolint:SA1019
 		existingMembers, err := graph.GroupAllMembers(ctx, client, d.Id())
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Could not retrieve group members",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Could not retrieve group members", err.Error(), "")
 		}
 
 		desiredMembers := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
@@ -307,41 +229,25 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, existingMember := range membersForRemoval {
 			log.Printf("[DEBUG] Removing member with id %q from Group with id %q", existingMember, d.Id())
 			if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), d.Id(), existingMember); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Removing group members",
-					Detail:   err.Error(),
-				}}
+				return tf.ErrorDiag("Removing group members", err.Error(), "")
 			}
 
 			if _, err := graph.WaitForListRemove(ctx, existingMember, func() ([]string, error) {
 				return graph.GroupAllMembers(ctx, client, d.Id())
 			}); err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Waiting for group membership removal",
-					Detail:   err.Error(),
-				}}
+				return tf.ErrorDiag("Waiting for group membership removal", err.Error(), "")
 			}
 		}
 
 		if err := graph.GroupAddMembers(ctx, client, d.Id(), membersToAdd); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Adding group members",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Adding group members", err.Error(), "")
 		}
 	}
 
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") { //nolint:SA1019
 		existingOwners, err := graph.GroupAllOwners(ctx, client, d.Id())
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Could not retrieve group owners",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Could not retrieve group owners", err.Error(), "")
 		}
 
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
@@ -352,21 +258,13 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			log.Printf("[DEBUG] Removing member with id %q from Group with id %q", ownerToDelete, d.Id())
 			if resp, err := client.RemoveOwner(ctx, d.Id(), ownerToDelete); err != nil {
 				if !utils.ResponseWasNotFound(resp) {
-					return diag.Diagnostics{diag.Diagnostic{
-						Severity: diag.Error,
-						Summary:  fmt.Sprintf("Removing group owner %q from group with object ID: %q", ownerToDelete, d.Id()),
-						Detail:   err.Error(),
-					}}
+					return tf.ErrorDiag(fmt.Sprintf("Removing group owner %q from group with object ID: %q", ownerToDelete, d.Id()), err.Error(), "")
 				}
 			}
 		}
 
 		if err := graph.GroupAddOwners(ctx, client, d.Id(), ownersToAdd); err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Adding group owners",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Adding group owners", err.Error(), "")
 		}
 	}
 
@@ -378,11 +276,7 @@ func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if resp, err := client.Delete(ctx, d.Id()); err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Deleting group with object ID: %q", d.Id()),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Deleting group with object ID: %q", d.Id()), err.Error(), "")
 		}
 	}
 

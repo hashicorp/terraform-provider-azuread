@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -39,15 +38,11 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 
 	cred, err := graph.KeyCredentialForResource(d)
 	if err != nil {
-		di := diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Generating certificate credentials for application with object ID %q", objectId),
-			Detail:   err.Error(),
-		}
+		attr := ""
 		if kerr, ok := err.(graph.CredentialError); ok {
-			di.AttributePath = cty.Path{cty.GetAttrStep{Name: kerr.Attr()}}
+			attr = kerr.Attr()
 		}
-		return diag.Diagnostics{di}
+		return tf.ErrorDiag(fmt.Sprintf("Generating certificate credentials for application with object ID %q", objectId), err.Error(), attr)
 	}
 
 	id := graph.CredentialIdFrom(objectId, "certificate", *cred.KeyID)
@@ -57,12 +52,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 
 	existingCreds, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing certificate credentials for application with ID %q", objectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credentials for application with ID %q", objectId), err.Error(), "application_object_id")
 	}
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
@@ -70,30 +60,18 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
 			return tf.ImportAsExistsDiag("azuread_application_certificate", id.String())
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Adding application certificate",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Adding application certificate", err.Error(), "")
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Creating certificate credentials %q for application with object ID %q", id.KeyId, id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Creating certificate credentials %q for application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
 	}
 
 	_, err = graph.WaitForKeyCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId), err.Error(), "")
 	}
 
 	d.SetId(id.String())
@@ -106,12 +84,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()), err.Error(), "id")
 	}
 
 	// ensure the Application Object exists
@@ -123,22 +96,12 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 			d.SetId("")
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving application with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with ID %q", id.ObjectId), err.Error(), "name")
 	}
 
 	credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing certificate credentials for application with object ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credentials for application with object ID %q", id.ObjectId), err.Error(), "name")
 	}
 
 	credential := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -149,21 +112,11 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err := d.Set("application_object_id", id.ObjectId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_object_id")
 	}
 
 	if err := d.Set("key_id", id.KeyId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "key_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "key_id")
 	}
 
 	keyType := ""
@@ -171,12 +124,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		keyType = *v
 	}
 	if err := d.Set("type", keyType); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
 	}
 
 	startDate := ""
@@ -184,12 +132,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		startDate = v.Format(time.RFC3339)
 	}
 	if err := d.Set("start_date", startDate); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "start_date"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "start_date")
 	}
 
 	endDate := ""
@@ -197,12 +140,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		endDate = v.Format(time.RFC3339)
 	}
 	if err := d.Set("end_date", endDate); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "end_date"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "end_date")
 	}
 
 	return nil
@@ -213,12 +151,7 @@ func applicationCertificateResourceDelete(ctx context.Context, d *schema.Resourc
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()), err.Error(), "id")
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -232,41 +165,21 @@ func applicationCertificateResourceDelete(ctx context.Context, d *schema.Resourc
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving application with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with ID %q", id.ObjectId), err.Error(), "name")
 	}
 
 	existing, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing certificate credential for application with object ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credential for application with object ID %q", id.ObjectId), err.Error(), "name")
 	}
 
 	newCreds, err := graph.KeyCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "name")
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "name")
 	}
 
 	return nil

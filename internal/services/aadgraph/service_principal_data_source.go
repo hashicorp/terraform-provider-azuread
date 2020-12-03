@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
@@ -62,18 +62,10 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		app, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(app.Response) {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("Service Principal with object ID %q was not found", objectId),
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("Service Principal with object ID %q was not found", objectId), "", "")
 			}
 
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Retrieving service principal with object ID: %q", objectId),
-				Detail:        err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with object ID: %q", objectId), err.Error(), "object_id")
 		}
 
 		sp = &app
@@ -84,11 +76,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Listing service principals for filter %q", filter),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Listing service principals for filter %q", filter), err.Error(), "")
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -103,11 +91,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if sp == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Service principal not found",
-				Detail:   fmt.Sprintf("No service principal found matching display name: %q", displayName),
-			}}
+			return tf.ErrorDiag("Service principal not found", fmt.Sprintf("No service principal found matching display name: %q", displayName), "")
 		}
 	} else {
 		// use the application_id to find the Azure AD service principal
@@ -116,11 +100,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Listing service principals for filter %q", filter),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Listing service principals for filter %q", filter), err.Error(), "")
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -135,67 +115,34 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if sp == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Service principal not found",
-				Detail:   fmt.Sprintf("No service principal found for application ID: %q", applicationId),
-			}}
+			return tf.ErrorDiag("Service principal not found", fmt.Sprintf("No service principal found for application ID: %q", applicationId), "")
 		}
 	}
 
 	if sp.ObjectID == nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Bad API response",
-			Detail:   "ObjectID returned for service principal is nil",
-		}}
+		return tf.ErrorDiag("Bad API response", "ObjectID returned for service principal is nil", "")
 	}
 
 	d.SetId(*sp.ObjectID)
 
 	if err := d.Set("object_id", sp.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("application_id", sp.AppID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
 	}
 
 	if err := d.Set("display_name", sp.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
 	}
 
 	return nil

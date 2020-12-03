@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
@@ -143,11 +143,7 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 					continue
 				}
 
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("Retrieving user with UPN: %q", v),
-					Detail:   err.Error(),
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("Retrieving user with UPN: %q", v), err.Error(), "")
 			}
 			users = append(users, &u)
 		}
@@ -157,22 +153,13 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			for _, v := range oids {
 				u, err := graph.UserGetByObjectId(ctx, client, v.(string))
 				if err != nil {
-					return diag.Diagnostics{diag.Diagnostic{
-						Severity:      diag.Error,
-						Summary:       fmt.Sprintf("Finding user with object ID: %q", v),
-						Detail:        err.Error(),
-						AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
-					}}
+					return tf.ErrorDiag(fmt.Sprintf("Finding user with object ID: %q", v), err.Error(), "object_ids")
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return diag.Diagnostics{diag.Diagnostic{
-							Severity:      diag.Error,
-							Summary:       fmt.Sprintf("User not found with object ID: %q", v),
-							AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
-						}}
+						return tf.ErrorDiag(fmt.Sprintf("User not found with object ID: %q", v), "", "object_ids")
 					}
 				}
 				users = append(users, u)
@@ -182,22 +169,13 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			for _, v := range mailNicknames {
 				u, err := graph.UserGetByMailNickname(ctx, client, v.(string))
 				if err != nil {
-					return diag.Diagnostics{diag.Diagnostic{
-						Severity:      diag.Error,
-						Summary:       fmt.Sprintf("Finding user with email alias: %q", v),
-						Detail:        err.Error(),
-						AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
-					}}
+					return tf.ErrorDiag(fmt.Sprintf("Finding user with email alias: %q", v), err.Error(), "mail_nicknames")
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return diag.Diagnostics{diag.Diagnostic{
-							Severity:      diag.Error,
-							Summary:       fmt.Sprintf("User not found with email alias: %q", v),
-							AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
-						}}
+						return tf.ErrorDiag(fmt.Sprintf("User not found with email alias: %q", v), "", "mail_nicknames")
 					}
 				}
 				users = append(users, u)
@@ -206,11 +184,7 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 	}
 
 	if !ignoreMissing && len(users) != expectedCount {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unexpected number of users returned",
-			Detail:   fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(users)),
-		}}
+		return tf.ErrorDiag("Unexpected number of users returned", fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(users)), "")
 	}
 
 	upns := make([]string, 0, len(users))
@@ -219,10 +193,7 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "API returned user with nil object ID",
-			}}
+			return tf.ErrorDiag("Bad API response", "API returned user with nil object ID", "")
 		}
 
 		oids = append(oids, *u.ObjectID)
@@ -247,49 +218,25 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Able to compute hash for UPNs",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Unable to compute hash for UPNs", err.Error(), "")
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
 	if err := d.Set("object_ids", oids); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_ids")
 	}
 
 	if err := d.Set("user_principal_names", upns); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_principal_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
 	}
 
 	if err := d.Set("mail_nicknames", mailNicknames); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "mail_nicknames"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nicknames")
 	}
 
 	if err := d.Set("users", userList); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "users"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "users")
 	}
 
 	return nil

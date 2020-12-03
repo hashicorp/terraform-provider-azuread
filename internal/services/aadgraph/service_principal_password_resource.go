@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,15 +49,11 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 
 	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
-		di := diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Generating password credentials for service principal with object ID %q", objectId),
-			Detail:   err.Error(),
-		}
+		attr := ""
 		if kerr, ok := err.(graph.CredentialError); ok {
-			di.AttributePath = cty.Path{cty.GetAttrStep{Name: kerr.Attr()}}
+			attr = kerr.Attr()
 		}
-		return diag.Diagnostics{di}
+		return tf.ErrorDiag(fmt.Sprintf("Generating password credentials for service principal with object ID %q", objectId), err.Error(), attr)
 	}
 	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
@@ -67,12 +62,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing password credentials for service principal with ID %q", objectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for service principal with ID %q", objectId), err.Error(), "application_object_id")
 	}
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
@@ -80,19 +70,11 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
 			return tf.ImportAsExistsDiag("azuread_service_principal_password", id.String())
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Adding service principal password",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Adding service principal password", err.Error(), "")
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Creating password credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Creating password credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
 	}
 
 	d.SetId(id.String())
@@ -101,11 +83,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Waiting for certificate credential replication for service principal (ObjectID %q, KeyID %q)", id.ObjectId, id.KeyId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Waiting for certificate credential replication for service principal (ObjectID %q, KeyID %q)", id.ObjectId, id.KeyId), err.Error(), "")
 	}
 
 	return servicePrincipalPasswordResourceRead(ctx, d, meta)
@@ -116,12 +94,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing password credential with ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing password credential with ID %q", d.Id()), err.Error(), "id")
 	}
 
 	// ensure the parent Service Principal exists
@@ -133,22 +106,12 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 			d.SetId("")
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing password credentials for service principal with object ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for service principal with object ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	credential := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -159,21 +122,11 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err := d.Set("service_principal_id", id.ObjectId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "service_principal_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "service_principal_id")
 	}
 
 	if err := d.Set("key_id", id.KeyId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "key_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "key_id")
 	}
 
 	description := ""
@@ -181,12 +134,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		description = string(*v)
 	}
 	if err := d.Set("description", description); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "description"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "description")
 	}
 
 	startDate := ""
@@ -194,12 +142,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		startDate = v.Format(time.RFC3339)
 	}
 	if err := d.Set("start_date", startDate); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "start_date"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "start_date")
 	}
 
 	endDate := ""
@@ -207,12 +150,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		endDate = v.Format(time.RFC3339)
 	}
 	if err := d.Set("end_date", endDate); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "end_date"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "end_date")
 	}
 
 	return nil
@@ -223,12 +161,7 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.Resou
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing password credential with ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing password credential with ID %q", d.Id()), err.Error(), "id")
 	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -242,41 +175,21 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.Resou
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	existing, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Listing password credentials for service principal with object ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for service principal with object ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	newCreds, err := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
 	}
 
 	return nil

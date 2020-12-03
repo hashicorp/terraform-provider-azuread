@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
@@ -62,12 +62,7 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 		for _, v := range names {
 			g, err := graph.GroupGetByDisplayName(ctx, client, v.(string))
 			if err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       fmt.Sprintf("No group found with display name: %q", v),
-					Detail:        err.Error(),
-					AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("No group found with display name: %q", v), err.Error(), "name")
 			}
 			groups = append(groups, *g)
 		}
@@ -76,11 +71,7 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 		for _, v := range oids {
 			resp, err := client.Get(ctx, v.(string))
 			if err != nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("Retrieving group with object ID: %q", v),
-					Detail:   err.Error(),
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("Retrieving group with object ID: %q", v), err.Error(), "")
 			}
 
 			groups = append(groups, resp)
@@ -88,21 +79,14 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 
 	if len(groups) != expectedCount {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unexpected number of groups returned",
-			Detail:   fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(groups)),
-		}}
+		return tf.ErrorDiag("Unexpected number of groups returned", fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(groups)), "")
 	}
 
 	names := make([]string, 0, len(groups))
 	oids := make([]string, 0, len(groups))
 	for _, u := range groups {
 		if u.ObjectID == nil || u.DisplayName == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "API returned group with nil object ID",
-			}}
+			return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
 		}
 
 		oids = append(oids, *u.ObjectID)
@@ -111,31 +95,17 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(names, "-"))); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Able to compute hash for names",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Able to compute hash for names", err.Error(), "")
 	}
 
 	d.SetId("groups#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
 	if err := d.Set("object_ids", oids); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_ids"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_ids")
 	}
 
 	if err := d.Set("names", names); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "names"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "names")
 	}
 
 	return nil

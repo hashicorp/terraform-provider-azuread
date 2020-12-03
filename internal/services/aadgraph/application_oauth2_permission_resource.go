@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -108,11 +107,7 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 	} else {
 		pid, err := uuid.GenerateUUID()
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Generating App Role for application with object ID %q", objectId),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Generating App Role for application with object ID %q", objectId), err.Error(), "")
 		}
 		permissionId = pid
 	}
@@ -137,18 +132,9 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(app.Response) {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Application with object ID %q was not found", objectId),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Application with object ID %q was not found", objectId), "", "application_object_id")
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving application with object ID %q", objectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with object ID %q", objectId), err.Error(), "application_object_id")
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -159,28 +145,16 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 			if _, ok := err.(*graph.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission", id.String())
 			}
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Failed to add OAuth2 Permission",
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag("Failed to add OAuth2 Permission", err.Error(), "")
 		}
 	} else {
 		if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "role_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId), "", "role_id")
 		}
 
 		newPermissions, err = graph.OAuth2PermissionUpdate(app.Oauth2Permissions, &permission)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Updating App Role with ID %q", *permission.ID),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Updating App Role with ID %q", *permission.ID), err.Error(), "")
 		}
 	}
 
@@ -188,12 +162,7 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "name")
 	}
 
 	d.SetId(id.String())
@@ -206,12 +175,7 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()), err.Error(), "id")
 	}
 
 	// ensure the Application Object exists
@@ -223,22 +187,12 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 			d.SetId("")
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId), err.Error(), "application_object_id")
 	}
 
 	permission, err := graph.OAuth2PermissionFindById(app, id.PermissionId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Identifying OAuth2 Permission",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "permission_id"}},
-		}}
+		return tf.ErrorDiag("Identifying OAuth2 Permission", err.Error(), "permission_id")
 	}
 
 	if permission == nil {
@@ -248,84 +202,39 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err := d.Set("application_object_id", id.ObjectId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_object_id")
 	}
 
 	if err := d.Set("permission_id", id.PermissionId); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "permission_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "permission_id")
 	}
 
 	if err := d.Set("admin_consent_description", permission.AdminConsentDescription); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "admin_consent_description"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "admin_consent_description")
 	}
 
 	if err := d.Set("admin_consent_display_name", permission.AdminConsentDisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "admin_consent_display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "admin_consent_display_name")
 	}
 
 	if err := d.Set("is_enabled", permission.IsEnabled); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "is_enabled"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "is_enabled")
 	}
 
 	if err := d.Set("type", permission.Type); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
 	}
 
 	if err := d.Set("user_consent_description", permission.UserConsentDescription); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_consent_description"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_consent_description")
 	}
 
 	if err := d.Set("user_consent_display_name", permission.UserConsentDisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "user_consent_display_name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_consent_display_name")
 	}
 
 	if err := d.Set("value", permission.Value); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "value"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "value")
 	}
 
 	return nil
@@ -336,12 +245,7 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()), err.Error(), "id")
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -355,12 +259,7 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_object_id"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId), err.Error(), "application_object_id")
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -368,43 +267,27 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId), err.Error(), "")
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId), err.Error(), "")
 	}
 
 	properties = graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  fmt.Sprintf("Updating Application with ID %q", id.ObjectId),
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "")
 	}
 
 	return nil

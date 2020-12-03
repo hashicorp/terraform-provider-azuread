@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
 func domainsData() *schema.Resource {
@@ -73,29 +74,18 @@ func domainsDataRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	results, err := client.List(ctx, "")
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Listing domains",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Listing domains", err.Error(), "")
 	}
 
 	d.SetId("domains-" + tenantId) // todo this should be more unique
 
 	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "No domains were return based on the provided filters",
-		}}
+		return tf.ErrorDiag("No domains were returned for the provided filters", "", "")
 	}
 
 	if err = d.Set("domains", domains); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Setting domains",
-			Detail:   err.Error(),
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "domains")
 	}
 
 	return nil

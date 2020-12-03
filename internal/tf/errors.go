@@ -7,6 +7,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
+func ErrorDiag(summary string, detail string, attr string) diag.Diagnostics {
+	d := diag.Diagnostic{
+		Severity: diag.Error,
+		Summary:  summary,
+	}
+	if detail != "" {
+		d.Detail = detail
+	}
+	if attr != "" {
+		d.AttributePath = cty.Path{cty.GetAttrStep{Name: attr}}
+	}
+	return diag.Diagnostics{d}
+}
+
 func ImportAsExistsDiag(resourceName, id string) diag.Diagnostics {
 	return diag.Diagnostics{diag.Diagnostic{
 		Severity:      diag.Error,

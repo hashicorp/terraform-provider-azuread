@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -160,18 +159,10 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 		resp, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  fmt.Sprintf("Application with ID %q was not found", objectId),
-				}}
+				return tf.ErrorDiag(fmt.Sprintf("Application with ID %q was not found", objectId), "", "object_id")
 			}
 
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       fmt.Sprintf("Retrieving application with object ID: %q", objectId),
-				Detail:        err.Error(),
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Retrieving application with object ID: %q", objectId), err.Error(), "object_id")
 		}
 
 		app = resp
@@ -184,189 +175,94 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 			fieldName = "displayName"
 			fieldValue = name
 		} else {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "One of `object_id`, `application_id` or `name` must be specified",
-				AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-			}}
+			return tf.ErrorDiag("One of `object_id`, `application_id` or `name` must be specified", "", "")
 		}
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Listing applications for filter %q", filter),
-				Detail:   err.Error(),
-			}}
+			return tf.ErrorDiag(fmt.Sprintf("Listing applications for filter %q", filter), err.Error(), "")
 		}
 
 		values := resp.Response().Value
 		if values == nil {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Bad API response",
-				Detail:   fmt.Sprintf("nil values for applications matching filter: %q", filter),
-			}}
+			return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil values for applications matching filter: %q", filter), "")
 		}
 		if len(*values) == 0 {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Application not found",
-				Detail:   fmt.Sprintf("No applications found matching filter: %q", filter),
-			}}
+			return tf.ErrorDiag("Application not found", fmt.Sprintf("No applications found matching filter: %q", filter), "")
 		}
 		if len(*values) > 1 {
-			return diag.Diagnostics{diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Multiple applications found",
-				Detail:   fmt.Sprintf("Found multiple applications matching filter: %q", filter),
-			}}
+			return tf.ErrorDiag("Multiple applications found", fmt.Sprintf("Found multiple applications matching filter: %q", filter), "")
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Bad API response",
-					Detail:   fmt.Sprintf("nil AppID for applications matching filter: %q", filter),
-				}}
+				return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil AppID for applications matching filter: %q", filter), "")
 			}
 			if *app.AppID != fieldValue {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Bad API response",
-					Detail:   fmt.Sprintf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter),
-				}}
+				return tf.ErrorDiag("Bad API response", fmt.Sprintf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter), "")
 			}
 		case "displayName":
 			if app.DisplayName == nil {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Bad API response",
-					Detail:   fmt.Sprintf("nil displayName for applications matching filter: %q", filter),
-				}}
+				return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil displayName for applications matching filter: %q", filter), "")
 			}
 			if *app.DisplayName != fieldValue {
-				return diag.Diagnostics{diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Bad API response",
-					Detail:   fmt.Sprintf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter),
-				}}
+				return tf.ErrorDiag("Bad API response", fmt.Sprintf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "")
 			}
 		}
 	}
 
 	if app.ObjectID == nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Bad API response",
-			Detail:   "ObjectID returned for application is nil",
-		}}
+		return tf.ErrorDiag("Bad API response", "ObjectID returned for application is nil", "")
 	}
 
 	d.SetId(*app.ObjectID)
 
 	if err := d.Set("object_id", app.ObjectID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "object_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
 	}
 
 	if err := d.Set("application_id", app.AppID); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "application_id"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
 	}
 
 	if err := d.Set("name", app.DisplayName); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "name"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
 	}
 
 	if err := d.Set("homepage", app.Homepage); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "homepage"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "homepage")
 	}
 
 	if err := d.Set("logout_url", app.LogoutURL); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "logout_url"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "logout_url")
 	}
 
 	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "available_to_other_tenants"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "available_to_other_tenants")
 	}
 
 	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_allow_implicit_flow"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_allow_implicit_flow")
 	}
 
 	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "identifier_uris"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "identifier_uris")
 	}
 
 	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "reply_urls"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "reply_urls")
 	}
 
 	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "required_resource_access"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "required_resource_access")
 	}
 
 	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "optional_claims"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "optional_claims")
 	}
 
 	var appType string
@@ -377,57 +273,27 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("type", appType); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "type"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
 	}
 
 	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "app_roles"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
 	}
 
 	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "group_membership_claims"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_membership_claims")
 	}
 
 	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "oauth2_permissions"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
 	}
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Could not retrieve owners for application with object ID %q", *app.ObjectID),
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-		}}
+		return tf.ErrorDiag(fmt.Sprintf("Could not retrieve owners for application with object ID %q", *app.ObjectID), err.Error(), "owners")
 	}
 	if err := d.Set("owners", owners); err != nil {
-		return diag.Diagnostics{diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Could not set attribute",
-			Detail:        err.Error(),
-			AttributePath: cty.Path{cty.GetAttrStep{Name: "owners"}},
-		}}
+		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
 	}
 
 	return nil
