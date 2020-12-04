@@ -107,7 +107,7 @@ func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 	})
 }
 
-func (a ServicePrincipalCertificateResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	id, err := graph.ParseCertificateId(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Service Principal Certificate ID: %v", err)
@@ -181,7 +181,7 @@ EOT
 `, ServicePrincipalResource{}.basic(data), testCertificateServicePrincipal)
 }
 
-func (ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {
+func (r ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -192,5 +192,5 @@ resource "azuread_service_principal_certificate" "import" {
   end_date             = azuread_service_principal_certificate.test.end_date
   value                = azuread_service_principal_certificate.test.value
 }
-`, ServicePrincipalCertificateResource{}.basic(data, endDate))
+`, r.basic(data, endDate))
 }

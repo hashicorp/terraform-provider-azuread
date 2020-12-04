@@ -414,7 +414,7 @@ func TestAccApplication_ownersUpdate(t *testing.T) {
 	})
 }
 
-func (a ApplicationResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ApplicationResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	resp, err := clients.AadGraph.ApplicationsClient.Get(ctx, state.ID)
 
 	if err != nil {

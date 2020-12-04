@@ -6,32 +6,29 @@ import (
 	"os"
 	"regexp"
 	"strings"
-	"testing"
+	"sync"
 
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/terraform-providers/terraform-provider-azuread/internal/provider"
 )
 
 var AzureADProvider *schema.Provider
-var ProviderFactories map[string]func() (*schema.Provider, error)
-var SupportedProviders map[string]*schema.Provider // TODO deprecated
+var once sync.Once
 
-func PreCheck(t *testing.T) {
-	variables := []string{
-		"ARM_CLIENT_ID",
-		"ARM_CLIENT_SECRET",
-		"ARM_TENANT_ID",
-		"ARM_TEST_LOCATION",
-		"ARM_TEST_LOCATION_ALT",
+func init() {
+	if os.Getenv("TF_ACC") == "" {
+		return
 	}
+	EnsureProvidersAreInitialised()
+}
 
-	for _, variable := range variables {
-		value := os.Getenv(variable)
-		if value == "" {
-			t.Fatalf("`%s` must be set for acceptance tests!", variable)
-		}
-	}
+func EnsureProvidersAreInitialised() {
+	once.Do(func() {
+		AzureADProvider = provider.AzureADProvider()
+	})
 }
 
 func EnvironmentName() string {

@@ -235,7 +235,7 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 	})
 }
 
-func (a GroupResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r GroupResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	resp, err := clients.AadGraph.GroupsClient.Get(ctx, state.ID)
 
 	if err != nil {
@@ -298,7 +298,7 @@ resource "azuread_group" "member" {
 `, ServicePrincipalResource{}.basic(data), UserResource{}.basic(data), data.RandomInteger)
 }
 
-func (GroupResource) withDiverseMembers(data acceptance.TestData) string {
+func (r GroupResource) withDiverseMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -306,10 +306,10 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id]
 }
-`, GroupResource{}.diverseDirectoryObjects(data), data.RandomInteger)
+`, r.diverseDirectoryObjects(data), data.RandomInteger)
 }
 
-func (GroupResource) withDiverseOwners(data acceptance.TestData) string {
+func (r GroupResource) withDiverseOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -317,7 +317,7 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.test.object_id, azuread_service_principal.test.object_id]
 }
-`, GroupResource{}.diverseDirectoryObjects(data), data.RandomInteger)
+`, r.diverseDirectoryObjects(data), data.RandomInteger)
 }
 
 func (GroupResource) withOneMember(data acceptance.TestData) string {
@@ -413,7 +413,7 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
-func (GroupResource) preventDuplicateNamesFail(data acceptance.TestData) string {
+func (r GroupResource) preventDuplicateNamesFail(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -421,5 +421,5 @@ resource "azuread_group" "duplicate" {
   name                    = azuread_group.test.name
   prevent_duplicate_names = true
 }
-`, GroupResource{}.basic(data))
+`, r.basic(data))
 }

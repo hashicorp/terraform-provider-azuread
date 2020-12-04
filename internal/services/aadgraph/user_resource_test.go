@@ -96,7 +96,7 @@ func TestAccUser_threeUsersABC(t *testing.T) {
 	})
 }
 
-func (a UserResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r UserResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	resp, err := clients.AadGraph.UsersClient.Get(ctx, state.ID)
 
 	if err != nil {

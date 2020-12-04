@@ -128,7 +128,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationAppRoleResource) basic(data acceptance.TestData) string {
+func (r ApplicationAppRoleResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -139,10 +139,10 @@ resource "azuread_application_app_role" "test" {
   display_name          = "Admin"
   is_enabled            = true
 }
-`, ApplicationAppRoleResource{}.template(data))
+`, r.template(data))
 }
 
-func (ApplicationAppRoleResource) complete(data acceptance.TestData) string {
+func (r ApplicationAppRoleResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -155,10 +155,10 @@ resource "azuread_application_app_role" "test" {
   role_id               = "%[2]s"
   value                 = "administer"
 }
-`, ApplicationAppRoleResource{}.template(data), data.RandomID)
+`, r.template(data), data.RandomID)
 }
 
-func (ApplicationAppRoleResource) update(data acceptance.TestData) string {
+func (r ApplicationAppRoleResource) update(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -171,7 +171,7 @@ resource "azuread_application_app_role" "test" {
   role_id               = "%[2]s"
   value                 = "administrate"
 }
-`, ApplicationAppRoleResource{}.template(data), data.RandomID)
+`, r.template(data), data.RandomID)
 }
 
 func (ApplicationAppRoleResource) requiresImport(data acceptance.TestData) string {

@@ -85,7 +85,7 @@ func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 	})
 }
 
-func (a ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	id, err := graph.ParsePasswordId(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Service Principal Password ID: %v", err)
@@ -151,7 +151,7 @@ resource "azuread_service_principal_password" "test" {
 `, ServicePrincipalResource{}.basic(data), data.RandomPassword)
 }
 
-func (ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
+func (r ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -161,5 +161,5 @@ resource "azuread_service_principal_password" "import" {
   value                = azuread_service_principal_password.test.value
   end_date             = azuread_service_principal_password.test.end_date
 }
-`, ServicePrincipalPasswordResource{}.basic(data, endDate))
+`, r.basic(data, endDate))
 }

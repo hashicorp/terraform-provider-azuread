@@ -32,7 +32,7 @@ type ServiceRegistration interface {
 	SupportedResources() map[string]*schema.Resource
 }
 
-// Provider returns a terraform.ResourceProvider.
+// AzureADProvider returns a schema.Provider.
 func AzureADProvider() *schema.Provider {
 	// avoids this showing up in test output
 	var debugLog = func(f string, v ...interface{}) {
@@ -216,8 +216,7 @@ func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Buil
 		TerraformVersion: p.TerraformVersion,
 	}
 
-	//nolint:SA1019
-	stopCtx, ok := schema.StopContext(ctx)
+	stopCtx, ok := schema.StopContext(ctx) //nolint:SA1019
 	if !ok {
 		stopCtx = ctx
 	}

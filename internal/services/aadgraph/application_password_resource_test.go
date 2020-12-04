@@ -87,7 +87,7 @@ func TestAccApplicationPassword_requiresImport(t *testing.T) {
 	})
 }
 
-func (a ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	id, err := graph.ParsePasswordId(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Application Password ID: %v", err)
@@ -153,7 +153,7 @@ resource "azuread_application_password" "test" {
 `, ApplicationResource{}.basic(data), data.RandomPassword)
 }
 
-func (ApplicationPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
+func (r ApplicationPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -163,5 +163,5 @@ resource "azuread_application_password" "import" {
   value                 = azuread_application_password.test.value
   end_date              = azuread_application_password.test.end_date
 }
-`, ApplicationPasswordResource{}.basic(data, endDate))
+`, r.basic(data, endDate))
 }

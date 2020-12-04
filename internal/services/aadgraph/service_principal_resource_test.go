@@ -75,7 +75,7 @@ func TestAccServicePrincipal_update(t *testing.T) {
 	})
 }
 
-func (a ServicePrincipalResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	resp, err := clients.AadGraph.ServicePrincipalsClient.Get(ctx, state.ID)
 
 	if err != nil {

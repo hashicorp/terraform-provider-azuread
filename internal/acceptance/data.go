@@ -14,15 +14,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
-func init() {
-	// unit testing
-	if os.Getenv("TF_ACC") == "" {
-		return
-	}
-
-	EnsureProvidersAreInitialised()
-}
-
 type TestData struct {
 	// RandomInteger is a random integer which unique to this test case
 	RandomInteger int

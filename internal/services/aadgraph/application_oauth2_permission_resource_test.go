@@ -96,7 +96,7 @@ func TestAccApplicationOAuth2Permission_requiresImport(t *testing.T) {
 	})
 }
 
-func (a ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	id, err := graph.ParseOAuth2PermissionId(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
@@ -173,7 +173,7 @@ resource "azuread_application_oauth2_permission" "test" {
 `, ApplicationResource{}.basic(data), data.RandomID)
 }
 
-func (ApplicationOAuth2PermissionResource) requiresImport(data acceptance.TestData) string {
+func (r ApplicationOAuth2PermissionResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -188,5 +188,5 @@ resource "azuread_application_oauth2_permission" "import" {
   user_consent_description   = azuread_application_oauth2_permission.test.user_consent_description
   user_consent_display_name  = azuread_application_oauth2_permission.test.user_consent_display_name
 }
-`, ApplicationOAuth2PermissionResource{}.basic(data))
+`, r.basic(data))
 }

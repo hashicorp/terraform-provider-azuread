@@ -135,7 +135,7 @@ func TestAccGroupMember_requiresImport(t *testing.T) {
 	})
 }
 
-func (a GroupMemberResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
 	id, err := graph.ParseGroupMemberId(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Group Member ID: %v", err)
@@ -219,7 +219,7 @@ resource "azuread_group_member" "testB" {
 `, GroupResource{}.basic(data), UserResource{}.threeUsersABC(data))
 }
 
-func (GroupMemberResource) requiresImport(data acceptance.TestData) string {
+func (r GroupMemberResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -227,5 +227,5 @@ resource "azuread_group_member" "import" {
   group_object_id  = azuread_group_member.test.group_object_id
   member_object_id = azuread_group_member.test.member_object_id
 }
-`, GroupMemberResource{}.group(data))
+`, r.group(data))
 }
