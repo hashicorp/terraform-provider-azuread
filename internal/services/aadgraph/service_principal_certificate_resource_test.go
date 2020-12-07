@@ -92,7 +92,7 @@ func TestAccServicePrincipalCertificate_relativeEndDate(t *testing.T) {
 
 func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{

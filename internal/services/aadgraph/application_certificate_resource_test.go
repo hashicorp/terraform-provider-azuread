@@ -92,7 +92,7 @@ func TestAccApplicationCertificate_relativeEndDate(t *testing.T) {
 
 func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ApplicationCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
