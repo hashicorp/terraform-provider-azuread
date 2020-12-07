@@ -40,7 +40,7 @@ type ApplicationCertificateResource struct{}
 
 func TestAccApplicationCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ApplicationCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -58,7 +58,7 @@ func TestAccApplicationCertificate_basic(t *testing.T) {
 func TestAccApplicationCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ApplicationCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -134,7 +134,15 @@ func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clien
 	return nil, fmt.Errorf("Key Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
 }
 
-func (ApplicationCertificateResource) basic(data acceptance.TestData, endDate string) string {
+func (ApplicationCertificateResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationCertificateResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -146,10 +154,10 @@ resource "azuread_application_certificate" "test" {
 %[3]s
 EOT
 }
-`, ApplicationResource{}.basic(data), endDate, testCertificateApplication)
+`, r.template(data), endDate, testCertificateApplication)
 }
 
-func (ApplicationCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
+func (r ApplicationCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -163,22 +171,22 @@ resource "azuread_application_certificate" "test" {
 %[5]s
 EOT
 }
-`, ApplicationResource{}.basic(data), data.RandomID, startDate, endDate, testCertificateApplication)
+`, r.template(data), data.RandomID, startDate, endDate, testCertificateApplication)
 }
 
-func (ApplicationCertificateResource) relativeEndDate(data acceptance.TestData) string {
+func (r ApplicationCertificateResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azuread_application_certificate" "test" {
   application_object_id = azuread_application.test.id
-  end_date_relative     = "4248h"
+  end_date_relative     = "2280h"
   type                  = "AsymmetricX509Cert"
   value                 = <<EOT
 %[2]s
 EOT
 }
-`, ApplicationResource{}.basic(data), testCertificateApplication)
+`, r.template(data), testCertificateApplication)
 }
 
 func (r ApplicationCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {

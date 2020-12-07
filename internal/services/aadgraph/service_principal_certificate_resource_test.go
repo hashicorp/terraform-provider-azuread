@@ -40,7 +40,7 @@ type ServicePrincipalCertificateResource struct{}
 
 func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -58,7 +58,7 @@ func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 func TestAccServicePrincipalCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -134,7 +134,19 @@ func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 	return nil, fmt.Errorf("Key Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
 
-func (ServicePrincipalCertificateResource) basic(data acceptance.TestData, endDate string) string {
+func (ServicePrincipalCertificateResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+`, data.RandomInteger)
+}
+
+func (r ServicePrincipalCertificateResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -146,10 +158,10 @@ resource "azuread_service_principal_certificate" "test" {
 %[3]s
 EOT
 }
-`, ServicePrincipalResource{}.basic(data), endDate, testCertificateServicePrincipal)
+`, r.template(data), endDate, testCertificateServicePrincipal)
 }
 
-func (ServicePrincipalCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
+func (r ServicePrincipalCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -163,22 +175,22 @@ resource "azuread_service_principal_certificate" "test" {
 %[5]s
 EOT
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomID, startDate, endDate, testCertificateServicePrincipal)
+`, r.template(data), data.RandomID, startDate, endDate, testCertificateServicePrincipal)
 }
 
-func (ServicePrincipalCertificateResource) relativeEndDate(data acceptance.TestData) string {
+func (r ServicePrincipalCertificateResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azuread_service_principal_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
-  end_date_relative    = "4248h"
+  end_date_relative    = "2280h"
   type                 = "AsymmetricX509Cert"
   value                = <<EOT
 %[2]s
 EOT
 }
-`, ServicePrincipalResource{}.basic(data), testCertificateServicePrincipal)
+`, r.template(data), testCertificateServicePrincipal)
 }
 
 func (r ServicePrincipalCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {

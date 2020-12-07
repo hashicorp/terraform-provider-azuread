@@ -112,7 +112,19 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 	return nil, fmt.Errorf("Password Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
 
-func (ServicePrincipalPasswordResource) basic(data acceptance.TestData, endDate string) string {
+func (ServicePrincipalPasswordResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+`, data.RandomInteger)
+}
+
+func (r ServicePrincipalPasswordResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -121,10 +133,10 @@ resource "azuread_service_principal_password" "test" {
   value                = "%[2]s"
   end_date             = "%[3]s"
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomPassword, endDate)
+`, r.template(data), data.RandomPassword, endDate)
 }
 
-func (ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
+func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -136,10 +148,10 @@ resource "azuread_service_principal_password" "test" {
   end_date             = "%[4]s"
   value                = "%[5]s"
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomID, startDate, endDate, data.RandomPassword)
+`, r.template(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
-func (ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
+func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -148,7 +160,7 @@ resource "azuread_service_principal_password" "test" {
   value                = "%[2]s"
   end_date_relative    = "8760h"
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomPassword)
+`, r.template(data), data.RandomPassword)
 }
 
 func (r ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {

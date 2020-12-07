@@ -120,7 +120,15 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 	return nil, fmt.Errorf("OAuth2 Permission %q was not found in Application %q", id.PermissionId, id.ObjectId)
 }
 
-func (ApplicationOAuth2PermissionResource) basic(data acceptance.TestData) string {
+func (ApplicationOAuth2PermissionResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationOAuth2PermissionResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -134,10 +142,10 @@ resource "azuread_application_oauth2_permission" "test" {
   user_consent_display_name  = "Administer"
   value                      = "administer"
 }
-`, ApplicationResource{}.basic(data))
+`, r.template(data))
 }
 
-func (ApplicationOAuth2PermissionResource) complete(data acceptance.TestData) string {
+func (r ApplicationOAuth2PermissionResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -152,10 +160,10 @@ resource "azuread_application_oauth2_permission" "test" {
   user_consent_display_name  = "Administer"
   value                      = "administer"
 }
-`, ApplicationResource{}.basic(data), data.RandomID)
+`, r.template(data), data.RandomID)
 }
 
-func (ApplicationOAuth2PermissionResource) update(data acceptance.TestData) string {
+func (r ApplicationOAuth2PermissionResource) update(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -170,7 +178,7 @@ resource "azuread_application_oauth2_permission" "test" {
   user_consent_display_name  = "Administrate"
   value                      = "administrate"
 }
-`, ApplicationResource{}.basic(data), data.RandomID)
+`, r.template(data), data.RandomID)
 }
 
 func (r ApplicationOAuth2PermissionResource) requiresImport(data acceptance.TestData) string {

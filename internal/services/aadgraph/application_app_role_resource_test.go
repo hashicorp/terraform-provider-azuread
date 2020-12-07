@@ -174,7 +174,7 @@ resource "azuread_application_app_role" "test" {
 `, r.template(data), data.RandomID)
 }
 
-func (ApplicationAppRoleResource) requiresImport(data acceptance.TestData) string {
+func (r ApplicationAppRoleResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %s
 
@@ -186,5 +186,5 @@ resource "azuread_application_app_role" "import" {
   is_enabled            = azuread_application_app_role.test.is_enabled
   role_id               = azuread_application_app_role.test.role_id
 }
-`, ApplicationAppRoleResource{}.basic(data))
+`, r.basic(data))
 }

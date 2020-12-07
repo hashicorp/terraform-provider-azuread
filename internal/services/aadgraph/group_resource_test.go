@@ -248,6 +248,59 @@ func (r GroupResource) Exists(ctx context.Context, clients *clients.AadClient, s
 	return utils.Bool(resp.ObjectID != nil && *resp.ObjectID == state.ID), nil
 }
 
+func (GroupResource) templateDiverseDirectoryObjects(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_application" "test" {
+  name = "acctestGroup-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestGroup.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d"
+  password            = "%[2]s"
+}
+
+resource "azuread_group" "member" {
+  name = "acctestGroup-%[1]d-Member"
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
+func (GroupResource) templateThreeUsers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "testA" {
+  user_principal_name = "acctestGroup.%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-A"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testB" {
+  user_principal_name = "acctestGroup.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-B"
+  mail_nickname       = "acctestGroup-%[1]d-B"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testC" {
+  user_principal_name = "acctestGroup.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-C"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
 func (GroupResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
@@ -258,15 +311,23 @@ resource "azuread_group" "test" {
 
 func (GroupResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%[1]s
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestGroup.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d"
+  password            = "%[2]s"
+}
 
 resource "azuread_group" "test" {
-  name        = "acctestGroup-%[2]d"
+  name        = "acctestGroup-%[1]d"
   description = "Please delete me as this is a.test.AD group!"
   members     = [azuread_user.test.object_id]
   owners      = [azuread_user.test.object_id]
 }
-`, UserResource{}.basic(data), data.RandomInteger)
+`, data.RandomInteger, data.RandomPassword)
 }
 
 func (GroupResource) noMembers(data acceptance.TestData) string {
@@ -287,17 +348,6 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
-func (GroupResource) diverseDirectoryObjects(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-%[2]s
-
-resource "azuread_group" "member" {
-  name = "acctestGroup-%[3]d-Member"
-}
-`, ServicePrincipalResource{}.basic(data), UserResource{}.basic(data), data.RandomInteger)
-}
-
 func (r GroupResource) withDiverseMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -306,7 +356,7 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id]
 }
-`, r.diverseDirectoryObjects(data), data.RandomInteger)
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
 func (r GroupResource) withDiverseOwners(data acceptance.TestData) string {
@@ -317,10 +367,10 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.test.object_id, azuread_service_principal.test.object_id]
 }
-`, r.diverseDirectoryObjects(data), data.RandomInteger)
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
-func (GroupResource) withOneMember(data acceptance.TestData) string {
+func (r GroupResource) withOneMember(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -328,10 +378,10 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.testA.object_id]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (GroupResource) withOneOwner(data acceptance.TestData) string {
+func (r GroupResource) withOneOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -339,10 +389,10 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.testA.object_id]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (GroupResource) withThreeMembers(data acceptance.TestData) string {
+func (r GroupResource) withThreeMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -350,10 +400,10 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (GroupResource) withThreeOwners(data acceptance.TestData) string {
+func (r GroupResource) withThreeOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -361,10 +411,10 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (GroupResource) withOwnersAndMembers(data acceptance.TestData) string {
+func (r GroupResource) withOwnersAndMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -373,24 +423,30 @@ resource "azuread_group" "test" {
   owners  = [azuread_user.testA.object_id]
   members = [azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%[1]s
+resource "azuread_application" "test" {
+  name = "acctestGroup-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
 
 resource "azuread_group" "test" {
-  name    = "acctestGroup-%[2]d"
+  name    = "acctestGroup-%[1]d"
   members = [azuread_service_principal.test.object_id]
 }
-`, ServicePrincipalResource{}.basic(data), data.RandomInteger)
+`, data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {

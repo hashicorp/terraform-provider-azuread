@@ -91,7 +91,7 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.A
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  name = "acctestServicePrincipal-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
@@ -103,7 +103,7 @@ resource "azuread_service_principal" "test" {
 func (ServicePrincipalResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctesttApp-%[1]d"
+  name = "acctestServicePrincipal-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {

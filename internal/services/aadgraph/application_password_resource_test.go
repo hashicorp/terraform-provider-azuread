@@ -114,7 +114,15 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	return nil, fmt.Errorf("Password Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
 }
 
-func (ApplicationPasswordResource) basic(data acceptance.TestData, endDate string) string {
+func (ApplicationPasswordResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name = "acctestApp-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationPasswordResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -123,10 +131,10 @@ resource "azuread_application_password" "test" {
   value                 = "%[2]s"
   end_date              = "%[3]s"
 }
-`, ApplicationResource{}.basic(data), data.RandomPassword, endDate)
+`, r.template(data), data.RandomPassword, endDate)
 }
 
-func (ApplicationPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
+func (r ApplicationPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -138,10 +146,10 @@ resource "azuread_application_password" "test" {
   end_date              = "%[4]s"
   value                 = "%[5]s"
 }
-`, ApplicationResource{}.basic(data), data.RandomID, startDate, endDate, data.RandomPassword)
+`, r.template(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
-func (ApplicationPasswordResource) relativeEndDate(data acceptance.TestData) string {
+func (r ApplicationPasswordResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -150,7 +158,7 @@ resource "azuread_application_password" "test" {
   value                 = "%[2]s"
   end_date_relative     = "8760h"
 }
-`, ApplicationResource{}.basic(data), data.RandomPassword)
+`, r.template(data), data.RandomPassword)
 }
 
 func (r ApplicationPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {

@@ -27,7 +27,7 @@ func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
 				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
 					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
-						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+						fmt.Sprintf("acctestServicePrincipal-%d", data.RandomInteger))),
 			),
 		},
 	})
@@ -48,7 +48,7 @@ func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
 				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
 					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
-						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+						fmt.Sprintf("acctestServicePrincipal-%d", data.RandomInteger))),
 			),
 		},
 	})
@@ -69,7 +69,7 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("1"),
 				check.That(data.ResourceName).Key("oauth2_permissions.0.admin_consent_description").HasValue(
 					fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.",
-						fmt.Sprintf("acctestApp-%d", data.RandomInteger))),
+						fmt.Sprintf("acctestServicePrincipal-%d", data.RandomInteger))),
 			),
 		},
 	})

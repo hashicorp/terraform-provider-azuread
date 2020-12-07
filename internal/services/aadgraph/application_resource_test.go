@@ -486,12 +486,20 @@ resource "azuread_application" "test" {
 
 func (ApplicationResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%[1]s
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = "%[2]s"
+}
 
 resource "azuread_application" "test" {
-  name                       = "acctest-APP-%[2]d"
-  homepage                   = "https://homepage-%[2]d"
-  identifier_uris            = ["api://hashicorptestapp-%[2]d"]
+  name                       = "acctest-APP-%[1]d"
+  homepage                   = "https://homepage-%[1]d"
+  identifier_uris            = ["api://hashicorptestapp-%[1]d"]
   reply_urls                 = ["https://unittest.hashicorptest.com"]
   logout_url                 = "https://log.me.out"
   available_to_other_tenants = true
@@ -536,12 +544,12 @@ resource "azuread_application" "test" {
   }
 
   oauth2_permissions {
-    admin_consent_description  = "Allow the application to access acctest-APP-%[2]d on behalf of the signed-in user."
-    admin_consent_display_name = "Access acctest-APP-%[2]d"
+    admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+    admin_consent_display_name = "Access acctest-APP-%[1]d"
     is_enabled                 = true
     type                       = "User"
-    user_consent_description   = "Allow the application to access acctest-APP-%[2]d on your behalf."
-    user_consent_display_name  = "Access acctest-APP-%[2]d"
+    user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+    user_consent_display_name  = "Access acctest-APP-%[1]d"
     value                      = "user_impersonation"
   }
 
@@ -564,7 +572,7 @@ resource "azuread_application" "test" {
 
   owners = [azuread_user.test.object_id]
 }
-`, UserResource{}.basic(data), data.RandomInteger)
+`, data.RandomInteger, data.RandomPassword)
 }
 
 func (ApplicationResource) appRoles(data acceptance.TestData) string {
@@ -709,7 +717,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) preventDuplicateNamesFail(data acceptance.TestData) string {
+func (r ApplicationResource) preventDuplicateNamesFail(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -717,7 +725,7 @@ resource "azuread_application" "duplicate" {
   name                    = azuread_application.test.name
   prevent_duplicate_names = true
 }
-`, ApplicationResource{}.basic(data))
+`, r.basic(data))
 }
 
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsValues(data acceptance.TestData) string {
@@ -744,7 +752,34 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) singleOwner(data acceptance.TestData) string {
+func (ApplicationResource) templateThreeUsers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "testA" {
+  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-A"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testB" {
+  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-B"
+  mail_nickname       = "acctestUser-%[1]d-B"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testC" {
+  user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-C"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
+func (r ApplicationResource) singleOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -754,10 +789,10 @@ resource "azuread_application" "test" {
     azuread_user.testA.object_id,
   ]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (ApplicationResource) threeOwners(data acceptance.TestData) string {
+func (r ApplicationResource) threeOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -769,10 +804,10 @@ resource "azuread_application" "test" {
     azuread_user.testC.object_id,
   ]
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (ApplicationResource) removeOwners(data acceptance.TestData) string {
+func (r ApplicationResource) removeOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -780,5 +815,5 @@ resource "azuread_application" "test" {
   name   = "acctest-APP-%[2]d"
   owners = []
 }
-`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }

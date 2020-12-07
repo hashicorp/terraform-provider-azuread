@@ -163,7 +163,15 @@ func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.AadCli
 	return nil, fmt.Errorf("Member %q was not found in Group %q", id.MemberId, id.GroupId)
 }
 
-func (GroupMemberResource) group(data acceptance.TestData) string {
+func (GroupMemberResource) template(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name = "acctestGroup-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (r GroupMemberResource) group(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -175,10 +183,10 @@ resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_group.member.object_id
 }
-`, GroupResource{}.basic(data), data.RandomInteger)
+`, r.template(data), data.RandomInteger)
 }
 
-func (GroupMemberResource) servicePrincipal(data acceptance.TestData) string {
+func (r GroupMemberResource) servicePrincipal(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -187,10 +195,10 @@ resource "azuread_group_member" "test" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_service_principal.test.object_id
 }
-`, GroupResource{}.basic(data), ServicePrincipalResource{}.basic(data))
+`, r.template(data), ServicePrincipalResource{}.basic(data))
 }
 
-func (GroupMemberResource) oneUser(data acceptance.TestData) string {
+func (r GroupMemberResource) oneUser(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -199,10 +207,10 @@ resource "azuread_group_member" "testA" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testA.object_id
 }
-`, GroupResource{}.basic(data), UserResource{}.threeUsersABC(data))
+`, r.template(data), UserResource{}.threeUsersABC(data))
 }
 
-func (GroupMemberResource) twoUsers(data acceptance.TestData) string {
+func (r GroupMemberResource) twoUsers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 %[2]s
@@ -216,7 +224,7 @@ resource "azuread_group_member" "testB" {
   group_object_id  = azuread_group.test.object_id
   member_object_id = azuread_user.testB.object_id
 }
-`, GroupResource{}.basic(data), UserResource{}.threeUsersABC(data))
+`, r.template(data), UserResource{}.threeUsersABC(data))
 }
 
 func (r GroupMemberResource) requiresImport(data acceptance.TestData) string {
