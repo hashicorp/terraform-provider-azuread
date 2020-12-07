@@ -20,8 +20,8 @@ func TestAccApplicationDataSource_byObjectId(t *testing.T) {
 		{
 			Config: r.objectId(data),
 			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").IsGuid(),
-				check.That(data.ResourceName).Key("object_id").IsGuid(),
+				check.That(data.ResourceName).Key("application_id").IsUuid(),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("homepage").HasValue(fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("identifier_uris.#").HasValue("1"),
@@ -45,8 +45,8 @@ func TestAccApplicationDataSource_byApplicationId(t *testing.T) {
 		{
 			Config: r.applicationId(data),
 			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").IsGuid(),
-				check.That(data.ResourceName).Key("object_id").IsGuid(),
+				check.That(data.ResourceName).Key("application_id").IsUuid(),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("homepage").HasValue(fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("identifier_uris.#").HasValue("1"),
@@ -70,8 +70,8 @@ func TestAccApplicationDataSource_byName(t *testing.T) {
 		{
 			Config: r.name(data),
 			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").IsGuid(),
-				check.That(data.ResourceName).Key("object_id").IsGuid(),
+				check.That(data.ResourceName).Key("application_id").IsUuid(),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("homepage").HasValue(fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("identifier_uris.#").HasValue("1"),

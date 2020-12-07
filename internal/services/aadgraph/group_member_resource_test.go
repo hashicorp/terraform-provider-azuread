@@ -26,8 +26,8 @@ func TestAccGroupMember_group(t *testing.T) {
 			Config: r.group(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		data.ImportStep(),
@@ -43,8 +43,8 @@ func TestAccGroupMember_servicePrincipal(t *testing.T) {
 			Config: r.servicePrincipal(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		data.ImportStep(),
@@ -60,8 +60,8 @@ func TestAccGroupMember_user(t *testing.T) {
 			Config: r.oneUser(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(data.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(data.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		data.ImportStep(),
@@ -78,8 +78,8 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 			Config: r.oneUser(dataA),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
-				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		dataA.ImportStep(),
@@ -87,11 +87,11 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 			Config: r.twoUsers(dataA),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
-				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsUuid(),
 				check.That(dataB.ResourceName).ExistsInAzure(r),
-				check.That(dataB.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(dataB.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(dataB.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(dataB.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		// we rerun the config so the group resource updates with the number of members
@@ -106,8 +106,8 @@ func TestAccGroupMember_multipleUser(t *testing.T) {
 			Config: r.oneUser(dataA),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
-				check.That(dataA.ResourceName).Key("group_object_id").IsGuid(),
-				check.That(dataA.ResourceName).Key("member_object_id").IsGuid(),
+				check.That(dataA.ResourceName).Key("group_object_id").IsUuid(),
+				check.That(dataA.ResourceName).Key("member_object_id").IsUuid(),
 			),
 		},
 		// we rerun the config so the group resource updates with the number of members

@@ -72,7 +72,7 @@ func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 
 func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
-		check.That(data.ResourceName).Key("object_id").IsGuid(),
+		check.That(data.ResourceName).Key("object_id").IsUuid(),
 		check.That(data.ResourceName).Key("immutable_id").Exists(),
 		check.That(data.ResourceName).Key("user_principal_name").Exists(),
 		check.That(data.ResourceName).Key("account_enabled").Exists(),

@@ -22,7 +22,7 @@ func TestAccClientConfigDataSource_basic(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("client_id").HasValue(clientId),
 				check.That(data.ResourceName).Key("tenant_id").HasValue(tenantId),
-				check.That(data.ResourceName).Key("object_id").IsGuid(),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
 		},
 	})

@@ -64,8 +64,8 @@ func (t thatWithKeyType) IsEmpty() resource.TestCheckFunc {
 	return resource.TestCheckResourceAttr(t.resourceName, t.key, "")
 }
 
-// IsGuid returns a TestCheckFunc which validates that the specific key is empty on the resource
-func (t thatWithKeyType) IsGuid() resource.TestCheckFunc {
+// IsUuid returns a TestCheckFunc which validates that the specific key value is a valid UUID
+func (t thatWithKeyType) IsUuid() resource.TestCheckFunc {
 	r, _ := regexp.Compile(`^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`)
 	return t.MatchesRegex(r)
 }
