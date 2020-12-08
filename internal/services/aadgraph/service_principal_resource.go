@@ -2,6 +2,7 @@ package aadgraph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -95,10 +96,10 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 	sp, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiag("Could not create service principal", err.Error(), "")
+		return tf.ErrorDiagF(err, "Could not create service principal")
 	}
 	if sp.ObjectID == nil || *sp.ObjectID == "" {
-		return tf.ErrorDiag("Bad API response", "ObjectID returned for service principal is nil", "")
+		return tf.ErrorDiagF(errors.New("ObjectID returned for service principal is nil"), "Bad API response")
 	}
 	d.SetId(*sp.ObjectID)
 
@@ -106,7 +107,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for service principal with object ID: %q", *sp.ObjectID), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for service principal with object ID: %q", *sp.ObjectID)
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
@@ -131,7 +132,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating service principal with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
 	}
 
 	// Wait for replication delay after updating
@@ -139,7 +140,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		return client.Get(ctx, d.Id())
 	})
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for service principal with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for service principal with object ID: %q", d.Id())
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
@@ -158,35 +159,35 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 			return nil
 		}
 
-		return tf.ErrorDiag(fmt.Sprintf("retrieving service principal with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
 	}
 
-	if err := d.Set("object_id", sp.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", sp.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("application_id", sp.AppID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
+	if dg := tf.Set(d, "application_id", sp.AppID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("display_name", sp.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
+	if dg := tf.Set(d, "display_name", sp.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("app_role_assignment_required", sp.AppRoleAssignmentRequired); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_role_assignment_required")
+	if dg := tf.Set(d, "app_role_assignment_required", sp.AppRoleAssignmentRequired); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("tags", sp.Tags); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "tags")
+	if dg := tf.Set(d, "tags", sp.Tags); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
+	if dg := tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
+	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -199,7 +200,7 @@ func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData,
 	app, err := client.Delete(ctx, applicationId)
 	if err != nil {
 		if !response.WasNotFound(app.Response) {
-			return tf.ErrorDiag(fmt.Sprintf("Deleting service principal with object ID: %q", d.Id()), err.Error(), "")
+			return tf.ErrorDiagF(err, "Deleting service principal with object ID: %q", d.Id())
 		}
 	}
 

@@ -74,18 +74,18 @@ func domainsDataRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	results, err := client.List(ctx, "")
 	if err != nil {
-		return tf.ErrorDiag("Listing domains", err.Error(), "")
+		return tf.ErrorDiagF(err, "Listing domains")
 	}
 
 	d.SetId("domains-" + tenantId) // todo this should be more unique
 
 	domains := flattenDomains(results.Value, includeUnverified, onlyDefault, onlyInitial)
 	if len(domains) == 0 {
-		return tf.ErrorDiag("No domains were returned for the provided filters", "", "")
+		return tf.ErrorDiagF(nil, "No domains were returned for the provided filters")
 	}
 
-	if err = d.Set("domains", domains); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "domains")
+	if dg := tf.Set(d, "domains", domains); dg != nil {
+		return dg
 	}
 
 	return nil

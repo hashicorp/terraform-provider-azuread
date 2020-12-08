@@ -2,7 +2,6 @@ package aadgraph
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -58,7 +57,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	existingMembers, err := graph.GroupAllMembers(ctx, client, groupID)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing existing members for group with object ID: %q", id.GroupId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Listing existing members for group with object ID: %q", id.GroupId)
 	}
 	if len(existingMembers) > 0 {
 		for _, v := range existingMembers {
@@ -69,7 +68,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
-		return tf.ErrorDiag("Adding group member", err.Error(), "")
+		return tf.ErrorDiagF(err, "Adding group member")
 	}
 
 	d.SetId(id.String())
@@ -81,12 +80,12 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing Group Member ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, id.GroupId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving members for group with object ID: %q", id.GroupId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Retrieving members for group with object ID: %q", id.GroupId)
 	}
 
 	var memberObjectID string
@@ -102,12 +101,12 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 
-	if err := d.Set("group_object_id", id.GroupId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_object_id")
+	if dg := tf.Set(d, "group_object_id", id.GroupId); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("member_object_id", memberObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "member_object_id")
+	if dg := tf.Set(d, "member_object_id", memberObjectID); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -118,20 +117,20 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing Group Member ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
 
 	tf.LockByName(groupMemberResourceName, id.GroupId)
 	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
 	if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), id.GroupId, id.MemberId); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing member %q from group with object ID: %q", id.MemberId, id.GroupId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Removing member %q from group with object ID: %q", id.MemberId, id.GroupId)
 	}
 
 	if _, err := graph.WaitForListRemove(ctx, id.MemberId, func() ([]string, error) {
 		return graph.GroupAllMembers(ctx, client, id.GroupId)
 	}); err != nil {
-		return tf.ErrorDiag("Waiting for group membership removal", err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for group membership removal")
 	}
 
 	return nil

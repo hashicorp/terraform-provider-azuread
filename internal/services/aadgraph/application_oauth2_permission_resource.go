@@ -2,7 +2,6 @@ package aadgraph
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -107,7 +106,7 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 	} else {
 		pid, err := uuid.GenerateUUID()
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Generating App Role for application with object ID %q", objectId), err.Error(), "")
+			return tf.ErrorDiagF(err, "Generating OAuth2 Permision for application with object ID %q", objectId)
 		}
 		permissionId = pid
 	}
@@ -132,9 +131,9 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(app.Response) {
-			return tf.ErrorDiag(fmt.Sprintf("Application with object ID %q was not found", objectId), "", "application_object_id")
+			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with object ID %q", objectId), err.Error(), "application_object_id")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -145,16 +144,16 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 			if _, ok := err.(*graph.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission", id.String())
 			}
-			return tf.ErrorDiag("Failed to add OAuth2 Permission", err.Error(), "")
+			return tf.ErrorDiagF(err, "Failed to add OAuth2 Permission")
 		}
 	} else {
 		if existing, _ := graph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-			return tf.ErrorDiag(fmt.Sprintf("OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId), "", "role_id")
+			return tf.ErrorDiagPathF(nil, "role_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
 		}
 
 		newPermissions, err = graph.OAuth2PermissionUpdate(app.Oauth2Permissions, &permission)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Updating App Role with ID %q", *permission.ID), err.Error(), "")
+			return tf.ErrorDiagF(err, "Updating OAuth2 Permission with ID %q", *permission.ID)
 		}
 	}
 
@@ -162,7 +161,7 @@ func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *sch
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	d.SetId(id.String())
@@ -175,7 +174,7 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing OAuth2 Permission ID %q", d.Id())
 	}
 
 	// ensure the Application Object exists
@@ -187,12 +186,12 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId), err.Error(), "application_object_id")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
 	permission, err := graph.OAuth2PermissionFindById(app, id.PermissionId)
 	if err != nil {
-		return tf.ErrorDiag("Identifying OAuth2 Permission", err.Error(), "permission_id")
+		return tf.ErrorDiagF(err, "Identifying OAuth2 Permission")
 	}
 
 	if permission == nil {
@@ -201,40 +200,40 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 		return nil
 	}
 
-	if err := d.Set("application_object_id", id.ObjectId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_object_id")
+	if dg := tf.Set(d, "application_object_id", id.ObjectId); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("permission_id", id.PermissionId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "permission_id")
+	if dg := tf.Set(d, "permission_id", id.PermissionId); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("admin_consent_description", permission.AdminConsentDescription); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "admin_consent_description")
+	if dg := tf.Set(d, "admin_consent_description", permission.AdminConsentDescription); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("admin_consent_display_name", permission.AdminConsentDisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "admin_consent_display_name")
+	if dg := tf.Set(d, "admin_consent_display_name", permission.AdminConsentDisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("is_enabled", permission.IsEnabled); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "is_enabled")
+	if dg := tf.Set(d, "is_enabled", permission.IsEnabled); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("type", permission.Type); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
+	if dg := tf.Set(d, "type", permission.Type); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("user_consent_description", permission.UserConsentDescription); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_consent_description")
+	if dg := tf.Set(d, "user_consent_description", permission.UserConsentDescription); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("user_consent_display_name", permission.UserConsentDisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_consent_display_name")
+	if dg := tf.Set(d, "user_consent_display_name", permission.UserConsentDisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("value", permission.Value); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "value")
+	if dg := tf.Set(d, "value", permission.Value); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -245,7 +244,7 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 
 	id, err := graph.ParseOAuth2PermissionId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing OAuth2 Permission ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing OAuth2 Permission ID %q", d.Id())
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -259,7 +258,7 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving Application with ID %q", id.ObjectId), err.Error(), "application_object_id")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 	}
 
 	var newPermissions *[]graphrbac.OAuth2Permission
@@ -267,27 +266,27 @@ func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.Re
 	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId)
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
 	newPermissions, err = graph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId)
 	}
 
 	properties = graphrbac.ApplicationUpdateParameters{
 		Oauth2Permissions: newPermissions,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating Application with ID %q", id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	return nil

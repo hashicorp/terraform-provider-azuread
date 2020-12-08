@@ -159,10 +159,10 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 		resp, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return tf.ErrorDiag(fmt.Sprintf("Application with ID %q was not found", objectId), "", "object_id")
+				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)
 			}
 
-			return tf.ErrorDiag(fmt.Sprintf("Retrieving application with object ID: %q", objectId), err.Error(), "object_id")
+			return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", objectId)
 		}
 
 		app = resp
@@ -175,94 +175,94 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 			fieldName = "displayName"
 			fieldValue = name
 		} else {
-			return tf.ErrorDiag("One of `object_id`, `application_id` or `name` must be specified", "", "")
+			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id` or `name` must be specified")
 		}
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Listing applications for filter %q", filter), err.Error(), "")
+			return tf.ErrorDiagF(err, "Listing applications for filter %q", filter)
 		}
 
 		values := resp.Response().Value
 		if values == nil {
-			return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil values for applications matching filter: %q", filter), "")
+			return tf.ErrorDiagF(fmt.Errorf("nil values for applications matching filter: %q", filter), "Bad API response")
 		}
 		if len(*values) == 0 {
-			return tf.ErrorDiag("Application not found", fmt.Sprintf("No applications found matching filter: %q", filter), "")
+			return tf.ErrorDiagF(fmt.Errorf("No applications found matching filter: %q", filter), "Application not found")
 		}
 		if len(*values) > 1 {
-			return tf.ErrorDiag("Multiple applications found", fmt.Sprintf("Found multiple applications matching filter: %q", filter), "")
+			return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil AppID for applications matching filter: %q", filter), "")
+				return tf.ErrorDiagF(fmt.Errorf("nil AppID for applications matching filter: %q", filter), "Bad API Response")
 			}
 			if *app.AppID != fieldValue {
-				return tf.ErrorDiag("Bad API response", fmt.Sprintf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter), "")
+				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter), "Bad API Response")
 			}
 		case "displayName":
 			if app.DisplayName == nil {
-				return tf.ErrorDiag("Bad API response", fmt.Sprintf("nil displayName for applications matching filter: %q", filter), "")
+				return tf.ErrorDiagF(fmt.Errorf("nil displayName for applications matching filter: %q", filter), "Bad API Response")
 			}
 			if *app.DisplayName != fieldValue {
-				return tf.ErrorDiag("Bad API response", fmt.Sprintf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "")
+				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "Bad API Response")
 			}
 		}
 	}
 
 	if app.ObjectID == nil {
-		return tf.ErrorDiag("Bad API response", "ObjectID returned for application is nil", "")
+		return tf.ErrorDiagF(fmt.Errorf("ObjectID returned for application is nil"), "Bad API Response")
 	}
 
 	d.SetId(*app.ObjectID)
 
-	if err := d.Set("object_id", app.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", app.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("application_id", app.AppID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
+	if dg := tf.Set(d, "application_id", app.AppID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("name", app.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
+	if dg := tf.Set(d, "name", app.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("homepage", app.Homepage); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "homepage")
+	if dg := tf.Set(d, "homepage", app.Homepage); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("logout_url", app.LogoutURL); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "logout_url")
+	if dg := tf.Set(d, "logout_url", app.LogoutURL); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "available_to_other_tenants")
+	if dg := tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_allow_implicit_flow")
+	if dg := tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "identifier_uris")
+	if dg := tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "reply_urls")
+	if dg := tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "required_resource_access")
+	if dg := tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "optional_claims")
+	if dg := tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); dg != nil {
+		return dg
 	}
 
 	var appType string
@@ -272,28 +272,28 @@ func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta inter
 		appType = "webapp/api"
 	}
 
-	if err := d.Set("type", appType); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
+	if dg := tf.Set(d, "type", appType); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
+	if dg := tf.Set(d, "app_roles", graph.FlattenAppRoles(app.AppRoles)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_membership_claims")
+	if dg := tf.Set(d, "group_membership_claims", app.GroupMembershipClaims); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
+	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); dg != nil {
+		return dg
 	}
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Could not retrieve owners for application with object ID %q", *app.ObjectID), err.Error(), "owners")
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ObjectID)
 	}
-	if err := d.Set("owners", owners); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
+	if dg := tf.Set(d, "owners", owners); dg != nil {
+		return dg
 	}
 
 	return nil

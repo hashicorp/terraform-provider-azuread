@@ -2,7 +2,6 @@ package aadgraph
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -42,7 +41,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 		if kerr, ok := err.(graph.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Generating certificate credentials for service principal with object ID %q", objectId), err.Error(), attr)
+		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for service principal with object ID %q", objectId)
 	}
 
 	id := graph.CredentialIdFrom(objectId, "certificate", *cred.KeyID)
@@ -52,7 +51,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 
 	existingCreds, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credentials for service principal with ID %q", objectId), err.Error(), "application_object_id")
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Listing certificate credentials for service principal with ID %q", objectId)
 	}
 
 	newCreds, err := graph.KeyCredentialResultAdd(existingCreds, cred)
@@ -60,18 +59,18 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
 			return tf.ImportAsExistsDiag("azuread_service_principal_certificate", id.String())
 		}
-		return tf.ErrorDiag("Adding service principal certificate", err.Error(), "")
+		return tf.ErrorDiagF(err, "Adding service principal certificate")
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Creating certificate credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Creating certificate credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	_, err = graph.WaitForKeyCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.KeyCredentialListResult, error) {
 		return client.ListKeyCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for certificate credential replication for service principal (ObjectID %q, KeyID %q)", id.ObjectId, id.KeyId)
 	}
 
 	d.SetId(id.String())
@@ -84,7 +83,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
 	// ensure the Service Principal Object exists
@@ -96,12 +95,12 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
 	credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credentials for service principal with object ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Listing certificate credentials for service principal with object ID %q", id.ObjectId)
 	}
 
 	credential := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -111,36 +110,36 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 		return nil
 	}
 
-	if err := d.Set("service_principal_id", id.ObjectId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "service_principal_id")
+	if dg := tf.Set(d, "service_principal_id", id.ObjectId); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("key_id", id.KeyId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "key_id")
+	if dg := tf.Set(d, "key_id", id.KeyId); dg != nil {
+		return dg
 	}
 
 	keyType := ""
 	if v := credential.Type; v != nil {
 		keyType = *v
 	}
-	if err := d.Set("type", keyType); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
+	if dg := tf.Set(d, "type", keyType); dg != nil {
+		return dg
 	}
 
 	startDate := ""
 	if v := credential.StartDate; v != nil {
 		startDate = v.Format(time.RFC3339)
 	}
-	if err := d.Set("start_date", startDate); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "start_date")
+	if dg := tf.Set(d, "start_date", startDate); dg != nil {
+		return dg
 	}
 
 	endDate := ""
 	if v := credential.EndDate; v != nil {
 		endDate = v.Format(time.RFC3339)
 	}
-	if err := d.Set("end_date", endDate); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "end_date")
+	if dg := tf.Set(d, "end_date", endDate); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -151,7 +150,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 
 	id, err := graph.ParseCertificateId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing certificate credential with ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -165,21 +164,21 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with ID %q", id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
 	existing, err := client.ListKeyCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing certificate credentials for service principal with object ID %q", id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Listing certificate credentials for service principal with object ID %q", id.ObjectId)
 	}
 
 	newCreds, err := graph.KeyCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	if _, err = client.UpdateKeyCredentials(ctx, id.ObjectId, graphrbac.KeyCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil

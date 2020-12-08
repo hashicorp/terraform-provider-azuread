@@ -2,6 +2,7 @@ package aadgraph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -315,21 +316,27 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	if d.Get("prevent_duplicate_names").(bool) {
-		err := graph.ApplicationCheckNameAvailability(ctx, client, name)
+		existingApp, err := graph.ApplicationFindByName(ctx, client, name)
 		if err != nil {
-			return tf.ErrorDiag(err.Error(), "", "name")
+			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
+		}
+		if existingApp != nil {
+			if existingApp.ObjectID == nil {
+				return tf.ImportAsDuplicateDiag("azuread_application", "unknown", name)
+			}
+			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ObjectID, name)
 		}
 	}
 
 	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
-		return tf.ErrorDiag(err.Error(), "", "app_role")
+		return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
 	}
 
 	appType := d.Get("type")
 	identUrls, hasIdentUrls := d.GetOk("identifier_uris")
 	if appType == "native" {
 		if hasIdentUrls {
-			return tf.ErrorDiag("Property is not required for a native application", "", "identifier_uris")
+			return tf.ErrorDiagPathF(nil, "identifier_uris", "Property is not required for a native application")
 		}
 	}
 
@@ -367,10 +374,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	app, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiag("Could not create application", err.Error(), "")
+		return tf.ErrorDiagF(err, "Could not create application")
 	}
 	if app.ObjectID == nil || *app.ObjectID == "" {
-		return tf.ErrorDiag("Bad API response", "ObjectID returned for application is nil", "")
+		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for application is nil/empty")
 	}
 
 	d.SetId(*app.ObjectID)
@@ -379,7 +386,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return client.Get(ctx, *app.ObjectID)
 	})
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for Application with object ID: %q", *app.ObjectID), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for Application with object ID: %q", *app.ObjectID)
 	}
 
 	// follow suggested hack for azure-cli
@@ -392,7 +399,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			PublicClient:   utils.Bool(true),
 		}
 		if _, err := client.Patch(ctx, *app.ObjectID, properties); err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", *app.ObjectID), err.Error(), "")
+			return tf.ErrorDiagF(err, "Updating Application with object ID: %q", *app.ObjectID)
 		}
 	}
 
@@ -400,7 +407,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		appRoles := expandApplicationAppRoles(v)
 		if appRoles != nil {
 			if err := graph.AppRolesSet(ctx, client, *app.ObjectID, appRoles); err != nil {
-				return tf.ErrorDiag(err.Error(), "", "app_role")
+				return tf.ErrorDiagPathF(err, "app_role", "Could not set App Roles")
 			}
 		}
 	}
@@ -409,7 +416,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		oauth2Permissions := expandApplicationOAuth2Permissions(v)
 		if oauth2Permissions != nil {
 			if err := graph.OAuth2PermissionsSet(ctx, client, *app.ObjectID, oauth2Permissions); err != nil {
-				return tf.ErrorDiag(err.Error(), "", "oauth2_permissions")
+				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permissions")
 			}
 		}
 	}
@@ -417,7 +424,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("owners"); ok {
 		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, *app.ObjectID, desiredOwners); err != nil {
-			return tf.ErrorDiag(err.Error(), "", "owners")
+			return tf.ErrorDiagPathF(err, "owners", "Could not set Owners")
 		}
 	}
 
@@ -430,14 +437,20 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 
 	if d.HasChange("name") && d.Get("prevent_duplicate_names").(bool) {
-		err := graph.ApplicationCheckNameAvailability(ctx, client, name)
+		existingApp, err := graph.ApplicationFindByName(ctx, client, name)
 		if err != nil {
-			return tf.ErrorDiag(err.Error(), "", "name")
+			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
+		}
+		if existingApp != nil {
+			if existingApp.ObjectID == nil {
+				return tf.ImportAsDuplicateDiag("azuread_application", "unknown", name)
+			}
+			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ObjectID, name)
 		}
 	}
 
 	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
-		return tf.ErrorDiag(err.Error(), "", "app_role")
+		return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
 	}
 
 	var properties graphrbac.ApplicationUpdateParameters
@@ -496,20 +509,20 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			properties.PublicClient = utils.Bool(true)
 			properties.IdentifierUris = &[]string{}
 		default:
-			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()),
-				fmt.Sprintf("Unknown application type %v. Supported types are: webapp/api, native", appType), "type")
+			return tf.ErrorDiagPathF(fmt.Errorf("Unknown application type %v. Supported types are: webapp/api, native", appType),
+				"type", "Updating Application with object ID: %q", d.Id())
 		}
 	}
 
 	if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagF(err, "Updating Application with object ID %q", d.Id())
 	}
 
 	if d.HasChange("app_role") {
 		appRoles := expandApplicationAppRoles(d.Get("app_role"))
 		if appRoles != nil {
 			if err := graph.AppRolesSet(ctx, client, d.Id(), appRoles); err != nil {
-				return tf.ErrorDiag(err.Error(), "", "app_role")
+				return tf.ErrorDiagPathF(err, "app_role", "Could not set App Roles")
 			}
 		}
 	}
@@ -518,7 +531,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oauth2Permissions := expandApplicationOAuth2Permissions(d.Get("oauth2_permissions"))
 		if oauth2Permissions != nil {
 			if err := graph.OAuth2PermissionsSet(ctx, client, d.Id(), oauth2Permissions); err != nil {
-				return tf.ErrorDiag(err.Error(), "", "oauth2_permissions")
+				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permissions")
 			}
 		}
 	}
@@ -526,7 +539,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("owners") {
 		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		if err := applicationSetOwnersTo(ctx, client, d.Id(), desiredOwners); err != nil {
-			return tf.ErrorDiag(err.Error(), "", "owners")
+			return tf.ErrorDiagPathF(err, "owners", "Could not set Owners")
 		}
 	}
 
@@ -539,44 +552,44 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	app, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if utils.ResponseWasNotFound(app.Response) {
-			log.Printf("[DEBUG] Application with ID %q was not found - removing from state", d.Id())
+			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiag(fmt.Sprintf("retrieving Application with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", d.Id())
 	}
 
-	if err := d.Set("object_id", app.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", app.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("application_id", app.AppID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
+	if dg := tf.Set(d, "application_id", app.AppID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("name", app.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "name")
+	if dg := tf.Set(d, "name", app.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("homepage", app.Homepage); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "homepage")
+	if dg := tf.Set(d, "homepage", app.Homepage); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("logout_url", app.LogoutURL); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "logout_url")
+	if dg := tf.Set(d, "logout_url", app.LogoutURL); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("available_to_other_tenants", app.AvailableToOtherTenants); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "available_to_other_tenants")
+	if dg := tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_allow_implicit_flow")
+	if dg := tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("public_client", app.PublicClient); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "public_client")
+	if dg := tf.Set(d, "public_client", app.PublicClient); dg != nil {
+		return dg
 	}
 
 	var appType string
@@ -586,52 +599,52 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		appType = "webapp/api"
 	}
 
-	if err := d.Set("type", appType); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "type")
+	if dg := tf.Set(d, "type", appType); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "group_membership_claims")
+	if dg := tf.Set(d, "group_membership_claims", app.GroupMembershipClaims); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "identifier_uris")
+	if dg := tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "reply_urls")
+	if dg := tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "required_resource_access")
+	if dg := tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "optional_claims")
+	if dg := tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("app_role", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_role")
+	if dg := tf.Set(d, "app_role", graph.FlattenAppRoles(app.AppRoles)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
+	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); dg != nil {
+		return dg
 	}
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return tf.ErrorDiag("Could not retrieve application owners", err.Error(), "")
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ObjectID)
 	}
-	if err := d.Set("owners", owners); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "owners")
+	if dg := tf.Set(d, "owners", owners); dg != nil {
+		return dg
 	}
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
 	}
-	if err := d.Set("prevent_duplicate_names", preventDuplicates); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "prevent_duplicate_names")
+	if dg := tf.Set(d, "prevent_duplicate_names", preventDuplicates); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -649,14 +662,14 @@ func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if _, err := client.Patch(ctx, d.Id(), properties); err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Updating Application with object ID: %q", d.Id()), err.Error(), "")
+			return tf.ErrorDiagF(err, "Updating Application with object ID %q", d.Id())
 		}
 	}
 
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return tf.ErrorDiag(fmt.Sprintf("Deleting Application with object ID: %q", d.Id()), err.Error(), "")
+			return tf.ErrorDiagF(err, "Deleting Application with object ID %q", d.Id())
 		}
 	}
 
@@ -965,7 +978,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	for _, val := range values {
 		for _, en := range encountered {
 			if en == val {
-				return fmt.Errorf("validation failed: duplicate app_role / oauth2_permissions value found: %q", val)
+				return fmt.Errorf("validation failed: duplicate value found: %q", val)
 			}
 		}
 		encountered = append(encountered, val)

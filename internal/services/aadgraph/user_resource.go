@@ -2,6 +2,7 @@ package aadgraph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -279,11 +280,11 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Creating user %q", upn), err.Error(), "")
+		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
 	if user.ObjectID == nil || *user.ObjectID == "" {
-		return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
+		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
 	d.SetId(*user.ObjectID)
@@ -293,7 +294,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for user %q with object ID: %q", upn, *user.ObjectID), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for user %q with object ID: %q", upn, *user.ObjectID)
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -386,7 +387,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Updating User with object ID: %q", d.Id()), err.Error(), "")
+		return tf.ErrorDiagF(err, "Updating User with object ID: %q", d.Id())
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -404,135 +405,135 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving user with object ID: %q", objectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", objectId)
 	}
 
-	if err := d.Set("object_id", user.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", user.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("immutable_id", user.ImmutableID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "immutable_id")
+	if dg := tf.Set(d, "immutable_id", user.ImmutableID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_sam_account_name")
+	if dg := tf.Set(d, "onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_user_principal_name")
+	if dg := tf.Set(d, "onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("user_principal_name", user.UserPrincipalName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
+	if dg := tf.Set(d, "user_principal_name", user.UserPrincipalName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("account_enabled", user.AccountEnabled); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "account_enabled")
+	if dg := tf.Set(d, "account_enabled", user.AccountEnabled); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("display_name", user.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
+	if dg := tf.Set(d, "display_name", user.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("given_name", user.GivenName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "given_name")
+	if dg := tf.Set(d, "given_name", user.GivenName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("surname", user.Surname); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "surname")
+	if dg := tf.Set(d, "surname", user.Surname); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("mail", user.Mail); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail")
+	if dg := tf.Set(d, "mail", user.Mail); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("mail_nickname", user.MailNickname); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nickname")
+	if dg := tf.Set(d, "mail_nickname", user.MailNickname); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("usage_location", user.UsageLocation); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "usage_location")
+	if dg := tf.Set(d, "usage_location", user.UsageLocation); dg != nil {
+		return dg
 	}
 
 	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
 		jobTitle = v.(string)
 	}
-	if err := d.Set("job_title", jobTitle); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "job_title")
+	if dg := tf.Set(d, "job_title", jobTitle); dg != nil {
+		return dg
 	}
 
 	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
 		dept = v.(string)
 	}
-	if err := d.Set("department", dept); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "department")
+	if dg := tf.Set(d, "department", dept); dg != nil {
+		return dg
 	}
 
 	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
 		companyName = v.(string)
 	}
-	if err := d.Set("company_name", companyName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "company_name")
+	if dg := tf.Set(d, "company_name", companyName); dg != nil {
+		return dg
 	}
 
 	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
 		physDelivOfficeName = v.(string)
 	}
-	if err := d.Set("physical_delivery_office_name", physDelivOfficeName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "physical_delivery_office_name")
+	if dg := tf.Set(d, "physical_delivery_office_name", physDelivOfficeName); dg != nil {
+		return dg
 	}
 
 	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
 		streetAddress = v.(string)
 	}
-	if err := d.Set("street_address", streetAddress); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "street_address")
+	if dg := tf.Set(d, "street_address", streetAddress); dg != nil {
+		return dg
 	}
 
 	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
 		city = v.(string)
 	}
-	if err := d.Set("city", city); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "city")
+	if dg := tf.Set(d, "city", city); dg != nil {
+		return dg
 	}
 
 	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
 		state = v.(string)
 	}
-	if err := d.Set("state", state); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "state")
+	if dg := tf.Set(d, "state", state); dg != nil {
+		return dg
 	}
 
 	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
 		country = v.(string)
 	}
-	if err := d.Set("country", country); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "country")
+	if dg := tf.Set(d, "country", country); dg != nil {
+		return dg
 	}
 
 	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
 		postalCode = v.(string)
 	}
-	if err := d.Set("postal_code", postalCode); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "postal_code")
+	if dg := tf.Set(d, "postal_code", postalCode); dg != nil {
+		return dg
 	}
 
 	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
 		mobile = v.(string)
 	}
-	if err := d.Set("mobile", mobile); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mobile")
+	if dg := tf.Set(d, "mobile", mobile); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -544,7 +545,7 @@ func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return tf.ErrorDiag(fmt.Sprintf("Deleting user with object ID: %q", d.Id()), err.Error(), "")
+			return tf.ErrorDiagF(err, "Deleting user with object ID: %q", d.Id())
 		}
 	}
 

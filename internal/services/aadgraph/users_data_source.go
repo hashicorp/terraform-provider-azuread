@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -143,23 +144,23 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 					continue
 				}
 
-				return tf.ErrorDiag(fmt.Sprintf("Retrieving user with UPN: %q", v), err.Error(), "")
+				return tf.ErrorDiagPathF(err, "user_principal_names", "Retrieving user with UPN: %q", v)
 			}
 			users = append(users, &u)
 		}
 	} else {
-		if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
-			expectedCount = len(oids)
-			for _, v := range oids {
+		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
+			expectedCount = len(objectIds)
+			for _, v := range objectIds {
 				u, err := graph.UserGetByObjectId(ctx, client, v.(string))
 				if err != nil {
-					return tf.ErrorDiag(fmt.Sprintf("Finding user with object ID: %q", v), err.Error(), "object_ids")
+					return tf.ErrorDiagPathF(err, "object_ids", "Finding user with object ID: %q", v)
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return tf.ErrorDiag(fmt.Sprintf("User not found with object ID: %q", v), "", "object_ids")
+						return tf.ErrorDiagPathF(nil, "object_ids", "User not found with object ID: %q", v)
 					}
 				}
 				users = append(users, u)
@@ -169,13 +170,13 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 			for _, v := range mailNicknames {
 				u, err := graph.UserGetByMailNickname(ctx, client, v.(string))
 				if err != nil {
-					return tf.ErrorDiag(fmt.Sprintf("Finding user with email alias: %q", v), err.Error(), "mail_nicknames")
+					return tf.ErrorDiagPathF(err, "mail_nicknames", "Finding user with email alias: %q", v)
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return tf.ErrorDiag(fmt.Sprintf("User not found with email alias: %q", v), "", "mail_nicknames")
+						return tf.ErrorDiagPathF(nil, "mail_nicknames", "User not found with email alias: %q", v)
 					}
 				}
 				users = append(users, u)
@@ -184,19 +185,19 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 	}
 
 	if !ignoreMissing && len(users) != expectedCount {
-		return tf.ErrorDiag("Unexpected number of users returned", fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(users)), "")
+		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(users)), "Unexpected number of users returned")
 	}
 
 	upns := make([]string, 0, len(users))
-	oids := make([]string, 0, len(users))
+	objectIds := make([]string, 0, len(users))
 	mailNicknames := make([]string, 0, len(users))
 	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return tf.ErrorDiag("Bad API response", "API returned user with nil object ID", "")
+			return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 		}
 
-		oids = append(oids, *u.ObjectID)
+		objectIds = append(objectIds, *u.ObjectID)
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
@@ -218,25 +219,25 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return tf.ErrorDiag("Unable to compute hash for UPNs", err.Error(), "")
+		return tf.ErrorDiagF(err, "Unable to compute hash for UPNs")
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
-	if err := d.Set("object_ids", oids); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_ids")
+	if dg := tf.Set(d, "object_ids", objectIds); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("user_principal_names", upns); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
+	if dg := tf.Set(d, "user_principal_names", upns); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("mail_nicknames", mailNicknames); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nicknames")
+	if dg := tf.Set(d, "mail_nicknames", mailNicknames); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("users", userList); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "users")
+	if dg := tf.Set(d, "users", userList); dg != nil {
+		return dg
 	}
 
 	return nil

@@ -3,7 +3,6 @@ package aadgraph_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -228,10 +227,7 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config:      r.preventDuplicateNamesFail(data),
-			ExpectError: regexp.MustCompile("existing Group .+ was found"),
-		},
+		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
 	})
 }
 

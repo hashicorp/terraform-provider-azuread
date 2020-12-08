@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
@@ -62,16 +64,20 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 		for _, v := range names {
 			g, err := graph.GroupGetByDisplayName(ctx, client, v.(string))
 			if err != nil {
-				return tf.ErrorDiag(fmt.Sprintf("No group found with display name: %q", v), err.Error(), "name")
+				return tf.ErrorDiagPathF(err, "name", "No group found with display name: %q", v)
 			}
 			groups = append(groups, *g)
 		}
-	} else if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
-		expectedCount = len(oids)
-		for _, v := range oids {
+	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
+		expectedCount = len(objectIds)
+		for _, v := range objectIds {
 			resp, err := client.Get(ctx, v.(string))
 			if err != nil {
-				return tf.ErrorDiag(fmt.Sprintf("Retrieving group with object ID: %q", v), err.Error(), "")
+				if utils.ResponseWasNotFound(resp.Response) {
+					return tf.ErrorDiagPathF(nil, "object_id", "No group found with object ID: %q", v)
+				}
+
+				return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", v)
 			}
 
 			groups = append(groups, resp)
@@ -79,14 +85,14 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 	}
 
 	if len(groups) != expectedCount {
-		return tf.ErrorDiag("Unexpected number of groups returned", fmt.Sprintf("Expected: %d, Actual: %d", expectedCount, len(groups)), "")
+		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
 	names := make([]string, 0, len(groups))
 	oids := make([]string, 0, len(groups))
 	for _, u := range groups {
 		if u.ObjectID == nil || u.DisplayName == nil {
-			return tf.ErrorDiag("Bad API response", "API returned group with nil object ID", "")
+			return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API response")
 		}
 
 		oids = append(oids, *u.ObjectID)
@@ -95,17 +101,17 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(names, "-"))); err != nil {
-		return tf.ErrorDiag("Able to compute hash for names", err.Error(), "")
+		return tf.ErrorDiagF(err, "Unable to compute hash for names")
 	}
 
 	d.SetId("groups#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
-	if err := d.Set("object_ids", oids); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_ids")
+	if dg := tf.Set(d, "object_ids", oids); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("names", names); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "names")
+	if dg := tf.Set(d, "names", names); dg != nil {
+		return dg
 	}
 
 	return nil

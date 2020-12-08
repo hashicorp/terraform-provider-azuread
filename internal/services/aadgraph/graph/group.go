@@ -264,14 +264,3 @@ func GroupFindByName(ctx context.Context, client *graphrbac.GroupsClient, name s
 
 	return nil, nil
 }
-
-func GroupCheckNameAvailability(ctx context.Context, client *graphrbac.GroupsClient, name string) error {
-	existingGroup, err := GroupFindByName(ctx, client, name)
-	if err != nil {
-		return err
-	}
-	if existingGroup != nil {
-		return fmt.Errorf("existing Group with name %q (ID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
-	}
-	return nil
-}

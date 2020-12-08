@@ -347,10 +347,7 @@ func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config:      r.preventDuplicateNamesFail(data),
-			ExpectError: regexp.MustCompile("existing Application .+ was found"),
-		},
+		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
 	})
 }
 
@@ -361,7 +358,7 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
 			Config:      r.duplicateAppRolesOauth2PermissionsValues(data),
-			ExpectError: regexp.MustCompile("validation failed: duplicate app_role / oauth2_permissions value found:"),
+			ExpectError: regexp.MustCompile("validation failed: duplicate value found:"),
 		},
 	})
 }

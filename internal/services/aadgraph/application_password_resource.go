@@ -53,7 +53,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 		if kerr, ok := err.(graph.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Generating password credentials for application with object ID %q", objectId), err.Error(), attr)
+		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for application with object ID %q", objectId)
 	}
 	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
@@ -62,7 +62,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for application with ID %q", objectId), err.Error(), "application_object_id")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Listing password credentials for application with ID %q", objectId)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
@@ -70,18 +70,18 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
 			return tf.ImportAsExistsDiag("azuread_application_password", id.String())
 		}
-		return tf.ErrorDiag("Adding application password", err.Error(), "")
+		return tf.ErrorDiagF(err, "Adding application password")
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Creating password credentials %q for application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Creating password credentials %q for application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	_, err = graph.WaitForPasswordCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId), err.Error(), "")
+		return tf.ErrorDiagF(err, "Waiting for certificate credential replication for application (AppID %q, KeyID %q)", id.ObjectId, id.KeyId)
 	}
 
 	d.SetId(id.String())
@@ -94,7 +94,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing password credential with ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
 	app, err := client.Get(ctx, id.ObjectId)
@@ -105,12 +105,12 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
 	credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for application with object ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Listing password credentials for application with object ID %q", id.ObjectId)
 	}
 
 	credential := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -120,36 +120,36 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 		return nil
 	}
 
-	if err := d.Set("application_object_id", id.ObjectId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_object_id")
+	if dg := tf.Set(d, "application_object_id", id.ObjectId); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("key_id", id.KeyId); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "key_id")
+	if dg := tf.Set(d, "key_id", id.KeyId); dg != nil {
+		return dg
 	}
 
 	description := ""
 	if v := credential.CustomKeyIdentifier; v != nil {
 		description = string(*v)
 	}
-	if err := d.Set("description", description); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "description")
+	if dg := tf.Set(d, "description", description); dg != nil {
+		return dg
 	}
 
 	startDate := ""
 	if v := credential.StartDate; v != nil {
 		startDate = v.Format(time.RFC3339)
 	}
-	if err := d.Set("start_date", startDate); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "start_date")
+	if dg := tf.Set(d, "start_date", startDate); dg != nil {
+		return dg
 	}
 
 	endDate := ""
 	if v := credential.EndDate; v != nil {
 		endDate = v.Format(time.RFC3339)
 	}
-	if err := d.Set("end_date", endDate); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "end_date")
+	if dg := tf.Set(d, "end_date", endDate); dg != nil {
+		return dg
 	}
 
 	return nil
@@ -160,7 +160,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *schema.ResourceDa
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Parsing password credential with ID %q", d.Id()), err.Error(), "id")
+		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -174,21 +174,21 @@ func applicationPasswordResourceDelete(ctx context.Context, d *schema.ResourceDa
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return tf.ErrorDiag(fmt.Sprintf("Retrieving application with ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with ID %q", id.ObjectId)
 	}
 
 	existing, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Listing password credentials for application with object ID %q", id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagF(err, "Listing password credentials for application with object ID %q", id.ObjectId)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return tf.ErrorDiag(fmt.Sprintf("Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId), err.Error(), "name")
+		return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil

@@ -317,17 +317,6 @@ func ApplicationFindByName(ctx context.Context, client *graphrbac.ApplicationsCl
 	return nil, nil
 }
 
-func ApplicationCheckNameAvailability(ctx context.Context, client *graphrbac.ApplicationsClient, name string) error {
-	existingApp, err := ApplicationFindByName(ctx, client, name)
-	if err != nil {
-		return err
-	}
-	if existingApp != nil {
-		return fmt.Errorf("existing Application with name %q (AppID: %q) was found and `prevent_duplicate_names` was specified", name, *existingApp.AppID)
-	}
-	return nil
-}
-
 type AppRoleId struct {
 	ObjectId string
 	RoleId   string

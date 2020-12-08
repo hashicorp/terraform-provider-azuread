@@ -216,16 +216,16 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		var err error
 		endDate, err = time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, CredentialError{str: "one of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
 	credential := graphrbac.PasswordCredential{
@@ -242,7 +242,7 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 	if v, ok := d.GetOk("start_date"); ok {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}
@@ -366,16 +366,16 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 		var err error
 		endDate, err = time.Parse(time.RFC3339, v)
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 	} else if v := d.Get("end_date_relative").(string); v != "" {
 		d, err := time.ParseDuration(v)
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, CredentialError{str: "one of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
 	credential := graphrbac.KeyCredential{
@@ -389,7 +389,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential,
 	if v, ok := d.GetOk("start_date"); ok {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDate = &date.Time{Time: startDate}
 	}

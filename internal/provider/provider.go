@@ -13,6 +13,7 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
 // Microsoft’s Terraform Partner ID is this specific GUID
@@ -203,11 +204,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.AadClient, diag.Diagnostics) {
 	config, err := b.Build()
 	if err != nil {
-		return nil, diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Building AzureAD Client",
-			Detail:   err.Error(),
-		}}
+		return nil, tf.ErrorDiagF(err, "Building AzureAD Client")
 	}
 
 	clientBuilder := clients.ClientBuilder{
@@ -223,10 +220,7 @@ func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Buil
 
 	client, err := clientBuilder.Build(stopCtx)
 	if err != nil {
-		return nil, diag.Diagnostics{diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  err.Error(),
-		}}
+		return nil, diag.FromErr(err)
 	}
 
 	return client, nil

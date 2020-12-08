@@ -2,6 +2,7 @@ package aadgraph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -62,10 +63,10 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		app, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(app.Response) {
-				return tf.ErrorDiag(fmt.Sprintf("Service Principal with object ID %q was not found", objectId), "", "")
+				return tf.ErrorDiagPathF(nil, "object_id", "Service Principal with object ID %q was not found", objectId)
 			}
 
-			return tf.ErrorDiag(fmt.Sprintf("Retrieving service principal with object ID: %q", objectId), err.Error(), "object_id")
+			return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
 		}
 
 		sp = &app
@@ -76,7 +77,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Listing service principals for filter %q", filter), err.Error(), "")
+			return tf.ErrorDiagF(err, "Listing service principals for filter %q", filter)
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -91,7 +92,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if sp == nil {
-			return tf.ErrorDiag("Service principal not found", fmt.Sprintf("No service principal found matching display name: %q", displayName), "")
+			return tf.ErrorDiagF(nil, "No service principal found matching display name: %q", displayName)
 		}
 	} else {
 		// use the application_id to find the Azure AD service principal
@@ -100,7 +101,7 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Listing service principals for filter %q", filter), err.Error(), "")
+			return tf.ErrorDiagF(err, "Listing service principals for filter %q", filter)
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -115,34 +116,34 @@ func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if sp == nil {
-			return tf.ErrorDiag("Service principal not found", fmt.Sprintf("No service principal found for application ID: %q", applicationId), "")
+			return tf.ErrorDiagF(nil, "No service principal found for application ID: %q", applicationId)
 		}
 	}
 
 	if sp.ObjectID == nil {
-		return tf.ErrorDiag("Bad API response", "ObjectID returned for service principal is nil", "")
+		return tf.ErrorDiagF(errors.New("ObjectID returned for service principal is nil"), "Bad API response")
 	}
 
 	d.SetId(*sp.ObjectID)
 
-	if err := d.Set("object_id", sp.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", sp.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("application_id", sp.AppID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "application_id")
+	if dg := tf.Set(d, "application_id", sp.AppID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("display_name", sp.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
+	if dg := tf.Set(d, "display_name", sp.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "app_roles")
+	if dg := tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles)); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "oauth2_permissions")
+	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); dg != nil {
+		return dg
 	}
 
 	return nil

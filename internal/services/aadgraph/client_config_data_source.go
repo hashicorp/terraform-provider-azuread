@@ -50,26 +50,26 @@ func clientConfigDataRead(ctx context.Context, d *schema.ResourceData, meta inte
 		result, err := spClient.List(ctx, filter)
 
 		if err != nil {
-			return tf.ErrorDiag("Listing Service Principals", err.Error(), "")
+			return tf.ErrorDiagF(err, "Listing Service Principals")
 		}
 
 		if result.Values() == nil || len(result.Values()) != 1 {
-			return tf.ErrorDiag("Unexpected Service Principal query result", fmt.Sprintf("%#v", result.Values()), "")
+			return tf.ErrorDiagF(fmt.Errorf("%#v", result.Values()), "Unexpected Service Principal query result")
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ObjectID, client.ClientID))
 
-	if err := d.Set("client_id", client.ClientID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "client_id")
+	if dg := tf.Set(d, "client_id", client.ClientID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("object_id", client.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", client.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("tenant_id", client.TenantID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "tenant_id")
+	if dg := tf.Set(d, "tenant_id", client.TenantID); dg != nil {
+		return dg
 	}
 
 	return nil

@@ -2,7 +2,7 @@ package aadgraph
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -169,166 +169,166 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 		resp, err := client.Get(ctx, upn)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return tf.ErrorDiag(fmt.Sprintf("User with UPN %q was not found", upn), "", "")
+				return tf.ErrorDiagF(nil, "User with UPN %q was not found", upn)
 			}
 
-			return tf.ErrorDiag(fmt.Sprintf("Retrieving user with UPN: %q", upn), err.Error(), "")
+			return tf.ErrorDiagF(err, "Retrieving user with UPN: %q", upn)
 		}
 		user = resp
-	} else if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		u, err := graph.UserGetByObjectId(ctx, client, oId)
+	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
+		u, err := graph.UserGetByObjectId(ctx, client, objectId)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Finding user with object ID: %q", oId), err.Error(), "object_id")
+			return tf.ErrorDiagF(err, "Finding user with object ID: %q", objectId)
 		}
 		if u == nil {
-			return tf.ErrorDiag(fmt.Sprintf("User not found with object ID: %q", oId), "", "object_id")
+			return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 		}
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		u, err := graph.UserGetByMailNickname(ctx, client, mailNickname)
 		if err != nil {
-			return tf.ErrorDiag(fmt.Sprintf("Finding user with email alias: %q", mailNickname), err.Error(), "mail_nickname")
+			return tf.ErrorDiagPathF(err, "mail_nickname", "Finding user with email alias: %q", mailNickname)
 		}
 		if u == nil {
-			return tf.ErrorDiag(fmt.Sprintf("User not found with email alias: %q", mailNickname), "", "mail_nickname")
+			return tf.ErrorDiagPathF(nil, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 		user = *u
 	} else {
-		return tf.ErrorDiag("One of `object_id`, `user_principal_name` and `mail_nickname` must be supplied", "", "")
+		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` and `mail_nickname` must be supplied")
 	}
 
 	if user.ObjectID == nil {
-		return tf.ErrorDiag("Bad API response", "Object ID returned for user is nil", "")
+		return tf.ErrorDiagF(errors.New("Object ID returned for user is nil"), "Bad API response")
 	}
 
 	d.SetId(*user.ObjectID)
 
-	if err := d.Set("object_id", user.ObjectID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "object_id")
+	if dg := tf.Set(d, "object_id", user.ObjectID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("immutable_id", user.ImmutableID); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "immutable_id")
+	if dg := tf.Set(d, "immutable_id", user.ImmutableID); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_sam_account_name")
+	if dg := tf.Set(d, "onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "onpremises_user_principal_name")
+	if dg := tf.Set(d, "onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("user_principal_name", user.UserPrincipalName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "user_principal_name")
+	if dg := tf.Set(d, "user_principal_name", user.UserPrincipalName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("account_enabled", user.AccountEnabled); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "account_enabled")
+	if dg := tf.Set(d, "account_enabled", user.AccountEnabled); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("display_name", user.DisplayName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "display_name")
+	if dg := tf.Set(d, "display_name", user.DisplayName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("given_name", user.GivenName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "given_name")
+	if dg := tf.Set(d, "given_name", user.GivenName); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("surname", user.Surname); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "surname")
+	if dg := tf.Set(d, "surname", user.Surname); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("mail", user.Mail); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail")
+	if dg := tf.Set(d, "mail", user.Mail); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("mail_nickname", user.MailNickname); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mail_nickname")
+	if dg := tf.Set(d, "mail_nickname", user.MailNickname); dg != nil {
+		return dg
 	}
 
-	if err := d.Set("usage_location", user.UsageLocation); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "usage_location")
+	if dg := tf.Set(d, "usage_location", user.UsageLocation); dg != nil {
+		return dg
 	}
 
 	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
 		jobTitle = v.(string)
 	}
-	if err := d.Set("job_title", jobTitle); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "job_title")
+	if dg := tf.Set(d, "job_title", jobTitle); dg != nil {
+		return dg
 	}
 
 	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
 		dept = v.(string)
 	}
-	if err := d.Set("department", dept); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "department")
+	if dg := tf.Set(d, "department", dept); dg != nil {
+		return dg
 	}
 
 	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
 		companyName = v.(string)
 	}
-	if err := d.Set("company_name", companyName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "company_name")
+	if dg := tf.Set(d, "company_name", companyName); dg != nil {
+		return dg
 	}
 
 	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
 		physDelivOfficeName = v.(string)
 	}
-	if err := d.Set("physical_delivery_office_name", physDelivOfficeName); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "physical_delivery_office_name")
+	if dg := tf.Set(d, "physical_delivery_office_name", physDelivOfficeName); dg != nil {
+		return dg
 	}
 
 	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
 		streetAddress = v.(string)
 	}
-	if err := d.Set("street_address", streetAddress); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "street_address")
+	if dg := tf.Set(d, "street_address", streetAddress); dg != nil {
+		return dg
 	}
 
 	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
 		city = v.(string)
 	}
-	if err := d.Set("city", city); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "city")
+	if dg := tf.Set(d, "city", city); dg != nil {
+		return dg
 	}
 
 	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
 		state = v.(string)
 	}
-	if err := d.Set("state", state); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "state")
+	if dg := tf.Set(d, "state", state); dg != nil {
+		return dg
 	}
 
 	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
 		country = v.(string)
 	}
-	if err := d.Set("country", country); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "country")
+	if dg := tf.Set(d, "country", country); dg != nil {
+		return dg
 	}
 
 	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
 		postalCode = v.(string)
 	}
-	if err := d.Set("postal_code", postalCode); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "postal_code")
+	if dg := tf.Set(d, "postal_code", postalCode); dg != nil {
+		return dg
 	}
 
 	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
 		mobile = v.(string)
 	}
-	if err := d.Set("mobile", mobile); err != nil {
-		return tf.ErrorDiag("Could not set attribute", err.Error(), "mobile")
+	if dg := tf.Set(d, "mobile", mobile); dg != nil {
+		return dg
 	}
 
 	return nil
