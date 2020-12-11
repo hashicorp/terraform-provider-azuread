@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `value` - (Required) The Password for this Application.
 
-* `description` - (Optional) A description for the Password.
+* `description` - (Optional) A description for the Password. 32 char limit.
 
 -> **NOTE:** `description` maps to the `CustomKeyIdentifier` property of the `PasswordCredentials` API resource.
 
