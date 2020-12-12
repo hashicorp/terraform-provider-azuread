@@ -4,7 +4,11 @@ import jetbrains.buildServer.configs.kotlin.v2019_2.Project
 const val providerName = "azuread"
 
 var services = mapOf(
-        "aadgraph" to "Azure Active Directory Graph"
+        "applications" to "Applications",
+        "domains" to "Domains",
+        "groups" to "Groups",
+        "serviceprincipals" to "Service Principals",
+        "Users" to "Users"
 )
 
 fun AzureAD(environment: String, configuration : ClientConfiguration) : Project {
