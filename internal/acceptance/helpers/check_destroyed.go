@@ -10,7 +10,7 @@ import (
 )
 
 // CheckDestroyedFunc returns a TestCheckFunc which validates the resource no longer exists
-func CheckDestroyedFunc(client *clients.AadClient, testResource types.TestResource, resourceType, resourceLabel string) func(state *terraform.State) error {
+func CheckDestroyedFunc(client *clients.Client, testResource types.TestResource, resourceType, resourceLabel string) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		ctx := client.StopContext
 

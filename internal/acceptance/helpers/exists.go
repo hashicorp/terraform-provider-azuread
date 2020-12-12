@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 )
 
-func ExistsInAzure(client *clients.AadClient, testResource types.TestResource, resourceName string) resource.TestCheckFunc {
+func ExistsInAzure(client *clients.Client, testResource types.TestResource, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		ctx := client.StopContext
 

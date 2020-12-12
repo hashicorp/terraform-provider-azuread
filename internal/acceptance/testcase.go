@@ -62,6 +62,6 @@ func PreCheck(t *testing.T) {
 	}
 }
 
-func buildClient() *clients.AadClient {
-	return AzureADProvider.Meta().(*clients.AadClient)
+func buildClient() *clients.Client {
+	return AzureADProvider.Meta().(*clients.Client)
 }

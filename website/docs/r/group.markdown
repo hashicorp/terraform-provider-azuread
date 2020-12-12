@@ -19,7 +19,7 @@ Manages a Group within Azure Active Directory.
 
 ```hcl
 resource "azuread_group" "example" {
-  name = "A-AD-Group"
+  display_name = "A-AD-Group"
 }
 ```
 
@@ -33,7 +33,7 @@ resource "azuread_user" "example" {
 }
 
 resource "azuread_group" "example" {
-  name    = "MyGroup"
+  display_name = "MyGroup"
   members = [
     azuread_user.example.object_id,
     /* more users */
@@ -45,7 +45,7 @@ resource "azuread_group" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
+* `display_name` - (Required) The display name for the Group. Changing this forces a new resource to be created.
 * `description` - (Optional) The description for the Group.  Changing this forces a new resource to be created.
 * `members` (Optional) A set of members who should be present in this Group. Supported Object types are Users, Groups or Service Principals.
 * `owners` (Optional) A set of owners who own this Group. Supported Object types are Users or Service Principals.

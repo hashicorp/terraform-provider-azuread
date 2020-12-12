@@ -11,7 +11,7 @@ import (
 
 // DeleteResourceFunc returns a TestCheckFunc which deletes the resource within Azure
 // this is only used within the Internal
-func DeleteResourceFunc(client *clients.AadClient, testResource types.TestResourceVerifyingRemoved, resourceName string) func(state *terraform.State) error {
+func DeleteResourceFunc(client *clients.Client, testResource types.TestResourceVerifyingRemoved, resourceName string) func(state *terraform.State) error {
 	return func(state *terraform.State) error {
 		ctx := client.StopContext
 
