@@ -23,6 +23,7 @@ type Client struct {
 	Environment      azure.Environment
 
 	AuthenticatedAsAServicePrincipal bool
+	EnableMsGraphBeta                bool
 
 	StopContext context.Context
 

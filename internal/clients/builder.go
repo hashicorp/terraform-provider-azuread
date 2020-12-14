@@ -6,26 +6,29 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
+	"github.com/manicminer/hamilton/auth"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type ClientBuilder struct {
-	AuthConfig       *authentication.Config
+	AuthConfig       *auth.Config
+	AadAuthConfig    *authentication.Config
+	EnableMsGraph    bool
 	PartnerID        string
 	TerraformVersion string
 }
 
 // Build is a helper method which returns a fully instantiated *Client based on the auth Config's current settings.
 func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
-	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, b.AuthConfig.MetadataHost, b.AuthConfig.Environment)
+	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, b.AadAuthConfig.MetadataHost, b.AadAuthConfig.Environment)
 	if err != nil {
 		return nil, err
 	}
 
 	objectID := ""
 	// TODO remove this when we confirm that MSI no longer returns nil with getAuthenticatedObjectID
-	if getAuthenticatedObjectID := b.AuthConfig.GetAuthenticatedObjectID; getAuthenticatedObjectID != nil {
+	if getAuthenticatedObjectID := b.AadAuthConfig.GetAuthenticatedObjectID; getAuthenticatedObjectID != nil {
 		v, err := getAuthenticatedObjectID(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting authenticated object ID: %v", err)
@@ -35,25 +38,25 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 	// client declarations:
 	client := Client{
-		ClientID:         b.AuthConfig.ClientID,
+		ClientID:         b.AadAuthConfig.ClientID,
 		ObjectID:         objectID,
-		TenantID:         b.AuthConfig.TenantID,
+		TenantID:         b.AadAuthConfig.TenantID,
 		TerraformVersion: b.TerraformVersion,
 		Environment:      *env,
 
-		AuthenticatedAsAServicePrincipal: b.AuthConfig.AuthenticatedAsAServicePrincipal,
+		AuthenticatedAsAServicePrincipal: b.AadAuthConfig.AuthenticatedAsAServicePrincipal,
 	}
 
 	sender := sender.BuildSender("AzureAD")
 
-	oauth, err := b.AuthConfig.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
+	oauth, err := b.AadAuthConfig.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
 	// Graph Endpoints
 	aadGraphEndpoint := env.GraphEndpoint
-	aadGraphAuthorizer, err := b.AuthConfig.GetAuthorizationToken(sender, oauth, aadGraphEndpoint)
+	aadGraphAuthorizer, err := b.AadAuthConfig.GetAuthorizationToken(sender, oauth, aadGraphEndpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -62,9 +65,18 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		AadGraphAuthorizer: aadGraphAuthorizer,
 		AadGraphEndpoint:   aadGraphEndpoint,
 		PartnerID:          b.PartnerID,
-		TenantID:           b.AuthConfig.TenantID,
+		TenantID:           b.AadAuthConfig.TenantID,
 		TerraformVersion:   b.TerraformVersion,
 		Environment:        *env,
+	}
+
+	// MS Graph
+	if b.EnableMsGraph && b.AuthConfig != nil {
+		client.EnableMsGraphBeta = true
+		o.MsGraphAuthorizer, err = b.AuthConfig.NewAuthorizer(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err := client.build(ctx, o); err != nil {
