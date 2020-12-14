@@ -207,14 +207,14 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			authConfig = &auth.Config{
 				TenantID:               d.Get("tenant_id").(string),
 				ClientID:               d.Get("client_id").(string),
-				EnableAzureCliToken:    true,
-				EnableMsiAuth:          true,
-				MsiEndpoint:            d.Get("msi_endpoint").(string),
-				EnableClientCertAuth:   true,
-				ClientCertPath:         d.Get("client_certificate_path").(string),
 				ClientCertPassword:     d.Get("client_certificate_password").(string),
-				EnableClientSecretAuth: true,
+				ClientCertPath:         d.Get("client_certificate_path").(string),
 				ClientSecret:           d.Get("client_secret").(string),
+				EnableAzureCliToken:    true,
+				EnableClientCertAuth:   true,
+				EnableClientSecretAuth: true,
+				EnableMsiAuth:          true, // TODO: not yet supported
+				MsiEndpoint:            d.Get("msi_endpoint").(string),
 			}
 		}
 
