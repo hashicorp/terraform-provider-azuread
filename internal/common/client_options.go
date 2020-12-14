@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
+	"github.com/manicminer/hamilton/auth"
 
 	"github.com/hashicorp/terraform-provider-azuread/version"
 )
@@ -23,6 +24,8 @@ type ClientOptions struct {
 
 	AadGraphAuthorizer autorest.Authorizer
 	AadGraphEndpoint   string
+
+	MsGraphAuthorizer auth.Authorizer
 
 	SkipProviderReg bool
 }

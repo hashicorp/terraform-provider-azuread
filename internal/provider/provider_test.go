@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/manicminer/hamilton/auth"
 )
 
 func TestProvider(t *testing.T) {
@@ -39,7 +40,13 @@ func TestAccProvider_cliAuth(t *testing.T) {
 			TenantOnly:            true,
 		}
 
-		return buildClient(ctx, provider, builder, "")
+		authConfig := &auth.Config{
+			TenantID:            d.Get("tenant_id").(string),
+			ClientID:            d.Get("client_id").(string),
+			EnableAzureCliToken: true,
+		}
+
+		return buildClient(ctx, provider, authConfig, builder, "", true)
 	}
 
 	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
@@ -71,7 +78,17 @@ func TestAccProvider_servicePrincipalAuth(t *testing.T) {
 			TenantOnly:               true,
 		}
 
-		return buildClient(ctx, provider, builder, "")
+		authConfig := &auth.Config{
+			TenantID:               d.Get("tenant_id").(string),
+			ClientID:               d.Get("client_id").(string),
+			EnableClientCertAuth:   true,
+			ClientCertPath:         d.Get("client_certificate_path").(string),
+			ClientCertPassword:     d.Get("client_certificate_password").(string),
+			EnableClientSecretAuth: true,
+			ClientSecret:           d.Get("client_secret").(string),
+		}
+
+		return buildClient(ctx, provider, authConfig, builder, "", true)
 	}
 
 	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/manicminer/hamilton/auth"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -151,6 +152,14 @@ func AzureADProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
 				Description: "Disable the Terraform Partner ID which is used if a custom `partner_id` isn't specified.",
 			},
+
+			// MS Graph beta
+			"enable_msgraph": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AAD_PROVIDER_ENABLE_MSGRAPH", false),
+				Description: "Beta: Use the Microsoft Graph API where supported.",
+			},
 		},
 
 		ResourcesMap:   resources,
@@ -164,7 +173,7 @@ func AzureADProvider() *schema.Provider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		builder := &authentication.Builder{
+		aadBuilder := &authentication.Builder{
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
 			TenantID:           d.Get("tenant_id").(string),
@@ -190,18 +199,40 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			partnerId = terraformPartnerId
 		}
 
-		return buildClient(ctx, p, builder, partnerId)
+		// Microsoft Graph beta opt-in
+		enableMsGraph := d.Get("enable_msgraph").(bool)
+
+		var authConfig *auth.Config
+		if enableMsGraph {
+			authConfig = &auth.Config{
+				TenantID:               d.Get("tenant_id").(string),
+				ClientID:               d.Get("client_id").(string),
+				EnableAzureCliToken:    true,
+				EnableMsiAuth:          true,
+				MsiEndpoint:            d.Get("msi_endpoint").(string),
+				EnableClientCertAuth:   true,
+				ClientCertPath:         d.Get("client_certificate_path").(string),
+				ClientCertPassword:     d.Get("client_certificate_password").(string),
+				EnableClientSecretAuth: true,
+				ClientSecret:           d.Get("client_secret").(string),
+			}
+		}
+
+		return buildClient(ctx, p, authConfig, aadBuilder, partnerId, enableMsGraph)
 	}
 }
 
-func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.Client, diag.Diagnostics) {
-	config, err := b.Build()
+// TODO: v2.0 pull out authentication.Builder and derived configuration
+func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Config, b *authentication.Builder, partnerId string, enableMsGraph bool) (*clients.Client, diag.Diagnostics) {
+	aadConfig, err := b.Build()
 	if err != nil {
 		return nil, tf.ErrorDiagF(err, "Building AzureAD Client")
 	}
 
 	clientBuilder := clients.ClientBuilder{
-		AuthConfig:       config,
+		AuthConfig:       authConfig,
+		AadAuthConfig:    aadConfig,
+		EnableMsGraph:    enableMsGraph,
 		PartnerID:        partnerId,
 		TerraformVersion: p.TerraformVersion,
 	}
