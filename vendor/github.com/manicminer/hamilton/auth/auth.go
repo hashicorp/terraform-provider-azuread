@@ -22,7 +22,6 @@ type Config struct {
 	ClientID string
 
 	// Azure CLI Tokens Auth
-	// TODO: NOT YET SUPPORTED
 	EnableAzureCliToken bool
 
 	// Managed Service Identity Auth
@@ -46,7 +45,7 @@ type Authorizer interface {
 }
 
 func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
-	if c.EnableClientCertAuth && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientCertPath) != "" {
+	if c.EnableClientCertAuth && strings.TrimSpace(c.TenantID) == "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientCertPath) != "" {
 		a, err := NewClientCertificateAuthorizer(ctx, c.TenantID, c.ClientID, c.ClientCertPath, c.ClientCertPassword)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
@@ -56,7 +55,7 @@ func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
 		}
 	}
 
-	if c.EnableClientSecretAuth && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientSecret) != "" {
+	if c.EnableClientSecretAuth && strings.TrimSpace(c.TenantID) == "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientSecret) != "" {
 		a, err := NewClientSecretAuthorizer(ctx, c.TenantID, c.ClientID, c.ClientSecret)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
@@ -66,17 +65,21 @@ func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
 		}
 	}
 
+	if c.EnableAzureCliToken {
+		a, err := NewAzureCliAuthorizer(ctx, c.TenantID)
+		if err != nil {
+			return nil, fmt.Errorf("could not configure AzureCli Authorizer: %s", err)
+		}
+		if a != nil {
+			return a, nil
+		}
+	}
+
 	return nil, fmt.Errorf("no Authorizer could be configured, please check your configuration")
 }
 
-func NewClientSecretAuthorizer(ctx context.Context, tenantId, clientId, clientSecret string) (Authorizer, error) {
-	conf := clientcredentials.Config{
-		AuthStyle:    oauth2.AuthStyleInParams,
-		ClientID:     clientId,
-		ClientSecret: clientSecret,
-		Scopes:       []string{"https://graph.microsoft.com/.default"},
-		TokenURL:     endpoints.AzureAD(tenantId).TokenURL,
-	}
+func NewAzureCliAuthorizer(ctx context.Context, tenantId string) (Authorizer, error) {
+	conf := AzureCliConfig{TenantID: tenantId}
 	return conf.TokenSource(ctx), nil
 }
 
@@ -102,6 +105,17 @@ func NewClientCertificateAuthorizer(ctx context.Context, tenantId, clientId, pfx
 		Certificate: cert.Raw,
 		Scopes:      []string{"https://graph.microsoft.com/.default"},
 		TokenURL:    microsoft.AzureADEndpoint(tenantId).TokenURL,
+	}
+	return conf.TokenSource(ctx), nil
+}
+
+func NewClientSecretAuthorizer(ctx context.Context, tenantId, clientId, clientSecret string) (Authorizer, error) {
+	conf := clientcredentials.Config{
+		AuthStyle:    oauth2.AuthStyleInParams,
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
+		Scopes:       []string{"https://graph.microsoft.com/.default"},
+		TokenURL:     endpoints.AzureAD(tenantId).TokenURL,
 	}
 	return conf.TokenSource(ctx), nil
 }

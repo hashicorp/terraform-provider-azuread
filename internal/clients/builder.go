@@ -31,7 +31,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	if getAuthenticatedObjectID := b.AadAuthConfig.GetAuthenticatedObjectID; getAuthenticatedObjectID != nil {
 		v, err := getAuthenticatedObjectID(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("Error getting authenticated object ID: %v", err)
+			return nil, fmt.Errorf("getting authenticated object ID: %v", err)
 		}
 		objectID = v
 	}
@@ -77,10 +77,19 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Obtain the tenant ID from Azure CLI
+		if cli, ok := o.MsGraphAuthorizer.(auth.AzureCliAuthorizer); ok {
+			if cli.TenantID == "" {
+				return nil, fmt.Errorf("azure-cli could not determine tenant ID to use")
+			}
+
+			// TODO: v2.0 set the provider tenantId from here, for now we use the one returned by go-azure-helpers
+		}
 	}
 
 	if err := client.build(ctx, o); err != nil {
-		return nil, fmt.Errorf("Error building Client: %+v", err)
+		return nil, fmt.Errorf("building client: %+v", err)
 	}
 
 	return &client, nil
