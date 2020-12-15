@@ -85,8 +85,10 @@ func userResource() *schema.Resource {
 			},
 
 			"mail": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validate.StringIsEmailAddress,
 			},
 
 			"onpremises_sam_account_name": {
@@ -201,7 +203,13 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := meta.(*clients.AadClient).StopContext
 
 	upn := d.Get("user_principal_name").(string)
+	mail := d.Get("mail").(string)
 	mailNickName := d.Get("mail_nickname").(string)
+
+	//default mail to the upn if not set to a different address
+	if mail == "" {
+		mail = upn
+	}
 
 	//default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
@@ -211,6 +219,7 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 	userCreateParameters := graphrbac.UserCreateParameters{
 		AccountEnabled: utils.Bool(d.Get("account_enabled").(bool)),
 		DisplayName:    utils.String(d.Get("display_name").(string)),
+		Mail:           &mail,
 		MailNickname:   &mailNickName,
 		PasswordProfile: &graphrbac.PasswordProfile{
 			ForceChangePasswordNextLogin: utils.Bool(d.Get("force_password_change").(bool)),
@@ -311,6 +320,10 @@ func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("surname") {
 		userUpdateParameters.Surname = utils.String(d.Get("surname").(string))
+	}
+
+	if d.HasChange("mail") {
+		userUpdateParameters.Mail = utils.String(d.Get("mail").(string))
 	}
 
 	if d.HasChange("mail_nickname") {

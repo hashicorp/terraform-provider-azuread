@@ -181,6 +181,7 @@ resource "azuread_user" "test" {
   display_name    = "acctestUser-%[1]d-Updated"
   given_name      = "acctestUser-%[1]d-GivenName"
   surname         = "acctestUser-%[1]d-Surname"
+  mail            = "acctestUser.%[1]d.Updated@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
   mail_nickname   = "acctestUser-%[1]d-Updated"
   account_enabled = false
   password        = "%[2]s"
