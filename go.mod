@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.3.0
 	github.com/hashicorp/terraform-plugin-test/v2 v2.1.2 // indirect
-	github.com/manicminer/hamilton v0.0.0-20201214113833-69b33b22d310
+	github.com/manicminer/hamilton v0.0.0-20201215144252-45b848b5f3fc
 )
 
 go 1.16

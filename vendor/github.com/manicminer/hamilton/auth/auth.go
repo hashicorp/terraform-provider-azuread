@@ -45,7 +45,7 @@ type Authorizer interface {
 }
 
 func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
-	if c.EnableClientCertAuth && strings.TrimSpace(c.TenantID) == "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientCertPath) != "" {
+	if c.EnableClientCertAuth && strings.TrimSpace(c.TenantID) != "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientCertPath) != "" {
 		a, err := NewClientCertificateAuthorizer(ctx, c.TenantID, c.ClientID, c.ClientCertPath, c.ClientCertPassword)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
@@ -55,7 +55,7 @@ func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
 		}
 	}
 
-	if c.EnableClientSecretAuth && strings.TrimSpace(c.TenantID) == "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientSecret) != "" {
+	if c.EnableClientSecretAuth && strings.TrimSpace(c.TenantID) != "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.ClientSecret) != "" {
 		a, err := NewClientSecretAuthorizer(ctx, c.TenantID, c.ClientID, c.ClientSecret)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
@@ -79,7 +79,10 @@ func (c *Config) NewAuthorizer(ctx context.Context) (Authorizer, error) {
 }
 
 func NewAzureCliAuthorizer(ctx context.Context, tenantId string) (Authorizer, error) {
-	conf := AzureCliConfig{TenantID: tenantId}
+	conf, err := NewAzureCliConfig(tenantId)
+	if err != nil {
+		return nil, err
+	}
 	return conf.TokenSource(ctx), nil
 }
 

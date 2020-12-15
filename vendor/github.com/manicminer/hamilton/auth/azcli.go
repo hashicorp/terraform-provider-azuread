@@ -13,9 +13,10 @@ import (
 )
 
 type AzureCliAuthorizer struct {
-	ctx      context.Context
-	conf     *AzureCliConfig
 	TenantID string
+
+	ctx  context.Context
+	conf *AzureCliConfig
 }
 
 func (a AzureCliAuthorizer) Token() (*oauth2.Token, error) {
@@ -26,7 +27,7 @@ func (a AzureCliAuthorizer) Token() (*oauth2.Token, error) {
 		Tenant      string `json:"tenant"`
 		TokenType   string `json:"tokenType"`
 	}
-	cmd := []string{"account", "get-access-token", "--resource-type=ms-graph", "--tenant", a.TenantID, "-o=json"}
+	cmd := []string{"account", "get-access-token", "--resource-type=ms-graph", "--tenant", a.conf.TenantID, "-o=json"}
 	err := jsonUnmarshalAzCmd(&token, cmd...)
 	if err != nil {
 		return nil, err
@@ -43,26 +44,36 @@ type AzureCliConfig struct {
 	TenantID string
 }
 
-func (c *AzureCliConfig) TokenSource(ctx context.Context) Authorizer {
-	var tenantId string
-	if validTenantId, err := regexp.MatchString("^[a-zA-Z0-9._-]+$", c.TenantID); err == nil && validTenantId {
-		tenantId = c.TenantID
-	} else {
+func NewAzureCliConfig(tenantId string) (*AzureCliConfig, error) {
+	// check az-cli version
+
+	// check tenant id
+	validTenantId, err := regexp.MatchString("^[a-zA-Z0-9._-]+$", tenantId)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse tenant ID %q: %s", tenantId, err)
+	}
+
+	if !validTenantId {
 		var account struct {
 			ID       string `json:"id"`
 			TenantID string `json:"tenantId"`
 		}
 		cmd := []string{"account", "show", "-o=json"}
 		err := jsonUnmarshalAzCmd(&account, cmd...)
-		if err == nil {
-			tenantId = account.TenantID
+		if err != nil {
+			return nil, fmt.Errorf("obtaining tenant ID: %s", err)
 		}
+		tenantId = account.TenantID
 	}
 
+	return &AzureCliConfig{TenantID: tenantId}, nil
+}
+
+func (c *AzureCliConfig) TokenSource(ctx context.Context) Authorizer {
 	return &AzureCliAuthorizer{
+		TenantID: c.TenantID,
 		ctx:      ctx,
 		conf:     c,
-		TenantID: tenantId,
 	}
 }
 
@@ -84,7 +95,7 @@ func jsonUnmarshalAzCmd(i interface{}, arg ...string) error {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		err := fmt.Errorf("waiting for the Azure CLI: %+v", err)
+		err := fmt.Errorf("running Azure CLI: %+v", err)
 		if stdErrStr := stderr.String(); stdErrStr != "" {
 			err = fmt.Errorf("%s: %s", err, strings.TrimSpace(stdErrStr))
 		}
@@ -92,7 +103,7 @@ func jsonUnmarshalAzCmd(i interface{}, arg ...string) error {
 	}
 
 	if err := json.Unmarshal([]byte(stdout.String()), &i); err != nil {
-		return fmt.Errorf("unmarshaling the result of Azure CLI: %v", err)
+		return fmt.Errorf("unmarshaling the output of Azure CLI: %v", err)
 	}
 
 	return nil

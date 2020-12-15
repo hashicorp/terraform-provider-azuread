@@ -1,4 +1,0 @@
-package auth
-
-func clientCertificateToken() {
-}
