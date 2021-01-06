@@ -130,7 +130,7 @@ fun ParametrizedWithType.hiddenPasswordVariable(name: String, value: String, des
 fun Triggers.RunNightly(nightlyTestsEnabled: Boolean, startHour: Int) {
     schedule{
         enabled = nightlyTestsEnabled
-        branchFilter = "+:refs/heads/master"
+        branchFilter = "+:refs/heads/main"
 
         schedulingPolicy = daily {
             hour = startHour
