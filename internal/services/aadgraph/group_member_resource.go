@@ -101,13 +101,8 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return nil
 	}
 
-	if dg := tf.Set(d, "group_object_id", id.GroupId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "member_object_id", memberObjectID); dg != nil {
-		return dg
-	}
+	tf.Set(d, "group_object_id", id.GroupId)
+	tf.Set(d, "member_object_id", memberObjectID)
 
 	return nil
 }

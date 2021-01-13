@@ -162,33 +162,13 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
 	}
 
-	if dg := tf.Set(d, "object_id", sp.ObjectID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "application_id", sp.AppID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "display_name", sp.DisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "app_role_assignment_required", sp.AppRoleAssignmentRequired); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "tags", sp.Tags); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); dg != nil {
-		return dg
-	}
+	tf.Set(d, "app_role_assignment_required", sp.AppRoleAssignmentRequired)
+	tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles))
+	tf.Set(d, "application_id", sp.AppID)
+	tf.Set(d, "display_name", sp.DisplayName)
+	tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions))
+	tf.Set(d, "object_id", sp.ObjectID)
+	tf.Set(d, "tags", sp.Tags)
 
 	return nil
 }

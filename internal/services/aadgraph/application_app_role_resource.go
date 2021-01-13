@@ -197,33 +197,13 @@ func applicationAppRoleResourceRead(ctx context.Context, d *schema.ResourceData,
 		return nil
 	}
 
-	if dg := tf.Set(d, "application_object_id", id.ObjectId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "role_id", id.RoleId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "allowed_member_types", role.AllowedMemberTypes); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "description", role.Description); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "display_name", role.DisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "is_enabled", role.IsEnabled); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "value", role.Value); dg != nil {
-		return dg
-	}
+	tf.Set(d, "allowed_member_types", role.AllowedMemberTypes)
+	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "description", role.Description)
+	tf.Set(d, "display_name", role.DisplayName)
+	tf.Set(d, "is_enabled", role.IsEnabled)
+	tf.Set(d, "role_id", id.RoleId)
+	tf.Set(d, "value", role.Value)
 
 	return nil
 }

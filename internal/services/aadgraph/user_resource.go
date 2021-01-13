@@ -408,133 +408,78 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", objectId)
 	}
 
-	if dg := tf.Set(d, "object_id", user.ObjectID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "immutable_id", user.ImmutableID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"]); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"]); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "user_principal_name", user.UserPrincipalName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "account_enabled", user.AccountEnabled); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "display_name", user.DisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "given_name", user.GivenName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "surname", user.Surname); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "mail", user.Mail); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "mail_nickname", user.MailNickname); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "usage_location", user.UsageLocation); dg != nil {
-		return dg
-	}
+	tf.Set(d, "object_id", user.ObjectID)
+	tf.Set(d, "immutable_id", user.ImmutableID)
+	tf.Set(d, "onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
+	tf.Set(d, "onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
+	tf.Set(d, "user_principal_name", user.UserPrincipalName)
+	tf.Set(d, "account_enabled", user.AccountEnabled)
+	tf.Set(d, "display_name", user.DisplayName)
+	tf.Set(d, "given_name", user.GivenName)
+	tf.Set(d, "surname", user.Surname)
+	tf.Set(d, "mail", user.Mail)
+	tf.Set(d, "mail_nickname", user.MailNickname)
+	tf.Set(d, "usage_location", user.UsageLocation)
 
 	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
 		jobTitle = v.(string)
 	}
-	if dg := tf.Set(d, "job_title", jobTitle); dg != nil {
-		return dg
-	}
+	tf.Set(d, "job_title", jobTitle)
 
 	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
 		dept = v.(string)
 	}
-	if dg := tf.Set(d, "department", dept); dg != nil {
-		return dg
-	}
+	tf.Set(d, "department", dept)
 
 	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
 		companyName = v.(string)
 	}
-	if dg := tf.Set(d, "company_name", companyName); dg != nil {
-		return dg
-	}
+	tf.Set(d, "company_name", companyName)
 
 	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
 		physDelivOfficeName = v.(string)
 	}
-	if dg := tf.Set(d, "physical_delivery_office_name", physDelivOfficeName); dg != nil {
-		return dg
-	}
+	tf.Set(d, "physical_delivery_office_name", physDelivOfficeName)
 
 	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
 		streetAddress = v.(string)
 	}
-	if dg := tf.Set(d, "street_address", streetAddress); dg != nil {
-		return dg
-	}
+	tf.Set(d, "street_address", streetAddress)
 
 	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
 		city = v.(string)
 	}
-	if dg := tf.Set(d, "city", city); dg != nil {
-		return dg
-	}
+	tf.Set(d, "city", city)
 
 	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
 		state = v.(string)
 	}
-	if dg := tf.Set(d, "state", state); dg != nil {
-		return dg
-	}
+	tf.Set(d, "state", state)
 
 	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
 		country = v.(string)
 	}
-	if dg := tf.Set(d, "country", country); dg != nil {
-		return dg
-	}
+	tf.Set(d, "country", country)
 
 	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
 		postalCode = v.(string)
 	}
-	if dg := tf.Set(d, "postal_code", postalCode); dg != nil {
-		return dg
-	}
+	tf.Set(d, "postal_code", postalCode)
 
 	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
 		mobile = v.(string)
 	}
-	if dg := tf.Set(d, "mobile", mobile); dg != nil {
-		return dg
-	}
+	tf.Set(d, "mobile", mobile)
 
 	return nil
 }

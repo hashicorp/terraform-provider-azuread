@@ -106,13 +106,8 @@ func groupsDataRead(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	d.SetId("groups#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
-	if dg := tf.Set(d, "object_ids", oids); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "names", names); dg != nil {
-		return dg
-	}
+	tf.Set(d, "object_ids", oids)
+	tf.Set(d, "names", names)
 
 	return nil
 }

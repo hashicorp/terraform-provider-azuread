@@ -110,37 +110,21 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		return nil
 	}
 
-	if dg := tf.Set(d, "application_object_id", id.ObjectId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "key_id", id.KeyId); dg != nil {
-		return dg
-	}
-
-	keyType := ""
-	if v := credential.Type; v != nil {
-		keyType = *v
-	}
-	if dg := tf.Set(d, "type", keyType); dg != nil {
-		return dg
-	}
+	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "key_id", id.KeyId)
+	tf.Set(d, "type", credential.Type)
 
 	startDate := ""
 	if v := credential.StartDate; v != nil {
 		startDate = v.Format(time.RFC3339)
 	}
-	if dg := tf.Set(d, "start_date", startDate); dg != nil {
-		return dg
-	}
+	tf.Set(d, "start_date", startDate)
 
 	endDate := ""
 	if v := credential.EndDate; v != nil {
 		endDate = v.Format(time.RFC3339)
 	}
-	if dg := tf.Set(d, "end_date", endDate); dg != nil {
-		return dg
-	}
+	tf.Set(d, "end_date", endDate)
 
 	return nil
 }

@@ -84,9 +84,7 @@ func domainsDataRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return tf.ErrorDiagF(nil, "No domains were returned for the provided filters")
 	}
 
-	if dg := tf.Set(d, "domains", domains); dg != nil {
-		return dg
-	}
+	tf.Set(d, "domains", domains)
 
 	return nil
 }

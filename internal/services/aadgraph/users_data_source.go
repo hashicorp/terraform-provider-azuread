@@ -224,21 +224,10 @@ func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
-	if dg := tf.Set(d, "object_ids", objectIds); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "user_principal_names", upns); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "mail_nicknames", mailNicknames); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "users", userList); dg != nil {
-		return dg
-	}
+	tf.Set(d, "object_ids", objectIds)
+	tf.Set(d, "mail_nicknames", mailNicknames)
+	tf.Set(d, "user_principal_names", upns)
+	tf.Set(d, "users", userList)
 
 	return nil
 }

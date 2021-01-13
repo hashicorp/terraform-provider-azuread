@@ -560,37 +560,21 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", d.Id())
 	}
 
-	if dg := tf.Set(d, "object_id", app.ObjectID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "application_id", app.AppID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "name", app.DisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "homepage", app.Homepage); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "logout_url", app.LogoutURL); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "public_client", app.PublicClient); dg != nil {
-		return dg
-	}
+	tf.Set(d, "app_role", graph.FlattenAppRoles(app.AppRoles))
+	tf.Set(d, "application_id", app.AppID)
+	tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants)
+	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
+	tf.Set(d, "homepage", app.Homepage)
+	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "logout_url", app.LogoutURL)
+	tf.Set(d, "name", app.DisplayName)
+	tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions))
+	tf.Set(d, "object_id", app.ObjectID)
+	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "public_client", app.PublicClient)
+	tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls))
+	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 
 	var appType string
 	if v := app.PublicClient; v != nil && *v {
@@ -598,54 +582,19 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		appType = "webapp/api"
 	}
-
-	if dg := tf.Set(d, "type", appType); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "group_membership_claims", app.GroupMembershipClaims); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "app_role", graph.FlattenAppRoles(app.AppRoles)); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); dg != nil {
-		return dg
-	}
+	tf.Set(d, "type", appType)
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ObjectID)
 	}
-	if dg := tf.Set(d, "owners", owners); dg != nil {
-		return dg
-	}
+	tf.Set(d, "owners", owners)
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
 	}
-	if dg := tf.Set(d, "prevent_duplicate_names", preventDuplicates); dg != nil {
-		return dg
-	}
+	tf.Set(d, "prevent_duplicate_names", preventDuplicates)
 
 	return nil
 }

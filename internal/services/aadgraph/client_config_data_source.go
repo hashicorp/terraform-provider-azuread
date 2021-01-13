@@ -60,17 +60,9 @@ func clientConfigDataRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ObjectID, client.ClientID))
 
-	if dg := tf.Set(d, "client_id", client.ClientID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "object_id", client.ObjectID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "tenant_id", client.TenantID); dg != nil {
-		return dg
-	}
+	tf.Set(d, "client_id", client.ClientID)
+	tf.Set(d, "object_id", client.ObjectID)
+	tf.Set(d, "tenant_id", client.TenantID)
 
 	return nil
 }

@@ -200,41 +200,15 @@ func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.Reso
 		return nil
 	}
 
-	if dg := tf.Set(d, "application_object_id", id.ObjectId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "permission_id", id.PermissionId); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "admin_consent_description", permission.AdminConsentDescription); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "admin_consent_display_name", permission.AdminConsentDisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "is_enabled", permission.IsEnabled); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "type", permission.Type); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "user_consent_description", permission.UserConsentDescription); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "user_consent_display_name", permission.UserConsentDisplayName); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "value", permission.Value); dg != nil {
-		return dg
-	}
+	tf.Set(d, "admin_consent_description", permission.AdminConsentDescription)
+	tf.Set(d, "admin_consent_display_name", permission.AdminConsentDisplayName)
+	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "is_enabled", permission.IsEnabled)
+	tf.Set(d, "permission_id", id.PermissionId)
+	tf.Set(d, "type", permission.Type)
+	tf.Set(d, "user_consent_description", permission.UserConsentDescription)
+	tf.Set(d, "user_consent_display_name", permission.UserConsentDisplayName)
+	tf.Set(d, "value", permission.Value)
 
 	return nil
 }

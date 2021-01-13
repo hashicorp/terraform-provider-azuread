@@ -92,39 +92,26 @@ func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}
 
 	d.SetId(*group.ObjectID)
 
-	if dg := tf.Set(d, "object_id", group.ObjectID); dg != nil {
-		return dg
-	}
-
-	if dg := tf.Set(d, "name", group.DisplayName); dg != nil {
-		return dg
-	}
+	tf.Set(d, "object_id", group.ObjectID)
+	tf.Set(d, "name", group.DisplayName)
 
 	description := ""
 	if v, ok := group.AdditionalProperties["description"]; ok {
 		description = v.(string)
 	}
-	if dg := tf.Set(d, "description", description); dg != nil {
-		return dg
-	}
+	tf.Set(d, "description", description)
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve members for group with object ID %q", d.Id())
 	}
-
-	if dg := tf.Set(d, "members", members); dg != nil {
-		return dg
-	}
+	tf.Set(d, "members", members)
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for group with object ID %q", d.Id())
 	}
-
-	if dg := tf.Set(d, "owners", owners); dg != nil {
-		return dg
-	}
+	tf.Set(d, "owners", owners)
 
 	return nil
 }
