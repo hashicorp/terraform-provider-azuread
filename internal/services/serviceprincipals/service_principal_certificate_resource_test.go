@@ -3,6 +3,7 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -174,22 +175,42 @@ func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 		return nil, fmt.Errorf("parsing Service Principal Certificate ID: %v", err)
 	}
 
-	resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+	switch clients.EnableMsGraphBeta {
+	case true:
+		app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
 		}
-		return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
-	}
 
-	credentials, err := clients.ServicePrincipals.AadClient.ListKeyCredentials(ctx, id.ObjectId)
-	if err != nil {
-		return nil, fmt.Errorf("listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
-	}
+		if app.KeyCredentials != nil {
+			for _, cred := range *app.KeyCredentials {
+				if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+					return utils.Bool(true), nil
+				}
+			}
+		}
 
-	cred := aadgraph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
-	if cred != nil {
-		return utils.Bool(true), nil
+	case false:
+		resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
+		}
+
+		credentials, err := clients.ServicePrincipals.AadClient.ListKeyCredentials(ctx, id.ObjectId)
+		if err != nil {
+			return nil, fmt.Errorf("listing Key Credentials for Service Principal %q: %+v", id.ObjectId, err)
+		}
+
+		cred := aadgraph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
+		if cred != nil {
+			return utils.Bool(true), nil
+		}
 	}
 
 	return nil, fmt.Errorf("Key Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)

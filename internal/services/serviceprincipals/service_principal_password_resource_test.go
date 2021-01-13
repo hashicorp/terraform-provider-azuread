@@ -21,7 +21,7 @@ type ServicePrincipalPasswordResource struct{}
 
 func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -89,9 +89,28 @@ func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	id, err := parse.PasswordID(state.ID)
 	if err != nil {
-		return nil, fmt.Errorf("Service Principal Password ID: %v", err)
+		return nil, fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
+	//switch clients.EnableMsGraphBeta {
+	//case true:
+	//	app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
+	//	if err != nil {
+	//		if status == http.StatusNotFound {
+	//			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+	//		}
+	//		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
+	//	}
+	//
+	//	if app.PasswordCredentials != nil {
+	//		for _, cred := range *app.PasswordCredentials {
+	//			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+	//				return utils.Bool(true), nil
+	//			}
+	//		}
+	//	}
+	//
+	//case false:
 	resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
@@ -109,6 +128,7 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 	if cred != nil {
 		return utils.Bool(true), nil
 	}
+	//}
 
 	return nil, fmt.Errorf("Password Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
@@ -159,7 +179,7 @@ func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestDa
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
   value                = "%[2]s"
-  end_date_relative    = "8760h"
+  end_date_relative    = "72h"
 }
 `, r.template(data), data.RandomPassword)
 }
