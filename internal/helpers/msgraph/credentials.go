@@ -142,7 +142,9 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*models.PasswordCred
 		SecretText:  utils.String(value),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk("display_name"); ok {
+		credential.DisplayName = utils.String(v.(string))
+	} else if v, ok := d.GetOk("description"); ok { // TODO: remove in v2.0
 		credential.DisplayName = utils.String(v.(string))
 	}
 

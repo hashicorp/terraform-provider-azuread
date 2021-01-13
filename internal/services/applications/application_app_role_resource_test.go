@@ -3,6 +3,7 @@ package applications_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/aadgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -103,19 +105,38 @@ func (a ApplicationAppRoleResource) Exists(ctx context.Context, clients *clients
 		return nil, fmt.Errorf("parsing App Role ID: %v", err)
 	}
 
-	resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+	switch clients.EnableMsGraphBeta {
+	case true:
+		app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
-	}
 
-	role, err := aadgraph.AppRoleFindById(resp, id.RoleId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to identity App Role: %s", err)
-	} else if role != nil {
-		return utils.Bool(true), nil
+		role, err := msgraph.AppRoleFindById(app, id.RoleId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to identity App Role: %s", err)
+		} else if role != nil {
+			return utils.Bool(true), nil
+		}
+
+	case false:
+		resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+		}
+
+		role, err := aadgraph.AppRoleFindById(resp, id.RoleId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to identity App Role: %s", err)
+		} else if role != nil {
+			return utils.Bool(true), nil
+		}
 	}
 
 	return nil, fmt.Errorf("App Role %q was not found in Application %q", id.RoleId, id.ObjectId)

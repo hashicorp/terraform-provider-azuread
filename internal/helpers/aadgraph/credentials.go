@@ -194,7 +194,10 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		EndDate: &date.Time{Time: endDate},
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk("display_name"); ok {
+		customIdentifier := []byte(v.(string))
+		credential.CustomKeyIdentifier = &customIdentifier
+	} else if v, ok := d.GetOk("description"); ok {
 		customIdentifier := []byte(v.(string))
 		credential.CustomKeyIdentifier = &customIdentifier
 	}

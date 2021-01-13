@@ -94,6 +94,25 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("parsing Application Password ID: %v", err)
 	}
 
+	//switch clients.EnableMsGraphBeta {
+	//case true:
+	//	app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
+	//	if err != nil {
+	//		if status == http.StatusNotFound {
+	//			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+	//		}
+	//		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+	//	}
+	//
+	//	if app.PasswordCredentials != nil {
+	//		for _, cred := range *app.PasswordCredentials {
+	//			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+	//				return utils.Bool(true), nil
+	//			}
+	//		}
+	//	}
+	//
+	//case false:
 	resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
@@ -111,6 +130,7 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	if cred != nil {
 		return utils.Bool(true), nil
 	}
+	//}
 
 	return nil, fmt.Errorf("Password Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
 }

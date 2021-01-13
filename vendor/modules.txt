@@ -264,7 +264,10 @@ github.com/manicminer/hamilton/auth
 github.com/manicminer/hamilton/auth/internal/microsoft
 github.com/manicminer/hamilton/base
 github.com/manicminer/hamilton/base/odata
+github.com/manicminer/hamilton/clients
 github.com/manicminer/hamilton/environments
+github.com/manicminer/hamilton/errors
+github.com/manicminer/hamilton/models
 # github.com/mitchellh/copystructure v1.0.0
 github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.1.0
