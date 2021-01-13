@@ -3,6 +3,7 @@ package groups_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -244,15 +245,29 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 }
 
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	resp, err := clients.Groups.AadClient.Get(ctx, state.ID)
+	var id *string
 
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Group with object ID %q does not exist", state.ID)
+	switch clients.EnableMsGraphBeta {
+	case true:
+		group, status, err := clients.Groups.MsClient.Get(ctx, state.ID)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Group with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
 		}
-		return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
+		id = group.ID
+
+	case false:
+		resp, err := clients.Groups.AadClient.Get(ctx, state.ID)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Group with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
+		}
+		id = resp.ObjectID
 	}
-	id := resp.ObjectID
 
 	return utils.Bool(id != nil && *id == state.ID), nil
 }
