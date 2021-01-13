@@ -2,47 +2,32 @@ package aadgraph_test
 
 import (
 	"os"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 )
 
+type ClientConfigDataSource struct{}
+
 func TestAccClientConfigDataSource_basic(t *testing.T) {
-	dsn := "data.azuread_client_config.current"
+	data := acceptance.BuildTestData(t, "data.azuread_client_config", "test")
 	clientId := os.Getenv("ARM_CLIENT_ID")
 	tenantId := os.Getenv("ARM_TENANT_ID")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClientConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dsn, "client_id", clientId),
-					resource.TestCheckResourceAttr(dsn, "tenant_id", tenantId),
-					testClientConfigGUIDAttr(dsn, "object_id"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: ClientConfigDataSource{}.basic(),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("client_id").HasValue(clientId),
+				check.That(data.ResourceName).Key("tenant_id").HasValue(tenantId),
+				check.That(data.ResourceName).Key("object_id").IsUuid(),
+			),
 		},
 	})
 }
 
-func testClientConfigGUIDAttr(name, key string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		r, err := regexp.Compile("^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$")
-		if err != nil {
-			return err
-		}
-
-		return resource.TestMatchResourceAttr(name, key, r)(s)
-	}
+func (ClientConfigDataSource) basic() string {
+	return `data "azuread_client_config" "test" {}`
 }
-
-const testAccClientConfig_basic = `
-data "azuread_client_config" "current" {}
-`

@@ -1,31 +1,35 @@
 package aadgraph
 
 import (
-	"fmt"
+	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
 func groupData() *schema.Resource {
 	return &schema.Resource{
-		Read: groupDataRead,
+		ReadContext: groupDataRead,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"name"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ExactlyOneOf:     []string{"name"},
 			},
 
 			"description": {
@@ -34,11 +38,11 @@ func groupData() *schema.Resource {
 			},
 
 			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.NoEmptyStrings,
-				ConflictsWith: []string{"object_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+				ExactlyOneOf:     []string{"object_id"},
 			},
 
 			"members": {
@@ -56,56 +60,58 @@ func groupData() *schema.Resource {
 	}
 }
 
-func groupDataRead(d *schema.ResourceData, meta interface{}) error {
+func groupDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var group graphrbac.ADGroup
 
-	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		resp, err := client.Get(ctx, oId)
+	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
+		resp, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Group with ID %q was not found", oId)
+				return tf.ErrorDiagPathF(nil, "object_id", "No group found with object ID: %q", objectId)
 			}
 
-			return fmt.Errorf("retrieving Group with ID %q: %+v", oId, err)
+			return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", objectId)
 		}
 
 		group = resp
 	} else if name, ok := d.Get("name").(string); ok && name != "" {
 		g, err := graph.GroupGetByDisplayName(ctx, client, name)
 		if err != nil {
-			return fmt.Errorf("finding Group with display name %q: %+v", name, err)
+			return tf.ErrorDiagPathF(err, "name", "No group found with display name: %q", name)
 		}
 		group = *g
 	} else {
-		return fmt.Errorf("one of `object_id` or `name` must be supplied")
+		return tf.ErrorDiagF(nil, "One of `object_id` or `name` must be specified")
 	}
 
 	if group.ObjectID == nil {
-		return fmt.Errorf("Group objectId is nil")
+		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
+
 	d.SetId(*group.ObjectID)
 
-	d.Set("object_id", group.ObjectID)
-	d.Set("name", group.DisplayName)
+	tf.Set(d, "object_id", group.ObjectID)
+	tf.Set(d, "name", group.DisplayName)
 
+	description := ""
 	if v, ok := group.AdditionalProperties["description"]; ok {
-		d.Set("description", v.(string))
+		description = v.(string)
 	}
+	tf.Set(d, "description", description)
 
 	members, err := graph.GroupAllMembers(ctx, client, d.Id())
 	if err != nil {
-		return err
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve members for group with object ID %q", d.Id())
 	}
-	d.Set("members", members)
+	tf.Set(d, "members", members)
 
 	owners, err := graph.GroupAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return err
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for group with object ID %q", d.Id())
 	}
-	d.Set("owners", owners)
+	tf.Set(d, "owners", owners)
 
 	return nil
 }

@@ -1,13 +1,15 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -18,9 +20,9 @@ import (
 
 func servicePrincipalPasswordResource() *schema.Resource {
 	return &schema.Resource{
-		Create: servicePrincipalPasswordResourceCreate,
-		Read:   servicePrincipalPasswordResourceRead,
-		Delete: servicePrincipalPasswordResourceDelete,
+		CreateContext: servicePrincipalPasswordResourceCreate,
+		ReadContext:   servicePrincipalPasswordResourceRead,
+		DeleteContext: servicePrincipalPasswordResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParsePasswordId(id)
@@ -40,15 +42,18 @@ func servicePrincipalPasswordResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("service_principal_id").(string)
 
 	cred, err := graph.PasswordCredentialForResource(d)
 	if err != nil {
-		return fmt.Errorf("generating Service Principal Credentials for Object ID %q: %+v", objectId, err)
+		attr := ""
+		if kerr, ok := err.(graph.CredentialError); ok {
+			attr = kerr.Attr()
+		}
+		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for service principal with object ID %q", objectId)
 	}
 	id := graph.CredentialIdFrom(objectId, "password", *cred.KeyID)
 
@@ -57,40 +62,39 @@ func servicePrincipalPasswordResourceCreate(d *schema.ResourceData, meta interfa
 
 	existingCreds, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Listing password credentials for service principal with ID %q", objectId)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultAdd(existingCreds, cred)
 	if err != nil {
 		if _, ok := err.(*graph.AlreadyExistsError); ok {
-			return tf.ImportAsExistsError("azuread_service_principal_password", id.String())
+			return tf.ImportAsExistsDiag("azuread_service_principal_password", id.String())
 		}
-		return fmt.Errorf("adding Service Principal Password: %+v", err)
+		return tf.ErrorDiagF(err, "Adding service principal password")
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, objectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("creating Password Credential %q for Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
+		return tf.ErrorDiagF(err, "Creating password credentials %q for service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	d.SetId(id.String())
 
-	_, err = graph.WaitForPasswordCredentialReplication(id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
+	_, err = graph.WaitForPasswordCredentialReplication(ctx, id.KeyId, d.Timeout(schema.TimeoutCreate), func() (graphrbac.PasswordCredentialListResult, error) {
 		return client.ListPasswordCredentials(ctx, id.ObjectId)
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for Service Principal Password replication (SP %q, KeyID %q: %+v", id.ObjectId, id.KeyId, err)
+		return tf.ErrorDiagF(err, "Waiting for password credential replication for service principal (ObjectID %q, KeyID %q)", id.ObjectId, id.KeyId)
 	}
 
-	return servicePrincipalPasswordResourceRead(d, meta)
+	return servicePrincipalPasswordResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
 	// ensure the parent Service Principal exists
@@ -102,12 +106,12 @@ func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Service Principal ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
 	credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Listing password credentials for service principal with object ID %q", id.ObjectId)
 	}
 
 	credential := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
@@ -117,32 +121,36 @@ func servicePrincipalPasswordResourceRead(d *schema.ResourceData, meta interface
 		return nil
 	}
 
-	// value is available in the SDK but isn't returned from the API
-	d.Set("key_id", credential.KeyID)
-	d.Set("service_principal_id", id.ObjectId)
+	tf.Set(d, "service_principal_id", id.ObjectId)
+	tf.Set(d, "key_id", id.KeyId)
 
-	if description := credential.CustomKeyIdentifier; description != nil {
-		d.Set("description", string(*description))
+	description := ""
+	if v := credential.CustomKeyIdentifier; v != nil {
+		description = string(*v)
 	}
+	tf.Set(d, "description", description)
 
-	if endDate := credential.EndDate; endDate != nil {
-		d.Set("end_date", endDate.Format(time.RFC3339))
+	startDate := ""
+	if v := credential.StartDate; v != nil {
+		startDate = v.Format(time.RFC3339)
 	}
+	tf.Set(d, "start_date", startDate)
 
-	if startDate := credential.StartDate; startDate != nil {
-		d.Set("start_date", startDate.Format(time.RFC3339))
+	endDate := ""
+	if v := credential.EndDate; v != nil {
+		endDate = v.Format(time.RFC3339)
 	}
+	tf.Set(d, "end_date", endDate)
 
 	return nil
 }
 
-func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParsePasswordId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing Service Principal Password ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -156,21 +164,21 @@ func servicePrincipalPasswordResourceDelete(d *schema.ResourceData, meta interfa
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("retrieving Service Principal ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
 	existing, err := client.ListPasswordCredentials(ctx, id.ObjectId)
 	if err != nil {
-		return fmt.Errorf("listing Password Credentials for Service Principal with Object ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Listing password credentials for service principal with object ID %q", id.ObjectId)
 	}
 
 	newCreds, err := graph.PasswordCredentialResultRemoveByKeyId(existing, id.KeyId)
 	if err != nil {
-		return fmt.Errorf("could not add new credential: %s", err)
+		return tf.ErrorDiagF(err, "Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	if _, err = client.UpdatePasswordCredentials(ctx, id.ObjectId, graphrbac.PasswordCredentialsUpdateParameters{Value: newCreds}); err != nil {
-		return fmt.Errorf("removing Password %q from Service Principal %q: %+v", id.KeyId, id.ObjectId, err)
+		return tf.ErrorDiagF(err, "Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil
@@ -180,18 +188,18 @@ func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"description": {
@@ -227,17 +235,17 @@ func resourceServicePrincipalPasswordInstanceResourceV0() *schema.Resource {
 			},
 
 			"end_date_relative": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"end_date"},
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ExactlyOneOf:     []string{"end_date"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},
 	}
 }
 
-func resourceServicePrincipalPasswordInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceServicePrincipalPasswordInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
 	newId, err := graph.ParseOldPasswordId(rawState["id"].(string))
 	if err != nil {

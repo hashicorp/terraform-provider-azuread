@@ -1,16 +1,18 @@
 package provider
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/authentication"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestProvider(t *testing.T) {
-	if err := AzureADProvider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := AzureADProvider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
@@ -24,10 +26,11 @@ func TestAccProvider_cliAuth(t *testing.T) {
 		return
 	}
 
-	provider := AzureADProvider().(*schema.Provider)
+	provider := AzureADProvider()
+	ctx := context.Background()
 
 	// Support only Azure CLI authentication
-	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		builder := &authentication.Builder{
 			TenantID:              d.Get("tenant_id").(string),
 			MetadataHost:          d.Get("metadata_host").(string),
@@ -36,12 +39,12 @@ func TestAccProvider_cliAuth(t *testing.T) {
 			TenantOnly:            true,
 		}
 
-		return buildClient(provider, builder, "")
+		return buildClient(ctx, provider, builder, "")
 	}
 
-	err := provider.Configure(terraform.NewResourceConfigRaw(nil))
-	if err != nil {
-		t.Fatalf("err: %s", err)
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
 	}
 }
 
@@ -50,10 +53,11 @@ func TestAccProvider_servicePrincipalAuth(t *testing.T) {
 		return
 	}
 
-	provider := AzureADProvider().(*schema.Provider)
+	provider := AzureADProvider()
+	ctx := context.Background()
 
 	// Support only Service Principal authentication (certificate or secret)
-	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		builder := &authentication.Builder{
 			ClientID:                 d.Get("client_id").(string),
 			ClientSecret:             d.Get("client_secret").(string),
@@ -67,11 +71,11 @@ func TestAccProvider_servicePrincipalAuth(t *testing.T) {
 			TenantOnly:               true,
 		}
 
-		return buildClient(provider, builder, "")
+		return buildClient(ctx, provider, builder, "")
 	}
 
-	err := provider.Configure(terraform.NewResourceConfigRaw(nil))
-	if err != nil {
-		t.Fatalf("err: %s", err)
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
 	}
 }

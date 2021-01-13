@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
@@ -145,7 +145,7 @@ func GroupAddMember(ctx context.Context, client *graphrbac.GroupsClient, groupId
 		time.Sleep(time.Second * 2)
 	}
 
-	if _, err := WaitForListAdd(member, func() ([]string, error) {
+	if _, err := WaitForListAdd(ctx, member, func() ([]string, error) {
 		return GroupAllMembers(ctx, client, groupId)
 	}); err != nil {
 		return fmt.Errorf("waiting for group membership: %+v", err)
@@ -176,11 +176,20 @@ func GroupRemoveMember(ctx context.Context, client *graphrbac.GroupsClient, time
 		Refresh: func() (interface{}, string, error) {
 			resp, err := client.RemoveMember(ctx, groupId, memberId)
 
-			// Return a fake result so WaitForState() will pass
-			if utils.ResponseWasNotFound(resp) {
-				return 1, "Gone", nil
-			} else if utils.ResponseWasStatusCode(resp, http.StatusNoContent) {
+			switch {
+			case utils.ResponseWasStatusCode(resp, http.StatusNoContent):
 				return 1, "Removed", nil
+
+			case utils.ResponseWasNotFound(resp):
+				return 1, "Gone", nil
+
+			// Member removal is inconsistent and sometimes member objects are already removed when
+			// we make the request, so try to handle that error state and consider it a success.
+			case utils.ResponseWasStatusCode(resp, http.StatusBadRequest):
+				odata, _ := NewOdataError(resp)
+				if OdataErrorContains(odata, "object references do not exist") {
+					return 2, "Gone", nil
+				}
 			}
 
 			if err != nil {
@@ -189,7 +198,7 @@ func GroupRemoveMember(ctx context.Context, client *graphrbac.GroupsClient, time
 
 			return nil, "Waiting", nil
 		},
-	}).WaitForState()
+	}).WaitForStateContext(ctx)
 
 	if err != nil {
 		return fmt.Errorf("deleting group member %q from Group with ID %q: %+v", memberId, groupId, err)
@@ -254,15 +263,4 @@ func GroupFindByName(ctx context.Context, client *graphrbac.GroupsClient, name s
 	}
 
 	return nil, nil
-}
-
-func GroupCheckNameAvailability(ctx context.Context, client *graphrbac.GroupsClient, name string) error {
-	existingGroup, err := GroupFindByName(ctx, client, name)
-	if err != nil {
-		return err
-	}
-	if existingGroup != nil {
-		return fmt.Errorf("existing Group with name %q (ID: %q) was found and `prevent_duplicate_names` was specified", name, *existingGroup.ObjectID)
-	}
-	return nil
 }

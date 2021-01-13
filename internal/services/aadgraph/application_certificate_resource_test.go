@@ -1,14 +1,16 @@
 package aadgraph_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
@@ -34,220 +36,162 @@ HraQzsK7BNxC5NSwwirT95JH+Xd8rvWu+bCveJz3mnZ3sgolCoxL6Hv1uD2UOZb5
 rCHdW31vp5PYNJaSkYL0j259Ogb8crkIzDr3Z8YF
 -----END CERTIFICATE-----`
 
-func testCheckApplicationKeyExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Key Credential ID: %v", err)
-		}
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Application %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on applicationsClient: %+v", err)
-		}
-
-		credentials, err := client.ListKeyCredentials(ctx, id.ObjectId)
-		if err != nil {
-			return fmt.Errorf("listing Key Credentials for Application %q: %+v", id.ObjectId, err)
-		}
-
-		cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
-		if cred != nil {
-			return nil
-		}
-
-		return fmt.Errorf("Key Credential %q was not found in Application %q", id.KeyId, id.ObjectId)
-	}
-}
-
-func testCheckApplicationKeyCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_application_certificate" {
-			continue
-		}
-
-		id, err := graph.ParseCertificateId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Application Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Application Key Credential still exists:\n%#v", resp)
-	}
-
-	return nil
-}
+type ApplicationCertificateResource struct{}
 
 func TestAccApplicationCertificate_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
+	r := ApplicationCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADObjectCertificateApplication_basic(data.RandomInteger, keyType, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationKeyExists(data.ResourceName),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccApplicationCertificate_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	keyType := "AsymmetricX509Cert"
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
+	r := ApplicationCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationCertificate_complete(data.RandomInteger, data.RandomID, keyType, startDate, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationKeyExists(data.ResourceName),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data, startDate, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccApplicationCertificate_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	value := testCertificateApplication
+	r := ApplicationCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationCertificate_relativeEndDate(data.RandomInteger, keyType, value),
-				Check: resource.ComposeTestCheckFunc(
-					// can't assert on Value since it's not returned
-					testCheckApplicationKeyExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "end_date"),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.relativeEndDate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
-	keyType := "AsymmetricX509Cert"
-	endDate := time.Now().AddDate(0, 6, 0).UTC().Format(time.RFC3339)
-	value := testCertificateApplication
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
+	r := ApplicationCertificateResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationKeyCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccADObjectCertificateApplication_basic(data.RandomInteger, keyType, endDate, value),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckApplicationKeyExists(data.ResourceName),
-				),
-			},
-			data.RequiresImportErrorStep(testAccApplicationCertificate_requiresImport(data.RandomInteger, keyType, endDate, value)),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
 	})
 }
 
-func testAccApplicationCertificate_template(ri int) string {
+func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+	id, err := graph.ParseCertificateId(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("parsing Application Certificate ID: %v", err)
+	}
+
+	resp, err := clients.AadGraph.ApplicationsClient.Get(ctx, id.ObjectId)
+	if err != nil {
+		if utils.ResponseWasNotFound(resp.Response) {
+			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+		}
+		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+	}
+
+	credentials, err := clients.AadGraph.ApplicationsClient.ListKeyCredentials(ctx, id.ObjectId)
+	if err != nil {
+		return nil, fmt.Errorf("listing Key Credentials for Application %q: %+v", id.ObjectId, err)
+	}
+
+	cred := graph.KeyCredentialResultFindByKeyId(credentials, id.KeyId)
+	if cred != nil {
+		return utils.Bool(true), nil
+	}
+
+	return nil, fmt.Errorf("Key Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
+}
+
+func (ApplicationCertificateResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%d"
+  name = "acctestApp-%[1]d"
 }
-`, ri)
+`, data.RandomInteger)
 }
 
-func testAccADObjectCertificateApplication_basic(ri int, keyType, endDate, value string) string {
+func (r ApplicationCertificateResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_application_certificate" "test" {
   application_object_id = azuread_application.test.id
-  type                  = "%s"
-  end_date              = "%s"
+  type                  = "AsymmetricX509Cert"
+  end_date              = "%[2]s"
   value                 = <<EOT
-%s
+%[3]s
 EOT
 }
-`, testAccApplicationCertificate_template(ri), keyType, endDate, value)
+`, r.template(data), endDate, testCertificateApplication)
 }
 
-func testAccApplicationCertificate_complete(ri int, keyId, keyType, startDate, endDate, value string) string {
+func (r ApplicationCertificateResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_application_certificate" "test" {
   application_object_id = azuread_application.test.id
-  key_id                = "%s"
-  type                  = "%s"
-  start_date            = "%s"
-  end_date              = "%s"
+  key_id                = "%[2]s"
+  type                  = "AsymmetricX509Cert"
+  start_date            = "%[3]s"
+  end_date              = "%[4]s"
   value                 = <<EOT
-%s
+%[5]s
 EOT
 }
-`, testAccApplicationCertificate_template(ri), keyId, keyType, startDate, endDate, value)
+`, r.template(data), data.RandomID, startDate, endDate, testCertificateApplication)
 }
 
-func testAccApplicationCertificate_relativeEndDate(ri int, keyType, value string) string {
+func (r ApplicationCertificateResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_application_certificate" "test" {
   application_object_id = azuread_application.test.id
-  end_date_relative     = "4320h"
-  type                  = "%s"
+  end_date_relative     = "2280h"
+  type                  = "AsymmetricX509Cert"
   value                 = <<EOT
-%s
+%[2]s
 EOT
 }
-`, testAccApplicationCertificate_template(ri), keyType, value)
+`, r.template(data), testCertificateApplication)
 }
 
-func testAccApplicationCertificate_requiresImport(ri int, keyType, endDate, value string) string {
-	template := testAccADObjectCertificateApplication_basic(ri, keyType, endDate, value)
+func (r ApplicationCertificateResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_application_certificate" "import" {
   application_object_id = azuread_application_certificate.test.application_object_id
@@ -256,5 +200,5 @@ resource "azuread_application_certificate" "import" {
   end_date              = azuread_application_certificate.test.end_date
   value                 = azuread_application_certificate.test.value
 }
-`, template)
+`, r.basic(data, endDate))
 }

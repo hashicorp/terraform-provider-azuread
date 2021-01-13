@@ -1,26 +1,30 @@
 package aadgraph
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
 func usersData() *schema.Resource {
 	return &schema.Resource{
-		Read: usersDataRead,
+		ReadContext: usersDataRead,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,8 +34,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.UUID,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -41,8 +45,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -52,8 +56,8 @@ func usersData() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames"},
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validate.NoEmptyStrings,
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -124,9 +128,8 @@ func usersData() *schema.Resource {
 	}
 }
 
-func usersDataRead(d *schema.ResourceData, meta interface{}) error {
+func usersDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var users []*graphrbac.User
 	expectedCount := 0
@@ -140,23 +143,24 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 				if ignoreMissing && utils.ResponseWasNotFound(u.Response) {
 					continue
 				}
-				return fmt.Errorf("retrieving User with ID %q: %+v", v.(string), err)
+
+				return tf.ErrorDiagPathF(err, "user_principal_names", "Retrieving user with UPN: %q", v)
 			}
 			users = append(users, &u)
 		}
 	} else {
-		if oids, ok := d.Get("object_ids").([]interface{}); ok && len(oids) > 0 {
-			expectedCount = len(oids)
-			for _, v := range oids {
+		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
+			expectedCount = len(objectIds)
+			for _, v := range objectIds {
 				u, err := graph.UserGetByObjectId(ctx, client, v.(string))
 				if err != nil {
-					return fmt.Errorf("finding User with object ID %q: %+v", v.(string), err)
+					return tf.ErrorDiagPathF(err, "object_ids", "Finding user with object ID: %q", v)
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return fmt.Errorf("found no Users with object ID %q", v.(string))
+						return tf.ErrorDiagPathF(nil, "object_ids", "User not found with object ID: %q", v)
 					}
 				}
 				users = append(users, u)
@@ -166,13 +170,13 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 			for _, v := range mailNicknames {
 				u, err := graph.UserGetByMailNickname(ctx, client, v.(string))
 				if err != nil {
-					return fmt.Errorf("finding User with email alias %q: %+v", v.(string), err)
+					return tf.ErrorDiagPathF(err, "mail_nicknames", "Finding user with email alias: %q", v)
 				}
 				if u == nil {
 					if ignoreMissing {
 						continue
 					} else {
-						return fmt.Errorf("found no Users with email alias %q", v.(string))
+						return tf.ErrorDiagPathF(nil, "mail_nicknames", "User not found with email alias: %q", v)
 					}
 				}
 				users = append(users, u)
@@ -181,19 +185,19 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !ignoreMissing && len(users) != expectedCount {
-		return fmt.Errorf("unexpected number of users returned (%d != %d)", len(users), expectedCount)
+		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(users)), "Unexpected number of users returned")
 	}
 
 	upns := make([]string, 0, len(users))
-	oids := make([]string, 0, len(users))
+	objectIds := make([]string, 0, len(users))
 	mailNicknames := make([]string, 0, len(users))
 	userList := make([]map[string]interface{}, 0, len(users))
 	for _, u := range users {
 		if u.ObjectID == nil || u.UserPrincipalName == nil {
-			return fmt.Errorf("User with nil ObjectID or UserPrincipalName was returned: %v", u)
+			return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 		}
 
-		oids = append(oids, *u.ObjectID)
+		objectIds = append(objectIds, *u.ObjectID)
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
@@ -215,14 +219,15 @@ func usersDataRead(d *schema.ResourceData, meta interface{}) error {
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(upns, "-"))); err != nil {
-		return fmt.Errorf("unable to compute hash for UPNs: %v", err)
+		return tf.ErrorDiagF(err, "Unable to compute hash for UPNs")
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
-	d.Set("object_ids", oids)
-	d.Set("user_principal_names", upns)
-	d.Set("mail_nicknames", mailNicknames)
-	d.Set("users", userList)
+
+	tf.Set(d, "object_ids", objectIds)
+	tf.Set(d, "mail_nicknames", mailNicknames)
+	tf.Set(d, "user_principal_names", upns)
+	tf.Set(d, "users", userList)
 
 	return nil
 }

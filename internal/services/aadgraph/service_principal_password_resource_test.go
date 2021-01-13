@@ -1,222 +1,171 @@
 package aadgraph_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func testCheckServicePrincipalPasswordExists(name string) resource.TestCheckFunc { //nolint unparam
-	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ServicePrincipalsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
-
-		id, err := graph.ParsePasswordId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("Service Principal Password Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Service Principal %q does not exist", id.ObjectId)
-			}
-			return fmt.Errorf("Bad: Get on ServicePrincipalsClient: %+v", err)
-		}
-
-		credentials, err := client.ListPasswordCredentials(ctx, id.ObjectId)
-		if err != nil {
-			return fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
-		}
-
-		cred := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
-		if cred != nil {
-			return nil
-		}
-
-		return fmt.Errorf("Password Credential %q was not found in Service Principal %q", id.KeyId, id.ObjectId)
-	}
-}
-
-func testCheckServicePrincipalPasswordCheckDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.ApplicationsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-
-		if rs.Type != "azuread_service_principal_password" {
-			continue
-		}
-
-		id, err := graph.ParsePasswordId(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("parsing Service Principal Password Credential ID: %v", err)
-		}
-
-		resp, err := client.Get(ctx, id.ObjectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Service Principal Password Credential still exists:\n%#v", resp)
-	}
-
-	return nil
-}
+type ServicePrincipalPasswordResource struct{}
 
 func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalPasswordResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-					resource.TestCheckResourceAttr(data.ResourceName, "end_date", "2099-01-01T01:02:03Z"),
-				),
-			},
-			data.ImportStep("value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("value"),
 	})
 }
 
 func TestAccServicePrincipalPassword_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalPasswordResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_complete(data.RandomInteger, data.RandomID, data.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
-					resource.TestCheckResourceAttr(data.ResourceName, "key_id", data.RandomID),
-					resource.TestCheckResourceAttr(data.ResourceName, "end_date", "2099-01-01T01:02:03Z"),
-				),
-			},
-			data.ImportStep("value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data, startDate, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").HasValue(data.RandomID),
+			),
 		},
+		data.ImportStep("value"),
 	})
 }
 
 func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	r := ServicePrincipalPasswordResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_relativeEndDate(data.RandomInteger, data.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "start_date"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "key_id"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "end_date"),
-				),
-			},
-			data.ImportStep("end_date_relative", "value"),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.relativeEndDate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
 		},
+		data.ImportStep("end_date_relative", "value"),
 	})
 }
 
 func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalPasswordResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckServicePrincipalPasswordCheckDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServicePrincipalPassword_basic(data.RandomInteger, data.RandomPassword),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckServicePrincipalPasswordExists(data.ResourceName),
-				),
-			},
-			data.RequiresImportErrorStep(testAccServicePrincipalPassword_requiresImport(data.RandomInteger, data.RandomPassword)),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
 	})
 }
 
-func testAccServicePrincipalPassword_template(ri int) string {
+func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+	id, err := graph.ParsePasswordId(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Service Principal Password ID: %v", err)
+	}
+
+	resp, err := clients.AadGraph.ServicePrincipalsClient.Get(ctx, id.ObjectId)
+	if err != nil {
+		if utils.ResponseWasNotFound(resp.Response) {
+			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+		}
+		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
+	}
+
+	credentials, err := clients.AadGraph.ServicePrincipalsClient.ListPasswordCredentials(ctx, id.ObjectId)
+	if err != nil {
+		return nil, fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
+	}
+
+	cred := graph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
+	if cred != nil {
+		return utils.Bool(true), nil
+	}
+
+	return nil, fmt.Errorf("Password Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
+}
+
+func (ServicePrincipalPasswordResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%d"
+  name = "acctestServicePrincipal-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 }
-`, ri)
+`, data.RandomInteger)
 }
 
-func testAccServicePrincipalPassword_basic(ri int, value string) string {
+func (r ServicePrincipalPasswordResource) basic(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
-  value                = "%s"
-  end_date             = "2099-01-01T01:02:03Z"
+  value                = "%[2]s"
+  end_date             = "%[3]s"
 }
-`, testAccServicePrincipalPassword_template(ri), value)
+`, r.template(data), data.RandomPassword, endDate)
 }
 
-func testAccServicePrincipalPassword_complete(ri int, keyId, value string) string {
+func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
   description          = "terraform"
-  key_id               = "%s"
-  value                = "%s"
-  end_date             = "2099-01-01T01:02:03Z"
+  key_id               = "%[2]s"
+  start_date           = "%[3]s"
+  end_date             = "%[4]s"
+  value                = "%[5]s"
 }
-`, testAccServicePrincipalPassword_template(ri), keyId, value)
+`, r.template(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
-func testAccServicePrincipalPassword_relativeEndDate(ri int, value string) string {
+func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.id
-  value                = "%s"
+  value                = "%[2]s"
   end_date_relative    = "8760h"
 }
-`, testAccServicePrincipalPassword_template(ri), value)
+`, r.template(data), data.RandomPassword)
 }
 
-func testAccServicePrincipalPassword_requiresImport(ri int, value string) string {
+func (r ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 resource "azuread_service_principal_password" "import" {
   key_id               = azuread_service_principal_password.test.key_id
@@ -224,5 +173,5 @@ resource "azuread_service_principal_password" "import" {
   value                = azuread_service_principal_password.test.value
   end_date             = azuread_service_principal_password.test.end_date
 }
-`, testAccServicePrincipalPassword_basic(ri, value))
+`, r.basic(data, endDate))
 }

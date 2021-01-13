@@ -1,13 +1,16 @@
 package aadgraph
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-azure-helpers/response"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -20,10 +23,10 @@ const servicePrincipalResourceName = "azuread_service_principal"
 
 func servicePrincipalResource() *schema.Resource {
 	return &schema.Resource{
-		Create: servicePrincipalResourceCreate,
-		Read:   servicePrincipalResourceRead,
-		Update: servicePrincipalResourceUpdate,
-		Delete: servicePrincipalResourceDelete,
+		CreateContext: servicePrincipalResourceCreate,
+		ReadContext:   servicePrincipalResourceRead,
+		UpdateContext: servicePrincipalResourceUpdate,
+		DeleteContext: servicePrincipalResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
@@ -34,10 +37,10 @@ func servicePrincipalResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"app_role_assignment_required": {
@@ -55,6 +58,8 @@ func servicePrincipalResource() *schema.Resource {
 				Computed: true,
 			},
 
+			"app_roles": graph.SchemaAppRolesComputed(),
+
 			"oauth2_permissions": graph.SchemaOauth2PermissionsComputed(),
 
 			"tags": {
@@ -69,9 +74,8 @@ func servicePrincipalResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Get("application_id").(string)
 
@@ -92,26 +96,25 @@ func servicePrincipalResourceCreate(d *schema.ResourceData, meta interface{}) er
 
 	sp, err := client.Create(ctx, properties)
 	if err != nil {
-		return fmt.Errorf("creating Service Principal for application  %q: %+v", applicationId, err)
+		return tf.ErrorDiagF(err, "Could not create service principal")
 	}
 	if sp.ObjectID == nil || *sp.ObjectID == "" {
-		return fmt.Errorf("Service Principal	objectID is nil/blank")
+		return tf.ErrorDiagF(errors.New("ObjectID returned for service principal is nil"), "Bad API response")
 	}
 	d.SetId(*sp.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *sp.ObjectID)
 	})
 	if err != nil {
-		return fmt.Errorf("waiting for Service Principal with ObjectId %q: %+v", *sp.ObjectID, err)
+		return tf.ErrorDiagF(err, "Waiting for service principal with object ID: %q", *sp.ObjectID)
 	}
 
-	return servicePrincipalResourceRead(d, meta)
+	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var properties graphrbac.ServicePrincipalUpdateParameters
 
@@ -129,54 +132,55 @@ func servicePrincipalResourceUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if _, err := client.Update(ctx, d.Id(), properties); err != nil {
-		return fmt.Errorf("patching Service Principal with ID %q: %+v", d.Id(), err)
+		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
 	}
 
-	return servicePrincipalResourceRead(d, meta)
+	// Wait for replication delay after updating
+	_, err := graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return client.Get(ctx, d.Id())
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Waiting for service principal with object ID: %q", d.Id())
+	}
+
+	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
 
-	app, err := client.Get(ctx, objectId)
+	sp, err := client.Get(ctx, objectId)
 	if err != nil {
-		if utils.ResponseWasNotFound(app.Response) {
+		if utils.ResponseWasNotFound(sp.Response) {
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Service Principal ID %q: %+v", objectId, err)
+
+		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
 	}
 
-	d.Set("application_id", app.AppID)
-	d.Set("display_name", app.DisplayName)
-	d.Set("object_id", app.ObjectID)
-	d.Set("app_role_assignment_required", app.AppRoleAssignmentRequired)
-
-	// tags doesn't exist as a property, so extract it
-	if err := d.Set("tags", app.Tags); err != nil {
-		return fmt.Errorf("setting `tags`: %+v", err)
-	}
-
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
-	}
+	tf.Set(d, "app_role_assignment_required", sp.AppRoleAssignmentRequired)
+	tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles))
+	tf.Set(d, "application_id", sp.AppID)
+	tf.Set(d, "display_name", sp.DisplayName)
+	tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions))
+	tf.Set(d, "object_id", sp.ObjectID)
+	tf.Set(d, "tags", sp.Tags)
 
 	return nil
 }
 
-func servicePrincipalResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	applicationId := d.Id()
 	app, err := client.Delete(ctx, applicationId)
 	if err != nil {
 		if !response.WasNotFound(app.Response) {
-			return fmt.Errorf("deleting Service Principal ID %q: %+v", applicationId, err)
+			return tf.ErrorDiagF(err, "Deleting service principal with object ID: %q", d.Id())
 		}
 	}
 

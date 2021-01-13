@@ -1,340 +1,350 @@
 package aadgraph_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
+type GroupResource struct{}
+
 func TestAccGroup_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroup_basic(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "0"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroup_complete(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "1", "1"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithThreeOwners(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "3"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withThreeOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithThreeMembers(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withThreeMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_membersAndOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithOwnersAndMembers(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "2", "1"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withOwnersAndMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_membersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithDiverseMembers(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withDiverseMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_ownersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupWithDiverseOwners(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "2"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withDiverseOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_membersUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			// Empty group with 0 members
-			{
-				Config: testAccGroup_basic(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "0"),
-			},
-			data.ImportStep(),
-			// Group with 1 member
-			{
-				Config: testAccGroupWithOneMember(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "1", "0"),
-			},
-			data.ImportStep(),
-			// Group with multiple members
-			{
-				Config: testAccGroupWithThreeMembers(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "3", "0"),
-			},
-			data.ImportStep(),
-			// Group with a different member
-			{
-				Config: testAccGroupWithServicePrincipalMember(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "1", "0"),
-			},
-			data.ImportStep(),
-			// Empty group with 0 members
-			{
-				Config: testAccGroup_basic(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "0"),
-			},
-			data.ImportStep(),
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
+		{
+			Config: r.withOneMember(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withThreeMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withServicePrincipalMember(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.noMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
 func TestAccGroup_ownersUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckGroupDestroy,
-		Steps: []resource.TestStep{
-			// Empty group with 0 owners
-			{
-				Config: testAccGroup_basic(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "0"),
-			},
-			data.ImportStep(),
-			// Group with multiple owners
-			{
-				Config: testAccGroupWithThreeOwners(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "3"),
-			},
-			data.ImportStep(),
-			// Group with 1 owners
-			{
-				Config: testAccGroupWithOneOwners(data.RandomInteger, data.RandomPassword),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "1"),
-			},
-			data.ImportStep(),
-			// Group with a different owners
-			{
-				Config: testAccGroupWithServicePrincipalOwner(data.RandomInteger),
-				Check:  testCheckGroupBasic(data.RandomInteger, "0", "1"),
-			},
-			data.ImportStep(),
-			// Empty group with 0 owners is not possible
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
 		},
+		data.ImportStep(),
+		{
+			Config: r.withThreeOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withOneOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withServicePrincipalOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
-func TestAccGroup_preventDuplicateNames(t *testing.T) {
-	ri := tf.AccRandTimeInt()
+func TestAccGroup_preventDuplicateNamesPass(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acceptance.PreCheck(t) },
-		Providers:    acceptance.SupportedProviders,
-		CheckDestroy: testCheckApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccGroup_duplicateName(ri),
-				ExpectError: regexp.MustCompile("existing Group .+ was found"),
-			},
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.preventDuplicateNamesPass(data),
+			Check: resource.ComposeTestCheckFunc(
+				resource.TestCheckResourceAttr(data.ResourceName, "name", fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
 		},
+		data.ImportStep("prevent_duplicate_names"),
 	})
 }
 
-func testCheckGroupExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %q", name)
-		}
+func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
 
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.GroupsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-		resp, err := client.Get(ctx, rs.Primary.ID)
-
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Bad: Group %q does not exist", rs.Primary.ID)
-			}
-			return fmt.Errorf("Bad: Get on GroupsClient: %+v", err)
-		}
-
-		return nil
-	}
+	data.ResourceTest(t, r, []resource.TestStep{
+		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
+	})
 }
 
-func testCheckGroupDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "azuread_group" {
-			continue
+func (r GroupResource) Exists(ctx context.Context, clients *clients.AadClient, state *terraform.InstanceState) (*bool, error) {
+	resp, err := clients.AadGraph.GroupsClient.Get(ctx, state.ID)
+
+	if err != nil {
+		if utils.ResponseWasNotFound(resp.Response) {
+			return nil, fmt.Errorf("Group with object ID %q does not exist", state.ID)
 		}
-
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient).AadGraph.GroupsClient
-		ctx := acceptance.AzureADProvider.Meta().(*clients.AadClient).StopContext
-		resp, err := client.Get(ctx, rs.Primary.ID)
-
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return nil
-			}
-
-			return err
-		}
-
-		return fmt.Errorf("Group still exists:\n%#v", resp)
+		return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
 	}
 
-	return nil
+	return utils.Bool(resp.ObjectID != nil && *resp.ObjectID == state.ID), nil
 }
 
-func testCheckGroupBasic(id int, memberCount, ownerCount string) resource.TestCheckFunc {
-	resourceName := "azuread_group.test"
-
-	return resource.ComposeTestCheckFunc(
-		testCheckGroupExists(resourceName),
-		resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("acctestGroup-%d", id)),
-		resource.TestCheckResourceAttrSet(resourceName, "object_id"),
-		resource.TestCheckResourceAttr(resourceName, "members.#", memberCount),
-		resource.TestCheckResourceAttr(resourceName, "owners.#", ownerCount),
-	)
-}
-
-func testAccGroup_basic(id int) string {
+func (GroupResource) templateDiverseDirectoryObjects(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_group" "test" {
-  name    = "acctestGroup-%d"
-  members = []
-}
-`, id)
-}
-
-func testAccGroup_complete(id int, password string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "azuread_group" "test" {
-  name        = "acctestGroup-%d"
-  description = "Please delete me as this is a.test.AD group!"
-  members     = [azuread_user.test.object_id]
-  owners      = [azuread_user.test.object_id]
-}
-`, testAccUser_basic(id, password), id)
-}
-
-func testAccDiverseDirectoryObjects(id int, password string) string {
-	return fmt.Sprintf(`
-data "azuread_domains" "tenant_domain" {
+data "azuread_domains" "test" {
   only_initial = true
 }
 
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 }
 
+resource "azuread_user" "test" {
+  user_principal_name = "acctestGroup.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d"
+  password            = "%[2]s"
+}
+
 resource "azuread_group" "member" {
   name = "acctestGroup-%[1]d-Member"
 }
+`, data.RandomInteger, data.RandomPassword)
+}
 
-resource "azuread_user" "test" {
-  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.tenant_domain.domains.0.domain_name}"
-  display_name        = "acctestUser-%[1]d"
+func (GroupResource) templateThreeUsers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "testA" {
+  user_principal_name = "acctestGroup.%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-A"
   password            = "%[2]s"
 }
-`, id, password)
+
+resource "azuread_user" "testB" {
+  user_principal_name = "acctestGroup.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-B"
+  mail_nickname       = "acctestGroup-%[1]d-B"
+  password            = "%[2]s"
 }
 
-func testAccGroupWithDiverseMembers(id int, password string) string {
+resource "azuread_user" "testC" {
+  user_principal_name = "acctestGroup.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d-C"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
+func (GroupResource) basic(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name = "acctestGroup-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestGroup.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroup-%[1]d"
+  password            = "%[2]s"
+}
+
+resource "azuread_group" "test" {
+  name        = "acctestGroup-%[1]d"
+  description = "Please delete me as this is a.test.AD group!"
+  members     = [azuread_user.test.object_id]
+  owners      = [azuread_user.test.object_id]
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
+func (GroupResource) noMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name    = "acctestGroup-%[1]d"
+  members = []
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) noOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  name   = "acctestGroup-%[1]d"
+  owners = []
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) withDiverseMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -342,10 +352,10 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.test.object_id, azuread_group.member.object_id, azuread_service_principal.test.object_id]
 }
-`, testAccDiverseDirectoryObjects(id, password), id)
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
-func testAccGroupWithDiverseOwners(id int, password string) string {
+func (r GroupResource) withDiverseOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -353,32 +363,32 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.test.object_id, azuread_service_principal.test.object_id]
 }
-`, testAccDiverseDirectoryObjects(id, password), id)
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
-func testAccGroupWithOneMember(id int, password string) string {
+func (r GroupResource) withOneMember(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
-  members = [azuread_user.test.object_id]
+  members = [azuread_user.testA.object_id]
 }
-`, testAccUser_basic(id, password), id)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func testAccGroupWithOneOwners(id int, password string) string {
+func (r GroupResource) withOneOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
-  owners = [azuread_user.test.object_id]
+  owners = [azuread_user.testA.object_id]
 }
-`, testAccUser_basic(id, password), id)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func testAccGroupWithThreeMembers(id int, password string) string {
+func (r GroupResource) withThreeMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -386,10 +396,10 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[2]d"
   members = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, testAccUser_threeUsersABC(id, password), id)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func testAccGroupWithThreeOwners(id int, password string) string {
+func (r GroupResource) withThreeOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -397,10 +407,10 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[2]d"
   owners = [azuread_user.testA.object_id, azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, testAccUser_threeUsersABC(id, password), id)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func testAccGroupWithOwnersAndMembers(id int, password string) string {
+func (r GroupResource) withOwnersAndMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -409,13 +419,13 @@ resource "azuread_group" "test" {
   owners  = [azuread_user.testA.object_id]
   members = [azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
-`, testAccUser_threeUsersABC(id, password), id)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func testAccGroupWithServicePrincipalMember(id int) string {
+func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
@@ -426,13 +436,13 @@ resource "azuread_group" "test" {
   name    = "acctestGroup-%[1]d"
   members = [azuread_service_principal.test.object_id]
 }
-`, id)
+`, data.RandomInteger)
 }
 
-func testAccGroupWithServicePrincipalOwner(id int) string {
+func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  name = "acctestGroup-%[1]d"
 }
 
 resource "azuread_service_principal" "test" {
@@ -443,16 +453,25 @@ resource "azuread_group" "test" {
   name   = "acctestGroup-%[1]d"
   owners = [azuread_service_principal.test.object_id]
 }
-`, id)
+`, data.RandomInteger)
 }
 
-func testAccGroup_duplicateName(id int) string {
+func (GroupResource) preventDuplicateNamesPass(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+resource "azuread_group" "test" {
+  name                    = "acctestGroup-%[1]d"
+  prevent_duplicate_names = true
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) preventDuplicateNamesFail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
 
 resource "azuread_group" "duplicate" {
   name                    = azuread_group.test.name
   prevent_duplicate_names = true
 }
-`, testAccGroup_basic(id))
+`, r.basic(data))
 }

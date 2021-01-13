@@ -1,10 +1,11 @@
 package aadgraph
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -16,9 +17,9 @@ const groupMemberResourceName = "azuread_group_member"
 
 func groupMemberResource() *schema.Resource {
 	return &schema.Resource{
-		Create: groupMemberResourceCreate,
-		Read:   groupMemberResourceRead,
-		Delete: groupMemberResourceDelete,
+		CreateContext: groupMemberResourceCreate,
+		ReadContext:   groupMemberResourceRead,
+		DeleteContext: groupMemberResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParseGroupMemberId(id)
@@ -27,25 +28,24 @@ func groupMemberResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"group_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"member_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 		},
 	}
 }
 
-func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	groupID := d.Get("group_object_id").(string)
 	memberID := d.Get("member_object_id").(string)
@@ -57,36 +57,35 @@ func groupMemberResourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	existingMembers, err := graph.GroupAllMembers(ctx, client, groupID)
 	if err != nil {
-		return fmt.Errorf("listing existing members for group with ID %q", groupID)
+		return tf.ErrorDiagF(err, "Listing existing members for group with object ID: %q", id.GroupId)
 	}
 	if len(existingMembers) > 0 {
 		for _, v := range existingMembers {
 			if strings.EqualFold(v, memberID) {
-				return tf.ImportAsExistsError("azuread_group_member", id.String())
+				return tf.ImportAsExistsDiag("azuread_group_member", id.String())
 			}
 		}
 	}
 
 	if err := graph.GroupAddMember(ctx, client, groupID, memberID); err != nil {
-		return err
+		return tf.ErrorDiagF(err, "Adding group member")
 	}
 
 	d.SetId(id.String())
-	return groupMemberResourceRead(d, meta)
+	return groupMemberResourceRead(ctx, d, meta)
 }
 
-func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return fmt.Errorf("unable to parse ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
 
 	members, err := graph.GroupAllMembers(ctx, client, id.GroupId)
 	if err != nil {
-		return fmt.Errorf("retrieving Group members (groupObjectId: %q): %+v", id.GroupId, err)
+		return tf.ErrorDiagF(err, "Retrieving members for group with object ID: %q", id.GroupId)
 	}
 
 	var memberObjectID string
@@ -102,32 +101,31 @@ func groupMemberResourceRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("group_object_id", id.GroupId)
-	d.Set("member_object_id", memberObjectID)
+	tf.Set(d, "group_object_id", id.GroupId)
+	tf.Set(d, "member_object_id", memberObjectID)
 
 	return nil
 }
 
-func groupMemberResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.GroupsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseGroupMemberId(d.Id())
 	if err != nil {
-		return fmt.Errorf("Unable to parse ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
 
 	tf.LockByName(groupMemberResourceName, id.GroupId)
 	defer tf.UnlockByName(groupMemberResourceName, id.GroupId)
 
 	if err := graph.GroupRemoveMember(ctx, client, d.Timeout(schema.TimeoutDelete), id.GroupId, id.MemberId); err != nil {
-		return err
+		return tf.ErrorDiagF(err, "Removing member %q from group with object ID: %q", id.MemberId, id.GroupId)
 	}
 
-	if _, err := graph.WaitForListRemove(id.MemberId, func() ([]string, error) {
+	if _, err := graph.WaitForListRemove(ctx, id.MemberId, func() ([]string, error) {
 		return graph.GroupAllMembers(ctx, client, id.GroupId)
 	}); err != nil {
-		return fmt.Errorf("waiting for group membership removal: %+v", err)
+		return tf.ErrorDiagF(err, "Waiting for group membership removal")
 	}
 
 	return nil

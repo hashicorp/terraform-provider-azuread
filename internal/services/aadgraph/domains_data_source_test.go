@@ -3,28 +3,27 @@ package aadgraph_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 )
+
+type DomainsDataSource struct{}
 
 func TestAccDomainsDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainsDataSource_basic,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.authentication_type"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_default"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_initial"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_verified"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: DomainsDataSource{}.basic(),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
+				check.That(data.ResourceName).Key("domains.0.authentication_type").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_default").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_initial").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_verified").Exists(),
+			),
 		},
 	})
 }
@@ -32,19 +31,15 @@ func TestAccDomainsDataSource_basic(t *testing.T) {
 func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainsDataSource_onlyDefault,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_default"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_verified"),
-					resource.TestCheckResourceAttr(data.ResourceName, "domains.0.is_default", "true"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: DomainsDataSource{}.onlyDefault(),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_default").HasValue("true"),
+				check.That(data.ResourceName).Key("domains.0.is_initial").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_verified").Exists(),
+			),
 		},
 	})
 }
@@ -52,35 +47,35 @@ func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainsDataSource_onlyInitial,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.domain_name"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_default"),
-					resource.TestCheckResourceAttrSet(data.ResourceName, "domains.0.is_verified"),
-					resource.TestCheckResourceAttr(data.ResourceName, "domains.0.is_initial", "true"),
-				),
-			},
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: DomainsDataSource{}.onlyInitial(),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_default").Exists(),
+				check.That(data.ResourceName).Key("domains.0.is_initial").HasValue("true"),
+				check.That(data.ResourceName).Key("domains.0.is_verified").Exists(),
+			),
 		},
 	})
 }
 
-const testAccDomainsDataSource_basic = `
-data "azuread_domains" "test" {}
-`
+func (DomainsDataSource) basic() string {
+	return `data "azuread_domains" "test" {}`
+}
 
-const testAccDomainsDataSource_onlyDefault = `
+func (DomainsDataSource) onlyDefault() string {
+	return `
 data "azuread_domains" "test" {
   only_default = true
 }
 `
+}
 
-const testAccDomainsDataSource_onlyInitial = `
+func (DomainsDataSource) onlyInitial() string {
+	return `
 data "azuread_domains" "test" {
   only_initial = true
 }
 `
+}

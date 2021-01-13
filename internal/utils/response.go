@@ -10,7 +10,7 @@ func ResponseWasNotFound(resp autorest.Response) bool {
 	return ResponseWasStatusCode(resp, http.StatusNotFound)
 }
 
-func ResponseWasStatusCode(resp autorest.Response, statusCode int) bool { // nolint: unparam
+func ResponseWasStatusCode(resp autorest.Response, statusCode int) bool {
 	if r := resp.Response; r != nil {
 		if r.StatusCode == statusCode {
 			return true

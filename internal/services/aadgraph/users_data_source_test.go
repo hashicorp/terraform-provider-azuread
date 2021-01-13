@@ -4,166 +4,121 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
 )
+
+type UsersDataSource struct{}
 
 func TestAccUsersDataSource_byUserPrincipalNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byUserPrincipalNames(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "2"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byUserPrincipalNames(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "3"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "3"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "3"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byUserPrincipalNamesIgnoreMissing(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("users.#").HasValue("3"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_byObjectIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byObjectIds(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "2"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byObjectIds(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_byObjectIdsIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byObjectIdsIgnoreMissing(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "2"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byObjectIdsIgnoreMissing(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byMailNicknames(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nicknames.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "2"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byMailNicknames(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
-	password := "utils@$$wR2" + acctest.RandStringFromCharSet(7, acctest.CharSetAlphaNum)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_byMailNicknamesIgnoreMissing(data.RandomInteger, password),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nicknames.#", "2"),
-					resource.TestCheckResourceAttr(data.ResourceName, "users.#", "2"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byMailNicknamesIgnoreMissing(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
 }
 
 func TestAccUsersDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { acceptance.PreCheck(t) },
-		Providers: acceptance.SupportedProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUsersDataSource_noNames(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(data.ResourceName, "user_principal_names.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "object_ids.#", "0"),
-					resource.TestCheckResourceAttr(data.ResourceName, "mail_nicknames.#", "0"),
-				),
-			},
-		},
-	})
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.noNames(),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("0"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("0"),
+			check.That(data.ResourceName).Key("users.#").HasValue("0"),
+		),
+	}})
 }
 
-func testAccUsersDataSource_byUserPrincipalNames(id int, password string) string {
+func (UsersDataSource) byUserPrincipalNames(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   user_principal_names = [azuread_user.testA.user_principal_name, azuread_user.testB.user_principal_name]
 }
-`, testAccUser_threeUsersABC(id, password))
+`, UserResource{}.threeUsersABC(data))
 }
 
-func testAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(id int, password string) string {
+func (UsersDataSource) byUserPrincipalNamesIgnoreMissing(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   ignore_missing = true
@@ -172,25 +127,25 @@ data "azuread_users" "test" {
     azuread_user.testA.user_principal_name,
     azuread_user.testB.user_principal_name,
     azuread_user.testC.user_principal_name,
-    "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}",
+    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
   ]
 }
-`, testAccUser_threeUsersABC(id, password), id)
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
 }
 
-func testAccUsersDataSource_byObjectIds(id int, password string) string {
+func (UsersDataSource) byObjectIds(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   object_ids = [azuread_user.testA.object_id, azuread_user.testB.object_id]
 }
-`, testAccUser_threeUsersABC(id, password))
+`, UserResource{}.threeUsersABC(data))
 }
 
-func testAccUsersDataSource_byObjectIdsIgnoreMissing(id int, password string) string {
+func (UsersDataSource) byObjectIdsIgnoreMissing(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   ignore_missing = true
@@ -201,22 +156,22 @@ data "azuread_users" "test" {
     "00000000-0000-0000-0000-000000000000"
   ]
 }
-`, testAccUser_threeUsersABC(id, password))
+`, UserResource{}.threeUsersABC(data))
 }
 
-func testAccUsersDataSource_byMailNicknames(id int, password string) string {
+func (UsersDataSource) byMailNicknames(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   mail_nicknames = [azuread_user.testA.mail_nickname, azuread_user.testB.mail_nickname]
 }
-`, testAccUser_threeUsersABC(id, password))
+`, UserResource{}.threeUsersABC(data))
 }
 
-func testAccUsersDataSource_byMailNicknamesIgnoreMissing(id int, password string) string {
+func (UsersDataSource) byMailNicknamesIgnoreMissing(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%s
+%[1]s
 
 data "azuread_users" "test" {
   ignore_missing = true
@@ -224,13 +179,13 @@ data "azuread_users" "test" {
   mail_nicknames = [
     azuread_user.testA.mail_nickname,
     azuread_user.testB.mail_nickname,
-    "not-a-real-user-%d${data.azuread_domains.tenant_domain.domains.0.domain_name}"
+    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}"
   ]
 }
-`, testAccUser_threeUsersABC(id, password), id)
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
 }
 
-func testAccUsersDataSource_noNames() string {
+func (UsersDataSource) noNames() string {
 	return `
 data "azuread_users" "test" {
   user_principal_names = []

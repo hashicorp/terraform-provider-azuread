@@ -1,6 +1,10 @@
 package validate
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/go-cty/cty"
+)
 
 func TestUUID(t *testing.T) {
 	cases := []struct {
@@ -27,10 +31,10 @@ func TestUUID(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Input, func(t *testing.T) {
-			_, errors := UUID(tc.Input, "test")
+			diags := UUID(tc.Input, cty.Path{})
 
-			if len(errors) != tc.Errors {
-				t.Fatalf("Expected UUID to have %d not %d errors for %q", tc.Errors, len(errors), tc.Input)
+			if len(diags) != tc.Errors {
+				t.Fatalf("Expected UUID to have %d not %d errors for %q", tc.Errors, len(diags), tc.Input)
 			}
 		})
 	}

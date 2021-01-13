@@ -1,13 +1,14 @@
 package aadgraph
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -18,10 +19,10 @@ import (
 
 func applicationAppRoleResource() *schema.Resource {
 	return &schema.Resource{
-		Create: applicationAppRoleResourceCreateUpdate,
-		Update: applicationAppRoleResourceCreateUpdate,
-		Read:   applicationAppRoleResourceRead,
-		Delete: applicationAppRoleResourceDelete,
+		CreateContext: applicationAppRoleResourceCreateUpdate,
+		UpdateContext: applicationAppRoleResourceCreateUpdate,
+		ReadContext:   applicationAppRoleResourceRead,
+		DeleteContext: applicationAppRoleResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := graph.ParseAppRoleId(id)
@@ -30,10 +31,10 @@ func applicationAppRoleResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"allowed_member_types": {
@@ -50,15 +51,15 @@ func applicationAppRoleResource() *schema.Resource {
 			},
 
 			"description": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"is_enabled": {
@@ -68,11 +69,11 @@ func applicationAppRoleResource() *schema.Resource {
 			},
 
 			"role_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"value": {
@@ -83,9 +84,8 @@ func applicationAppRoleResource() *schema.Resource {
 	}
 }
 
-func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Get("application_object_id").(string)
 
@@ -96,7 +96,7 @@ func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interfa
 	} else {
 		rid, err := uuid.GenerateUUID()
 		if err != nil {
-			return fmt.Errorf("generating App Role for Object ID %q: %+v", objectId, err)
+			return tf.ErrorDiagF(err, "Generating App Role for application with object ID %q", objectId)
 		}
 		roleId = rid
 	}
@@ -128,9 +128,9 @@ func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interfa
 	app, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(app.Response) {
-			return fmt.Errorf("Application with ID %q was not found", id.ObjectId)
+			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
 	var newRoles *[]graphrbac.AppRole
@@ -139,18 +139,18 @@ func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interfa
 		newRoles, err = graph.AppRoleAdd(app.AppRoles, &role)
 		if err != nil {
 			if _, ok := err.(*graph.AlreadyExistsError); ok {
-				return tf.ImportAsExistsError("azuread_application_app_role", id.String())
+				return tf.ImportAsExistsDiag("azuread_application_app_role", id.String())
 			}
-			return fmt.Errorf("adding App Role: %+v", err)
+			return tf.ErrorDiagF(err, "Failed to add App Role")
 		}
 	} else {
-		if existing := graph.AppRoleFindById(app, id.RoleId); existing == nil {
-			return fmt.Errorf("App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
+		if existing, _ := graph.AppRoleFindById(app, id.RoleId); existing == nil {
+			return tf.ErrorDiagPathF(nil, "role_id", "App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 		}
 
 		newRoles, err = graph.AppRoleUpdate(app.AppRoles, &role)
 		if err != nil {
-			return fmt.Errorf("updating App Role: %s", err)
+			return tf.ErrorDiagF(err, "Updating App Role with ID %q", *role.ID)
 		}
 	}
 
@@ -158,21 +158,20 @@ func applicationAppRoleResourceCreateUpdate(d *schema.ResourceData, meta interfa
 		AppRoles: newRoles,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	d.SetId(id.String())
 
-	return applicationAppRoleResourceRead(d, meta)
+	return applicationAppRoleResourceRead(ctx, d, meta)
 }
 
-func applicationAppRoleResourceRead(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseAppRoleId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing App Role ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing App Role ID %q", d.Id())
 	}
 
 	// ensure the Application Object exists
@@ -184,34 +183,37 @@ func applicationAppRoleResourceRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	role := graph.AppRoleFindById(app, id.RoleId)
+	role, err := graph.AppRoleFindById(app, id.RoleId)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Identifying App Role")
+	}
+
 	if role == nil {
 		log.Printf("[DEBUG] App Role %q (ID %q) was not found - removing from state!", id.RoleId, id.ObjectId)
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("application_object_id", id.ObjectId)
-	d.Set("role_id", id.RoleId)
-	d.Set("allowed_member_types", role.AllowedMemberTypes)
-	d.Set("description", role.Description)
-	d.Set("display_name", role.DisplayName)
-	d.Set("is_enabled", role.IsEnabled)
-	d.Set("value", role.Value)
+	tf.Set(d, "allowed_member_types", role.AllowedMemberTypes)
+	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "description", role.Description)
+	tf.Set(d, "display_name", role.DisplayName)
+	tf.Set(d, "is_enabled", role.IsEnabled)
+	tf.Set(d, "role_id", id.RoleId)
+	tf.Set(d, "value", role.Value)
 
 	return nil
 }
 
-func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func applicationAppRoleResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	id, err := graph.ParseAppRoleId(d.Id())
 	if err != nil {
-		return fmt.Errorf("parsing App Role ID: %v", err)
+		return tf.ErrorDiagPathF(err, "id", "Parsing App Role ID %q", d.Id())
 	}
 
 	tf.LockByName(resourceApplicationName, id.ObjectId)
@@ -225,28 +227,33 @@ func applicationAppRoleResourceDelete(d *schema.ResourceData, meta interface{}) 
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
 			return nil
 		}
-		return fmt.Errorf("retrieving Application ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 	}
 
 	log.Printf("[DEBUG] Disabling App Role %q for Application %q prior to removal", id.RoleId, id.ObjectId)
 	newRoles, err := graph.AppRoleResultDisableById(app.AppRoles, id.RoleId)
 	if err != nil {
-		return fmt.Errorf("deleting App Role: %s", err)
+		return tf.ErrorDiagF(err, "Disabling App Role with ID %q for application %q", id.RoleId, id.ObjectId)
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
 		AppRoles: newRoles,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	log.Printf("[DEBUG] Removing App Role %q for Application %q", id.RoleId, id.ObjectId)
+	newRoles, err = graph.AppRoleResultRemoveById(app.AppRoles, id.RoleId)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Removing App Role with ID %q for application %q", id.RoleId, id.ObjectId)
+	}
+
 	properties = graphrbac.ApplicationUpdateParameters{
-		AppRoles: graph.AppRoleResultRemoveById(app.AppRoles, id.RoleId),
+		AppRoles: newRoles,
 	}
 	if _, err := client.Patch(ctx, id.ObjectId, properties); err != nil {
-		return fmt.Errorf("patching Application with ID %q: %+v", id.ObjectId, err)
+		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
 	return nil

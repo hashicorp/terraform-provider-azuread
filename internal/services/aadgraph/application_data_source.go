@@ -1,10 +1,12 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -15,31 +17,31 @@ import (
 
 func applicationData() *schema.Resource {
 	return &schema.Resource{
-		Read: applicationDataRead,
+		ReadContext: applicationDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"application_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.UUID,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"application_id", "name", "object_id"},
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "name", "object_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"homepage": {
@@ -148,20 +150,19 @@ func applicationData() *schema.Resource {
 	}
 }
 
-func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
+func applicationDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ApplicationsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var app graphrbac.Application
 
-	if oId, ok := d.Get("object_id").(string); ok && oId != "" {
-		resp, err := client.Get(ctx, oId)
+	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
+		resp, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
-				return fmt.Errorf("Application with ID %q was not found", oId)
+				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)
 			}
 
-			return fmt.Errorf("retrieving Application with ID %q: %+v", oId, err)
+			return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", objectId)
 		}
 
 		app = resp
@@ -174,100 +175,81 @@ func applicationDataRead(d *schema.ResourceData, meta interface{}) error {
 			fieldName = "displayName"
 			fieldValue = name
 		} else {
-			return fmt.Errorf("one of `object_id` or `name` must be supplied")
+			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id` or `name` must be specified")
 		}
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
 		resp, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Applications for filter %q: %+v", filter, err)
+			return tf.ErrorDiagF(err, "Listing applications for filter %q", filter)
 		}
 
 		values := resp.Response().Value
 		if values == nil {
-			return fmt.Errorf("bad API response: nil values for Applications matching %q", filter)
+			return tf.ErrorDiagF(fmt.Errorf("nil values for applications matching filter: %q", filter), "Bad API response")
 		}
 		if len(*values) == 0 {
-			return fmt.Errorf("found no Applications matching %q", filter)
+			return tf.ErrorDiagF(fmt.Errorf("No applications found matching filter: %q", filter), "Application not found")
 		}
 		if len(*values) > 1 {
-			return fmt.Errorf("found multiple Applications matching %q", filter)
+			return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
 		}
 
 		app = (*values)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppID == nil {
-				return fmt.Errorf("bad API response: nil AppID for Applications matching %q", filter)
+				return tf.ErrorDiagF(fmt.Errorf("nil AppID for applications matching filter: %q", filter), "Bad API Response")
 			}
 			if *app.AppID != fieldValue {
-				return fmt.Errorf("AppID for Applications matching %q does not match(%q!=%q)", filter, *app.AppID, fieldValue)
+				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter), "Bad API Response")
 			}
 		case "displayName":
 			if app.DisplayName == nil {
-				return fmt.Errorf("nil DisplayName for Applications matching %q", filter)
+				return tf.ErrorDiagF(fmt.Errorf("nil displayName for applications matching filter: %q", filter), "Bad API Response")
 			}
 			if *app.DisplayName != fieldValue {
-				return fmt.Errorf("DisplayName for Applications matching %q does not match(%q!=%q)", filter, *app.DisplayName, fieldValue)
+				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "Bad API Response")
 			}
 		}
 	}
 
 	if app.ObjectID == nil {
-		return fmt.Errorf("Application ObjectId is nil")
+		return tf.ErrorDiagF(fmt.Errorf("ObjectID returned for application is nil"), "Bad API Response")
 	}
+
 	d.SetId(*app.ObjectID)
 
-	d.Set("object_id", app.ObjectID)
-	d.Set("name", app.DisplayName)
-	d.Set("application_id", app.AppID)
-	d.Set("homepage", app.Homepage)
-	d.Set("logout_url", app.LogoutURL)
-	d.Set("available_to_other_tenants", app.AvailableToOtherTenants)
-	d.Set("oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	tf.Set(d, "app_roles", graph.FlattenAppRoles(app.AppRoles))
+	tf.Set(d, "application_id", app.AppID)
+	tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants)
+	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
+	tf.Set(d, "homepage", app.Homepage)
+	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "logout_url", app.LogoutURL)
+	tf.Set(d, "name", app.DisplayName)
+	tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
+	tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions))
+	tf.Set(d, "object_id", app.ObjectID)
+	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls))
+	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 
-	if err := d.Set("identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris)); err != nil {
-		return fmt.Errorf("setting `identifier_uris`: %+v", err)
-	}
-
-	if err := d.Set("reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls)); err != nil {
-		return fmt.Errorf("setting `reply_urls`: %+v", err)
-	}
-
-	if err := d.Set("required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess)); err != nil {
-		return fmt.Errorf("setting `required_resource_access`: %+v", err)
-	}
-
-	if err := d.Set("optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims)); err != nil {
-		return fmt.Errorf("setting `optional_claims`: %+v", err)
-	}
-
+	var appType string
 	if v := app.PublicClient; v != nil && *v {
-		d.Set("type", "native")
+		appType = "native"
 	} else {
-		d.Set("type", "webapp/api")
+		appType = "webapp/api"
 	}
 
-	if err := d.Set("app_roles", graph.FlattenAppRoles(app.AppRoles)); err != nil {
-		return fmt.Errorf("setting `app_roles`: %+v", err)
-	}
-
-	if err := d.Set("group_membership_claims", app.GroupMembershipClaims); err != nil {
-		return fmt.Errorf("setting `group_membership_claims`: %+v", err)
-	}
-
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(app.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
-	}
+	tf.Set(d, "type", appType)
 
 	owners, err := graph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
-		return fmt.Errorf("getting owners for Application %q: %+v", *app.ObjectID, err)
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ObjectID)
 	}
-	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("setting `owners`: %+v", err)
-	}
+	tf.Set(d, "owners", owners)
 
 	return nil
 }

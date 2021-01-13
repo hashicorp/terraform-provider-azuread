@@ -1,17 +1,20 @@
 package aadgraph
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 )
 
 func clientConfigData() *schema.Resource {
 	return &schema.Resource{
-		Read: clientConfigDataRead,
+		ReadContext: clientConfigDataRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(5 * time.Minute),
@@ -36,30 +39,30 @@ func clientConfigData() *schema.Resource {
 	}
 }
 
-func clientConfigDataRead(d *schema.ResourceData, meta interface{}) error {
+func clientConfigDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient)
-	ctx := meta.(*clients.AadClient).StopContext
 
 	if client.AuthenticatedAsAServicePrincipal {
 		spClient := client.AadGraph.ServicePrincipalsClient
 		// Application & Service Principal is 1:1 per tenant. Since we know the appId (client_id)
 		// here, we can query for the Service Principal whose appId matches.
 		filter := fmt.Sprintf("appId eq '%s'", client.ClientID)
-		listResult, listErr := spClient.List(ctx, filter)
+		result, err := spClient.List(ctx, filter)
 
-		if listErr != nil {
-			return fmt.Errorf("listing Service Principals: %#v", listErr)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Listing Service Principals")
 		}
 
-		if listResult.Values() == nil || len(listResult.Values()) != 1 {
-			return fmt.Errorf("unexpected Service Principal query result: %#v", listResult.Values())
+		if result.Values() == nil || len(result.Values()) != 1 {
+			return tf.ErrorDiagF(fmt.Errorf("%#v", result.Values()), "Unexpected Service Principal query result")
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ObjectID, client.ClientID))
-	d.Set("client_id", client.ClientID)
-	d.Set("object_id", client.ObjectID)
-	d.Set("tenant_id", client.TenantID)
+
+	tf.Set(d, "client_id", client.ClientID)
+	tf.Set(d, "object_id", client.ObjectID)
+	tf.Set(d, "tenant_id", client.TenantID)
 
 	return nil
 }

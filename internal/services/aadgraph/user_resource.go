@@ -1,14 +1,17 @@
 package aadgraph
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
@@ -19,10 +22,10 @@ import (
 
 func userResource() *schema.Resource {
 	return &schema.Resource{
-		Create: userResourceCreate,
-		Read:   userResourceRead,
-		Update: userResourceUpdate,
-		Delete: userResourceDelete,
+		CreateContext: userResourceCreate,
+		ReadContext:   userResourceRead,
+		UpdateContext: userResourceUpdate,
+		DeleteContext: userResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
@@ -33,16 +36,16 @@ func userResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"user_principal_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validate.StringIsEmailAddress,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.StringIsEmailAddress,
 			},
 
 			"display_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validate.NoEmptyStrings,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"given_name": {
@@ -196,14 +199,13 @@ func userResource() *schema.Resource {
 	}
 }
 
-func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
+func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	upn := d.Get("user_principal_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
 
-	//default mail nickname to the first part of the UPN (matches the portal)
+	// default mail nickname to the first part of the UPN (matches the portal)
 	if mailNickName == "" {
 		mailNickName = strings.Split(upn, "@")[0]
 	}
@@ -278,26 +280,28 @@ func userResourceCreate(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := client.Create(ctx, userCreateParameters)
 	if err != nil {
-		return fmt.Errorf("creating User (%q): %+v", upn, err)
+		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
+
 	if user.ObjectID == nil || *user.ObjectID == "" {
-		return fmt.Errorf("nil/blank User ID for %q: %+v", upn, err)
+		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
+
 	d.SetId(*user.ObjectID)
 
-	_, err = graph.WaitForCreationReplication(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = graph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return client.Get(ctx, *user.ObjectID)
 	})
+
 	if err != nil {
-		return fmt.Errorf("waiting for User (%s) with ObjectId %q: %+v", upn, *user.ObjectID, err)
+		return tf.ErrorDiagF(err, "Waiting for user %q with object ID: %q", upn, *user.ObjectID)
 	}
 
-	return userResourceRead(d, meta)
+	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var userUpdateParameters graphrbac.UserUpdateParameters
 
@@ -383,15 +387,14 @@ func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := client.Update(ctx, d.Id(), userUpdateParameters); err != nil {
-		return fmt.Errorf("updating User with ID %q: %+v", d.Id(), err)
+		return tf.ErrorDiagF(err, "Updating User with object ID: %q", d.Id())
 	}
 
-	return userResourceRead(d, meta)
+	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceRead(d *schema.ResourceData, meta interface{}) error {
+func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	objectId := d.Id()
 
@@ -402,74 +405,92 @@ func userResourceRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("retrieving User with ID %q: %+v", objectId, err)
+		return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", objectId)
 	}
 
-	d.Set("user_principal_name", user.UserPrincipalName)
-	d.Set("display_name", user.DisplayName)
-	d.Set("given_name", user.GivenName)
-	d.Set("surname", user.Surname)
-	d.Set("mail", user.Mail)
-	d.Set("mail_nickname", user.MailNickname)
-	d.Set("account_enabled", user.AccountEnabled)
-	d.Set("object_id", user.ObjectID)
-	d.Set("usage_location", user.UsageLocation)
-	d.Set("immutable_id", user.ImmutableID)
+	tf.Set(d, "object_id", user.ObjectID)
+	tf.Set(d, "immutable_id", user.ImmutableID)
+	tf.Set(d, "onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
+	tf.Set(d, "onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
+	tf.Set(d, "user_principal_name", user.UserPrincipalName)
+	tf.Set(d, "account_enabled", user.AccountEnabled)
+	tf.Set(d, "display_name", user.DisplayName)
+	tf.Set(d, "given_name", user.GivenName)
+	tf.Set(d, "surname", user.Surname)
+	tf.Set(d, "mail", user.Mail)
+	tf.Set(d, "mail_nickname", user.MailNickname)
+	tf.Set(d, "usage_location", user.UsageLocation)
 
+	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
-		d.Set("job_title", v.(string))
+		jobTitle = v.(string)
 	}
+	tf.Set(d, "job_title", jobTitle)
 
+	dept := ""
 	if v, ok := user.AdditionalProperties["department"]; ok {
-		d.Set("department", v.(string))
+		dept = v.(string)
 	}
+	tf.Set(d, "department", dept)
 
+	companyName := ""
 	if v, ok := user.AdditionalProperties["companyName"]; ok {
-		d.Set("company_name", v.(string))
+		companyName = v.(string)
 	}
+	tf.Set(d, "company_name", companyName)
 
+	physDelivOfficeName := ""
 	if v, ok := user.AdditionalProperties["physicalDeliveryOfficeName"]; ok {
-		d.Set("physical_delivery_office_name", v.(string))
+		physDelivOfficeName = v.(string)
 	}
+	tf.Set(d, "physical_delivery_office_name", physDelivOfficeName)
 
+	streetAddress := ""
 	if v, ok := user.AdditionalProperties["streetAddress"]; ok {
-		d.Set("street_address", v.(string))
+		streetAddress = v.(string)
 	}
+	tf.Set(d, "street_address", streetAddress)
 
+	city := ""
 	if v, ok := user.AdditionalProperties["city"]; ok {
-		d.Set("city", v.(string))
+		city = v.(string)
 	}
+	tf.Set(d, "city", city)
 
+	state := ""
 	if v, ok := user.AdditionalProperties["state"]; ok {
-		d.Set("state", v.(string))
+		state = v.(string)
 	}
+	tf.Set(d, "state", state)
 
+	country := ""
 	if v, ok := user.AdditionalProperties["country"]; ok {
-		d.Set("country", v.(string))
+		country = v.(string)
 	}
+	tf.Set(d, "country", country)
 
+	postalCode := ""
 	if v, ok := user.AdditionalProperties["postalCode"]; ok {
-		d.Set("postal_code", v.(string))
+		postalCode = v.(string)
 	}
+	tf.Set(d, "postal_code", postalCode)
 
+	mobile := ""
 	if v, ok := user.AdditionalProperties["mobile"]; ok {
-		d.Set("mobile", v.(string))
+		mobile = v.(string)
 	}
-
-	d.Set("onpremises_sam_account_name", user.AdditionalProperties["onPremisesSamAccountName"])
-	d.Set("onpremises_user_principal_name", user.AdditionalProperties["onPremisesUserPrincipalName"])
+	tf.Set(d, "mobile", mobile)
 
 	return nil
 }
 
-func userResourceDelete(d *schema.ResourceData, meta interface{}) error {
+func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.UsersClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	resp, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		if !utils.ResponseWasNotFound(resp) {
-			return fmt.Errorf("deleting User with ID %q: %+v", d.Id(), err)
+			return tf.ErrorDiagF(err, "Deleting user with object ID: %q", d.Id())
 		}
 	}
 

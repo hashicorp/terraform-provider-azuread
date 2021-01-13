@@ -1,44 +1,48 @@
 package aadgraph
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/graph"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
 )
 
 func servicePrincipalData() *schema.Resource {
 	return &schema.Resource{
-		Read: servicePrincipalDataRead,
+		ReadContext: servicePrincipalDataRead,
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"display_name", "application_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ConflictsWith:    []string{"display_name", "application_id"},
 			},
 
 			"display_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.NoEmptyStrings,
-				ConflictsWith: []string{"object_id", "application_id"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+				ConflictsWith:    []string{"object_id", "application_id"},
 			},
 
 			"application_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validate.UUID,
-				ConflictsWith: []string{"object_id", "display_name"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.UUID,
+				ConflictsWith:    []string{"object_id", "display_name"},
 			},
 
 			"app_roles": graph.SchemaAppRolesComputed(),
@@ -48,9 +52,8 @@ func servicePrincipalData() *schema.Resource {
 	}
 }
 
-func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
+func servicePrincipalDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.AadClient).AadGraph.ServicePrincipalsClient
-	ctx := meta.(*clients.AadClient).StopContext
 
 	var sp *graphrbac.ServicePrincipal
 
@@ -60,10 +63,10 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		app, err := client.Get(ctx, objectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(app.Response) {
-				return fmt.Errorf("Service Principal with Object ID %q was not found!", objectId)
+				return tf.ErrorDiagPathF(nil, "object_id", "Service Principal with object ID %q was not found", objectId)
 			}
 
-			return fmt.Errorf("retrieving Service Principal ID %q: %+v", objectId, err)
+			return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
 		}
 
 		sp = &app
@@ -74,7 +77,7 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Service Principals: %+v", err)
+			return tf.ErrorDiagF(err, "Listing service principals for filter %q", filter)
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -89,7 +92,7 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if sp == nil {
-			return fmt.Errorf("A Service Principal with the Display Name %q was not found", displayName)
+			return tf.ErrorDiagF(nil, "No service principal found matching display name: %q", displayName)
 		}
 	} else {
 		// use the application_id to find the Azure AD service principal
@@ -98,7 +101,7 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 
 		apps, err := client.ListComplete(ctx, filter)
 		if err != nil {
-			return fmt.Errorf("listing Service Principals: %+v", err)
+			return tf.ErrorDiagF(err, "Listing service principals for filter %q", filter)
 		}
 
 		for _, app := range *apps.Response().Value {
@@ -113,26 +116,21 @@ func servicePrincipalDataRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if sp == nil {
-			return fmt.Errorf("A Service Principal for Application ID %q was not found", applicationId)
+			return tf.ErrorDiagF(nil, "No service principal found for application ID: %q", applicationId)
 		}
 	}
 
 	if sp.ObjectID == nil {
-		return fmt.Errorf("Service Principal objectId is nil")
+		return tf.ErrorDiagF(errors.New("ObjectID returned for service principal is nil"), "Bad API response")
 	}
+
 	d.SetId(*sp.ObjectID)
 
-	d.Set("application_id", sp.AppID)
-	d.Set("display_name", sp.DisplayName)
-	d.Set("object_id", sp.ObjectID)
-
-	if err := d.Set("app_roles", graph.FlattenAppRoles(sp.AppRoles)); err != nil {
-		return fmt.Errorf("setting `app_roles`: %+v", err)
-	}
-
-	if err := d.Set("oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions)); err != nil {
-		return fmt.Errorf("setting `oauth2_permissions`: %+v", err)
-	}
+	tf.Set(d, "app_roles", graph.FlattenAppRoles(sp.AppRoles))
+	tf.Set(d, "application_id", sp.AppID)
+	tf.Set(d, "display_name", sp.DisplayName)
+	tf.Set(d, "oauth2_permissions", graph.FlattenOauth2Permissions(sp.Oauth2Permissions))
+	tf.Set(d, "object_id", sp.ObjectID)
 
 	return nil
 }
