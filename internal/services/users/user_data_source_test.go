@@ -74,6 +74,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheck
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
 		check.That(data.ResourceName).Key("immutable_id").Exists(),
+		check.That(data.ResourceName).Key("onpremises_immutable_id").Exists(),
 		check.That(data.ResourceName).Key("user_principal_name").Exists(),
 		check.That(data.ResourceName).Key("account_enabled").Exists(),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestUser-%d-DisplayName", data.RandomInteger)),
@@ -85,6 +86,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheck
 		check.That(data.ResourceName).Key("job_title").HasValue(fmt.Sprintf("acctestUser-%d-Job", data.RandomInteger)),
 		check.That(data.ResourceName).Key("department").HasValue(fmt.Sprintf("acctestUser-%d-Dept", data.RandomInteger)),
 		check.That(data.ResourceName).Key("company_name").HasValue(fmt.Sprintf("acctestUser-%d-Company", data.RandomInteger)),
+		check.That(data.ResourceName).Key("office_location").HasValue(fmt.Sprintf("acctestUser-%d-PDON", data.RandomInteger)),
 		check.That(data.ResourceName).Key("physical_delivery_office_name").HasValue(fmt.Sprintf("acctestUser-%d-PDON", data.RandomInteger)),
 		check.That(data.ResourceName).Key("street_address").HasValue(fmt.Sprintf("acctestUser-%d-Street", data.RandomInteger)),
 		check.That(data.ResourceName).Key("city").HasValue(fmt.Sprintf("acctestUser-%d-City", data.RandomInteger)),
@@ -92,6 +94,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheck
 		check.That(data.ResourceName).Key("country").HasValue(fmt.Sprintf("acctestUser-%d-Country", data.RandomInteger)),
 		check.That(data.ResourceName).Key("postal_code").HasValue("111111"),
 		check.That(data.ResourceName).Key("mobile").HasValue("(555) 555-5555"),
+		check.That(data.ResourceName).Key("mobile_phone").HasValue("(555) 555-5555"),
 		check.That(data.ResourceName).Key("user_type").HasValue("Member"),
 	)
 }

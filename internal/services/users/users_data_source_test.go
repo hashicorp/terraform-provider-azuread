@@ -125,9 +125,9 @@ data "azuread_users" "test" {
 
   user_principal_names = [
     azuread_user.testA.user_principal_name,
+    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
     azuread_user.testB.user_principal_name,
     azuread_user.testC.user_principal_name,
-    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
   ]
 }
 `, UserResource{}.threeUsersABC(data), data.RandomInteger)
@@ -152,8 +152,8 @@ data "azuread_users" "test" {
 
   object_ids = [
     azuread_user.testA.object_id,
+    "00000000-0000-0000-0000-000000000000",
     azuread_user.testB.object_id,
-    "00000000-0000-0000-0000-000000000000"
   ]
 }
 `, UserResource{}.threeUsersABC(data))
@@ -178,8 +178,8 @@ data "azuread_users" "test" {
 
   mail_nicknames = [
     azuread_user.testA.mail_nickname,
+    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
     azuread_user.testB.mail_nickname,
-    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}"
   ]
 }
 `, UserResource{}.threeUsersABC(data), data.RandomInteger)
