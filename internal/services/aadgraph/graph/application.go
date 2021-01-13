@@ -141,6 +141,7 @@ func SchemaOptionalClaims() *schema.Schema {
 							[]string{
 								"dns_domain_and_sam_account_name",
 								"emit_as_roles",
+								"include_externally_authenticated_upn",
 								"netbios_domain_and_sam_account_name",
 								"sam_account_name",
 							},
