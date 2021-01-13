@@ -192,6 +192,12 @@ func userResource() *schema.Resource {
 				Computed:    true,
 				Description: "The primary cellular telephone number for the user.",
 			},
+
+			"manager": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The user's manager.",
+			},
 		},
 	}
 }
@@ -386,6 +392,13 @@ func userResourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("updating User with ID %q: %+v", d.Id(), err)
 	}
 
+	if d.HasChange("manager") {
+		err := graph.UserUpdateManager(client, ctx, d.Id(), d.Get("manager").(string))
+		if err != nil {
+			return fmt.Errorf("Failed to update users manger: %w", err)
+		}
+	}
+
 	return userResourceRead(d, meta)
 }
 
@@ -405,6 +418,13 @@ func userResourceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("retrieving User with ID %q: %+v", objectId, err)
 	}
 
+	managerObjectId, err := graph.UserGetManager(client, ctx, objectId)
+
+	if err != nil {
+		return fmt.Errorf("Failed to get user's manger: %w", err)
+	}
+
+	d.Set("manager", managerObjectId)
 	d.Set("user_principal_name", user.UserPrincipalName)
 	d.Set("display_name", user.DisplayName)
 	d.Set("given_name", user.GivenName)
