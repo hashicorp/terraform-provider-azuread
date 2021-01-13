@@ -1,3 +1,9 @@
+## 1.2.0 (Unreleased)
+
+NOTES:
+
+* **Terraform Plugin SDK Upgrade:** This version upgrades the Terraform Plugin SDK to v2.3.0. This does not provide any additional provider features or resources but is useful for developers and part of our development roadmap.
+
 ## 1.1.1 (November 26, 2020)
 
 BUG FIXES:
