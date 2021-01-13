@@ -38,23 +38,29 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 	// client declarations:
 	client := Client{
-		ClientID:         b.AadAuthConfig.ClientID,
-		ObjectID:         objectID,
-		TenantID:         b.AadAuthConfig.TenantID,
+		TenantID: b.AadAuthConfig.TenantID, // TODO: v2.0 use AuthConfig
+		ClientID: b.AadAuthConfig.ClientID, // TODO: v2.0 use AuthConfig
+		ObjectID: objectID,
+
 		TerraformVersion: b.TerraformVersion,
-		Environment:      *env,
 
 		AuthenticatedAsAServicePrincipal: b.AadAuthConfig.AuthenticatedAsAServicePrincipal,
 	}
 
-	sender := sender.BuildSender("AzureAD")
+	if b.AuthConfig != nil {
+		client.Environment = b.AuthConfig.Environment
+	}
 
+	sender := sender.BuildSender("AzureAD") // TODO: remove in v2.0
+
+	// TODO: remove in v2.0
 	oauth, err := b.AadAuthConfig.BuildOAuthConfig(env.ActiveDirectoryEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	// Graph Endpoints
+	// AAD Graph Endpoints
+	// TODO: remove in v2.0
 	aadGraphEndpoint := env.GraphEndpoint
 	aadGraphAuthorizer, err := b.AadAuthConfig.GetAuthorizationToken(sender, oauth, aadGraphEndpoint)
 	if err != nil {
@@ -62,18 +68,20 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	}
 
 	o := &common.ClientOptions{
-		AadGraphAuthorizer: aadGraphAuthorizer,
-		AadGraphEndpoint:   aadGraphEndpoint,
-		PartnerID:          b.PartnerID,
-		TenantID:           b.AadAuthConfig.TenantID,
-		TerraformVersion:   b.TerraformVersion,
-		Environment:        *env,
+		Environment: client.Environment,
+		TenantID:    client.TenantID,
+
+		PartnerID:        b.PartnerID,
+		TerraformVersion: client.TerraformVersion,
+
+		AadGraphAuthorizer: aadGraphAuthorizer, // TODO: remove in v2.0
+		AadGraphEndpoint:   aadGraphEndpoint,   // TODO: remove in v2.0
 	}
 
 	// MS Graph
 	if b.EnableMsGraph && b.AuthConfig != nil {
 		client.EnableMsGraphBeta = true
-		o.MsGraphAuthorizer, err = b.AuthConfig.NewAuthorizer(ctx)
+		o.MsGraphAuthorizer, err = b.AuthConfig.NewAuthorizer(ctx, auth.MsGraph)
 		if err != nil {
 			return nil, err
 		}
