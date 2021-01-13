@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/Azure/go-autorest/autorest"
-	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
@@ -18,16 +18,16 @@ import (
 
 // Client contains the handles to all the specific Azure AD resource classes' respective clients
 type Client struct {
-	ClientID string
-	ObjectID string
-	TenantID string
-	Claims   auth.Claims
+	Environment environments.Environment
+	TenantID    string
+	ClientID    string
+	ObjectID    string
+	Claims      auth.Claims
 
 	TerraformVersion string
-	Environment      azure.Environment
 
 	AuthenticatedAsAServicePrincipal bool
-	EnableMsGraphBeta                bool
+	EnableMsGraphBeta                bool // TODO: remove in v2.0
 
 	StopContext context.Context
 

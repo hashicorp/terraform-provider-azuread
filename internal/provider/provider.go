@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -90,14 +91,15 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
+				Deprecated:  "The `metadata_host` provider attribute is deprecated and will be removed in version 2.0",
 				Description: "The Hostname which should be used for the Azure Metadata Service.",
 			},
 
 			"environment": {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
-				Description: "The Cloud Environment which should be used. Possible values are `public`, `usgovernment`, `german`, and `china`. Defaults to `public`.",
+				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
+				Description: "The national cloud environment which should be used. Possible values are `global`, `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
 			},
 
 			// Client Certificate specific fields
@@ -154,6 +156,7 @@ func AzureADProvider() *schema.Provider {
 			},
 
 			// MS Graph beta
+			// TODO: remove in v2.0
 			"enable_msgraph": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -173,12 +176,52 @@ func AzureADProvider() *schema.Provider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		var environment environments.Environment
+		var aadEnvironment string // TODO: remove in v2.0
+		switch d.Get("environment").(string) {
+		case "global", "public":
+			environment = environments.Global
+			aadEnvironment = "public"
+		case "usgovernment", "usgovernmentl4":
+			environment = environments.USGovernmentL4
+			aadEnvironment = "usgovernment"
+		case "dod", "usgovernmentl5":
+			environment = environments.USGovernmentL5
+			aadEnvironment = "usgovernment"
+		case "german", "germany":
+			environment = environments.Germany
+			aadEnvironment = "german"
+		case "china":
+			environment = environments.China
+			aadEnvironment = "china"
+		}
+
+		// Microsoft Graph beta opt-in
+		enableMsGraph := d.Get("enable_msgraph").(bool)
+
+		var authConfig *auth.Config
+		if enableMsGraph {
+			authConfig = &auth.Config{
+				Environment:            environment,
+				TenantID:               d.Get("tenant_id").(string),
+				ClientID:               d.Get("client_id").(string),
+				ClientCertPassword:     d.Get("client_certificate_password").(string),
+				ClientCertPath:         d.Get("client_certificate_path").(string),
+				ClientSecret:           d.Get("client_secret").(string),
+				EnableAzureCliToken:    true,
+				EnableClientCertAuth:   true,
+				EnableClientSecretAuth: true,
+				EnableMsiAuth:          true, // TODO: not yet supported
+				MsiEndpoint:            d.Get("msi_endpoint").(string),
+			}
+		}
+
 		aadBuilder := &authentication.Builder{
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
 			TenantID:           d.Get("tenant_id").(string),
 			MetadataHost:       d.Get("metadata_host").(string),
-			Environment:        d.Get("environment").(string),
+			Environment:        aadEnvironment,
 			MsiEndpoint:        d.Get("msi_endpoint").(string),
 			ClientCertPassword: d.Get("client_certificate_password").(string),
 			ClientCertPath:     d.Get("client_certificate_path").(string),
@@ -197,25 +240,6 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		partnerId := d.Get("partner_id").(string)
 		if partnerId == "" && !d.Get("disable_terraform_partner_id").(bool) {
 			partnerId = terraformPartnerId
-		}
-
-		// Microsoft Graph beta opt-in
-		enableMsGraph := d.Get("enable_msgraph").(bool)
-
-		var authConfig *auth.Config
-		if enableMsGraph {
-			authConfig = &auth.Config{
-				TenantID:               d.Get("tenant_id").(string),
-				ClientID:               d.Get("client_id").(string),
-				ClientCertPassword:     d.Get("client_certificate_password").(string),
-				ClientCertPath:         d.Get("client_certificate_path").(string),
-				ClientSecret:           d.Get("client_secret").(string),
-				EnableAzureCliToken:    true,
-				EnableClientCertAuth:   true,
-				EnableClientSecretAuth: true,
-				EnableMsiAuth:          true, // TODO: not yet supported
-				MsiEndpoint:            d.Get("msi_endpoint").(string),
-			}
 		}
 
 		return buildClient(ctx, p, authConfig, aadBuilder, partnerId, enableMsGraph)
