@@ -4,6 +4,10 @@ NOTES:
 
 * **Terraform Plugin SDK Upgrade:** This version upgrades the Terraform Plugin SDK to v2.3.0. This does not provide any additional provider features or resources but is useful for developers and part of our development roadmap.
 
+IMPROVEMENTS:
+
+* `azuread_application` - support new values `include_externally_authenticated_upn`, `include_externally_authenticated_upn_without_hash`, and `use_guid` for the `additional_properties` property of the `optional_claims` block.
+
 ## 1.1.1 (November 26, 2020)
 
 BUG FIXES:
