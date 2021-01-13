@@ -71,11 +71,11 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 func (GroupsDataSource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "testA" {
-  name = "acctestGroup-%[1]d"
+  name = "acctestGroupA-%[1]d"
 }
 
 resource "azuread_group" "testB" {
-  name = "acctestGroup-%[1]d"
+  name = "acctestGroupB-%[1]d"
 }
 `, data.RandomInteger)
 }
