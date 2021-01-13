@@ -3,6 +3,7 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -76,16 +77,32 @@ func TestAccServicePrincipal_update(t *testing.T) {
 }
 
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	resp, err := clients.ServicePrincipals.AadClient.Get(ctx, state.ID)
+	var id *string
 
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", state.ID)
+	switch clients.EnableMsGraphBeta {
+	case true:
+		app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, state.ID)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
 		}
-		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
+		id = app.ID
+
+	case false:
+		resp, err := clients.ServicePrincipals.AadClient.Get(ctx, state.ID)
+
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
+		}
+		id = resp.ObjectID
 	}
 
-	return utils.Bool(resp.ObjectID != nil && *resp.ObjectID == state.ID), nil
+	return utils.Bool(id != nil && *id == state.ID), nil
 }
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
