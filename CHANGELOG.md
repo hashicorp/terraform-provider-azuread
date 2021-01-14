@@ -12,11 +12,11 @@ IMPROVEMENTS:
 DEPRECATIONS:
 
 * `data.azuread_application` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `data.azuread_group` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `data.azuread_groups` - the `names` property has been renamed to `display_names` and will be removed in version 2.0.
 * `azuread_application` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
 * `azuread_application` - the `type` property is now deprecated and will be removed in version 2.0, as there is no longer any distinction between native and webapp/api applications.
-* `data.azuread_group` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
 * `azuread_group` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
-* `data.azuread_groups` - the `names` property has been renamed to `display_names` and will be removed in version 2.0.
 
 ## 1.1.1 (November 26, 2020)
 
