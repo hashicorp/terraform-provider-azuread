@@ -27,7 +27,7 @@ func That(resourceName string) thatType {
 // ExistsInAzure validates that the specified resource exists within Azure
 func (t thatType) ExistsInAzure(testResource types.TestResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.AadClient)
+		client := acceptance.AzureADProvider.Meta().(*clients.Client)
 		return helpers.ExistsInAzure(client, testResource, t.resourceName)(s)
 	}
 }

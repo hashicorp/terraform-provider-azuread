@@ -17,7 +17,7 @@ Manages an Application within Azure Active Directory.
 
 ```hcl
 resource "azuread_application" "example" {
-  name                       = "example"
+  display_name               = "example"
   homepage                   = "https://homepage"
   identifier_uris            = ["https://uri"]
   reply_urls                 = ["https://replyurl"]
@@ -107,7 +107,7 @@ resource "azuread_application" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The display name for the application.
+* `display_name` - (Required) The display name for the application.
 
 * `homepage` - (optional) The URL to the application's home page.
 
@@ -133,11 +133,13 @@ The following arguments are supported:
 
 * `type` - (Optional) Type of an application: `webapp/api` or `native`. Defaults to `webapp/api`. For `native` apps type `identifier_uris` property can not not be set.
 
+-> **Note:** The `type` attribute is deprecated and will be removed in version 2.0 of the provider, along with the associated constraints of this attribute's values.
+
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
 * `oauth2_permissions` - (Optional) A collection of OAuth 2.0 permission scopes that the web API (resource) app exposes to client apps. Each permission is covered by `oauth2_permissions` blocks as documented below.
 
--> **Note on roles and scopes/permissions:** in Azure Active Directory, roles (`app_role`) and scopes/permissions (`oauth2_permissions`) exported by an Application share the same namespace and cannot contain duplicate values. Terraform will attempt to detect this at plan time.
+-> **Note on roles and scopes/permissions:** In Azure Active Directory, roles (`app_role`) and scopes/permissions (`oauth2_permissions`) exported by an Application share the same namespace and cannot contain duplicate values. Terraform will attempt to detect this at plan time.
 
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error when an existing Application is found with the same name. Defaults to `false`.
 

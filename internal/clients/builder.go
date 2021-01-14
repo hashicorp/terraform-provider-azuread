@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/go-autorest/autorest"
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-azure-helpers/sender"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/services"
-	aad "github.com/terraform-providers/terraform-provider-azuread/internal/services/aadgraph/client"
+	"github.com/terraform-providers/terraform-provider-azuread/internal/common"
 )
 
 type ClientBuilder struct {
@@ -18,8 +16,8 @@ type ClientBuilder struct {
 	TerraformVersion string
 }
 
-// Build is a helper method which returns a fully instantiated *AadClient based on the auth Config's current settings.
-func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
+// Build is a helper method which returns a fully instantiated *Client based on the auth Config's current settings.
+func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	env, err := authentication.AzureEnvironmentByNameFromEndpoint(ctx, b.AuthConfig.MetadataHost, b.AuthConfig.Environment)
 	if err != nil {
 		return nil, err
@@ -36,7 +34,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 	}
 
 	// client declarations:
-	client := AadClient{
+	client := Client{
 		ClientID:         b.AuthConfig.ClientID,
 		ObjectID:         objectID,
 		TenantID:         b.AuthConfig.TenantID,
@@ -53,25 +51,25 @@ func (b *ClientBuilder) Build(ctx context.Context) (*AadClient, error) {
 		return nil, err
 	}
 
-	o := &services.ClientOptions{
-		PartnerID:        b.PartnerID,
-		TenantID:         b.AuthConfig.TenantID,
-		TerraformVersion: b.TerraformVersion,
-		Environment:      *env,
-	}
-
 	// Graph Endpoints
-	graphEndpoint := env.GraphEndpoint // todo this should become AadGraphEndpoint?
-	graphAuthorizer, err := b.AuthConfig.GetAuthorizationToken(sender, oauth, graphEndpoint)
+	aadGraphEndpoint := env.GraphEndpoint
+	aadGraphAuthorizer, err := b.AuthConfig.GetAuthorizationToken(sender, oauth, aadGraphEndpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	client.AadGraph = aad.BuildClient(o, graphEndpoint, graphAuthorizer)
+	o := &common.ClientOptions{
+		AadGraphAuthorizer: aadGraphAuthorizer,
+		AadGraphEndpoint:   aadGraphEndpoint,
+		PartnerID:          b.PartnerID,
+		TenantID:           b.AuthConfig.TenantID,
+		TerraformVersion:   b.TerraformVersion,
+		Environment:        *env,
+	}
 
-	autorest.Count429AsRetry = false
-
-	client.StopContext = ctx
+	if err := client.build(ctx, o); err != nil {
+		return nil, fmt.Errorf("Error building Client: %+v", err)
+	}
 
 	return &client, nil
 }

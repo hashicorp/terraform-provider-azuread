@@ -16,7 +16,7 @@ Use this data source to access information about an existing Application within 
 
 ```hcl
 data "azuread_application" "example" {
-  name = "My First AzureAD Application"
+  display_name = "My First AzureAD Application"
 }
 
 output "azure_ad_object_id" {
@@ -30,9 +30,9 @@ output "azure_ad_object_id" {
 
 * `application_id` - (Optional) Specifies the Application ID of the Azure Active Directory Application.
 
-* `name` - (Optional) Specifies the name of the Application within Azure Active Directory.
+* `display_name` - (Optional) Specifies the display name of the Application within Azure Active Directory.
 
-~> **NOTE:** One of `object_id`, `application_id` or `name` must be specified.
+~> **NOTE:** One of `object_id`, `application_id` or `display_name` must be specified.
 
 ## Attributes Reference
 
@@ -66,7 +66,7 @@ The following attributes are exported:
 
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 
-* `public_client` - Is this Azure AD Application available publically?
+* `public_client` - Is this Azure AD Application available publicly?
 
 ---
 

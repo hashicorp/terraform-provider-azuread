@@ -9,10 +9,10 @@ import (
 )
 
 type TestResource interface {
-	Exists(ctx context.Context, client *clients.AadClient, state *terraform.InstanceState) (*bool, error)
+	Exists(ctx context.Context, client *clients.Client, state *terraform.InstanceState) (*bool, error)
 }
 
 type TestResourceVerifyingRemoved interface {
 	TestResource
-	Destroy(ctx context.Context, client *clients.AadClient, state *terraform.InstanceState) (*bool, error)
+	Destroy(ctx context.Context, client *clients.Client, state *terraform.InstanceState) (*bool, error)
 }
