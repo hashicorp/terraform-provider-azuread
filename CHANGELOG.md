@@ -1,4 +1,4 @@
-## 1.2.1 (Unreleased)
+## 1.2.1 (January 14, 2021)
 
 BUGFIXES:
 
