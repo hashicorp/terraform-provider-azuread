@@ -1,3 +1,10 @@
+## 1.2.1 (Unreleased)
+
+BUGFIXES:
+
+* `data.azuread_application` - correctly set the `display_name` attribute in state.
+* `azuread_application` - correctly set the `display_name` attribute in state.
+
 ## 1.2.0 (January 14, 2021)
 
 NOTES:
