@@ -3,10 +3,20 @@
 NOTES:
 
 * **Terraform Plugin SDK Upgrade:** This version upgrades the Terraform Plugin SDK to v2.3.0. This does not provide any additional provider features or resources but is useful for developers and part of our development roadmap.
+* **Refactor into multiple packages:** As part of our preparation for Microsoft Graph support, this release refactors resources and data sources into separate Go packages.
 
 IMPROVEMENTS:
 
 * `azuread_application` - support new values `include_externally_authenticated_upn`, `include_externally_authenticated_upn_without_hash`, and `use_guid` for the `additional_properties` property of the `optional_claims` block.
+
+DEPRECATIONS:
+
+* `data.azuread_application` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `azuread_application` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `azuread_application` - the `type` property is now deprecated and will be removed in version 2.0, as there is no longer any distinction between native and webapp/api applications.
+* `data.azuread_group` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `azuread_group` - the `name` property has been renamed to `display_name` and will be removed in version 2.0.
+* `data.azuread_groups` - the `names` property has been renamed to `display_names` and will be removed in version 2.0.
 
 ## 1.1.1 (November 26, 2020)
 
