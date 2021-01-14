@@ -8,7 +8,7 @@ var services = mapOf(
         "domains" to "Domains",
         "groups" to "Groups",
         "serviceprincipals" to "Service Principals",
-        "Users" to "Users"
+        "users" to "Users"
 )
 
 fun AzureAD(environment: String, configuration : ClientConfiguration) : Project {
