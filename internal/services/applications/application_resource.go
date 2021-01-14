@@ -588,6 +588,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "app_role", aadgraph.FlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppID)
 	tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants)
+	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
 	tf.Set(d, "homepage", app.Homepage)
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))

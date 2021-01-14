@@ -64,6 +64,7 @@ func (ApplicationDataSource) testCheck(data acceptance.TestData) resource.TestCh
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("application_id").IsUuid(),
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
+		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("homepage").HasValue(fmt.Sprintf("https://homepage-%d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("identifier_uris.#").HasValue("1"),
