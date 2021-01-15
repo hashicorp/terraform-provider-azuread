@@ -176,25 +176,7 @@ func AzureADProvider() *schema.Provider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		var environment environments.Environment
-		var aadEnvironment string // TODO: remove in v2.0
-		switch d.Get("environment").(string) {
-		case "global", "public":
-			environment = environments.Global
-			aadEnvironment = "public"
-		case "usgovernment", "usgovernmentl4":
-			environment = environments.USGovernmentL4
-			aadEnvironment = "usgovernment"
-		case "dod", "usgovernmentl5":
-			environment = environments.USGovernmentL5
-			aadEnvironment = "usgovernment"
-		case "german", "germany":
-			environment = environments.Germany
-			aadEnvironment = "german"
-		case "china":
-			environment = environments.China
-			aadEnvironment = "china"
-		}
+		environment, aadEnvironment := environment(d.Get("environment").(string))
 
 		// Microsoft Graph beta opt-in
 		enableMsGraph := d.Get("enable_msgraph").(bool)
@@ -272,4 +254,25 @@ func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Confi
 	}
 
 	return client, nil
+}
+
+func environment(name string) (env environments.Environment, aadEnv string) {
+	switch name {
+	case "global", "public":
+		env = environments.Global
+		aadEnv = "public"
+	case "usgovernment", "usgovernmentl4":
+		env = environments.USGovernmentL4
+		aadEnv = "usgovernment"
+	case "dod", "usgovernmentl5":
+		env = environments.USGovernmentL5
+		aadEnv = "usgovernment"
+	case "german", "germany":
+		env = environments.Germany
+		aadEnv = "german"
+	case "china":
+		env = environments.China
+		aadEnv = "china"
+	}
+	return
 }

@@ -40,7 +40,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	client := Client{
 		TenantID: b.AadAuthConfig.TenantID, // TODO: v2.0 use AuthConfig
 		ClientID: b.AadAuthConfig.ClientID, // TODO: v2.0 use AuthConfig
-		ObjectID: objectID,
+		ObjectID: objectID,                 // TODO: remove in v2.0, use client.Claims.ObjectId instead
 
 		TerraformVersion: b.TerraformVersion,
 
@@ -91,8 +91,6 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 			if cli.TenantID == "" {
 				return nil, fmt.Errorf("azure-cli could not determine tenant ID to use")
 			}
-
-			// TODO: v2.0 set the provider tenantId from here, for now we use the one returned by go-azure-helpers
 		}
 	}
 
