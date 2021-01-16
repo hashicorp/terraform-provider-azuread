@@ -28,6 +28,27 @@ func TestAccApplication_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_basicDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basicDeprecated(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
 		},
 		data.ImportStep(),
@@ -351,6 +372,30 @@ func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
 	})
 }
 
+func TestAccApplication_preventDuplicateNamesPassDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.preventDuplicateNamesPassDeprecated(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("prevent_duplicate_names"),
+	})
+}
+
+func TestAccApplication_preventDuplicateNamesFailDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		data.RequiresImportErrorStep(r.preventDuplicateNamesFailDeprecated(data)),
+	})
+}
+
 func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -428,6 +473,14 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 func (ApplicationResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (ApplicationResource) basicDeprecated(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
   name = "acctest-APP-%[1]d"
 }
 `, data.RandomInteger)
@@ -436,7 +489,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) basicEmpty(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest-APP-%[1]s"
+  display_name            = "acctest-APP-%[1]s"
   identifier_uris         = []
   oauth2_permissions      = []
   reply_urls              = []
@@ -449,7 +502,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) publicClient(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name          = "acctest-APP-%[1]d"
+  display_name  = "acctest-APP-%[1]d"
   type          = "native"
   public_client = true
 }
@@ -459,7 +512,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) withGroupMembershipClaimsDirectoryRole(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest-APP-%[1]d"
+  display_name            = "acctest-APP-%[1]d"
   group_membership_claims = "DirectoryRole"
 }
 `, data.RandomInteger)
@@ -468,7 +521,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) withGroupMembershipClaimsSecurityGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest-APP-%[1]d"
+  display_name            = "acctest-APP-%[1]d"
   group_membership_claims = "SecurityGroup"
 }
 `, data.RandomInteger)
@@ -477,7 +530,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) withGroupMembershipClaimsApplicationGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest-APP-%[1]d"
+  display_name            = "acctest-APP-%[1]d"
   group_membership_claims = "ApplicationGroup"
 }
 `, data.RandomInteger)
@@ -496,7 +549,7 @@ resource "azuread_user" "test" {
 }
 
 resource "azuread_application" "test" {
-  name                       = "acctest-APP-%[1]d"
+  display_name               = "acctest-APP-%[1]d"
   homepage                   = "https://homepage-%[1]d"
   identifier_uris            = ["api://hashicorptestapp-%[1]d"]
   reply_urls                 = ["https://unittest.hashicorptest.com"]
@@ -577,7 +630,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) appRoles(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = [
@@ -597,7 +650,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) appRolesNoValue(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = ["User"]
@@ -612,7 +665,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) appRolesUpdate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
+  display_name = "acctestApp-%[1]d"
 
   app_role {
     allowed_member_types = ["User"]
@@ -636,9 +689,8 @@ resource "azuread_application" "test" {
 func (ApplicationResource) appRolesEmpty(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctestApp-%[1]d"
-
-  app_role = []
+  display_name = "acctestApp-%[1]d"
+  app_role     = []
 }
 `, data.RandomInteger)
 }
@@ -646,7 +698,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) oauth2Permissions(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[1]d"
 
   oauth2_permissions {
     admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
@@ -672,7 +724,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) oauth2PermissionsEmpty(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name               = "acctest-APP-%[1]d"
+  display_name       = "acctest-APP-%[1]d"
   oauth2_permissions = []
 }
 `, data.RandomInteger)
@@ -681,8 +733,8 @@ resource "azuread_application" "test" {
 func (ApplicationResource) native(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[1]d"
-  type = "native"
+  display_name = "acctest-APP-%[1]d"
+  type         = "native"
 }
 `, data.RandomInteger)
 }
@@ -690,9 +742,9 @@ resource "azuread_application" "test" {
 func (ApplicationResource) nativeReplyUrls(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name       = "acctest-APP-%[1]d"
-  type       = "native"
-  reply_urls = ["urn:ietf:wg:oauth:2.0:oob"]
+  display_name = "acctest-APP-%[1]d"
+  type         = "native"
+  reply_urls   = ["urn:ietf:wg:oauth:2.0:oob"]
 }
 `, data.RandomInteger)
 }
@@ -700,7 +752,7 @@ resource "azuread_application" "test" {
 func (ApplicationResource) nativeAppDoesNotAllowIdentifierUris(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name            = "acctest-APP-%[1]d"
+  display_name    = "acctest-APP-%[1]d"
   identifier_uris = ["http://%[1]d.hashicorptest.com"]
   type            = "native"
 }
@@ -710,13 +762,33 @@ resource "azuread_application" "test" {
 func (ApplicationResource) preventDuplicateNamesPass(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name                    = "acctest-APP-%[1]d"
+  display_name            = "acctest-APP-%[1]d"
   prevent_duplicate_names = true
 }
 `, data.RandomInteger)
 }
 
 func (r ApplicationResource) preventDuplicateNamesFail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "duplicate" {
+  display_name            = azuread_application.test.name
+  prevent_duplicate_names = true
+}
+`, r.basic(data))
+}
+
+func (ApplicationResource) preventDuplicateNamesPassDeprecated(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  name                    = "acctest-APP-%[1]d"
+  prevent_duplicate_names = true
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationResource) preventDuplicateNamesFailDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -730,7 +802,7 @@ resource "azuread_application" "duplicate" {
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsValues(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[1]d"
 
   app_role {
     allowed_member_types = ["User"]
@@ -783,7 +855,7 @@ func (r ApplicationResource) singleOwner(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[2]d"
+  display_name = "acctest-APP-%[2]d"
   owners = [
     azuread_user.testA.object_id,
   ]
@@ -796,7 +868,7 @@ func (r ApplicationResource) threeOwners(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_application" "test" {
-  name = "acctest-APP-%[2]d"
+  display_name = "acctest-APP-%[2]d"
   owners = [
     azuread_user.testA.object_id,
     azuread_user.testB.object_id,
@@ -811,8 +883,8 @@ func (r ApplicationResource) removeOwners(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_application" "test" {
-  name   = "acctest-APP-%[2]d"
-  owners = []
+  display_name = "acctest-APP-%[2]d"
+  owners       = []
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
 }

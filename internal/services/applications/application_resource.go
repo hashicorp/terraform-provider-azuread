@@ -338,7 +338,12 @@ func applicationResource() *schema.Resource {
 func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.AadClient
 
-	name := d.Get("name").(string)
+	var name string
+	if v, ok := d.GetOk("display_name"); ok {
+		name = v.(string)
+	} else {
+		name = d.Get("name").(string)
+	}
 
 	if d.Get("prevent_duplicate_names").(bool) {
 		existingApp, err := aadgraph.ApplicationFindByName(ctx, client, name)
@@ -459,9 +464,14 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.AadClient
 
-	name := d.Get("name").(string)
+	var name string
+	if v, ok := d.GetOk("display_name"); ok {
+		name = v.(string)
+	} else {
+		name = d.Get("name").(string)
+	}
 
-	if d.HasChange("name") && d.Get("prevent_duplicate_names").(bool) {
+	if (d.HasChange("display_name") || d.HasChange("name")) && d.Get("prevent_duplicate_names").(bool) {
 		existingApp, err := aadgraph.ApplicationFindByName(ctx, client, name)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
@@ -480,7 +490,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	var properties graphrbac.ApplicationUpdateParameters
 
-	if d.HasChange("name") {
+	if d.HasChange("display_name") || d.HasChange("name") {
 		properties.DisplayName = &name
 	}
 
