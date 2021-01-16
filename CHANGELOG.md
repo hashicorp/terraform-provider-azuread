@@ -1,3 +1,9 @@
+## 1.2.2 (Unreleased)
+
+BUGFIXES:
+
+* `azuread_application` - set the display name correctly when creating/updating applications using the `display_name` property
+
 ## 1.2.1 (January 14, 2021)
 
 BUGFIXES:
