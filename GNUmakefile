@@ -96,7 +96,7 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 todo:
-	grep --color=always --exclude=GNUmakefile --exclude-dir=.git --exclude-dir=vendor --recursive TODO "$(CURDIR)"
+	grep --color=always --exclude=GNUmakefile --exclude-dir=.git --exclude-dir=vendor --line-number --recursive TODO "$(CURDIR)"
 
 website-lint:
 	@echo "==> Checking documentation spelling..."
