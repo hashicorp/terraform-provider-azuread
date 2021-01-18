@@ -95,6 +95,9 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
+todo:
+	grep --color=always --exclude=GNUmakefile --exclude-dir=.git --exclude-dir=vendor --recursive TODO "$(CURDIR)"
+
 website-lint:
 	@echo "==> Checking documentation spelling..."
 	@misspell -error -source=text -i hdinsight -locale UK website/
