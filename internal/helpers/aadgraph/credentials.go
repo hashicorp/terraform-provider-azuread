@@ -3,8 +3,11 @@ package aadgraph
 import (
 	"context"
 	"encoding/base64"
+	"encoding/hex"
+	"encoding/pem"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
@@ -43,6 +46,18 @@ func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
 			ValidateFunc: validation.StringInSlice([]string{
 				"AsymmetricX509Cert",
 				"Symmetric",
+			}, false),
+		},
+
+		"encoding": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+			Default:  "pem",
+			ValidateFunc: validation.StringInSlice([]string{
+				"base64",
+				"hex",
+				"pem",
 			}, false),
 		},
 
@@ -291,7 +306,43 @@ func WaitForPasswordCredentialReplication(ctx context.Context, keyId string, tim
 func KeyCredentialForResource(d *schema.ResourceData) (*graphrbac.KeyCredential, error) {
 	keyType := d.Get("type").(string)
 	value := d.Get("value").(string)
-	encodedValue := base64.StdEncoding.EncodeToString([]byte(value))
+
+	var encodedValue string
+	encoding := d.Get("encoding").(string)
+	switch encoding {
+	case "base64":
+		der, err := base64.StdEncoding.DecodeString(strings.TrimSpace(value))
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode base64 certificate data")
+		}
+		block := pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: der,
+		}
+		pemVal := pem.EncodeToMemory(&block)
+		if pemVal == nil {
+			return nil, fmt.Errorf("failed to PEM-encode certificate")
+		}
+		encodedValue = base64.StdEncoding.EncodeToString(pemVal)
+	case "hex":
+		bytesVal := []byte(strings.TrimSpace(value))
+		der := make([]byte, hex.DecodedLen(len(bytesVal)))
+		_, err := hex.Decode(der, bytesVal)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode hexadecimal certificate data: %+v", err)
+		}
+		block := pem.Block{
+			Type:  "CERTIFICATE",
+			Bytes: der,
+		}
+		pemVal := pem.EncodeToMemory(&block)
+		if pemVal == nil {
+			return nil, fmt.Errorf("failed to PEM-encode certificate")
+		}
+		encodedValue = base64.StdEncoding.EncodeToString(pemVal)
+	case "pem":
+		encodedValue = base64.StdEncoding.EncodeToString([]byte(value))
+	}
 
 	// errors should be handled by the validation
 	var keyId string
