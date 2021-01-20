@@ -10,6 +10,8 @@ Manages a Certificate associated with a Service Principal within Azure Active Di
 
 ## Example Usage
 
+*Using a PEM certificate*
+
 ```hcl
 resource "azuread_application" "example" {
   name = "example"
@@ -23,6 +25,26 @@ resource "azuread_service_principal_certificate" "example" {
   service_principal_id = azuread_service_principal.example.id
   type                 = "AsymmetricX509Cert"
   value                = file("cert.pem")
+  end_date             = "2021-05-01T01:02:03Z"
+}
+```
+
+*Using a DER certificate*
+
+```hcl
+resource "azuread_application" "example" {
+  name = "example"
+}
+
+resource "azuread_service_principal" "example" {
+  application_id = azuread_application.example.application_id
+}
+
+resource "azuread_service_principal_certificate" "example" {
+  service_principal_id = azuread_service_principal.example.id
+  type                 = "AsymmetricX509Cert"
+  encoding             = "base64"
+  value                = base64encode(file("cert.der"))
   end_date             = "2021-05-01T01:02:03Z"
 }
 ```
