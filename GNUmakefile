@@ -1,5 +1,4 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
-WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=internal
 PROVIDER=azuread
 
@@ -98,30 +97,15 @@ test-compile:
 todo:
 	grep --color=always --exclude=GNUmakefile --exclude-dir=.git --exclude-dir=vendor --line-number --recursive TODO "$(CURDIR)"
 
-website-lint:
+docs-lint:
 	@echo "==> Checking documentation spelling..."
-	@misspell -error -source=text -i hdinsight -locale UK website/
+	@misspell -error -source=text -i hdinsight -locale UK docs/
 	@echo "==> Checking documentation for errors..."
-	@tfproviderdocs check -provider-name=azuread -require-resource-subcategory \
-		-allowed-resource-subcategories-file website/allowed-subcategories
-	@sh -c "'$(CURDIR)/scripts/terrafmt-website.sh'"
-
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
-website-test:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $$(go env GOPATH || $$GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $$(go env GOPATH || $$GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PROVIDER)
+	@tfproviderdocs check -provider-name=azuread -allowed-guide-subcategories=Authentication -enable-contents-check -require-schema-ordering -require-guide-subcategory -require-resource-subcategory
+	@sh -c "'$(CURDIR)/scripts/terrafmt-docs.sh'"
 
 teamcity-test:
 	@$(MAKE) -C .teamcity tools
 	@$(MAKE) -C .teamcity test
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile website website-test
+.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile
