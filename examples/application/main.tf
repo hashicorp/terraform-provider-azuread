@@ -4,8 +4,8 @@ resource "random_password" "widgets_service" {
 }
 
 resource "azuread_application" "widgets_service" {
-  name = "widgets-service"
-  type = "webapp/api"
+  display_name = "widgets-service"
+  type         = "webapp/api"
 
   identifier_uris = ["api://widgets-service"]
 
