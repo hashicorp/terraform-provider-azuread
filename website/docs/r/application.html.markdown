@@ -151,6 +151,8 @@ The following arguments are supported:
 
 * `resource_access` - (Required) A collection of `resource_access` blocks as documented below.
 
+-> **Note on Resource Application ID's:** Documentation on `resource_app_id` values for Microsoft API's can be difficult to find, but you can use the [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/ad/sp?view=azure-cli-latest#az_ad_sp_list) to find them. (e.g. `az ad sp list --display-name "Microsoft Graph" | select-string '"appid"' -cont 10`)
+
 ---
 
 `resource_access` supports the following:
