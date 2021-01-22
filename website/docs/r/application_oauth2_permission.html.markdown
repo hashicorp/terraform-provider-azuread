@@ -59,7 +59,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The identifier for the OAuth2 Permission.
+* `id` - The Terraform identifier for the OAuth2 Permission.
+
+* `permission_id` - The Azure identifier for the OAuth2 Permission. Used in a `resource_access` block in the `azuread_application` resource.
 
 ## Import
 

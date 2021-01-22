@@ -155,7 +155,7 @@ The following arguments are supported:
 
 `resource_access` supports the following:
 
-* `id` - (Required) The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes.
+* `id` - (Required) The unique identifier for one of the `OAuth2Permission` or `AppRole` instances that the resource application exposes. For an `OAuth2Permission` that you create with Terraform, use the `permission_id` attribute.
 
 * `type` - (Required) Specifies whether the id property references an `OAuth2Permission` or an `AppRole`. Possible values are `Scope` or `Role`.
 
