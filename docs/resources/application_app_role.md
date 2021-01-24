@@ -41,7 +41,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The identifier for the App Role.
+*No additional attributes are exported*
 
 ## Import
 

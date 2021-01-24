@@ -45,7 +45,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Key ID for the Password.
+*No additional attributes are exported*
 
 ## Import
 

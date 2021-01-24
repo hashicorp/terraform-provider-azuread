@@ -54,7 +54,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Object ID of the Group.
+* `object_id` - The Object ID of the Group.
 
 ## Import
 

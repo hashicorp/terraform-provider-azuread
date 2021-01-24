@@ -32,20 +32,17 @@ resource "azuread_service_principal" "example" {
 
 The following arguments are supported:
 
-* `app_role_assignment_required` - (Optional) Does this Service Principal require an AppRoleAssignment to a user or group before Azure AD will issue a user or access token to the application? Defaults to `false`.
-* `application_id` - (Required) The ID of the Azure AD Application for which to create a Service Principal.
+* `app_role_assignment_required` - (Optional) Whether this Service Principal requires an AppRoleAssignment to a user or group before Azure AD will issue a user or access token to the application. Defaults to `false`.
+* `application_id` - (Required) The App ID of the Application for which to create a Service Principal.
 * `tags` - (Optional) A list of tags to apply to the Service Principal.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `app_role_assignment_required` - Whether this Service Principal requires an AppRoleAssignment to a user or group before Azure AD will issue a user or access token to the application.
-* `application_id` - The Application ID (appId) for the Service Principal.
-* `display_name` - The Display Name of the Azure Active Directory Application associated with this Service Principal.
-* `id` - The Object ID (internal ID) for the Service Principal.
-* `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated application. Each permission is covered by a `oauth2_permission` block as documented below.
-* `object_id` - The Service Principal's Object ID.
+* `display_name` - The Display Name of the Application associated with this Service Principal.
+* `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated Application. Each permission is covered by an `oauth2_permission` block as documented below.
+* `object_id` - The Object ID of the Service Principal.
 
 ---
 

@@ -42,17 +42,16 @@ The following arguments are supported:
 * `street_address` - (Optional) The street address of the user's place of business.
 * `surname` - (Optional) The user's surname (family name or last name).
 * `usage_location` - (Optional) The usage location of the User. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set. 
-* `user_principal_name` - (Required) The User Principal Name of the Azure AD User.
+* `user_principal_name` - (Required) The User Principal Name of the User.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Object ID of the Azure AD User.
-* `mail` - The primary email address of the Azure AD User.
-* `object_id` - The Object ID of the Azure AD User.
-* `onpremises_sam_account_name` - The on-premise SAM account name of the Azure AD User.
-* `onpremises_user_principal_name` - The on-premise user principal name of the Azure AD User.
+* `mail` - The primary email address of the User.
+* `object_id` - The Object ID of the User.
+* `onpremises_sam_account_name` - The on-premise SAM account name of the User.
+* `onpremises_user_principal_name` - The on-premise user principal name of the User.
 
 ## Import
 

@@ -42,7 +42,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Key ID for the Certificate.
+*No additional attributes are exported*
 
 ## Import
 

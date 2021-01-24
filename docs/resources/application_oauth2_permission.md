@@ -45,7 +45,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The identifier for the OAuth2 Permission.
+*No additional attributes are exported*
 
 ## Import
 
