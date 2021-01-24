@@ -1,6 +1,6 @@
 # Create Application
 resource "azuread_application" "example" {
-  name = "example"
+  display_name = "example"
 }
 
 # Create Service Principal linked to the Application

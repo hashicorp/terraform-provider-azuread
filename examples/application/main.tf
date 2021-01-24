@@ -4,8 +4,8 @@ resource "random_password" "widgets_service" {
 }
 
 resource "azuread_application" "widgets_service" {
-  name = "widgets-service"
-  type = "webapp/api"
+  display_name = "widgets-service"
+  type         = "webapp/api"
 
   identifier_uris = ["api://widgets-service"]
 
@@ -27,8 +27,8 @@ resource "azuread_application_password" "widgets_service" {
 }
 
 resource "azuread_application" "widgets_app" {
-  name = "widgets-app"
-  type = "webapp/api"
+  display_name = "widgets-app"
+  type         = "webapp/api"
 
   logout_url = "https://widgets.example.net/logout"
   reply_urls = [
