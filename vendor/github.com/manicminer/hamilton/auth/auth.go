@@ -39,8 +39,7 @@ type Config struct {
 	// Enables authentication using Azure CLI
 	EnableAzureCliToken bool
 
-	// Enables authentication using managed service identity. Not yet supported.
-	// TODO: NOT YET SUPPORTED
+	// Enables authentication using managed service identity.
 	EnableMsiAuth bool
 
 	// Specifies a custom MSI endpoint to connect to
@@ -107,6 +106,16 @@ func (c *Config) NewAuthorizer(ctx context.Context, api Api) (Authorizer, error)
 		}
 	}
 
+	if c.EnableMsiAuth {
+		a, err := NewMsiAuthorizer(ctx, c.Environment, api, c.MsiEndpoint)
+		if err != nil {
+			return nil, fmt.Errorf("could not configure MSI Authorizer: %s", err)
+		}
+		if a != nil {
+			return a, nil
+		}
+	}
+
 	if c.EnableAzureCliToken {
 		a, err := NewAzureCliAuthorizer(ctx, api, c.TenantID)
 		if err != nil {
@@ -123,6 +132,15 @@ func (c *Config) NewAuthorizer(ctx context.Context, api Api) (Authorizer, error)
 // NewAzureCliAuthorizer returns an Authorizer which authenticates using the Azure CLI.
 func NewAzureCliAuthorizer(ctx context.Context, api Api, tenantId string) (Authorizer, error) {
 	conf, err := NewAzureCliConfig(api, tenantId)
+	if err != nil {
+		return nil, err
+	}
+	return conf.TokenSource(ctx), nil
+}
+
+// NewMsiAuthorizer returns an authorizer which uses managed service identity to for authentication.
+func NewMsiAuthorizer(ctx context.Context, environment environments.Environment, api Api, msiEndpoint string) (Authorizer, error) {
+	conf, err := NewMsiConfig(resource(environment, api), msiEndpoint)
 	if err != nil {
 		return nil, err
 	}

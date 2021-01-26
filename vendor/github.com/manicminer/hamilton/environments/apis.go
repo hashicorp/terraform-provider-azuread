@@ -22,9 +22,15 @@ const (
 	MsGraphCliName  ApiCliName = "ms-graph"
 )
 
+// API represent an API configuration for Microsoft Graph or Azure Active Directory Graph.
 type Api struct {
+	// The Application ID for the API.
 	AppId    ApiAppId
+
+	// The Azure CLI codename for the API. Used with `az account get-access-token`.
 	CliName  ApiCliName
+
+	// The endpoint for the API, including scheme.
 	Endpoint ApiEndpoint
 }
 
