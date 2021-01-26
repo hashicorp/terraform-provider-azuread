@@ -193,7 +193,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 				EnableAzureCliToken:    true,
 				EnableClientCertAuth:   true,
 				EnableClientSecretAuth: true,
-				EnableMsiAuth:          true, // TODO: not yet supported
+				EnableMsiAuth:          d.Get("use_msi").(bool),
 				MsiEndpoint:            d.Get("msi_endpoint").(string),
 			}
 		}

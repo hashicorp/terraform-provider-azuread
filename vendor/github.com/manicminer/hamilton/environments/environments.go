@@ -1,8 +1,14 @@
 package environments
 
+// Environment represents a set of API configurations for a particular cloud.
 type Environment struct {
+	// The Azure AD endpoint for acquiring access tokens.
 	AzureADEndpoint AzureADEndpoint
+
+	// The Microsoft Graph configuration for an environment.
 	MsGraph         Api
+
+	// The Azure Active Directory Graph configuration for an environment.
 	AadGraph        Api
 }
 
