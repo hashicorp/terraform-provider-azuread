@@ -200,6 +200,8 @@ github.com/hashicorp/go-safetemp v1.0.0/go.mod h1:oaerMy3BhqiTbVye6QuFhFtIceqFoD
 github.com/hashicorp/go-uuid v1.0.0/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/hashicorp/go-uuid v1.0.1 h1:fv1ep09latC32wFoVwnqcnKJGnMSdBanPczbHAYm1BE=
 github.com/hashicorp/go-uuid v1.0.1/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
+github.com/hashicorp/go-uuid v1.0.2 h1:cfejS+Tpcp13yd5nYHWDI6qVCny6wyX2Mt5SGur2IGE=
+github.com/hashicorp/go-uuid v1.0.2/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
 github.com/hashicorp/go-version v1.1.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
 github.com/hashicorp/go-version v1.2.1 h1:zEfKbn2+PDgroKdiOzqiE8rsmLqU2uwi5PB5pBJ3TkI=
 github.com/hashicorp/go-version v1.2.1/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=
@@ -251,6 +253,8 @@ github.com/manicminer/hamilton v0.5.0 h1:4UwgGYXQ27PLn/bAgKWzNP/z0CMFW4ISauCdWpi
 github.com/manicminer/hamilton v0.5.0/go.mod h1:hkIiAJPBfkx3AYunsjna2+o1LujK+Ck8+o3Cim3CAGM=
 github.com/manicminer/hamilton v0.6.0 h1:oRVUr6YlwHD4GIVP/CqGLpGlm1uJ3DlDELoDnAY3NP4=
 github.com/manicminer/hamilton v0.6.0/go.mod h1:hkIiAJPBfkx3AYunsjna2+o1LujK+Ck8+o3Cim3CAGM=
+github.com/manicminer/hamilton v0.7.0 h1:33FzQd1u+VxfDFzEELVl5anTh8qMT+pxoNyswWnkHSo=
+github.com/manicminer/hamilton v0.7.0/go.mod h1:+8L+ZLfpUJDAzew2wfC4IcYiy76m6BxBV4FQXUPYNII=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-isatty v0.0.3/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=
 github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNxMWT7Zi4=

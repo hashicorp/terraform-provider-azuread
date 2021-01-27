@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/oauth2"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
 const (
-	defaultMsiEndpoint   = "http://169.254.169.254/metadata/identity/oauth2/token"
-	defaultMsiApiVersion = "2018-02-01"
+	msiDefaultApiVersion = "2018-02-01"
+	msiDefaultEndpoint   = "http://169.254.169.254/metadata/identity/oauth2/token"
+	msiDefaultTimeout    =  10 * time.Second
 )
 
 // MsiAuthorizer is an Authorizer which supports managed service identity.
@@ -31,28 +33,9 @@ func (a *MsiAuthorizer) Token() (*oauth2.Token, error) {
 	}
 	url := fmt.Sprintf("%s?%s", a.conf.MsiEndpoint, query.Encode())
 
-	req, err := http.NewRequestWithContext(a.ctx, http.MethodGet, url, http.NoBody)
+	body, err := azureMetadata(a.ctx, url)
 	if err != nil {
-		return nil, fmt.Errorf("MsiAuthorizer: failed to build HTTP request: %v", err)
-	}
-
-	req.Header = http.Header{
-		"Metadata": []string{"true"},
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("MsiAuthorizer: failed to request token: %v", err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("MsiAuthorizer: failed to read response: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if c := resp.StatusCode; c < 200 || c > 299 {
-		return nil, fmt.Errorf("MsiAuthorizer: received HTTP status %d with response: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("MsiAuthorizer: failed to request token from metadata endpoint: %v", err)
 	}
 
 	// TODO: surface the client ID for use by callers
@@ -99,22 +82,67 @@ type MsiConfig struct {
 }
 
 // NewMsiConfig returns a new MsiConfig with a configured metadata endpoint and resource.
-func NewMsiConfig(resource string, msiEndpoint string) (*MsiConfig, error) {
-	endpoint := defaultMsiEndpoint
+func NewMsiConfig(ctx context.Context, resource string, msiEndpoint string) (*MsiConfig, error) {
+	endpoint := msiDefaultEndpoint
 	if msiEndpoint != "" {
 		endpoint = msiEndpoint
 	}
+
+	// validate the metadata endpoint
+	e, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("NewMsiConfig: invalid MSI endpoint configured: %q", endpoint)
+	}
+
+	// determine the generic metadata URL and check if we can reach it
+	e.Path = "/metadata"
+	e.RawQuery = url.Values{
+		"api-version": []string{msiDefaultApiVersion},
+		"format":      []string{"text"},
+	}.Encode()
+
+	_, err = azureMetadata(ctx, e.String())
+	if err != nil {
+		return nil, fmt.Errorf("NewMsiConfig: could not validate MSI endpoint: %v", err)
+	}
+
 	return &MsiConfig{
 		Resource:      resource,
-		MsiApiVersion: defaultMsiApiVersion,
+		MsiApiVersion: msiDefaultApiVersion,
 		MsiEndpoint:   endpoint,
 	}, nil
 }
 
 // TokenSource provides a source for obtaining access tokens using MsiAuthorizer.
 func (c *MsiConfig) TokenSource(ctx context.Context) Authorizer {
-	return oauth2.ReuseTokenSource(nil, &MsiAuthorizer{
-		ctx:  ctx,
-		conf: c,
-	})
+	return CachedAuthorizer(&MsiAuthorizer{ctx: ctx, conf: c})
+}
+
+func azureMetadata(ctx context.Context, url string) (body []byte, err error) {
+	var req *http.Request
+	req, err = http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return
+	}
+	req.Header = http.Header{
+		"Metadata": []string{"true"},
+	}
+	client := &http.Client{
+		Timeout: msiDefaultTimeout,
+	}
+	var resp *http.Response
+	resp, err = client.Do(req)
+	if err != nil {
+		return
+	}
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if c := resp.StatusCode; c < 200 || c > 299 {
+		err = fmt.Errorf("received HTTP status %d", resp.StatusCode)
+		return
+	}
+	return
 }
