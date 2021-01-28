@@ -1,3 +1,10 @@
+## 1.3.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_application_certificate` - support for base64 and hex encoded certificate values [GH-386]
+* `azuread_service_principal_certificate` - support for base64 and hex encoded certificate values [GH-386]
+
 ## 1.2.2 (January 16, 2021)
 
 BUGFIXES:
