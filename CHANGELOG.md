@@ -1,9 +1,9 @@
-## 1.3.0 (Unreleased)
+## 1.3.0 (January 28, 2021)
 
 IMPROVEMENTS:
 
-* `azuread_application_certificate` - support for base64 and hex encoded certificate values [GH-386]
-* `azuread_service_principal_certificate` - support for base64 and hex encoded certificate values [GH-386]
+* `azuread_application_certificate` - support for base64 and hex encoded certificate values ([#386](https://github.com/terraform-providers/terraform-provider-azuread/issues/386))
+* `azuread_service_principal_certificate` - support for base64 and hex encoded certificate values ([#386](https://github.com/terraform-providers/terraform-provider-azuread/issues/386))
 
 ## 1.2.2 (January 16, 2021)
 
