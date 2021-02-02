@@ -57,7 +57,13 @@ type Error struct {
 	RawMessage      *json.RawMessage `json:"message"` // sometimes a string, sometimes an object :/
 	ClientRequestId *string          `json:"client-request-id"`
 	RequestId       *string          `json:"request-id"`
-	InnerError      *Error           `json:"innerError"` // nested errors
+
+	InnerError *Error `json:"innerError"` // nested errors
+
+	Values *[]struct {
+		Item  string `json:"item"`
+		Value string `json:"value"`
+	} `json:"values"`
 }
 
 func (e *Error) UnmarshalJSON(data []byte) error {
