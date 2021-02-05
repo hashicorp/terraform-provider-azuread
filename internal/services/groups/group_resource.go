@@ -58,6 +58,11 @@ func groupResource() *schema.Resource {
 				Optional: true,
 			},
 
+			"mail_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"members": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -84,10 +89,16 @@ func groupResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"prevent_duplicate_names": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+
+			"security_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 		},
 	}
@@ -196,6 +207,8 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	tf.Set(d, "object_id", resp.ObjectID)
 	tf.Set(d, "display_name", resp.DisplayName)
 	tf.Set(d, "name", resp.DisplayName)
+	tf.Set(d, "mail_enabled", resp.MailEnabled)
+	tf.Set(d, "security_enabled", resp.SecurityEnabled)
 
 	description := ""
 	if v, ok := resp.AdditionalProperties["description"]; ok {

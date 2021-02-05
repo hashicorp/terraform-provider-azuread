@@ -54,7 +54,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `mail_enabled` - Whether the group is mail-enabled.
 * `object_id` - The Object ID of the Group.
+* `security_enabled` - Whether the group is a security group.
+
+~> **NOTE:** Due to API limitations, this resource only supports the creation of security-only groups.
 
 ## Import
 
