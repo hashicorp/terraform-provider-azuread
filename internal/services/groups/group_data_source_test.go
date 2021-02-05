@@ -24,6 +24,18 @@ func TestAccGroupDataSource_byName(t *testing.T) {
 		},
 	})
 }
+func TestAccGroupDataSource_byNameWithSecurity(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.nameSecurity(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
 
 func TestAccGroupDataSource_byNameDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
@@ -57,6 +69,19 @@ func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: GroupDataSource{}.objectId(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
+func TestAccGroupDataSource_byObjectIdWithSecurity(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.objectIdSecurity(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
@@ -112,6 +137,18 @@ data "azuread_group" "test" {
 `, GroupResource{}.basic(data))
 }
 
+func (GroupDataSource) nameSecurity(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  display_name     = azuread_group.test.name
+  mail_enabled     = false
+  security_enabled = true
+}
+`, GroupResource{}.basic(data))
+}
+
 func (GroupDataSource) caseInsensitiveName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -127,6 +164,18 @@ func (GroupDataSource) objectId(data acceptance.TestData) string {
 
 data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
+}
+`, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) objectIdSecurity(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  object_id        = azuread_group.test.object_id
+  mail_enabled     = false
+  security_enabled = true
 }
 `, GroupResource{}.basic(data))
 }
