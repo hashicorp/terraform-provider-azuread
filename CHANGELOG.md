@@ -1,3 +1,10 @@
+## 1.4.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `data.azuread_group` - support for the `mail_enabled` and `security_enabled` properties [GH-393]
+* `azuread_group` - support for the `mail_enabled` and `security_enabled` attributes [GH-393]
+
 ## 1.3.0 (January 28, 2021)
 
 IMPROVEMENTS:
