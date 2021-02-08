@@ -3,6 +3,8 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -54,6 +56,18 @@ func groupDataSource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"mail_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
+			"security_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
 			"members": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -81,6 +95,14 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		name = v.(string)
 	}
 
+	var mailEnabled, securityEnabled *bool
+	if v, exists := d.GetOkExists("mail_enabled"); exists { //nolint:SA1019
+		mailEnabled = utils.Bool(v.(bool))
+	}
+	if v, exists := d.GetOkExists("security_enabled"); exists { //nolint:SA1019
+		securityEnabled = utils.Bool(v.(bool))
+	}
+
 	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.Get(ctx, objectId)
 		if err != nil {
@@ -91,11 +113,38 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", objectId)
 		}
 
+		if mailEnabled != nil && (resp.MailEnabled == nil || *resp.MailEnabled != *mailEnabled) {
+			var actual string
+			if resp.MailEnabled == nil {
+				actual = "nil"
+			} else {
+				actual = fmt.Sprintf("%t", *resp.MailEnabled)
+			}
+			return tf.ErrorDiagPathF(nil, "mail_enabled", "Group with object ID %q does not have the specified mail_enabled setting (expected: %t, actual: %s)", objectId, *mailEnabled, actual)
+		}
+
+		if securityEnabled != nil && (resp.SecurityEnabled == nil || *resp.SecurityEnabled != *securityEnabled) {
+			var actual string
+			if resp.SecurityEnabled == nil {
+				actual = "nil"
+			} else {
+				actual = fmt.Sprintf("%t", *resp.SecurityEnabled)
+			}
+			return tf.ErrorDiagPathF(nil, "security_enabled", "Group with object ID %q does not have the specified security_enabled setting (expected: %t, actual: %s)", objectId, *securityEnabled, actual)
+		}
+
 		group = resp
 	} else if name != "" {
-		g, err := aadgraph.GroupGetByDisplayName(ctx, client, name)
+		g, err := aadgraph.GroupGetByDisplayName(ctx, client, name, mailEnabled, securityEnabled)
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "name", "No group found with display name: %q", name)
+			params := []string{fmt.Sprintf("display_name: %q", name)}
+			if mailEnabled != nil {
+				params = append(params, fmt.Sprintf("mail_enabled: %t", *mailEnabled))
+			}
+			if securityEnabled != nil {
+				params = append(params, fmt.Sprintf("security_enabled: %t", *securityEnabled))
+			}
+			return tf.ErrorDiagPathF(err, "name", "No group found matching specified parameters (%s)", strings.Join(params, ", "))
 		}
 		group = *g
 	}
@@ -109,6 +158,8 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "object_id", group.ObjectID)
 	tf.Set(d, "display_name", group.DisplayName)
 	tf.Set(d, "name", group.DisplayName)
+	tf.Set(d, "mail_enabled", group.MailEnabled)
+	tf.Set(d, "security_enabled", group.SecurityEnabled)
 
 	description := ""
 	if v, ok := group.AdditionalProperties["description"]; ok {

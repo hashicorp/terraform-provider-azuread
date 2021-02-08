@@ -81,7 +81,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if len(names) > 0 {
 		expectedCount = len(names)
 		for _, name := range names {
-			g, err := aadgraph.GroupGetByDisplayName(ctx, client, name.(string))
+			g, err := aadgraph.GroupGetByDisplayName(ctx, client, name.(string), nil, nil)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "name", "No group found with display name: %q", name)
 			}

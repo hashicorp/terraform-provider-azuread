@@ -12,7 +12,8 @@ Gets information about an Azure Active Directory group.
 
 ```hcl
 data "azuread_group" "example" {
-  display_name = "A-AD-Group"
+  display_name     = "MyGroupName"
+  security_enabled = true
 }
 ```
 
@@ -20,8 +21,10 @@ data "azuread_group" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) The splay name of the Group within Azure Active Directory.
-* `object_id` - (Optional) Specifies the Object ID of the Group within Azure Active Directory.
+* `display_name` - (Optional) The display name for the Group.
+* `mail_enabled` - (Optional) Whether the group is mail-enabled.
+* `object_id` - (Optional) Specifies the Object ID of the Group.
+* `security_enabled` - (Optional) Whether the group is a security group.
 
 ~> **NOTE:** One of `display_name` or `object_id` must be specified.
 
@@ -29,9 +32,10 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `description` - The description of the AD Group.
-* `display_name` - The name of the Azure AD Group.
+* `description` - The optional description of the Group.
+* `display_name` - The display name for the Group.
 * `id` - The Object ID of the Azure AD Group.
-* `members` - The Object IDs of the Azure AD Group members.
-* `owners` - The Object IDs of the Azure AD Group owners.
-
+* `mail_enabled` - Whether the group is mail-enabled.
+* `members` - The Object IDs of the Group members.
+* `owners` - The Object IDs of the Group owners.
+* `security_enabled` - Whether the group is a security group.

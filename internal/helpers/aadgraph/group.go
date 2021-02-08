@@ -13,8 +13,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
 )
 
-func GroupGetByDisplayName(ctx context.Context, client *graphrbac.GroupsClient, displayName string) (*graphrbac.ADGroup, error) {
+func GroupGetByDisplayName(ctx context.Context, client *graphrbac.GroupsClient, displayName string, mailEnabled *bool, securityEnabled *bool) (*graphrbac.ADGroup, error) {
 	filter := fmt.Sprintf("displayName eq '%s'", displayName)
+
+	if mailEnabled != nil {
+		filter = fmt.Sprintf("%s and mailEnabled eq %t", filter, *mailEnabled)
+	}
+
+	if securityEnabled != nil {
+		filter = fmt.Sprintf("%s and securityEnabled eq %t", filter, *securityEnabled)
+	}
 
 	resp, err := client.ListComplete(ctx, filter)
 	if err != nil {
