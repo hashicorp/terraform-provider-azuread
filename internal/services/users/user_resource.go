@@ -195,6 +195,12 @@ func userResource() *schema.Resource {
 				Computed:    true,
 				Description: "The primary cellular telephone number for the user.",
 			},
+			"user_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.ValidatorWrapper(validation.StringInSlice([]string{"Member", "Guest"}, false)),
+			},
 		},
 	}
 }
@@ -219,6 +225,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Password:                     utils.String(d.Get("password").(string)),
 		},
 		UserPrincipalName:    &upn,
+		UserType:             graphrbac.UserType(d.Get("user_type").(string)),
 		AdditionalProperties: map[string]interface{}{},
 	}
 
@@ -420,6 +427,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "mail", user.Mail)
 	tf.Set(d, "mail_nickname", user.MailNickname)
 	tf.Set(d, "usage_location", user.UsageLocation)
+	tf.Set(d, "user_type", user.UserType)
 
 	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
