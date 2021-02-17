@@ -53,7 +53,7 @@ Further [usage documentation](https://www.terraform.io/docs/providers/azuread/) 
 ## Developer Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.x or later
-- [Go](https://golang.org/doc/install) 1.15.x (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.16.x (to build the provider plugin)
 
 If you're building on Windows, you will also need:
 - [Git Bash for Windows](https://git-scm.com/download/win)
@@ -66,7 +66,7 @@ For *Git Bash for Windows*, at the step of "Adjusting your PATH environment", pl
 
 ## Developing the Provider
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.15+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.16+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
 
 Clone the repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-azuread`
 
