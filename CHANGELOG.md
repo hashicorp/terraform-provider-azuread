@@ -2,7 +2,8 @@
 
 IMPROVEMENTS:
 
-* `data.azuread_group` - support for the `mail_enabled` and `security_enabled` properties [GH-393]
+* dependencies: updating to build using Go 1.16 [GH-403]
+* Data Source: `azuread_group` - support for the `mail_enabled` and `security_enabled` properties [GH-393]
 * `azuread_group` - support for the `mail_enabled` and `security_enabled` attributes [GH-393]
 
 ## 1.3.0 (January 28, 2021)
