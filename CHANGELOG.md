@@ -1,10 +1,10 @@
-## 1.4.0 (Unreleased)
+## 1.4.0 (February 18, 2021)
 
 IMPROVEMENTS:
 
-* dependencies: updating to build using Go 1.16 which adds support for `darwin/arm64` (Apple Silicon) [GH-403]
-* Data Source: `azuread_group` - support for the `mail_enabled` and `security_enabled` properties [GH-393]
-* `azuread_group` - support for the `mail_enabled` and `security_enabled` attributes [GH-393]
+* dependencies: updating to build using Go 1.16 which adds support for `darwin/arm64` (Apple Silicon) ([#403](https://github.com/terraform-providers/terraform-provider-azuread/issues/403))
+* Data Source: `azuread_group` - support for the `mail_enabled` and `security_enabled` properties ([#393](https://github.com/terraform-providers/terraform-provider-azuread/issues/393))
+* `azuread_group` - support for the `mail_enabled` and `security_enabled` attributes ([#393](https://github.com/terraform-providers/terraform-provider-azuread/issues/393))
 
 ## 1.3.0 (January 28, 2021)
 
