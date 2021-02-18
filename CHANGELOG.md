@@ -2,7 +2,7 @@
 
 IMPROVEMENTS:
 
-* dependencies: updating to build using Go 1.16 [GH-403]
+* dependencies: updating to build using Go 1.16 which adds support for `darwin/arm64` (Apple Silicon) [GH-403]
 * Data Source: `azuread_group` - support for the `mail_enabled` and `security_enabled` properties [GH-393]
 * `azuread_group` - support for the `mail_enabled` and `security_enabled` attributes [GH-393]
 
