@@ -43,6 +43,7 @@ The following arguments are supported:
 * `surname` - (Optional) The user's surname (family name or last name).
 * `usage_location` - (Optional) The usage location of the User. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set. 
 * `user_principal_name` - (Required) The User Principal Name of the User.
+* `user_type` - (Optional) - The user type in the directory. Valid values are `Guest` and `Member`. Defaults to `Member`.
 
 ## Attributes Reference
 
