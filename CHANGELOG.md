@@ -1,5 +1,9 @@
 ## 1.5.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `azuread_user` - support guest user invitations using the `user_type` property [GH-401]
+
 ## 1.4.0 (February 18, 2021)
 
 IMPROVEMENTS:
