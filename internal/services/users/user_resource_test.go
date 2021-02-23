@@ -31,7 +31,7 @@ func TestAccUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUser_Guest(t *testing.T) {
+func TestAccUser_guest(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 

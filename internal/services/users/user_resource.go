@@ -199,8 +199,8 @@ func userResource() *schema.Resource {
 			"user_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validate.ValidatorWrapper(validation.StringInSlice([]string{"Member", "Guest"}, false)),
+				Default:          "Member",
+				ValidateDiagFunc: validate.ValidateDiag(validation.StringInSlice([]string{"Member", "Guest"}, false)),
 			},
 		},
 	}
