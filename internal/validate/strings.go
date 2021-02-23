@@ -66,9 +66,8 @@ func StringIsEmailAddress(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 	return
 }
 
-//wrapper to use validator in ValidateDiagFunc
-
-func ValidatorWrapper(validateFunc func(interface{}, string) ([]string, []error)) schema.SchemaValidateDiagFunc {
+// ValidateDiag wraps a SchemaValidateFunc to build a Diagnostics from the warning and error slices
+func ValidateDiag(validateFunc func(interface{}, string) ([]string, []error)) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {
 		warnings, errs := validateFunc(i, fmt.Sprintf("%+v", path))
 		var diags diag.Diagnostics
