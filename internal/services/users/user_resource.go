@@ -195,6 +195,7 @@ func userResource() *schema.Resource {
 				Computed:    true,
 				Description: "The primary cellular telephone number for the user.",
 			},
+
 			"user_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
