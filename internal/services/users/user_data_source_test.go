@@ -92,6 +92,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheck
 		check.That(data.ResourceName).Key("country").HasValue(fmt.Sprintf("acctestUser-%d-Country", data.RandomInteger)),
 		check.That(data.ResourceName).Key("postal_code").HasValue("111111"),
 		check.That(data.ResourceName).Key("mobile").HasValue("(555) 555-5555"),
+		check.That(data.ResourceName).Key("user_type").HasValue("Member"),
 	)
 }
 
