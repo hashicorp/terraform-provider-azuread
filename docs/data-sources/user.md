@@ -53,3 +53,4 @@ The following attributes are exported:
 * `surname` - The user's surname (family name or last name).
 * `usage_location` - The usage location of the Azure AD User.
 * `user_principal_name` - The User Principal Name of the Azure AD User.
+* `user_type` - The user type in the directory. One of `Guest` or `Member`.

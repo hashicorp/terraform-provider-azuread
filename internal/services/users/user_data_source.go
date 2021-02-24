@@ -156,6 +156,12 @@ func userData() *schema.Resource {
 				Computed:    true,
 				Description: "The primary cellular telephone number for the user.",
 			},
+
+			"user_type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Whether the user is homed in the current tenant or a guest user invited from another tenant.",
+			},
 		},
 	}
 }
@@ -215,6 +221,7 @@ func userDataRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 	tf.Set(d, "surname", user.Surname)
 	tf.Set(d, "usage_location", user.UsageLocation)
 	tf.Set(d, "user_principal_name", user.UserPrincipalName)
+	tf.Set(d, "user_type", user.UserType)
 
 	jobTitle := ""
 	if v, ok := user.AdditionalProperties["jobTitle"]; ok {
