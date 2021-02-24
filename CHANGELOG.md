@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+* `data.azuread_user` - export the `user_type` attribute [GH-406]
 * `azuread_user` - support guest user invitations using the `user_type` property [GH-401]
 
 ## 1.4.0 (February 18, 2021)
