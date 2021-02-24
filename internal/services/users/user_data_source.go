@@ -158,8 +158,9 @@ func userData() *schema.Resource {
 			},
 
 			"user_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Whether the user is homed in the current tenant or a guest user invited from another tenant.",
 			},
 		},
 	}
