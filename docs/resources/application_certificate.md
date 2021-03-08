@@ -12,7 +12,7 @@ Manages a Certificate associated with an Application within Azure Active Directo
 
 *Using a PEM certificate*
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }
@@ -27,7 +27,7 @@ resource "azuread_application_certificate" "example" {
 
 *Using a DER certificate*
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }
@@ -43,7 +43,7 @@ resource "azuread_application_certificate" "example" {
 
 ### Using a certificate from Azure Key Vault
 
-```hcl
+```terraform
 resource "azurerm_key_vault_certificate" "example" {
   name         = "generated-cert"
   key_vault_id = azurerm_key_vault.example.id

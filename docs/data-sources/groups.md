@@ -10,7 +10,7 @@ Gets Object IDs or Display Names for multiple Azure Active Directory groups.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "azuread_groups" "groups" {
   names = ["group-a", "group-b"]
 }

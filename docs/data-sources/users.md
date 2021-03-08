@@ -10,7 +10,7 @@ Gets Object IDs or UPNs for multiple Azure Active Directory users.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "azuread_users" "users" {
   user_principal_names = ["kat@hashicorp.com", "byte@hashicorp.com"]
 }

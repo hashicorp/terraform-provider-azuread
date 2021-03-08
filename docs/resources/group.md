@@ -12,7 +12,7 @@ Manages a Group within Azure Active Directory.
 
 *Basic example*
 
-```hcl
+```terraform
 resource "azuread_group" "example" {
   display_name = "A-AD-Group"
 }
@@ -20,7 +20,7 @@ resource "azuread_group" "example" {
 
 *A group with members*
 
-```hcl
+```terraform
 resource "azuread_user" "example" {
   display_name        = "J Doe"
   password            = "notSecure123"

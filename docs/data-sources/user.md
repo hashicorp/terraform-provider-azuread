@@ -10,7 +10,7 @@ Gets information about an Azure Active Directory user.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "azuread_user" "example" {
   user_principal_name = "user@hashicorp.com"
 }

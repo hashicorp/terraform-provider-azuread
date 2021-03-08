@@ -10,7 +10,7 @@ Use this data source to access information about existing Domains within Azure A
 
 ## Example Usage
 
-```hcl
+```terraform
 data "azuread_domains" "aad_domains" {}
 
 output "domains" {

@@ -10,7 +10,7 @@ Manages a single Group Membership within Azure Active Directory.
 
 ## Example Usage
 
-```hcl
+```terraform
 
 data "azuread_user" "example" {
   user_principal_name = "jdoe@hashicorp.com"

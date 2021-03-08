@@ -12,7 +12,7 @@ Manages a Certificate associated with a Service Principal within Azure Active Di
 
 *Using a PEM certificate*
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }
@@ -31,7 +31,7 @@ resource "azuread_service_principal_certificate" "example" {
 
 *Using a DER certificate*
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }

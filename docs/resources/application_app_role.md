@@ -10,7 +10,7 @@ Manages an App Role associated with an Application within Azure Active Directory
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }
