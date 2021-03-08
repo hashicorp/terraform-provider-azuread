@@ -197,10 +197,8 @@ func userResource() *schema.Resource {
 			},
 
 			"user_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          "Member",
-				ValidateDiagFunc: validate.ValidateDiag(validation.StringInSlice([]string{"Member", "Guest"}, false)),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -226,7 +224,6 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Password:                     utils.String(d.Get("password").(string)),
 		},
 		UserPrincipalName:    &upn,
-		UserType:             graphrbac.UserType(d.Get("user_type").(string)),
 		AdditionalProperties: map[string]interface{}{},
 	}
 

@@ -31,19 +31,6 @@ func TestAccUser_basic(t *testing.T) {
 	})
 }
 
-func TestAccUser_guest(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_user", "test")
-	r := UserResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.guest(data),
-			Check:  resource.ComposeTestCheckFunc(check.That(data.ResourceName).ExistsInAzure(r)),
-		},
-		data.ImportStep("force_password_change", "password"),
-	})
-}
-
 func TestAccUser_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
@@ -193,21 +180,6 @@ resource "azuread_user" "testC" {
   user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-C"
   password            = "%[2]s"
-}
-`, data.RandomInteger, data.RandomPassword)
-}
-
-func (UserResource) guest(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-data "azuread_domains" "test" {
-  only_initial = true
-}
-
-resource "azuread_user" "test" {
-  user_principal_name = "acctestUser.%[1]d_example.com#EXT#@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctestUser-%[1]d"
-  password            = "%[2]s"
-  user_type           = "Guest"
 }
 `, data.RandomInteger, data.RandomPassword)
 }
