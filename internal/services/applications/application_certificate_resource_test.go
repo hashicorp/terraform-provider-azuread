@@ -9,12 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/helpers/aadgraph"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
+	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/aadgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 const applicationCertificatePem string = `-----BEGIN CERTIFICATE-----

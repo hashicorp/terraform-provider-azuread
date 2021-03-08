@@ -9,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
+
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {

@@ -39,7 +39,7 @@ fmtcheck:
 
 goimports:
 	@echo "==> Fixing imports code with goimports..."
-	goimports -local "github.com/terraform-providers/terraform-provider-azuread" -w $(PKG_NAME)/
+	goimports -local "github.com/hashicorp/terraform-provider-azuread" -w $(PKG_NAME)/
 
 lint:
 	@echo "==> Checking source code against linters..."
@@ -78,10 +78,10 @@ test: fmtcheck
 		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=10
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 180m -ldflags="-X=github.com/terraform-providers/terraform-provider-azuread/version.ProviderVersion=acc"
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 180m -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
 
 acctests: fmtcheck
-	TF_ACC=1 go test -v ./internal/services/$(SERVICE)/tests/ $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/terraform-providers/terraform-provider-azuread/version.ProviderVersion=acc"
+	TF_ACC=1 go test -v ./internal/services/$(SERVICE)/tests/ $(TESTARGS) -timeout $(TESTTIMEOUT) -ldflags="-X=github.com/hashicorp/terraform-provider-azuread/version.ProviderVersion=acc"
 
 debugacc: fmtcheck
 	TF_ACC=1 dlv test $(TEST) --headless --listen=:2345 --api-version=2 -- -test.v $(TESTARGS)

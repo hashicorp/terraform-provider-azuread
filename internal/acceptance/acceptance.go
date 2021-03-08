@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/provider"
+	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
 var AzureADProvider *schema.Provider

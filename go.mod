@@ -1,4 +1,4 @@
-module github.com/terraform-providers/terraform-provider-azuread
+module github.com/hashicorp/terraform-provider-azuread
 
 require (
 	github.com/Azure/azure-sdk-for-go v47.1.0+incompatible
@@ -11,4 +11,4 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.3.0
 )
 
-go 1.14
+go 1.16

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 
-	"github.com/terraform-providers/terraform-provider-azuread/version"
+	"github.com/hashicorp/terraform-provider-azuread/version"
 )
 
 type ClientOptions struct {

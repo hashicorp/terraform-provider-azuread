@@ -6,12 +6,12 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/common"
-	applications "github.com/terraform-providers/terraform-provider-azuread/internal/services/applications/client"
-	domains "github.com/terraform-providers/terraform-provider-azuread/internal/services/domains/client"
-	groups "github.com/terraform-providers/terraform-provider-azuread/internal/services/groups/client"
-	serviceprincipals "github.com/terraform-providers/terraform-provider-azuread/internal/services/serviceprincipals/client"
-	users "github.com/terraform-providers/terraform-provider-azuread/internal/services/users/client"
+	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
+	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
+	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
+	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
+	users "github.com/hashicorp/terraform-provider-azuread/internal/services/users/client"
 )
 
 // Client contains the handles to all the specific Azure AD resource classes' respective clients

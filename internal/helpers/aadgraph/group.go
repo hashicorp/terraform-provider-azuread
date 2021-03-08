@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 func GroupGetByDisplayName(ctx context.Context, client *graphrbac.GroupsClient, displayName string, mailEnabled *bool, securityEnabled *bool) (*graphrbac.ADGroup, error) {
