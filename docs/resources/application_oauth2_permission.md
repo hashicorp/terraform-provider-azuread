@@ -10,7 +10,7 @@ Manages an OAuth2 Permission (also known as a Scope) associated with an Applicat
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }

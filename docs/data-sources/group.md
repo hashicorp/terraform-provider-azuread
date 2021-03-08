@@ -10,7 +10,7 @@ Gets information about an Azure Active Directory group.
 
 ## Example Usage (by Group Display Name)
 
-```hcl
+```terraform
 data "azuread_group" "example" {
   display_name     = "MyGroupName"
   security_enabled = true

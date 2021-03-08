@@ -10,7 +10,7 @@ Use this data source to access information about an existing Application within 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "azuread_application" "example" {
   display_name = "My First AzureAD Application"
 }

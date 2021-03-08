@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/acceptance/check"
+
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
 
 type ClientConfigDataSource struct{}

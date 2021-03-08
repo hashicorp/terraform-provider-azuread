@@ -10,7 +10,7 @@ Manages an Application within Azure Active Directory.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   display_name               = "example"
   homepage                   = "https://homepage"

@@ -10,7 +10,7 @@ Manages a Password associated with a Service Principal within Azure Active Direc
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name = "example"
 }

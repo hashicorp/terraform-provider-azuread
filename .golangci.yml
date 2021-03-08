@@ -37,4 +37,4 @@ linters-settings:
   misspell:
     locale: UK
   goimports:
-    local-prefixes: github.com/terraform-providers/terraform-provider-azuread/azuread
+    local-prefixes: github.com/hashicorp/terraform-provider-azuread/azuread

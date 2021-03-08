@@ -8,11 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/terraform-providers/terraform-provider-azuread/internal/clients"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/helpers/aadgraph"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/tf"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/utils"
-	"github.com/terraform-providers/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/aadgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
 func userData() *schema.Resource {

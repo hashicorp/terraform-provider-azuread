@@ -10,7 +10,7 @@ Gets information about an existing Service Principal associated with an Applicat
 
 ## Example Usage (by Application Display Name)
 
-```hcl
+```terraform
 data "azuread_service_principal" "example" {
   display_name = "my-awesome-application"
 }
@@ -18,7 +18,7 @@ data "azuread_service_principal" "example" {
 
 ## Example Usage (by Application ID)
 
-```hcl
+```terraform
 data "azuread_service_principal" "example" {
   application_id = "00000000-0000-0000-0000-000000000000"
 }
@@ -26,7 +26,7 @@ data "azuread_service_principal" "example" {
 
 ## Example Usage (by Object ID)
 
-```hcl
+```terraform
 data "azuread_service_principal" "example" {
   object_id = "00000000-0000-0000-0000-000000000000"
 }

@@ -10,7 +10,7 @@ Manages a User within Azure Active Directory.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_user" "example" {
   user_principal_name = "jdoe@hashicorp.com"
   display_name        = "J. Doe"

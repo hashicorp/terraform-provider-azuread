@@ -10,7 +10,7 @@ Manages a Service Principal associated with an Application within Azure Active D
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "azuread_application" "example" {
   name                       = "example"
   homepage                   = "http://homepage"
