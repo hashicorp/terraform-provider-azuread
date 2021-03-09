@@ -43,9 +43,6 @@ The following arguments are supported:
 * `surname` - (Optional) The user's surname (family name or last name).
 * `usage_location` - (Optional) The usage location of the User. Required for users that will be assigned licenses due to legal requirement to check for availability of services in countries. The usage location is a two letter country code (ISO standard 3166). Examples include: `NO`, `JP`, and `GB`. Cannot be reset to null once set. 
 * `user_principal_name` - (Required) The User Principal Name of the User.
-* `user_type` - (Optional) The user type in the directory. Valid values are `Guest` and `Member`. Defaults to `Member`.
-
-~> Note on Guest Users: Due to API limitations, when configuring a Guest user, `password` must be specified. Since the password isn't used for authenticating the user, it's suggested to specify a placeholder string. This will be fixed in version 2.0 of the provider.
 
 ## Attributes Reference
 
@@ -55,6 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 * `object_id` - The Object ID of the User.
 * `onpremises_sam_account_name` - The on-premise SAM account name of the User.
 * `onpremises_user_principal_name` - The on-premise user principal name of the User.
+* `user_type` - The user type in the directory. One of `Guest` or `Member`.
 
 ## Import
 
