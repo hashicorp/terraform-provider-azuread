@@ -12,7 +12,7 @@ Manages a Service Principal associated with an Application within Azure Active D
 
 ```terraform
 resource "azuread_application" "example" {
-  name                       = "example"
+  display_name               = "example"
   homepage                   = "http://homepage"
   identifier_uris            = ["http://uri"]
   reply_urls                 = ["http://replyurl"]
