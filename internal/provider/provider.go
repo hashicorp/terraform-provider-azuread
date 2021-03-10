@@ -162,6 +162,7 @@ func AzureADProvider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AAD_PROVIDER_ENABLE_MSGRAPH", false),
 				Description: "Beta: Use the Microsoft Graph API where supported.",
+				Deprecated:  "The `enable_msgraph` provider attribute enables Microsoft Graph Beta Support for version 1.5, and will be removed in version 2.0 of the provider.",
 			},
 		},
 
