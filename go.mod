@@ -13,5 +13,3 @@ require (
 )
 
 go 1.16
-
-//replace github.com/manicminer/hamilton => /Users/tom/go/src/github.com/manicminer/hamilton
