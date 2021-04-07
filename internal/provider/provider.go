@@ -157,12 +157,12 @@ func AzureADProvider() *schema.Provider {
 
 			// MS Graph beta
 			// TODO: remove in v2.0
-			"enable_msgraph": {
+			"enable_msgraph_beta": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("AAD_PROVIDER_ENABLE_MSGRAPH", false),
 				Description: "Beta: Use the Microsoft Graph API where supported.",
-				Deprecated:  "The `enable_msgraph` provider attribute enables Microsoft Graph Beta Support for version 1.5, and will be removed in version 2.0 of the provider.",
+				Deprecated:  "The `enable_msgraph_beta` provider attribute enables Microsoft Graph Beta Support for version 1.5, and will be removed in version 2.0 of the provider.",
 			},
 		},
 
@@ -180,7 +180,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		environment, aadEnvironment := environment(d.Get("environment").(string))
 
 		// Microsoft Graph beta opt-in
-		enableMsGraph := d.Get("enable_msgraph").(bool)
+		enableMsGraph := d.Get("enable_msgraph_beta").(bool)
 
 		var authConfig *auth.Config
 		if enableMsGraph {
