@@ -66,8 +66,7 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 	}
 
 	if d.IsNewResource() {
-		err = app.AppendAppRole(role)
-		if err != nil {
+		if app.AppendAppRole(role) != nil {
 			if _, ok := err.(*grapherrors.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_app_role", id.String())
 			}
@@ -78,8 +77,7 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 			return tf.ErrorDiagPathF(nil, "role_id", "App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 		}
 
-		err = app.UpdateAppRole(role)
-		if err != nil {
+		if app.UpdateAppRole(role) != nil {
 			return tf.ErrorDiagF(err, "Updating App Role with ID %q", *role.ID)
 		}
 	}
@@ -170,8 +168,7 @@ func applicationAppRoleResourceDeleteMsGraph(ctx context.Context, d *schema.Reso
 
 	log.Printf("[DEBUG] Disabling App Role %q for Application %q prior to removal", id.RoleId, id.ObjectId)
 	role.IsEnabled = utils.Bool(false)
-	err = app.UpdateAppRole(*role)
-	if err != nil {
+	if app.UpdateAppRole(*role) != nil {
 		return tf.ErrorDiagF(err, "Disabling App Role with ID %q", *role.ID)
 	}
 
@@ -184,8 +181,7 @@ func applicationAppRoleResourceDeleteMsGraph(ctx context.Context, d *schema.Reso
 	}
 
 	log.Printf("[DEBUG] Removing App Role %q from Application %q", id.RoleId, id.ObjectId)
-	err = app.RemoveAppRole(*role)
-	if err != nil {
+	if app.RemoveAppRole(*role) != nil {
 		return tf.ErrorDiagF(err, "Removing App Role with ID %q", *role.ID)
 	}
 

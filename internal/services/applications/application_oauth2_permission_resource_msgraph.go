@@ -64,8 +64,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		if app.Api == nil {
 			app.Api = &models.ApplicationApi{}
 		}
-		err = app.Api.AppendOAuth2PermissionScope(scope)
-		if err != nil {
+		if app.Api.AppendOAuth2PermissionScope(scope) != nil {
 			if _, ok := err.(*grapherrors.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission", id.String())
 			}
@@ -76,8 +75,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 			return tf.ErrorDiagPathF(nil, "role_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
 		}
 
-		err = app.Api.UpdateOAuth2PermissionScope(scope)
-		if err != nil {
+		if app.Api.UpdateOAuth2PermissionScope(scope) != nil {
 			return tf.ErrorDiagF(err, "Updating OAuth2 Permission with ID %q", *scope.ID)
 		}
 	}
@@ -172,8 +170,7 @@ func applicationOAuth2PermissionResourceDeleteMsGraph(ctx context.Context, d *sc
 
 	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
 	scope.IsEnabled = utils.Bool(false)
-	err = app.Api.UpdateOAuth2PermissionScope(*scope)
-	if err != nil {
+	if app.Api.UpdateOAuth2PermissionScope(*scope) != nil {
 		return tf.ErrorDiagF(err, "Disabling OAuth2 Permission with ID %q", *scope.ID)
 	}
 
@@ -188,8 +185,7 @@ func applicationOAuth2PermissionResourceDeleteMsGraph(ctx context.Context, d *sc
 	}
 
 	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
-	err = app.Api.RemoveOAuth2PermissionScope(*scope)
-	if err != nil {
+	if app.Api.RemoveOAuth2PermissionScope(*scope) != nil {
 		return tf.ErrorDiagF(err, "Removing OAuth2 Permission with ID %q", *scope.ID)
 	}
 
