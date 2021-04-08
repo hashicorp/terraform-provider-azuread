@@ -99,7 +99,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
-				Description: "The national cloud environment which should be used. Possible values are `global`, `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
+				Description: "The cloud environment which should be used. Possible values are `global`, `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
 			},
 
 			// Client Certificate specific fields
