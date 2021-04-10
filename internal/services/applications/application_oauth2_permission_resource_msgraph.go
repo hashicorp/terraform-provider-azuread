@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	grapherrors "github.com/manicminer/hamilton/errors"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
@@ -36,7 +36,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		permissionId = pid
 	}
 
-	scope := models.PermissionScope{
+	scope := msgraph.PermissionScope{
 		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
 		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
 		ID:                      utils.String(permissionId),
@@ -62,7 +62,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 
 	if d.IsNewResource() {
 		if app.Api == nil {
-			app.Api = &models.ApplicationApi{}
+			app.Api = &msgraph.ApplicationApi{}
 		}
 		if app.Api.AppendOAuth2PermissionScope(scope) != nil {
 			if _, ok := err.(*grapherrors.AlreadyExistsError); ok {
@@ -71,7 +71,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 			return tf.ErrorDiagF(err, "Failed to add OAuth2 Permission")
 		}
 	} else {
-		if existing, _ := msgraph.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
+		if existing, _ := helpers.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
 			return tf.ErrorDiagPathF(nil, "role_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
 		}
 
@@ -80,9 +80,9 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		}
 	}
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID: app.ID,
-		Api: &models.ApplicationApi{
+		Api: &msgraph.ApplicationApi{
 			OAuth2PermissionScopes: app.Api.OAuth2PermissionScopes,
 		},
 	}
@@ -113,7 +113,7 @@ func applicationOAuth2PermissionResourceReadMsGraph(ctx context.Context, d *sche
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	permission, err := msgraph.OAuth2PermissionFindById(app, id.PermissionId)
+	permission, err := helpers.OAuth2PermissionFindById(app, id.PermissionId)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Identifying OAuth2 Permission")
 	}
@@ -157,7 +157,7 @@ func applicationOAuth2PermissionResourceDeleteMsGraph(ctx context.Context, d *sc
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 	}
 
-	scope, err := msgraph.OAuth2PermissionFindById(app, id.PermissionId)
+	scope, err := helpers.OAuth2PermissionFindById(app, id.PermissionId)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Identifying OAuth2 Permission")
 	}
@@ -174,9 +174,9 @@ func applicationOAuth2PermissionResourceDeleteMsGraph(ctx context.Context, d *sc
 		return tf.ErrorDiagF(err, "Disabling OAuth2 Permission with ID %q", *scope.ID)
 	}
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID: app.ID,
-		Api: &models.ApplicationApi{
+		Api: &msgraph.ApplicationApi{
 			OAuth2PermissionScopes: app.Api.OAuth2PermissionScopes,
 		},
 	}

@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -28,7 +28,7 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.Get("prevent_duplicate_names").(bool) {
-		existingId, err := msgraph.GroupCheckNameAvailability(ctx, client, displayName, nil)
+		existingId, err := helpers.GroupCheckNameAvailability(ctx, client, displayName, nil)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "display_name", "Could not check for existing group(s)")
 		}
@@ -42,7 +42,7 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 		return tf.ErrorDiagF(err, "Failed to generate mailNickname")
 	}
 
-	properties := models.Group{
+	properties := msgraph.Group{
 		DisplayName:  utils.String(displayName),
 		MailNickname: utils.String(mailNickname),
 
@@ -80,7 +80,7 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(*group.ID)
 
-	_, err = msgraph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
 		return client.Get(ctx, *group.ID)
 	})
 
@@ -134,7 +134,7 @@ func groupResourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta 
 
 func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.MsClient
-	group := models.Group{ID: utils.String(d.Id())}
+	group := msgraph.Group{ID: utils.String(d.Id())}
 
 	var displayName string
 	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
@@ -145,7 +145,7 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("display_name") {
 		if preventDuplicates := d.Get("prevent_duplicate_names").(bool); preventDuplicates {
-			existingId, err := msgraph.GroupCheckNameAvailability(ctx, client, displayName, group.ID)
+			existingId, err := helpers.GroupCheckNameAvailability(ctx, client, displayName, group.ID)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "display_name", "Could not check for existing group(s)")
 			}

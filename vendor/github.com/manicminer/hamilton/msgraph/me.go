@@ -1,33 +1,30 @@
-package clients
+package msgraph
 
 import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/manicminer/hamilton/base"
-	"github.com/manicminer/hamilton/models"
 )
 
 // MeClient performs operations on the authenticated user.
 type MeClient struct {
-	BaseClient base.Client
+	BaseClient Client
 }
 
 // NewMeClient returns a new MeClient.
 func NewMeClient(tenantId string) *MeClient {
 	return &MeClient{
-		BaseClient: base.NewClient(base.VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta, tenantId),
 	}
 }
 
 // Get retrieves information about the authenticated user.
-func (c *MeClient) Get(ctx context.Context) (*models.Me, int, error) {
+func (c *MeClient) Get(ctx context.Context) (*Me, int, error) {
 	var status int
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      "/me",
 			HasTenantId: false,
 		},
@@ -37,7 +34,7 @@ func (c *MeClient) Get(ctx context.Context) (*models.Me, int, error) {
 	}
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	var me models.Me
+	var me Me
 	if err := json.Unmarshal(respBody, &me); err != nil {
 		return nil, status, err
 	}
@@ -45,11 +42,11 @@ func (c *MeClient) Get(ctx context.Context) (*models.Me, int, error) {
 }
 
 // GetProfile retrieves the profile of the authenticated user.
-func (c *MeClient) GetProfile(ctx context.Context) (*models.Me, int, error) {
+func (c *MeClient) GetProfile(ctx context.Context) (*Me, int, error) {
 	var status int
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      "/me/profile",
 			HasTenantId: false,
 		},
@@ -59,7 +56,7 @@ func (c *MeClient) GetProfile(ctx context.Context) (*models.Me, int, error) {
 	}
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	var me models.Me
+	var me Me
 	if err := json.Unmarshal(respBody, &me); err != nil {
 		return nil, status, err
 	}

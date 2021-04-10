@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/manicminer/hamilton/clients"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
-func GroupCheckNameAvailability(ctx context.Context, client *clients.GroupsClient, displayName string, existingID *string) (*string, error) {
+func GroupCheckNameAvailability(ctx context.Context, client *msgraph.GroupsClient, displayName string, existingID *string) (*string, error) {
 	filter := fmt.Sprintf("displayName eq '%s'", displayName)
 	result, _, err := client.List(ctx, filter)
 	if err != nil {

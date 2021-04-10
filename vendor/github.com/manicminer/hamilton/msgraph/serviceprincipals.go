@@ -1,41 +1,38 @@
-package clients
+package msgraph
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	odata2 "github.com/manicminer/hamilton/odata"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
-
-	"github.com/manicminer/hamilton/base"
-	"github.com/manicminer/hamilton/base/odata"
-	"github.com/manicminer/hamilton/models"
 )
 
 // ServicePrincipalsClient performs operations on Service Principals.
 type ServicePrincipalsClient struct {
-	BaseClient base.Client
+	BaseClient Client
 }
 
 // NewServicePrincipalsClient returns a new ServicePrincipalsClient.
 func NewServicePrincipalsClient(tenantId string) *ServicePrincipalsClient {
 	return &ServicePrincipalsClient{
-		BaseClient: base.NewClient(base.VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta, tenantId),
 	}
 }
 
 // List returns a list of Service Principals, optionally filtered using OData.
-func (c *ServicePrincipalsClient) List(ctx context.Context, filter string) (*[]models.ServicePrincipal, int, error) {
+func (c *ServicePrincipalsClient) List(ctx context.Context, filter string) (*[]ServicePrincipal, int, error) {
 	params := url.Values{}
 	if filter != "" {
 		params.Add("$filter", filter)
 	}
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      "/servicePrincipals",
 			Params:      params,
 			HasTenantId: true,
@@ -47,7 +44,7 @@ func (c *ServicePrincipalsClient) List(ctx context.Context, filter string) (*[]m
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
 	var data struct {
-		ServicePrincipals []models.ServicePrincipal `json:"value"`
+		ServicePrincipals []ServicePrincipal `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, err
@@ -56,16 +53,16 @@ func (c *ServicePrincipalsClient) List(ctx context.Context, filter string) (*[]m
 }
 
 // Create creates a new Service Principal.
-func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal models.ServicePrincipal) (*models.ServicePrincipal, int, error) {
+func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal ServicePrincipal) (*ServicePrincipal, int, error) {
 	var status int
 	body, err := json.Marshal(servicePrincipal)
 	if err != nil {
 		return nil, status, err
 	}
-	resp, status, _, err := c.BaseClient.Post(ctx, base.PostHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      "/servicePrincipals",
 			HasTenantId: true,
 		},
@@ -75,7 +72,7 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal m
 	}
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	var newServicePrincipal models.ServicePrincipal
+	var newServicePrincipal ServicePrincipal
 	if err := json.Unmarshal(respBody, &newServicePrincipal); err != nil {
 		return nil, status, err
 	}
@@ -83,10 +80,10 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal m
 }
 
 // Get retrieves a Service Principal.
-func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*models.ServicePrincipal, int, error) {
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*ServicePrincipal, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
 			HasTenantId: true,
 		},
@@ -96,7 +93,7 @@ func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*models.S
 	}
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
-	var servicePrincipal models.ServicePrincipal
+	var servicePrincipal ServicePrincipal
 	if err := json.Unmarshal(respBody, &servicePrincipal); err != nil {
 		return nil, status, err
 	}
@@ -104,7 +101,7 @@ func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*models.S
 }
 
 // Update amends an existing Service Principal.
-func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal models.ServicePrincipal) (int, error) {
+func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal ServicePrincipal) (int, error) {
 	var status int
 	if servicePrincipal.ID == nil {
 		return status, errors.New("cannot update service principal with nil ID")
@@ -113,10 +110,10 @@ func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal m
 	if err != nil {
 		return status, err
 	}
-	_, status, _, err = c.BaseClient.Patch(ctx, base.PatchHttpRequestInput{
+	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusNoContent},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s", *servicePrincipal.ID),
 			HasTenantId: true,
 		},
@@ -129,9 +126,9 @@ func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal m
 
 // Delete removes a Service Principal.
 func (c *ServicePrincipalsClient) Delete(ctx context.Context, id string) (int, error) {
-	_, status, _, err := c.BaseClient.Delete(ctx, base.DeleteHttpRequestInput{
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusNoContent},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
 			HasTenantId: true,
 		},
@@ -145,9 +142,9 @@ func (c *ServicePrincipalsClient) Delete(ctx context.Context, id string) (int, e
 // ListOwners retrieves the owners of the specified Service Principal.
 // id is the object ID of the service principal.
 func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[]string, int, error) {
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners", id),
 			Params:      url.Values{"$select": []string{"id"}},
 			HasTenantId: true,
@@ -178,9 +175,9 @@ func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[
 // servicePrincipalId is the object ID of the service principal.
 // ownerId is the object ID of the owning object.
 func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipalId, ownerId string) (*string, int, error) {
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
 			Params:      url.Values{"$select": []string{"id,url"}},
 			HasTenantId: true,
@@ -205,7 +202,7 @@ func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipal
 
 // AddOwners adds a new owner to a Service Principal.
 // First populate the Owners field of the ServicePrincipal using the AppendOwner method of the model, then call this method.
-func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipal *models.ServicePrincipal) (int, error) {
+func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipal *ServicePrincipal) (int, error) {
 	var status int
 	if servicePrincipal.ID == nil {
 		return status, errors.New("cannot update service principal with nil ID")
@@ -223,10 +220,10 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		if err != nil {
 			return status, err
 		}
-		_, status, _, err = c.BaseClient.Post(ctx, base.PostHttpRequestInput{
+		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
 			ValidStatusCodes: []int{http.StatusNoContent},
-			Uri: base.Uri{
+			Uri: Uri{
 				Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/$ref", *servicePrincipal.ID),
 				HasTenantId: true,
 			},
@@ -256,7 +253,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 		}
 
 		// despite the above check, sometimes owners are just gone
-		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
+		checkOwnerGone := func(resp *http.Response, o *odata2.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
 					re := regexp.MustCompile("One or more removed object references do not exist")
@@ -268,10 +265,10 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 			return false
 		}
 
-		_, status, _, err := c.BaseClient.Delete(ctx, base.DeleteHttpRequestInput{
+		_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 			ValidStatusCodes: []int{http.StatusNoContent},
 			ValidStatusFunc:  checkOwnerGone,
-			Uri: base.Uri{
+			Uri: Uri{
 				Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
 				HasTenantId: true,
 			},
@@ -284,14 +281,14 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 }
 
 // ListGroupMemberships returns a list of Groups the Service Principal is member of, optionally filtered using OData.
-func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id string, filter string) (*[]models.Group, int, error) {
+func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id string, filter string) (*[]Group, int, error) {
 	params := url.Values{}
 	if filter != "" {
 		params.Add("$filter", filter)
 	}
-	resp, status, _, err := c.BaseClient.Get(ctx, base.GetHttpRequestInput{
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
-		Uri: base.Uri{
+		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/transitiveMemberOf", id),
 			Params:      params,
 			HasTenantId: true,
@@ -303,7 +300,7 @@ func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id s
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
 	var data struct {
-		Groups []models.Group `json:"value"`
+		Groups []Group `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, err

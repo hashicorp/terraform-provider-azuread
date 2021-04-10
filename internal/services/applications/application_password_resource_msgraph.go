@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
@@ -20,10 +20,10 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 	client := meta.(*clients.Client).Applications.MsClient
 	objectId := d.Get("application_object_id").(string)
 
-	credential, err := msgraph.PasswordCredentialForResource(d)
+	credential, err := helpers.PasswordCredentialForResource(d)
 	if err != nil {
 		attr := ""
-		if kerr, ok := err.(msgraph.CredentialError); ok {
+		if kerr, ok := err.(helpers.CredentialError); ok {
 			attr = kerr.Attr()
 		}
 		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for application with object ID %q", objectId)
@@ -42,7 +42,7 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
-	newCredentials := make([]models.PasswordCredential, 0)
+	newCredentials := make([]msgraph.PasswordCredential, 0)
 	if app.PasswordCredentials != nil {
 		for _, cred := range *app.PasswordCredentials {
 			if cred.KeyId != nil && *cred.KeyId == *credential.KeyId {
@@ -54,7 +54,7 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 
 	newCredentials = append(newCredentials, *credential)
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:                  &id.ObjectId,
 		PasswordCredentials: &newCredentials,
 	}
@@ -83,7 +83,7 @@ func applicationPasswordResourceReadMsGraph(ctx context.Context, d *schema.Resou
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
-	var credential *models.PasswordCredential
+	var credential *msgraph.PasswordCredential
 	if app.PasswordCredentials != nil {
 		for _, cred := range *app.PasswordCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
@@ -139,7 +139,7 @@ func applicationPasswordResourceDeleteMsGraph(ctx context.Context, d *schema.Res
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
-	newCredentials := make([]models.PasswordCredential, 0)
+	newCredentials := make([]msgraph.PasswordCredential, 0)
 	if app.PasswordCredentials != nil {
 		for _, cred := range *app.PasswordCredentials {
 			if cred.KeyId != nil && *cred.KeyId != id.KeyId {
@@ -148,7 +148,7 @@ func applicationPasswordResourceDeleteMsGraph(ctx context.Context, d *schema.Res
 		}
 	}
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:                  &id.ObjectId,
 		PasswordCredentials: &newCredentials,
 	}

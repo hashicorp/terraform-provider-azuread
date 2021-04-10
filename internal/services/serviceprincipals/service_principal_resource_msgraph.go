@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -19,7 +19,7 @@ import (
 func servicePrincipalResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.MsClient
 
-	properties := models.ServicePrincipal{
+	properties := msgraph.ServicePrincipal{
 		AccountEnabled: utils.Bool(true),
 		AppId:          utils.String(d.Get("application_id").(string)),
 	}
@@ -47,7 +47,7 @@ func servicePrincipalResourceCreateMsGraph(ctx context.Context, d *schema.Resour
 func servicePrincipalResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.MsClient
 
-	properties := models.ServicePrincipal{
+	properties := msgraph.ServicePrincipal{
 		ID: utils.String(d.Id()),
 	}
 
@@ -87,10 +87,10 @@ func servicePrincipalResourceReadMsGraph(ctx context.Context, d *schema.Resource
 	}
 
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
-	tf.Set(d, "app_roles", msgraph.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
+	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "oauth2_permissions", msgraph.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
 	tf.Set(d, "tags", servicePrincipal.Tags)
 

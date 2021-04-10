@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/go-azure-helpers/sender"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/base"
 	"github.com/manicminer/hamilton/environments"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/version"
 )
@@ -29,7 +29,7 @@ type ClientOptions struct {
 	MsGraphAuthorizer auth.Authorizer // TODO: rename in v2.0
 }
 
-func (o ClientOptions) ConfigureClient(c *base.Client, ar *autorest.Client) {
+func (o ClientOptions) ConfigureClient(c *msgraph.Client, ar *autorest.Client) {
 	c.Authorizer = o.MsGraphAuthorizer
 	c.Endpoint = o.Environment.MsGraph.Endpoint
 	c.UserAgent = o.userAgent(c.UserAgent)

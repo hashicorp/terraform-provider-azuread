@@ -9,10 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -28,11 +28,11 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 		mailNickName = strings.Split(upn, "@")[0]
 	}
 
-	properties := models.User{
+	properties := msgraph.User{
 		AccountEnabled: utils.Bool(d.Get("account_enabled").(bool)),
 		DisplayName:    utils.String(d.Get("display_name").(string)),
 		MailNickname:   &mailNickName,
-		PasswordProfile: &models.UserPasswordProfile{
+		PasswordProfile: &msgraph.UserPasswordProfile{
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
 			Password:                      utils.String(d.Get("password").(string)),
 		},
@@ -112,7 +112,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*user.ID)
 
-	_, err = msgraph.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
 		return client.Get(ctx, *user.ID)
 	})
 
@@ -126,7 +126,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 func userResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.MsClient
 
-	properties := models.User{
+	properties := msgraph.User{
 		ID: utils.String(d.Id()),
 	}
 
@@ -151,7 +151,7 @@ func userResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("password") {
-		properties.PasswordProfile = &models.UserPasswordProfile{
+		properties.PasswordProfile = &msgraph.UserPasswordProfile{
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
 			Password:                      utils.String(d.Get("password").(string)),
 		}

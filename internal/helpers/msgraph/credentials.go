@@ -10,12 +10,12 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
-func KeyCredentialForResource(d *schema.ResourceData) (*models.KeyCredential, error) {
+func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
 	keyType := d.Get("type").(string)
 	value := d.Get("value").(string)
 
@@ -85,7 +85,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*models.KeyCredential, er
 		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
-	credential := models.KeyCredential{
+	credential := msgraph.KeyCredential{
 		KeyId:       utils.String(keyId),
 		Type:        utils.String(keyType),
 		Usage:       utils.String("verify"),
@@ -104,7 +104,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*models.KeyCredential, er
 	return &credential, nil
 }
 
-func PasswordCredentialForResource(d *schema.ResourceData) (*models.PasswordCredential, error) {
+func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCredential, error) {
 	value := d.Get("value").(string)
 
 	var keyId string
@@ -136,7 +136,7 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*models.PasswordCred
 		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
 	}
 
-	credential := models.PasswordCredential{
+	credential := msgraph.PasswordCredential{
 		EndDateTime: &endDate,
 		KeyId:       utils.String(keyId),
 		SecretText:  utils.String(value),
