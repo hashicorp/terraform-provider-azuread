@@ -7,17 +7,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
 
 func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.MsClient
 
-	var app *models.Application
+	var app *msgraph.Application
 
 	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		var status int
@@ -84,9 +84,9 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(*app.ID)
 
-	tf.Set(d, "app_roles", msgraph.ApplicationFlattenAppRoles(app.AppRoles))
+	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
-	tf.Set(d, "available_to_other_tenants", app.SignInAudience == models.SignInAudienceAzureADMultipleOrgs)
+	tf.Set(d, "available_to_other_tenants", app.SignInAudience == msgraph.SignInAudienceAzureADMultipleOrgs)
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
@@ -105,7 +105,7 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 	tf.Set(d, "type", appType)
 
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permissions", msgraph.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
+		tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
 	}
 
 	if app.Web != nil {

@@ -10,10 +10,10 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -29,7 +29,7 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.Get("prevent_duplicate_names").(bool) {
-		existingApp, err := msgraph.ApplicationFindByName(ctx, client, displayName)
+		existingApp, err := helpers.ApplicationFindByName(ctx, client, displayName)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
 		}
@@ -54,22 +54,22 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 to be replaced by new property `sign_in_audience`
-	var signInAudience models.SignInAudience
+	var signInAudience msgraph.SignInAudience
 	if v, ok := d.GetOk("available_to_other_tenants"); ok && v.(bool) {
-		signInAudience = models.SignInAudienceAzureADMultipleOrgs
+		signInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
 	} else {
-		signInAudience = models.SignInAudienceAzureADMyOrg
+		signInAudience = msgraph.SignInAudienceAzureADMyOrg
 	}
 
-	properties := models.Application{
-		Api:                    &models.ApplicationApi{},
+	properties := msgraph.Application{
+		Api:                    &msgraph.ApplicationApi{},
 		DisplayName:            utils.String(displayName),
 		IdentifierUris:         tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:         signInAudience,
-		Web: &models.ApplicationWeb{
-			ImplicitGrantSettings: &models.ImplicitGrantSettings{
+		Web: &msgraph.ApplicationWeb{
+			ImplicitGrantSettings: &msgraph.ImplicitGrantSettings{
 				EnableAccessTokenIssuance: utils.Bool(d.Get("oauth2_allow_implicit_flow").(bool)),
 			},
 		},
@@ -97,7 +97,7 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	} else {
 		// TODO: v2.0 this hack is here solely to mimic AAD Graph - with MS Graph applications do not receive a default scope
 		id, _ := uuid.GenerateUUID()
-		properties.Api.OAuth2PermissionScopes = &[]models.PermissionScope{
+		properties.Api.OAuth2PermissionScopes = &[]msgraph.PermissionScope{
 			{
 				AdminConsentDescription: utils.String(fmt.Sprintf("Allow the application to access %s on behalf of the signed-in user.", displayName)),
 				AdminConsentDisplayName: utils.String(fmt.Sprintf("Access %s", displayName)),
@@ -141,7 +141,7 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk("owners"); ok {
 		owners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		if err := msgraph.ApplicationSetOwners(ctx, client, app, owners); err != nil {
+		if err := helpers.ApplicationSetOwners(ctx, client, app, owners); err != nil {
 			return tf.ErrorDiagPathF(err, "owners", "Could not set owners for application with object ID: %q", *app.ID)
 		}
 	}
@@ -160,7 +160,7 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if displayName != "" && d.Get("prevent_duplicate_names").(bool) {
-		existingApp, err := msgraph.ApplicationFindByName(ctx, client, displayName)
+		existingApp, err := helpers.ApplicationFindByName(ctx, client, displayName)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
 		}
@@ -188,22 +188,22 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 to be replaced by new property `sign_in_audience`
-	var signInAudience models.SignInAudience
+	var signInAudience msgraph.SignInAudience
 	if v, ok := d.GetOk("available_to_other_tenants"); ok && v.(bool) {
-		signInAudience = models.SignInAudienceAzureADMultipleOrgs
+		signInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
 	} else {
-		signInAudience = models.SignInAudienceAzureADMyOrg
+		signInAudience = msgraph.SignInAudienceAzureADMyOrg
 	}
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:                     utils.String(d.Id()),
-		Api:                    &models.ApplicationApi{},
+		Api:                    &msgraph.ApplicationApi{},
 		IdentifierUris:         tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:         signInAudience,
-		Web: &models.ApplicationWeb{
-			ImplicitGrantSettings: &models.ImplicitGrantSettings{
+		Web: &msgraph.ApplicationWeb{
+			ImplicitGrantSettings: &msgraph.ImplicitGrantSettings{
 				EnableAccessTokenIssuance: utils.Bool(d.Get("oauth2_allow_implicit_flow").(bool)),
 			},
 			LogoutUrl: utils.String(d.Get("logout_url").(string)),
@@ -257,7 +257,7 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChange("app_role") {
 		appRoles := expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())
-		if err := msgraph.ApplicationSetAppRoles(ctx, client, &properties, appRoles); err != nil {
+		if err := helpers.ApplicationSetAppRoles(ctx, client, &properties, appRoles); err != nil {
 			return tf.ErrorDiagPathF(err, "app_role", "Could not set App Roles")
 		}
 	}
@@ -266,7 +266,7 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("oauth2_permissions") {
 		oauth2Permissions := expandApplicationOAuth2Permissions(d.Get("oauth2_permissions").(*schema.Set).List())
 		if oauth2Permissions != nil {
-			if err := msgraph.ApplicationSetOAuth2PermissionScopes(ctx, client, &properties, oauth2Permissions); err != nil {
+			if err := helpers.ApplicationSetOAuth2PermissionScopes(ctx, client, &properties, oauth2Permissions); err != nil {
 				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permission Scopes")
 			}
 		}
@@ -274,7 +274,7 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChange("owners") {
 		owners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
-		if err := msgraph.ApplicationSetOwners(ctx, client, &properties, owners); err != nil {
+		if err := helpers.ApplicationSetOwners(ctx, client, &properties, owners); err != nil {
 			return tf.ErrorDiagPathF(err, "owners", "Could not set owners for application with object ID: %q", d.Id())
 		}
 	}
@@ -296,9 +296,9 @@ func applicationResourceReadMsGraph(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
 	}
 
-	tf.Set(d, "app_role", msgraph.ApplicationFlattenAppRoles(app.AppRoles))
+	tf.Set(d, "app_role", helpers.ApplicationFlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
-	tf.Set(d, "available_to_other_tenants", app.SignInAudience == models.SignInAudienceAzureADMultipleOrgs) // TODO: v2.0 replace with sign_in_audience
+	tf.Set(d, "available_to_other_tenants", app.SignInAudience == msgraph.SignInAudienceAzureADMultipleOrgs) // TODO: v2.0 replace with sign_in_audience
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
@@ -318,7 +318,7 @@ func applicationResourceReadMsGraph(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "type", appType)
 
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permissions", msgraph.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
+		tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
 	}
 
 	if app.Web != nil {
@@ -366,12 +366,12 @@ func applicationResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func expandApplicationAppRoles(input []interface{}) *[]models.AppRole {
+func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 	if len(input) == 0 {
 		return nil
 	}
 
-	result := make([]models.AppRole, 0, len(input))
+	result := make([]msgraph.AppRole, 0, len(input))
 	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
 
@@ -382,7 +382,7 @@ func expandApplicationAppRoles(input []interface{}) *[]models.AppRole {
 
 		id, _ := uuid.GenerateUUID()
 
-		newAppRole := models.AppRole{
+		newAppRole := msgraph.AppRole{
 			ID:                 utils.String(id),
 			AllowedMemberTypes: &allowedMemberTypes,
 			Description:        utils.String(appRole["description"].(string)),
@@ -400,8 +400,8 @@ func expandApplicationAppRoles(input []interface{}) *[]models.AppRole {
 	return &result
 }
 
-func expandApplicationOAuth2Permissions(in []interface{}) *[]models.PermissionScope {
-	result := make([]models.PermissionScope, 0)
+func expandApplicationOAuth2Permissions(in []interface{}) *[]msgraph.PermissionScope {
+	result := make([]msgraph.PermissionScope, 0)
 
 	for _, raw := range in {
 		oauth2Permissions := raw.(map[string]interface{})
@@ -412,7 +412,7 @@ func expandApplicationOAuth2Permissions(in []interface{}) *[]models.PermissionSc
 		}
 
 		result = append(result,
-			models.PermissionScope{
+			msgraph.PermissionScope{
 				AdminConsentDescription: utils.String(oauth2Permissions["admin_consent_description"].(string)),
 				AdminConsentDisplayName: utils.String(oauth2Permissions["admin_consent_display_name"].(string)),
 				ID:                      &id,
@@ -428,8 +428,8 @@ func expandApplicationOAuth2Permissions(in []interface{}) *[]models.PermissionSc
 	return &result
 }
 
-func expandApplicationOptionalClaims(in []interface{}) *models.OptionalClaims {
-	result := models.OptionalClaims{}
+func expandApplicationOptionalClaims(in []interface{}) *msgraph.OptionalClaims {
+	result := msgraph.OptionalClaims{}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -445,8 +445,8 @@ func expandApplicationOptionalClaims(in []interface{}) *models.OptionalClaims {
 	return &result
 }
 
-func expandApplicationOptionalClaim(in []interface{}) *[]models.OptionalClaim {
-	result := make([]models.OptionalClaim, 0, len(in))
+func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
+	result := make([]msgraph.OptionalClaim, 0, len(in))
 
 	for _, optionalClaimRaw := range in {
 		optionalClaim := optionalClaimRaw.(map[string]interface{})
@@ -458,7 +458,7 @@ func expandApplicationOptionalClaim(in []interface{}) *[]models.OptionalClaim {
 			}
 		}
 
-		newClaim := models.OptionalClaim{
+		newClaim := msgraph.OptionalClaim{
 			Name:                 utils.String(optionalClaim["name"].(string)),
 			Essential:            utils.Bool(optionalClaim["essential"].(bool)),
 			AdditionalProperties: &additionalProps,
@@ -474,13 +474,13 @@ func expandApplicationOptionalClaim(in []interface{}) *[]models.OptionalClaim {
 	return &result
 }
 
-func expandApplicationRequiredResourceAccess(in []interface{}) *[]models.RequiredResourceAccess {
-	result := make([]models.RequiredResourceAccess, 0, len(in))
+func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.RequiredResourceAccess {
+	result := make([]msgraph.RequiredResourceAccess, 0, len(in))
 
 	for _, raw := range in {
 		requiredResourceAccess := raw.(map[string]interface{})
 
-		result = append(result, models.RequiredResourceAccess{
+		result = append(result, msgraph.RequiredResourceAccess{
 			ResourceAppId: utils.String(requiredResourceAccess["resource_app_id"].(string)),
 			ResourceAccess: expandApplicationResourceAccess(
 				requiredResourceAccess["resource_access"].([]interface{}),
@@ -491,13 +491,13 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]models.Require
 	return &result
 }
 
-func expandApplicationResourceAccess(in []interface{}) *[]models.ResourceAccess {
-	result := make([]models.ResourceAccess, 0, len(in))
+func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess {
+	result := make([]msgraph.ResourceAccess, 0, len(in))
 
 	for _, resourceAccessRaw := range in {
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
 
-		result = append(result, models.ResourceAccess{
+		result = append(result, msgraph.ResourceAccess{
 			ID:   utils.String(resourceAccess["id"].(string)),
 			Type: utils.String(resourceAccess["type"].(string)),
 		})
@@ -506,7 +506,7 @@ func expandApplicationResourceAccess(in []interface{}) *[]models.ResourceAccess 
 	return &result
 }
 
-func flattenApplicationOptionalClaims(in *models.OptionalClaims) interface{} {
+func flattenApplicationOptionalClaims(in *msgraph.OptionalClaims) interface{} {
 	var result []map[string]interface{}
 
 	if in == nil {
@@ -533,7 +533,7 @@ func flattenApplicationOptionalClaims(in *models.OptionalClaims) interface{} {
 	return result
 }
 
-func flattenApplicationOptionalClaim(in *[]models.OptionalClaim) []interface{} {
+func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -561,7 +561,7 @@ func flattenApplicationOptionalClaim(in *[]models.OptionalClaim) []interface{} {
 	return optionalClaims
 }
 
-func flattenApplicationRequiredResourceAccess(in *[]models.RequiredResourceAccess) []map[string]interface{} {
+func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAccess) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -581,7 +581,7 @@ func flattenApplicationRequiredResourceAccess(in *[]models.RequiredResourceAcces
 	return result
 }
 
-func flattenApplicationResourceAccess(in *[]models.ResourceAccess) []interface{} {
+func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -17,7 +17,7 @@ import (
 func userDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.MsClient
 
-	var user models.User
+	var user msgraph.User
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		filter := fmt.Sprintf("userPrincipalName eq '%s'", upn)

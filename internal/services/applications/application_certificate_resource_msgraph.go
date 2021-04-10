@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
@@ -20,10 +20,10 @@ func applicationCertificateResourceCreateMsGraph(ctx context.Context, d *schema.
 	client := meta.(*clients.Client).Applications.MsClient
 	objectId := d.Get("application_object_id").(string)
 
-	credential, err := msgraph.KeyCredentialForResource(d)
+	credential, err := helpers.KeyCredentialForResource(d)
 	if err != nil {
 		attr := ""
-		if kerr, ok := err.(msgraph.CredentialError); ok {
+		if kerr, ok := err.(helpers.CredentialError); ok {
 			attr = kerr.Attr()
 		}
 		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for application with object ID %q", objectId)
@@ -42,7 +42,7 @@ func applicationCertificateResourceCreateMsGraph(ctx context.Context, d *schema.
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
-	newCredentials := make([]models.KeyCredential, 0)
+	newCredentials := make([]msgraph.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId == *credential.KeyId {
@@ -54,7 +54,7 @@ func applicationCertificateResourceCreateMsGraph(ctx context.Context, d *schema.
 
 	newCredentials = append(newCredentials, *credential)
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}
@@ -83,7 +83,7 @@ func applicationCertificateResourceReadMsGraph(ctx context.Context, d *schema.Re
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	var credential *models.KeyCredential
+	var credential *msgraph.KeyCredential
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
@@ -143,7 +143,7 @@ func applicationCertificateResourceDeleteMsGraph(ctx context.Context, d *schema.
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
 
-	newCredentials := make([]models.KeyCredential, 0)
+	newCredentials := make([]msgraph.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId != id.KeyId {
@@ -152,7 +152,7 @@ func applicationCertificateResourceDeleteMsGraph(ctx context.Context, d *schema.
 		}
 	}
 
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}

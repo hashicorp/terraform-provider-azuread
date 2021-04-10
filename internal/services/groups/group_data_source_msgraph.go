@@ -9,7 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -19,7 +19,7 @@ import (
 func groupDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.MsClient
 
-	var group models.Group
+	var group msgraph.Group
 	var displayName string
 
 	if v, ok := d.GetOk("display_name"); ok {

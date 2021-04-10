@@ -2,19 +2,19 @@ package client
 
 import (
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
-	"github.com/manicminer/hamilton/clients"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {
 	AadClient *graphrbac.ServicePrincipalsClient
-	MsClient  *clients.ServicePrincipalsClient
+	MsClient  *msgraph.ServicePrincipalsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
 	aadClient := graphrbac.NewServicePrincipalsClientWithBaseURI(o.AadGraphEndpoint, o.TenantID)
-	msClient := clients.NewServicePrincipalsClient(o.TenantID)
+	msClient := msgraph.NewServicePrincipalsClient(o.TenantID)
 	o.ConfigureClient(&msClient.BaseClient, &aadClient.Client)
 
 	return &Client{

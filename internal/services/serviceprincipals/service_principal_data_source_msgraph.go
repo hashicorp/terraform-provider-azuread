@@ -8,17 +8,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
 
 func servicePrincipalDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.MsClient
 
-	var servicePrincipal *models.ServicePrincipal
+	var servicePrincipal *msgraph.ServicePrincipal
 
 	if v, ok := d.GetOk("object_id"); ok {
 		objectId := v.(string)
@@ -92,10 +92,10 @@ func servicePrincipalDataSourceReadMsGraph(ctx context.Context, d *schema.Resour
 
 	d.SetId(*servicePrincipal.ID)
 
-	tf.Set(d, "app_roles", msgraph.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
+	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "oauth2_permissions", msgraph.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
 
 	return nil

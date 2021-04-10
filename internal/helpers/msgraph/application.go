@@ -7,13 +7,12 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/manicminer/hamilton/clients"
-	"github.com/manicminer/hamilton/models"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
-func ApplicationFindByName(ctx context.Context, client *clients.ApplicationsClient, displayName string) (*models.Application, error) {
+func ApplicationFindByName(ctx context.Context, client *msgraph.ApplicationsClient, displayName string) (*msgraph.Application, error) {
 	filter := fmt.Sprintf("displayName eq '%s'", displayName)
 	result, _, err := client.List(ctx, filter)
 	if err != nil {
@@ -31,7 +30,7 @@ func ApplicationFindByName(ctx context.Context, client *clients.ApplicationsClie
 	return nil, nil
 }
 
-func ApplicationFlattenAppRoles(in *[]models.AppRole) []map[string]interface{} {
+func ApplicationFlattenAppRoles(in *[]msgraph.AppRole) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -67,7 +66,7 @@ func ApplicationFlattenAppRoles(in *[]models.AppRole) []map[string]interface{} {
 	return appRoles
 }
 
-func ApplicationFlattenOAuth2Permissions(in *[]models.PermissionScope) []map[string]interface{} {
+func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -123,13 +122,13 @@ func ApplicationFlattenOAuth2Permissions(in *[]models.PermissionScope) []map[str
 	return result
 }
 
-func ApplicationSetAppRoles(ctx context.Context, client *clients.ApplicationsClient, application *models.Application, newRoles *[]models.AppRole) error {
+func ApplicationSetAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
 	if application.ID == nil {
 		return fmt.Errorf("Cannot use Application model with nil ID")
 	}
 
 	if newRoles == nil {
-		newRoles = &[]models.AppRole{}
+		newRoles = &[]msgraph.AppRole{}
 	}
 
 	// Roles must be disabled before they can be edited or removed.
@@ -150,7 +149,7 @@ func ApplicationSetAppRoles(ctx context.Context, client *clients.ApplicationsCli
 
 	// first disable any existing roles
 	if app.AppRoles != nil && len(*app.AppRoles) > 0 {
-		properties := models.Application{
+		properties := msgraph.Application{
 			ID:       application.ID,
 			AppRoles: app.AppRoles,
 		}
@@ -165,7 +164,7 @@ func ApplicationSetAppRoles(ctx context.Context, client *clients.ApplicationsCli
 	}
 
 	// then set the new roles
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID:       application.ID,
 		AppRoles: newRoles,
 	}
@@ -177,13 +176,13 @@ func ApplicationSetAppRoles(ctx context.Context, client *clients.ApplicationsCli
 	return nil
 }
 
-func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *clients.ApplicationsClient, application *models.Application, newScopes *[]models.PermissionScope) error {
+func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newScopes *[]msgraph.PermissionScope) error {
 	if application.ID == nil {
 		return fmt.Errorf("Cannot use Application model with nil ID")
 	}
 
 	if newScopes == nil {
-		newScopes = &[]models.PermissionScope{}
+		newScopes = &[]msgraph.PermissionScope{}
 	}
 
 	// OAuth2 Permission Scopes must be disabled before they can be edited or removed.
@@ -204,9 +203,9 @@ func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *clients.A
 
 	// first disable any existing scopes
 	if app.Api != nil && app.Api.OAuth2PermissionScopes != nil && len(*app.Api.OAuth2PermissionScopes) > 0 {
-		properties := models.Application{
+		properties := msgraph.Application{
 			ID: application.ID,
-			Api: &models.ApplicationApi{
+			Api: &msgraph.ApplicationApi{
 				OAuth2PermissionScopes: app.Api.OAuth2PermissionScopes,
 			},
 		}
@@ -221,9 +220,9 @@ func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *clients.A
 	}
 
 	// then set the new scopes
-	properties := models.Application{
+	properties := msgraph.Application{
 		ID: application.ID,
-		Api: &models.ApplicationApi{
+		Api: &msgraph.ApplicationApi{
 			OAuth2PermissionScopes: newScopes,
 		},
 	}
@@ -235,7 +234,7 @@ func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *clients.A
 	return nil
 }
 
-func ApplicationSetOwners(ctx context.Context, client *clients.ApplicationsClient, application *models.Application, desiredOwners []string) error {
+func ApplicationSetOwners(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, desiredOwners []string) error {
 	if application.ID == nil {
 		return fmt.Errorf("Cannot use Application model with nil ID")
 	}
@@ -267,7 +266,7 @@ func ApplicationSetOwners(ctx context.Context, client *clients.ApplicationsClien
 	return nil
 }
 
-func AppRoleFindById(app *models.Application, roleId string) (*models.AppRole, error) {
+func AppRoleFindById(app *msgraph.Application, roleId string) (*msgraph.AppRole, error) {
 	if app == nil || app.AppRoles == nil {
 		return nil, nil
 	}
@@ -288,7 +287,7 @@ func AppRoleFindById(app *models.Application, roleId string) (*models.AppRole, e
 	return nil, nil
 }
 
-func OAuth2PermissionFindById(app *models.Application, scopeId string) (*models.PermissionScope, error) {
+func OAuth2PermissionFindById(app *msgraph.Application, scopeId string) (*msgraph.PermissionScope, error) {
 	if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
 		return nil, nil
 	}
