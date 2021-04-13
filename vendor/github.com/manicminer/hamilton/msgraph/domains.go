@@ -32,18 +32,21 @@ func (c *DomainsClient) List(ctx context.Context) (*[]Domain, int, error) {
 	})
 
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("DomainsClient.BaseClient.Get(): %v", err)
 	}
 
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 
 	var data struct {
 		Domains []Domain `json:"value"`
 	}
 
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 
 	return &data.Domains, status, nil
@@ -60,13 +63,16 @@ func (c *DomainsClient) Get(ctx context.Context, id string) (*Domain, int, error
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("DomainsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var domain Domain
 	if err := json.Unmarshal(respBody, &domain); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &domain, status, nil
 }

@@ -36,15 +36,18 @@ func (c *GroupsClient) List(ctx context.Context, filter string) (*[]Group, int, 
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Groups []Group `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Groups, status, nil
 }
@@ -54,7 +57,7 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 	var status int
 	body, err := json.Marshal(group)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -65,13 +68,16 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newGroup Group
 	if err := json.Unmarshal(respBody, &newGroup); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newGroup, status, nil
 }
@@ -86,13 +92,16 @@ func (c *GroupsClient) Get(ctx context.Context, id string) (*Group, int, error) 
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var group Group
 	if err := json.Unmarshal(respBody, &group); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &group, status, nil
 }
@@ -102,7 +111,7 @@ func (c *GroupsClient) Update(ctx context.Context, group Group) (int, error) {
 	var status int
 	body, err := json.Marshal(group)
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
@@ -113,7 +122,7 @@ func (c *GroupsClient) Update(ctx context.Context, group Group) (int, error) {
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("GroupsClient.BaseClient.Patch(): %v", err)
 	}
 	return status, nil
 }
@@ -128,7 +137,7 @@ func (c *GroupsClient) Delete(ctx context.Context, id string) (int, error) {
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("GroupsClient.BaseClient.Delete(): %v", err)
 	}
 	return status, nil
 }
@@ -145,10 +154,13 @@ func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, i
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Members []struct {
 			Type string `json:"@odata.type"`
@@ -156,7 +168,7 @@ func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, i
 		} `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	ret := make([]string, len(data.Members))
 	for i, v := range data.Members {
@@ -178,10 +190,13 @@ func (c *GroupsClient) GetMember(ctx context.Context, groupId, memberId string) 
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Context string `json:"@odata.context"`
 		Type    string `json:"@odata.type"`
@@ -189,7 +204,7 @@ func (c *GroupsClient) GetMember(ctx context.Context, groupId, memberId string) 
 		Url     string `json:"url"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Id, status, nil
 }
@@ -218,7 +233,7 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 		}
 		body, err := json.Marshal(data)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 			Body:             body,
@@ -229,7 +244,7 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("GroupsClient.BaseClient.Patch(): %v", err)
 		}
 	}
 	return status, nil
@@ -257,7 +272,7 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("GroupsClient.BaseClient.Delete(): %v", err)
 		}
 	}
 	return status, nil
@@ -275,10 +290,13 @@ func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, in
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Owners []struct {
 			Type string `json:"@odata.type"`
@@ -286,7 +304,7 @@ func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, in
 		} `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	ret := make([]string, len(data.Owners))
 	for i, v := range data.Owners {
@@ -308,10 +326,13 @@ func (c *GroupsClient) GetOwner(ctx context.Context, groupId, ownerId string) (*
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Context string `json:"@odata.context"`
 		Type    string `json:"@odata.type"`
@@ -319,7 +340,7 @@ func (c *GroupsClient) GetOwner(ctx context.Context, groupId, ownerId string) (*
 		Url     string `json:"url"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Id, status, nil
 }
@@ -336,7 +357,7 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 		}
 		body, err := json.Marshal(data)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
@@ -347,7 +368,7 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("GroupsClient.BaseClient.Post(): %v", err)
 		}
 	}
 	return status, nil
@@ -375,7 +396,7 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("GroupsClient.BaseClient.Delete(): %v", err)
 		}
 	}
 	return status, nil
