@@ -55,6 +55,7 @@ var PublishedApis = map[string]ApiAppId{
 	"CortanaRuntimeService":             "81473081-50b9-469a-b9d8-303109583ecb",
 	"CustomerInsights":                  "38c77d00-5fcb-4cce-9d93-af4738258e3c",
 	"DataMigrationService":              "a4bad4aa-bf02-4631-9f78-a64ffdba8150",
+	"DomainControllerServices":          "2565bd9d-da50-47d4-8b85-4c97f669dc36",
 	"Dynamic365BusinessCentral":         "996def3d-b36c-4153-8607-a6fd3c01b89f",
 	"Dynamics365DataExportService":      "b861dbcc-a7ef-4219-a005-0e4de4ea7dcf",
 	"DynamicsCrm":                       "00000007-0000-0000-c000-000000000000",

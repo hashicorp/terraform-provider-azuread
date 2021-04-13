@@ -68,6 +68,7 @@ func NewClient(apiVersion ApiVersion, tenantId string) Client {
 		Endpoint:   environments.MsGraphGlobal.Endpoint,
 		ApiVersion: apiVersion,
 		TenantId:   tenantId,
+		UserAgent:  "Hamilton (Go-http-client/1.1)",
 		httpClient: http.DefaultClient,
 	}
 }
@@ -127,7 +128,7 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 
 		// Unmarshall odata
 		if err := json.Unmarshal(respBody, &o); err != nil {
-			return nil, status, nil, err
+			return nil, status, nil, fmt.Errorf("could not unmarshal odata: %s", err)
 		}
 
 		// Reassign the response body

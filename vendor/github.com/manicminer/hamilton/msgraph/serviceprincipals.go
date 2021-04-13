@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	odata2 "github.com/manicminer/hamilton/odata"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // ServicePrincipalsClient performs operations on Service Principals.
@@ -39,15 +40,18 @@ func (c *ServicePrincipalsClient) List(ctx context.Context, filter string) (*[]S
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		ServicePrincipals []ServicePrincipal `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.ServicePrincipals, status, nil
 }
@@ -57,7 +61,7 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 	var status int
 	body, err := json.Marshal(servicePrincipal)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -68,13 +72,16 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newServicePrincipal ServicePrincipal
 	if err := json.Unmarshal(respBody, &newServicePrincipal); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newServicePrincipal, status, nil
 }
@@ -89,13 +96,16 @@ func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*ServiceP
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var servicePrincipal ServicePrincipal
 	if err := json.Unmarshal(respBody, &servicePrincipal); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &servicePrincipal, status, nil
 }
@@ -108,7 +118,7 @@ func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal S
 	}
 	body, err := json.Marshal(servicePrincipal)
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
@@ -119,7 +129,7 @@ func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal S
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Patch(): %v", err)
 	}
 	return status, nil
 }
@@ -134,7 +144,7 @@ func (c *ServicePrincipalsClient) Delete(ctx context.Context, id string) (int, e
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Delete(): %v", err)
 	}
 	return status, nil
 }
@@ -151,10 +161,13 @@ func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Owners []struct {
 			Type string `json:"@odata.type"`
@@ -162,7 +175,7 @@ func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[
 		} `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	ret := make([]string, len(data.Owners))
 	for i, v := range data.Owners {
@@ -184,10 +197,13 @@ func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipal
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Context string `json:"@odata.context"`
 		Type    string `json:"@odata.type"`
@@ -195,7 +211,7 @@ func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipal
 		Url     string `json:"url"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Id, status, nil
 }
@@ -218,7 +234,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		}
 		body, err := json.Marshal(data)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
@@ -229,7 +245,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
 		}
 	}
 	return status, nil
@@ -253,7 +269,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 		}
 
 		// despite the above check, sometimes owners are just gone
-		checkOwnerGone := func(resp *http.Response, o *odata2.OData) bool {
+		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
 					re := regexp.MustCompile("One or more removed object references do not exist")
@@ -274,7 +290,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Delete(): %v", err)
 		}
 	}
 	return status, nil
@@ -295,15 +311,18 @@ func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id s
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Groups []Group `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Groups, status, nil
 }
