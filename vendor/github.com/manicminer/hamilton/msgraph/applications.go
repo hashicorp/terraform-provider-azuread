@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	odata2 "github.com/manicminer/hamilton/odata"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // ApplicationsClient performs operations on Applications.
@@ -39,15 +40,18 @@ func (c *ApplicationsClient) List(ctx context.Context, filter string) (*[]Applic
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Applications []Application `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Applications, status, nil
 }
@@ -57,7 +61,7 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 	var status int
 	body, err := json.Marshal(application)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -68,13 +72,16 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newApplication Application
 	if err := json.Unmarshal(respBody, &newApplication); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newApplication, status, nil
 }
@@ -89,13 +96,16 @@ func (c *ApplicationsClient) Get(ctx context.Context, id string) (*Application, 
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var application Application
 	if err := json.Unmarshal(respBody, &application); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &application, status, nil
 }
@@ -104,11 +114,11 @@ func (c *ApplicationsClient) Get(ctx context.Context, id string) (*Application, 
 func (c *ApplicationsClient) Update(ctx context.Context, application Application) (int, error) {
 	var status int
 	if application.ID == nil {
-		return status, errors.New("cannot update application with nil ID")
+		return status, errors.New("ApplicationsClient.Update(): cannot update application with nil ID")
 	}
 	body, err := json.Marshal(application)
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
@@ -119,7 +129,7 @@ func (c *ApplicationsClient) Update(ctx context.Context, application Application
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Patch(): %v", err)
 	}
 	return status, nil
 }
@@ -134,7 +144,7 @@ func (c *ApplicationsClient) Delete(ctx context.Context, id string) (int, error)
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Delete(): %v", err)
 	}
 	return status, nil
 }
@@ -144,7 +154,7 @@ func (c *ApplicationsClient) AddKey(ctx context.Context, applicationId string, k
 	var status int
 	body, err := json.Marshal(keyCredential)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -155,13 +165,16 @@ func (c *ApplicationsClient) AddKey(ctx context.Context, applicationId string, k
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newKeyCredential KeyCredential
 	if err := json.Unmarshal(respBody, &newKeyCredential); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newKeyCredential, status, nil
 }
@@ -178,10 +191,13 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Owners []struct {
 			Type string `json:"@odata.type"`
@@ -189,7 +205,7 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 		} `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	ret := make([]string, len(data.Owners))
 	for i, v := range data.Owners {
@@ -211,10 +227,13 @@ func (c *ApplicationsClient) GetOwner(ctx context.Context, applicationId, ownerI
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var data struct {
 		Context string `json:"@odata.context"`
 		Type    string `json:"@odata.type"`
@@ -222,7 +241,7 @@ func (c *ApplicationsClient) GetOwner(ctx context.Context, applicationId, ownerI
 		Url     string `json:"url"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Id, status, nil
 }
@@ -239,7 +258,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 	}
 	for _, owner := range *application.Owners {
 		// don't fail if an owner already exists
-		checkOwnerAlreadyExists := func(resp *http.Response, o *odata2.OData) bool {
+		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
 					re := regexp.MustCompile("One or more added object references already exist")
@@ -258,7 +277,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 		}
 		body, err := json.Marshal(data)
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
@@ -270,7 +289,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
 		}
 	}
 	return status, nil
@@ -294,7 +313,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 		}
 
 		// despite the above check, sometimes owners are just gone
-		checkOwnerGone := func(resp *http.Response, o *odata2.OData) bool {
+		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
 					re := regexp.MustCompile("One or more removed object references do not exist")
@@ -316,7 +335,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 			},
 		})
 		if err != nil {
-			return status, err
+			return status, fmt.Errorf("ApplicationsClient.BaseClient.Delete(): %v", err)
 		}
 	}
 	return status, nil

@@ -219,6 +219,10 @@ func (a *ApplicationApi) UpdateOAuth2PermissionScope(scope PermissionScope) erro
 	return nil
 }
 
+type ApplicationEnforcedRestrictionsSessionControl struct {
+	IsEnabled *bool `json:"isEnabled,omitempty"`
+}
+
 type ApplicationWeb struct {
 	HomePageUrl           *string                `json:"homePageUrl"`
 	ImplicitGrantSettings *ImplicitGrantSettings `json:"implicitGrantSettings,omitempty"`
@@ -234,6 +238,95 @@ type AppRole struct {
 	IsEnabled          *bool     `json:"isEnabled,omitempty"`
 	Origin             *string   `json:"origin,omitempty"`
 	Value              *string   `json:"value,omitempty"`
+}
+
+type BaseNamedLocation struct {
+	ODataType        *string    `json:"@odata.type,omitempty"`
+	ID               *string    `json:"id,omitempty"`
+	DisplayName      *string    `json:"displayName,omitempty"`
+	CreatedDateTime  *time.Time `json:"createdDateTime,omitempty"`
+	ModifiedDateTime *time.Time `json:"modifiedDateTime,omitempty"`
+}
+
+type CloudAppSecurityControl struct {
+	IsEnabled            *bool   `json:"isEnabled,omitempty"`
+	CloudAppSecurityType *string `json:"cloudAppSecurityType,omitempty"`
+}
+
+// ConditionalAccessPolicy describes an Conditional Access Policy object.
+type ConditionalAccessPolicy struct {
+	Conditions       *ConditionalAccessConditionSet    `json:"conditions,omitempty"`
+	CreatedDateTime  *time.Time                        `json:"createdDateTime,omitempty"`
+	DisplayName      *string                           `json:"displayName,omitempty"`
+	GrantControls    *ConditionalAccessGrantControls   `json:"grantControls,omitempty"`
+	ID               *string                           `json:"id,omitempty"`
+	ModifiedDateTime *time.Time                        `json:"modifiedDateTime,omitempty"`
+	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls,omitempty"`
+	State            *string                           `json:"state,omitempty"`
+}
+
+type ConditionalAccessConditionSet struct {
+	Applications     *ConditionalAccessApplications `json:"applications,omitempty"`
+	Users            *ConditionalAccessUsers        `json:"users,omitempty"`
+	ClientAppTypes   *[]string                      `json:"clientAppTypes,omitempty"`
+	Locations        *ConditionalAccessLocations    `json:"locations,omitempty"`
+	Platforms        *ConditionalAccessPlatforms    `json:"platforms,omitempty"`
+	SignInRiskLevels *[]string                      `json:"signInRiskLevels,omitempty"`
+	UserRiskLevels   *[]string                      `json:"userRiskLevels,omitempty"`
+}
+
+type ConditionalAccessApplications struct {
+	IncludeApplications *[]string `json:"includeApplications,omitempty"`
+	ExcludeApplications *[]string `json:"excludeApplications,omitempty"`
+	IncludeUserActions  *[]string `json:"includeUserActions,omitempty"`
+}
+
+type ConditionalAccessUsers struct {
+	IncludeUsers  *[]string `json:"includeUsers,omitempty"`
+	ExcludeUsers  *[]string `json:"excludeUsers,omitempty"`
+	IncludeGroups *[]string `json:"includeGroups,omitempty"`
+	ExcludeGroups *[]string `json:"excludeGroups,omitempty"`
+	IncludeRoles  *[]string `json:"includeRoles,omitempty"`
+	ExcludeRoles  *[]string `json:"excludeRoles,omitempty"`
+}
+
+type ConditionalAccessLocations struct {
+	IncludeLocations *[]string `json:"includeLocations,omitempty"`
+	ExcludeLocations *[]string `json:"excludeLocations,omitempty"`
+}
+
+type ConditionalAccessPlatforms struct {
+	IncludePlatforms *[]string `json:"includePlatforms,omitempty"`
+	ExcludePlatforms *[]string `json:"excludePlatforms,omitempty"`
+}
+
+type ConditionalAccessGrantControls struct {
+	Operator                    *string   `json:"operator,omitempty"`
+	BuiltInControls             *[]string `json:"builtInControls,omitempty"`
+	CustomAuthenticationFactors *[]string `json:"customAuthenticationFactors,omitempty"`
+	TermsOfUse                  *[]string `json:"termsOfUse,omitempty"`
+}
+
+type ConditionalAccessSessionControls struct {
+	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions,omitempty"`
+	CloudAppSecurity                *CloudAppSecurityControl                       `json:"cloudAppSecurity,omitempty"`
+	PersistentBrowser               *PersistentBrowserSessionControl               `json:"persistentBrowser,omitempty"`
+	SignInFrequency                 *SignInFrequencySessionControl                 `json:"signInFrequency,omitempty"`
+}
+
+// CountryNamedLocation describes an Country Named Location object.
+type CountryNamedLocation struct {
+	*BaseNamedLocation
+	CountriesAndRegions               *[]string `json:"countriesAndRegions,omitempty"`
+	IncludeUnknownCountriesAndRegions *bool     `json:"includeUnknownCountriesAndRegions,omitempty"`
+}
+
+// DirectoryRoleTemplate describes a Directory Role Template.
+type DirectoryRoleTemplate struct {
+	ID              *string    `json:"id,omitempty"`
+	DeletedDateTime *time.Time `json:"deletedDateTime,omitempty"`
+	Description     *string    `json:"description,omitempty"`
+	DisplayName     *string    `json:"displayName,omitempty"`
 }
 
 // Domain describes a Domain object.
@@ -381,6 +474,17 @@ type InvitedUserMessageInfo struct {
 	MessageLanguage       *string      `json:"messageLanguage,omitempty"`
 }
 
+// IPNamedLocation describes an IP Named Location object.
+type IPNamedLocation struct {
+	*BaseNamedLocation
+	IPRanges  *[]IPNamedLocationIPRange `json:"ipRanges,omitempty"`
+	IsTrusted *bool                     `json:"isTrusted,omitempty"`
+}
+
+type IPNamedLocationIPRange struct {
+	CIDRAddress *string `json:"cidrAddress,omitempty"`
+}
+
 type KerberosSignOnSettings struct {
 	ServicePrincipalName       *string `json:"kerberosServicePrincipalName,omitempty"`
 	SignOnMappingAttributeType *string `jsonL:"kerberosSignOnMappingAttributeType,omitempty"`
@@ -404,6 +508,8 @@ type Me struct {
 	DisplayName       *string `json:"displayName"`
 	UserPrincipalName *string `json:"userPrincipalName"`
 }
+
+type NamedLocation interface{}
 
 type OnPremisesPublishing struct {
 	AlternateUrl                  *string `json:"alternateUrl,omitempty"`
@@ -480,6 +586,11 @@ type PermissionScope struct {
 	UserConsentDescription  *string `json:"userConsentDescription,omitempty"`
 	UserConsentDisplayName  *string `json:"userConsentDisplayName,omitempty"`
 	Value                   *string `json:"value,omitempty"`
+}
+
+type PersistentBrowserSessionControl struct {
+	IsEnabled *bool   `json:"isEnabled,omitempty"`
+	Mode      *string `json:"mode,omitempty"`
 }
 
 type PublicClient struct {
@@ -559,6 +670,12 @@ const (
 	SignInAudienceAzureADMultipleOrgs                SignInAudience = "AzureADMultipleOrgs"
 	SignInAudienceAzureADandPersonalMicrosoftAccount SignInAudience = "AzureADandPersonalMicrosoftAccount"
 )
+
+type SignInFrequencySessionControl struct {
+	IsEnabled *bool   `json:"isEnabled,omitempty"`
+	Type      *string `json:"type,omitempty"`
+	Value     *int32  `json:"value,omitempty"`
+}
 
 type SingleSignOnField struct {
 	CustomizedLabel *string `json:"customizedLabel,omitempty"`
