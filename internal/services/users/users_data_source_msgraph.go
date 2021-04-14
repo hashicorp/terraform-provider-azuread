@@ -98,10 +98,10 @@ func usersDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, met
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(users)), "Unexpected number of users returned")
 	}
 
-	upns := make([]string, 0, len(users))
-	objectIds := make([]string, 0, len(users))
-	mailNicknames := make([]string, 0, len(users))
-	userList := make([]map[string]interface{}, 0, len(users))
+	upns := make([]string, 0)
+	objectIds := make([]string, 0)
+	mailNicknames := make([]string, 0)
+	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
 		if u.ID == nil || u.UserPrincipalName == nil {
 			return tf.ErrorDiagF(errors.New("API returned user with nil object ID or userPrincipalName"), "Bad API Response")
