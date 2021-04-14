@@ -7,11 +7,11 @@ import (
 )
 
 type Client struct {
-	MsClient  *msgraph.ApplicationsClient
+	MsClient *msgraph.ConditionalAccessPolicyClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewApplicationsClient(o.TenantID)
+	msClient := msgraph.NewConditionalAccessPolicyClient(o.TenantID)
 	o.ConfigureClient(&msClient.BaseClient, nil)
 
 	return &Client{
