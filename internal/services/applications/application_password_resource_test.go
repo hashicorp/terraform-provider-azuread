@@ -94,8 +94,8 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("parsing Application Password ID: %v", err)
 	}
 
-	//switch clients.EnableMsGraphBeta {
-	//case true:
+	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
+	//if clients.EnableMsGraphBeta {
 	//	app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
 	//	if err != nil {
 	//		if status == http.StatusNotFound {
@@ -111,8 +111,7 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	//			}
 	//		}
 	//	}
-	//
-	//case false:
+	//} else {
 	resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {

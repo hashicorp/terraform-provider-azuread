@@ -100,8 +100,7 @@ func TestAccUser_threeUsersABC(t *testing.T) {
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		user, status, err := clients.Users.MsClient.Get(ctx, state.ID)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -110,8 +109,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 			return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
 		}
 		id = user.ID
-
-	case false:
+	} else {
 		resp, err := clients.Users.AadClient.Get(ctx, state.ID)
 
 		if err != nil {

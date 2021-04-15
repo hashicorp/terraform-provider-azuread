@@ -261,7 +261,7 @@ func applicationDataSource() *schema.Resource {
 }
 
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationDataSourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationDataSourceReadAadGraph(ctx, d, meta)

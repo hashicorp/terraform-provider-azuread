@@ -247,8 +247,7 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		group, status, err := clients.Groups.MsClient.Get(ctx, state.ID)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -257,8 +256,7 @@ func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, stat
 			return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
 		}
 		id = group.ID
-
-	case false:
+	} else {
 		resp, err := clients.Groups.AadClient.Get(ctx, state.ID)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {

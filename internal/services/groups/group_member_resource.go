@@ -44,21 +44,21 @@ func groupMemberResource() *schema.Resource {
 }
 
 func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return groupMemberResourceCreateMsGraph(ctx, d, meta)
 	}
 	return groupMemberResourceCreateAadGraph(ctx, d, meta)
 }
 
 func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return groupMemberResourceReadMsGraph(ctx, d, meta)
 	}
 	return groupMemberResourceReadAadGraph(ctx, d, meta)
 }
 
 func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return groupMemberResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return groupMemberResourceDeleteAadGraph(ctx, d, meta)

@@ -83,21 +83,21 @@ func applicationAppRoleResource() *schema.Resource {
 }
 
 func applicationAppRoleResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationAppRoleResourceCreateUpdateMsGraph(ctx, d, meta)
 	}
 	return applicationAppRoleResourceCreateUpdateAadGraph(ctx, d, meta)
 }
 
 func applicationAppRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationAppRoleResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationAppRoleResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationAppRoleResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationAppRoleResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return applicationAppRoleResourceDeleteAadGraph(ctx, d, meta)

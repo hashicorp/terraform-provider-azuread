@@ -92,21 +92,21 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 }
 
 func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx, d, meta)
 }
 
 func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceDeleteAadGraph(ctx, d, meta)

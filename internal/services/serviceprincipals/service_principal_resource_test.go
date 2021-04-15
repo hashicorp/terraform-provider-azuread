@@ -79,8 +79,7 @@ func TestAccServicePrincipal_update(t *testing.T) {
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, state.ID)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -89,8 +88,7 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
 		}
 		id = app.ID
-
-	case false:
+	} else {
 		resp, err := clients.ServicePrincipals.AadClient.Get(ctx, state.ID)
 
 		if err != nil {

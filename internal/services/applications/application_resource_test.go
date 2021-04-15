@@ -52,7 +52,7 @@ func TestAccApplication_basicDeprecated(t *testing.T) {
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
 		},
-		//data.ImportStep(),
+		data.ImportStep(),
 	})
 }
 
@@ -460,8 +460,7 @@ func TestAccApplication_ownersUpdate(t *testing.T) {
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.Applications.MsClient.Get(ctx, state.ID)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -470,8 +469,7 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
 		}
 		id = app.ID
-
-	case false:
+	} else {
 		resp, err := clients.Applications.AadClient.Get(ctx, state.ID)
 
 		if err != nil {

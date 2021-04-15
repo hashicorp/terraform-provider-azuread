@@ -69,28 +69,28 @@ func servicePrincipalResource() *schema.Resource {
 }
 
 func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return servicePrincipalResourceCreateMsGraph(ctx, d, meta)
 	}
 	return servicePrincipalResourceCreateAadGraph(ctx, d, meta)
 }
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return servicePrincipalResourceUpdateMsGraph(ctx, d, meta)
 	}
 	return servicePrincipalResourceUpdateAadGraph(ctx, d, meta)
 }
 
 func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return servicePrincipalResourceReadMsGraph(ctx, d, meta)
 	}
 	return servicePrincipalResourceReadAadGraph(ctx, d, meta)
 }
 
 func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return servicePrincipalResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return servicePrincipalResourceDeleteAadGraph(ctx, d, meta)

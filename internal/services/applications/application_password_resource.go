@@ -110,21 +110,21 @@ func applicationPasswordResource() *schema.Resource {
 // "New password credentials must be generated using service actions"
 
 func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return applicationPasswordResourceCreateMsGraph(ctx, d, meta)
 	//}
 	return applicationPasswordResourceCreateAadGraph(ctx, d, meta)
 }
 
 func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return applicationPasswordResourceReadMsGraph(ctx, d, meta)
 	//}
 	return applicationPasswordResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationPasswordResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return applicationPasswordResourceDeleteMsGraph(ctx, d, meta)
 	//}
 	return applicationPasswordResourceDeleteAadGraph(ctx, d, meta)

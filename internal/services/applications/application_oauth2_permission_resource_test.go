@@ -105,8 +105,7 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 		return nil, fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
 	}
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -121,8 +120,7 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 		} else if role != nil {
 			return utils.Bool(true), nil
 		}
-
-	case false:
+	} else {
 		resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {

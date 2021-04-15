@@ -98,21 +98,21 @@ func applicationCertificateResource() *schema.Resource {
 }
 
 func applicationCertificateResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationCertificateResourceCreateMsGraph(ctx, d, meta)
 	}
 	return applicationCertificateResourceCreateAadGraph(ctx, d, meta)
 }
 
 func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationCertificateResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationCertificateResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationCertificateResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationCertificateResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return applicationCertificateResourceDeleteAadGraph(ctx, d, meta)

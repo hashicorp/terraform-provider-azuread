@@ -47,7 +47,7 @@ func servicePrincipalData() *schema.Resource {
 }
 
 func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return servicePrincipalDataSourceReadMsGraph(ctx, d, meta)
 	}
 	return servicePrincipalDataSourceReadAadGraph(ctx, d, meta)

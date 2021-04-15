@@ -126,7 +126,7 @@ func usersData() *schema.Resource {
 }
 
 func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return usersDataSourceReadMsGraph(ctx, d, meta)
 	}
 	return usersDataSourceReadAadGraph(ctx, d, meta)

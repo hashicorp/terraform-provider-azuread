@@ -175,8 +175,7 @@ func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 		return nil, fmt.Errorf("parsing Service Principal Certificate ID: %v", err)
 	}
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -192,8 +191,7 @@ func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 				}
 			}
 		}
-
-	case false:
+	} else {
 		resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {

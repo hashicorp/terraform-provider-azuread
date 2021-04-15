@@ -175,8 +175,7 @@ func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clien
 		return nil, fmt.Errorf("parsing Application Certificate ID: %v", err)
 	}
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -192,8 +191,7 @@ func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clien
 				}
 			}
 		}
-
-	case false:
+	} else {
 		resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
