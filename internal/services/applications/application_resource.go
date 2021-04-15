@@ -386,7 +386,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 		}
 	}
 
-	encountered := make([]string, len(values))
+	encountered := make([]string, 0)
 	for _, val := range values {
 		for _, en := range encountered {
 			if en == val {

@@ -69,8 +69,8 @@ func groupsDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, me
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
-	newDisplayNames := make([]string, 0, len(groups))
-	newObjectIds := make([]string, 0, len(groups))
+	newDisplayNames := make([]string, 0)
+	newObjectIds := make([]string, 0)
 	for _, group := range groups {
 		if group.ID == nil || group.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API response")

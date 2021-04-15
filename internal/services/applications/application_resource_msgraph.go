@@ -371,7 +371,7 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 		return nil
 	}
 
-	result := make([]msgraph.AppRole, 0, len(input))
+	result := make([]msgraph.AppRole, 0)
 	for _, appRoleRaw := range input {
 		appRole := appRoleRaw.(map[string]interface{})
 
@@ -446,12 +446,12 @@ func expandApplicationOptionalClaims(in []interface{}) *msgraph.OptionalClaims {
 }
 
 func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
-	result := make([]msgraph.OptionalClaim, 0, len(in))
+	result := make([]msgraph.OptionalClaim, 0)
 
 	for _, optionalClaimRaw := range in {
 		optionalClaim := optionalClaimRaw.(map[string]interface{})
 
-		additionalProps := make([]string, 0, 10)
+		additionalProps := make([]string, 0)
 		if props, ok := optionalClaim["additional_properties"]; ok && props != nil {
 			for _, prop := range props.([]interface{}) {
 				additionalProps = append(additionalProps, prop.(string))
@@ -475,7 +475,7 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 }
 
 func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.RequiredResourceAccess {
-	result := make([]msgraph.RequiredResourceAccess, 0, len(in))
+	result := make([]msgraph.RequiredResourceAccess, 0)
 
 	for _, raw := range in {
 		requiredResourceAccess := raw.(map[string]interface{})
@@ -492,7 +492,7 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.Requir
 }
 
 func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess {
-	result := make([]msgraph.ResourceAccess, 0, len(in))
+	result := make([]msgraph.ResourceAccess, 0)
 
 	for _, resourceAccessRaw := range in {
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
@@ -538,7 +538,7 @@ func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} 
 		return []interface{}{}
 	}
 
-	optionalClaims := make([]interface{}, 0, len(*in))
+	optionalClaims := make([]interface{}, 0)
 	for _, claim := range *in {
 		optionalClaim := map[string]interface{}{
 			"name":      claim.Name,
@@ -566,7 +566,7 @@ func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAcce
 		return []map[string]interface{}{}
 	}
 
-	result := make([]map[string]interface{}, 0, len(*in))
+	result := make([]map[string]interface{}, 0)
 	for _, requiredResourceAccess := range *in {
 		resource := make(map[string]interface{})
 		if requiredResourceAccess.ResourceAppId != nil {
@@ -586,7 +586,7 @@ func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{
 		return []interface{}{}
 	}
 
-	accesses := make([]interface{}, 0, len(*in))
+	accesses := make([]interface{}, 0)
 	for _, resourceAccess := range *in {
 		access := make(map[string]interface{})
 		if resourceAccess.ID != nil {
