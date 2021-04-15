@@ -2,6 +2,7 @@ package applications
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -47,7 +48,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		Value:                   utils.String(d.Get("value").(string)),
 	}
 
-	id := parse.NewOAuth2PermissionID(objectId, *scope.ID)
+	id := parse.NewOAuth2PermissionID(objectId, permissionId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -151,8 +152,7 @@ func applicationOAuth2PermissionResourceDeleteMsGraph(ctx context.Context, d *sc
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 	}

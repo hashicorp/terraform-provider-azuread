@@ -3,6 +3,7 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -230,10 +231,9 @@ func groupResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, met
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Group with ID %q was already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", d.Id())
 		}
-		return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", d.Id())
 	}
 
 	if _, err := client.Delete(ctx, d.Id()); err != nil {

@@ -2,6 +2,7 @@ package applications
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -133,8 +134,7 @@ func applicationPasswordResourceDeleteMsGraph(ctx context.Context, d *schema.Res
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}

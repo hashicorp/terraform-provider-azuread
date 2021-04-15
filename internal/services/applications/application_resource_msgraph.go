@@ -362,8 +362,7 @@ func applicationResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceDat
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with Object ID %q already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", d.Id())
 		}
 
 		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", d.Id())

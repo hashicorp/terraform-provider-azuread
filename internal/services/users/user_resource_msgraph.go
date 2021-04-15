@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -269,8 +270,7 @@ func userResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, meta
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] User with Object ID %q already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", d.Id())
 		}
 
 		return tf.ErrorDiagPathF(err, "id", "Retrieving user with object ID %q", d.Id())
