@@ -317,18 +317,29 @@ func applicationResourceReadMsGraph(ctx context.Context, d *schema.ResourceData,
 	}
 	tf.Set(d, "type", appType)
 
+	// TODO: v2.0 set these in a ApplicationFlattenApi func
+	var oauth2Permissions []map[string]interface{}
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
+		oauth2Permissions = helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes)
 	}
+	tf.Set(d, "oauth2_permissions", oauth2Permissions)
 
+	// TODO: v2.0 set these in a ApplicationFlattenWeb func
+	var homepage, logoutUrl *string
+	var oauth2AllowImplicitFlow *bool
+	var replyUrls []interface{}
 	if app.Web != nil {
-		tf.Set(d, "homepage", app.Web.HomePageUrl)
-		tf.Set(d, "logout_url", app.Web.LogoutUrl)
-		tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.Web.RedirectUris))
+		homepage = app.Web.HomePageUrl
+		logoutUrl = app.Web.LogoutUrl
+		replyUrls = tf.FlattenStringSlicePtr(app.Web.RedirectUris)
 		if app.Web.ImplicitGrantSettings != nil {
-			tf.Set(d, "oauth2_allow_implicit_flow", app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance)
+			oauth2AllowImplicitFlow = app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance
 		}
 	}
+	tf.Set(d, "homepage", homepage)
+	tf.Set(d, "logout_url", logoutUrl)
+	tf.Set(d, "oauth2_allow_implicit_flow", oauth2AllowImplicitFlow)
+	tf.Set(d, "reply_urls", replyUrls)
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
