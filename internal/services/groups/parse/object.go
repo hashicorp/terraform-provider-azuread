@@ -42,7 +42,7 @@ func ObjectSubResourceID(idString, expectedType string) (*ObjectSubResourceId, e
 	}
 
 	if id.Type == "" {
-		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} should not blank")
+		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} should not be empty")
 	}
 
 	if id.Type != expectedType {
