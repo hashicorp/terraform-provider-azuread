@@ -16,10 +16,13 @@ func GroupCheckNameAvailability(ctx context.Context, client *msgraph.GroupsClien
 	}
 
 	for _, r := range *result {
+		if r.ID == nil {
+			return nil, fmt.Errorf("group returned with nil ID")
+		}
 		if existingID != nil && *existingID == *r.ID {
 			continue
 		}
-		if strings.EqualFold(displayName, *r.DisplayName) {
+		if r.DisplayName != nil && strings.EqualFold(displayName, *r.DisplayName) {
 			return r.ID, nil
 		}
 	}

@@ -63,7 +63,7 @@ func DirectoryObjectListToIDs(ctx context.Context, objects graphrbac.DirectoryOb
 		user, _ := v.AsUser()
 		if user != nil {
 			if user.ObjectID == nil {
-				return nil, fmt.Errorf("user with null object ID encountered %s", errBase)
+				return nil, fmt.Errorf("user with nil object ID encountered %s", errBase)
 			}
 			ids = append(ids, *user.ObjectID)
 		}
@@ -71,7 +71,7 @@ func DirectoryObjectListToIDs(ctx context.Context, objects graphrbac.DirectoryOb
 		group, _ := v.AsADGroup()
 		if group != nil {
 			if group.ObjectID == nil {
-				return nil, fmt.Errorf("group with null object ID encountered %s", errBase)
+				return nil, fmt.Errorf("group with nil object ID encountered %s", errBase)
 			}
 			ids = append(ids, *group.ObjectID)
 		}
@@ -79,7 +79,7 @@ func DirectoryObjectListToIDs(ctx context.Context, objects graphrbac.DirectoryOb
 		servicePrincipal, _ := v.AsServicePrincipal()
 		if servicePrincipal != nil {
 			if servicePrincipal.ObjectID == nil {
-				return nil, fmt.Errorf("service principal with null object ID encountered %s", errBase)
+				return nil, fmt.Errorf("service principal with nil object ID encountered %s", errBase)
 			}
 			ids = append(ids, *servicePrincipal.ObjectID)
 		}

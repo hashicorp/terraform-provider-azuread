@@ -80,7 +80,7 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(*group.ID)
 
-	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, func() (interface{}, int, error) {
 		return client.Get(ctx, *group.ID)
 	})
 

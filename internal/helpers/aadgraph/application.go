@@ -2,7 +2,6 @@ package aadgraph
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -209,7 +208,7 @@ func AppRoleFindById(app graphrbac.Application, roleId string) (*graphrbac.AppRo
 	}
 
 	if roleId == "" {
-		return nil, errors.New("specified role ID is blank")
+		return nil, fmt.Errorf("specified role ID is empty")
 	}
 
 	for _, r := range *app.AppRoles {
@@ -225,9 +224,9 @@ func AppRoleFindById(app graphrbac.Application, roleId string) (*graphrbac.AppRo
 
 func AppRoleAdd(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]graphrbac.AppRole, error) {
 	if role == nil {
-		return nil, errors.New("role to be added is null")
+		return nil, fmt.Errorf("role to be added is nil")
 	} else if role.ID == nil {
-		return nil, errors.New("ID of new role is null")
+		return nil, fmt.Errorf("ID of new role is nil")
 	}
 
 	cap := 1
@@ -252,7 +251,7 @@ func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]grap
 	newRoles := make([]graphrbac.AppRole, len(*roles))
 
 	if role.ID == nil {
-		return nil, errors.New("ID of role to be updated is null")
+		return nil, fmt.Errorf("ID of role to be updated is nil")
 	}
 
 	for i, v := range *roles {
@@ -271,9 +270,9 @@ func AppRoleUpdate(roles *[]graphrbac.AppRole, role *graphrbac.AppRole) (*[]grap
 
 func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]graphrbac.AppRole, error) {
 	if existing == nil {
-		return nil, errors.New("existing roles are null")
+		return nil, fmt.Errorf("existing roles are nil")
 	} else if roleId == "" {
-		return nil, errors.New("ID of role to be updated is blank")
+		return nil, fmt.Errorf("ID of role to be updated is empty")
 	}
 
 	newRoles := make([]graphrbac.AppRole, len(*existing))
@@ -293,9 +292,9 @@ func AppRoleResultDisableById(existing *[]graphrbac.AppRole, roleId string) (*[]
 
 func AppRoleResultRemoveById(existing *[]graphrbac.AppRole, roleId string) (*[]graphrbac.AppRole, error) {
 	if existing == nil {
-		return nil, errors.New("existing roles are null")
+		return nil, fmt.Errorf("existing roles are nil")
 	} else if roleId == "" {
-		return nil, errors.New("ID of role to be disabled is empty")
+		return nil, fmt.Errorf("ID of role to be disabled is empty")
 	}
 
 	newRoles := make([]graphrbac.AppRole, 0)
@@ -369,7 +368,7 @@ func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (*
 	}
 
 	if permissionId == "" {
-		return nil, errors.New("specified permission ID is blank")
+		return nil, fmt.Errorf("specified permission ID is empty")
 	}
 
 	for _, r := range *app.Oauth2Permissions {
@@ -385,9 +384,9 @@ func OAuth2PermissionFindById(app graphrbac.Application, permissionId string) (*
 
 func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
 	if permission == nil {
-		return nil, errors.New("permission to be added is null")
+		return nil, fmt.Errorf("permission to be added is nil")
 	} else if permission.ID == nil {
-		return nil, errors.New("ID of new permission is null")
+		return nil, fmt.Errorf("ID of new permission is nil")
 	}
 
 	cap := 1
@@ -412,11 +411,11 @@ func OAuth2PermissionAdd(permissions *[]graphrbac.OAuth2Permission, permission *
 
 func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permission *graphrbac.OAuth2Permission) (*[]graphrbac.OAuth2Permission, error) {
 	if permission == nil {
-		return nil, errors.New("permission to be added is null")
+		return nil, fmt.Errorf("permission to be added is nil")
 	} else if permission.ID == nil {
-		return nil, errors.New("ID of new permission is null")
+		return nil, fmt.Errorf("ID of new permission is nil")
 	} else if permissions == nil {
-		return nil, errors.New("permissions cannot be null when updating")
+		return nil, fmt.Errorf("permissions cannot be nil when updating")
 	}
 
 	newPermissions := make([]graphrbac.OAuth2Permission, len(*permissions))
@@ -437,9 +436,9 @@ func OAuth2PermissionUpdate(permissions *[]graphrbac.OAuth2Permission, permissio
 
 func OAuth2PermissionResultDisableById(existing *[]graphrbac.OAuth2Permission, permissionId string) (*[]graphrbac.OAuth2Permission, error) {
 	if existing == nil {
-		return nil, errors.New("existing permissions are null")
+		return nil, fmt.Errorf("existing permissions are nil")
 	} else if permissionId == "" {
-		return nil, errors.New("ID of permission to be disabled is empty")
+		return nil, fmt.Errorf("ID of permission to be disabled is empty")
 	}
 
 	newPermissions := make([]graphrbac.OAuth2Permission, len(*existing))
@@ -459,9 +458,9 @@ func OAuth2PermissionResultDisableById(existing *[]graphrbac.OAuth2Permission, p
 
 func OAuth2PermissionResultRemoveById(existing *[]graphrbac.OAuth2Permission, permissionId string) (*[]graphrbac.OAuth2Permission, error) {
 	if existing == nil {
-		return nil, errors.New("existing permissions are null")
+		return nil, fmt.Errorf("existing permissions are nil")
 	} else if permissionId == "" {
-		return nil, errors.New("ID of permission to be disabled is empty")
+		return nil, fmt.Errorf("ID of permission to be disabled is empty")
 	}
 
 	newPermissions := make([]graphrbac.OAuth2Permission, 0)

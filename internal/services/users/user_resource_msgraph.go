@@ -112,7 +112,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*user.ID)
 
-	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, func() (interface{}, int, error) {
 		return client.Get(ctx, *user.ID)
 	})
 
