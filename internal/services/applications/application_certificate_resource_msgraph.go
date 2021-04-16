@@ -2,6 +2,7 @@ package applications
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,9 @@ func applicationCertificateResourceCreateMsGraph(ctx context.Context, d *schema.
 		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for application with object ID %q", objectId)
 	}
 
+	if credential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
+	}
 	id := parse.NewCredentialID(objectId, "certificate", *credential.KeyId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)

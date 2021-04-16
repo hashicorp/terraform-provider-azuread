@@ -2,6 +2,7 @@ package applications
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,9 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for application with object ID %q", objectId)
 	}
 
+	if credential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("keyId for password credential is nil"), "Creating password credential")
+	}
 	id := parse.NewCredentialID(objectId, "password", *credential.KeyId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)

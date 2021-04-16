@@ -2,6 +2,7 @@ package serviceprincipals
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,9 @@ func servicePrincipalCertificateResourceCreateMsGraph(ctx context.Context, d *sc
 		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for service principal with object ID %q", objectId)
 	}
 
+	if credential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
+	}
 	id := parse.NewCredentialID(objectId, "certificate", *credential.KeyId)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)

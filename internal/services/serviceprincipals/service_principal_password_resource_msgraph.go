@@ -2,6 +2,7 @@ package serviceprincipals
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,6 +31,9 @@ func servicePrincipalPasswordResourceCreateMsGraph(ctx context.Context, d *schem
 		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for service principal with object ID %q", objectId)
 	}
 
+	if credential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("keyId for password credential is nil"), "Creating password credential")
+	}
 	id := parse.NewCredentialID(objectId, "password", *credential.KeyId)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
