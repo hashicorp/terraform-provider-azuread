@@ -58,6 +58,9 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 		if err != nil {
 			return fmt.Errorf("unable to parse claims in access token: %v", err)
 		}
+		if client.Claims.ObjectId == "" {
+			return fmt.Errorf("parsing claims in access token: oid claim is empty")
+		}
 	}
 
 	return nil
