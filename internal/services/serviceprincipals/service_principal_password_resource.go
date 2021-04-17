@@ -105,11 +105,8 @@ func servicePrincipalPasswordResource() *schema.Resource {
 	}
 }
 
-// TODO: MS Graph does not seem to support user-supplied passwords for applications. Needs investigation.
-// Attempting to add a password to an application returns an error:
-// "New password credentials must be generated using service actions"
-
 func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
 	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return servicePrincipalPasswordResourceCreateMsGraph(ctx, d, meta)
 	//}
@@ -117,6 +114,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 }
 
 func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
 	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return servicePrincipalPasswordResourceReadMsGraph(ctx, d, meta)
 	//}
@@ -124,6 +122,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 }
 
 func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
 	//if meta.(*clients.Client).EnableMsGraphBeta {
 	//	return servicePrincipalPasswordResourceDeleteMsGraph(ctx, d, meta)
 	//}

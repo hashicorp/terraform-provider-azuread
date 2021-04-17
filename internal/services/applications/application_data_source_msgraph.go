@@ -28,7 +28,7 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)
 			}
 
-			return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", objectId)
+			return tf.ErrorDiagPathF(err, "object_id", "Retrieving Application with object ID %q", objectId)
 		}
 	} else {
 		var fieldName, fieldValue string
@@ -78,6 +78,10 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
+	if app == nil {
+		return tf.ErrorDiagF(fmt.Errorf("app was unexpectedly nil"), "Application not found")
+	}
+
 	if app.ID == nil {
 		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
 	}
@@ -88,7 +92,7 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 	tf.Set(d, "application_id", app.AppId)
 	tf.Set(d, "available_to_other_tenants", app.SignInAudience == msgraph.SignInAudienceAzureADMultipleOrgs)
 	tf.Set(d, "display_name", app.DisplayName)
-	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
+	tf.Set(d, "group_membership_claims", helpers.ApplicationFlattenGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "name", app.DisplayName) // TODO: remove in v2.0
 	tf.Set(d, "object_id", app.ID)

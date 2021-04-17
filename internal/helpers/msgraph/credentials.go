@@ -88,7 +88,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 	credential := msgraph.KeyCredential{
 		KeyId:       utils.String(keyId),
 		Type:        utils.String(keyType),
-		Usage:       utils.String("verify"),
+		Usage:       msgraph.KeyCredentialUsageVerify,
 		Key:         utils.String(encodedValue),
 		EndDateTime: &endDate,
 	}

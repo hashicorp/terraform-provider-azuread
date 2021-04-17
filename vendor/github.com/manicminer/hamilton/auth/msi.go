@@ -16,7 +16,7 @@ import (
 const (
 	msiDefaultApiVersion = "2018-02-01"
 	msiDefaultEndpoint   = "http://169.254.169.254/metadata/identity/oauth2/token"
-	msiDefaultTimeout    =  10 * time.Second
+	msiDefaultTimeout    = 10 * time.Second
 )
 
 // MsiAuthorizer is an Authorizer which supports managed service identity.

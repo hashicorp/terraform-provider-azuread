@@ -41,29 +41,35 @@ func (c *NamedLocationsClient) List(ctx context.Context, filter string) (*[]Name
 	})
 
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("NamedLocationsClient.BaseClient.Get(): %v", err)
 	}
 
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 
 	var data struct {
 		NamedLocations *[]json.RawMessage `json:"value"`
 	}
 
 	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 
-	if data.NamedLocations == nil {
-		return nil, status, err
-	}
 	// The Graph API returns a mixture of types, this loop matches up the result to the appropriate model
 	var ret []NamedLocation
+
+	if data.NamedLocations == nil {
+		// Treat this as no result
+		return &ret, status, nil
+	}
+
 	for _, namedLocation := range *data.NamedLocations {
 		var o odata.OData
 		if err := json.Unmarshal(namedLocation, &o); err != nil {
-			return nil, status, err
+			return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 		}
 
 		if o.Type == nil {
@@ -73,13 +79,13 @@ func (c *NamedLocationsClient) List(ctx context.Context, filter string) (*[]Name
 		case "#microsoft.graph.countryNamedLocation":
 			var loc CountryNamedLocation
 			if err := json.Unmarshal(namedLocation, &loc); err != nil {
-				return nil, status, err
+				return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 			}
 			ret = append(ret, loc)
 		case "#microsoft.graph.ipNamedLocation":
 			var loc IPNamedLocation
 			if err := json.Unmarshal(namedLocation, &loc); err != nil {
-				return nil, status, err
+				return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 			}
 			ret = append(ret, loc)
 		}
@@ -99,7 +105,7 @@ func (c *NamedLocationsClient) Delete(ctx context.Context, id string) (int, erro
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("NamedLocationsClient.BaseClient.Delete(): %v", err)
 	}
 	return status, nil
 }
@@ -111,7 +117,7 @@ func (c *NamedLocationsClient) CreateIP(ctx context.Context, ipNamedLocation IPN
 	ipNamedLocation.ODataType = utils.StringPtr("#microsoft.graph.ipNamedLocation")
 	body, err := json.Marshal(ipNamedLocation)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -122,13 +128,16 @@ func (c *NamedLocationsClient) CreateIP(ctx context.Context, ipNamedLocation IPN
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("NamedLocationsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newIPNamedLocation IPNamedLocation
 	if err := json.Unmarshal(respBody, &newIPNamedLocation); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newIPNamedLocation, status, nil
 }
@@ -141,7 +150,7 @@ func (c *NamedLocationsClient) CreateCountry(ctx context.Context, countryNamedLo
 
 	body, err := json.Marshal(countryNamedLocation)
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
@@ -152,13 +161,16 @@ func (c *NamedLocationsClient) CreateCountry(ctx context.Context, countryNamedLo
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("NamedLocationsClient.BaseClient.Post(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var newCountryNamedLocation CountryNamedLocation
 	if err := json.Unmarshal(respBody, &newCountryNamedLocation); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &newCountryNamedLocation, status, nil
 }
@@ -173,13 +185,16 @@ func (c *NamedLocationsClient) GetIP(ctx context.Context, id string) (*IPNamedLo
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("NamedLocationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var ipNamedLocation IPNamedLocation
 	if err := json.Unmarshal(respBody, &ipNamedLocation); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &ipNamedLocation, status, nil
 }
@@ -194,13 +209,16 @@ func (c *NamedLocationsClient) GetCountry(ctx context.Context, id string) (*Coun
 		},
 	})
 	if err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("NamedLocationsClient.BaseClient.Get(): %v", err)
 	}
 	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
 	var countryNamedLocation CountryNamedLocation
 	if err := json.Unmarshal(respBody, &countryNamedLocation); err != nil {
-		return nil, status, err
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &countryNamedLocation, status, nil
 }
@@ -211,7 +229,7 @@ func (c *NamedLocationsClient) UpdateIP(ctx context.Context, ipNamedLocation IPN
 
 	body, err := json.Marshal(ipNamedLocation)
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
@@ -222,7 +240,7 @@ func (c *NamedLocationsClient) UpdateIP(ctx context.Context, ipNamedLocation IPN
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("NamedLocationsClient.BaseClient.Patch(): %v", err)
 	}
 	return status, nil
 }
@@ -233,7 +251,7 @@ func (c *NamedLocationsClient) UpdateCountry(ctx context.Context, countryNamedLo
 
 	body, err := json.Marshal(countryNamedLocation)
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:             body,
@@ -244,7 +262,7 @@ func (c *NamedLocationsClient) UpdateCountry(ctx context.Context, countryNamedLo
 		},
 	})
 	if err != nil {
-		return status, err
+		return status, fmt.Errorf("NamedLocationsClient.BaseClient.Patch(): %v", err)
 	}
 	return status, nil
 }

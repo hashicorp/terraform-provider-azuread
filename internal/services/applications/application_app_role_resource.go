@@ -58,12 +58,18 @@ func applicationAppRoleResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			// TODO: v2.0 rename to `enabled`
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			// TODO: v2.0 remove this
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
 				Default:    true,
-				Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
+				Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 			},
 
 			"role_id": {

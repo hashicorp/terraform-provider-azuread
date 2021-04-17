@@ -104,7 +104,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 
 	user, _, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating properties %q", upn)
+		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
 	if user.ID == nil || *user.ID == "" {

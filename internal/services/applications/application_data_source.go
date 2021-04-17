@@ -78,7 +78,12 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						// TODO: v2.0 remove this
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Computed:   true,
@@ -157,7 +162,12 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						// TODO: v2.0 remove this
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Computed:   true,
@@ -248,6 +258,11 @@ func applicationDataSource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"sign_in_audience": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 
 			// TODO: v2.0 drop this, there's no such distinction any more

@@ -72,8 +72,11 @@ func groupsDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, me
 	newDisplayNames := make([]string, 0)
 	newObjectIds := make([]string, 0)
 	for _, group := range groups {
-		if group.ID == nil || group.DisplayName == nil {
+		if group.ID == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API response")
+		}
+		if group.DisplayName == nil {
+			return tf.ErrorDiagF(errors.New("API returned group with nil displayName"), "Bad API response")
 		}
 
 		newObjectIds = append(newObjectIds, *group.ID)

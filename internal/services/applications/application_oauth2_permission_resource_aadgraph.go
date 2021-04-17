@@ -34,11 +34,18 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 		permissionId = pid
 	}
 
+	var enabled bool
+	if v, ok := d.GetOkExists("is_enabled"); ok { //nolint:SA1019
+		enabled = v.(bool)
+	} else {
+		enabled = d.Get("enabled").(bool)
+	}
+
 	permission := graphrbac.OAuth2Permission{
 		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
 		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
 		ID:                      utils.String(permissionId),
-		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
+		IsEnabled:               utils.Bool(enabled),
 		Type:                    utils.String(d.Get("type").(string)),
 		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
 		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
@@ -126,6 +133,7 @@ func applicationOAuth2PermissionResourceReadAadGraph(ctx context.Context, d *sch
 	tf.Set(d, "admin_consent_description", permission.AdminConsentDescription)
 	tf.Set(d, "admin_consent_display_name", permission.AdminConsentDisplayName)
 	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "enabled", permission.IsEnabled)
 	tf.Set(d, "is_enabled", permission.IsEnabled)
 	tf.Set(d, "permission_id", id.PermissionId)
 	tf.Set(d, "type", permission.Type)

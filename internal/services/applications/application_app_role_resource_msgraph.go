@@ -35,9 +35,16 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 		roleId = rid
 	}
 
-	allowedMemberTypes := make([]string, 0)
+	allowedMemberTypes := make([]msgraph.AppRoleAllowedMemberType, 0)
 	for _, a := range d.Get("allowed_member_types").(*schema.Set).List() {
-		allowedMemberTypes = append(allowedMemberTypes, a.(string))
+		allowedMemberTypes = append(allowedMemberTypes, msgraph.AppRoleAllowedMemberType(a.(string)))
+	}
+
+	var enabled bool
+	if v, ok := d.GetOkExists("is_enabled"); ok { //nolint:SA1019
+		enabled = v.(bool)
+	} else {
+		enabled = d.Get("enabled").(bool)
 	}
 
 	role := msgraph.AppRole{
@@ -45,7 +52,7 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 		ID:                 utils.String(roleId),
 		Description:        utils.String(d.Get("description").(string)),
 		DisplayName:        utils.String(d.Get("display_name").(string)),
-		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+		IsEnabled:          utils.Bool(enabled),
 	}
 
 	if v, ok := d.GetOk("value"); ok {
@@ -128,7 +135,8 @@ func applicationAppRoleResourceReadMsGraph(ctx context.Context, d *schema.Resour
 	tf.Set(d, "application_object_id", id.ObjectId)
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
-	tf.Set(d, "is_enabled", role.IsEnabled)
+	tf.Set(d, "enabled", role.IsEnabled)
+	tf.Set(d, "is_enabled", role.IsEnabled) // TODO: remove in v2.0
 	tf.Set(d, "role_id", id.RoleId)
 	tf.Set(d, "value", role.Value)
 

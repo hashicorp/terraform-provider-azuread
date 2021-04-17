@@ -37,12 +37,19 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		permissionId = pid
 	}
 
+	var enabled bool
+	if v, ok := d.GetOkExists("is_enabled"); ok { //nolint:SA1019
+		enabled = v.(bool)
+	} else {
+		enabled = d.Get("enabled").(bool)
+	}
+
 	scope := msgraph.PermissionScope{
 		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
 		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
 		ID:                      utils.String(permissionId),
-		IsEnabled:               utils.Bool(d.Get("is_enabled").(bool)),
-		Type:                    utils.String(d.Get("type").(string)),
+		IsEnabled:               utils.Bool(enabled),
+		Type:                    msgraph.PermissionScopeType(d.Get("type").(string)),
 		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
 		UserConsentDisplayName:  utils.String(d.Get("user_consent_display_name").(string)),
 		Value:                   utils.String(d.Get("value").(string)),
@@ -128,7 +135,8 @@ func applicationOAuth2PermissionResourceReadMsGraph(ctx context.Context, d *sche
 	tf.Set(d, "admin_consent_description", permission.AdminConsentDescription)
 	tf.Set(d, "admin_consent_display_name", permission.AdminConsentDisplayName)
 	tf.Set(d, "application_object_id", id.ObjectId)
-	tf.Set(d, "is_enabled", permission.IsEnabled)
+	tf.Set(d, "enabled", permission.IsEnabled)
+	tf.Set(d, "is_enabled", permission.IsEnabled) // TODO: remove in v2.0
 	tf.Set(d, "permission_id", id.PermissionId)
 	tf.Set(d, "type", permission.Type)
 	tf.Set(d, "user_consent_description", permission.UserConsentDescription)

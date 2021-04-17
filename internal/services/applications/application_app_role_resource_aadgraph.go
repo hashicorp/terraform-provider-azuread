@@ -39,12 +39,19 @@ func applicationAppRoleResourceCreateUpdateAadGraph(ctx context.Context, d *sche
 		allowedMemberTypes = append(allowedMemberTypes, a.(string))
 	}
 
+	var enabled bool
+	if v, ok := d.GetOkExists("is_enabled"); ok { //nolint:SA1019
+		enabled = v.(bool)
+	} else {
+		enabled = d.Get("enabled").(bool)
+	}
+
 	role := graphrbac.AppRole{
 		AllowedMemberTypes: &allowedMemberTypes,
 		ID:                 utils.String(roleId),
 		Description:        utils.String(d.Get("description").(string)),
 		DisplayName:        utils.String(d.Get("display_name").(string)),
-		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+		IsEnabled:          utils.Bool(enabled),
 	}
 
 	if v, ok := d.GetOk("value"); ok {
@@ -133,6 +140,7 @@ func applicationAppRoleResourceReadAadGraph(ctx context.Context, d *schema.Resou
 	tf.Set(d, "application_object_id", id.ObjectId)
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
+	tf.Set(d, "enabled", role.IsEnabled)
 	tf.Set(d, "is_enabled", role.IsEnabled)
 	tf.Set(d, "role_id", id.RoleId)
 	tf.Set(d, "value", role.Value)

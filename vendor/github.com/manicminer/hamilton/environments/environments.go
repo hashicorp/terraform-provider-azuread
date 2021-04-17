@@ -6,10 +6,10 @@ type Environment struct {
 	AzureADEndpoint AzureADEndpoint
 
 	// The Microsoft Graph configuration for an environment.
-	MsGraph         Api
+	MsGraph Api
 
 	// The Azure Active Directory Graph configuration for an environment.
-	AadGraph        Api
+	AadGraph Api
 }
 
 var (

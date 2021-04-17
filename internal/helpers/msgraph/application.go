@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/manicminer/hamilton/msgraph"
 
@@ -27,6 +28,18 @@ func ApplicationFindByName(ctx context.Context, client *msgraph.ApplicationsClie
 	}
 
 	return nil, nil
+}
+
+func ApplicationFlattenApi(in *msgraph.ApplicationApi) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	api := map[string]interface{}{
+		"oauth2_permission_scope": ApplicationFlattenOAuth2Permissions(in.OAuth2PermissionScopes),
+	}
+
+	return []map[string]interface{}{api}
 }
 
 func ApplicationFlattenAppRoles(in *[]msgraph.AppRole) []map[string]interface{} {
@@ -76,6 +89,31 @@ func ApplicationFlattenAppRoles(in *[]msgraph.AppRole) []map[string]interface{} 
 	return appRoles
 }
 
+func ApplicationFlattenGroupMembershipClaims(in *[]msgraph.GroupMembershipClaim) *string {
+	if in == nil {
+		return nil
+	}
+	result := make([]string, 0)
+	for _, c := range *in {
+		result = append(result, string(c))
+	}
+	// TODO: v2.0 this property should be a set/list
+	ret := strings.Join(result, ",")
+	return &ret
+}
+
+func ApplicationFlattenImplicitGrant(in *msgraph.ImplicitGrantSettings) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	implicitGrant := map[string]interface{}{
+		"access_token_issuance_enabled": in.EnableAccessTokenIssuance != nil && *in.EnableAccessTokenIssuance,
+	}
+
+	return []map[string]interface{}{implicitGrant}
+}
+
 func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
@@ -98,16 +136,6 @@ func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[st
 			id = *v
 		}
 
-		enabled := false
-		if p.IsEnabled != nil && *p.IsEnabled {
-			enabled = true
-		}
-
-		permType := ""
-		if v := p.Type; v != nil {
-			permType = *v
-		}
-
 		userConsentDescription := ""
 		if v := p.UserConsentDescription; v != nil {
 			userConsentDescription = *v
@@ -123,12 +151,15 @@ func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[st
 			value = *v
 		}
 
+		enabled := p.IsEnabled != nil && *p.IsEnabled
+
 		result = append(result, map[string]interface{}{
 			"admin_consent_description":  adminConsentDescription,
 			"admin_consent_display_name": adminConsentDisplayName,
 			"id":                         id,
-			"is_enabled":                 enabled,
-			"type":                       permType,
+			"enabled":                    enabled,
+			"is_enabled":                 enabled, // TODO: remove in v2.0
+			"type":                       p.Type,
 			"user_consent_description":   userConsentDescription,
 			"user_consent_display_name":  userConsentDisplayName,
 			"value":                      value,
@@ -136,6 +167,36 @@ func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[st
 	}
 
 	return result
+}
+
+func ApplicationFlattenWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	homepageUrl := ""
+	if in.HomePageUrl != nil {
+		homepageUrl = *in.HomePageUrl
+	}
+
+	logoutUrl := ""
+	if in.LogoutUrl != nil {
+		logoutUrl = *in.LogoutUrl
+	}
+
+	var redirectUris []string
+	if in.RedirectUris != nil {
+		redirectUris = *in.RedirectUris
+	}
+
+	api := map[string]interface{}{
+		"homepage_url":   homepageUrl,
+		"logout_url":     logoutUrl,
+		"redirect_uris":  redirectUris,
+		"implicit_grant": ApplicationFlattenImplicitGrant(in.ImplicitGrantSettings),
+	}
+
+	return []map[string]interface{}{api}
 }
 
 func ApplicationSetAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
@@ -171,7 +232,7 @@ func ApplicationSetAppRoles(ctx context.Context, client *msgraph.ApplicationsCli
 		}
 
 		for _, role := range *properties.AppRoles {
-			role.IsEnabled = utils.Bool(false)
+			*role.IsEnabled = false
 		}
 
 		if _, err := client.Update(ctx, properties); err != nil {
@@ -227,7 +288,7 @@ func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *msgraph.A
 		}
 
 		for _, scope := range *properties.Api.OAuth2PermissionScopes {
-			scope.IsEnabled = utils.Bool(false)
+			*scope.IsEnabled = false
 		}
 
 		if _, err := client.Update(ctx, properties); err != nil {

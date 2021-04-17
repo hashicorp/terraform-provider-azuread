@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 
 	"github.com/manicminer/hamilton/odata"
 )
@@ -261,8 +260,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					re := regexp.MustCompile("One or more added object references already exist")
-					if re.MatchString(o.Error.String()) {
+					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
 						return true
 					}
 				}
@@ -316,8 +314,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					re := regexp.MustCompile("One or more removed object references do not exist")
-					if re.MatchString(o.Error.String()) {
+					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
 						return true
 					}
 				}
