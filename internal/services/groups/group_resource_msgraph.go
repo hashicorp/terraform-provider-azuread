@@ -205,12 +205,6 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
-		if ownersForRemoval != nil {
-			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove owners from group with ID: %q", d.Id())
-			}
-		}
-
 		if ownersToAdd != nil {
 			for _, m := range ownersToAdd {
 				group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
@@ -218,6 +212,12 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 			if _, err := client.AddOwners(ctx, &group); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
+			}
+		}
+
+		if ownersForRemoval != nil {
+			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove owners from group with ID: %q", d.Id())
 			}
 		}
 	}

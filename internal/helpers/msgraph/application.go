@@ -325,12 +325,6 @@ func ApplicationSetOwners(ctx context.Context, client *msgraph.ApplicationsClien
 	ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 	ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
-	if ownersForRemoval != nil {
-		if _, err = client.RemoveOwners(ctx, *application.ID, &ownersForRemoval); err != nil {
-			return fmt.Errorf("removing owner from Application with object ID %q: %+v", *application.ID, err)
-		}
-	}
-
 	if ownersToAdd != nil {
 		for _, m := range ownersToAdd {
 			application.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
@@ -340,6 +334,13 @@ func ApplicationSetOwners(ctx context.Context, client *msgraph.ApplicationsClien
 			return fmt.Errorf("adding owners to Application with object ID %q: %+v", *application.ID, err)
 		}
 	}
+
+	if ownersForRemoval != nil {
+		if _, err = client.RemoveOwners(ctx, *application.ID, &ownersForRemoval); err != nil {
+			return fmt.Errorf("removing owner from Application with object ID %q: %+v", *application.ID, err)
+		}
+	}
+
 	return nil
 }
 
