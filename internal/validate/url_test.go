@@ -124,7 +124,7 @@ func TestURLIsAppURI(t *testing.T) {
 			Errors: 0,
 		},
 		{
-			Url:    "urn://www.example.com",
+			Url:    "urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a66",
 			Errors: 0,
 		},
 		{
