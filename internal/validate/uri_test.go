@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 )
 
-func TestURLIsHTTPS(t *testing.T) {
+func TestIsHTTPSURL(t *testing.T) {
 	cases := []struct {
 		Url    string
 		Errors int
@@ -39,7 +39,7 @@ func TestURLIsHTTPS(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := URLIsHTTPS(tc.Url, cty.Path{})
+			diags := IsHTTPSURL(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
@@ -48,7 +48,7 @@ func TestURLIsHTTPS(t *testing.T) {
 	}
 }
 
-func TestURLIsHTTPOrHTTPS(t *testing.T) {
+func TestIsHTTPOrHTTPSURL(t *testing.T) {
 	cases := []struct {
 		Url    string
 		Errors int
@@ -81,7 +81,7 @@ func TestURLIsHTTPOrHTTPS(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := URLIsHTTPOrHTTPS(tc.Url, cty.Path{})
+			diags := IsHTTPOrHTTPSURL(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsHTTPOrHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
@@ -90,7 +90,7 @@ func TestURLIsHTTPOrHTTPS(t *testing.T) {
 	}
 }
 
-func TestURLIsAppURI(t *testing.T) {
+func TestIsAppURI(t *testing.T) {
 	cases := []struct {
 		Url    string
 		Errors int
@@ -135,7 +135,7 @@ func TestURLIsAppURI(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := URLIsAppURI(tc.Url, cty.Path{})
+			diags := IsAppURI(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsAppURI to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
