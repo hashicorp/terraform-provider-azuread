@@ -124,6 +124,14 @@ func AzureADProvider() *schema.Provider {
 				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
 			},
 
+			// CLI authentication specific fields
+			"use_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_CLI", true),
+				Description: "Allow Azure CLI to be used for Authentication.",
+			},
+
 			// Managed Service Identity specific fields
 			"use_msi": {
 				Type:        schema.TypeBool,
@@ -190,9 +198,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 				ClientCertPassword:     d.Get("client_certificate_password").(string),
 				ClientCertPath:         d.Get("client_certificate_path").(string),
 				ClientSecret:           d.Get("client_secret").(string),
-				EnableAzureCliToken:    true,
 				EnableClientCertAuth:   true,
 				EnableClientSecretAuth: true,
+				EnableAzureCliToken:    d.Get("use_cli").(bool),
 				EnableMsiAuth:          d.Get("use_msi").(bool),
 				MsiEndpoint:            d.Get("msi_endpoint").(string),
 			}
@@ -212,7 +220,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			SupportsClientCertAuth:         true,
 			SupportsClientSecretAuth:       true,
 			SupportsManagedServiceIdentity: d.Get("use_msi").(bool),
-			SupportsAzureCliToken:          true,
+			SupportsAzureCliToken:          d.Get("use_cli").(bool),
 			TenantOnly:                     true,
 		}
 
