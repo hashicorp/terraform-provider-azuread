@@ -45,7 +45,7 @@ func IsURI(validURLSchemes []string, URNAllowed bool) schema.SchemaValidateDiagF
 
 		if URNAllowed {
 			parts := strings.Split(v, ":")
-			if len(parts) == 3 && parts[0] == "urn" {
+			if len(parts) >= 3 && parts[0] == "urn" {
 				return
 			}
 		}

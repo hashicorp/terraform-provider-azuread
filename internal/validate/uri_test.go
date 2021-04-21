@@ -128,6 +128,10 @@ func TestIsAppURI(t *testing.T) {
 			Errors: 0,
 		},
 		{
+			Url:    "urn:nbn:de:bvb:19-146642",
+			Errors: 0,
+		},
+		{
 			Url:    "ms-appx://www.example.com",
 			Errors: 0,
 		},
