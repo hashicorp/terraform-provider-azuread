@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func URLIsHTTPS(i interface{}, path cty.Path) diag.Diagnostics {
-	return URLWithScheme([]string{"https"})(i, path)
+func IsHTTPSURL(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsURI([]string{"https"}, false)(i, path)
 }
 
-func URLIsHTTPOrHTTPS(i interface{}, path cty.Path) diag.Diagnostics {
-	return URLWithScheme([]string{"http", "https"})(i, path)
+func IsHTTPOrHTTPSURL(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsURI([]string{"http", "https"}, false)(i, path)
 }
 
-func URLIsAppURI(i interface{}, path cty.Path) diag.Diagnostics {
-	return URLWithScheme([]string{"http", "https", "api", "urn", "ms-appx"})(i, path)
+func IsAppURI(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsURI([]string{"http", "https", "api", "ms-appx"}, true)(i, path)
 }
 
-func URLWithScheme(validSchemes []string) schema.SchemaValidateDiagFunc {
+func IsURI(validURLSchemes []string, URNAllowed bool) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		v, ok := i.(string)
 		if !ok {
@@ -41,6 +41,13 @@ func URLWithScheme(validSchemes []string) schema.SchemaValidateDiagFunc {
 				AttributePath: path,
 			})
 			return
+		}
+
+		if URNAllowed {
+			parts := strings.Split(v, ":")
+			if len(parts) >= 3 && parts[0] == "urn" {
+				return
+			}
 		}
 
 		u, err := url.Parse(v)
@@ -63,7 +70,7 @@ func URLWithScheme(validSchemes []string) schema.SchemaValidateDiagFunc {
 			return
 		}
 
-		for _, s := range validSchemes {
+		for _, s := range validURLSchemes {
 			if u.Scheme == s {
 				return
 			}
@@ -71,7 +78,7 @@ func URLWithScheme(validSchemes []string) schema.SchemaValidateDiagFunc {
 
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Expected URL to have a schema of: %s", strings.Join(validSchemes, ", ")),
+			Summary:       fmt.Sprintf("Expected URL to have a schema of: %s", strings.Join(validURLSchemes, ", ")),
 			AttributePath: path,
 		})
 		return

@@ -139,7 +139,7 @@ func applicationResource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
+				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
 			},
 
 			"identifier_uris": {
@@ -148,7 +148,7 @@ func applicationResource() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.URLIsAppURI,
+					ValidateDiagFunc: validate.IsAppURI,
 				},
 			},
 
@@ -156,7 +156,7 @@ func applicationResource() *schema.Resource {
 			"logout_url": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
+				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
 			},
 
 			// TODO: v2.0 put this in an `implicit_grant` block and rename to `access_token_issuance_enabled`
