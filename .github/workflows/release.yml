@@ -17,8 +17,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Unshallow
         run: git fetch --prune --unshallow
-      - name: lint
-        run: go run github.com/bflad/tfproviderlint/cmd/tfproviderlint ./...
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v3
