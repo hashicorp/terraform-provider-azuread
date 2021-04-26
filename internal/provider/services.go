@@ -2,6 +2,7 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/directory_roles"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/domains"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
@@ -15,5 +16,6 @@ func SupportedServices() []ServiceRegistration {
 		groups.Registration{},
 		serviceprincipals.Registration{},
 		users.Registration{},
+		directory_roles.Registration{},
 	}
 }

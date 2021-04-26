@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
+	directory_roles "github.com/hashicorp/terraform-provider-azuread/internal/services/directory_roles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
 	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
@@ -31,6 +32,7 @@ type Client struct {
 	Groups            *groups.Client
 	ServicePrincipals *serviceprincipals.Client
 	Users             *users.Client
+	DirectoryRoles    *directory_roles.Client
 }
 
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
@@ -41,6 +43,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.Groups = groups.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
 	client.Users = users.NewClient(o)
+	client.DirectoryRoles = directory_roles.NewClient(o)
 
 	// Acquire an access token upfront so we can decode and populate the JWT claims
 	token, err := o.Authorizer.Token()
