@@ -20,7 +20,7 @@ resource "azuread_directory_role" "example" {
   display_name = "Global Administrator"
 }
 
-resource "azuread_group_member" "example" {
+resource "azuread_directory_role_member" "example" {
   directory_role_object_id = azuread_directory_role.example.id
   member_object_id = data.azuread_user.example.id
 }
@@ -31,7 +31,7 @@ resource "azuread_group_member" "example" {
 The following arguments are supported:
 
 * `directory_role_object_id` - (Required) The Object ID of the Azure AD Directory Role you want to add the Member to. Changing this forces a new resource to be created.
-* `member_object_id` - (Required) The Object ID of the Azure AD Object you want to add as a Member to the Group. Supported Object types are Users or Groups. Changing this forces a new resource to be created.
+* `member_object_id` - (Required) The Object ID of the Azure AD Object you want to add as a Member to the Directory Role. Supported Object types are Users or Groups. Changing this forces a new resource to be created.
 
 -> **NOTE:** The Member object has to be present in your Azure Active Directory, either as a Member or a Guest.
 
