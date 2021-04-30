@@ -21,15 +21,13 @@ func directoryRoleResourceCreateMsGraph(ctx context.Context, d *schema.ResourceD
 	var displayName string
 	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
 		displayName = v.(string)
-	} else {
-		displayName = d.Get("name").(string)
 	}
 
-	existingDirRole, err := helpers.DirectoryRoleFindByName(ctx, client, displayName)
+	dirRoles, err := helpers.DirectoryRoleFindByName(ctx, client, displayName)
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "name", "Could not check for existing directory role template(s)")
 	}
-	if existingDirRole == nil {
+	if dirRoles == nil {
 		existingDirRoleTemplate, err := helpers.DirectoryRoleTemplateFindByName(ctx, dirRoleTemplatesClient, displayName)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "name", "Could not check for existing directory role template(s)")
@@ -45,17 +43,17 @@ func directoryRoleResourceCreateMsGraph(ctx context.Context, d *schema.ResourceD
 		if dirRole.ID == nil {
 			return tf.ErrorDiagF(errors.New("API returned directory role with nil object ID"), "Bad API Response")
 		}
-		existingDirRole = dirRole
+		dirRoles = append(dirRoles, dirRole)
 	}
 
-	d.SetId(*existingDirRole.ID)
+	d.SetId(*dirRoles[0].ID)
 
 	_, err = helpers.WaitForCreationReplication(ctx, func() (interface{}, int, error) {
-		return client.Get(ctx, *existingDirRole.ID)
+		return client.Get(ctx, *dirRoles[0].ID)
 	})
 
 	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for Directory Role with object ID: %q", *existingDirRole.ID)
+		return tf.ErrorDiagF(err, "Waiting for Directory Role with object ID: %q", *dirRoles[0].ID)
 	}
 
 	return directoryRoleResourceReadMsGraph(ctx, d, meta)

@@ -10,7 +10,7 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	helpers `github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph`
+	helpers "github.com/hashicorp/terraform-provider-azuread/internal/helpers/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
 
