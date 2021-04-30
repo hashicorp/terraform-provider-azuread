@@ -21,8 +21,8 @@ func (r Registration) WebsiteCategories() []string {
 // SupportedDataSources returns the supported Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		//"azuread_directory_role":  directoryRoleDataSource(),
-		//"azuread_directory_roles": directoryRolesDataSource(),
+		"azuread_directory_role":  directoryRoleDataSource(),
+		"azuread_directory_roles": directoryRolesDataSource(),
 	}
 }
 
