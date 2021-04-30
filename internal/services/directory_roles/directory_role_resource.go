@@ -3,7 +3,6 @@ package directory_roles
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,7 +17,6 @@ func directoryRoleResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: directoryRoleResourceCreate,
 		ReadContext:   directoryRoleResourceRead,
-		//UpdateContext: directoryRoleResourceUpdate,
 		DeleteContext: directoryRoleResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
@@ -50,7 +48,6 @@ func directoryRoleResource() *schema.Resource {
 }
 
 func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[TEST-DEBUG] directoryRoleResourceCreate %v..", meta.(*clients.Client).EnableMsGraphBeta)
 	if meta.(*clients.Client).EnableMsGraphBeta {
 		return directoryRoleResourceCreateMsGraph(ctx, d, meta)
 	}
@@ -58,7 +55,6 @@ func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[TEST-DEBUG] directoryRoleResourceRead %v..", meta.(*clients.Client).EnableMsGraphBeta)
 	if meta.(*clients.Client).EnableMsGraphBeta {
 		return directoryRoleResourceReadMsGraph(ctx, d, meta)
 	}
