@@ -6,7 +6,7 @@ subcategory: "Directory Roles"
 
 Activates Azure AD directory role within Azure Active Directory. Azure AD directory roles are also known as administrator roles. 
 
-!> **NOTE:** This resource is supported only if use of MS Graph API is enabled.
+-> **NOTE:** This resource is supported only if the  MS Graph API is enabled.
 
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to `RoleManagement.ReadWrite.Directory` within the `Azure Active Directory` API. 
 Please refer to [this documentation](https://docs.microsoft.com/en-us/graph/api/resources/directoryrole?view=graph-rest-1.0) for more details about directory roles. 
