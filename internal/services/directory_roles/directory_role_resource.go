@@ -17,6 +17,7 @@ func directoryRoleResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: directoryRoleResourceCreate,
 		ReadContext:   directoryRoleResourceRead,
+		DeleteContext: directoryRoleResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
@@ -58,4 +59,9 @@ func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta
 		return directoryRoleResourceReadMsGraph(ctx, d, meta)
 	}
 	return tf.ErrorDiagPathF(nil, "", "Directory role resource can be only used with ms graph enabled")
+}
+
+func directoryRoleResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	d.SetId("")
+	return nil
 }

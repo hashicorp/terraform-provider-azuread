@@ -249,6 +249,12 @@ func groupResource() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"is_assignable_to_role": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }

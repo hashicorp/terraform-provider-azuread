@@ -6,7 +6,7 @@ subcategory: "Directory Roles"
 
 Manages a single Directory Role Membership within Azure Active Directory.
 
-~> **NOTE:** This resource is supported only if `EnableMsGraphBeta` feature is enabled.
+!> **NOTE:** This resource is supported only if use of MS Graph API is enabled.
 
 ## Example Usage
 
