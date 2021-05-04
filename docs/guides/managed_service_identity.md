@@ -1,20 +1,20 @@
 ---
-page_title: "Authenticating via Managed Service Identity"
+page_title: "Authenticating via Managed Identity"
 subcategory: "Authentication"
 ---
 
-# Azure Active Directory Provider: Authenticating using Managed Service Identity
+# Authenticating using Managed Identity
 
 Terraform supports a number of different methods for authenticating to Azure:
 
 * [Authenticating to Azure using the Azure CLI](azure_cli.html)
-* Authenticating to Azure using Managed Service Identity (covered in this guide)
+* Authenticating to Azure using Managed Identity (covered in this guide)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
 ---
 
-We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
+We recommend using either a Service Principal or Managed Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
 Once you have configured a Service Principal as described in this guide, you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
@@ -56,13 +56,13 @@ Refer to the [azurerm_linux_virtual_machine][azurerm_linux_virtual_machine] and 
 
 The implicitly created Service Principal should have the same or similar name as your virtual machine. At this point you will need to assign permissions to access Azure Active Directory to create and modify Azure Active Directory objects such as users and groups. We recommend the Directory Roles method. See the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html#method-1-directory-roles-recommended) guide for more information.
 
-## Configuring Managed Service Identity in Terraform
+## Configuring Managed Identity in Terraform
 
 At this point we assume that managed identity is configured on the resource (e.g. virtual machine) being used, that permissions have been granted, and that you are running Terraform on that resource.
 
 Terraform can be configured to use managed identity for authentication in one of two ways: using Environment Variables or by defining the fields within the Provider block.
 
-You can configure Terraform to use Managed Service Identity by setting the Environment Variable `ARM_USE_MSI` to `true`; as shown below:
+You can configure Terraform to use Managed Identity by setting the Environment Variable `ARM_USE_MSI` to `true`; as shown below:
 
 ```shell
 $ export ARM_USE_MSI=true ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
@@ -70,7 +70,7 @@ $ export ARM_USE_MSI=true ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
 
 Note that when using managed identity for authentication, the tenant ID must also be specified.
 
--> **Using a Custom MSI Endpoint?** In the unlikely event you're using a custom endpoint for Managed Service Identity - this can be configured using the `ARM_MSI_ENDPOINT` Environment Variable - however this shouldn't need to be configured in regular use.
+-> **Using a Custom MSI Endpoint?** In the unlikely event you're using a custom endpoint for Managed Identity - this can be configured using the `ARM_MSI_ENDPOINT` Environment Variable - however this shouldn't need to be configured in regular use.
 
 Whilst a Provider block is _technically_ optional when using Environment Variables - we'd strongly recommend defining one to be able to pin the version of the Provider to be used:
 
@@ -83,11 +83,11 @@ provider "azuread" {
 
 More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
-At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using Managed Service Identity.
+At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using Managed Identity.
 
 ---
 
-It's also possible to enable Managed Service Identity within the Provider Block:
+It's also possible to enable Managed Identity within the Provider Block:
 
 ```hcl
 provider "azuread" {
@@ -101,11 +101,11 @@ provider "azuread" {
 
 Note that when using managed identity for authentication, the tenant ID must also be specified.
 
--> **Using a Custom MSI Endpoint?** In the unlikely event you're using a custom endpoint for Managed Service Identity - this can be configured using the `msi_endpoint` field - however this shouldn't need to be configured in regular use.
+-> **Using a Custom MSI Endpoint?** In the unlikely event you're using a custom endpoint for Managed Identity - this can be configured using the `msi_endpoint` field - however this shouldn't need to be configured in regular use.
 
 More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
-At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using Managed Service Identity.
+At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using Managed Identity.
 
 Next you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
