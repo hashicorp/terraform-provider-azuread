@@ -45,7 +45,7 @@ func directoryRolesDataSourceReadMsGraph(ctx context.Context, d *schema.Resource
 				return tf.ErrorDiagPathF(err, "display_name", "No directory role found with display name: %q", displayName)
 			}
 
-			dirRoles = append(dirRoles, *listDirRoles[0])
+			dirRoles = append(dirRoles, listDirRoles[0])
 		}
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 		expectedCount = len(objectIds)

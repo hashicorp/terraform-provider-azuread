@@ -33,6 +33,18 @@ func directoryRoleResource() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"object_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"role_template_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"members": {
 				Type:     schema.TypeSet,
 				Optional: true,

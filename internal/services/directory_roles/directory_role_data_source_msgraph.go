@@ -37,7 +37,7 @@ func directoryRoleDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceD
 			return tf.ErrorDiagPathF(err, "display_name", "No directory role found matching specified display_name (%s)", displayName)
 		}
 
-		dirRole = *dirRoles[0]
+		dirRole = dirRoles[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		getDirRole, status, err := client.Get(ctx, objectId)
 		if err != nil {
