@@ -72,7 +72,7 @@ Clone the repository to: `$GOPATH/src/github.com/hashicorp/terraform-provider-az
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/terraform-providers; cd $GOPATH/src/github.com/terraform-providers
-$ git clone github.com/hashicorp/terraform-provider-azuread
+$ git clone https://github.com/hashicorp/terraform-provider-azuread
 ```
 
 Change to the clone directory and run `make tools` to install the dependent tooling needed to test and build the provider.
