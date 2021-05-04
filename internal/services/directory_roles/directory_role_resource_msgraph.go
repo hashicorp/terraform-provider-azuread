@@ -43,7 +43,7 @@ func directoryRoleResourceCreateMsGraph(ctx context.Context, d *schema.ResourceD
 		if dirRole.ID == nil {
 			return tf.ErrorDiagF(errors.New("API returned directory role with nil object ID"), "Bad API Response")
 		}
-		dirRoles = append(dirRoles, dirRole)
+		dirRoles = append(dirRoles, *dirRole)
 	}
 
 	d.SetId(*dirRoles[0].ID)
