@@ -138,7 +138,7 @@ func applicationResource() *schema.Resource {
 
 			// TODO: v2.0 consider another computed typemap attribute `app_role_ids` for easier consumption
 			"app_role": {
-				Type:       schema.TypeSet, // TODO: v2.0 consider changing this back to a list if the API is predictable
+				Type:       schema.TypeSet,
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -151,7 +151,7 @@ func applicationResource() *schema.Resource {
 						},
 
 						"allowed_member_types": {
-							Type:     schema.TypeSet, // TODO: v2.0 consider changing this to a list if the API is predictable
+							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
@@ -270,7 +270,7 @@ func applicationResource() *schema.Resource {
 
 			// TODO: v2.0 remove this block
 			"oauth2_permissions": {
-				Type:       schema.TypeSet, // TODO: v2.0 consider changing this back to a list if the API is predictable
+				Type:       schema.TypeSet,
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
@@ -302,10 +302,9 @@ func applicationResource() *schema.Resource {
 						},
 
 						"is_enabled": {
-							Type:       schema.TypeBool,
-							Optional:   true,
-							Computed:   true,
-							Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
 						},
 
 						"type": {
@@ -353,7 +352,7 @@ func applicationResource() *schema.Resource {
 			},
 
 			"owners": {
-				Type:     schema.TypeSet, // TODO: v2.0 consider changing this to a list if the API is predictable
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true, // TODO: v2.0 maybe remove Computed
 				Elem: &schema.Schema{
@@ -385,7 +384,7 @@ func applicationResource() *schema.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     schema.TypeSet, // TODO: v2.0 consider changing this to a list if the API is predictable
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
