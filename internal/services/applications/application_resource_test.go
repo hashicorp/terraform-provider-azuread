@@ -52,7 +52,7 @@ func TestAccApplication_basicDeprecated(t *testing.T) {
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
 		},
-		//data.ImportStep(),
+		data.ImportStep(),
 	})
 }
 
