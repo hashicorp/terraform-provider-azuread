@@ -202,6 +202,48 @@ resource "azuread_application" "example" {
 }
 ```
 
+Requiring these properties will enable more predictable management of app roles and OAuth2 permission scopes such that existing roles/scopes will not be overwritten to accommodate changes in an application's configuration.
+
+### Avoiding diffs for already-published applications
+
+In order to determine the value of a given UUID-type property where you had previously not defined one, you can use the `terraform state show` command to inspect your existing application(s), and add the current value to your configuration.
+
+```shell
+$ terraform state show azuread_application.example
+
+# azuread_application.example:
+resource "azuread_application" "example" {
+    app_role           = [
+        {
+            allowed_member_types = [
+                "User",
+            ]
+            description          = "Just an example"
+            display_name         = "Example Role"
+            id                   = "3dbd749f-c2ba-4796-0d33-273878f8a31b"
+            is_enabled           = true
+            value                = ""
+        },
+    ]
+    application_id     = "cd986e6e-5a90-42f0-8c01-82f0da5b286c"
+    display_name       = "example-app"
+    id                 = "61a9d04a-6694-497a-afe8-6303aa3435df"
+    oauth2_permissions = [
+        {
+            admin_consent_description  = "Allow the application to access example-app on behalf of the signed-in user."
+            admin_consent_display_name = "Access example-app"
+            id                         = "c32d857d-02d9-4887-af7a-cb1f1fd61b9a"
+            is_enabled                 = true
+            type                       = "User"
+            user_consent_description   = "Allow the application to access example-app on your behalf."
+            user_consent_display_name  = "Access example-app"
+            value                      = "user_impersonation"
+        },
+    ]
+    object_id          = "61a9d04a-6694-497a-afe8-6303aa3435df"
+}
+```
+
 ### Resource: `azuread_application`
 
 The `id` field in the `app_role` block is currently Computed (read-only) but will be Required.
@@ -215,6 +257,31 @@ The `role_id` field is currently Optional but will be Required.
 ### Resource: `azuread_application_oauth2_permission`
 
 The `permission_id` field is currently Optional but will be Required.
+
+## Behaviour change: default `user_impersonation` scope for applications
+
+With AzureAD v1.x using Azure Active Directory Graph, newly created applications are assigned a default `user_impersonation` scope which enables users to sign in to your application.
+
+With AzureAD v2.0 and later using Microsoft Graph, this default scope is _not_ automatically granted to your application and you will need to specify it in your configuration. The following example can be used to replicate the earlier behaviour.
+
+```hcl
+resource "random_uuid" "example_app_user_impersonation_scope" {}
+
+resource "azuread_application" "example" {
+  display_name = "example-app"
+
+  oauth2_permissions {
+    admin_consent_description  = "Allow the application to access example-app on behalf of the signed-in user."
+    admin_consent_display_name = "Access example-app"
+    id                         = random_uuid.example_app_user_impersonation_scope.result
+    is_enabled                 = true
+    type                       = "User"
+    user_consent_description   = "Allow the application to access example-app on your behalf."
+    user_consent_display_name  = "Access example-app"
+    value                      = "user_impersonation"
+  }
+}
+```
 
 ## Beta support for Microsoft Graph in v1.5.0
 
