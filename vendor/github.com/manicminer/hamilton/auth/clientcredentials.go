@@ -69,9 +69,6 @@ type ClientCredentialsConfig struct {
 	// function to obtain this value, but it may change for non-public clouds.
 	TokenURL string
 
-	// Expires optionally specifies how long the clientCredentialsToken is valid for.
-	Expires time.Duration
-
 	// Audience optionally specifies the intended audience of the
 	// request.  If empty, the value of TokenURL is used as the
 	// intended audience.
@@ -127,9 +124,14 @@ type clientAssertionToken struct {
 }
 
 func (c *clientAssertionToken) encode(key *rsa.PrivateKey) (string, error) {
+	var err error
+
 	c.claims.NotBefore = time.Now().Unix()
 	c.claims.Expiry = time.Now().Add(time.Hour).Unix()
-	c.claims.JwtId, _ = uuid.GenerateUUID()
+	c.claims.JwtId, err = uuid.GenerateUUID()
+	if err != nil {
+		return "", err
+	}
 
 	sign := func(data []byte) (sig []byte, err error) {
 		h := sha256.New()

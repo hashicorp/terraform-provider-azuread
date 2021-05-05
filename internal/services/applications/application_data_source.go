@@ -78,7 +78,12 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						// TODO: v2.0 remove this
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Computed:   true,
@@ -157,7 +162,12 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						// TODO: v2.0 remove this
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Computed:   true,
@@ -250,6 +260,11 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"sign_in_audience": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			// TODO: v2.0 drop this, there's no such distinction any more
 			"type": {
 				Type:       schema.TypeString,
@@ -261,7 +276,7 @@ func applicationDataSource() *schema.Resource {
 }
 
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationDataSourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationDataSourceReadAadGraph(ctx, d, meta)

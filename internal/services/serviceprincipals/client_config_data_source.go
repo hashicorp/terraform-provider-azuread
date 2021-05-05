@@ -38,7 +38,7 @@ func clientConfigDataSource() *schema.Resource {
 }
 
 func clientConfigDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return clientConfigDataSourceReadMsGraph(ctx, d, meta)
 	}
 	return clientConfigDataSourceReadAadGraph(ctx, d, meta)

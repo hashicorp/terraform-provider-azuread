@@ -92,8 +92,8 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 		return nil, fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
-	//switch clients.EnableMsGraphBeta {
-	//case true:
+	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
+	//if clients.EnableMsGraphBeta {
 	//	app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
 	//	if err != nil {
 	//		if status == http.StatusNotFound {
@@ -109,8 +109,7 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 	//			}
 	//		}
 	//	}
-	//
-	//case false:
+	//} else {
 	resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {

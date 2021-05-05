@@ -8,7 +8,7 @@ type AlreadyExistsError struct {
 }
 
 func (e AlreadyExistsError) Error() string {
-	return fmt.Sprintf("%s with ID %q already exists", e.obj, e.id)
+	return fmt.Sprintf("An existing %s already exists with the ID %q", e.obj, e.id)
 }
 
 type CredentialError struct {

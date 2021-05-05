@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // GroupsClient performs operations on Groups.
@@ -226,6 +228,18 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 		memberChunks = append(memberChunks, members[i:end])
 	}
 	for _, members := range memberChunks {
+		// don't fail if a member already exists
+		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
+			if resp.StatusCode == http.StatusBadRequest {
+				if o.Error != nil {
+					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		data := struct {
 			Members []string `json:"members@odata.bind"`
 		}{
@@ -238,6 +252,7 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 		_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 			Body:             body,
 			ValidStatusCodes: []int{http.StatusNoContent},
+			ValidStatusFunc:  checkMemberAlreadyExists,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s", *group.ID),
 				HasTenantId: true,
@@ -263,9 +278,23 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 			}
 			return status, err
 		}
+
+		// despite the above check, sometimes members are just gone
+		checkMemberGone := func(resp *http.Response, o *odata.OData) bool {
+			if resp.StatusCode == http.StatusBadRequest {
+				if o.Error != nil {
+					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		var err error
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 			ValidStatusCodes: []int{http.StatusNoContent},
+			ValidStatusFunc:  checkMemberGone,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/members/%s/$ref", id, memberId),
 				HasTenantId: true,
@@ -350,6 +379,18 @@ func (c *GroupsClient) GetOwner(ctx context.Context, groupId, ownerId string) (*
 func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error) {
 	var status int
 	for _, owner := range *group.Owners {
+		// don't fail if an owner already exists
+		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
+			if resp.StatusCode == http.StatusBadRequest {
+				if o.Error != nil {
+					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		data := struct {
 			Owner string `json:"@odata.id"`
 		}{
@@ -362,6 +403,7 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
 			ValidStatusCodes: []int{http.StatusNoContent},
+			ValidStatusFunc:  checkOwnerAlreadyExists,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/owners/$ref", *group.ID),
 				HasTenantId: true,
@@ -387,9 +429,23 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 			}
 			return status, err
 		}
+
+		// despite the above check, sometimes owners are just gone
+		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
+			if resp.StatusCode == http.StatusBadRequest {
+				if o.Error != nil {
+					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		var err error
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 			ValidStatusCodes: []int{http.StatusNoContent},
+			ValidStatusFunc:  checkOwnerGone,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/owners/%s/$ref", id, ownerId),
 				HasTenantId: true,

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/aadgraph"
@@ -52,6 +53,16 @@ func applicationResourceCreateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
+	// Note: supporting new property sign_in_audience for MS Graph backwards compatibility
+	var availableToOtherTenants bool
+	if v, exists := d.GetOkExists("available_to_other_tenants"); exists { //nolint:SA1019
+		availableToOtherTenants = v.(bool)
+	} else {
+		if d.Get("sign_in_audience").(msgraph.SignInAudience) == msgraph.SignInAudienceAzureADMultipleOrgs {
+			availableToOtherTenants = true
+		}
+	}
+
 	// We don't send Oauth2Permissions here because applications tend to get a default `user_impersonation` scope
 	// defined, which will either conflict if we also define it, or create an unwanted diff if we don't
 	// After creating the application, we update it later before this function returns, including any Oauth2Permissions
@@ -59,7 +70,7 @@ func applicationResourceCreateAadGraph(ctx context.Context, d *schema.ResourceDa
 		DisplayName:             &name,
 		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
 		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
-		AvailableToOtherTenants: utils.Bool(d.Get("available_to_other_tenants").(bool)),
+		AvailableToOtherTenants: utils.Bool(availableToOtherTenants),
 		RequiredResourceAccess:  expandApplicationRequiredResourceAccessAad(d),
 		OptionalClaims:          expandApplicationOptionalClaimsAad(d),
 	}
@@ -540,7 +551,12 @@ func expandApplicationAppRolesAad(i interface{}) *[]graphrbac.AppRole {
 
 		appRoleDescription := appRole["description"].(string)
 		appRoleDisplayName := appRole["display_name"].(string)
-		appRoleIsEnabled := appRole["is_enabled"].(bool)
+		var appRoleIsEnabled bool
+		if v, ok := appRole["is_enabled"]; ok {
+			appRoleIsEnabled = v.(bool)
+		} else {
+			appRoleIsEnabled = appRole["enabled"].(bool)
+		}
 
 		var appRoleValue *string
 		if v, ok := appRole["value"].(string); ok {
@@ -576,7 +592,12 @@ func expandApplicationOAuth2PermissionsAad(i interface{}) *[]graphrbac.OAuth2Per
 			ID, _ = uuid.GenerateUUID()
 		}
 
-		IsEnabled := OAuth2Permissions["is_enabled"].(bool)
+		var IsEnabled bool
+		if v, ok := OAuth2Permissions["is_enabled"]; ok {
+			IsEnabled = v.(bool)
+		} else {
+			IsEnabled = OAuth2Permissions["enabled"].(bool)
+		}
 		Type := OAuth2Permissions["type"].(string)
 		UserConsentDescription := OAuth2Permissions["user_consent_description"].(string)
 		UserConsentDisplayName := OAuth2Permissions["user_consent_display_name"].(string)

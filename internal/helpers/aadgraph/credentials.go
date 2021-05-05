@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -98,7 +97,7 @@ func PasswordCredentialResultFindByKeyId(creds graphrbac.PasswordCredentialListR
 
 func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult, cred *graphrbac.PasswordCredential) (*[]graphrbac.PasswordCredential, error) {
 	if cred == nil {
-		return nil, errors.New("credential to be added is null")
+		return nil, fmt.Errorf("credential to be added is nil")
 	}
 
 	newCreds := make([]graphrbac.PasswordCredential, 0)
@@ -122,7 +121,7 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 
 func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredentialListResult, keyId string) (*[]graphrbac.PasswordCredential, error) {
 	if keyId == "" {
-		return nil, errors.New("ID of key to be removed is blank")
+		return nil, fmt.Errorf("ID of key to be removed is empty")
 	}
 
 	newCreds := make([]graphrbac.PasswordCredential, 0)
@@ -298,7 +297,7 @@ func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *gr
 
 func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult, keyId string) (*[]graphrbac.KeyCredential, error) {
 	if keyId == "" {
-		return nil, errors.New("ID of key to be removed is blank")
+		return nil, fmt.Errorf("ID of key to be removed is empty")
 	}
 
 	newCreds := make([]graphrbac.KeyCredential, 0)

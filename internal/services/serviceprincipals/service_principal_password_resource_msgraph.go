@@ -2,6 +2,8 @@ package serviceprincipals
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -29,6 +31,9 @@ func servicePrincipalPasswordResourceCreateMsGraph(ctx context.Context, d *schem
 		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for service principal with object ID %q", objectId)
 	}
 
+	if credential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("keyId for password credential is nil"), "Creating password credential")
+	}
 	id := parse.NewCredentialID(objectId, "password", *credential.KeyId)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
@@ -133,8 +138,7 @@ func servicePrincipalPasswordResourceDeleteMsGraph(ctx context.Context, d *schem
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", id.ObjectId)
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}

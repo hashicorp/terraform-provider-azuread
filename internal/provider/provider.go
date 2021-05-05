@@ -99,7 +99,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
-				Description: "The cloud environment which should be used. Possible values are `global`, `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
+				Description: "The cloud environment which should be used. Possible values are `global` (formerly `public`), `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
 			},
 
 			// Client Certificate specific fields
@@ -122,6 +122,14 @@ func AzureADProvider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
 				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
+			},
+
+			// CLI authentication specific fields
+			"use_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_CLI", true),
+				Description: "Allow Azure CLI to be used for Authentication.",
 			},
 
 			// Managed Service Identity specific fields
@@ -157,12 +165,11 @@ func AzureADProvider() *schema.Provider {
 
 			// MS Graph beta
 			// TODO: remove in v2.0
-			"enable_msgraph_beta": {
+			"use_microsoft_graph": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("AAD_PROVIDER_ENABLE_MSGRAPH", false),
-				Description: "Beta: Use the Microsoft Graph API where supported.",
-				Deprecated:  "The `enable_msgraph_beta` provider attribute enables Microsoft Graph Beta Support for version 1.5, and will be removed in version 2.0 of the provider.",
+				DefaultFunc: schema.EnvDefaultFunc("AAD_USE_MICROSOFT_GRAPH", false),
+				Description: "Beta: Use the Microsoft Graph API, instead of the legacy Azure Active Directory Graph API, where supported.",
 			},
 		},
 
@@ -180,7 +187,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		environment, aadEnvironment := environment(d.Get("environment").(string))
 
 		// Microsoft Graph beta opt-in
-		enableMsGraph := d.Get("enable_msgraph_beta").(bool)
+		enableMsGraph := d.Get("use_microsoft_graph").(bool)
 
 		var authConfig *auth.Config
 		if enableMsGraph {
@@ -191,9 +198,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 				ClientCertPassword:     d.Get("client_certificate_password").(string),
 				ClientCertPath:         d.Get("client_certificate_path").(string),
 				ClientSecret:           d.Get("client_secret").(string),
-				EnableAzureCliToken:    true,
 				EnableClientCertAuth:   true,
 				EnableClientSecretAuth: true,
+				EnableAzureCliToken:    d.Get("use_cli").(bool),
 				EnableMsiAuth:          d.Get("use_msi").(bool),
 				MsiEndpoint:            d.Get("msi_endpoint").(string),
 			}
@@ -213,7 +220,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			SupportsClientCertAuth:         true,
 			SupportsClientSecretAuth:       true,
 			SupportsManagedServiceIdentity: d.Get("use_msi").(bool),
-			SupportsAzureCliToken:          true,
+			SupportsAzureCliToken:          d.Get("use_cli").(bool),
 			TenantOnly:                     true,
 		}
 

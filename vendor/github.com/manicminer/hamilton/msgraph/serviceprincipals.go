@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 
 	"github.com/manicminer/hamilton/odata"
 )
@@ -227,6 +226,18 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		return status, errors.New("cannot update service principal with nil Owners")
 	}
 	for _, owner := range *servicePrincipal.Owners {
+		// don't fail if an owner already exists
+		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
+			if resp.StatusCode == http.StatusBadRequest {
+				if o.Error != nil {
+					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
+						return true
+					}
+				}
+			}
+			return false
+		}
+
 		data := struct {
 			Owner string `json:"@odata.id"`
 		}{
@@ -239,6 +250,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
 			ValidStatusCodes: []int{http.StatusNoContent},
+			ValidStatusFunc:  checkOwnerAlreadyExists,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/$ref", *servicePrincipal.ID),
 				HasTenantId: true,
@@ -272,8 +284,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					re := regexp.MustCompile("One or more removed object references do not exist")
-					if re.MatchString(o.Error.String()) {
+					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
 						return true
 					}
 				}

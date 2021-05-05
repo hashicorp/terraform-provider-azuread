@@ -45,12 +45,18 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			// TODO: v2.0 rename to `enabled`
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+
+			// TODO: v2.0 remove this
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
 				Default:    true,
-				Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
+				Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 			},
 
 			"permission_id": {
@@ -92,21 +98,21 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 }
 
 func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx, d, meta)
 }
 
 func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceDeleteAadGraph(ctx, d, meta)

@@ -3,7 +3,11 @@
 IMPROVEMENTS:
 
 * `data.azuread_user` - export the `user_type` attribute [GH-406]
-* `azuread_user` - support guest user invitations using the `user_type` property [GH-401]
+* `azuread_user` - export the `user_type` attribute [GH-401] / [GH-413]
+
+BUG FIXES:
+
+* `azuread_application` - validation for the `identifier_uris` property now supports URNs [GH-426]
 
 ## 1.4.0 (February 18, 2021)
 

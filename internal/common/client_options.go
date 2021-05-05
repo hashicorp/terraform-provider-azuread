@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 
@@ -55,6 +54,5 @@ func (o ClientOptions) userAgent(sdkUserAgent string) (userAgent string) {
 		userAgent = fmt.Sprintf("%s pid-%s", userAgent, o.PartnerID)
 	}
 
-	log.Printf("[DEBUG] User Agent: %s\n", userAgent)
 	return
 }

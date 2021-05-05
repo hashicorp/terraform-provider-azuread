@@ -79,7 +79,11 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	}
 
 	// MS Graph
-	if b.EnableMsGraph && b.AuthConfig != nil {
+	if b.EnableMsGraph {
+		if b.AuthConfig == nil {
+			return nil, fmt.Errorf("building client: AuthConfig is nil")
+		}
+
 		client.EnableMsGraphBeta = true
 		o.MsGraphAuthorizer, err = b.AuthConfig.NewAuthorizer(ctx, auth.MsGraph)
 		if err != nil {

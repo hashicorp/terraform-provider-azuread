@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -103,7 +104,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 
 	user, _, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating properties %q", upn)
+		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
 	if user.ID == nil || *user.ID == "" {
@@ -112,7 +113,7 @@ func userResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*user.ID)
 
-	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, func() (interface{}, int, error) {
 		return client.Get(ctx, *user.ID)
 	})
 
@@ -269,8 +270,7 @@ func userResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, meta
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] User with Object ID %q already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", d.Id())
 		}
 
 		return tf.ErrorDiagPathF(err, "id", "Retrieving user with object ID %q", d.Id())

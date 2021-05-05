@@ -229,28 +229,28 @@ func userResource() *schema.Resource {
 }
 
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return userResourceCreateMsGraph(ctx, d, meta)
 	}
 	return userResourceCreateAadGraph(ctx, d, meta)
 }
 
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return userResourceUpdateMsGraph(ctx, d, meta)
 	}
 	return userResourceUpdateAadGraph(ctx, d, meta)
 }
 
 func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return userResourceReadMsGraph(ctx, d, meta)
 	}
 	return userResourceReadAadGraph(ctx, d, meta)
 }
 
 func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return userResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return userResourceDeleteAadGraph(ctx, d, meta)

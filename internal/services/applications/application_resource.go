@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -57,17 +58,96 @@ func applicationResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"api": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// TODO: v2.0 also consider another computed typemap attribute `oauth2_permission_scope_ids` for easier consumption
+						"oauth2_permission_scope": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Set:      tf.SetFuncHashId,
+							// SchemaConfigModeAttr seems to break d.Get("api.0.oauth2_permission_scope") ??
+							// Maybe re-enable in v2.0 when we'll be using the expand func for `api`
+							// (The goal being to enable config to set `oauth2_permission_scope = []`)
+							//ConfigMode: schema.SchemaConfigModeAttr,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+
+									"admin_consent_description": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validate.NoEmptyStrings,
+									},
+
+									"admin_consent_display_name": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validate.NoEmptyStrings,
+									},
+
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+
+									// TODO: v2.0 remove this
+									"is_enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											string(msgraph.PermissionScopeTypeAdmin),
+											string(msgraph.PermissionScopeTypeUser),
+										}, false),
+									},
+
+									"user_consent_description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"user_consent_display_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"value": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validate.NoEmptyStrings,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			// TODO: v2.0 consider another computed typemap attribute `app_role_ids` for easier consumption
 			"app_role": {
 				Type:       schema.TypeSet, // TODO: v2.0 consider changing this back to a list if the API is predictable
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
+				//Set:        tf.SetFuncHashId, // TODO: v2.0 enable this SchemaSetFunc when id is no longer Computed
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Computed: true, // TODO: v2.0 remove Computed and make this Required
 						},
 
 						"allowed_member_types": {
@@ -77,8 +157,10 @@ func applicationResource() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice(
-									[]string{"User", "Application"},
-									false,
+									[]string{
+										string(msgraph.AppRoleAllowedMemberTypeApplication),
+										string(msgraph.AppRoleAllowedMemberTypeUser),
+									}, false,
 								),
 							},
 						},
@@ -95,50 +177,66 @@ func applicationResource() *schema.Resource {
 							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
+						// TODO: v2.0 remove this
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Optional:   true,
 							Default:    true,
-							Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
+							Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 						},
 
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							Computed: true, // TODO v2.0 remove Computed
 						},
 					},
 				},
 			},
 
-			// TODO: v2.0 move this to `sign_in_audience` property and support other values
+			// TODO: v2.0 remove this
 			"available_to_other_tenants": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "[NOTE] This attribute will be replaced by a new property `sign_in_audience` in version 2.0 of the AzureAD provider",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"sign_in_audience"},
+				Deprecated:    "[NOTE] This attribute will be replaced by a new property `sign_in_audience` in version 2.0 of the AzureAD provider",
 			},
 
+			"fallback_public_client_enabled": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true, // TODO: v2.0 remove Computed
+				ConflictsWith: []string{"public_client"},
+			},
+
+			// TODO: v2.0 make this a set/list - in v1.x we only allow a single value but we concatenate multiple values on read
 			"group_membership_claims": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					// TODO: v2.0 use SDK constants
-					"All",
-					"None",
-					"SecurityGroup",
-					"DirectoryRole",    // missing from sdk: https://github.com/Azure/azure-sdk-for-go/issues/7857
-					"ApplicationGroup", //missing from sdk:https://github.com/Azure/azure-sdk-for-go/issues/8244
+					string(msgraph.GroupMembershipClaimAll),
+					string(msgraph.GroupMembershipClaimNone),
+					string(msgraph.GroupMembershipClaimApplicationGroup),
+					string(msgraph.GroupMembershipClaimDirectoryRole),
+					string(msgraph.GroupMembershipClaimSecurityGroup),
 				}, false),
 			},
 
-			// TODO: v2.0 put this in a `web` block and remove Computed
+			// TODO: v2.0 remove this
 			"homepage": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				Deprecated:       "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
-				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
+				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				ConflictsWith:    []string{"web.0.homepage_url"},
+				Deprecated:       "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"identifier_uris": {
@@ -147,35 +245,38 @@ func applicationResource() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.URLIsAppURI,
+					ValidateDiagFunc: validate.IsAppURI,
 				},
 			},
 
-			// TODO: v2.0 put this in a `web` block
+			// TODO: v2.0 remove this
 			"logout_url": {
 				Type:             schema.TypeString,
 				Optional:         true,
+				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				Computed:         true,
+				ConflictsWith:    []string{"web.0.logout_url"},
 				Deprecated:       "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
-				ValidateDiagFunc: validate.URLIsHTTPOrHTTPS,
 			},
 
-			// TODO: v2.0 put this in an `implicit_grant` block and rename to `access_token_issuance_enabled`
+			// TODO: v2.0 remove this
 			"oauth2_allow_implicit_flow": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Deprecated: "[NOTE] This attribute will be moved to the `implicit_grant` block and renamed to `access_token_issuance_enabled` in version 2.0 of the AzureAD provider",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"web.0.implicit_grant.0.access_token_issuance_enabled"},
+				Deprecated:    "[NOTE] This attribute will be moved to the `implicit_grant` block and renamed to `access_token_issuance_enabled` in version 2.0 of the AzureAD provider",
 			},
 
-			// TODO: v2.0 put this in an `api` block and maybe rename to `oauth2_permission_scope`.
-			// TODO: v2.0 also consider another computed typemap attribute `oauth2_permission_scope_ids` for easier consumption
+			// TODO: v2.0 remove this block
 			"oauth2_permissions": {
 				Type:       schema.TypeSet, // TODO: v2.0 consider changing this back to a list if the API is predictable
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
+				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permission` will be removed in version 2.0 of the AzureAD provider.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// TODO: v2.0 consider removing Computed - users could use random.uuid to generate their own
 						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -195,7 +296,11 @@ func applicationResource() *schema.Resource {
 							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"is_enabled": {
 							Type:       schema.TypeBool,
 							Optional:   true,
@@ -250,27 +355,29 @@ func applicationResource() *schema.Resource {
 			"owners": {
 				Type:     schema.TypeSet, // TODO: v2.0 consider changing this to a list if the API is predictable
 				Optional: true,
-				Computed: true,
+				Computed: true, // TODO: v2.0 maybe remove Computed
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
-			// TODO: v2.0 rename this to `fallback_public_client` and remove Computed
+			// TODO: v2.0 remove this
 			"public_client": {
-				Type:       schema.TypeBool,
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "[NOTE] This legacy attribute will be renamed to `fallback_public_client` in version 2.0 of the AzureAD provider",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"fallback_public_client_enabled"},
+				Deprecated:    "[NOTE] This legacy attribute will be renamed to `fallback_public_client_enabled` in version 2.0 of the AzureAD provider",
 			},
 
-			// TODO: v2.0 replace with `web.redirect_uris` block
+			// TODO: v2.0 remove this
 			"reply_urls": {
-				Type:       schema.TypeSet, // TODO: v2.0 consider changing this to a list if the API is predictable
-				Optional:   true,
-				Computed:   true,
-				Deprecated: "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"web.0.redirect_uris"},
+				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -302,7 +409,10 @@ func applicationResource() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice(
-											[]string{"Scope", "Role"},
+											[]string{
+												string(msgraph.ResourceAccessTypeRole),
+												string(msgraph.ResourceAccessTypeScope),
+											},
 											false, // force case sensitivity
 										),
 									},
@@ -313,6 +423,18 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"sign_in_audience": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"available_to_other_tenants"},
+				ValidateFunc: validation.StringInSlice([]string{
+					string(msgraph.SignInAudienceAzureADMyOrg),
+					string(msgraph.SignInAudienceAzureADMultipleOrgs),
+					//string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), // TODO: v2.0 enable this value
+				}, false),
+			},
+
 			// TODO: v2.0 drop this, there's no such distinction any more
 			"type": {
 				Type:         schema.TypeString,
@@ -320,6 +442,58 @@ func applicationResource() *schema.Resource {
 				Deprecated:   "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
 				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
 				Default:      "webapp/api",
+			},
+
+			"web": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"homepage_url": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ConflictsWith:    []string{"homepage"},
+							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+						},
+
+						"logout_url": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ConflictsWith:    []string{"logout_url"},
+							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+						},
+
+						"redirect_uris": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ConflictsWith: []string{"reply_urls"},
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validate.NoEmptyStrings,
+							},
+						},
+
+						"implicit_grant": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_token_issuance_enabled": {
+										Type:          schema.TypeBool,
+										Optional:      true,
+										ConflictsWith: []string{"oauth2_allow_implicit_flow"},
+									},
+
+									// TODO: v2.0 support `id_token_issuance_enabled`
+								},
+							},
+						},
+					},
+				},
 			},
 
 			"application_id": {
@@ -342,28 +516,28 @@ func applicationResource() *schema.Resource {
 }
 
 func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationResourceCreateMsGraph(ctx, d, meta)
 	}
 	return applicationResourceCreateAadGraph(ctx, d, meta)
 }
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationResourceUpdateMsGraph(ctx, d, meta)
 	}
 	return applicationResourceUpdateAadGraph(ctx, d, meta)
 }
 
 func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationResourceReadAadGraph(ctx, d, meta)
 }
 
 func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	if useMsGraph := meta.(*clients.Client).EnableMsGraphBeta; useMsGraph {
+	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationResourceDeleteMsGraph(ctx, d, meta)
 	}
 	return applicationResourceDeleteAadGraph(ctx, d, meta)
@@ -386,7 +560,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 		}
 	}
 
-	encountered := make([]string, len(values))
+	encountered := make([]string, 0)
 	for _, val := range values {
 		for _, en := range encountered {
 			if en == val {

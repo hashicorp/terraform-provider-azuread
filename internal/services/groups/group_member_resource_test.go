@@ -143,8 +143,7 @@ func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.Client
 		return nil, fmt.Errorf("parsing Group Member ID: %v", err)
 	}
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		members, _, err := clients.Groups.MsClient.ListMembers(ctx, id.GroupId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve Group members (groupId: %q): %+v", id.GroupId, err)
@@ -157,8 +156,7 @@ func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.Client
 				}
 			}
 		}
-
-	case false:
+	} else {
 		if resp, err := clients.Groups.AadClient.Get(ctx, id.GroupId); err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {
 				return nil, fmt.Errorf("Group with object ID %q does not exist", id.GroupId)

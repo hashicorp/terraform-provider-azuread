@@ -3,6 +3,12 @@ package odata
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+)
+
+const (
+	ErrorAddedObjectReferencesAlreadyExist = "One or more added object references already exist"
+	ErrorRemovedObjectReferencesDoNotExist = "One or more removed object references do not exist"
 )
 
 // OData is used to unmarshall OData metadata from an API response.
@@ -110,4 +116,9 @@ func (e Error) String() (s string) {
 		s = fmt.Sprintf("%s: %s", s, *e.Message)
 	}
 	return
+}
+
+func (e Error) Match(errorText string) bool {
+	re := regexp.MustCompile(errorText)
+	return re.MatchString(e.String())
 }

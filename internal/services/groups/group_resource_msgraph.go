@@ -3,6 +3,7 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -80,7 +81,7 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(*group.ID)
 
-	_, err = helpers.WaitForCreationReplication(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, int, error) {
+	_, err = helpers.WaitForCreationReplication(ctx, func() (interface{}, int, error) {
 		return client.Get(ctx, *group.ID)
 	})
 
@@ -204,12 +205,6 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
-		if ownersForRemoval != nil {
-			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove owners from group with ID: %q", d.Id())
-			}
-		}
-
 		if ownersToAdd != nil {
 			for _, m := range ownersToAdd {
 				group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
@@ -217,6 +212,12 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 			if _, err := client.AddOwners(ctx, &group); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
+			}
+		}
+
+		if ownersForRemoval != nil {
+			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove owners from group with ID: %q", d.Id())
 			}
 		}
 	}
@@ -230,10 +231,9 @@ func groupResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, met
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Group with ID %q was already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", d.Id())
 		}
-		return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", d.Id())
 	}
 
 	if _, err := client.Delete(ctx, d.Id()); err != nil {

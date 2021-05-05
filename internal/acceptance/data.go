@@ -50,6 +50,10 @@ type TestData struct {
 	resourceLabel string
 }
 
+func (t *TestData) UUID() string {
+	return uuid.New().String()
+}
+
 // BuildTestData generates some test data for the given resource
 func BuildTestData(t *testing.T, resourceType string, resourceLabel string) TestData {
 	EnsureProvidersAreInitialised()

@@ -8,7 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func WaitForCreationReplication(ctx context.Context, timeout time.Duration, f func() (interface{}, int, error)) (interface{}, error) {
+func WaitForCreationReplication(ctx context.Context, f func() (interface{}, int, error)) (interface{}, error) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return nil, fmt.Errorf("context has no deadline")
+	}
+	timeout := time.Until(deadline)
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"NotFound", "BadCast"},
 		Target:                    []string{"Found"},
@@ -35,10 +40,15 @@ func WaitForCreationReplication(ctx context.Context, timeout time.Duration, f fu
 }
 
 func WaitForListAdd(ctx context.Context, item string, f func() ([]string, error)) (interface{}, error) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return nil, fmt.Errorf("context has no deadline")
+	}
+	timeout := time.Until(deadline)
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"NotFound"},
 		Target:                    []string{"Found"},
-		Timeout:                   5 * time.Minute,
+		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 2,
 		Refresh: func() (interface{}, string, error) {
@@ -60,10 +70,15 @@ func WaitForListAdd(ctx context.Context, item string, f func() ([]string, error)
 }
 
 func WaitForListRemove(ctx context.Context, item string, f func() ([]string, error)) (interface{}, error) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return nil, fmt.Errorf("context has no deadline")
+	}
+	timeout := time.Until(deadline)
 	return (&resource.StateChangeConf{
 		Pending:                   []string{"Found"},
 		Target:                    []string{"NotFound"},
-		Timeout:                   5 * time.Minute,
+		Timeout:                   timeout,
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 2,
 		Refresh: func() (interface{}, string, error) {

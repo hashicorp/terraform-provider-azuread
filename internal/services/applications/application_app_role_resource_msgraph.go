@@ -2,6 +2,7 @@ package applications
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -34,10 +35,16 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 		roleId = rid
 	}
 
-	allowedMemberTypesRaw := d.Get("allowed_member_types").(*schema.Set).List()
-	allowedMemberTypes := make([]string, 0, len(allowedMemberTypesRaw))
-	for _, a := range allowedMemberTypesRaw {
-		allowedMemberTypes = append(allowedMemberTypes, a.(string))
+	allowedMemberTypes := make([]msgraph.AppRoleAllowedMemberType, 0)
+	for _, a := range d.Get("allowed_member_types").(*schema.Set).List() {
+		allowedMemberTypes = append(allowedMemberTypes, msgraph.AppRoleAllowedMemberType(a.(string)))
+	}
+
+	var enabled bool
+	if v, ok := d.GetOkExists("is_enabled"); ok { //nolint:SA1019
+		enabled = v.(bool)
+	} else {
+		enabled = d.Get("enabled").(bool)
 	}
 
 	role := msgraph.AppRole{
@@ -45,14 +52,14 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 		ID:                 utils.String(roleId),
 		Description:        utils.String(d.Get("description").(string)),
 		DisplayName:        utils.String(d.Get("display_name").(string)),
-		IsEnabled:          utils.Bool(d.Get("is_enabled").(bool)),
+		IsEnabled:          utils.Bool(enabled),
 	}
 
 	if v, ok := d.GetOk("value"); ok {
 		role.Value = utils.String(v.(string))
 	}
 
-	id := parse.NewAppRoleID(objectId, *role.ID)
+	id := parse.NewAppRoleID(objectId, roleId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -128,7 +135,8 @@ func applicationAppRoleResourceReadMsGraph(ctx context.Context, d *schema.Resour
 	tf.Set(d, "application_object_id", id.ObjectId)
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
-	tf.Set(d, "is_enabled", role.IsEnabled)
+	tf.Set(d, "enabled", role.IsEnabled)
+	tf.Set(d, "is_enabled", role.IsEnabled) // TODO: remove in v2.0
 	tf.Set(d, "role_id", id.RoleId)
 	tf.Set(d, "value", role.Value)
 
@@ -149,8 +157,7 @@ func applicationAppRoleResourceDeleteMsGraph(ctx context.Context, d *schema.Reso
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state!", id.ObjectId)
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
 	}

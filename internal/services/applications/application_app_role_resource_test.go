@@ -105,8 +105,7 @@ func (a ApplicationAppRoleResource) Exists(ctx context.Context, clients *clients
 		return nil, fmt.Errorf("parsing App Role ID: %v", err)
 	}
 
-	switch clients.EnableMsGraphBeta {
-	case true:
+	if clients.EnableMsGraphBeta {
 		app, status, err := clients.Applications.MsClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -121,8 +120,7 @@ func (a ApplicationAppRoleResource) Exists(ctx context.Context, clients *clients
 		} else if role != nil {
 			return utils.Bool(true), nil
 		}
-
-	case false:
+	} else {
 		resp, err := clients.Applications.AadClient.Get(ctx, id.ObjectId)
 		if err != nil {
 			if utils.ResponseWasNotFound(resp.Response) {

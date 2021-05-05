@@ -3,6 +3,7 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -103,8 +104,7 @@ func servicePrincipalResourceDeleteMsGraph(ctx context.Context, d *schema.Resour
 	_, status, err := client.Get(ctx, d.Id())
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with Object ID %q already deleted", d.Id())
-			return nil
+			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", d.Id())
 		}
 
 		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", d.Id())

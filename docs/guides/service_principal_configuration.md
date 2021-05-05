@@ -3,18 +3,18 @@ page_title: "Configuring a Service Principal to manage an Azure Active Directory
 subcategory: "Authentication"
 ---
 
-# Azure Active Directory Provider: Configuring a Service Principal for managing Azure Active Directory
+# Configuring a Service Principal for managing Azure Active Directory
 
 Terraform supports a number of different methods for authenticating to Azure:
 
 * [Authenticating to Azure using the Azure CLI](azure_cli.html)
-* [Authenticating to Azure using Managed Service Identity](managed_service_identity.html)
+* [Authenticating to Azure using Managed Identity](managed_service_identity.html)
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
 ---
 
-We recommend using either a Service Principal or Managed Service Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
+We recommend using either a Service Principal or Managed Identity when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
 ## Creating a Service Principal
 

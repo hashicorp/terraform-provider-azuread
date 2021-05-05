@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,24 +44,16 @@ func groupDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceData, met
 			filter = fmt.Sprintf("%s and securityEnabled eq %t", filter, *securityEnabled)
 		}
 
-		params := []string{fmt.Sprintf("display_name: %q", displayName)}
-		if mailEnabled != nil {
-			params = append(params, fmt.Sprintf("mail_enabled: %t", *mailEnabled))
-		}
-		if securityEnabled != nil {
-			params = append(params, fmt.Sprintf("security_enabled: %t", *securityEnabled))
-		}
-
 		groups, _, err := client.List(ctx, filter)
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "name", "No group found matching specified parameters (%s)", strings.Join(params, ", "))
+			return tf.ErrorDiagPathF(err, "name", "No group found matching specified filter (%s)", filter)
 		}
 
 		count := len(*groups)
 		if count > 1 {
-			return tf.ErrorDiagPathF(err, "name", "More than one group found matching specified parameters (%s)", strings.Join(params, ", "))
+			return tf.ErrorDiagPathF(err, "name", "More than one group found matching specified filter (%s)", filter)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "name", "No group found matching specified parameters (%s)", strings.Join(params, ", "))
+			return tf.ErrorDiagPathF(err, "name", "No group found matching specified filter (%s)", filter)
 		}
 
 		group = (*groups)[0]
