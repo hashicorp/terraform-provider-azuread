@@ -18,21 +18,12 @@ import (
 func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
 
-	var displayName string
-	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
-		displayName = v.(string)
-	} else {
-		displayName = d.Get("name").(string)
-	}
-
-	var state string
-	if v, ok := d.GetOk("state"); ok && v.(string) != "" {
-		state = v.(string)
-	}
+	displayName := d.Get("display_name").(string)
+	state := d.Get("state").(string)
 
 	properties := msgraph.ConditionalAccessPolicy{
 		DisplayName: utils.String(displayName),
-		State:       &state,
+		State:       utils.String(state),
 		Conditions: &msgraph.ConditionalAccessConditionSet{
 			ClientAppTypes: &[]string{"mobileAppsAndDesktopClients", "browser"},
 			Applications: &msgraph.ConditionalAccessApplications{
