@@ -83,7 +83,11 @@ func applicationAppRoleResourceCreateUpdateAadGraph(ctx context.Context, d *sche
 			return tf.ErrorDiagF(err, "Failed to add App Role")
 		}
 	} else {
-		if existing, _ := aadgraph.AppRoleFindById(app, id.RoleId); existing == nil {
+		existing, err := aadgraph.AppRoleFindById(app, id.RoleId)
+		if err != nil {
+			return tf.ErrorDiagPathF(nil, "role_id", "retrieving App Role with ID %q for Application %q: %+v", id.RoleId, id.ObjectId, err)
+		}
+		if existing == nil {
 			return tf.ErrorDiagPathF(nil, "role_id", "App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 		}
 

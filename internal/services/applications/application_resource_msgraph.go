@@ -23,10 +23,10 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	// TODO: v2.0 drop `name` property
 	var displayName string
-	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
 		displayName = v.(string)
 	} else {
-		displayName = d.Get("display_name").(string)
+		displayName = d.Get("name").(string)
 	}
 
 	if d.Get("prevent_duplicate_names").(bool) {
@@ -43,9 +43,9 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO v2.0 remove this and use expand func for `api` block
-	oauth2PermissionScopes, hasOauth2PermissionScopes := d.GetOk("oauth2_permissions")
+	oauth2PermissionScopes, hasOauth2PermissionScopes := d.GetOk("api.0.oauth2_permission_scope")
 	if !hasOauth2PermissionScopes {
-		oauth2PermissionScopes, hasOauth2PermissionScopes = d.GetOk("api.0.oauth2_permission_scope")
+		oauth2PermissionScopes, hasOauth2PermissionScopes = d.GetOk("oauth2_permissions")
 	}
 
 	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), oauth2PermissionScopes.(*schema.Set).List()); err != nil {
@@ -76,14 +76,17 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 remove "available_to_other_tenants" property
-	if availableToOtherTenants, ok := d.GetOk("available_to_other_tenants"); ok {
+	if signInAudience, ok := d.GetOk("sign_in_audience"); ok {
+		properties.SignInAudience = msgraph.SignInAudience(signInAudience.(string))
+	} else if availableToOtherTenants, ok := d.GetOk("available_to_other_tenants"); ok {
 		if availableToOtherTenants.(bool) {
 			properties.SignInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
 		} else {
 			properties.SignInAudience = msgraph.SignInAudienceAzureADMyOrg
 		}
 	} else {
-		properties.SignInAudience = msgraph.SignInAudience(d.Get("sign_in_audience").(string))
+		// TODO: this default value hack emulates AAD Graph, remove in v2.0
+		properties.SignInAudience = msgraph.SignInAudienceAzureADMyOrg
 	}
 
 	if v, ok := d.GetOk("group_membership_claims"); ok {
@@ -91,16 +94,16 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 use an expand func for the `web` block
-	if v, ok := d.GetOk("homepage"); ok {
+	if v, ok := d.GetOk("web.0.homepage_url"); ok {
 		properties.Web.HomePageUrl = utils.String(v.(string))
-	} else if v, ok := d.GetOk("web.0.homepage_url"); ok {
+	} else if v, ok := d.GetOk("homepage"); ok {
 		properties.Web.HomePageUrl = utils.String(v.(string))
 	}
 
 	// TODO: v2.0 use an expand func for the `web` block
-	if v, ok := d.GetOk("logout_url"); ok {
+	if v, ok := d.GetOk("web.0.logout_url"); ok {
 		properties.Web.LogoutUrl = utils.String(v.(string))
-	} else if v, ok := d.GetOk("web.0.logout_url"); ok {
+	} else if v, ok := d.GetOk("logout_url"); ok {
 		properties.Web.LogoutUrl = utils.String(v.(string))
 	}
 
@@ -125,24 +128,24 @@ func applicationResourceCreateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 remove this and use an expand func for the `implicit_grant` block
-	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
+	if v, ok := d.GetOk("web.0.implicit_grant.0.access_token_issuance_enabled"); ok {
 		properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(v.(bool))
 	} else {
-		properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(d.Get("web.0.implicit_grant.0.access_token_issuance_enabled").(bool))
+		properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(d.Get("oauth2_allow_implicit_flow").(bool))
 	}
 
 	// TODO: v2.0 remove old property `public_client`
-	if v, ok := d.GetOk("public_client"); ok {
+	if v, ok := d.GetOk("fallback_public_client_enabled"); ok {
 		properties.IsFallbackPublicClient = utils.Bool(v.(bool))
-	} else if v, ok := d.GetOk("fallback_public_client_enabled"); ok {
+	} else if v, ok := d.GetOk("public_client"); ok {
 		properties.IsFallbackPublicClient = utils.Bool(v.(bool))
 	}
 
 	// TODO: v2.0 remove old property `reply_urls` and use expand func for `web` block
-	if v, ok := d.GetOk("reply_urls"); ok {
+	if v, ok := d.GetOk("web.0.redirect_uris"); ok {
 		properties.Web.RedirectUris = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 	} else {
-		properties.Web.RedirectUris = tf.ExpandStringSlicePtr(d.Get("web.0.redirect_uris").(*schema.Set).List())
+		properties.Web.RedirectUris = tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List())
 	}
 
 	// TODO: v2.0 remove this autoconfiguration logic; it's only here to maintain functional compatibility with AAD Graph
@@ -178,10 +181,10 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	// TODO: v2.0 drop `name` property
 	var displayName string
-	if v, ok := d.GetOk("name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
 		displayName = v.(string)
 	} else {
-		displayName = d.Get("display_name").(string)
+		displayName = d.Get("name").(string)
 	}
 
 	if d.Get("prevent_duplicate_names").(bool) {
@@ -201,13 +204,20 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO v2.0 remove this and use expand func for `api` block
-	oauth2PermissionScopes, ok := d.GetOk("oauth2_permissions")
-	if !ok {
-		oauth2PermissionScopes, _ = d.GetOk("api.0.oauth2_permission_scope")
+	var oauth2PermissionScopes interface{}
+	if d.HasChange("api.0.oauth2_permission_scope") {
+		oauth2PermissionScopes = d.Get("api.0.oauth2_permission_scope")
+	} else if d.HasChange("oauth2_permissions") {
+		v, ok := d.GetOk("oauth2_permissions")
+		if ok {
+			oauth2PermissionScopes = v
+		}
 	}
 
-	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), oauth2PermissionScopes.(*schema.Set).List()); err != nil {
-		return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
+	if oauth2PermissionScopes != nil {
+		if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), oauth2PermissionScopes.(*schema.Set).List()); err != nil {
+			return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
+		}
 	}
 
 	appType := d.Get("type")
@@ -231,14 +241,18 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 remove "available_to_other_tenants" property
-	if availableToOtherTenants, ok := d.GetOk("available_to_other_tenants"); ok {
-		if availableToOtherTenants.(bool) {
-			properties.SignInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
-		} else {
-			properties.SignInAudience = msgraph.SignInAudienceAzureADMyOrg
+	if d.HasChange("available_to_other_tenants") {
+		if availableToOtherTenants, exists := d.GetOkExists("available_to_other_tenants"); exists {
+			if availableToOtherTenants.(bool) {
+				properties.SignInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
+			} else {
+				properties.SignInAudience = msgraph.SignInAudienceAzureADMyOrg
+			}
 		}
-	} else {
-		properties.SignInAudience = msgraph.SignInAudience(d.Get("sign_in_audience").(string))
+	} else if d.HasChange("sign_in_audience") {
+		if signInAudience, ok := d.GetOk("sign_in_audience"); ok {
+			properties.SignInAudience = msgraph.SignInAudience(signInAudience.(string))
+		}
 	}
 
 	if d.HasChange("group_membership_claims") {
@@ -246,38 +260,48 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: v2.0 use an expand func for the `web` block
-	if v, ok := d.GetOk("homepage"); ok {
-		properties.Web.HomePageUrl = utils.String(v.(string))
-	} else if v, ok := d.GetOk("web.0.homepage_url"); ok {
-		properties.Web.HomePageUrl = utils.String(v.(string))
+	if d.HasChange("web.0.homepage_url") {
+		properties.Web.HomePageUrl = utils.String(d.Get("web.0.homepage_url").(string))
+	} else if d.HasChange("homepage") {
+		if v, ok := d.GetOk("homepage"); ok {
+			properties.Web.HomePageUrl = utils.String(v.(string))
+		}
 	}
 
 	// TODO: v2.0 use an expand func for the `web` block
-	if v, ok := d.GetOk("logout_url"); ok {
-		properties.Web.LogoutUrl = utils.String(v.(string))
-	} else if v, ok := d.GetOk("web.0.logout_url"); ok {
-		properties.Web.LogoutUrl = utils.String(v.(string))
+	if d.HasChange("web.0.logout_url") {
+		properties.Web.LogoutUrl = utils.String(d.Get("web.0.logout_url").(string))
+	} else if d.HasChange("logout_url") {
+		if v, ok := d.GetOk("logout_url"); ok {
+			properties.Web.LogoutUrl = utils.String(v.(string))
+		}
 	}
 
 	// TODO: v2.0 remove this and use an expand func for the `implicit_grant` block
-	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
-		properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(v.(bool))
-	} else {
+	if d.HasChange("web.0.implicit_grant.0.access_token_issuance_enabled") {
 		properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(d.Get("web.0.implicit_grant.0.access_token_issuance_enabled").(bool))
+	} else if d.HasChange("oauth2_allow_implicit_flow") {
+		if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
+			properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = utils.Bool(v.(bool))
+		}
 	}
 
 	// TODO: v2.0 remove old property `public_client`
-	if v, ok := d.GetOk("public_client"); ok {
-		properties.IsFallbackPublicClient = utils.Bool(v.(bool))
-	} else if v, ok := d.GetOk("fallback_public_client_enabled"); ok {
-		properties.IsFallbackPublicClient = utils.Bool(v.(bool))
+	if d.HasChange("fallback_public_client_enabled") {
+		properties.IsFallbackPublicClient = utils.Bool(d.Get("fallback_public_client_enabled").(bool))
+	} else if d.HasChange("public_client") {
+		if v, ok := d.GetOk("public_client"); ok {
+			properties.IsFallbackPublicClient = utils.Bool(v.(bool))
+		}
 	}
 
 	// TODO: v2.0 remove old property `reply_urls` and use expand func for `web` block
-	if v, ok := d.GetOk("reply_urls"); ok {
-		properties.Web.RedirectUris = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-	} else {
+	if d.HasChange("web.0.redirect_uris") {
 		properties.Web.RedirectUris = tf.ExpandStringSlicePtr(d.Get("web.0.redirect_uris").(*schema.Set).List())
+	} else if d.HasChange("reply_urls") {
+		if v, ok := d.GetOk("reply_urls"); ok {
+			properties.Web.RedirectUris = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		}
 	}
 
 	// TODO: v2.0 remove this autoconfiguration logic; it's only here to maintain functional compatibility with AAD Graph
@@ -300,18 +324,22 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("app_role") {
-		if a := expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()); a != nil {
-			if err := helpers.ApplicationSetAppRoles(ctx, client, &properties, a); err != nil {
-				return tf.ErrorDiagPathF(err, "app_role", "Could not set App Roles")
-			}
+		if err := helpers.ApplicationSetAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
+			return tf.ErrorDiagPathF(err, "app_role", "Could not set App Roles")
 		}
 	}
 
 	// TODO v2.0 use expand func for `api` block
-	if d.HasChange("oauth2_permissions") {
-		if o := expandApplicationOAuth2Permissions(oauth2PermissionScopes.(*schema.Set).List()); o != nil {
+	if d.HasChange("api.0.oauth2_permission_scope") {
+		if o := expandApplicationOAuth2Permissions(d.Get("api.0.oauth2_permission_scope").(*schema.Set).List()); o != nil {
 			if err := helpers.ApplicationSetOAuth2PermissionScopes(ctx, client, &properties, o); err != nil {
 				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permission Scopes")
+			}
+		}
+	} else if d.HasChange("oauth2_permissions") {
+		if o := expandApplicationOAuth2Permissions(d.Get("oauth2_permissions").(*schema.Set).List()); o != nil {
+			if err := helpers.ApplicationSetOAuth2PermissionScopes(ctx, client, &properties, o); err != nil {
+				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permissions")
 			}
 		}
 	}
@@ -340,7 +368,7 @@ func applicationResourceReadMsGraph(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
 	}
 
-	tf.Set(d, "api", helpers.ApplicationFlattenApi(app.Api))
+	tf.Set(d, "api", helpers.ApplicationFlattenApi(app.Api, false))
 	tf.Set(d, "app_role", helpers.ApplicationFlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
 	tf.Set(d, "available_to_other_tenants", app.SignInAudience == msgraph.SignInAudienceAzureADMultipleOrgs) // TODO: remove in v2.0
@@ -468,7 +496,9 @@ func expandApplicationGroupMembershipClaims(in interface{}) *[]msgraph.GroupMemb
 	if in == nil {
 		return nil
 	}
-	return &[]msgraph.GroupMembershipClaim{msgraph.GroupMembershipClaim(in.(string))}
+	ret := make([]msgraph.GroupMembershipClaim, 0)
+	ret = append(ret, msgraph.GroupMembershipClaim(in.(string)))
+	return &ret
 
 	// TODO: v2.0 use the following to expand a TypeSet, in v1.x this attribute is a singleton string
 	//if len(in) == 0 {
@@ -487,16 +517,17 @@ func expandApplicationOAuth2Permissions(in []interface{}) *[]msgraph.PermissionS
 	for _, raw := range in {
 		oauth2Permissions := raw.(map[string]interface{})
 
+		// TODO: v2.0 remove id autogeneration
 		id := oauth2Permissions["id"].(string)
 		if id == "" {
 			id, _ = uuid.GenerateUUID()
 		}
 
 		var enabled bool
-		if v, ok := oauth2Permissions["is_enabled"]; ok {
+		if v, ok := oauth2Permissions["enabled"]; ok {
 			enabled = v.(bool)
 		} else {
-			enabled = oauth2Permissions["enabled"].(bool)
+			enabled = oauth2Permissions["is_enabled"].(bool) // TODO: v2.0 remove this
 		}
 
 		result = append(result,
@@ -601,23 +632,19 @@ func flattenApplicationOptionalClaims(in *msgraph.OptionalClaims) interface{} {
 		return result
 	}
 
-	optionalClaims := make(map[string]interface{})
-	if claims := flattenApplicationOptionalClaim(in.AccessToken); len(claims) > 0 {
-		optionalClaims["access_token"] = claims
-	}
-	if claims := flattenApplicationOptionalClaim(in.IdToken); len(claims) > 0 {
-		optionalClaims["id_token"] = claims
-	}
-	// TODO: v2.0 enable this
-	//if claims := flattenApplicationOptionalClaim(in.Saml2Token); len(claims) > 0 {
-	//	optionalClaims["saml2_token"] = claims
-	//}
+	accessTokenClaims := flattenApplicationOptionalClaim(in.AccessToken)
+	idTokenClaims := flattenApplicationOptionalClaim(in.IdToken)
+	//saml2TokenClaims := flattenApplicationOptionalClaim(in.Saml2Token) // TODO: v2.0 support this
 
-	if len(optionalClaims) == 0 {
+	if len(accessTokenClaims) == 0 && len(idTokenClaims) == 0 {
 		return result
 	}
 
-	result = append(result, optionalClaims)
+	result = append(result, map[string]interface{}{
+		"access_token": accessTokenClaims,
+		"id_token":     idTokenClaims,
+		//"saml2_token":  saml2TokenClaims, // TODO: v2.0 support this
+	})
 	return result
 }
 
@@ -656,14 +683,15 @@ func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAcce
 
 	result := make([]map[string]interface{}, 0)
 	for _, requiredResourceAccess := range *in {
-		resource := make(map[string]interface{})
+		resourceAppId := ""
 		if requiredResourceAccess.ResourceAppId != nil {
-			resource["resource_app_id"] = *requiredResourceAccess.ResourceAppId
+			resourceAppId = *requiredResourceAccess.ResourceAppId
 		}
 
-		resource["resource_access"] = flattenApplicationResourceAccess(requiredResourceAccess.ResourceAccess)
-
-		result = append(result, resource)
+		result = append(result, map[string]interface{}{
+			"resource_app_id": resourceAppId,
+			"resource_access": flattenApplicationResourceAccess(requiredResourceAccess.ResourceAccess),
+		})
 	}
 
 	return result

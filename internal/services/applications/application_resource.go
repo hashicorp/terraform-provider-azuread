@@ -61,7 +61,7 @@ func applicationResource() *schema.Resource {
 			"api": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
+				Computed: true, // TODO: v2.0 remove Computed
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -69,12 +69,6 @@ func applicationResource() *schema.Resource {
 						"oauth2_permission_scope": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
-							Set:      tf.SetFuncHashId,
-							// SchemaConfigModeAttr seems to break d.Get("api.0.oauth2_permission_scope") ??
-							// Maybe re-enable in v2.0 when we'll be using the expand func for `api`
-							// (The goal being to enable config to set `oauth2_permission_scope = []`)
-							//ConfigMode: schema.SchemaConfigModeAttr,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
@@ -97,12 +91,6 @@ func applicationResource() *schema.Resource {
 									"enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
-									},
-
-									// TODO: v2.0 remove this
-									"is_enabled": {
-										Type:     schema.TypeBool,
-										Computed: true,
 									},
 
 									"type": {
@@ -140,9 +128,8 @@ func applicationResource() *schema.Resource {
 			"app_role": {
 				Type:       schema.TypeSet,
 				Optional:   true,
-				Computed:   true,
+				Computed:   true, // TODO: v2.0 remove computed?
 				ConfigMode: schema.SchemaConfigModeAttr,
-				//Set:        tf.SetFuncHashId, // TODO: v2.0 enable this SchemaSetFunc when id is no longer Computed
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -212,7 +199,7 @@ func applicationResource() *schema.Resource {
 			"fallback_public_client_enabled": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				Computed:      true, // TODO: v2.0 remove Computed
+				Computed:      true,
 				ConflictsWith: []string{"public_client"},
 			},
 
@@ -274,7 +261,7 @@ func applicationResource() *schema.Resource {
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: schema.SchemaConfigModeAttr,
-				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permission` will be removed in version 2.0 of the AzureAD provider.",
+				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -294,11 +281,6 @@ func applicationResource() *schema.Resource {
 							Optional:         true,
 							Computed:         true,
 							ValidateDiagFunc: validate.NoEmptyStrings,
-						},
-
-						"enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
 						},
 
 						"is_enabled": {
@@ -446,7 +428,7 @@ func applicationResource() *schema.Resource {
 			"web": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
+				Computed: true, // TODO: v2.0 remove Computed
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -477,7 +459,6 @@ func applicationResource() *schema.Resource {
 						"implicit_grant": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

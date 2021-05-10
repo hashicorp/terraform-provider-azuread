@@ -79,8 +79,12 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 			return tf.ErrorDiagF(err, "Failed to add OAuth2 Permission")
 		}
 	} else {
-		if existing, _ := helpers.OAuth2PermissionFindById(app, id.PermissionId); existing == nil {
-			return tf.ErrorDiagPathF(nil, "role_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
+		existing, _ := helpers.OAuth2PermissionFindById(app, id.PermissionId)
+		if err != nil {
+			return tf.ErrorDiagPathF(nil, "permission_id", "retrieving OAuth2 Permission with ID %q for Application %q: %+v", id.PermissionId, id.ObjectId, err)
+		}
+		if existing == nil {
+			return tf.ErrorDiagPathF(nil, "permission_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
 		}
 
 		if app.Api.UpdateOAuth2PermissionScope(scope) != nil {

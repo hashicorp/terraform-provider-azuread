@@ -25,6 +25,7 @@ func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {
 			"description":          "",
 			"display_name":         "",
 			"is_enabled":           false,
+			"enabled":              false,
 			"value":                "",
 		}
 
@@ -50,6 +51,7 @@ func FlattenAppRoles(in *[]graphrbac.AppRole) []map[string]interface{} {
 
 		if v := role.IsEnabled; v != nil {
 			appRole["is_enabled"] = v
+			appRole["enabled"] = v
 		}
 
 		if v := role.Value; v != nil {

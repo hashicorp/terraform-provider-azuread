@@ -41,7 +41,12 @@ func applicationResourceCreateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
+	oauth2PermissionScopes, hasOauth2PermissionScopes := d.GetOk("api.0.oauth2_permission_scope")
+	if !hasOauth2PermissionScopes {
+		oauth2PermissionScopes, hasOauth2PermissionScopes = d.GetOk("oauth2_permissions")
+	}
+
+	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), oauth2PermissionScopes.(*schema.Set).List()); err != nil {
 		return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
 	}
 
@@ -53,41 +58,49 @@ func applicationResourceCreateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	// Note: supporting new property sign_in_audience for MS Graph backwards compatibility
-	var availableToOtherTenants bool
-	if v, exists := d.GetOkExists("available_to_other_tenants"); exists { //nolint:SA1019
-		availableToOtherTenants = v.(bool)
-	} else {
-		if d.Get("sign_in_audience").(msgraph.SignInAudience) == msgraph.SignInAudienceAzureADMultipleOrgs {
-			availableToOtherTenants = true
-		}
-	}
-
 	// We don't send Oauth2Permissions here because applications tend to get a default `user_impersonation` scope
 	// defined, which will either conflict if we also define it, or create an unwanted diff if we don't
 	// After creating the application, we update it later before this function returns, including any Oauth2Permissions
 	properties := graphrbac.ApplicationCreateParameters{
-		DisplayName:             &name,
-		IdentifierUris:          tf.ExpandStringSlicePtr(identUrls.([]interface{})),
-		ReplyUrls:               tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List()),
-		AvailableToOtherTenants: utils.Bool(availableToOtherTenants),
-		RequiredResourceAccess:  expandApplicationRequiredResourceAccessAad(d),
-		OptionalClaims:          expandApplicationOptionalClaimsAad(d),
+		DisplayName:            &name,
+		IdentifierUris:         tf.ExpandStringSlicePtr(identUrls.([]interface{})),
+		RequiredResourceAccess: expandApplicationRequiredResourceAccessAad(d),
+		OptionalClaims:         expandApplicationOptionalClaimsAad(d),
 	}
 
-	if v, ok := d.GetOk("homepage"); ok {
+	if v, ok := d.GetOk("available_to_other_tenants"); ok {
+		properties.AvailableToOtherTenants = utils.Bool(v.(bool))
+	} else {
+		properties.AvailableToOtherTenants = utils.Bool(msgraph.SignInAudience(d.Get("sign_in_audience").(string)) == msgraph.SignInAudienceAzureADMultipleOrgs)
+	}
+
+	if v, ok := d.GetOk("web.0.homepage_url"); ok {
+		properties.Homepage = utils.String(v.(string))
+	} else if v, ok := d.GetOk("homepage"); ok {
 		properties.Homepage = utils.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logout_url"); ok {
+	if v, ok := d.GetOk("web.0.logout_url"); ok {
 		properties.LogoutURL = utils.String(v.(string))
+	} else if v, ok := d.GetOk("logout_url"); ok {
+		properties.LogoutURL = utils.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("web.0.redirect_uris"); ok {
+		properties.ReplyUrls = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+	} else if v, ok := d.GetOk("reply_urls"); ok {
+		properties.ReplyUrls = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
 		properties.Oauth2AllowImplicitFlow = utils.Bool(v.(bool))
+	} else if v, ok := d.GetOk("web.0.implicit_grant.0.access_token_issuance_enabled"); ok {
+		properties.Oauth2AllowImplicitFlow = utils.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("public_client"); ok {
+	if v, ok := d.GetOk("fallback_public_client_enabled"); ok {
+		properties.PublicClient = utils.Bool(v.(bool))
+	} else if v, ok := d.GetOk("public_client"); ok {
 		properties.PublicClient = utils.Bool(v.(bool))
 	}
 
@@ -135,12 +148,13 @@ func applicationResourceCreateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if v, ok := d.GetOk("oauth2_permissions"); ok {
-		oauth2Permissions := expandApplicationOAuth2PermissionsAad(v)
-		if oauth2Permissions != nil {
-			if err := aadgraph.OAuth2PermissionsSet(ctx, client, *app.ObjectID, oauth2Permissions); err != nil {
-				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permissions")
-			}
+	var oauth2Permissions *[]graphrbac.OAuth2Permission
+	if hasOauth2PermissionScopes {
+		oauth2Permissions = expandApplicationOAuth2PermissionsAad(oauth2PermissionScopes)
+	}
+	if oauth2Permissions != nil {
+		if err := aadgraph.OAuth2PermissionsSet(ctx, client, *app.ObjectID, oauth2Permissions); err != nil {
+			return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permissions")
 		}
 	}
 
@@ -177,7 +191,14 @@ func applicationResourceUpdateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), d.Get("oauth2_permissions").(*schema.Set).List()); err != nil {
+	var oauth2PermissionScopes interface{}
+	if d.HasChange("api.0.oauth2_permission_scope") {
+		oauth2PermissionScopes = d.Get("api.0.oauth2_permission_scope")
+	} else {
+		oauth2PermissionScopes = d.Get("oauth2_permissions")
+	}
+
+	if err := applicationValidateRolesScopes(d.Get("app_role").(*schema.Set).List(), oauth2PermissionScopes.(*schema.Set).List()); err != nil {
 		return tf.ErrorDiagPathF(err, "app_role", "Checking for duplicate app role / oauth2_permissions values")
 	}
 
@@ -187,32 +208,56 @@ func applicationResourceUpdateAadGraph(ctx context.Context, d *schema.ResourceDa
 		properties.DisplayName = &name
 	}
 
-	if d.HasChange("homepage") {
-		properties.Homepage = utils.String(d.Get("homepage").(string))
+	if d.HasChange("homepage") || d.HasChange("web.0.homepage_url") {
+		if v, ok := d.GetOk("web.0.homepage_url"); ok {
+			properties.Homepage = utils.String(v.(string))
+		} else if v, ok := d.GetOk("homepage"); ok {
+			properties.Homepage = utils.String(v.(string))
+		}
 	}
 
-	if d.HasChange("logout_url") {
-		properties.LogoutURL = utils.String(d.Get("logout_url").(string))
+	if d.HasChange("logout_url") || d.HasChange("web.0.logout_url") {
+		if v, ok := d.GetOk("web.0.logout_url"); ok {
+			properties.LogoutURL = utils.String(v.(string))
+		} else if v, ok := d.GetOk("logout_url"); ok {
+			properties.LogoutURL = utils.String(v.(string))
+		}
 	}
 
 	if d.HasChange("identifier_uris") {
 		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{}))
 	}
 
-	if d.HasChange("reply_urls") {
-		properties.ReplyUrls = tf.ExpandStringSlicePtr(d.Get("reply_urls").(*schema.Set).List())
+	if d.HasChange("reply_urls") || d.HasChange("web.0.redirect_uris") {
+		if v, ok := d.GetOk("web.0.redirect_uris"); ok {
+			properties.ReplyUrls = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		} else if v, ok := d.GetOk("reply_urls"); ok {
+			properties.ReplyUrls = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		}
 	}
 
-	if d.HasChange("available_to_other_tenants") {
-		properties.AvailableToOtherTenants = utils.Bool(d.Get("available_to_other_tenants").(bool))
+	if d.HasChange("available_to_other_tenants") || d.HasChange("sign_in_audience") {
+		if v, ok := d.GetOk("available_to_other_tenants"); ok {
+			properties.AvailableToOtherTenants = utils.Bool(v.(bool))
+		} else {
+			properties.AvailableToOtherTenants = utils.Bool(msgraph.SignInAudience(d.Get("sign_in_audience").(string)) == msgraph.SignInAudienceAzureADMultipleOrgs)
+		}
 	}
 
-	if d.HasChange("oauth2_allow_implicit_flow") {
-		properties.Oauth2AllowImplicitFlow = utils.Bool(d.Get("oauth2_allow_implicit_flow").(bool))
+	if d.HasChange("oauth2_allow_implicit_flow") || d.HasChange("web.0.implicit_grant.0.access_token_issuance_enabled") {
+		if v, ok := d.GetOk("oauth2_allow_implicit_flow"); ok {
+			properties.Oauth2AllowImplicitFlow = utils.Bool(v.(bool))
+		} else if v, ok := d.GetOk("web.0.implicit_grant.0.access_token_issuance_enabled"); ok {
+			properties.Oauth2AllowImplicitFlow = utils.Bool(v.(bool))
+		}
 	}
 
-	if d.HasChange("public_client") {
-		properties.PublicClient = utils.Bool(d.Get("public_client").(bool))
+	if d.HasChange("public_client") || d.HasChange("fallback_public_client_enabled") {
+		if v, ok := d.GetOk("fallback_public_client_enabled"); ok {
+			properties.PublicClient = utils.Bool(v.(bool))
+		} else if v, ok := d.GetOk("public_client"); ok {
+			properties.PublicClient = utils.Bool(v.(bool))
+		}
 	}
 
 	if d.HasChange("required_resource_access") {
@@ -255,7 +300,14 @@ func applicationResourceUpdateAadGraph(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	if d.HasChange("oauth2_permissions") {
+	if d.HasChange("api.0.oauth2_permission_scope") {
+		oauth2Permissions := expandApplicationOAuth2PermissionsAad(d.Get("api.0.oauth2_permission_scope"))
+		if oauth2Permissions != nil {
+			if err := aadgraph.OAuth2PermissionsSet(ctx, client, d.Id(), oauth2Permissions); err != nil {
+				return tf.ErrorDiagPathF(err, "oauth2_permissions", "Could not set OAuth2 Permission Scopes")
+			}
+		}
+	} else if d.HasChange("oauth2_permissions") {
 		oauth2Permissions := expandApplicationOAuth2PermissionsAad(d.Get("oauth2_permissions"))
 		if oauth2Permissions != nil {
 			if err := aadgraph.OAuth2PermissionsSet(ctx, client, d.Id(), oauth2Permissions); err != nil {
@@ -288,10 +340,17 @@ func applicationResourceReadAadGraph(ctx context.Context, d *schema.ResourceData
 		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
 	}
 
+	api := []map[string]interface{}{
+		{
+			"oauth2_permission_scope": applicationFlattenOAuth2PermissionScopes(app.Oauth2Permissions),
+		},
+	}
+	tf.Set(d, "api", api)
 	tf.Set(d, "app_role", aadgraph.FlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppID)
 	tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants)
 	tf.Set(d, "display_name", app.DisplayName)
+	tf.Set(d, "fallback_public_client_enabled", app.PublicClient)
 	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
 	tf.Set(d, "homepage", app.Homepage)
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
@@ -305,6 +364,12 @@ func applicationResourceReadAadGraph(ctx context.Context, d *schema.ResourceData
 	tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls))
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccessAad(app.RequiredResourceAccess))
 
+	signInAudience := msgraph.SignInAudienceAzureADMyOrg
+	if app.AvailableToOtherTenants != nil && *app.AvailableToOtherTenants {
+		signInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
+	}
+	tf.Set(d, "sign_in_audience", string(signInAudience))
+
 	var appType string
 	if v := app.PublicClient; v != nil && *v {
 		appType = "native"
@@ -312,6 +377,34 @@ func applicationResourceReadAadGraph(ctx context.Context, d *schema.ResourceData
 		appType = "webapp/api"
 	}
 	tf.Set(d, "type", appType)
+
+	web := []map[string]interface{}{
+		{
+			"homepage_url":  "",
+			"logout_url":    "",
+			"redirect_uris": "",
+			"implicit_grant": []map[string]interface{}{
+				{
+					"access_token_issuance_enabled": false,
+				},
+			},
+		},
+	}
+
+	if app.Homepage != nil {
+		web[0]["homepage_url"] = *app.Homepage
+	}
+	if app.LogoutURL != nil {
+		web[0]["logout_url"] = *app.LogoutURL
+	}
+	if app.ReplyUrls != nil {
+		web[0]["redirect_uris"] = *app.ReplyUrls
+	}
+	if app.Oauth2AllowImplicitFlow != nil {
+		web[0]["implicit_grant"].([]map[string]interface{})[0]["access_token_issuance_enabled"] = *app.Oauth2AllowImplicitFlow
+	}
+
+	tf.Set(d, "web", web)
 
 	owners, err := aadgraph.ApplicationAllOwners(ctx, client, d.Id())
 	if err != nil {
@@ -484,7 +577,7 @@ func flattenApplicationOptionalClaimsAad(in *graphrbac.OptionalClaims) interface
 		return result
 	}
 
-	optionalClaims := make(map[string]interface{})
+	optionalClaims := make(map[string]interface{}, 0)
 	if claims := flattenApplicationOptionalClaimsListAad(in.AccessToken); len(claims) > 0 {
 		optionalClaims["access_token"] = claims
 	}
@@ -593,10 +686,10 @@ func expandApplicationOAuth2PermissionsAad(i interface{}) *[]graphrbac.OAuth2Per
 		}
 
 		var IsEnabled bool
-		if v, ok := OAuth2Permissions["is_enabled"]; ok {
+		if v, ok := OAuth2Permissions["enabled"]; ok {
 			IsEnabled = v.(bool)
 		} else {
-			IsEnabled = OAuth2Permissions["enabled"].(bool)
+			IsEnabled = OAuth2Permissions["is_enabled"].(bool)
 		}
 		Type := OAuth2Permissions["type"].(string)
 		UserConsentDescription := OAuth2Permissions["user_consent_description"].(string)
@@ -617,4 +710,28 @@ func expandApplicationOAuth2PermissionsAad(i interface{}) *[]graphrbac.OAuth2Per
 		)
 	}
 	return &result
+}
+
+func applicationFlattenOAuth2PermissionScopes(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
+	oauth2Permissions := aadgraph.FlattenOauth2Permissions(in)
+
+	if oauth2Permissions == nil || len(oauth2Permissions) == 0 {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0)
+	for _, p := range oauth2Permissions {
+		result = append(result, map[string]interface{}{
+			"admin_consent_description":  p["admin_consent_description"],
+			"admin_consent_display_name": p["admin_consent_display_name"],
+			"id":                         p["id"],
+			"enabled":                    p["is_enabled"],
+			"type":                       p["type"],
+			"user_consent_description":   p["user_consent_description"],
+			"user_consent_display_name":  p["user_consent_display_name"],
+			"value":                      p["value"],
+		})
+	}
+
+	return result
 }

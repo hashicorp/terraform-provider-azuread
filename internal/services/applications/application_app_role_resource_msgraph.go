@@ -80,7 +80,11 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 			return tf.ErrorDiagF(err, "Failed to add App Role")
 		}
 	} else {
-		if existing, _ := helpers.AppRoleFindById(app, id.RoleId); existing == nil {
+		existing, err := helpers.AppRoleFindById(app, id.RoleId)
+		if err != nil {
+			return tf.ErrorDiagPathF(nil, "role_id", "retrieving App Role with ID %q for Application %q: %+v", id.RoleId, id.ObjectId, err)
+		}
+		if existing == nil {
 			return tf.ErrorDiagPathF(nil, "role_id", "App Role with ID %q was not found for Application %q", id.RoleId, id.ObjectId)
 		}
 
@@ -194,7 +198,7 @@ func applicationAppRoleResourceDeleteMsGraph(ctx context.Context, d *schema.Reso
 
 	properties.AppRoles = app.AppRoles
 	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Removing App Role with ID %q", *role.ID)
+		return tf.ErrorDiagF(err, "Updating application to remove App Role with ID %q", *role.ID)
 	}
 
 	return nil

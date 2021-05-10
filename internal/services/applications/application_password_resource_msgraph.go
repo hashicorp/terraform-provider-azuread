@@ -83,7 +83,9 @@ func applicationPasswordResourceReadMsGraph(ctx context.Context, d *schema.Resou
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
+			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
+			d.SetId("")
+			return nil
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
