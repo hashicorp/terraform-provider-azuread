@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	ErrorAddedObjectReferencesAlreadyExist = "One or more added object references already exist"
-	ErrorRemovedObjectReferencesDoNotExist = "One or more removed object references do not exist"
+	ErrorAddedObjectReferencesAlreadyExist   = "One or more added object references already exist"
+	ErrorConflictingObjectPresentInDirectory = "A conflicting object with one or more of the specified property values is present in the directory"
+	ErrorRemovedObjectReferencesDoNotExist   = "One or more removed object references do not exist"
 )
 
 // OData is used to unmarshall OData metadata from an API response.

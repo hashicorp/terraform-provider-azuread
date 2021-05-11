@@ -83,7 +83,9 @@ func servicePrincipalPasswordResourceReadMsGraph(ctx context.Context, d *schema.
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", id.ObjectId)
+			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
+			d.SetId("")
+			return nil
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}

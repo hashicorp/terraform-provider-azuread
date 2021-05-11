@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
 
 	"github.com/manicminer/hamilton/odata"
 )
@@ -25,7 +24,7 @@ func NewDirectoryRolesClient(tenantId string) *DirectoryRolesClient {
 	}
 }
 
-// List returns a list of DirectoryRoles.
+// List returns a list of DirectoryRoles activated in the tenant.
 func (c *DirectoryRolesClient) List(ctx context.Context) (*[]DirectoryRole, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
@@ -121,18 +120,16 @@ func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *Di
 		return status, errors.New("cannot update directory role with nil Owners")
 	}
 	for _, member := range *directoryRole.Members {
-		// don't fail if an member already exists
+		// don't fail if a member already exists
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					re := regexp.MustCompile("One or more added object references already exist")
-					if re.MatchString(o.Error.String()) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
 		}
+
 		data := struct {
 			Member string `json:"@odata.id"`
 		}{
@@ -219,4 +216,53 @@ func (c *DirectoryRolesClient) GetMember(ctx context.Context, directoryRoleId, m
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Id, status, nil
+}
+
+// Activate activates a directory role. To read a directory role or update its members, it must first be activated in the tenant using role template id.
+// This method will attempt to detect whether a role is already activated in the tenant, but may fail in some circumstances.
+func (c *DirectoryRolesClient) Activate(ctx context.Context, roleTemplateID string) (*DirectoryRole, int, error) {
+	var status int
+
+	// don't fail if a role is already activated
+	checkRoleAlreadyActivated := func(resp *http.Response, o *odata.OData) bool {
+		if resp.StatusCode == http.StatusBadRequest {
+			if o.Error != nil {
+				return o.Error.Match(odata.ErrorConflictingObjectPresentInDirectory)
+			}
+		}
+		return false
+	}
+
+	data := struct {
+		RoleTemplateID string `json:"roleTemplateId"`
+	}{
+		RoleTemplateID: roleTemplateID,
+	}
+	body, err := json.Marshal(data)
+	if err != nil {
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusCreated},
+		ValidStatusFunc:  checkRoleAlreadyActivated,
+		Uri: Uri{
+			Entity:      "/directoryRoles",
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var newDirRole DirectoryRole
+	if err := json.Unmarshal(respBody, &newDirRole); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &newDirRole, status, nil
 }

@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
-func applicationOAuth2PermissionResource() *schema.Resource {
+func applicationOAuth2PermissionScopeResource() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: applicationOAuth2PermissionResourceCreateUpdate,
-		UpdateContext: applicationOAuth2PermissionResourceCreateUpdate,
-		ReadContext:   applicationOAuth2PermissionResourceRead,
-		DeleteContext: applicationOAuth2PermissionResourceDelete,
+		CreateContext: applicationOAuth2PermissionScopeResourceCreateUpdate,
+		UpdateContext: applicationOAuth2PermissionScopeResourceCreateUpdate,
+		ReadContext:   applicationOAuth2PermissionScopeResourceRead,
+		DeleteContext: applicationOAuth2PermissionScopeResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
-			_, err := parse.OAuth2PermissionID(id)
+			_, err := parse.OAuth2PermissionScopeID(id)
 			return err
 		}),
 
@@ -65,6 +65,15 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 				Computed:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validate.UUID,
+				Deprecated:       "[NOTE] This attribute has been renamed to `scope_id` and will be removed in version 2.0 of the AzureAD provider",
+			},
+
+			"scope_id": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
 			},
 
 			"type": {
@@ -97,21 +106,21 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 	}
 }
 
-func applicationOAuth2PermissionResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationOAuth2PermissionScopeResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx, d, meta)
 }
 
-func applicationOAuth2PermissionResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationOAuth2PermissionScopeResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceReadMsGraph(ctx, d, meta)
 	}
 	return applicationOAuth2PermissionResourceReadAadGraph(ctx, d, meta)
 }
 
-func applicationOAuth2PermissionResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationOAuth2PermissionScopeResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if meta.(*clients.Client).EnableMsGraphBeta {
 		return applicationOAuth2PermissionResourceDeleteMsGraph(ctx, d, meta)
 	}

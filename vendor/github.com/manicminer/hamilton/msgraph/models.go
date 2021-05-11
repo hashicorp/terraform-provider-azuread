@@ -70,7 +70,7 @@ func (a Application) MarshalJSON() ([]byte, error) {
 	}
 	type application Application
 	return json.Marshal(&struct {
-		GroupMembershipClaims *string `json:"groupMembershipClaims"`
+		GroupMembershipClaims *string `json:"groupMembershipClaims,omitempty"`
 		*application
 	}{
 		GroupMembershipClaims: groupMembershipClaims,
@@ -874,3 +874,41 @@ type VerifiedPublisher struct {
 	DisplayName         *string    `json:"displayName,omitempty"`
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
 }
+
+type AppRoleAssignment struct {
+	Id                   *string    `json:"id,omitempty"`
+	DeletedDateTime      *time.Time `json:"deletedDateTime,omitempty"`
+	AppRoleId            *string    `json:"appRoleId,omitempty"`
+	CreatedDateTime      *time.Time `json:"createdDateTime,omitempty"`
+	PrincipalDisplayName *string    `json:"principalDisplayName,omitempty"`
+	PrincipalId          *string    `json:"principalId,omitempty"`
+	PrincipalType        *string    `json:"principalType,omitempty"`
+	ResourceDisplayName  *string    `json:"resourceDisplayName,omitempty"`
+	ResourceId           *string    `json:"resourceId,omitempty"`
+}
+
+type MailMessage struct {
+	Message *Message `json:"message,omitempty"`
+}
+
+type Message struct {
+	ID            *string      `json:"id,omitempty"`
+	Subject       *string      `json:"subject,omitempty"`
+	Body          *ItemBody    `json:"body,omitempty"`
+	From          *Recipient   `json:"from,omitempty"`
+	ToRecipients  *[]Recipient `json:"toRecipients,omitempty"`
+	CcRecipients  *[]Recipient `json:"ccRecipients,omitempty"`
+	BccRecipients *[]Recipient `json:"bccRecipients,omitempty"`
+}
+
+type ItemBody struct {
+	Content     *string   `json:"content,omitempty"`
+	ContentType *BodyType `json:"contentType,omitempty"`
+}
+
+type BodyType string
+
+const (
+	BodyTypeText BodyType = "text"
+	BodyTypeHtml BodyType = "html"
+)

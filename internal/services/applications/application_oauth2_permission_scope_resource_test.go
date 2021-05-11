@@ -100,7 +100,7 @@ func TestAccApplicationOAuth2Permission_requiresImport(t *testing.T) {
 }
 
 func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	id, err := parse.OAuth2PermissionID(state.ID)
+	id, err := parse.OAuth2PermissionScopeID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing OAuth2 Permission ID: %v", err)
 	}
@@ -114,7 +114,7 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
 		}
 
-		role, err := msgraph.OAuth2PermissionFindById(app, id.PermissionId)
+		role, err := msgraph.OAuth2PermissionFindById(app, id.ScopeId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
 		} else if role != nil {
@@ -129,7 +129,7 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
 		}
 
-		scope, err := aadgraph.OAuth2PermissionFindById(resp, id.PermissionId)
+		scope, err := aadgraph.OAuth2PermissionFindById(resp, id.ScopeId)
 		if err != nil {
 			return nil, fmt.Errorf("failed to identity OAuth2 Permission: %s", err)
 		} else if scope != nil {
@@ -137,7 +137,7 @@ func (r ApplicationOAuth2PermissionResource) Exists(ctx context.Context, clients
 		}
 	}
 
-	return nil, fmt.Errorf("OAuth2 Permission %q was not found in Application %q", id.PermissionId, id.ObjectId)
+	return nil, fmt.Errorf("OAuth2 Permission %q was not found in Application %q", id.ScopeId, id.ObjectId)
 }
 
 func (ApplicationOAuth2PermissionResource) template(data acceptance.TestData) string {

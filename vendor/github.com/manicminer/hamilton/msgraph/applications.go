@@ -260,9 +260,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
@@ -314,9 +312,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 				}
 			}
 			return false

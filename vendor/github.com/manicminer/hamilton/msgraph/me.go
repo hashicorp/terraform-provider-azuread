@@ -69,3 +69,25 @@ func (c *MeClient) GetProfile(ctx context.Context) (*Me, int, error) {
 	}
 	return &me, status, nil
 }
+
+// SendMail sends message specified in the request body.
+// TODO: Needs testing with an O365 user principal
+func (c *MeClient) Sendmail(ctx context.Context, message MailMessage) (int, error) {
+	var status int
+	body, err := json.Marshal(message)
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusOK, http.StatusAccepted},
+		Uri: Uri{
+			Entity:      "/me/sendMail",
+			HasTenantId: false,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("MeClient.BaseClient.Post(): %v", err)
+	}
+	return status, nil
+}

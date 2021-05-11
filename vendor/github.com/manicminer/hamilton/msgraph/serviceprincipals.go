@@ -230,9 +230,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
@@ -284,9 +282,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 				}
 			}
 			return false

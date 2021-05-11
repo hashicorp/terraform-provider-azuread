@@ -22,16 +22,18 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 	objectId := d.Get("application_object_id").(string)
 
 	// errors should be handled by the validation
-	var permissionId string
+	var scopeId string
 
-	if v, ok := d.GetOk("permission_id"); ok {
-		permissionId = v.(string)
+	if v, ok := d.GetOk("scope_id"); ok {
+		scopeId = v.(string)
+	} else if v, ok := d.GetOk("permission_id"); ok {
+		scopeId = v.(string)
 	} else {
 		pid, err := uuid.GenerateUUID()
 		if err != nil {
-			return tf.ErrorDiagF(err, "Generating OAuth2 Permision for application with object ID %q", objectId)
+			return tf.ErrorDiagF(err, "Generating OAuth2 Permission for application with object ID %q", objectId)
 		}
-		permissionId = pid
+		scopeId = pid
 	}
 
 	var enabled bool
@@ -44,7 +46,7 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 	permission := graphrbac.OAuth2Permission{
 		AdminConsentDescription: utils.String(d.Get("admin_consent_description").(string)),
 		AdminConsentDisplayName: utils.String(d.Get("admin_consent_display_name").(string)),
-		ID:                      utils.String(permissionId),
+		ID:                      utils.String(scopeId),
 		IsEnabled:               utils.Bool(enabled),
 		Type:                    utils.String(d.Get("type").(string)),
 		UserConsentDescription:  utils.String(d.Get("user_consent_description").(string)),
@@ -52,7 +54,7 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 		Value:                   utils.String(d.Get("value").(string)),
 	}
 
-	id := parse.NewOAuth2PermissionID(objectId, *permission.ID)
+	id := parse.NewOAuth2PermissionScopeID(objectId, *permission.ID)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -77,12 +79,12 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 			return tf.ErrorDiagF(err, "Failed to add OAuth2 Permission")
 		}
 	} else {
-		existing, err := aadgraph.OAuth2PermissionFindById(app, id.PermissionId)
+		existing, err := aadgraph.OAuth2PermissionFindById(app, id.ScopeId)
 		if err != nil {
-			return tf.ErrorDiagPathF(nil, "permission_id", "retrieving OAuth2 Permission with ID %q for Application %q: %+v", id.PermissionId, id.ObjectId, err)
+			return tf.ErrorDiagPathF(nil, "scope_id", "retrieving OAuth2 Permission with ID %q for Application %q: %+v", id.ScopeId, id.ObjectId, err)
 		}
 		if existing == nil {
-			return tf.ErrorDiagPathF(nil, "permission_id", "OAuth2 Permission with ID %q was not found for Application %q", id.PermissionId, id.ObjectId)
+			return tf.ErrorDiagPathF(nil, "scope_id", "OAuth2 Permission with ID %q was not found for Application %q", id.ScopeId, id.ObjectId)
 		}
 
 		newPermissions, err = aadgraph.OAuth2PermissionUpdate(app.Oauth2Permissions, &permission)
@@ -106,7 +108,7 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 func applicationOAuth2PermissionResourceReadAadGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.AadClient
 
-	id, err := parse.OAuth2PermissionID(d.Id())
+	id, err := parse.OAuth2PermissionScopeID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing OAuth2 Permission ID %q", d.Id())
 	}
@@ -123,13 +125,13 @@ func applicationOAuth2PermissionResourceReadAadGraph(ctx context.Context, d *sch
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	permission, err := aadgraph.OAuth2PermissionFindById(app, id.PermissionId)
+	permission, err := aadgraph.OAuth2PermissionFindById(app, id.ScopeId)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Identifying OAuth2 Permission")
 	}
 
 	if permission == nil {
-		log.Printf("[DEBUG] OAuth2 Permission %q (ID %q) was not found - removing from state!", id.PermissionId, id.ObjectId)
+		log.Printf("[DEBUG] OAuth2 Permission %q (ID %q) was not found - removing from state!", id.ScopeId, id.ObjectId)
 		d.SetId("")
 		return nil
 	}
@@ -139,7 +141,8 @@ func applicationOAuth2PermissionResourceReadAadGraph(ctx context.Context, d *sch
 	tf.Set(d, "application_object_id", id.ObjectId)
 	tf.Set(d, "enabled", permission.IsEnabled)
 	tf.Set(d, "is_enabled", permission.IsEnabled)
-	tf.Set(d, "permission_id", id.PermissionId)
+	tf.Set(d, "permission_id", id.ScopeId)
+	tf.Set(d, "scope_id", id.ScopeId)
 	tf.Set(d, "type", permission.Type)
 	tf.Set(d, "user_consent_description", permission.UserConsentDescription)
 	tf.Set(d, "user_consent_display_name", permission.UserConsentDisplayName)
@@ -151,7 +154,7 @@ func applicationOAuth2PermissionResourceReadAadGraph(ctx context.Context, d *sch
 func applicationOAuth2PermissionResourceDeleteAadGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.AadClient
 
-	id, err := parse.OAuth2PermissionID(d.Id())
+	id, err := parse.OAuth2PermissionScopeID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing OAuth2 Permission ID %q", d.Id())
 	}
@@ -172,10 +175,10 @@ func applicationOAuth2PermissionResourceDeleteAadGraph(ctx context.Context, d *s
 
 	var newPermissions *[]graphrbac.OAuth2Permission
 
-	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.PermissionId, id.ObjectId)
-	newPermissions, err = aadgraph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.PermissionId)
+	log.Printf("[DEBUG] Disabling OAuth2 Permission %q for Application %q prior to removal", id.ScopeId, id.ObjectId)
+	newPermissions, err = aadgraph.OAuth2PermissionResultDisableById(app.Oauth2Permissions, id.ScopeId)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Disabling OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Disabling OAuth2 Permission with ID %q for application %q", id.ScopeId, id.ObjectId)
 	}
 
 	properties := graphrbac.ApplicationUpdateParameters{
@@ -185,10 +188,10 @@ func applicationOAuth2PermissionResourceDeleteAadGraph(ctx context.Context, d *s
 		return tf.ErrorDiagF(err, "Updating Application with ID %q", id.ObjectId)
 	}
 
-	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.PermissionId, id.ObjectId)
-	newPermissions, err = aadgraph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.PermissionId)
+	log.Printf("[DEBUG] Removing OAuth2 Permission %q for Application %q", id.ScopeId, id.ObjectId)
+	newPermissions, err = aadgraph.OAuth2PermissionResultRemoveById(app.Oauth2Permissions, id.ScopeId)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Removing OAuth2 Permission with ID %q for application %q", id.PermissionId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Removing OAuth2 Permission with ID %q for application %q", id.ScopeId, id.ObjectId)
 	}
 
 	properties = graphrbac.ApplicationUpdateParameters{
