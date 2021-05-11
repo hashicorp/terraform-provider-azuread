@@ -258,7 +258,7 @@ github.com/jstemmer/go-junit-report/formatter
 github.com/jstemmer/go-junit-report/parser
 # github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd
 github.com/kevinburke/ssh_config
-# github.com/manicminer/hamilton v0.12.1-0.20210511134947-f5522eccd3c5
+# github.com/manicminer/hamilton v0.12.1-0.20210511220946-0d95723180f7
 ## explicit
 github.com/manicminer/hamilton/auth
 github.com/manicminer/hamilton/environments

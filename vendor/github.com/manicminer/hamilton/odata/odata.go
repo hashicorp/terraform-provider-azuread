@@ -83,18 +83,17 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 	*e = Error(e2)
 
 	// Unmarshal the message, which can be a plain string or an object wrapping a message
-	if e.RawMessage != nil {
-		raw := *e.RawMessage
-		switch string(raw[0]) {
+	if raw := e.RawMessage; raw != nil && len(*raw) > 0 {
+		switch string((*raw)[0]) {
 		case "\"":
 			var s string
-			if err := json.Unmarshal(raw, &s); err != nil {
+			if err := json.Unmarshal(*raw, &s); err != nil {
 				return err
 			}
 			e.Message = &s
 		case "{":
 			var m map[string]interface{}
-			if err := json.Unmarshal(raw, &m); err != nil {
+			if err := json.Unmarshal(*raw, &m); err != nil {
 				return err
 			}
 			if v, ok := m["value"]; ok {
@@ -103,7 +102,7 @@ func (e *Error) UnmarshalJSON(data []byte) error {
 				}
 			}
 		default:
-			return fmt.Errorf("unrecognised error message: %#v", string(raw))
+			return fmt.Errorf("unrecognised error message: %#v", string(*raw))
 		}
 	}
 	return nil

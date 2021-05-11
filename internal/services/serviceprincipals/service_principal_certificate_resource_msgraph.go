@@ -108,12 +108,7 @@ func servicePrincipalCertificateResourceReadMsGraph(ctx context.Context, d *sche
 
 	tf.Set(d, "service_principal_id", id.ObjectId)
 	tf.Set(d, "key_id", id.KeyId)
-
-	keyType := ""
-	if v := credential.Type; v != nil {
-		keyType = *v
-	}
-	tf.Set(d, "type", keyType)
+	tf.Set(d, "type", string(credential.Type))
 
 	startDate := ""
 	if v := credential.StartDateTime; v != nil {

@@ -22,6 +22,30 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 	client := meta.(*clients.Client).Applications.MsClient
 	objectId := d.Get("application_object_id").(string)
 
+	if val, ok := d.GetOk("display_name"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`display_name` is a read-only field when using Microsoft Graph. Please remove the `display_name` field from your configuration"), "display_name", "Creating application password")
+	}
+
+	if val, ok := d.GetOk("end_date"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`end_date` is a read-only field when using Microsoft Graph. Please remove the `end_date` field from your configuration"), "end_date", "Creating application password")
+	}
+
+	if val, ok := d.GetOk("end_date_relative"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`end_date_relative` is a read-only field when using Microsoft Graph. Please remove the `end_date_relative` field from your configuration"), "end_date_relative", "Creating application password")
+	}
+
+	if val, ok := d.GetOk("key_id"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`key_id` is a read-only field when using Microsoft Graph. Please remove the `key_id` field from your configuration"), "key_id", "Creating application password")
+	}
+
+	if val, ok := d.GetOk("start_date"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`start_date` is a read-only field when using Microsoft Graph. Please remove the `start_date` field from your configuration"), "start_date", "Creating application password")
+	}
+
+	if val, ok := d.GetOk("value"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`value` is a read-only field when using Microsoft Graph. Please remove the `value` field from your configuration"), "value", "Creating application password")
+	}
+
 	credential, err := helpers.PasswordCredentialForResource(d)
 	if err != nil {
 		attr := ""
@@ -30,44 +54,41 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 		}
 		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for application with object ID %q", objectId)
 	}
-
-	if credential.KeyId == nil {
-		return tf.ErrorDiagF(errors.New("keyId for password credential is nil"), "Creating password credential")
+	if credential == nil {
+		return tf.ErrorDiagF(errors.New("nil credential was returned"), "Generating password credentials for application with object ID %q", objectId)
 	}
-	id := parse.NewCredentialID(objectId, "password", *credential.KeyId)
 
-	tf.LockByName(applicationResourceName, id.ObjectId)
-	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
+	tf.LockByName(applicationResourceName, objectId)
+	defer tf.UnlockByName(applicationResourceName, objectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, objectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
+			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", objectId)
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
+	}
+	if app == nil || app.ID == nil {
+		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
 	}
 
-	newCredentials := make([]msgraph.PasswordCredential, 0)
-	if app.PasswordCredentials != nil {
-		for _, cred := range *app.PasswordCredentials {
-			if cred.KeyId != nil && *cred.KeyId == *credential.KeyId {
-				return tf.ImportAsExistsDiag("azuread_application_password", id.String())
-			}
-			newCredentials = append(newCredentials, cred)
-		}
+	newCredential, _, err := client.AddPassword(ctx, *app.ID, *credential)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", *app.ID)
+	}
+	if newCredential == nil {
+		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for application with object ID %q", *app.ID)
+	}
+	if newCredential.KeyId == nil {
+		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for application with object ID %q", *app.ID)
+	}
+	if newCredential.SecretText == nil || len(*newCredential.SecretText) == 0 {
+		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for application with object ID %q", *app.ID)
 	}
 
-	newCredentials = append(newCredentials, *credential)
-
-	properties := msgraph.Application{
-		ID:                  &id.ObjectId,
-		PasswordCredentials: &newCredentials,
-	}
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", id.ObjectId)
-	}
-
+	id := parse.NewCredentialID(*app.ID, "password", *newCredential.KeyId)
 	d.SetId(id.String())
+	d.Set("value", newCredential.SecretText)
 
 	return applicationPasswordResourceReadMsGraph(ctx, d, meta)
 }
@@ -137,28 +158,7 @@ func applicationPasswordResourceDeleteMsGraph(ctx context.Context, d *schema.Res
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
-		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
-	}
-
-	newCredentials := make([]msgraph.PasswordCredential, 0)
-	if app.PasswordCredentials != nil {
-		for _, cred := range *app.PasswordCredentials {
-			if cred.KeyId != nil && *cred.KeyId != id.KeyId {
-				newCredentials = append(newCredentials, cred)
-			}
-		}
-	}
-
-	properties := msgraph.Application{
-		ID:                  &id.ObjectId,
-		PasswordCredentials: &newCredentials,
-	}
-	if _, err := client.Update(ctx, properties); err != nil {
+	if _, err := client.RemovePassword(ctx, id.ObjectId, id.KeyId); err != nil {
 		return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 

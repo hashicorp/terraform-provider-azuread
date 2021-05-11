@@ -87,7 +87,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 
 	credential := msgraph.KeyCredential{
 		KeyId:       utils.String(keyId),
-		Type:        utils.String(keyType),
+		Type:        msgraph.KeyCredentialType(keyType),
 		Usage:       msgraph.KeyCredentialUsageVerify,
 		Key:         utils.String(encodedValue),
 		EndDateTime: &endDate,
@@ -105,41 +105,26 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 }
 
 func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCredential, error) {
-	value := d.Get("value").(string)
+	credential := msgraph.PasswordCredential{}
 
-	var keyId string
-	if v, ok := d.GetOk("key_id"); ok {
-		keyId = v.(string)
-	} else {
-		kid, err := uuid.GenerateUUID()
-		if err != nil {
-			return nil, err
-		}
-
-		keyId = kid
-	}
-
-	var endDate time.Time
-	if v := d.Get("end_date").(string); v != "" {
+	var endDate *time.Time
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
 		var err error
-		endDate, err = time.Parse(time.RFC3339, v)
+		expiry, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
-	} else if v := d.Get("end_date_relative").(string); v != "" {
-		d, err := time.ParseDuration(v)
+		endDate = &expiry
+	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
+		d, err := time.ParseDuration(v.(string))
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
-		endDate = time.Now().Add(d)
-	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		expiry := time.Now().Add(d)
+		endDate = &expiry
 	}
-
-	credential := msgraph.PasswordCredential{
-		EndDateTime: &endDate,
-		KeyId:       utils.String(keyId),
-		SecretText:  utils.String(value),
+	if endDate != nil {
+		credential.EndDateTime = endDate
 	}
 
 	if v, ok := d.GetOk("display_name"); ok {

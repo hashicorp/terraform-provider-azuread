@@ -3,6 +3,8 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -21,12 +23,34 @@ type ServicePrincipalPasswordResource struct{}
 
 func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	r := ServicePrincipalPasswordResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
+func TestAccServicePrincipalPassword_basicAadGraph(t *testing.T) {
+	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
+		t.Skipf("Test skipped when using MS Graph")
+	}
+
+	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 	endDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data, endDate),
+			Config: r.basicAadGraph(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -36,7 +60,11 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalPassword_complete(t *testing.T) {
+func TestAccServicePrincipalPassword_completeAadGraph(t *testing.T) {
+	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
+		t.Skipf("Test skipped when using MS Graph")
+	}
+
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
 	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
@@ -44,7 +72,7 @@ func TestAccServicePrincipalPassword_complete(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data, startDate, endDate),
+			Config: r.completeAadGraph(data, startDate, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").HasValue(data.RandomID),
@@ -54,13 +82,17 @@ func TestAccServicePrincipalPassword_complete(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
+func TestAccServicePrincipalPassword_relativeEndDateAadGraph(t *testing.T) {
+	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
+		t.Skipf("Test skipped when using MS Graph")
+	}
+
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.relativeEndDate(data),
+			Config: r.relativeEndDateAadGraph(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -70,19 +102,23 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalPassword_requiresImport(t *testing.T) {
+func TestAccServicePrincipalPassword_requiresImportAadGraph(t *testing.T) {
+	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
+		t.Skipf("Test skipped when using MS Graph")
+	}
+
 	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
 	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalPasswordResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basic(data, endDate),
+			Config: r.basicAadGraph(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.RequiresImportErrorStep(r.requiresImport(data, endDate)),
+		data.RequiresImportErrorStep(r.requiresImportAadGraph(data, endDate)),
 	})
 }
 
@@ -92,42 +128,41 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 		return nil, fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
-	// TODO: v2.0 use MS Graph for passwords after making the `value` attribute read-only
-	//if clients.EnableMsGraphBeta {
-	//	app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
-	//	if err != nil {
-	//		if status == http.StatusNotFound {
-	//			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
-	//		}
-	//		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
-	//	}
-	//
-	//	if app.PasswordCredentials != nil {
-	//		for _, cred := range *app.PasswordCredentials {
-	//			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
-	//				return utils.Bool(true), nil
-	//			}
-	//		}
-	//	}
-	//} else {
-	resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+	if clients.EnableMsGraphBeta {
+		app, status, err := clients.ServicePrincipals.MsClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
 		}
-		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
-	}
 
-	credentials, err := clients.ServicePrincipals.AadClient.ListPasswordCredentials(ctx, id.ObjectId)
-	if err != nil {
-		return nil, fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
-	}
+		if app.PasswordCredentials != nil {
+			for _, cred := range *app.PasswordCredentials {
+				if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+					return utils.Bool(true), nil
+				}
+			}
+		}
+	} else {
+		resp, err := clients.ServicePrincipals.AadClient.Get(ctx, id.ObjectId)
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+			}
+			return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
+		}
 
-	cred := aadgraph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
-	if cred != nil {
-		return utils.Bool(true), nil
+		credentials, err := clients.ServicePrincipals.AadClient.ListPasswordCredentials(ctx, id.ObjectId)
+		if err != nil {
+			return nil, fmt.Errorf("listing Password Credentials for Service Principal %q: %+v", id.ObjectId, err)
+		}
+
+		cred := aadgraph.PasswordCredentialResultFindByKeyId(credentials, id.KeyId)
+		if cred != nil {
+			return utils.Bool(true), nil
+		}
 	}
-	//}
 
 	return nil, fmt.Errorf("Password Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
 }
@@ -144,7 +179,17 @@ resource "azuread_service_principal" "test" {
 `, data.RandomInteger)
 }
 
-func (r ServicePrincipalPasswordResource) basic(data acceptance.TestData, endDate string) string {
+func (r ServicePrincipalPasswordResource) basic(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = azuread_service_principal.test.object_id
+}
+`, r.template(data))
+}
+
+func (r ServicePrincipalPasswordResource) basicAadGraph(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -156,7 +201,7 @@ resource "azuread_service_principal_password" "test" {
 `, r.template(data), data.RandomPassword, endDate)
 }
 
-func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
+func (r ServicePrincipalPasswordResource) completeAadGraph(data acceptance.TestData, startDate, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -171,7 +216,7 @@ resource "azuread_service_principal_password" "test" {
 `, r.template(data), data.RandomID, startDate, endDate, data.RandomPassword)
 }
 
-func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
+func (r ServicePrincipalPasswordResource) relativeEndDateAadGraph(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -183,7 +228,7 @@ resource "azuread_service_principal_password" "test" {
 `, r.template(data), data.RandomPassword)
 }
 
-func (r ServicePrincipalPasswordResource) requiresImport(data acceptance.TestData, endDate string) string {
+func (r ServicePrincipalPasswordResource) requiresImportAadGraph(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -193,5 +238,5 @@ resource "azuread_service_principal_password" "import" {
   value                = azuread_service_principal_password.test.value
   end_date             = azuread_service_principal_password.test.end_date
 }
-`, r.basic(data, endDate))
+`, r.basicAadGraph(data, endDate))
 }

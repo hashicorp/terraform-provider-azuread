@@ -148,10 +148,10 @@ func (c *ApplicationsClient) Delete(ctx context.Context, id string) (int, error)
 	return status, nil
 }
 
-// AddKey appends a new key credential to an Application.
-func (c *ApplicationsClient) AddKey(ctx context.Context, applicationId string, keyCredential KeyCredential) (*KeyCredential, int, error) {
+// AddPassword appends a new password credential to an Application.
+func (c *ApplicationsClient) AddPassword(ctx context.Context, applicationId string, passwordCredential PasswordCredential) (*PasswordCredential, int, error) {
 	var status int
-	body, err := json.Marshal(keyCredential)
+	body, err := json.Marshal(passwordCredential)
 	if err != nil {
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
@@ -159,7 +159,7 @@ func (c *ApplicationsClient) AddKey(ctx context.Context, applicationId string, k
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusOK, http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/addKey", applicationId),
+			Entity:      fmt.Sprintf("/applications/%s/addPassword", applicationId),
 			HasTenantId: true,
 		},
 	})
@@ -171,11 +171,36 @@ func (c *ApplicationsClient) AddKey(ctx context.Context, applicationId string, k
 	if err != nil {
 		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
 	}
-	var newKeyCredential KeyCredential
-	if err := json.Unmarshal(respBody, &newKeyCredential); err != nil {
+	var newPasswordCredential PasswordCredential
+	if err := json.Unmarshal(respBody, &newPasswordCredential); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
-	return &newKeyCredential, status, nil
+	return &newPasswordCredential, status, nil
+}
+
+// RemovePassword removes a password credential from an Application.
+func (c *ApplicationsClient) RemovePassword(ctx context.Context, applicationId string, keyId string) (int, error) {
+	var status int
+	body, err := json.Marshal(struct {
+		KeyId string `json:"keyId"`
+	}{
+		KeyId: keyId,
+	})
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusOK, http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/applications/%s/removePassword", applicationId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
+	}
+	return status, nil
 }
 
 // ListOwners retrieves the owners of the specified Application.

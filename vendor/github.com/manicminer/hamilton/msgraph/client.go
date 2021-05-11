@@ -171,7 +171,7 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 
 			var errText string
 			switch {
-			case o.Error != nil && o.Error.String() != "":
+			case o != nil && o.Error != nil && o.Error.String() != "":
 				errText = fmt.Sprintf("OData error: %s", o.Error)
 			default:
 				defer resp.Body.Close()

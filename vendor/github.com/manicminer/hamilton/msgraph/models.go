@@ -602,10 +602,17 @@ type KeyCredential struct {
 	EndDateTime         *time.Time         `json:"endDateTime,omitempty"`
 	KeyId               *string            `json:"keyId,omitempty"`
 	StartDateTime       *time.Time         `json:"startDateTime,omitempty"`
-	Type                *string            `json:"type,omitempty"`
-	Usage               KeyCredentialUsage `json:"usage,omitempty"`
+	Type                KeyCredentialType  `json:"type"`
+	Usage               KeyCredentialUsage `json:"usage"`
 	Key                 *string            `json:"key,omitempty"`
 }
+
+type KeyCredentialType string
+
+const (
+	KeyCredentialTypeAsymmetricX509Cert  KeyCredentialType = "AsymmetricX509Cert"
+	KeyCredentialTypeX509CertAndPassword KeyCredentialType = "X509CertAndPassword"
+)
 
 type KeyCredentialUsage string
 

@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.3.0
-	github.com/manicminer/hamilton v0.12.1-0.20210511134947-f5522eccd3c5
+	github.com/manicminer/hamilton v0.12.1-0.20210511220946-0d95723180f7
 )
 
 go 1.16
