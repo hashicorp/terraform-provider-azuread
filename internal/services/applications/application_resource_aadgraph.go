@@ -342,7 +342,7 @@ func applicationResourceReadAadGraph(ctx context.Context, d *schema.ResourceData
 
 	api := []map[string]interface{}{
 		{
-			"oauth2_permission_scope": applicationFlattenOAuth2PermissionScopes(app.Oauth2Permissions),
+			"oauth2_permission_scope": aadgraph.ApplicationFlattenOAuth2PermissionScopes(app.Oauth2Permissions),
 		},
 	}
 	tf.Set(d, "api", api)
@@ -710,28 +710,4 @@ func expandApplicationOAuth2PermissionsAad(i interface{}) *[]graphrbac.OAuth2Per
 		)
 	}
 	return &result
-}
-
-func applicationFlattenOAuth2PermissionScopes(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
-	oauth2Permissions := aadgraph.FlattenOauth2Permissions(in)
-
-	if len(oauth2Permissions) == 0 {
-		return []map[string]interface{}{}
-	}
-
-	result := make([]map[string]interface{}, 0)
-	for _, p := range oauth2Permissions {
-		result = append(result, map[string]interface{}{
-			"admin_consent_description":  p["admin_consent_description"],
-			"admin_consent_display_name": p["admin_consent_display_name"],
-			"id":                         p["id"],
-			"enabled":                    p["is_enabled"],
-			"type":                       p["type"],
-			"user_consent_description":   p["user_consent_description"],
-			"user_consent_display_name":  p["user_consent_display_name"],
-			"value":                      p["value"],
-		})
-	}
-
-	return result
 }

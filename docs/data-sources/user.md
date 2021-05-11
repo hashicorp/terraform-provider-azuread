@@ -38,15 +38,18 @@ The following attributes are exported:
 * `display_name` - The Display Name of the Azure AD User.
 * `given_name` - The given name (first name) of the user.
 * `id` - The Object ID of the Azure AD User.
-* `immutable_id` - The value used to associate an on-premise Active Directory user account with their Azure AD user object.
+* `immutable_id` - (**Deprecated**) The value used to associate an on-premise Active Directory user account with their Azure AD user object. Deprecated in favour of `onpremises_immutable_id`.
 * `job_title` - The user’s job title.
 * `mail_nickname` - The email alias of the Azure AD User.
 * `mail_nickname` - The email alias of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
-* `mobile` - The primary cellular telephone number for the user.
+* `mobile` - (**Deprecated**) The primary cellular telephone number for the user. Deprecated in favour of `mobile_phone`.
+* `mobile_phone` - The primary cellular telephone number for the user.
+* `office_location` - The office location in the user's place of business.
+* `onpremises_immutable_id` - The value used to associate an on-premise Active Directory user account with their Azure AD user object.
 * `onpremises_sam_account_name` - The on-premise SAM account name of the Azure AD User.
 * `onpremises_user_principal_name` - The on-premise user principal name of the Azure AD User.
-* `physical_delivery_office_name` - The office location in the user's place of business.
+* `physical_delivery_office_name` - (**Deprecated**) The office location in the user's place of business. Deprecated in favour of `office_location`.
 * `postal_code` - The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code.
 * `state` - The state or province in the user's address.
 * `street_address` - The street address of the user's place of business.

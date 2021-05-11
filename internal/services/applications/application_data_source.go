@@ -81,8 +81,9 @@ func applicationDataSource() *schema.Resource {
 
 									// TODO: v2.0 remove this
 									"is_enabled": {
-										Type:     schema.TypeBool,
-										Computed: true,
+										Type:       schema.TypeBool,
+										Computed:   true,
+										Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 									},
 
 									"type": {
@@ -208,9 +209,10 @@ func applicationDataSource() *schema.Resource {
 
 			// TODO: v2.0 remove this block
 			"oauth2_permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admin_consent_description": {
@@ -233,11 +235,9 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 remove this
 						"is_enabled": {
-							Type:       schema.TypeBool,
-							Computed:   true,
-							Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 
 						"type": {

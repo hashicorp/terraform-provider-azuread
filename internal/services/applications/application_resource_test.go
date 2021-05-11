@@ -648,6 +648,22 @@ resource "azuread_application" "test" {
     }
   }
 
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = ""
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "ReadOnly roles have limited query access"
+    display_name         = "ReadOnly"
+    is_enabled           = true
+    value                = "User"
+  }
+
   optional_claims {
     access_token {
       name = "myclaim"

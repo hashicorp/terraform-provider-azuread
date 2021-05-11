@@ -42,10 +42,11 @@ ___
 
 * `account_enabled` - `True` if the account is enabled; otherwise `False`.
 * `display_name` - The Display Name of the Azure AD User.
-* `immutable_id` - The value used to associate an on-premises Active Directory user account with their Azure AD user object.
+* `immutable_id` - (**Deprecated**) The value used to associate an on-premises Active Directory user account with their Azure AD user object. Deprecated in favour of `onpremises_immutable_id`.
 * `mail_nickname` - The email alias of the Azure AD User.
 * `mail` - The primary email address of the Azure AD User.
 * `object_id` - The Object ID of the Azure AD User.
+* `onpremises_immutable_id` - The value used to associate an on-premises Active Directory user account with their Azure AD user object.
 * `onpremises_sam_account_name` - The on-premise SAM account name of the Azure AD User.
 * `onpremises_user_principal_name` - The on-premise user principal name of the Azure AD User.
 * `usage_location` - The usage location of the Azure AD User.

@@ -31,7 +31,8 @@ resource "azuread_service_principal_password" "example" {
 
 The following arguments are supported:
 
-* `description` - (Optional) A description for the Password.
+* `description` - (Optional, **Deprecated**) A description for the Password. Deprecated in favour of `display_name`.
+* `display_name` - (Optional) The display name for the password.
 
 -> **NOTE:** `description` maps to the `CustomKeyIdentifier` property of the `PasswordCredentials` API resource.
 

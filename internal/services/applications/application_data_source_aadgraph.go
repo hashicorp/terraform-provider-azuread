@@ -91,7 +91,7 @@ func applicationDataSourceReadAadGraph(ctx context.Context, d *schema.ResourceDa
 
 	api := []map[string]interface{}{
 		{
-			"oauth2_permission_scope": applicationFlattenOAuth2PermissionScopes(app.Oauth2Permissions),
+			"oauth2_permission_scope": aadgraph.ApplicationFlattenOAuth2PermissionScopes(app.Oauth2Permissions),
 		},
 	}
 	tf.Set(d, "api", api)

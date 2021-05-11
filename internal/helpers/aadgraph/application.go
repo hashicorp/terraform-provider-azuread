@@ -120,6 +120,30 @@ func FlattenOauth2Permissions(in *[]graphrbac.OAuth2Permission) []map[string]int
 	return result
 }
 
+func ApplicationFlattenOAuth2PermissionScopes(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
+	oauth2Permissions := FlattenOauth2Permissions(in)
+
+	if len(oauth2Permissions) == 0 {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0)
+	for _, p := range oauth2Permissions {
+		result = append(result, map[string]interface{}{
+			"admin_consent_description":  p["admin_consent_description"],
+			"admin_consent_display_name": p["admin_consent_display_name"],
+			"id":                         p["id"],
+			"enabled":                    p["is_enabled"],
+			"type":                       p["type"],
+			"user_consent_description":   p["user_consent_description"],
+			"user_consent_display_name":  p["user_consent_display_name"],
+			"value":                      p["value"],
+		})
+	}
+
+	return result
+}
+
 func ApplicationAllOwners(ctx context.Context, client *graphrbac.ApplicationsClient, appId string) ([]string, error) {
 	owners, err := client.ListOwnersComplete(ctx, appId)
 
