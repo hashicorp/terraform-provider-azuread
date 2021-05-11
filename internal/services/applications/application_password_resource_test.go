@@ -40,6 +40,7 @@ func TestAccApplicationPassword_basic(t *testing.T) {
 }
 
 func TestAccApplicationPassword_basicAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -61,6 +62,7 @@ func TestAccApplicationPassword_basicAadGraph(t *testing.T) {
 }
 
 func TestAccApplicationPassword_completeAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -83,6 +85,7 @@ func TestAccApplicationPassword_completeAadGraph(t *testing.T) {
 }
 
 func TestAccApplicationPassword_relativeEndDateAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -104,6 +107,7 @@ func TestAccApplicationPassword_relativeEndDateAadGraph(t *testing.T) {
 }
 
 func TestAccApplicationPassword_requiresImportAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -188,6 +192,7 @@ resource "azuread_application_password" "test" {
 }
 
 func (r ApplicationPasswordResource) basicAadGraph(data acceptance.TestData, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -200,6 +205,7 @@ resource "azuread_application_password" "test" {
 }
 
 func (r ApplicationPasswordResource) completeAadGraph(data acceptance.TestData, startDate, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -215,6 +221,7 @@ resource "azuread_application_password" "test" {
 }
 
 func (r ApplicationPasswordResource) relativeEndDateAadGraph(data acceptance.TestData) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -227,6 +234,7 @@ resource "azuread_application_password" "test" {
 }
 
 func (r ApplicationPasswordResource) requiresImportAadGraph(data acceptance.TestData, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 

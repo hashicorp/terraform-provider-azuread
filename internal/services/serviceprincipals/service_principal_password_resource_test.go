@@ -40,6 +40,7 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 }
 
 func TestAccServicePrincipalPassword_basicAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -61,6 +62,7 @@ func TestAccServicePrincipalPassword_basicAadGraph(t *testing.T) {
 }
 
 func TestAccServicePrincipalPassword_completeAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -83,6 +85,7 @@ func TestAccServicePrincipalPassword_completeAadGraph(t *testing.T) {
 }
 
 func TestAccServicePrincipalPassword_relativeEndDateAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -103,6 +106,7 @@ func TestAccServicePrincipalPassword_relativeEndDateAadGraph(t *testing.T) {
 }
 
 func TestAccServicePrincipalPassword_requiresImportAadGraph(t *testing.T) {
+	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
 		t.Skipf("Test skipped when using MS Graph")
 	}
@@ -190,6 +194,7 @@ resource "azuread_service_principal_password" "test" {
 }
 
 func (r ServicePrincipalPasswordResource) basicAadGraph(data acceptance.TestData, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -202,6 +207,7 @@ resource "azuread_service_principal_password" "test" {
 }
 
 func (r ServicePrincipalPasswordResource) completeAadGraph(data acceptance.TestData, startDate, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -217,6 +223,7 @@ resource "azuread_service_principal_password" "test" {
 }
 
 func (r ServicePrincipalPasswordResource) relativeEndDateAadGraph(data acceptance.TestData) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
@@ -229,6 +236,7 @@ resource "azuread_service_principal_password" "test" {
 }
 
 func (r ServicePrincipalPasswordResource) requiresImportAadGraph(data acceptance.TestData, endDate string) string {
+	// TODO: remove this config in v2.0
 	return fmt.Sprintf(`
 %[1]s
 
