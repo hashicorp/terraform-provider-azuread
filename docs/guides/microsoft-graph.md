@@ -41,8 +41,7 @@ terraform {
 }
 ```
 
-For Terraform 0.12.x, you can pin using the `version` attribute in your `provider` block:
-
+Older versions of Terraform (0.12.x) can pin the provider version using the `version` attribute within the `provider` block:
 ```hcl
 provider "azuread" {
   version = "~> 1.5.0"
@@ -54,6 +53,8 @@ This will enable you to upgrade to version 2.0 at your convenience, by simply ad
 ## New API permissions
 
 Microsoft Graph is a different web service to Azure Active Directory Graph, and as such if you are authenticating using a service principal, you may need to assign new permissions to [your authenticated principal](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_configuration).
+
+-> If you have assigned API permissions specific to the Azure Directory Graph API, you can safely unassign these permissions after upgrading to version 2.0.
 
 ### Assigning directory roles
 
@@ -87,101 +88,107 @@ After assigning permissions, you will need to grant consent for the service prin
 
 The following attributes/properties have been deprecated in the AzureAD provider, and will be removed in version 2.0.
 
+~> You will need to update your Terraform configuration in the latest v1.x release to use the new fields, prior to upgrading to 2.0.
+
 ### Data source: `azuread_application`
 
-The deprecated `name` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `name` has been replaced by the `display_name` field and will be removed.
 
-The deprecated `is_enabled` field in the `app_roles` block has been replaced by the `enabled` field and will be removed.
+The deprecated field `is_enabled` in the `app_roles` block has been replaced by the `enabled` field and will be removed.
 
-The deprecated `available_to_other_tenants` field has been replaced by the `sign_in_audience` field and will be removed.
+The deprecated field `available_to_other_tenants` has been replaced by the `sign_in_audience` field and will be removed.
 
-The deprecated `homepage` field has been replaced by the `homepage_url` field in the `web` block and will be removed.
+The deprecated field `homepage` has been replaced by the `homepage_url` field in the `web` block and will be removed.
 
-The deprecated `logout_url` field has been replaced by the `logout_url` field in the `web` block and will be removed.
+The deprecated field `logout_url` has been replaced by the `logout_url` field in the `web` block and will be removed.
 
-The deprecated `oauth2_allow_implicit_flow` field has been replaced by the `access_token_issuance_enabled` field in the `implicit_grant` block and will be removed.
+The deprecated field `oauth2_allow_implicit_flow` has been replaced by the `access_token_issuance_enabled` field in the `implicit_grant` block and will be removed.
 
 The deprecated `oauth2_permissions` block has been replaced by the `oauth2_permission_scopes` block within the `api` block and will be removed.
 
-The deprecated `reply_urls` field has been replaced by the `redirect_uris` field in the `web` block and will be removed.
+The deprecated field `reply_urls` has been replaced by the `redirect_uris` field in the `web` block and will be removed.
 
 The legacy `type` field is deprecated and will be removed.
 
 ### Data source: `azuread_group`
 
-The deprecated `name` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `name` has been replaced by the `display_name` field and will be removed.
 
 ### Data source: `azuread_groups`
 
-The deprecated `names` field has been replaced by the `display_names` field and will be removed.
+The deprecated field `names` has been replaced by the `display_names` field and will be removed.
 
 ### Data source: `azuread_user`
 
-The deprecated `immutable_id` field has been replaced by the `onpremises_immutable_id` field and will be removed.
+The deprecated field `immutable_id` has been replaced by the `onpremises_immutable_id` field and will be removed.
 
-The deprecated `physical_delivery_office_name` field has been replaced by the `office_location` field and will be removed.
+The deprecated field `physical_delivery_office_name` has been replaced by the `office_location` field and will be removed.
 
-The deprecated `mobile` field has been replaced by the `mobile_phone` field and will be removed.
+The deprecated field `mobile` has been replaced by the `mobile_phone` field and will be removed.
 
 ### Data source: `azuread_users`
 
-The deprecated `immutable_id` field in the `users` block has been replaced by the `onpremises_immutable_id` field and will be removed.
+The deprecated field `immutable_id` in the `users` block has been replaced by the `onpremises_immutable_id` field and will be removed.
 
 ### Resource: `azuread_application`
 
-The deprecated `name` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `name` has been replaced by the `display_name` field and will be removed.
 
-The deprecated `is_enabled` field in the `app_roles` block has been replaced by the `enabled` field and will be removed.
+The deprecated field `is_enabled` in the `app_roles` block has been replaced by the `enabled` field and will be removed.
 
-The deprecated `available_to_other_tenants` field has been replaced by the `sign_in_audience` field and will be removed.
+The deprecated field `available_to_other_tenants` has been replaced by the `sign_in_audience` field and will be removed.
 
-The deprecated `homepage` field has been replaced by the `homepage_url` field in the `web` block and will be removed.
+The deprecated field `homepage` has been replaced by the `homepage_url` field in the `web` block and will be removed.
 
-The deprecated `logout_url` field has been replaced by the `logout_url` field in the `web` block and will be removed.
+The deprecated field `logout_url` has been replaced by the `logout_url` field in the `web` block and will be removed.
 
-The deprecated `oauth2_allow_implicit_flow` field has been replaced by the `access_token_issuance_enabled` field in the `implicit_grant` block and will be removed.
+The deprecated field `oauth2_allow_implicit_flow` has been replaced by the `access_token_issuance_enabled` field in the `implicit_grant` block and will be removed.
+
+The deprecated field `is_enabled` in the `app_role` block has been replaced by the `enabled` field and will be removed.
 
 The deprecated `oauth2_permissions` block has been replaced by the `oauth2_permission_scopes` block within the `api` block and will be removed.
 
-The deprecated `public_client` field has been replaced by the `fallback_public_client_enabled` field and will be removed.
+-> In the new `oauth2_permission_scope` block, the `is_enabled` field has been renamed to `enabled` and the `id` field is now **required**. See the [New required UUID fields](#new-required-uuid-fields) section below for more information.
 
-The deprecated `reply_urls` field has been replaced by the `redirect_uris` field in the `web` block and will be removed.
+The deprecated field `public_client` has been replaced by the `fallback_public_client_enabled` field and will be removed.
+
+The deprecated field `reply_urls` has been replaced by the `redirect_uris` field in the `web` block and will be removed.
 
 The legacy `type` field is deprecated and will be removed.
 
 ### Resource: `azuread_application_app_role`
 
-The deprecated `is_enabled` field has been replaced by the `enabled` field and will be removed.
+The deprecated field `is_enabled` has been replaced by the `enabled` field and will be removed.
 
 ### Resource: `azuread_application_oauth2_permission`
 
 This resource will be renamed to `azuread_application_oauth2_permission_scope`.
 
-The deprecated `is_enabled` field has been replaced by the `enabled` field and will be removed.
+The deprecated field `is_enabled` has been replaced by the `enabled` field and will be removed.
 
 ### Resource: `azuread_application_password`
 
-The deprecated `description` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `description` has been replaced by the `display_name` field and will be removed.
 
-The deprecated `value` field will become read-only as Azure Active Directory no longer accepts user-supplied passwords. Passwords will instead be auto-generated by Azure and will be exported as attributes by the resource.
+The deprecated field `value` will become read-only as Azure Active Directory no longer accepts user-supplied passwords. Passwords will instead be auto-generated by Azure and will be exported as attributes by the resource.
 
 ### Resource: `azuread_group`
 
-The deprecated `name` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `name` has been replaced by the `display_name` field and will be removed.
 
 ### Resource: `azuread_service_principal_password`
 
-The deprecated `description` field has been replaced by the `display_name` field and will be removed.
+The deprecated field `description` has been replaced by the `display_name` field and will be removed.
 
-The deprecated `value` field will become read-only as Azure Active Directory no longer accepts user-supplied passwords. Passwords will instead be auto-generated by Azure and will be exported as attributes by the resource.
+The deprecated field `value` will become read-only as Azure Active Directory no longer accepts user-supplied passwords. Passwords will instead be auto-generated by Azure and will be exported as attributes by the resource.
 
 ### Resource: `azuread_user`
 
-The deprecated `immutable_id` field has been replaced by the `onpremises_immutable_id` field and will be removed.
+The deprecated field `immutable_id` has been replaced by the `onpremises_immutable_id` field and will be removed.
 
-The deprecated `physical_delivery_office_name` field has been replaced by the `office_location` field and will be removed.
+The deprecated field `physical_delivery_office_name` has been replaced by the `office_location` field and will be removed.
 
-The deprecated `mobile` field has been replaced by the `mobile_phone` field and will be removed.
+The deprecated field `mobile` has been replaced by the `mobile_phone` field and will be removed.
 
 ## New required UUID fields
 
@@ -248,7 +255,7 @@ resource "azuread_application" "example" {
 
 The `id` field in the `app_role` block is currently Computed (read-only) but will be Required.
 
-The `id` in the `oauth2_permissions` block is currently Computed (read-only) but its replacement field `id` in the `oauth2_permission_scope` block will be Required.
+The `id` in the deprecated `oauth2_permissions` block is currently Computed (read-only) but its replacement field `id` in the `oauth2_permission_scope` block will be Required.
 
 ### Resource: `azuread_application_app_role`
 
@@ -285,7 +292,9 @@ resource "azuread_application" "example" {
 
 ## Beta support for Microsoft Graph in v1.5.0
 
-In version 1.5.0 or later of the AzureAD provider, beta support for Microsoft Graph can be enabled in the provider block. Please note that whilst we do not recommend using this feature in production during the beta phase, you can use this feature flag to determine any configuration changes that you may need to make in advance of the v2.0 release.
+In version 1.5.0 or later of the AzureAD provider, beta support for Microsoft Graph can be enabled in the provider block.
+
+~> Please note that whilst we do not recommend using this feature in production during the beta phase, you can use this feature flag to determine any configuration changes that you may need to make in advance of the v2.0 release.
 
 With this feature enabled, most requests will be sent to Microsoft Graph, however for compatibility some requests may still be sent to Azure Active Directory Graph. You should therefore ensure your authenticated principal is assigned the required permissions for both APIs.
 

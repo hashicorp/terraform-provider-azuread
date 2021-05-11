@@ -577,7 +577,7 @@ func flattenApplicationOptionalClaimsAad(in *graphrbac.OptionalClaims) interface
 		return result
 	}
 
-	optionalClaims := make(map[string]interface{}, 0)
+	optionalClaims := make(map[string]interface{})
 	if claims := flattenApplicationOptionalClaimsListAad(in.AccessToken); len(claims) > 0 {
 		optionalClaims["access_token"] = claims
 	}
@@ -715,7 +715,7 @@ func expandApplicationOAuth2PermissionsAad(i interface{}) *[]graphrbac.OAuth2Per
 func applicationFlattenOAuth2PermissionScopes(in *[]graphrbac.OAuth2Permission) []map[string]interface{} {
 	oauth2Permissions := aadgraph.FlattenOauth2Permissions(in)
 
-	if oauth2Permissions == nil || len(oauth2Permissions) == 0 {
+	if len(oauth2Permissions) == 0 {
 		return []map[string]interface{}{}
 	}
 

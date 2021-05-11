@@ -4,7 +4,7 @@ subcategory: "Applications"
 
 # Resource: azuread_application_password
 
-Manages a Password associated with an Application within Azure Active Directory. Also can be referred to as Client secrets.
+Manages a password credential associated with an application within Azure Active Directory. These are also referred to as client secrets during authentication.
 
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API.
 
@@ -40,6 +40,8 @@ The following arguments are supported:
 * `key_id` - (Optional) A GUID used to uniquely identify this Password. If not specified a GUID will be created. Changing this field forces a new resource to be created.
 * `start_date` - (Optional) The Start Date which the Password is valid from, formatted as a RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.  Changing this field forces a new resource to be created.
 * `value` - (Required) The Password for this Application.
+
+~> In version 2.0 of the provider, the `value` property will become read-only. For more information, see the [Upgrade Guide for v2.0](../guides/microsoft-graph.html).
 
 ## Attributes Reference
 

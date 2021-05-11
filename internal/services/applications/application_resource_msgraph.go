@@ -242,7 +242,7 @@ func applicationResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	// TODO: v2.0 remove "available_to_other_tenants" property
 	if d.HasChange("available_to_other_tenants") {
-		if availableToOtherTenants, exists := d.GetOkExists("available_to_other_tenants"); exists {
+		if availableToOtherTenants, exists := d.GetOkExists("available_to_other_tenants"); exists { // nolint:SA1019
 			if availableToOtherTenants.(bool) {
 				properties.SignInAudience = msgraph.SignInAudienceAzureADMultipleOrgs
 			} else {

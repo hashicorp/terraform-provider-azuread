@@ -12,6 +12,7 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
@@ -96,6 +97,7 @@ func applicationResource() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  string(msgraph.PermissionScopeTypeUser),
 										ValidateFunc: validation.StringInSlice([]string{
 											string(msgraph.PermissionScopeTypeAdmin),
 											string(msgraph.PermissionScopeTypeUser),
@@ -103,19 +105,21 @@ func applicationResource() *schema.Resource {
 									},
 
 									"user_consent_description": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validate.NoEmptyStrings,
 									},
 
 									"user_consent_display_name": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: validate.NoEmptyStrings,
 									},
 
 									"value": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 									},
 								},
 							},
@@ -179,9 +183,10 @@ func applicationResource() *schema.Resource {
 						},
 
 						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true, // TODO v2.0 remove Computed
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true, // TODO v2.0 remove Computed
+							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 						},
 					},
 				},
@@ -205,8 +210,9 @@ func applicationResource() *schema.Resource {
 
 			// TODO: v2.0 make this a set/list - in v1.x we only allow a single value but we concatenate multiple values on read
 			"group_membership_claims": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				Deprecated: "[NOTE] This attribute will become a list in version 2.0 of the AzureAD provider",
 				ValidateFunc: validation.StringInSlice([]string{
 					string(msgraph.GroupMembershipClaimAll),
 					string(msgraph.GroupMembershipClaimNone),
