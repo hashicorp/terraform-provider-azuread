@@ -31,7 +31,7 @@ func (r Registration) SupportedResources() map[string]*schema.Resource {
 		"azuread_application":                         applicationResource(),
 		"azuread_application_app_role":                applicationAppRoleResource(),
 		"azuread_application_certificate":             applicationCertificateResource(),
-		"azuread_application_oauth2_permission":       applicationOAuth2PermissionScopeResource(),
+		"azuread_application_oauth2_permission":       applicationOAuth2PermissionResource(), // TODO: v2.0 remove this resource
 		"azuread_application_oauth2_permission_scope": applicationOAuth2PermissionScopeResource(),
 		"azuread_application_password":                applicationPasswordResource(),
 	}

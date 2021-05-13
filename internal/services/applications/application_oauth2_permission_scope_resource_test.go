@@ -21,12 +21,44 @@ import (
 type ApplicationOAuth2PermissionResource struct{}
 
 func TestAccApplicationOAuth2Permission_basic(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
+	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
 			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("scope_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
+	r := ApplicationOAuth2PermissionResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("scope_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplicationOAuth2Permission_basicDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
+	r := ApplicationOAuth2PermissionResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basicDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("permission_id").Exists(),
@@ -36,13 +68,13 @@ func TestAccApplicationOAuth2Permission_basic(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
+func TestAccApplicationOAuth2Permission_completeDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.completeDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("permission_id").Exists(),
@@ -53,7 +85,7 @@ func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
 }
 
 func TestAccApplicationOAuth2Permission_update(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
+	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -61,7 +93,7 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("permission_id").Exists(),
+				check.That(data.ResourceName).Key("scope_id").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -69,7 +101,7 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 			Config: r.update(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("permission_id").Exists(),
+				check.That(data.ResourceName).Key("scope_id").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -77,7 +109,7 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("permission_id").Exists(),
+				check.That(data.ResourceName).Key("scope_id").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -85,7 +117,7 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 }
 
 func TestAccApplicationOAuth2Permission_requiresImport(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
+	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
@@ -152,6 +184,41 @@ func (r ApplicationOAuth2PermissionResource) basic(data acceptance.TestData) str
 	return fmt.Sprintf(`
 %[1]s
 
+resource "azuread_application_oauth2_permission_scope" "test" {
+  application_object_id      = azuread_application.test.id
+  admin_consent_description  = "Administer the application"
+  admin_consent_display_name = "Administer"
+  enabled                    = true
+  type                       = "Admin"
+  user_consent_description   = "Administer the application"
+  user_consent_display_name  = "Administer"
+  value                      = "administer"
+}
+`, r.template(data))
+}
+
+func (r ApplicationOAuth2PermissionResource) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_oauth2_permission_scope" "test" {
+  application_object_id      = azuread_application.test.id
+  admin_consent_description  = "Administer the application"
+  admin_consent_display_name = "Administer"
+  enabled                    = true
+  scope_id                   = "%[2]s"
+  type                       = "Admin"
+  user_consent_description   = "Administer the application"
+  user_consent_display_name  = "Administer"
+  value                      = "administer"
+}
+`, r.template(data), data.RandomID)
+}
+
+func (r ApplicationOAuth2PermissionResource) basicDeprecated(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
 resource "azuread_application_oauth2_permission" "test" {
   application_object_id      = azuread_application.test.id
   admin_consent_description  = "Administer the application"
@@ -165,7 +232,7 @@ resource "azuread_application_oauth2_permission" "test" {
 `, r.template(data))
 }
 
-func (r ApplicationOAuth2PermissionResource) complete(data acceptance.TestData) string {
+func (r ApplicationOAuth2PermissionResource) completeDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -187,12 +254,12 @@ func (r ApplicationOAuth2PermissionResource) update(data acceptance.TestData) st
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azuread_application_oauth2_permission" "test" {
+resource "azuread_application_oauth2_permission_scope" "test" {
   application_object_id      = azuread_application.test.id
   admin_consent_description  = "Administrators can administrate all the things"
   admin_consent_display_name = "Administrate"
-  is_enabled                 = true
-  permission_id              = "%[2]s"
+  enabled                    = true
+  scope_id                   = "%[2]s"
   type                       = "User"
   user_consent_description   = "Administrators can administrate all the things"
   user_consent_display_name  = "Administrate"
@@ -205,16 +272,16 @@ func (r ApplicationOAuth2PermissionResource) requiresImport(data acceptance.Test
 	return fmt.Sprintf(`
 %[1]s
 
-resource "azuread_application_oauth2_permission" "import" {
-  application_object_id      = azuread_application_oauth2_permission.test.application_object_id
-  admin_consent_description  = azuread_application_oauth2_permission.test.admin_consent_description
-  admin_consent_display_name = azuread_application_oauth2_permission.test.admin_consent_display_name
-  is_enabled                 = azuread_application_oauth2_permission.test.is_enabled
-  permission_id              = azuread_application_oauth2_permission.test.permission_id
-  type                       = azuread_application_oauth2_permission.test.type
-  value                      = azuread_application_oauth2_permission.test.value
-  user_consent_description   = azuread_application_oauth2_permission.test.user_consent_description
-  user_consent_display_name  = azuread_application_oauth2_permission.test.user_consent_display_name
+resource "azuread_application_oauth2_permission_scope" "import" {
+  application_object_id      = azuread_application_oauth2_permission_scope.test.application_object_id
+  admin_consent_description  = azuread_application_oauth2_permission_scope.test.admin_consent_description
+  admin_consent_display_name = azuread_application_oauth2_permission_scope.test.admin_consent_display_name
+  enabled                    = azuread_application_oauth2_permission_scope.test.enabled
+  scope_id                   = azuread_application_oauth2_permission_scope.test.scope_id
+  type                       = azuread_application_oauth2_permission_scope.test.type
+  value                      = azuread_application_oauth2_permission_scope.test.value
+  user_consent_description   = azuread_application_oauth2_permission_scope.test.user_consent_description
+  user_consent_display_name  = azuread_application_oauth2_permission_scope.test.user_consent_display_name
 }
 `, r.basic(data))
 }

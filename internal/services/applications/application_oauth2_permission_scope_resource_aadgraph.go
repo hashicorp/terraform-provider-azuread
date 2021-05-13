@@ -74,7 +74,7 @@ func applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx context.Context
 		newPermissions, err = aadgraph.OAuth2PermissionAdd(app.Oauth2Permissions, &permission)
 		if err != nil {
 			if _, ok := err.(*aadgraph.AlreadyExistsError); ok {
-				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission", id.String())
+				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission_scope", id.String())
 			}
 			return tf.ErrorDiagF(err, "Failed to add OAuth2 Permission")
 		}
