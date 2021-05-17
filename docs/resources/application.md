@@ -160,7 +160,7 @@ The following arguments are supported:
 * `id` - The unique identifier of the app role. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to use the [azuread_application_app_role](application_app_role.html) resource.
 * `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
-~> In version 2.0 of the provider, the `id` property will become mandatory. For more information, see the [Upgrade Guide for v2.0](../guides/microsoft-graph.html).
+~> In version 2.0 of the provider, the `id` property will become mandatory. For more information, see the [Upgrade Guide for v2.0](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph.html).
 
 -> **Note on roles and permission scopes:** In Azure Active Directory, roles (`app_role`) and permission scopes (`oauth2_permission_scope`) exported by an Application share the same namespace and cannot contain duplicate `value`s. Terraform will attempt to detect this at plan time.
 
