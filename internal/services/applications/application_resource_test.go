@@ -113,8 +113,25 @@ func TestAccApplication_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_updateDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basicEmpty(data),
+			Config: r.basicDeprecated(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.completeDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
@@ -334,6 +351,40 @@ func TestAccApplication_nativeDeprecatedAppDoesNotAllowIdentifierUris(t *testing
 	})
 }
 
+func TestAccApplication_oauth2PermissionScopeUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+	scopeIDs := []string{
+		data.UUID(),
+		data.UUID(),
+	}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"), // TODO: v2.0 this should be zero length
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.oauth2PermissionScopes(data, scopeIDs),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.oauth2PermissionScopesUpdate(data, scopeIDs),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_oauth2PermissionsDeprecatedUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -503,8 +554,11 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 
 func (ApplicationResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
+  homepage     = "https://aaatest-%[1]d.net"
 }
 `, data.RandomInteger)
 }
@@ -515,19 +569,6 @@ resource "azuread_application" "test" {
   name = "acctest-APP-%[1]d"
 }
 `, data.RandomInteger)
-}
-
-func (ApplicationResource) basicEmpty(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  display_name            = "acctest-APP-%[1]s"
-  identifier_uris         = []
-  oauth2_permissions      = []
-  reply_urls              = []
-  owners                  = []
-  group_membership_claims = "None"
-}
-`, data.RandomString)
 }
 
 func (ApplicationResource) publicClientDeprecated(data acceptance.TestData) string {
@@ -607,6 +648,39 @@ resource "azuread_application" "test" {
     }
   }
 
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = ""
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "ReadOnly roles have limited query access"
+    display_name         = "ReadOnly"
+    is_enabled           = true
+    value                = "User"
+  }
+
+  optional_claims {
+    access_token {
+      name = "myclaim"
+    }
+
+    access_token {
+      name = "otherclaim"
+    }
+
+    id_token {
+      name                  = "userclaim"
+      source                = "user"
+      essential             = true
+      additional_properties = ["emit_as_roles"]
+    }
+  }
+
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
 
@@ -635,23 +709,6 @@ resource "azuread_application" "test" {
     }
   }
 
-  optional_claims {
-    access_token {
-      name = "myclaim"
-    }
-
-    access_token {
-      name = "otherclaim"
-    }
-
-    id_token {
-      name                  = "userclaim"
-      source                = "user"
-      essential             = true
-      additional_properties = ["emit_as_roles"]
-    }
-  }
-
   web {
     homepage_url  = "https://homepage-%[1]d"
     logout_url    = "https://log.me.out"
@@ -662,7 +719,7 @@ resource "azuread_application" "test" {
     }
   }
 
-  //owners = [azuread_user.test.object_id]
+  owners = [azuread_user.test.object_id]
 }
 `, data.RandomInteger, data.RandomPassword, data.UUID(), data.UUID())
 }
@@ -824,6 +881,66 @@ resource "azuread_application" "test" {
   app_role     = []
 }
 `, data.RandomInteger)
+}
+
+func (ApplicationResource) oauth2PermissionScopes(data acceptance.TestData, scopeIDs []string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      id                         = "%[2]s"
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+
+    oauth2_permission_scope {
+      id                         = "%[3]s"
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+}
+`, data.RandomInteger, scopeIDs[0], scopeIDs[1])
+}
+
+func (ApplicationResource) oauth2PermissionScopesUpdate(data acceptance.TestData, scopeIDs []string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      id                         = "%[2]s"
+      admin_consent_description  = "Allow the application to access on behalf blah... this changed"
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+
+    oauth2_permission_scope {
+      id                         = "%[3]s"
+      admin_consent_description  = "AdminiSTRATE the application"
+      admin_consent_display_name = "AdminiSTRATE"
+      enabled                    = true
+      type                       = "Admin"
+      value                      = "administrate"
+    }
+  }
+}
+`, data.RandomInteger, scopeIDs[0], scopeIDs[1])
 }
 
 func (ApplicationResource) oauth2PermissionsDeprecated(data acceptance.TestData) string {

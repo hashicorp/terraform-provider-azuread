@@ -230,9 +230,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
@@ -284,9 +282,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 				}
 			}
 			return false
@@ -336,4 +332,59 @@ func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id s
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 	return &data.Groups, status, nil
+}
+
+// AddPassword appends a new password credential to a Service Principal.
+func (c *ServicePrincipalsClient) AddPassword(ctx context.Context, servicePrincipalId string, passwordCredential PasswordCredential) (*PasswordCredential, int, error) {
+	var status int
+	body, err := json.Marshal(passwordCredential)
+	if err != nil {
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusOK, http.StatusCreated},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/addPassword", servicePrincipalId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var newPasswordCredential PasswordCredential
+	if err := json.Unmarshal(respBody, &newPasswordCredential); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &newPasswordCredential, status, nil
+}
+
+// RemovePassword removes a password credential from a Service Principal.
+func (c *ServicePrincipalsClient) RemovePassword(ctx context.Context, servicePrincipalId string, keyId string) (int, error) {
+	var status int
+	body, err := json.Marshal(struct {
+		KeyId string `json:"keyId"`
+	}{
+		KeyId: keyId,
+	})
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusOK, http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/removePassword", servicePrincipalId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
+	}
+	return status, nil
 }

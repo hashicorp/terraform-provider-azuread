@@ -1,24 +1,24 @@
 package applications
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
-func applicationOAuth2PermissionResource() *schema.Resource {
-	// TODO: v2.0 remove this resource
+func applicationOAuth2PermissionScopeResource() *schema.Resource {
 	return &schema.Resource{
-		// until v2.0, the new resource is compatible with the old resource so don't duplicate the CRUD functions
 		CreateContext: applicationOAuth2PermissionScopeResourceCreateUpdate,
 		UpdateContext: applicationOAuth2PermissionScopeResourceCreateUpdate,
 		ReadContext:   applicationOAuth2PermissionScopeResourceRead,
 		DeleteContext: applicationOAuth2PermissionScopeResourceDelete,
-
-		DeprecationMessage: "[NOTE] The `azuread_application_oauth2_permission` resource has been renamed to `azuread_application_oauth2_permission` and will be removed in version 2.0 of the provider",
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := parse.OAuth2PermissionScopeID(id)
@@ -51,6 +51,7 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 				Default:  true,
 			},
 
+			// TODO: v2.0 remove this
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
@@ -58,6 +59,7 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 				Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 			},
 
+			// TODO: v2.0 remove this
 			"permission_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -103,4 +105,25 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 			},
 		},
 	}
+}
+
+func applicationOAuth2PermissionScopeResourceCreateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if meta.(*clients.Client).EnableMsGraphBeta {
+		return applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx, d, meta)
+	}
+	return applicationOAuth2PermissionResourceCreateUpdateAadGraph(ctx, d, meta)
+}
+
+func applicationOAuth2PermissionScopeResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if meta.(*clients.Client).EnableMsGraphBeta {
+		return applicationOAuth2PermissionResourceReadMsGraph(ctx, d, meta)
+	}
+	return applicationOAuth2PermissionResourceReadAadGraph(ctx, d, meta)
+}
+
+func applicationOAuth2PermissionScopeResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if meta.(*clients.Client).EnableMsGraphBeta {
+		return applicationOAuth2PermissionResourceDeleteMsGraph(ctx, d, meta)
+	}
+	return applicationOAuth2PermissionResourceDeleteAadGraph(ctx, d, meta)
 }

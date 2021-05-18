@@ -39,3 +39,6 @@ website/vendor
 
 # built binary
 terraform-provider-azuread
+
+# terraform version
+.terraform-version

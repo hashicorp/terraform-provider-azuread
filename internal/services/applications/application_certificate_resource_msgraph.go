@@ -83,7 +83,9 @@ func applicationCertificateResourceReadMsGraph(ctx context.Context, d *schema.Re
 	app, status, err := client.Get(ctx, id.ObjectId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
+			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
+			d.SetId("")
+			return nil
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
@@ -106,12 +108,7 @@ func applicationCertificateResourceReadMsGraph(ctx context.Context, d *schema.Re
 
 	tf.Set(d, "application_object_id", id.ObjectId)
 	tf.Set(d, "key_id", id.KeyId)
-
-	keyType := ""
-	if v := credential.Type; v != nil {
-		keyType = *v
-	}
-	tf.Set(d, "type", keyType)
+	tf.Set(d, "type", string(credential.Type))
 
 	startDate := ""
 	if v := credential.StartDateTime; v != nil {

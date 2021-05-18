@@ -232,9 +232,7 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
@@ -283,9 +281,7 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 		checkMemberGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 				}
 			}
 			return false
@@ -383,9 +379,7 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 				}
 			}
 			return false
@@ -434,9 +428,7 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
 			if resp.StatusCode == http.StatusBadRequest {
 				if o.Error != nil {
-					if o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist) {
-						return true
-					}
+					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 				}
 			}
 			return false

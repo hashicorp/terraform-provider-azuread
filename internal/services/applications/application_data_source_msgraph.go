@@ -88,18 +88,22 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(*app.ID)
 
+	tf.Set(d, "api", helpers.ApplicationFlattenApi(app.Api, true))
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
 	tf.Set(d, "available_to_other_tenants", app.SignInAudience == msgraph.SignInAudienceAzureADMultipleOrgs)
 	tf.Set(d, "display_name", app.DisplayName)
+	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
 	tf.Set(d, "group_membership_claims", helpers.ApplicationFlattenGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "name", app.DisplayName) // TODO: remove in v2.0
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
+	tf.Set(d, "web", helpers.ApplicationFlattenWeb(app.Web))
 
-	// TODO: remove `type` in v2.0
+	// TODO: v2.0 BEGIN REMOVE
 	var appType string
 	if v := app.IsFallbackPublicClient; v != nil && *v {
 		appType = "native"
@@ -108,18 +112,28 @@ func applicationDataSourceReadMsGraph(ctx context.Context, d *schema.ResourceDat
 	}
 	tf.Set(d, "type", appType)
 
+	var oauth2Permissions []map[string]interface{}
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes))
+		oauth2Permissions = helpers.ApplicationFlattenOAuth2Permissions(app.Api.OAuth2PermissionScopes)
 	}
+	tf.Set(d, "oauth2_permissions", oauth2Permissions)
 
+	var homepage, logoutUrl *string
+	var oauth2AllowImplicitFlow *bool
+	var replyUrls []interface{}
 	if app.Web != nil {
-		tf.Set(d, "homepage", app.Web.HomePageUrl)
-		tf.Set(d, "logout_url", app.Web.LogoutUrl)
-		tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.Web.RedirectUris))
+		homepage = app.Web.HomePageUrl
+		logoutUrl = app.Web.LogoutUrl
+		replyUrls = tf.FlattenStringSlicePtr(app.Web.RedirectUris)
 		if app.Web.ImplicitGrantSettings != nil {
-			tf.Set(d, "oauth2_allow_implicit_flow", app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance)
+			oauth2AllowImplicitFlow = app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance
 		}
 	}
+	tf.Set(d, "homepage", homepage)
+	tf.Set(d, "logout_url", logoutUrl)
+	tf.Set(d, "oauth2_allow_implicit_flow", oauth2AllowImplicitFlow)
+	tf.Set(d, "reply_urls", replyUrls)
+	// TODO: v2.0 END REMOVE
 
 	owners, _, err := client.ListOwners(ctx, *app.ID)
 	if err != nil {

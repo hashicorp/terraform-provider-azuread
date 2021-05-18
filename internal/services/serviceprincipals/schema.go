@@ -31,10 +31,16 @@ func schemaAppRolesComputed() *schema.Schema {
 					Computed: true,
 				},
 
-				// TODO: v2.0 rename to `enabled`
-				"is_enabled": {
+				"enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,
+				},
+
+				// TODO: v2.0 remove this
+				"is_enabled": {
+					Type:       schema.TypeBool,
+					Computed:   true,
+					Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
 				},
 
 				"value": {
@@ -46,7 +52,7 @@ func schemaAppRolesComputed() *schema.Schema {
 	}
 }
 
-func schemaOauth2PermissionsComputed() *schema.Schema {
+func schemaOauth2PermissionScopesComputed() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -68,7 +74,59 @@ func schemaOauth2PermissionsComputed() *schema.Schema {
 					Computed: true,
 				},
 
-				// TODO: v2.0 rename to `enabled`
+				"enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+
+				"type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"user_consent_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"user_consent_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func schemaOauth2PermissionsComputed() *schema.Schema {
+	// TODO: v2.0 remove this
+	return &schema.Schema{
+		Type:       schema.TypeList,
+		Optional:   true,
+		Computed:   true,
+		Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"admin_consent_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"admin_consent_display_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+
 				"is_enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,

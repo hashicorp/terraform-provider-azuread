@@ -41,6 +41,8 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
@@ -119,6 +121,44 @@ func (ServicePrincipalResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   name = "acctestServicePrincipal-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      id                         = "%[3]s"
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = "superAdmin"
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "ReadOnly roles have limited query access"
+    display_name         = "ReadOnly"
+    is_enabled           = true
+    value                = "readOnlyUser"
+  }
 }
 
 resource "azuread_service_principal" "test" {
@@ -127,5 +167,5 @@ resource "azuread_service_principal" "test" {
 
   tags = ["test", "multiple", "CapitalS"]
 }
-`, data.RandomInteger)
+`, data.RandomInteger, data.UUID(), data.UUID())
 }

@@ -54,7 +54,9 @@ func servicePrincipalResource() *schema.Resource {
 
 			"app_roles": schemaAppRolesComputed(),
 
-			"oauth2_permissions": schemaOauth2PermissionsComputed(),
+			"oauth2_permissions": schemaOauth2PermissionsComputed(), // TODO: v2.0 remove this
+
+			"oauth2_permission_scopes": schemaOauth2PermissionScopesComputed(),
 
 			"tags": {
 				Type:     schema.TypeSet,

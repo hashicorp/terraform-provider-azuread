@@ -172,3 +172,25 @@ func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, filte
 	}
 	return &data.Groups, status, nil
 }
+
+// SendMail sends message specified in the request body.
+// TODO: Needs testing with an O365 user principal
+func (c *UsersClient) Sendmail(ctx context.Context, id string, message MailMessage) (int, error) {
+	var status int
+	body, err := json.Marshal(message)
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusOK, http.StatusAccepted},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/users/%s/sendMail", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("UsersClient.BaseClient.Post(): %v", err)
+	}
+	return status, nil
+}

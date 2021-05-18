@@ -95,7 +95,8 @@ func servicePrincipalDataSourceReadMsGraph(ctx context.Context, d *schema.Resour
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "oauth2_permissions", helpers.ApplicationFlattenOAuth2Permissions(servicePrincipal.PublishedPermissionScopes)) // TODO: v2.0 remove this
 	tf.Set(d, "object_id", servicePrincipal.ID)
 
 	return nil

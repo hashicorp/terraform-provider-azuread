@@ -30,13 +30,19 @@ func ApplicationFindByName(ctx context.Context, client *msgraph.ApplicationsClie
 	return nil, nil
 }
 
-func ApplicationFlattenApi(in *msgraph.ApplicationApi) []map[string]interface{} {
+func ApplicationFlattenApi(in *msgraph.ApplicationApi, dataSource bool) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	api := map[string]interface{}{
-		"oauth2_permission_scope": ApplicationFlattenOAuth2Permissions(in.OAuth2PermissionScopes),
+	api := make(map[string]interface{})
+
+	oauth2PermissionScopes := ApplicationFlattenOAuth2PermissionScopes(in.OAuth2PermissionScopes)
+
+	if dataSource {
+		api["oauth2_permission_scopes"] = oauth2PermissionScopes
+	} else {
+		api["oauth2_permission_scope"] = oauth2PermissionScopes
 	}
 
 	return []map[string]interface{}{api}
@@ -114,7 +120,7 @@ func ApplicationFlattenImplicitGrant(in *msgraph.ImplicitGrantSettings) []map[st
 	return []map[string]interface{}{implicitGrant}
 }
 
-func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[string]interface{} {
+func ApplicationFlattenOAuth2PermissionScopes(in *[]msgraph.PermissionScope) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -158,11 +164,35 @@ func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[st
 			"admin_consent_display_name": adminConsentDisplayName,
 			"id":                         id,
 			"enabled":                    enabled,
-			"is_enabled":                 enabled, // TODO: remove in v2.0
 			"type":                       p.Type,
 			"user_consent_description":   userConsentDescription,
 			"user_consent_display_name":  userConsentDisplayName,
 			"value":                      value,
+		})
+	}
+
+	return result
+}
+
+func ApplicationFlattenOAuth2Permissions(in *[]msgraph.PermissionScope) []map[string]interface{} {
+	// TODO: v2.0 remove this func
+	oauth2Permissions := ApplicationFlattenOAuth2PermissionScopes(in)
+
+	if len(oauth2Permissions) == 0 {
+		return []map[string]interface{}{}
+	}
+
+	result := make([]map[string]interface{}, 0)
+	for _, p := range oauth2Permissions {
+		result = append(result, map[string]interface{}{
+			"admin_consent_description":  p["admin_consent_description"],
+			"admin_consent_display_name": p["admin_consent_display_name"],
+			"id":                         p["id"],
+			"is_enabled":                 p["enabled"],
+			"type":                       p["type"],
+			"user_consent_description":   p["user_consent_description"],
+			"user_consent_display_name":  p["user_consent_display_name"],
+			"value":                      p["value"],
 		})
 	}
 
@@ -264,6 +294,7 @@ func ApplicationSetOAuth2PermissionScopes(ctx context.Context, client *msgraph.A
 
 	// OAuth2 Permission Scopes must be disabled before they can be edited or removed.
 	// Since we cannot match them by ID, we have to disable all the scopes, and replace them in one pass.
+	// TODO: v2.0 don't do this! we should be able to find the updated ones by ID and disable them selectively as we update them
 	app, status, err := client.Get(ctx, *application.ID)
 	if err != nil {
 		if status == http.StatusNotFound {

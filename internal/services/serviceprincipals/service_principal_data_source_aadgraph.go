@@ -92,6 +92,7 @@ func servicePrincipalDataSourceReadAadGraph(ctx context.Context, d *schema.Resou
 	tf.Set(d, "app_roles", aadgraph.FlattenAppRoles(sp.AppRoles))
 	tf.Set(d, "application_id", sp.AppID)
 	tf.Set(d, "display_name", sp.DisplayName)
+	tf.Set(d, "oauth2_permission_scopes", aadgraph.ApplicationFlattenOAuth2PermissionScopes(sp.Oauth2Permissions))
 	tf.Set(d, "oauth2_permissions", aadgraph.FlattenOauth2Permissions(sp.Oauth2Permissions))
 	tf.Set(d, "object_id", sp.ObjectID)
 

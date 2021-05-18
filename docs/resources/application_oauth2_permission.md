@@ -6,6 +6,8 @@ subcategory: "Applications"
 
 Manages an OAuth2 Permission (also known as a Scope) associated with an Application within Azure Active Directory.
 
+~> This resource is deprecated in favour of [azuread_application_oauth2_permission_scope](application_oauth2_permission_scope.html) and will be removed in version 2.0 of the provider.
+
 -> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to both `Read and write all applications` and `Sign in and read user profile` within the `Windows Azure Active Directory` API.
 
 ## Example Usage
