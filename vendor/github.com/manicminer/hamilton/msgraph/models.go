@@ -919,3 +919,12 @@ const (
 	BodyTypeText BodyType = "text"
 	BodyTypeHtml BodyType = "html"
 )
+
+type IdentityProvider struct {
+	ODataType    *string `json:"@odata.type,omitempty"`
+	ID           *string `json:"id,omitempty"`
+	ClientId     *string `json:"clientId,omitempty"`
+	ClientSecret *string `json:"clientSecret,omitempty"`
+	Type         *string `json:"identityProviderType,omitempty"`
+	Name         *string `json:"displayName,omitempty"`
+}
