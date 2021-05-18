@@ -24,15 +24,18 @@ func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema
 	conditionsRaw := d.Get("conditions").([]interface{})
 	conditions := expandConditionalAccessConditionSet(conditionsRaw)
 
+	grantControlsRaw := d.Get("grant_controls").([]interface{})
+	grantControls := expandConditionalAccessGrantControls(grantControlsRaw)
+
 	properties := msgraph.ConditionalAccessPolicy{
-		DisplayName: utils.String(displayName),
-		State:       utils.String(state),
-		Conditions:  conditions,
-		GrantControls: &msgraph.ConditionalAccessGrantControls{
-			Operator:        utils.String("OR"),
-			BuiltInControls: &[]string{"block"},
-		},
+		DisplayName:   utils.String(displayName),
+		State:         utils.String(state),
+		Conditions:    conditions,
+		GrantControls: grantControls,
 	}
+
+	// foo, err := json.Marshal(properties)
+	// panic(string(foo))
 
 	policy, _, err := client.Create(ctx, properties)
 	if err != nil {
@@ -126,6 +129,23 @@ func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAcce
 
 	result.IncludeLocations = tf.ExpandStringSlicePtr(includeLocations)
 	result.ExcludeLocations = tf.ExpandStringSlicePtr(excludeLocations)
+
+	return &result
+}
+
+func expandConditionalAccessGrantControls(in []interface{}) *msgraph.ConditionalAccessGrantControls {
+	if len(in) == 0 {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessGrantControls{}
+	config := in[0].(map[string]interface{})
+
+	operator := config["operator"].(string)
+	builtInControls := config["built_in_controls"].([]interface{})
+
+	result.Operator = &operator
+	result.BuiltInControls = tf.ExpandStringSlicePtr(builtInControls)
 
 	return &result
 }

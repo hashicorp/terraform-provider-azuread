@@ -172,6 +172,28 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					},
 				},
 			},
+
+			"grant_controls": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"operator": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"built_in_controls": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
