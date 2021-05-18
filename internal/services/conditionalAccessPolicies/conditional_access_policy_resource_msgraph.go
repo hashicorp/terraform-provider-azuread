@@ -34,9 +34,6 @@ func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema
 		GrantControls: grantControls,
 	}
 
-	// foo, err := json.Marshal(properties)
-	// panic(string(foo))
-
 	policy, _, err := client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create conditional access policy")
@@ -49,6 +46,84 @@ func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema
 	d.SetId(*policy.ID)
 
 	return conditionalAccessPolicyResourceReadMsGraph(ctx, d, meta)
+}
+
+func conditionalAccessPolicyResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
+
+	properties := msgraph.ConditionalAccessPolicy{
+		ID: utils.String(d.Id()),
+	}
+
+	if d.HasChange("display_name") {
+		displayName := d.Get("display_name").(string)
+		properties.DisplayName = &displayName
+	}
+
+	if d.HasChange("state") {
+		state := d.Get("state").(string)
+		properties.State = &state
+	}
+
+	if d.HasChange("conditions") {
+		conditionsRaw := d.Get("conditions").([]interface{})
+		conditions := expandConditionalAccessConditionSet(conditionsRaw)
+		properties.Conditions = conditions
+	}
+
+	if d.HasChange("grant_controls") {
+		grantControlsRaw := d.Get("grant_controls").([]interface{})
+		grantControls := expandConditionalAccessGrantControls(grantControlsRaw)
+		properties.GrantControls = grantControls
+	}
+
+	if _, err := client.Update(ctx, properties); err != nil {
+		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
+	}
+
+	return nil
+}
+
+func conditionalAccessPolicyResourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
+
+	policy, status, err := client.Get(ctx, d.Id())
+	if err != nil {
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] Conditional Access Policy with Object ID %q was not found - removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
+		return tf.ErrorDiagPathF(err, "id", "Retrieving Conditional Access Policy with object ID %q", d.Id())
+	}
+
+	tf.Set(d, "display_name", policy.DisplayName)
+	tf.Set(d, "id", policy.ID)
+	tf.Set(d, "state", policy.State)
+
+	return nil
+}
+
+func conditionalAccessPolicyResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
+
+	_, status, err := client.Get(ctx, d.Id())
+	if err != nil {
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] Conditional Access Policy with ID %q already deleted", d.Id())
+			return nil
+		}
+
+		return tf.ErrorDiagPathF(err, "id", "Retrieving conditional access policy with ID %q", d.Id())
+	}
+
+	status, err = client.Delete(ctx, d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting conditional access policy with ID %q, got status %d", d.Id(), status)
+	}
+
+	return nil
 }
 
 func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
@@ -148,78 +223,4 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	result.BuiltInControls = tf.ExpandStringSlicePtr(builtInControls)
 
 	return &result
-}
-
-func conditionalAccessPolicyResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
-
-	var displayName string
-	if d.HasChange("display_name") {
-		displayName = d.Get("display_name").(string)
-	}
-
-	var state string
-	if d.HasChange("state") {
-		state = d.Get("state").(string)
-	}
-
-	properties := msgraph.ConditionalAccessPolicy{
-		ID: utils.String(d.Id()),
-	}
-
-	if displayName != "" {
-		properties.DisplayName = &displayName
-	}
-
-	if state != "" {
-		properties.State = &state
-	}
-
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
-	}
-
-	return nil
-}
-
-func conditionalAccessPolicyResourceReadMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
-
-	policy, status, err := client.Get(ctx, d.Id())
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Conditional Access Policy with Object ID %q was not found - removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving Conditional Access Policy with object ID %q", d.Id())
-	}
-
-	tf.Set(d, "display_name", policy.DisplayName)
-	tf.Set(d, "id", policy.ID)
-	tf.Set(d, "state", policy.State)
-
-	return nil
-}
-
-func conditionalAccessPolicyResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccessPolicies.MsClient
-
-	_, status, err := client.Get(ctx, d.Id())
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Conditional Access Policy with ID %q already deleted", d.Id())
-			return nil
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving conditional access policy with ID %q", d.Id())
-	}
-
-	status, err = client.Delete(ctx, d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting conditional access policy with ID %q, got status %d", d.Id(), status)
-	}
-
-	return nil
 }
