@@ -52,6 +52,12 @@ provider "azuread" {
 
 This will enable you to upgrade to version 2.0 at your convenience, by simply advancing the desired target version in your configuration. See the [Lock and Upgrade Provider Versions](https://learn.hashicorp.com/tutorials/terraform/provider-versioning) guide on HashiCorp Learn for more details.
 
+## Authentication and National Clouds
+
+Existing authentication methods will continue to work unchanged, whether you authenticate with a service principal ([client certificate](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_client_certificate) or [client secret](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_client_secret)), [managed identity](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/managed_service_identity), or using [Azure CLI](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/azure_cli).
+
+For users connecting to national clouds (e.g. germany, china and usgovernment), these are all supported using the existing provider configuration property `environment`, or the environment variable `ARM_ENVIRONMENT`. The usgovernment environment has been split into two environments usgovernmentl4 and usgovernmentl5 - see [this post](https://developer.microsoft.com/en-us/office/blogs/new-microsoft-graph-endpoints-in-us-government-cloud/) for more information. Specifying the `usgovernment` environment will use the `usgovernmentl4` cloud.
+
 ## New API permissions
 
 Microsoft Graph is a different web service to Azure Active Directory Graph, and as such if you are authenticating using a service principal, you may need to assign new permissions to [your authenticated principal](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_configuration).
@@ -326,4 +332,4 @@ export AAD_USE_MICROSOFT_GRAPH=1
 $env:AAD_USE_MICROSOFT_GRAPH = "1"
 ```
 
-We appreciate any feedback you might have whilst using beta support for Microsoft Graph. Bug reports and feature requests can be logged on our [GitHub issue tracker](https://github.com/hashicorp/terraform-provider-azuread/issues), and you can also check out the [project README](https://github.com/hashicorp/terraform-provider-azuread/blob/main/README.md) for information on how to get in touch with the maintainers.
+We appreciate any feedback you might have whilst using beta support for Microsoft Graph. Bug reports and feature requests can be logged on our [GitHub issue tracker](https://github.com/hashicorp/terraform-provider-azuread/issues), and you can also check out the [project README](https://github.com/hashicorp/terraform-provider-azuread/blob/main/README.md) for information on how to get in touch with the maintainers. If you encounter an issue that has already been reported, please upvote it and comment to add any additional context you might have.
