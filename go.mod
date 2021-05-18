@@ -10,6 +10,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.3.0
 	github.com/manicminer/hamilton v0.12.1-0.20210511220946-0d95723180f7
+	github.com/sethvargo/go-password v0.2.0
 )
 
 go 1.16

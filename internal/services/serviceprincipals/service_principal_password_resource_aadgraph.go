@@ -59,6 +59,11 @@ func servicePrincipalPasswordResourceCreateAadGraph(ctx context.Context, d *sche
 		return tf.ErrorDiagF(err, "Waiting for password credential replication for service principal (ObjectID %q, KeyID %q)", id.ObjectId, id.KeyId)
 	}
 
+	// MS Graph compatibility, if no value set in config, use the generated value
+	if v, ok := d.GetOk("value"); !ok || v == "" {
+		tf.Set(d, "value", cred.Value)
+	}
+
 	return servicePrincipalPasswordResourceReadAadGraph(ctx, d, meta)
 }
 

@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -20,8 +19,6 @@ func servicePrincipalPasswordResource() *schema.Resource {
 		CreateContext: servicePrincipalPasswordResourceCreate,
 		ReadContext:   servicePrincipalPasswordResourceRead,
 		DeleteContext: servicePrincipalPasswordResourceDelete,
-
-		Importer: tf.ImportNotSupported(),
 
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
@@ -44,7 +41,7 @@ func servicePrincipalPasswordResource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"description"},
-				ForceNew:      true, // TODO: ForceNew not required with MS Graph, remove in v2.0
+				ForceNew:      true,
 			},
 
 			// TODO: remove in v2.0
@@ -76,19 +73,20 @@ func servicePrincipalPasswordResource() *schema.Resource {
 			},
 
 			"end_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				//ExactlyOneOf: []string{"end_date_relative"},
-				ValidateFunc: validation.IsRFC3339Time,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date_relative"},
+				ValidateFunc:  validation.IsRFC3339Time,
 			},
 
 			"end_date_relative": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				//ExactlyOneOf:     []string{"end_date"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"end_date"},
+				Default:          "17520h", // 2 years
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},

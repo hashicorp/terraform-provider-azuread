@@ -282,6 +282,9 @@ github.com/mitchellh/reflectwalk
 github.com/oklog/run
 # github.com/sergi/go-diff v1.1.0
 github.com/sergi/go-diff/diffmatchpatch
+# github.com/sethvargo/go-password v0.2.0
+## explicit
+github.com/sethvargo/go-password/password
 # github.com/ulikunitz/xz v0.5.8
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash
