@@ -21,23 +21,13 @@ func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema
 	displayName := d.Get("display_name").(string)
 	state := d.Get("state").(string)
 
+	conditionsRaw := d.Get("conditions").([]interface{})
+	conditions := expandConditionalAccessConditionSet(conditionsRaw)
+
 	properties := msgraph.ConditionalAccessPolicy{
 		DisplayName: utils.String(displayName),
 		State:       utils.String(state),
-		Conditions: &msgraph.ConditionalAccessConditionSet{
-			ClientAppTypes: &[]string{"mobileAppsAndDesktopClients", "browser"},
-			Applications: &msgraph.ConditionalAccessApplications{
-				IncludeApplications: &[]string{"All"},
-			},
-			Users: &msgraph.ConditionalAccessUsers{
-				IncludeUsers: &[]string{"All"},
-				ExcludeUsers: &[]string{"GuestsOrExternalUsers"},
-			},
-			Locations: &msgraph.ConditionalAccessLocations{
-				IncludeLocations: &[]string{"All"},
-				ExcludeLocations: &[]string{"AllTrusted"},
-			},
-		},
+		Conditions:  conditions,
 		GrantControls: &msgraph.ConditionalAccessGrantControls{
 			Operator:        utils.String("OR"),
 			BuiltInControls: &[]string{"block"},
@@ -56,6 +46,88 @@ func conditionalAccessPolicyResourceCreateMsGraph(ctx context.Context, d *schema
 	d.SetId(*policy.ID)
 
 	return conditionalAccessPolicyResourceReadMsGraph(ctx, d, meta)
+}
+
+func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
+	if len(in) == 0 {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessConditionSet{}
+	config := in[0].(map[string]interface{})
+
+	applications := config["applications"].([]interface{})
+	users := config["users"].([]interface{})
+	clientAppTypes := config["client_app_types"].([]interface{})
+	locations := config["locations"].([]interface{})
+
+	result.Applications = expandConditionalAccessApplications(applications)
+	result.Users = expandConditionalAccessUsers(users)
+	result.ClientAppTypes = tf.ExpandStringSlicePtr(clientAppTypes)
+	result.Locations = expandConditionalAccessLocations(locations)
+
+	return &result
+}
+
+func expandConditionalAccessApplications(in []interface{}) *msgraph.ConditionalAccessApplications {
+	if len(in) == 0 {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessApplications{}
+	config := in[0].(map[string]interface{})
+
+	includeApplications := config["included_applications"].([]interface{})
+	excludeApplications := config["excluded_applications"].([]interface{})
+	includeUserActions := config["included_user_actions"].([]interface{})
+
+	result.IncludeApplications = tf.ExpandStringSlicePtr(includeApplications)
+	result.ExcludeApplications = tf.ExpandStringSlicePtr(excludeApplications)
+	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
+
+	return &result
+}
+
+func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUsers {
+	if len(in) == 0 {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessUsers{}
+	config := in[0].(map[string]interface{})
+
+	includeUsers := config["included_users"].([]interface{})
+	excludeUsers := config["excluded_users"].([]interface{})
+	includeGroups := config["included_groups"].([]interface{})
+	excludeGroups := config["excluded_groups"].([]interface{})
+	includeRoles := config["included_roles"].([]interface{})
+	excludeRoles := config["excluded_roles"].([]interface{})
+
+	result.IncludeUsers = tf.ExpandStringSlicePtr(includeUsers)
+	result.ExcludeUsers = tf.ExpandStringSlicePtr(excludeUsers)
+	result.IncludeGroups = tf.ExpandStringSlicePtr(includeGroups)
+	result.ExcludeGroups = tf.ExpandStringSlicePtr(excludeGroups)
+	result.IncludeRoles = tf.ExpandStringSlicePtr(includeRoles)
+	result.ExcludeRoles = tf.ExpandStringSlicePtr(excludeRoles)
+
+	return &result
+}
+
+func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAccessLocations {
+	if len(in) == 0 {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessLocations{}
+	config := in[0].(map[string]interface{})
+
+	includeLocations := config["included_locations"].([]interface{})
+	excludeLocations := config["excluded_locations"].([]interface{})
+
+	result.IncludeLocations = tf.ExpandStringSlicePtr(includeLocations)
+	result.ExcludeLocations = tf.ExpandStringSlicePtr(excludeLocations)
+
+	return &result
 }
 
 func conditionalAccessPolicyResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
