@@ -73,7 +73,7 @@ func applicationAppRoleResourceCreateUpdateMsGraph(ctx context.Context, d *schem
 	}
 
 	if d.IsNewResource() {
-		if app.AppendAppRole(role) != nil {
+		if err := app.AppendAppRole(role); err != nil {
 			if _, ok := err.(*grapherrors.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_app_role", id.String())
 			}

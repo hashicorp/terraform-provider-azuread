@@ -20,7 +20,7 @@ import (
 
 type ApplicationOAuth2PermissionResource struct{}
 
-func TestAccApplicationOAuth2Permission_basic(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
@@ -36,7 +36,7 @@ func TestAccApplicationOAuth2Permission_basic(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
@@ -52,7 +52,7 @@ func TestAccApplicationOAuth2Permission_complete(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_basicDeprecated(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_basicDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
@@ -68,7 +68,7 @@ func TestAccApplicationOAuth2Permission_basicDeprecated(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_completeDeprecated(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_completeDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
@@ -84,7 +84,7 @@ func TestAccApplicationOAuth2Permission_completeDeprecated(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_update(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
@@ -116,7 +116,7 @@ func TestAccApplicationOAuth2Permission_update(t *testing.T) {
 	})
 }
 
-func TestAccApplicationOAuth2Permission_requiresImport(t *testing.T) {
+func TestAccApplicationOAuth2PermissionScope_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_oauth2_permission_scope", "test")
 	r := ApplicationOAuth2PermissionResource{}
 
