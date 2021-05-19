@@ -57,7 +57,8 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		// MS Graph compatibility: default the end date to T + 2 years
+		endDate = time.Now().Add(17520 * time.Hour)
 	}
 
 	credential := graphrbac.PasswordCredential{

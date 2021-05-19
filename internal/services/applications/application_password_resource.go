@@ -86,7 +86,6 @@ func applicationPasswordResource() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"end_date"},
-				Default:          "17520h", // 2 years
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},
