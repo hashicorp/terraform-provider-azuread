@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
+	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
@@ -101,7 +102,7 @@ func applicationOAuth2PermissionScopeResource() *schema.Resource {
 			"value": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 			},
 		},
 	}

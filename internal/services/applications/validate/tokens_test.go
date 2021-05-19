@@ -36,8 +36,8 @@ func TestRoleScopeClaimValue(t *testing.T) {
 		},
 		{
 			Value:    "",
-			TestName: "Invalid_MinLength",
-			ErrCount: 1,
+			TestName: "Valid_Empty",
+			ErrCount: 0,
 		},
 		{
 			Value:    acctest.RandString(121),
