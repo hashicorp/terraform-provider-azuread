@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -89,14 +91,15 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
+				Deprecated:  "The `metadata_host` provider attribute is deprecated and will be removed in version 2.0",
 				Description: "The Hostname which should be used for the Azure Metadata Service.",
 			},
 
 			"environment": {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "public"),
-				Description: "The Cloud Environment which should be used. Possible values are `public`, `usgovernment`, `german`, and `china`. Defaults to `public`.",
+				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
+				Description: "The cloud environment which should be used. Possible values are `global` (formerly `public`), `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
 			},
 
 			// Client Certificate specific fields
@@ -119,6 +122,14 @@ func AzureADProvider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
 				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
+			},
+
+			// CLI authentication specific fields
+			"use_cli": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_CLI", true),
+				Description: "Allow Azure CLI to be used for Authentication.",
 			},
 
 			// Managed Service Identity specific fields
@@ -151,6 +162,15 @@ func AzureADProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
 				Description: "Disable the Terraform Partner ID which is used if a custom `partner_id` isn't specified.",
 			},
+
+			// MS Graph beta
+			// TODO: remove in v2.0
+			"use_microsoft_graph": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AAD_USE_MICROSOFT_GRAPH", false),
+				Description: "Beta: Use the Microsoft Graph API, instead of the legacy Azure Active Directory Graph API, where supported.",
+			},
 		},
 
 		ResourcesMap:   resources,
@@ -164,12 +184,34 @@ func AzureADProvider() *schema.Provider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		builder := &authentication.Builder{
+		environment, aadEnvironment := environment(d.Get("environment").(string))
+
+		// Microsoft Graph beta opt-in
+		enableMsGraph := d.Get("use_microsoft_graph").(bool)
+
+		var authConfig *auth.Config
+		if enableMsGraph {
+			authConfig = &auth.Config{
+				Environment:            environment,
+				TenantID:               d.Get("tenant_id").(string),
+				ClientID:               d.Get("client_id").(string),
+				ClientCertPassword:     d.Get("client_certificate_password").(string),
+				ClientCertPath:         d.Get("client_certificate_path").(string),
+				ClientSecret:           d.Get("client_secret").(string),
+				EnableClientCertAuth:   true,
+				EnableClientSecretAuth: true,
+				EnableAzureCliToken:    d.Get("use_cli").(bool),
+				EnableMsiAuth:          d.Get("use_msi").(bool),
+				MsiEndpoint:            d.Get("msi_endpoint").(string),
+			}
+		}
+
+		aadBuilder := &authentication.Builder{
 			ClientID:           d.Get("client_id").(string),
 			ClientSecret:       d.Get("client_secret").(string),
 			TenantID:           d.Get("tenant_id").(string),
 			MetadataHost:       d.Get("metadata_host").(string),
-			Environment:        d.Get("environment").(string),
+			Environment:        aadEnvironment,
 			MsiEndpoint:        d.Get("msi_endpoint").(string),
 			ClientCertPassword: d.Get("client_certificate_password").(string),
 			ClientCertPath:     d.Get("client_certificate_path").(string),
@@ -178,7 +220,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			SupportsClientCertAuth:         true,
 			SupportsClientSecretAuth:       true,
 			SupportsManagedServiceIdentity: d.Get("use_msi").(bool),
-			SupportsAzureCliToken:          true,
+			SupportsAzureCliToken:          d.Get("use_cli").(bool),
 			TenantOnly:                     true,
 		}
 
@@ -190,18 +232,21 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			partnerId = terraformPartnerId
 		}
 
-		return buildClient(ctx, p, builder, partnerId)
+		return buildClient(ctx, p, authConfig, aadBuilder, partnerId, enableMsGraph)
 	}
 }
 
-func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Builder, partnerId string) (*clients.Client, diag.Diagnostics) {
-	config, err := b.Build()
+// TODO: v2.0 pull out authentication.Builder and derived configuration
+func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Config, b *authentication.Builder, partnerId string, enableMsGraph bool) (*clients.Client, diag.Diagnostics) {
+	aadConfig, err := b.Build()
 	if err != nil {
 		return nil, tf.ErrorDiagF(err, "Building AzureAD Client")
 	}
 
 	clientBuilder := clients.ClientBuilder{
-		AuthConfig:       config,
+		AuthConfig:       authConfig,
+		AadAuthConfig:    aadConfig,
+		EnableMsGraph:    enableMsGraph,
 		PartnerID:        partnerId,
 		TerraformVersion: p.TerraformVersion,
 	}
@@ -217,4 +262,25 @@ func buildClient(ctx context.Context, p *schema.Provider, b *authentication.Buil
 	}
 
 	return client, nil
+}
+
+func environment(name string) (env environments.Environment, aadEnv string) {
+	switch name {
+	case "global", "public":
+		env = environments.Global
+		aadEnv = "public"
+	case "usgovernment", "usgovernmentl4":
+		env = environments.USGovernmentL4
+		aadEnv = "usgovernment"
+	case "dod", "usgovernmentl5":
+		env = environments.USGovernmentL5
+		aadEnv = "usgovernment"
+	case "german", "germany":
+		env = environments.Germany
+		aadEnv = "german"
+	case "china":
+		env = environments.China
+		aadEnv = "china"
+	}
+	return
 }

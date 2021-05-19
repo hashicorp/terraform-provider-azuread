@@ -3,6 +3,7 @@ package applications_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"testing"
 
@@ -72,6 +73,23 @@ func TestAccApplication_complete(t *testing.T) {
 	})
 }
 
+func TestAccApplication_completeDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.completeDeprecated(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -95,8 +113,25 @@ func TestAccApplication_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_updateDeprecated(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basicEmpty(data),
+			Config: r.basicDeprecated(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.completeDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
@@ -107,13 +142,13 @@ func TestAccApplication_update(t *testing.T) {
 	})
 }
 
-func TestAccApplication_publicClient(t *testing.T) {
+func TestAccApplication_publicClientDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.publicClient(data),
+			Config: r.publicClientDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
@@ -235,13 +270,13 @@ func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	})
 }
 
-func TestAccApplication_native(t *testing.T) {
+func TestAccApplication_nativeDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.native(data),
+			Config: r.nativeDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("homepage").HasValue(""),
@@ -253,13 +288,13 @@ func TestAccApplication_native(t *testing.T) {
 	})
 }
 
-func TestAccApplication_nativeReplyUrls(t *testing.T) {
+func TestAccApplication_nativeDeprecatedReplyUrls(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.nativeReplyUrls(data),
+			Config: r.nativeDeprecatedReplyUrls(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("homepage").HasValue(""),
@@ -269,7 +304,7 @@ func TestAccApplication_nativeReplyUrls(t *testing.T) {
 	})
 }
 
-func TestAccApplication_nativeUpdate(t *testing.T) {
+func TestAccApplication_nativeDeprecatedUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
@@ -284,7 +319,7 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.native(data),
+			Config: r.nativeDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("identifier_uris.#").HasValue("0"),
@@ -304,19 +339,53 @@ func TestAccApplication_nativeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccApplication_nativeAppDoesNotAllowIdentifierUris(t *testing.T) {
+func TestAccApplication_nativeDeprecatedAppDoesNotAllowIdentifierUris(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config:      r.nativeAppDoesNotAllowIdentifierUris(data),
+			Config:      r.nativeDeprecatedAppDoesNotAllowIdentifierUris(data),
 			ExpectError: regexp.MustCompile("not required for a native application"),
 		},
 	})
 }
 
-func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
+func TestAccApplication_oauth2PermissionScopeUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+	scopeIDs := []string{
+		data.UUID(),
+		data.UUID(),
+	}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"), // TODO: v2.0 this should be zero length
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.oauth2PermissionScopes(data, scopeIDs),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.oauth2PermissionScopesUpdate(data, scopeIDs),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_oauth2PermissionsDeprecatedUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
@@ -330,7 +399,7 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.oauth2Permissions(data),
+			Config: r.oauth2PermissionsDeprecated(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("2"),
@@ -338,7 +407,7 @@ func TestAccApplication_oauth2PermissionsUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.oauth2PermissionsEmpty(data),
+			Config: r.oauth2PermissionsDeprecatedEmpty(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("oauth2_permissions.#").HasValue("0"),
@@ -457,23 +526,39 @@ func TestAccApplication_ownersUpdate(t *testing.T) {
 }
 
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	resp, err := clients.Applications.AadClient.Get(ctx, state.ID)
+	var id *string
 
-	if err != nil {
-		if utils.ResponseWasNotFound(resp.Response) {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+	if clients.EnableMsGraphBeta {
+		app, status, err := clients.Applications.MsClient.Get(ctx, state.ID)
+		if err != nil {
+			if status == http.StatusNotFound {
+				return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
+		id = app.ID
+	} else {
+		resp, err := clients.Applications.AadClient.Get(ctx, state.ID)
+
+		if err != nil {
+			if utils.ResponseWasNotFound(resp.Response) {
+				return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+			}
+			return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
+		}
+		id = resp.ObjectID
 	}
-	id := resp.ObjectID
 
 	return utils.Bool(id != nil && *id == state.ID), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
+  homepage     = "https://aaatest-%[1]d.net"
 }
 `, data.RandomInteger)
 }
@@ -486,20 +571,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) basicEmpty(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  display_name            = "acctest-APP-%[1]s"
-  identifier_uris         = []
-  oauth2_permissions      = []
-  reply_urls              = []
-  owners                  = []
-  group_membership_claims = "None"
-}
-`, data.RandomString)
-}
-
-func (ApplicationResource) publicClient(data acceptance.TestData) string {
+func (ApplicationResource) publicClientDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name  = "acctest-APP-%[1]d"
@@ -549,7 +621,123 @@ resource "azuread_user" "test" {
 }
 
 resource "azuread_application" "test" {
-  display_name               = "acctest-APP-%[1]d"
+  display_name            = "acctest-APP-%[1]d"
+  identifier_uris         = ["api://hashicorptestapp-%[1]d"]
+  group_membership_claims = "All"
+  sign_in_audience        = "AzureADMultipleOrgs"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[3]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      id                         = "%[4]s"
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    is_enabled           = true
+    value                = ""
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "ReadOnly roles have limited query access"
+    display_name         = "ReadOnly"
+    is_enabled           = true
+    value                = "User"
+  }
+
+  optional_claims {
+    access_token {
+      name = "myclaim"
+    }
+
+    access_token {
+      name = "otherclaim"
+    }
+
+    id_token {
+      name                  = "userclaim"
+      source                = "user"
+      essential             = true
+      additional_properties = ["emit_as_roles"]
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+
+    resource_access {
+      id   = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
+      type = "Role"
+    }
+
+    resource_access {
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      type = "Scope"
+    }
+
+    resource_access {
+      id   = "06da0dbc-49e2-44d2-8312-53f166ab848a"
+      type = "Scope"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = "00000002-0000-0000-c000-000000000000"
+
+    resource_access {
+      id   = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+      type = "Scope"
+    }
+  }
+
+  web {
+    homepage_url  = "https://homepage-%[1]d"
+    logout_url    = "https://log.me.out"
+    redirect_uris = ["https://unittest.hashicorptest.com"]
+
+    implicit_grant {
+      access_token_issuance_enabled = true
+    }
+  }
+
+  owners = [azuread_user.test.object_id]
+}
+`, data.RandomInteger, data.RandomPassword, data.UUID(), data.UUID())
+}
+
+func (ApplicationResource) completeDeprecated(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = "%[2]s"
+}
+
+resource "azuread_application" "test" {
+  name                       = "acctest-APP-%[1]d"
   homepage                   = "https://homepage-%[1]d"
   identifier_uris            = ["api://hashicorptestapp-%[1]d"]
   reply_urls                 = ["https://unittest.hashicorptest.com"]
@@ -695,7 +883,67 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) oauth2Permissions(data acceptance.TestData) string {
+func (ApplicationResource) oauth2PermissionScopes(data acceptance.TestData, scopeIDs []string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      id                         = "%[2]s"
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+
+    oauth2_permission_scope {
+      id                         = "%[3]s"
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+}
+`, data.RandomInteger, scopeIDs[0], scopeIDs[1])
+}
+
+func (ApplicationResource) oauth2PermissionScopesUpdate(data acceptance.TestData, scopeIDs []string) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      id                         = "%[2]s"
+      admin_consent_description  = "Allow the application to access on behalf blah... this changed"
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+
+    oauth2_permission_scope {
+      id                         = "%[3]s"
+      admin_consent_description  = "AdminiSTRATE the application"
+      admin_consent_display_name = "AdminiSTRATE"
+      enabled                    = true
+      type                       = "Admin"
+      value                      = "administrate"
+    }
+  }
+}
+`, data.RandomInteger, scopeIDs[0], scopeIDs[1])
+}
+
+func (ApplicationResource) oauth2PermissionsDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
@@ -721,7 +969,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) oauth2PermissionsEmpty(data acceptance.TestData) string {
+func (ApplicationResource) oauth2PermissionsDeprecatedEmpty(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name       = "acctest-APP-%[1]d"
@@ -730,7 +978,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) native(data acceptance.TestData) string {
+func (ApplicationResource) nativeDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
@@ -739,7 +987,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) nativeReplyUrls(data acceptance.TestData) string {
+func (ApplicationResource) nativeDeprecatedReplyUrls(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
@@ -749,7 +997,7 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (ApplicationResource) nativeAppDoesNotAllowIdentifierUris(data acceptance.TestData) string {
+func (ApplicationResource) nativeDeprecatedAppDoesNotAllowIdentifierUris(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_application" "test" {
   display_name    = "acctest-APP-%[1]d"

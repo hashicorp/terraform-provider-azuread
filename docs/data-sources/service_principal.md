@@ -36,24 +36,24 @@ data "azuread_service_principal" "example" {
 
 The following arguments are supported:
 
-* `app_roles` - A collection of `app_role` blocks as documented below. For more information https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles
 * `application_id` - (Optional) The ID of the Azure AD Application.
 * `display_name` - (Optional) The Display Name of the Azure AD Application associated with this Service Principal.
 * `object_id` - (Optional) The ID of the Azure AD Service Principal.
 
 ~> **NOTE:** At least one of `application_id`, `display_name` or `object_id` must be specified.
 
-* `oauth2_permissions` - A collection of OAuth 2.0 permissions exposed by the associated application. Each permission is covered by a `oauth2_permission` block as documented below.
-
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - The Object ID for the Service Principal.
+* `app_roles` - A collection of `app_roles` blocks as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `object_id` - The Object ID for the Service Principal.
+* `oauth2_permission_scopes` - A collection of OAuth 2.0 delegated permissions exposed by the associated Application. Each permission is covered by an `oauth2_permission_scopes` block as documented below.
+* `oauth2_permissions` - (**Deprecated**) A collection of OAuth 2.0 permissions exposed by the associated Application. Each permission is covered by an `oauth2_permissions` block as documented below. Deprecated in favour of `oauth2_permission_scopes`.
 
 ---
 
-`app_role` block exports the following:
+`app_roles` block exports the following:
 
 * `allowed_member_types` - Specifies whether this app role definition can be assigned to users and groups, or to other applications (that are accessing this application in daemon service scenarios). Possible values are: `User` and `Application`, or both.
 * `description` - Permission help text that appears in the admin app assignment and consent experiences.
@@ -64,7 +64,20 @@ The following attributes are exported:
 
 ---
 
-`oauth2_permission` block exports the following:
+`oauth2_permission_scopes` block exports the following:
+
+* `admin_consent_description` - The description of the admin consent.
+* `admin_consent_display_name` - The display name of the admin consent.
+* `enabled` - Is this permission enabled?
+* `id` - The unique identifier for one of the `OAuth2Permission`.
+* `type` - The type of the permission.
+* `user_consent_description` - The description of the user consent.
+* `user_consent_display_name` - The display name of the user consent.
+* `value` - The name of this permission.
+
+---
+
+`oauth2_permissions` block exports the following:
 
 * `admin_consent_description` - The description of the admin consent
 * `admin_consent_display_name` - The display name of the admin consent

@@ -2,16 +2,10 @@ package applications
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/aadgraph"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -44,15 +38,81 @@ func applicationDataSource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			// TODO: remove in v2.0
 			"name": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				Deprecated:       "This property has been renamed to `display_name` and will be removed in version 2.0 of this provider.",
+				Deprecated:       "This property has been renamed to `display_name` and will be removed in version 2.0 of the AzureAD provider",
 				ExactlyOneOf:     []string{"application_id", "display_name", "name", "object_id"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"api": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// TODO: v2.0 also consider another computed typemap attribute `oauth2_permission_scope_ids` for easier consumption
+						"oauth2_permission_scopes": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"admin_consent_description": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"admin_consent_display_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+
+									// TODO: v2.0 remove this
+									"is_enabled": {
+										Type:       schema.TypeBool,
+										Computed:   true,
+										Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
+									},
+
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"user_consent_description": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"user_consent_display_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+
+									"value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			// TODO: v2.0 consider another computed typemap attribute `app_role_ids` for easier consumption
 			"app_roles": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -81,10 +141,16 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
-						"is_enabled": {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
+						},
+
+						// TODO: v2.0 remove this
+						"is_enabled": {
+							Type:       schema.TypeBool,
+							Computed:   true,
+							Deprecated: "[NOTE] This attribute will be renamed to `enabled` in version 2.0 of the AzureAD provider",
 						},
 
 						"value": {
@@ -95,8 +161,14 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
-			// TODO: v2.0 move this to `sign_in_audience` property and support other values
+			// TODO: v2.0 remove this
 			"available_to_other_tenants": {
+				Type:       schema.TypeBool,
+				Computed:   true,
+				Deprecated: "[NOTE] This attribute will be replaced by a new property `sign_in_audience` in version 2.0 of the AzureAD provider",
+			},
+
+			"fallback_public_client_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -106,10 +178,11 @@ func applicationDataSource() *schema.Resource {
 				Computed: true,
 			},
 
-			// TODO: v2.0 put this in a `web` block and remove Computed
+			// TODO: v2.0 remove this
 			"homepage": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"identifier_uris": {
@@ -120,23 +193,26 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
-			// TODO: v2.0 put this in a `web` block
+			// TODO: v2.0 remove this
 			"logout_url": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
 			},
 
-			// TODO: v2.0 put this in an `implicit_grant` block and rename to `access_token_issuance_enabled`
+			// TODO: v2.0 remove this
 			"oauth2_allow_implicit_flow": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Computed:   true,
+				Deprecated: "[NOTE] This attribute will be moved to the `implicit_grant` block and renamed to `access_token_issuance_enabled` in version 2.0 of the AzureAD provider",
 			},
 
-			// TODO: v2.0 put this in an `api` block and maybe rename to `oauth2_permission_scope`
+			// TODO: v2.0 remove this block
 			"oauth2_permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeList,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scopes` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admin_consent_description": {
@@ -154,7 +230,11 @@ func applicationDataSource() *schema.Resource {
 							Computed: true,
 						},
 
-						// TODO: v2.0 rename to `enabled`
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"is_enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -205,9 +285,11 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			// TODO: v2.0 remove this
 			"reply_urls": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Type:       schema.TypeList,
+				Computed:   true,
+				Deprecated: "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -244,119 +326,67 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
-			// TODO: v2.0 drop this, there's no such distinction any more
-			"type": {
+			"sign_in_audience": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			// TODO: v2.0 drop this, there's no such distinction any more
+			"type": {
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
+			},
+
+			"web": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"homepage_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"logout_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"redirect_uris": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+
+						"implicit_grant": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"access_token_issuance_enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+
+									// TODO: v2.0 support `id_token_issuance_enabled`
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).Applications.AadClient
-
-	var app graphrbac.Application
-
-	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		resp, err := client.Get(ctx, objectId)
-		if err != nil {
-			if utils.ResponseWasNotFound(resp.Response) {
-				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)
-			}
-
-			return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", objectId)
-		}
-
-		app = resp
-	} else {
-		var fieldName, fieldValue string
-		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
-			fieldName = "appId"
-			fieldValue = applicationId
-		} else if displayName, ok := d.Get("display_name").(string); ok && displayName != "" {
-			fieldName = "displayName"
-			fieldValue = displayName
-		} else if name, ok := d.Get("name").(string); ok && name != "" {
-			fieldName = "displayName"
-			fieldValue = name
-		} else {
-			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id` or `displayName` must be specified")
-		}
-
-		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
-
-		resp, err := client.ListComplete(ctx, filter)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Listing applications for filter %q", filter)
-		}
-
-		values := resp.Response().Value
-		if values == nil {
-			return tf.ErrorDiagF(fmt.Errorf("nil values for applications matching filter: %q", filter), "Bad API response")
-		}
-		if len(*values) == 0 {
-			return tf.ErrorDiagF(fmt.Errorf("No applications found matching filter: %q", filter), "Application not found")
-		}
-		if len(*values) > 1 {
-			return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
-		}
-
-		app = (*values)[0]
-		switch fieldName {
-		case "appId":
-			if app.AppID == nil {
-				return tf.ErrorDiagF(fmt.Errorf("nil AppID for applications matching filter: %q", filter), "Bad API Response")
-			}
-			if *app.AppID != fieldValue {
-				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppID, fieldValue, filter), "Bad API Response")
-			}
-		case "displayName":
-			if app.DisplayName == nil {
-				return tf.ErrorDiagF(fmt.Errorf("nil displayName for applications matching filter: %q", filter), "Bad API Response")
-			}
-			if *app.DisplayName != fieldValue {
-				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "Bad API Response")
-			}
-		}
+	if meta.(*clients.Client).EnableMsGraphBeta {
+		return applicationDataSourceReadMsGraph(ctx, d, meta)
 	}
-
-	if app.ObjectID == nil {
-		return tf.ErrorDiagF(fmt.Errorf("ObjectID returned for application is nil"), "Bad API Response")
-	}
-
-	d.SetId(*app.ObjectID)
-
-	tf.Set(d, "app_roles", aadgraph.FlattenAppRoles(app.AppRoles))
-	tf.Set(d, "application_id", app.AppID)
-	tf.Set(d, "available_to_other_tenants", app.AvailableToOtherTenants)
-	tf.Set(d, "display_name", app.DisplayName)
-	tf.Set(d, "group_membership_claims", app.GroupMembershipClaims)
-	tf.Set(d, "homepage", app.Homepage)
-	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
-	tf.Set(d, "logout_url", app.LogoutURL)
-	tf.Set(d, "name", app.DisplayName)
-	tf.Set(d, "oauth2_allow_implicit_flow", app.Oauth2AllowImplicitFlow)
-	tf.Set(d, "oauth2_permissions", aadgraph.FlattenOauth2Permissions(app.Oauth2Permissions))
-	tf.Set(d, "object_id", app.ObjectID)
-	tf.Set(d, "optional_claims", flattenApplicationOptionalClaimsAad(app.OptionalClaims))
-	tf.Set(d, "reply_urls", tf.FlattenStringSlicePtr(app.ReplyUrls))
-	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccessAad(app.RequiredResourceAccess))
-
-	var appType string
-	if v := app.PublicClient; v != nil && *v {
-		appType = "native"
-	} else {
-		appType = "webapp/api"
-	}
-
-	tf.Set(d, "type", appType)
-
-	owners, err := aadgraph.ApplicationAllOwners(ctx, client, d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ObjectID)
-	}
-	tf.Set(d, "owners", owners)
-
-	return nil
+	return applicationDataSourceReadAadGraph(ctx, d, meta)
 }

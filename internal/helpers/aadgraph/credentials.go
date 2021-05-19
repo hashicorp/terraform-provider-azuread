@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,148 +14,21 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/sethvargo/go-password/password"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
-
-// valid types are `application` and `service_principal`
-func CertificateResourceSchema(idAttribute string) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		idAttribute: {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validate.UUID,
-		},
-
-		"key_id": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validate.UUID,
-		},
-
-		"type": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ForceNew: true,
-			ValidateFunc: validation.StringInSlice([]string{
-				"AsymmetricX509Cert",
-				"Symmetric",
-			}, false),
-		},
-
-		"encoding": {
-			Type:     schema.TypeString,
-			Optional: true,
-			ForceNew: true,
-			Default:  "pem",
-			ValidateFunc: validation.StringInSlice([]string{
-				"base64",
-				"hex",
-				"pem",
-			}, false),
-		},
-
-		"value": {
-			Type:      schema.TypeString,
-			Required:  true,
-			ForceNew:  true,
-			Sensitive: true,
-		},
-
-		"start_date": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.IsRFC3339Time,
-		},
-
-		"end_date": {
-			Type:          schema.TypeString,
-			Optional:      true,
-			Computed:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"end_date_relative"},
-			ValidateFunc:  validation.IsRFC3339Time,
-		},
-
-		"end_date_relative": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ForceNew:         true,
-			ConflictsWith:    []string{"end_date"},
-			ValidateDiagFunc: validate.NoEmptyStrings,
-		},
-	}
-}
-
-// valid types are `application` and `service_principal`
-func PasswordResourceSchema(idAttribute string) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		idAttribute: {
-			Type:             schema.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validate.UUID,
-		},
-
-		"key_id": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validate.UUID,
-		},
-
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-			ForceNew: true,
-		},
-
-		"value": {
-			Type:         schema.TypeString,
-			Required:     true,
-			ForceNew:     true,
-			Sensitive:    true,
-			ValidateFunc: validation.StringLenBetween(1, 863), // Encrypted secret cannot be empty and can be at most 1024 bytes.
-		},
-
-		"start_date": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ValidateFunc: validation.IsRFC3339Time,
-		},
-
-		"end_date": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			Computed:     true,
-			ForceNew:     true,
-			ExactlyOneOf: []string{"end_date_relative"},
-			ValidateFunc: validation.IsRFC3339Time,
-		},
-
-		"end_date_relative": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ForceNew:         true,
-			ExactlyOneOf:     []string{"end_date"},
-			ValidateDiagFunc: validate.NoEmptyStrings,
-		},
-	}
-}
 
 func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordCredential, error) {
 	value := d.Get("value").(string)
+	if value == "" {
+		// Password generation mimics MS Graph: 34 chars, 6 digits, 4 symbols, no repeats
+		pwd, err := password.Generate(34, 6, 4, false, false)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to generate password: %+v", err)
+		}
+		value = pwd
+	}
 
 	// errors should be handled by the validation
 	var keyId string
@@ -185,7 +57,8 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		// MS Graph compatibility: default the end date to T + 2 years
+		endDate = time.Now().Add(17520 * time.Hour)
 	}
 
 	credential := graphrbac.PasswordCredential{
@@ -194,7 +67,10 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		EndDate: &date.Time{Time: endDate},
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk("display_name"); ok {
+		customIdentifier := []byte(v.(string))
+		credential.CustomKeyIdentifier = &customIdentifier
+	} else if v, ok := d.GetOk("description"); ok {
 		customIdentifier := []byte(v.(string))
 		credential.CustomKeyIdentifier = &customIdentifier
 	}
@@ -231,7 +107,7 @@ func PasswordCredentialResultFindByKeyId(creds graphrbac.PasswordCredentialListR
 
 func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult, cred *graphrbac.PasswordCredential) (*[]graphrbac.PasswordCredential, error) {
 	if cred == nil {
-		return nil, errors.New("credential to be added is null")
+		return nil, fmt.Errorf("credential to be added is nil")
 	}
 
 	newCreds := make([]graphrbac.PasswordCredential, 0)
@@ -255,7 +131,7 @@ func PasswordCredentialResultAdd(existing graphrbac.PasswordCredentialListResult
 
 func PasswordCredentialResultRemoveByKeyId(existing graphrbac.PasswordCredentialListResult, keyId string) (*[]graphrbac.PasswordCredential, error) {
 	if keyId == "" {
-		return nil, errors.New("ID of key to be removed is blank")
+		return nil, fmt.Errorf("ID of key to be removed is empty")
 	}
 
 	newCreds := make([]graphrbac.PasswordCredential, 0)
@@ -431,7 +307,7 @@ func KeyCredentialResultAdd(existing graphrbac.KeyCredentialListResult, cred *gr
 
 func KeyCredentialResultRemoveByKeyId(existing graphrbac.KeyCredentialListResult, keyId string) (*[]graphrbac.KeyCredential, error) {
 	if keyId == "" {
-		return nil, errors.New("ID of key to be removed is blank")
+		return nil, fmt.Errorf("ID of key to be removed is empty")
 	}
 
 	newCreds := make([]graphrbac.KeyCredential, 0)
