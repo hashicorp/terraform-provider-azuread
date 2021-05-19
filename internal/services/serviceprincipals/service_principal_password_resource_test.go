@@ -137,7 +137,7 @@ func TestAccServicePrincipalPassword_relativeEndDateAadGraph(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 				check.That(data.ResourceName).Key("end_date").Exists(),
-				check.That(data.ResourceName).Key("end_date_relative").HasValue("8760h"),
+				check.That(data.ResourceName).Key("end_date_relative").HasValue("72h"),
 				check.That(data.ResourceName).Key("value").Exists(),
 			),
 		},
