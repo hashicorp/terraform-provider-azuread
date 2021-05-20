@@ -1,4 +1,4 @@
-## 1.5.0 (Unreleased)
+## 1.5.0 (May 20, 2021)
 
 NOTES:
 
@@ -8,12 +8,12 @@ NOTES:
 
 IMPROVEMENTS:
 
-* `data.azuread_user` - export the `user_type` attribute [GH-406]
-* `azuread_user` - export the `user_type` attribute [GH-401] / [GH-413]
+* `data.azuread_user` - export the `user_type` attribute ([#406](https://github.com/terraform-providers/terraform-provider-azuread/issues/406))
+* `azuread_user` - export the `user_type` attribute ([#401](https://github.com/terraform-providers/terraform-provider-azuread/issues/401)] / [[#413](https://github.com/terraform-providers/terraform-provider-azuread/issues/413))
 
 BUG FIXES:
 
-* `azuread_application` - validation for the `identifier_uris` property now supports URNs [GH-426]
+* `azuread_application` - validation for the `identifier_uris` property now supports URNs ([#426](https://github.com/terraform-providers/terraform-provider-azuread/issues/426))
 
 ## 1.4.0 (February 18, 2021)
 
