@@ -178,6 +178,8 @@ The deprecated field `is_enabled` has been replaced by the `enabled` field and w
 
 The deprecated field `description` has been replaced by the `display_name` field and will be removed.
 
+-> The following also applies when the Microsoft Graph beta is enabled in version 1.5 or later
+
 The `display_name` field will become read-only as Azure Active Directory no longer respects user-supplied display names for passwords.
 
 The `key_id` field will become read-only as Azure Active Directory no longer allows user-specified key IDs for passwords. This also means that the `azuread_application_password` resource no longer supports importing in version 2.0 of the provider.
@@ -195,6 +197,8 @@ The deprecated field `name` has been replaced by the `display_name` field and wi
 ### Resource: `azuread_service_principal_password`
 
 The deprecated field `description` has been replaced by the `display_name` field and will be removed.
+
+-> The following also applies when the Microsoft Graph beta is enabled in version 1.5 or later
 
 The `display_name` field will become read-only as Azure Active Directory no longer respects user-supplied display names for passwords.
 
