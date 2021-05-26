@@ -22,6 +22,10 @@ func servicePrincipalPasswordResourceCreateMsGraph(ctx context.Context, d *schem
 	client := meta.(*clients.Client).ServicePrincipals.MsClient
 	objectId := d.Get("service_principal_id").(string)
 
+	if val, ok := d.GetOk("description"); ok && val.(string) != "" {
+		return tf.ErrorDiagPathF(fmt.Errorf("`description` is a read-only field when using Microsoft Graph. Please remove the `description` field from your configuration"), "description", "Creating service principal password")
+	}
+
 	if val, ok := d.GetOk("display_name"); ok && val.(string) != "" {
 		return tf.ErrorDiagPathF(fmt.Errorf("`display_name` is a read-only field when using Microsoft Graph. Please remove the `display_name` field from your configuration"), "display_name", "Creating service principal password")
 	}

@@ -74,7 +74,7 @@ func applicationOAuth2PermissionResourceCreateUpdateMsGraph(ctx context.Context,
 		if app.Api == nil {
 			app.Api = &msgraph.ApplicationApi{}
 		}
-		if app.Api.AppendOAuth2PermissionScope(scope) != nil {
+		if err := app.Api.AppendOAuth2PermissionScope(scope); err != nil {
 			if _, ok := err.(*grapherrors.AlreadyExistsError); ok {
 				return tf.ImportAsExistsDiag("azuread_application_oauth2_permission_scope", id.String())
 			}

@@ -14,12 +14,21 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/sethvargo/go-password/password"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordCredential, error) {
 	value := d.Get("value").(string)
+	if value == "" {
+		// Password generation mimics MS Graph: 34 chars, 6 digits, 4 symbols, no repeats
+		pwd, err := password.Generate(34, 6, 4, false, false)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to generate password: %+v", err)
+		}
+		value = pwd
+	}
 
 	// errors should be handled by the validation
 	var keyId string
@@ -48,7 +57,8 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*graphrbac.PasswordC
 		}
 		endDate = time.Now().Add(d)
 	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
+		// MS Graph compatibility: default the end date to T + 2 years
+		endDate = time.Now().Add(17520 * time.Hour)
 	}
 
 	credential := graphrbac.PasswordCredential{

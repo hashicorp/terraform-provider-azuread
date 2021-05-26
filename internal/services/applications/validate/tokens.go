@@ -2,7 +2,6 @@ package validate
 
 import (
 	"regexp"
-	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,18 +20,10 @@ func RoleScopeClaimValue(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		return
 	}
 
-	if strings.TrimSpace(v) == "" {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Value must not be empty",
-			AttributePath: path,
-		})
-	}
-
 	if len(v) > 120 {
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Value must be between 1-120 characters in length",
+			Summary:       "Value must be between 0-120 characters in length",
 			AttributePath: path,
 		})
 	}

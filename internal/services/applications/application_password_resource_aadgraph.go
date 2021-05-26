@@ -70,6 +70,11 @@ func applicationPasswordResourceCreateAadGraph(ctx context.Context, d *schema.Re
 
 	d.SetId(id.String())
 
+	// MS Graph compatibility, if no value set in config, use the generated value
+	if v, ok := d.GetOk("value"); !ok || v == "" {
+		tf.Set(d, "value", cred.Value)
+	}
+
 	return applicationPasswordResourceReadAadGraph(ctx, d, meta)
 }
 

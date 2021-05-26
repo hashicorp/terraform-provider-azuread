@@ -84,15 +84,14 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_TENANT_ID", ""),
-				Description: "The Tenant ID which should be used. Works with all authentication methods except MSI.",
+				Description: "The Tenant ID which should be used. Works with all authentication methods except Managed Identity.",
 			},
 
 			"metadata_host": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
-				Deprecated:  "The `metadata_host` provider attribute is deprecated and will be removed in version 2.0",
-				Description: "The Hostname which should be used for the Azure Metadata Service.",
+				Description: "[DEPRECATED] The Hostname which should be used for the Azure Metadata Service.",
 			},
 
 			"environment": {
@@ -132,19 +131,19 @@ func AzureADProvider() *schema.Provider {
 				Description: "Allow Azure CLI to be used for Authentication.",
 			},
 
-			// Managed Service Identity specific fields
+			// Managed Identity specific fields
 			"use_msi": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_MSI", false),
-				Description: "Allow Managed Service Identity to be used for Authentication.",
+				Description: "Allow Managed Identity to be used for Authentication.",
 			},
 
 			"msi_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
-				Description: "The path to a custom endpoint for Managed Service Identity - in most circumstances this should be detected automatically. ",
+				Description: "The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. ",
 			},
 
 			// Managed Tracking GUID for User-agent

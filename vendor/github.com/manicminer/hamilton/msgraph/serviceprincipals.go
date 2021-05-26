@@ -388,3 +388,35 @@ func (c *ServicePrincipalsClient) RemovePassword(ctx context.Context, servicePri
 	}
 	return status, nil
 }
+
+// ListOwnedObjects retrieves the owned objects of the specified Service Principal.
+// id is the object ID of the service principal.
+func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id string) (*[]string, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/ownedObjects", id),
+			Params:      url.Values{"$select": []string{"id"}},
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, err
+	}
+	defer resp.Body.Close()
+	respBody, _ := ioutil.ReadAll(resp.Body)
+	var data struct {
+		OwnedObjects []struct {
+			Type string `json:"@odata.type"`
+			Id   string `json:"id"`
+		} `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, err
+	}
+	ret := make([]string, len(data.OwnedObjects))
+	for i, v := range data.OwnedObjects {
+		ret[i] = v.Id
+	}
+	return &ret, status, nil
+}

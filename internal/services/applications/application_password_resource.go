@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
+	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -21,8 +19,6 @@ func applicationPasswordResource() *schema.Resource {
 		CreateContext: applicationPasswordResourceCreate,
 		ReadContext:   applicationPasswordResourceRead,
 		DeleteContext: applicationPasswordResourceDelete,
-
-		Importer: tf.ImportNotSupported(),
 
 		Schema: map[string]*schema.Schema{
 			"application_object_id": {
@@ -45,7 +41,7 @@ func applicationPasswordResource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"description"},
-				ForceNew:      true, // TODO: ForceNew not required with MS Graph, remove in v2.0
+				ForceNew:      true,
 			},
 
 			// TODO: remove in v2.0
@@ -77,19 +73,19 @@ func applicationPasswordResource() *schema.Resource {
 			},
 
 			"end_date": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				//ExactlyOneOf: []string{"end_date_relative"},
-				ValidateFunc: validation.IsRFC3339Time,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date_relative"},
+				ValidateFunc:  validation.IsRFC3339Time,
 			},
 
 			"end_date_relative": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				//ExactlyOneOf:     []string{"end_date"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"end_date"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},

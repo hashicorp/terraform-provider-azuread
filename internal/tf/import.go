@@ -34,13 +34,3 @@ func ValidateResourceIDPriorToImportThen(idParser ResourceIDValidator, importer 
 		},
 	}
 }
-
-func ImportNotSupported() *schema.ResourceImporter {
-	return &schema.ResourceImporter{
-		StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-			log.Printf("[DEBUG] Import attempted for unsupported resource")
-
-			return []*schema.ResourceData{d}, fmt.Errorf("import is not supported for this resource")
-		},
-	}
-}

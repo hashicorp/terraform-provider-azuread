@@ -39,6 +39,41 @@ func TestAccApplicationPassword_basic(t *testing.T) {
 	})
 }
 
+func TestAccApplicationPassword_updateDeprecated(t *testing.T) {
+	// TODO: remove this test in v2.0
+	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
+		t.Skipf("Test skipped when using MS Graph")
+	}
+
+	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ApplicationPasswordResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.completeAadGraph(data, startDate, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
 func TestAccApplicationPassword_basicAadGraph(t *testing.T) {
 	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
@@ -55,9 +90,10 @@ func TestAccApplicationPassword_basicAadGraph(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").HasValue(endDate),
+				check.That(data.ResourceName).Key("value").Exists(),
 			),
 		},
-		data.ImportStep("value"),
 	})
 }
 
@@ -78,9 +114,11 @@ func TestAccApplicationPassword_completeAadGraph(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").HasValue(data.RandomID),
+				check.That(data.ResourceName).Key("start_date").HasValue(startDate),
+				check.That(data.ResourceName).Key("end_date").HasValue(endDate),
+				check.That(data.ResourceName).Key("value").Exists(),
 			),
 		},
-		data.ImportStep("value"),
 	})
 }
 
@@ -100,31 +138,10 @@ func TestAccApplicationPassword_relativeEndDateAadGraph(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("end_date_relative").HasValue("8760h"),
+				check.That(data.ResourceName).Key("value").Exists(),
 			),
 		},
-		data.ImportStep("end_date_relative", "value"),
-	})
-}
-
-func TestAccApplicationPassword_requiresImportAadGraph(t *testing.T) {
-	// TODO: remove this test in v2.0
-	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
-		t.Skipf("Test skipped when using MS Graph")
-	}
-
-	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
-	r := ApplicationPasswordResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.basicAadGraph(data, endDate),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("key_id").Exists(),
-			),
-		},
-		data.RequiresImportErrorStep(r.requiresImportAadGraph(data, endDate)),
 	})
 }
 
@@ -231,18 +248,4 @@ resource "azuread_application_password" "test" {
   end_date_relative     = "8760h"
 }
 `, r.template(data), data.RandomPassword)
-}
-
-func (r ApplicationPasswordResource) requiresImportAadGraph(data acceptance.TestData, endDate string) string {
-	// TODO: remove this config in v2.0
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_application_password" "import" {
-  application_object_id = azuread_application_password.test.application_object_id
-  key_id                = azuread_application_password.test.key_id
-  value                 = azuread_application_password.test.value
-  end_date              = azuread_application_password.test.end_date
-}
-`, r.basicAadGraph(data, endDate))
 }

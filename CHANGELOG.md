@@ -1,13 +1,19 @@
-## 1.5.0 (Unreleased)
+## 1.5.0 (May 20, 2021)
+
+NOTES:
+
+* **Support for Microsoft Graph:** This release introduces beta support for [Microsoft Graph](https://docs.microsoft.com/en-us/graph/overview) in a way that is forward (and backward) compatible with the current [Azure Active Directory Graph](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-graph-api) API implementation. We do not recommend enabling this beta _in production_ at this time, but encourage you to try it out in test environments where minimal impact can occur if something doesn't work as expected. See the [Migration Guide](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph#beta-support-for-microsoft-graph-in-v150) for more details.
+
+* **Deprecations:** This release contains a number of additional deprecations to aid in future upgrades to version 2.0 of this provider. These will be flagged when running Terraform, and are documented in detail in the [Migration Guide](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph). Existing configurations will continue to work unchanged for any v1.x release, regardless of which API is used.
 
 IMPROVEMENTS:
 
-* `data.azuread_user` - export the `user_type` attribute [GH-406]
-* `azuread_user` - export the `user_type` attribute [GH-401] / [GH-413]
+* `data.azuread_user` - export the `user_type` attribute ([#406](https://github.com/terraform-providers/terraform-provider-azuread/issues/406))
+* `azuread_user` - export the `user_type` attribute ([#401](https://github.com/terraform-providers/terraform-provider-azuread/issues/401)] / [[#413](https://github.com/terraform-providers/terraform-provider-azuread/issues/413))
 
 BUG FIXES:
 
-* `azuread_application` - validation for the `identifier_uris` property now supports URNs [GH-426]
+* `azuread_application` - validation for the `identifier_uris` property now supports URNs ([#426](https://github.com/terraform-providers/terraform-provider-azuread/issues/426))
 
 ## 1.4.0 (February 18, 2021)
 

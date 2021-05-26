@@ -1,0 +1,2 @@
+# Do not mangle vendored files
+vendor/** -text

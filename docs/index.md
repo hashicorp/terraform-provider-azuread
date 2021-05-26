@@ -113,7 +113,7 @@ For more advanced scenarios, the following additional arguments are supported:
 
 * `disable_terraform_partner_id` - (Optional) Disable sending the Terraform Partner ID if a custom `partner_id` isn't specified. The default Partner ID allows Microsoft to better understand the usage of Terraform and does not give HashiCorp any direct access to usage information. This can also be sourced from the `ARM_DISABLE_TERRAFORM_PARTNER_ID` environment variable. Defaults to `false`.
 
-* `metadata_host` - (Optional) The Hostname of the Azure Metadata Service (for example `management.azure.com`), used to obtain the Cloud Environment when using a Custom Azure Environment. This can also be sourced from the `ARM_METADATA_HOST` Environment Variable.
+* `metadata_host` - (Optional, **Deprecated**) The Hostname of the Azure Metadata Service (for example `management.azure.com`), used to obtain the Cloud Environment when using a Custom Azure Environment. This can also be sourced from the `ARM_METADATA_HOST` Environment Variable. This property is deprecated and will be removed in version 2.0 of the provider.
 
 ~> **Note:** `environment` must be set to the requested environment name in the list of available environments held in the `metadata_host`.
 
