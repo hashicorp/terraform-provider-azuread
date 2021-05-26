@@ -101,8 +101,82 @@ func conditionalAccessPolicyResourceReadMsGraph(ctx context.Context, d *schema.R
 	tf.Set(d, "display_name", policy.DisplayName)
 	tf.Set(d, "id", policy.ID)
 	tf.Set(d, "state", policy.State)
+	tf.Set(d, "conditions", flattenConditionalAccessConditionSet(policy.Conditions))
+	tf.Set(d, "grant_controls", flattenConditionalAccessGrantControls(policy.GrantControls))
 
 	return nil
+}
+
+func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessConditionSet) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"applications":     flattenConditionalAccessApplications(in.Applications),
+			"users":            flattenConditionalAccessUsers(in.Users),
+			"client_app_types": tf.FlattenStringSlicePtr(in.ClientAppTypes),
+			"locations":        flattenConditionalAccessLocations(in.Locations),
+		},
+	}
+}
+
+func flattenConditionalAccessApplications(in *msgraph.ConditionalAccessApplications) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
+			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
+			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+		},
+	}
+}
+
+func flattenConditionalAccessUsers(in *msgraph.ConditionalAccessUsers) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"included_users":  tf.FlattenStringSlicePtr(in.IncludeUsers),
+			"excluded_users":  tf.FlattenStringSlicePtr(in.ExcludeUsers),
+			"included_groups": tf.FlattenStringSlicePtr(in.IncludeGroups),
+			"excluded_groups": tf.FlattenStringSlicePtr(in.ExcludeGroups),
+			"included_roles":  tf.FlattenStringSlicePtr(in.IncludeRoles),
+			"excluded_roles":  tf.FlattenStringSlicePtr(in.ExcludeRoles),
+		},
+	}
+}
+
+func flattenConditionalAccessLocations(in *msgraph.ConditionalAccessLocations) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"included_locations": tf.FlattenStringSlicePtr(in.IncludeLocations),
+			"excluded_locations": tf.FlattenStringSlicePtr(in.ExcludeLocations),
+		},
+	}
+}
+
+func flattenConditionalAccessGrantControls(in *msgraph.ConditionalAccessGrantControls) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"operator":          in.Operator,
+			"built_in_controls": tf.FlattenStringSlicePtr(in.BuiltInControls),
+		},
+	}
 }
 
 func conditionalAccessPolicyResourceDeleteMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

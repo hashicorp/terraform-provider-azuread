@@ -27,26 +27,26 @@ func TestAccConditionalAccessPolicy_basic(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-POLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("enabled"),
 			),
 		},
 		data.ImportStep(),
 	})
 }
 
-func TestAccConditionalAccessPolicy_basicEnabled(t *testing.T) {
+func TestAccConditionalAccessPolicy_basicDisabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.basicEnabled(data),
+			Config: r.basicDisabled(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-POLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("enabled"),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
 			),
 		},
 		data.ImportStep(),
@@ -77,17 +77,85 @@ func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *cl
 func (ConditionalAccessPolicyResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-POLICY-%[1]d"
-  state = "disabled"
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state = "enabled"
+
+  conditions {
+    applications {
+      included_applications = ["All"]
+    }
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+    client_app_types = ["browser"]
+    locations {
+      included_locations = ["All"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
 }
 `, data.RandomInteger)
 }
 
-func (ConditionalAccessPolicyResource) basicEnabled(data acceptance.TestData) string {
+func (ConditionalAccessPolicyResource) basicDisabled(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-POLICY-%[1]d"
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state = "disabled"
+
+  conditions {
+    applications {
+      included_applications = ["All"]
+    }
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+    client_app_types = ["browser"]
+    locations {
+      included_locations = ["All"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
   state = "enabled"
+
+  conditions {
+    applications {
+      included_applications = ["All", "00000002-0000-0ff1-ce00-000000000000"]
+	  excluded_applications = ["00000003-0000-0000-c000-000000000000"]
+    }
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+    client_app_types = ["mobileAppsAndDesktopClients", "browser"]
+    locations {
+      included_locations = ["All"]
+      excluded_locations = ["AllTrusted"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
 }
 `, data.RandomInteger)
 }
