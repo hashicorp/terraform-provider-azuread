@@ -22,28 +22,8 @@ func applicationPasswordResourceCreateMsGraph(ctx context.Context, d *schema.Res
 	client := meta.(*clients.Client).Applications.MsClient
 	objectId := d.Get("application_object_id").(string)
 
-	if val, ok := d.GetOk("description"); ok && val.(string) != "" {
-		return tf.ErrorDiagPathF(fmt.Errorf("`description` is a read-only field when using Microsoft Graph. Please remove the `description` field from your configuration"), "description", "Creating application password")
-	}
-
-	if val, ok := d.GetOk("display_name"); ok && val.(string) != "" {
-		return tf.ErrorDiagPathF(fmt.Errorf("`display_name` is a read-only field when using Microsoft Graph. Please remove the `display_name` field from your configuration"), "display_name", "Creating application password")
-	}
-
-	if val, ok := d.GetOk("end_date"); ok && val.(string) != "" {
-		return tf.ErrorDiagPathF(fmt.Errorf("`end_date` is a read-only field when using Microsoft Graph. Please remove the `end_date` field from your configuration"), "end_date", "Creating application password")
-	}
-
-	if val, ok := d.GetOk("end_date_relative"); ok && val.(string) != "" {
-		return tf.ErrorDiagPathF(fmt.Errorf("`end_date_relative` is a read-only field when using Microsoft Graph. Please remove the `end_date_relative` field from your configuration"), "end_date_relative", "Creating application password")
-	}
-
 	if val, ok := d.GetOk("key_id"); ok && val.(string) != "" {
 		return tf.ErrorDiagPathF(fmt.Errorf("`key_id` is a read-only field when using Microsoft Graph. Please remove the `key_id` field from your configuration"), "key_id", "Creating application password")
-	}
-
-	if val, ok := d.GetOk("start_date"); ok && val.(string) != "" {
-		return tf.ErrorDiagPathF(fmt.Errorf("`start_date` is a read-only field when using Microsoft Graph. Please remove the `start_date` field from your configuration"), "start_date", "Creating application password")
 	}
 
 	if val, ok := d.GetOk("value"); ok && val.(string) != "" {

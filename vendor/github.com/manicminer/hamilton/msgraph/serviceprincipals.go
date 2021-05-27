@@ -337,7 +337,11 @@ func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id s
 // AddPassword appends a new password credential to a Service Principal.
 func (c *ServicePrincipalsClient) AddPassword(ctx context.Context, servicePrincipalId string, passwordCredential PasswordCredential) (*PasswordCredential, int, error) {
 	var status int
-	body, err := json.Marshal(passwordCredential)
+	body, err := json.Marshal(struct {
+		PwdCredential PasswordCredential `json:"passwordCredential"`
+	}{
+		PwdCredential: passwordCredential,
+	})
 	if err != nil {
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
@@ -419,4 +423,90 @@ func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id strin
 		ret[i] = v.Id
 	}
 	return &ret, status, nil
+}
+
+// ListAppRoleAssignments retrieves a list of appRoleAssignment that users, groups, or client service principals have been granted for the given resource service principal.
+func (c *ServicePrincipalsClient) ListAppRoleAssignments(ctx context.Context, resourceId string) (*[]AppRoleAssignment, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var data struct {
+		AppRoleAssignments []AppRoleAssignment `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &data.AppRoleAssignments, status, nil
+}
+
+// RemoveAppRoleAssignment deletes an appRoleAssignment that a user, group, or client service principal has been granted for a resource service principal.
+func (c *ServicePrincipalsClient) RemoveAppRoleAssignment(ctx context.Context, resourceId, appRoleAssignmentId string) (int, error) {
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("AppRoleAssignmentsClient.BaseClient.Delete(): %v", err)
+	}
+	return status, nil
+}
+
+// AssignAppRoleForResource assigns an app role for a resource service principal, to a user, group, or client service principal.
+// To grant an app role assignment, you need three identifiers:
+//
+// principalId: The id of the user, group or client servicePrincipal to which you are assigning the app role.
+// resourceId: The id of the resource servicePrincipal which has defined the app role.
+// appRoleId: The id of the appRole (defined on the resource service principal) to assign to a user, group, or service principal.
+func (c *ServicePrincipalsClient) AssignAppRoleForResource(ctx context.Context, principalId, resourceId, appRoleId string) (*AppRoleAssignment, int, error) {
+	var status int
+	data := struct {
+		PrincipalId string `json:"principalId"`
+		ResourceId  string `json:"resourceId"`
+		AppRoleId   string `json:"appRoleId"`
+	}{
+		PrincipalId: principalId,
+		ResourceId:  resourceId,
+		AppRoleId:   appRoleId,
+	}
+
+	body, err := json.Marshal(data)
+	if err != nil {
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusCreated},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var appRoleAssignment AppRoleAssignment
+	if err := json.Unmarshal(respBody, &appRoleAssignment); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &appRoleAssignment, status, nil
 }
