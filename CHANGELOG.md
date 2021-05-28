@@ -1,3 +1,9 @@
+## 1.5.1 (Unreleased)
+
+BUG FIXES:
+
+- **Provider:** Suppress a spurious deprecation notice for the `metadata_host` provider field [GH-439]
+
 ## 1.5.0 (May 20, 2021)
 
 NOTES:
