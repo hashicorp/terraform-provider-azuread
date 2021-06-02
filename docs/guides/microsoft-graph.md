@@ -333,7 +333,7 @@ Alternatively, you can enable the beta by setting the following environment vari
 export AAD_USE_MICROSOFT_GRAPH=1
 
 # PowerShell
-$env:AAD_USE_MICROSOFT_GRAPH = "1"
+$env:AAD_USE_MICROSOFT_GRAPH = 1
 ```
 
 We appreciate any feedback you might have whilst using beta support for Microsoft Graph. Bug reports and feature requests can be logged on our [GitHub issue tracker](https://github.com/hashicorp/terraform-provider-azuread/issues), and you can also check out the [project README](https://github.com/hashicorp/terraform-provider-azuread/blob/main/README.md) for information on how to get in touch with the maintainers. If you encounter an issue that has already been reported, please upvote it and comment to add any additional context you might have.
