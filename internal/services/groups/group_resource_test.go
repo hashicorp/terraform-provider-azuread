@@ -111,6 +111,21 @@ func TestAccGroup_membersAndOwners(t *testing.T) {
 	})
 }
 
+func TestAccGroup_manyMembersAndOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withManyOwnersAndMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccGroup_membersDiverse(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -445,6 +460,28 @@ resource "azuread_group" "test" {
   members      = [azuread_user.testB.object_id, azuread_user.testC.object_id]
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (r GroupResource) withManyOwnersAndMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  count = 25
+
+  user_principal_name = "acctestGroupParticipant${count.index}-%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestGroupParticipant${count.index}-%[1]d"
+  password            = "Qwer5678!@#"
+}
+
+resource "azuread_group" "test" {
+  display_name = "acctestGroup-%[1]d"
+  owners       = azuread_user.test.*.object_id
+  members      = azuread_user.test.*.object_id
+}
+`, data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
