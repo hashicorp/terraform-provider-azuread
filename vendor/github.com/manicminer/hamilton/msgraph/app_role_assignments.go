@@ -75,7 +75,8 @@ func (c *AppRoleAssignmentsClient) List(ctx context.Context, id string) (*[]AppR
 // Remove removes a app role assignment.
 func (c *AppRoleAssignmentsClient) Remove(ctx context.Context, id, appRoleAssignmentId string) (int, error) {
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusNoContent},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/%s/%s/appRoleAssignments/%s", c.resourceType, id, appRoleAssignmentId),
 			HasTenantId: true,
@@ -105,8 +106,9 @@ func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrin
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/%s/%s/appRoleAssignments", c.resourceType, clientServicePrincipalId),
 			HasTenantId: true,

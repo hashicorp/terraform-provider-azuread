@@ -85,7 +85,8 @@ func (c *UsersClient) Create(ctx context.Context, user User) (*User, int, error)
 // Get retrieves a User.
 func (c *UsersClient) Get(ctx context.Context, id string) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", id),
 			HasTenantId: true,
@@ -109,7 +110,8 @@ func (c *UsersClient) Get(ctx context.Context, id string) (*User, int, error) {
 // GetDeleted retrieves a deleted User.
 func (c *UsersClient) GetDeleted(ctx context.Context, id string) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
 			HasTenantId: true,
@@ -138,8 +140,9 @@ func (c *UsersClient) Update(ctx context.Context, user User) (int, error) {
 		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusNoContent},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", *user.ID),
 			HasTenantId: true,
@@ -154,9 +157,26 @@ func (c *UsersClient) Update(ctx context.Context, user User) (int, error) {
 // Delete removes a User.
 func (c *UsersClient) Delete(ctx context.Context, id string) (int, error) {
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusNoContent},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("UsersClient.BaseClient.Delete(): %v", err)
+	}
+	return status, nil
+}
+
+// DeletePermanently removes a deleted User permanently.
+func (c *UsersClient) DeletePermanently(ctx context.Context, id string) (int, error) {
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
 			HasTenantId: true,
 		},
 	})
@@ -201,7 +221,8 @@ func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, filte
 		params.Add("$filter", filter)
 	}
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/transitiveMemberOf", id),
 			Params:      params,
