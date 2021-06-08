@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -20,6 +21,7 @@ import (
 
 func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.MsClient
+	callerId := meta.(*clients.Client).Claims.ObjectId
 
 	var displayName string
 	if v, ok := d.GetOk("display_name"); ok && v.(string) != "" {
@@ -56,19 +58,9 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 		properties.Description = utils.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("members"); ok {
-		members := v.(*schema.Set).List()
-		for _, o := range members {
-			properties.AppendMember(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("owners"); ok {
-		owners := v.(*schema.Set).List()
-		for _, o := range owners {
-			properties.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
-		}
-	}
+	// Add the caller as the group owner to prevent lock-out after creation
+	properties.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, callerId)
+	removeInitialOwner := true
 
 	group, _, err := client.Create(ctx, properties)
 	if err != nil {
@@ -87,6 +79,41 @@ func groupResourceCreateMsGraph(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		return tf.ErrorDiagF(err, "Waiting for Group with object ID: %q", *group.ID)
+	}
+
+	// Configure owners after the group is created, so they can be set one-by-one
+	if v, ok := d.GetOk("owners"); ok {
+		owners := v.(*schema.Set).List()
+		for _, o := range owners {
+			group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
+
+			// If the authenticated principal is included in the owners list, make sure to not remove them after the fact
+			if strings.EqualFold(callerId, o.(string)) {
+				removeInitialOwner = false
+			}
+		}
+		if _, err := client.AddOwners(ctx, group); err != nil {
+			return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
+		}
+	}
+
+	// Configure members after the group is created, so they can be reliably batched
+	if v, ok := d.GetOk("members"); ok {
+		members := v.(*schema.Set).List()
+		for _, o := range members {
+			group.AppendMember(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
+		}
+		if _, err := client.AddMembers(ctx, group); err != nil {
+			return tf.ErrorDiagF(err, "Could not add members to group with ID: %q", d.Id())
+		}
+	}
+
+	// Remove the initial owner
+	if removeInitialOwner {
+		ownersToRemove := []string{callerId}
+		if _, err := client.RemoveOwners(ctx, *group.ID, &ownersToRemove); err != nil {
+			return tf.ErrorDiagF(err, "Could not remove temporary owner of group with ID: %q", d.Id())
+		}
 	}
 
 	return groupResourceReadMsGraph(ctx, d, meta)
@@ -197,7 +224,7 @@ func groupResourceUpdateMsGraph(ctx context.Context, d *schema.ResourceData, met
 	if v, ok := d.GetOkExists("owners"); ok && d.HasChange("owners") { //nolint:SA1019
 		owners, _, err := client.ListOwners(ctx, *group.ID)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve eowners for group with ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not retrieve owners for group with ID: %q", d.Id())
 		}
 
 		existingOwners := *owners
