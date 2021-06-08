@@ -3,6 +3,8 @@
 BUG FIXES:
 
 - **Provider:** Suppress a spurious deprecation notice for the `metadata_host` provider field [GH-439]
+- `azuread_application_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph [GH-444]
+- `azuread_service_principal_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph [GH-444]
 
 ## 1.5.0 (May 20, 2021)
 
