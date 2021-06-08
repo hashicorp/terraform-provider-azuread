@@ -39,6 +39,45 @@ func TestAccServicePrincipalPassword_basic(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipalPassword_complete(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ServicePrincipalPasswordResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data, startDate, endDate),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
+func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal_password", "test")
+	r := ServicePrincipalPasswordResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.relativeEndDate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("end_date_relative").HasValue("8760h"),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
 func TestAccServicePrincipalPassword_updateDeprecated(t *testing.T) {
 	// TODO: remove this test in v2.0
 	if v := os.Getenv("AAD_USE_MICROSOFT_GRAPH"); v != "" {
@@ -209,6 +248,31 @@ resource "azuread_service_principal_password" "test" {
   service_principal_id = azuread_service_principal.test.object_id
 }
 `, r.template(data))
+}
+
+func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, startDate, endDate string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = azuread_service_principal.test.object_id
+  display_name         = "terraform-%[2]s"
+  start_date           = "%[3]s"
+  end_date             = "%[4]s"
+}
+`, r.template(data), data.RandomString, startDate, endDate)
+}
+
+func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal_password" "test" {
+  service_principal_id = azuread_service_principal.test.object_id
+  display_name         = "terraform-%[2]s"
+  end_date_relative    = "8760h"
+}
+`, r.template(data), data.RandomString)
 }
 
 func (r ServicePrincipalPasswordResource) basicAadGraph(data acceptance.TestData, endDate string) string {

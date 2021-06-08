@@ -22,7 +22,7 @@ resource "azuread_application_password" "example" {
 
 ## Argument Reference
 
-~> **IMPORTANT:** In version 2.0 of the provider, or when using the Microsoft Graph beta in version 1.5 or later, the `key_id`, `display_name` / `description`, `start_date`, `end_date` / `end_date_relative` and `value` properties will all become read-only and should not be specified. For more information, see the [Upgrade Guide for v2.0](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph#resource-azuread_application_password).
+~> **IMPORTANT:** In version 2.0 of the provider, or when using the Microsoft Graph beta in version 1.5 or later, the `key_id` and `value` properties will become read-only and should not be specified. For more information, see the [Upgrade Guide for v2.0](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph#resource-azuread_application_password).
 
 The following arguments are supported:
 
