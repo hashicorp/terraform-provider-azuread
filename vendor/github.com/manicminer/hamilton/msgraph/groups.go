@@ -87,7 +87,8 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 // Get retrieves a Group.
 func (c *GroupsClient) Get(ctx context.Context, id string) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", id),
 			HasTenantId: true,
@@ -109,9 +110,11 @@ func (c *GroupsClient) Get(ctx context.Context, id string) (*Group, int, error) 
 }
 
 // GetDeleted retrieves a deleted O365 Group.
+// TODO: add test coverage once API supports creating O365 groups.
 func (c *GroupsClient) GetDeleted(ctx context.Context, id string) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
 			HasTenantId: true,
@@ -140,8 +143,9 @@ func (c *GroupsClient) Update(ctx context.Context, group Group) (int, error) {
 		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusNoContent},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", *group.ID),
 			HasTenantId: true,
@@ -156,9 +160,27 @@ func (c *GroupsClient) Update(ctx context.Context, group Group) (int, error) {
 // Delete removes a Group.
 func (c *GroupsClient) Delete(ctx context.Context, id string) (int, error) {
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusNoContent},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("GroupsClient.BaseClient.Delete(): %v", err)
+	}
+	return status, nil
+}
+
+// DeletePermanently removes a deleted O365 Group permanently.
+// TODO: add test coverage once API supports creating O365 groups.
+func (c *GroupsClient) DeletePermanently(ctx context.Context, id string) (int, error) {
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
 			HasTenantId: true,
 		},
 	})
@@ -201,7 +223,8 @@ func (c *GroupsClient) ListDeleted(ctx context.Context, filter string) (*[]Group
 // id is the object ID of the group.
 func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/members", id),
 			Params:      url.Values{"$select": []string{"id"}},
@@ -237,7 +260,8 @@ func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, i
 // memberId is the object ID of the member object.
 func (c *GroupsClient) GetMember(ctx context.Context, groupId, memberId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/members/%s/$ref", groupId, memberId),
 			Params:      url.Values{"$select": []string{"id,url"}},
@@ -286,10 +310,8 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 	for _, members := range memberChunks {
 		// don't fail if a member already exists
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest {
-				if o.Error != nil {
-					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
-				}
+			if resp.StatusCode == http.StatusBadRequest && o.Error != nil {
+				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
@@ -302,9 +324,10 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
-			Body:             body,
-			ValidStatusCodes: []int{http.StatusNoContent},
-			ValidStatusFunc:  checkMemberAlreadyExists,
+			Body:                   body,
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkMemberAlreadyExists,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s", *group.ID),
 				HasTenantId: true,
@@ -336,18 +359,17 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 
 		// despite the above check, sometimes members are just gone
 		checkMemberGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest {
-				if o.Error != nil {
-					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
-				}
+			if resp.StatusCode == http.StatusBadRequest && o.Error != nil {
+				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false
 		}
 
 		var err error
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
-			ValidStatusCodes: []int{http.StatusNoContent},
-			ValidStatusFunc:  checkMemberGone,
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkMemberGone,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/members/%s/$ref", id, memberId),
 				HasTenantId: true,
@@ -364,7 +386,8 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 // id is the object ID of the group.
 func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/owners", id),
 			Params:      url.Values{"$select": []string{"id"}},
@@ -400,7 +423,8 @@ func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, in
 // ownerId is the object ID of the owning object.
 func (c *GroupsClient) GetOwner(ctx context.Context, groupId, ownerId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		ValidStatusCodes: []int{http.StatusOK},
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/owners/%s/$ref", groupId, ownerId),
 			Params:      url.Values{"$select": []string{"id,url"}},
@@ -437,10 +461,8 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 	for _, owner := range *group.Owners {
 		// don't fail if an owner already exists
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest {
-				if o.Error != nil {
-					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
-				}
+			if resp.StatusCode == http.StatusBadRequest && o.Error != nil {
+				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
@@ -455,9 +477,10 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
-			Body:             body,
-			ValidStatusCodes: []int{http.StatusNoContent},
-			ValidStatusFunc:  checkOwnerAlreadyExists,
+			Body:                   body,
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkOwnerAlreadyExists,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/owners/$ref", *group.ID),
 				HasTenantId: true,
@@ -489,18 +512,17 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 
 		// despite the above check, sometimes owners are just gone
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest {
-				if o.Error != nil {
-					return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
-				}
+			if resp.StatusCode == http.StatusBadRequest && o.Error != nil {
+				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false
 		}
 
 		var err error
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
-			ValidStatusCodes: []int{http.StatusNoContent},
-			ValidStatusFunc:  checkOwnerGone,
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkOwnerGone,
 			Uri: Uri{
 				Entity:      fmt.Sprintf("/groups/%s/owners/%s/$ref", id, ownerId),
 				HasTenantId: true,
