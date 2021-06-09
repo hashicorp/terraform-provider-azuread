@@ -158,9 +158,10 @@ The following arguments are supported:
 * `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences.
 * `enabled` - (Optional) Determines if the app role is enabled: Defaults to `true`.
 * `id` - The unique identifier of the app role. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to use the [azuread_application_app_role](application_app_role.html) resource.
-* `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
 ~> In version 2.0 of the provider, the `id` property will become mandatory. For more information, see the [Upgrade Guide for v2.0](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/microsoft-graph.html).
+
+* `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
 -> **Note on roles and permission scopes:** In Azure Active Directory, roles (`app_role`) and permission scopes (`oauth2_permission_scope`) exported by an Application share the same namespace and cannot contain duplicate `value`s. Terraform will attempt to detect this at plan time.
 
@@ -178,6 +179,9 @@ The following arguments are supported:
 * `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
 * `enabled` - (Optional) Determines if the permission scope is enabled. Defaults to `true`.
 * `id` - (Required) The unique identifier of the delegated permission. Must be a valid UUID.
+
+-> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
+
 * `type` - (Required) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions. Defaults to `User`. Possible values are `User` or `Admin`.
 * `user_consent_description` - (Optional) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
 * `user_consent_display_name` - (Optional) Display name for the delegated permission that appears in the end user consent experience.
@@ -195,7 +199,7 @@ If you don't specify any `oauth2_permission_scope` blocks, your Application will
 
 * `admin_consent_description` - (Required) Permission help text that appears in the admin consent and app assignment experiences.
 * `admin_consent_display_name` - (Required) Display name for the permission that appears in the admin consent and app assignment experiences.
-* `id` - The unique identifier of the permision. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to use the [azuread_application_oauth2_permission](application_oauth2_permission.html) resource.
+* `id` - The unique identifier of the permision. This attribute is computed and cannot be specified manually in this block. If you need to specify a custom `id`, it's recommended to migrate to the newer `oauth2_permission_scope` block, or use the [azuread_application_oauth2_permission](application_oauth2_permission.html) resource.
 * `is_enabled` - (Optional) Determines if the permission is enabled: defaults to `true`.
 * `type` - (Required) Specifies whether this scope permission can be consented to by an end user, or whether it is a tenant-wide permission that must be consented to by a Company Administrator. Possible values are "User" or "Admin".
 * `user_consent_description` - (Optional) Permission help text that appears in the end user consent experience.
