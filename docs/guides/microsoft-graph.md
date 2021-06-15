@@ -285,15 +285,17 @@ resource "random_uuid" "example_app_user_impersonation_scope" {}
 resource "azuread_application" "example" {
   display_name = "example-app"
 
-  oauth2_permissions {
-    admin_consent_description  = "Allow the application to access example-app on behalf of the signed-in user."
-    admin_consent_display_name = "Access example-app"
-    id                         = random_uuid.example_app_user_impersonation_scope.result
-    is_enabled                 = true
-    type                       = "User"
-    user_consent_description   = "Allow the application to access example-app on your behalf."
-    user_consent_display_name  = "Access example-app"
-    value                      = "user_impersonation"
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access example-app on behalf of the signed-in user."
+      admin_consent_display_name = "Access example-app"
+      id                         = random_uuid.example_app_user_impersonation_scope.result
+      is_enabled                 = true
+      type                       = "User"
+      user_consent_description   = "Allow the application to access example-app on your behalf."
+      user_consent_display_name  = "Access example-app"
+      value                      = "user_impersonation"
+    }
   }
 }
 ```
