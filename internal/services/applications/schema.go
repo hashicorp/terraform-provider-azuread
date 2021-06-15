@@ -43,6 +43,7 @@ func schemaOptionalClaims() *schema.Schema {
 								"netbios_domain_and_sam_account_name",
 								"sam_account_name",
 								"use_guid",
+								"on_premise_security_identifier",
 							},
 							false,
 						),
