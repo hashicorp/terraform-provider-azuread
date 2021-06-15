@@ -222,6 +222,32 @@ func (c *ApplicationsClient) ListDeleted(ctx context.Context, filter string) (*[
 	return &data.DeletedApps, status, nil
 }
 
+// RestoreDeleted restores a recently deleted Application.
+// id is the object ID of the application.
+func (c *ApplicationsClient) RestoreDeleted(ctx context.Context, id string) (*Application, int, error) {
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directory/deletedItems/%s/restore", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var restoredApplication Application
+	if err = json.Unmarshal(respBody, &restoredApplication); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &restoredApplication, status, nil
+}
+
 // AddPassword appends a new password credential to an Application.
 func (c *ApplicationsClient) AddPassword(ctx context.Context, applicationId string, passwordCredential PasswordCredential) (*PasswordCredential, int, error) {
 	var status int

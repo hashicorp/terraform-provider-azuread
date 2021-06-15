@@ -219,6 +219,32 @@ func (c *GroupsClient) ListDeleted(ctx context.Context, filter string) (*[]Group
 	return &data.DeletedGroups, status, nil
 }
 
+// RestoreDeleted restores a recently deleted O365 Group.
+// TODO: add test coverage once API supports creating O365 groups.
+func (c *GroupsClient) RestoreDeleted(ctx context.Context, id string) (*Group, int, error) {
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directory/deletedItems/%s/restore", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var restoredGroup Group
+	if err = json.Unmarshal(respBody, &restoredGroup); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &restoredGroup, status, nil
+}
+
 // ListMembers retrieves the members of the specified Group.
 // id is the object ID of the group.
 func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, int, error) {
