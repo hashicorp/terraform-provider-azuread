@@ -1,4 +1,4 @@
-package msgraph
+package helpers
 
 import (
 	"encoding/base64"
@@ -14,6 +14,19 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
+
+type CredentialError struct {
+	str  string
+	attr string
+}
+
+func (e CredentialError) Attr() string {
+	return e.attr
+}
+
+func (e CredentialError) Error() string {
+	return e.str
+}
 
 func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
 	keyType := d.Get("type").(string)
@@ -107,6 +120,19 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCredential, error) {
 	credential := msgraph.PasswordCredential{}
 
+	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these
+	if v, ok := d.GetOk("display_name"); ok {
+		credential.DisplayName = utils.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("start_date"); ok {
+		startDate, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+		}
+		credential.StartDateTime = &startDate
+	}
+
 	var endDate *time.Time
 	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
 		var err error
@@ -125,20 +151,6 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCre
 	}
 	if endDate != nil {
 		credential.EndDateTime = endDate
-	}
-
-	if v, ok := d.GetOk("display_name"); ok {
-		credential.DisplayName = utils.String(v.(string))
-	} else if v, ok := d.GetOk("description"); ok { // TODO: remove in v2.0
-		credential.DisplayName = utils.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("start_date"); ok {
-		startDate, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
-		}
-		credential.StartDateTime = &startDate
 	}
 
 	return &credential, nil
