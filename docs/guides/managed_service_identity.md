@@ -65,7 +65,12 @@ Terraform can be configured to use managed identity for authentication in one of
 You can configure Terraform to use Managed Identity by setting the Environment Variable `ARM_USE_MSI` to `true`; as shown below:
 
 ```shell
-$ export ARM_USE_MSI=true ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
+# sh
+export ARM_USE_MSI=true ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
+
+# PowerShell
+$env:ARM_USE_MSI = true
+$env:ARM_TENANT_ID = 00000000-0000-0000-0000-000000000000
 ```
 
 Note that when using managed identity for authentication, the tenant ID must also be specified.

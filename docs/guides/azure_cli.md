@@ -66,19 +66,20 @@ The output (similar to below) will display one or more Tenants and/or Subscripti
 ]
 ```
 
-Each entry shown is referred to as an `Azure CLI account`. The provider will select the tenant ID from your default Azure CLI account. If you have more than one tenant listed in the output of `az account list`, for example if you are a guest user in other tenants, you can specify the tenant to use.
+Each entry shown is referred to as an `Azure CLI account`, which represents either a subscription with its linked tenant, or a tenant without any accessible subscriptions. The provider will select the tenant ID from your default Azure CLI account. If you have more than one tenant listed in the output of `az account list`, for example if you are a guest user in other tenants, you can specify the tenant to use.
 
 ```shell
-$ export ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
+# sh
+export ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
+
+# PowerShell
+$env:ARM_TENANT_ID = 00000000-0000-0000-0000-000000000000
 ```
 
 You can also configure the tenant ID from within the provider block.
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider being used
-  version = "=1.1.0"
-
   tenant_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
@@ -95,22 +96,10 @@ $ az login --allow-no-subscriptions --tenant "TENANT_ID_OR_DOMAIN"
 
 ## Configuring Azure CLI authentication in Terraform
 
-No specific configuration is required for the provider to use Azure CLI authentication. A Provider block is _technically_ optional, however we'd strongly recommend defining one to be able to pin the version of the Provider being used:
+No specific configuration is required for the provider to use Azure CLI authentication. If you're looking to use Terraform across Tenants - it's possible to do this by configuring the `tenant_id` field in the Provider block, as shown below:
 
 ```hcl
 provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
-  version = "=1.1.0"
-}
-```
-
-If you're looking to use Terraform across Tenants - it's possible to do this by configuring the `tenant_id` field in the Provider block, as shown below:
-
-```hcl
-provider "azuread" {
-  # Whilst version is optional, we /strongly recommend/ using it to pin the version of the Provider to be used
-  version = "=1.1.0"
-
   tenant_id = "10000000-2000-3000-4000-500000000000"
 }
 ```
@@ -138,5 +127,5 @@ Alternatively, you can set the `ARM_USE_CLI` environment variable.
 export ARM_USE_CLI=false
 
 # PowerShell
-$env:AAD_USE_MICROSOFT_GRAPH = "false"
+$env:ARM_USE_CLI = false
 ```
