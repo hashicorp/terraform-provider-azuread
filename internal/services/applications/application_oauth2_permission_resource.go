@@ -18,7 +18,7 @@ func applicationOAuth2PermissionResource() *schema.Resource {
 		ReadContext:   applicationOAuth2PermissionScopeResourceRead,
 		DeleteContext: applicationOAuth2PermissionScopeResourceDelete,
 
-		DeprecationMessage: "[NOTE] The `azuread_application_oauth2_permission` resource has been renamed to `azuread_application_oauth2_permission` and will be removed in version 2.0 of the provider",
+		DeprecationMessage: "[NOTE] The `azuread_application_oauth2_permission` resource is deprecated and will be removed in version 2.0 of the provider",
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := parse.OAuth2PermissionScopeID(id)
