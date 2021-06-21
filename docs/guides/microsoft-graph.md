@@ -166,13 +166,13 @@ The legacy `type` field is deprecated and will be removed.
 
 ### Resource: `azuread_application_app_role`
 
-The deprecated field `is_enabled` has been replaced by the `enabled` field and will be removed.
+This resource will be removed in version 2.0 of the provider. Limitations of the `azuread_application` resource, that currently necessitate use of this resource, will be resolved in version 2.0. See [this pull request](https://github.com/hashicorp/terraform-provider-azuread/pull/465) for more information about this change.
 
-### Resource: `azuread_application_oauth2_permission`
+### Resources: `azuread_application_oauth2_permission` and `azuread_application_oauth2_permission_scope`
 
-This resource has been renamed to `azuread_application_oauth2_permission_scope`.
+In version 1.5.0 of the provider, the `azuread_application_oauth2_permission` resource was deprecated and replaced by the `azuread_application_oauth2_permission_scope` resource.
 
-The deprecated field `is_enabled` has been replaced by the `enabled` field and will be removed.
+However, in version 2.0 of the provider, both of these resources will be removed. Limitations of the `azuread_application` resource, that currently necessitate use of these resources, will be resolved in version 2.0. See [this pull request](https://github.com/hashicorp/terraform-provider-azuread/pull/465) for more information about this change.
 
 ### Resource: `azuread_application_password`
 
