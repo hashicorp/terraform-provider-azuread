@@ -1,11 +1,19 @@
+## 1.6.0 (Unreleased)
+
+DEPRECATIONS:
+
+* `azuread_application_app_role` - this resource is deprecated and will be removed in version 2.0 [GH-465]
+* `azuread_application_oauth2_permission` - this resource is deprecated and will be removed in version 2.0 [GH-465]
+* `azuread_application_oauth2_permission_scope` - this resource is deprecated and will be removed in version 2.0 [GH-465]
+
 ## 1.5.1 (June 10, 2021)
 
 BUG FIXES:
 
-- **Provider:** Suppress a spurious deprecation notice for the `metadata_host` provider field ([#439](https://github.com/terraform-providers/terraform-provider-azuread/issues/439))
-- `azuread_application_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph ([#444](https://github.com/terraform-providers/terraform-provider-azuread/issues/444))
-- `azuread_group` - fix a bug that prevented creating a group with more than 20 owners or members ([#454](https://github.com/terraform-providers/terraform-provider-azuread/issues/454))
-- `azuread_service_principal_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph ([#444](https://github.com/terraform-providers/terraform-provider-azuread/issues/444))
+* **Provider:** Suppress a spurious deprecation notice for the `metadata_host` provider field ([#439](https://github.com/terraform-providers/terraform-provider-azuread/issues/439))
+* `azuread_application_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph ([#444](https://github.com/terraform-providers/terraform-provider-azuread/issues/444))
+* `azuread_group` - fix a bug that prevented creating a group with more than 20 owners or members ([#454](https://github.com/terraform-providers/terraform-provider-azuread/issues/454))
+* `azuread_service_principal_password` - fix a bug that prevented specifying the `display_name`, `start_date`, `end_date` or `end_date_relative` properties when using Microsoft Graph ([#444](https://github.com/terraform-providers/terraform-provider-azuread/issues/444))
 
 ## 1.5.0 (May 20, 2021)
 
