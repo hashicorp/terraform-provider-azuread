@@ -21,6 +21,8 @@ func applicationAppRoleResource() *schema.Resource {
 		ReadContext:   applicationAppRoleResourceRead,
 		DeleteContext: applicationAppRoleResourceDelete,
 
+		DeprecationMessage: "[NOTE] The `azuread_application_app_role` resource is deprecated and will be removed in version 2.0 of the provider",
+
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
 			_, err := parse.AppRoleID(id)
 			return err
