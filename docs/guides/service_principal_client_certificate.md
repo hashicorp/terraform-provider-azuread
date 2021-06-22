@@ -40,7 +40,7 @@ $ openssl req -subj '/CN=myclientcertificate/O=HashiCorp, Inc./ST=CA/C=US' \
 Next we generate a PKCS#12 bundle (.pfx file) which can be used by the AzureAD provider to authenticate with Azure:
 
 ```shell
-$ openssl pkcs12 -export -password pass:Pa55w0rd123 -out "client.pfx" -inkey "client.key" -in "client.crt"
+$ openssl pkcs12 -export -password pass:"Pa55w0rd123" -out client.pfx -inkey client.key -in client.crt
 ```
 
 Now that we've generated a certificate, we can create the Azure Active Directory Application.
@@ -83,10 +83,10 @@ $ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 
 # PowerShell
-$env:ARM_CLIENT_ID = 00000000-0000-0000-0000-000000000000
-$env:ARM_CLIENT_CERTIFICATE_PATH = /path/to/my/client/certificate.pfx
-$env:ARM_CLIENT_CERTIFICATE_PASSWORD = Pa55w0rd123
-$env:ARM_TENANT_ID = 10000000-2000-3000-4000-500000000000
+$env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
+$env:ARM_CLIENT_CERTIFICATE_PATH = "/path/to/my/client/certificate.pfx"
+$env:ARM_CLIENT_CERTIFICATE_PASSWORD = "Pa55w0rd123"
+$env:ARM_TENANT_ID = "10000000-2000-3000-4000-500000000000"
 ```
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to authenticate using the Client Certificate.

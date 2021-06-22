@@ -78,24 +78,24 @@ resource "azuread_application" "example" {
   }
 
   required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000"
+    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
 
     resource_access {
-      id   = "df021288-bdef-4463-88db-98f22de89214"
+      id   = "df021288-bdef-4463-88db-98f22de89214" # User.Read.All
       type = "Role"
     }
 
     resource_access {
-      id   = "b4e74841-8e56-480b-be8b-910348b18b4c"
+      id   = "b4e74841-8e56-480b-be8b-910348b18b4c" # User.ReadWrite
       type = "Scope"
     }
   }
 
   required_resource_access {
-    resource_app_id = "c5393580-f805-4401-95e8-94b7a6ef2fc2"
+    resource_app_id = "c5393580-f805-4401-95e8-94b7a6ef2fc2" # Office 365 Management
 
     resource_access {
-      id   = "594c1fb6-4f81-4475-ae41-0c394909246c"
+      id   = "594c1fb6-4f81-4475-ae41-0c394909246c" # ActivityFeed.Read
       type = "Role"
     }
   }

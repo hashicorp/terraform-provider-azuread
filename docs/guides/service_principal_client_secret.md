@@ -59,7 +59,7 @@ Our recommended approach is storing the credentials as Environment Variables, fo
 ```bash
 # sh
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
-$ export ARM_CLIENT_SECRET="03MWPmH2W3i008UVcucO1E1vifY_bR"
+$ export ARM_CLIENT_SECRET="MyCl1eNtSeCr3t"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 
 # PowerShell
