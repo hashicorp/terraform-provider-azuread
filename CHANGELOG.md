@@ -1,10 +1,10 @@
-## 1.6.0 (Unreleased)
+## 1.6.0 (June 24, 2021)
 
 DEPRECATIONS:
 
-* `azuread_application_app_role` - this resource is deprecated and will be removed in version 2.0 [GH-465]
-* `azuread_application_oauth2_permission` - this resource is deprecated and will be removed in version 2.0 [GH-465]
-* `azuread_application_oauth2_permission_scope` - this resource is deprecated and will be removed in version 2.0 [GH-465]
+* `azuread_application_app_role` - this resource is deprecated and will be removed in version 2.0 ([#465](https://github.com/terraform-providers/terraform-provider-azuread/issues/465))
+* `azuread_application_oauth2_permission` - this resource is deprecated and will be removed in version 2.0 ([#465](https://github.com/terraform-providers/terraform-provider-azuread/issues/465))
+* `azuread_application_oauth2_permission_scope` - this resource is deprecated and will be removed in version 2.0 ([#465](https://github.com/terraform-providers/terraform-provider-azuread/issues/465))
 
 ## 1.5.1 (June 10, 2021)
 
