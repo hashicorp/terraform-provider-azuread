@@ -355,6 +355,9 @@ resource "azuread_application" "test" {
   group_membership_claims = ["All"]
   sign_in_audience        = "AzureADMultipleOrgs"
 
+  device_only_auth_enabled       = true
+  fallback_public_client_enabled = true
+
   api {
     accept_mapped_claims           = true
     requested_access_token_version = 2

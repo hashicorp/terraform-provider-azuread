@@ -246,11 +246,16 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"device_only_auth_enabled": {
+				Description: "Specifies whether this application supports device authentication without a user.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+
 			"fallback_public_client_enabled": {
 				Description: "Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 			},
 
 			"group_membership_claims": {
@@ -535,17 +540,18 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	properties := msgraph.Application{
-		Api:                    expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:               expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:            utils.String(displayName),
-		GroupMembershipClaims:  expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:         tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
-		Info:                   expandApplicationInfo(d.Get("info").([]interface{})),
-		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:         msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
-		Web:                    expandApplicationWeb(d.Get("web").([]interface{})),
+		Api:                       expandApplicationApi(d.Get("api").([]interface{})),
+		AppRoles:                  expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		DisplayName:               utils.String(displayName),
+		GroupMembershipClaims:     expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
+		IdentifierUris:            tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
+		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
+		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	app, _, err := client.Create(ctx, properties)
@@ -592,18 +598,19 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	properties := msgraph.Application{
-		ID:                     utils.String(applicationId),
-		Api:                    expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:               expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:            utils.String(displayName),
-		GroupMembershipClaims:  expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:         tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
-		Info:                   expandApplicationInfo(d.Get("info").([]interface{})),
-		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:         msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
-		Web:                    expandApplicationWeb(d.Get("web").([]interface{})),
+		ID:                        utils.String(applicationId),
+		Api:                       expandApplicationApi(d.Get("api").([]interface{})),
+		AppRoles:                  expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		DisplayName:               utils.String(displayName),
+		GroupMembershipClaims:     expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
+		IdentifierUris:            tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
+		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
+		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
@@ -643,6 +650,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "api", flattenApplicationApi(app.Api, d.Get("api.#").(int) > 0, false))
 	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft_status", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)

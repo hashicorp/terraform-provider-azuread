@@ -193,6 +193,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"device_only_auth_enabled": {
+				Description: "Specifies whether this application supports device authentication without a user.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
 			"fallback_public_client_enabled": {
 				Description: "The fallback application type as public client, such as an installed application running on a mobile device",
 				Type:        schema.TypeBool,
@@ -444,6 +450,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true, true))
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft_status", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
