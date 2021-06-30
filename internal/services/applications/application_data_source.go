@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -418,7 +419,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
 
-		result, _, err := client.List(ctx, filter)
+		result, _, err := client.List(ctx, odata.Query{Filter: filter})
 		if err != nil {
 			return tf.ErrorDiagF(err, "Listing applications for filter %q", filter)
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -281,10 +282,12 @@ func ApplicationFindOAuth2PermissionScope(app *msgraph.Application, scopeId stri
 }
 
 func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClient, displayName string) (*[]msgraph.Application, error) {
-	filter := fmt.Sprintf("displayName eq '%s'", displayName)
-	apps, _, err := client.List(ctx, filter)
+	query := odata.Query{
+		Filter: fmt.Sprintf("displayName eq '%s'", displayName),
+	}
+	apps, _, err := client.List(ctx, query)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", filter, err)
+		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", query.Filter, err)
 	}
 
 	result := make([]msgraph.Application, 0)
