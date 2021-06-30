@@ -217,6 +217,45 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"logo_url": {
+							Description: "CDN URL to the application's logo",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"marketing_url": {
+							Description: "URL of the application's marketing page",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"privacy_statement_url": {
+							Description: "URL of the application's privacy statement",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"support_url": {
+							Description: "URL of the application's support page",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"terms_of_service_url": {
+							Description: "URL of the application's terms of service statement",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"optional_claims": {
 				Type:     schema.TypeList,
 				Computed: true,

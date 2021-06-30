@@ -403,6 +403,13 @@ resource "azuread_application" "test" {
     value                = "User"
   }
 
+  info {
+    marketing_url         = "https://hashitown-%[1]d.com/"
+    privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
+    support_url           = "https://support.hashitown-%[1]d.com/"
+    terms_of_service_url  = "https://hashitown-%[1]d.com/terms"
+  }
+
   optional_claims {
     access_token {
       name = "myclaim"
@@ -453,9 +460,13 @@ resource "azuread_application" "test" {
   }
 
   web {
-    homepage_url  = "https://homepage-%[1]d"
-    logout_url    = "https://log.me.out"
-    redirect_uris = ["https://unittest.hashicorptest.com"]
+    homepage_url = "https://app.hashitown-%[1]d.com/"
+    logout_url   = "https://app.hashitown-%[1]d.com/logout"
+
+    redirect_uris = [
+      "https://app.hashitown-%[1]d.com",
+      "https://classic.hashitown-%[1]d.com"
+    ]
 
     implicit_grant {
       access_token_issuance_enabled = true

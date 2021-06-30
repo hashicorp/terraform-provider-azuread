@@ -38,6 +38,7 @@ The following attributes are exported:
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `info` - (Optional) An `info` block as documented below.
 * `object_id` - The application's object ID.
 * `optional_claims` - An `optional_claims` block as documented below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
@@ -77,6 +78,16 @@ The following attributes are exported:
 * `enabled` - Determines if the app role is enabled.
 * `id` - The unique identifier of the app role.
 * `value` - The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
+
+---
+
+`info` block exports the following:
+
+* `logo_url` - CDN URL to the application's logo.
+* `marketing_url` - URL of the application's marketing page.
+* `privacy_statement_url` - URL of the application's privacy statement.
+* `support_url` - URL of the application's support page.
+* `terms_of_service_url` - URL of the application's terms of service statement.
 
 ---
 

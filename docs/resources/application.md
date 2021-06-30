@@ -131,6 +131,7 @@ The following arguments are supported:
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `identifier_uris` - (Optional) The user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `info` - (Optional) An `info` block as documented below.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A list of object IDs of principals that will be granted ownership of the application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
@@ -187,6 +188,15 @@ The following arguments are supported:
 
 ---
 
+`info` block supports the following:
+
+* `marketing_url` - (Optional) URL of the application's marketing page.
+* `privacy_statement_url` - (Optional) URL of the application's privacy statement.
+* `support_url` - (Optional) URL of the application's support page.
+* `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
+
+---
+
 `optional_claims` block supports the following:
 
 * `access_token` - (Optional) One or more `access_token` blocks as documented below.
@@ -240,7 +250,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `application_id` - The Application ID (also called Client ID).
 * `disabled_by_microsoft_status` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
+* `info` - An `info` block as documented below.
 * `object_id` - The application's object ID.
+
+---
+
+`info` block exports the following:
+
+* `logo_url` - CDN URL to the application's logo.
 
 ## Import
 

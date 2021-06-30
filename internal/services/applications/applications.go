@@ -448,6 +448,27 @@ func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.Implic
 	}
 }
 
+func expandApplicationInfo(input []interface{}) (result *msgraph.InformationalUrl) {
+	result = &msgraph.InformationalUrl{
+		MarketingUrl:        utils.String(""),
+		PrivacyStatementUrl: utils.String(""),
+		SupportUrl:          utils.String(""),
+		TermsOfServiceUrl:   utils.String(""),
+	}
+
+	if len(input) == 0 {
+		return
+	}
+
+	in := input[0].(map[string]interface{})
+	result.MarketingUrl = utils.String(in["marketing_url"].(string))
+	result.PrivacyStatementUrl = utils.String(in["privacy_statement_url"].(string))
+	result.SupportUrl = utils.String(in["support_url"].(string))
+	result.TermsOfServiceUrl = utils.String(in["terms_of_service_url"].(string))
+
+	return
+}
+
 func expandApplicationOAuth2PermissionScope(in []interface{}) *[]msgraph.PermissionScope {
 	result := make([]msgraph.PermissionScope, 0)
 
@@ -642,6 +663,36 @@ func flattenApplicationImplicitGrant(in *msgraph.ImplicitGrantSettings, implicit
 	if len(implicitGrant) > 0 {
 		result = append(result, implicitGrant)
 	}
+	return
+}
+
+func flattenApplicationInfo(in *msgraph.InformationalUrl, infoConfigured bool) (result []map[string]interface{}) {
+	if in == nil {
+		return
+	}
+
+	info := make(map[string]interface{})
+
+	if infoConfigured || in.LogoUrl != nil {
+		info["logo_url"] = in.LogoUrl
+	}
+	if infoConfigured || in.MarketingUrl != nil {
+		info["marketing_url"] = in.MarketingUrl
+	}
+	if infoConfigured || in.PrivacyStatementUrl != nil {
+		info["privacy_statement_url"] = in.PrivacyStatementUrl
+	}
+	if infoConfigured || in.SupportUrl != nil {
+		info["support_url"] = in.SupportUrl
+	}
+	if infoConfigured || in.TermsOfServiceUrl != nil {
+		info["terms_of_service_url"] = in.TermsOfServiceUrl
+	}
+
+	if len(info) > 0 {
+		result = append(result, info)
+	}
+
 	return
 }
 

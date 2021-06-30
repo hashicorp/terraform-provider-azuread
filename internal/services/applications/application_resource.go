@@ -279,6 +279,45 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"logo_url": {
+							Description: "CDN URL to the application's logo",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"marketing_url": {
+							Description: "URL of the application's marketing page",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+
+						"privacy_statement_url": {
+							Description: "URL of the application's privacy statement",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+
+						"support_url": {
+							Description: "URL of the application's support page",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+
+						"terms_of_service_url": {
+							Description: "URL of the application's terms of service statement",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+					},
+				},
+			},
+
 			"optional_claims": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -499,9 +538,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Api:                    expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:               expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:            utils.String(displayName),
-		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		GroupMembershipClaims:  expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:         tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info:                   expandApplicationInfo(d.Get("info").([]interface{})),
+		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:         msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
@@ -556,9 +596,10 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Api:                    expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:               expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:            utils.String(displayName),
-		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		GroupMembershipClaims:  expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:         tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info:                   expandApplicationInfo(d.Get("info").([]interface{})),
+		IsFallbackPublicClient: utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		OptionalClaims:         expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess: expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:         msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
@@ -607,6 +648,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "info", flattenApplicationInfo(app.Info, d.Get("info.#").(int) > 0))
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
