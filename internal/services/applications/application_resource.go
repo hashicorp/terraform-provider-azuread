@@ -687,6 +687,13 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 	}
 
+	if s := diff.Get("sign_in_audience").(string); s == string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount) || s == string(msgraph.SignInAudiencePersonalMicrosoftAccount) {
+		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
+			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+	}
+
 	return nil
 }
 
