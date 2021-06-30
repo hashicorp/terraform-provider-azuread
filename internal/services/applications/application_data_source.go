@@ -262,6 +262,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"oauth2_post_response_required": {
+				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
 			"optional_claims": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -456,6 +462,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))

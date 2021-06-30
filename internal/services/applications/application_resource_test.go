@@ -357,6 +357,7 @@ resource "azuread_application" "test" {
 
   device_only_auth_enabled       = true
   fallback_public_client_enabled = true
+  oauth2_post_response_required  = true
 
   api {
     accept_mapped_claims           = true

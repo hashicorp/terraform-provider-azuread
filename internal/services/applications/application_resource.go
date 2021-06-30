@@ -323,6 +323,12 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"oauth2_post_response_required": {
+				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+
 			"optional_claims": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -548,6 +554,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
@@ -607,6 +614,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
@@ -657,6 +665,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "info", flattenApplicationInfo(app.Info, d.Get("info.#").(int) > 0))
+	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))

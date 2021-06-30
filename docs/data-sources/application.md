@@ -40,6 +40,7 @@ The following attributes are exported:
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `info` - (Optional) An `info` block as documented below.
+* `oauth2_post_response_required` - Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.
 * `object_id` - The application's object ID.
 * `optional_claims` - An `optional_claims` block as documented below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
