@@ -481,6 +481,12 @@ func applicationResource() *schema.Resource {
 				Default:     false,
 			},
 
+			"publisher_domain": {
+				Description: "The verified publisher domain for the application",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"disabled_by_microsoft_status": {
 				Description: "Whether Microsoft has disabled the registered application",
 				Type:        schema.TypeString,
@@ -668,6 +674,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, d.Get("web.#").(int) > 0, d.Get("web.0.implicit_grant.#").(int) > 0))

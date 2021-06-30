@@ -289,6 +289,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"publisher_domain": {
+				Description: "The verified publisher domain for the application",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -465,6 +471,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, true, true))

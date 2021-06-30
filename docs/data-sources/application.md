@@ -44,6 +44,7 @@ The following attributes are exported:
 * `object_id` - The application's object ID.
 * `optional_claims` - An `optional_claims` block as documented below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
+* `publisher_domain` - The verified publisher domain for the application.
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `web` - A `web` block as documented below.

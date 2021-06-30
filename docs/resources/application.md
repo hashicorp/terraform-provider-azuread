@@ -254,6 +254,7 @@ In addition to all arguments above, the following attributes are exported:
 * `disabled_by_microsoft_status` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `info` - An `info` block as documented below.
 * `object_id` - The application's object ID.
+* `publisher_domain` - The verified publisher domain for the application.
 
 ---
 
