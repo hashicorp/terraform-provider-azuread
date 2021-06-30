@@ -290,6 +290,23 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"public_client": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"redirect_uris": {
+							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Type:        schema.TypeList,
+							Computed:    true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+
 			"publisher_domain": {
 				Description: "The verified publisher domain for the application",
 				Type:        schema.TypeString,
@@ -335,6 +352,23 @@ func applicationDataSource() *schema.Resource {
 				Description: "The Microsoft account types that are supported for the current application",
 				Type:        schema.TypeString,
 				Computed:    true,
+			},
+
+			"single_page_application": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"redirect_uris": {
+							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Type:        schema.TypeList,
+							Computed:    true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 
 			"web": {
@@ -472,9 +506,11 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient, d.Get("public_client.#").(int) > 0))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
+	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa, d.Get("single_page_application.#").(int) > 0))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, true, true))
 
 	owners, _, err := client.ListOwners(ctx, *app.ID)

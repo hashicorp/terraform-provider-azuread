@@ -125,7 +125,7 @@ resource "azuread_application" "example" {
 
 The following arguments are supported:
 
-* `api` - (Optional) An `api` block as documented below, which configures API related settings for this Application.
+* `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
@@ -137,9 +137,11 @@ The following arguments are supported:
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A list of object IDs of principals that will be granted ownership of the application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
+* `public_client` - (Optional) A `public_client` block as documented below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
-* `web` - (Optional) A `web` block as documented below, which configures web related settings for this Application.
+* `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
+* `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
 -> **Application Name Uniqueness** Application names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing applications if you want to avoid name collisions.
 
@@ -216,6 +218,12 @@ The following arguments are supported:
 
 ---
 
+`public_client` block supports the following:
+
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+
+---
+
 `required_resource_access` block supports the following:
 
 * `resource_access` - (Required) A collection of `resource_access` blocks as documented below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
@@ -232,12 +240,18 @@ The following arguments are supported:
 
 ---
 
+`single_page_application` block supports the following:
+
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+
+---
+
 `web` block supports the following:
 
 * `homepage_url` - (Optional) Home page or landing page of the application.
 * `implicit_grant` - (Optional) An `implicit_grant` block as documented above.
 * `logout_url` - (Optional) The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
-* `redirect_uris` - (Optional) A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
 
 ---
 

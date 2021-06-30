@@ -352,6 +352,25 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"public_client": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"redirect_uris": {
+							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validate.NoEmptyStrings,
+							},
+						},
+					},
+				},
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -406,6 +425,25 @@ func applicationResource() *schema.Resource {
 					string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount),
 					string(msgraph.SignInAudiencePersonalMicrosoftAccount),
 				}, false),
+			},
+
+			"single_page_application": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"redirect_uris": {
+							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validate.NoEmptyStrings,
+							},
+						},
+					},
+				},
 			},
 
 			"web": {
@@ -562,8 +600,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
+		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -622,8 +662,10 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            msgraph.SignInAudience(d.Get("sign_in_audience").(string)),
+		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -674,9 +716,11 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
+	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient, d.Get("public_client.#").(int) > 0))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
+	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa, d.Get("single_page_application.#").(int) > 0))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, d.Get("web.#").(int) > 0, d.Get("web.0.implicit_grant.#").(int) > 0))
 
 	preventDuplicates := false

@@ -44,9 +44,11 @@ The following attributes are exported:
 * `object_id` - The application's object ID.
 * `optional_claims` - An `optional_claims` block as documented below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
+* `public_client` - A `public_client` block as documented below.
 * `publisher_domain` - The verified publisher domain for the application.
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
+* `single_page_application` - A `single_page_application` block as documented below.
 * `web` - A `web` block as documented below.
 
 ---
@@ -111,6 +113,12 @@ The following attributes are exported:
 
 ---
 
+`public_client` block exports the following:
+
+* `redirect_uris` - A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+
+---
+
 `required_resource_access` block exports the following:
 
 * `resource_access` - A collection of `resource_access` blocks as documented below, describing OAuth2.0 permission scopes and app roles that the application requires from the specified resource.
@@ -122,6 +130,12 @@ The following attributes are exported:
 
 * `id` - The unique identifier for an app role or OAuth2 permission scope published by the resource application.
 * `type` - Specifies whether the `id` property references an app role or an OAuth2 permission scope. Possible values are `Role` or `Scope`.
+
+---
+
+`single_page_application` block exports the following:
+
+* `redirect_uris` - A list of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
 
 ---
 

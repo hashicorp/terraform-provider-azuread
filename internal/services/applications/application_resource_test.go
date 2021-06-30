@@ -435,6 +435,13 @@ resource "azuread_application" "test" {
     }
   }
 
+  public_client {
+    redirect_uris = [
+      "https://login.microsoftonline.com/common/oauth2/nativeclient",
+      "https://login.live.com/oauth20_desktop.srf",
+    ]
+  }
+
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000"
 
@@ -461,6 +468,12 @@ resource "azuread_application" "test" {
       id   = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
       type = "Scope"
     }
+  }
+
+  single_page_application {
+    redirect_uris = [
+      "https://beta.hashitown-%[1]d.com",
+    ]
   }
 
   web {

@@ -540,6 +540,21 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 	return &result
 }
 
+func expandApplicationPublicClient(input []interface{}) (result *msgraph.PublicClient) {
+	result = &msgraph.PublicClient{
+		RedirectUris: &[]string{},
+	}
+
+	if len(input) == 0 {
+		return
+	}
+
+	in := input[0].(map[string]interface{})
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+
+	return
+}
+
 func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.RequiredResourceAccess {
 	result := make([]msgraph.RequiredResourceAccess, 0)
 
@@ -570,6 +585,21 @@ func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess
 	}
 
 	return &result
+}
+
+func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) {
+	result = &msgraph.ApplicationSpa{
+		RedirectUris: &[]string{},
+	}
+
+	if len(input) == 0 {
+		return
+	}
+
+	in := input[0].(map[string]interface{})
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+
+	return
 }
 
 func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) {
@@ -754,6 +784,24 @@ func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} 
 	return optionalClaims
 }
 
+func flattenApplicationPublicClient(in *msgraph.PublicClient, publicClientConfigured bool) (result []map[string]interface{}) {
+	if in == nil {
+		return
+	}
+
+	publicClient := make(map[string]interface{})
+
+	if v := tf.FlattenStringSlicePtr(in.RedirectUris); publicClientConfigured || len(v) > 0 {
+		publicClient["redirect_uris"] = v
+	}
+
+	if len(publicClient) > 0 {
+		result = append(result, publicClient)
+	}
+
+	return
+}
+
 func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAccess) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
@@ -791,6 +839,24 @@ func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{
 	}
 
 	return accesses
+}
+
+func flattenApplicationSpa(in *msgraph.ApplicationSpa, spaConfigured bool) (result []map[string]interface{}) {
+	if in == nil {
+		return
+	}
+
+	spa := make(map[string]interface{})
+
+	if v := tf.FlattenStringSlicePtr(in.RedirectUris); spaConfigured || len(v) > 0 {
+		spa["redirect_uris"] = v
+	}
+
+	if len(spa) > 0 {
+		result = append(result, spa)
+	}
+
+	return
 }
 
 func flattenApplicationWeb(in *msgraph.ApplicationWeb, webConfigured bool, implicitGrantConfigured bool) (result []map[string]interface{}) {
