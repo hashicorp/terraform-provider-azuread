@@ -8,6 +8,7 @@ import (
 
 type Client struct {
 	NamedLocationsClient *msgraph.NamedLocationsClient
+	PoliciesClient       *msgraph.ConditionalAccessPolicyClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
