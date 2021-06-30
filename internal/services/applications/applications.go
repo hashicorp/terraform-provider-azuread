@@ -362,21 +362,31 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	return nil
 }
 
-func expandApplicationApi(input []interface{}) *msgraph.ApplicationApi {
-	oauth2PermissionScopes := &[]msgraph.PermissionScope{}
-
-	if len(input) > 0 {
-		in := input[0].(map[string]interface{})
-		oauth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*schema.Set).List())
+func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) {
+	result = &msgraph.ApplicationApi{
+		AcceptMappedClaims:          utils.Bool(false),
+		KnownClientApplications:     &[]string{},
+		OAuth2PermissionScopes:      &[]msgraph.PermissionScope{},
+		RequestedAccessTokenVersion: utils.Int32(int32(1)),
 	}
 
-	return &msgraph.ApplicationApi{
-		AcceptMappedClaims:          nil,
-		KnownClientApplications:     nil,
-		OAuth2PermissionScopes:      oauth2PermissionScopes,
-		PreAuthorizedApplications:   nil,
-		RequestedAccessTokenVersion: nil,
+	if len(input) == 0 {
+		return
 	}
+
+	in := input[0].(map[string]interface{})
+	if v, ok := in["accept_mapped_claims"]; ok {
+		result.AcceptMappedClaims = utils.Bool(v.(bool))
+	}
+	if v, ok := in["known_client_applications"]; ok {
+		result.KnownClientApplications = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+	}
+	result.OAuth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*schema.Set).List())
+	if v, ok := in["requested_access_token_version"]; ok {
+		result.RequestedAccessTokenVersion = utils.Int32(int32(v.(int)))
+	}
+
+	return
 }
 
 func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
@@ -538,49 +548,63 @@ func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess
 	return &result
 }
 
-func expandApplicationWeb(input []interface{}) *msgraph.ApplicationWeb {
-	var homepageUrl msgraph.StringNullWhenEmpty
-	var logoutUrl msgraph.StringNullWhenEmpty
-
-	implicitGrantSettings := expandApplicationImplicitGrantSettings(nil)
-	redirectUris := &[]string{}
-
-	if len(input) > 0 {
-		in := input[0].(map[string]interface{})
-		homepageUrl = msgraph.StringNullWhenEmpty(in["homepage_url"].(string))
-		logoutUrl = msgraph.StringNullWhenEmpty(in["logout_url"].(string))
-		implicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
-		redirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) {
+	result = &msgraph.ApplicationWeb{
+		HomePageUrl:           utils.NullableString(""),
+		ImplicitGrantSettings: expandApplicationImplicitGrantSettings(nil),
+		LogoutUrl:             utils.NullableString(""),
+		RedirectUris:          &[]string{},
 	}
 
-	return &msgraph.ApplicationWeb{
-		HomePageUrl:           &homepageUrl,
-		ImplicitGrantSettings: implicitGrantSettings,
-		LogoutUrl:             &logoutUrl,
-		RedirectUris:          redirectUris,
+	if len(input) == 0 {
+		return
 	}
+
+	in := input[0].(map[string]interface{})
+	result.HomePageUrl = utils.NullableString(in["homepage_url"].(string))
+	result.LogoutUrl = utils.NullableString(in["logout_url"].(string))
+	result.ImplicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+
+	return
 }
 
-func flattenApplicationApi(in *msgraph.ApplicationApi, dataSource bool) (result []map[string]interface{}) {
+func flattenApplicationApi(in *msgraph.ApplicationApi, apiConfigured bool, dataSource bool) (result []map[string]interface{}) {
 	if in == nil {
 		return
 	}
 
-	var scopesKey string
-	if dataSource {
-		scopesKey = "oauth2_permission_scopes"
-	} else {
-		scopesKey = "oauth2_permission_scope"
-	}
-	oauth2PermissionScopes := flattenApplicationOAuth2PermissionScopes(in.OAuth2PermissionScopes)
+	api := make(map[string]interface{})
 
-	if oauth2PermissionScopes != nil {
-		result = append(result, map[string]interface{}{
-			scopesKey: oauth2PermissionScopes,
-		})
+	if in.AcceptMappedClaims != nil {
+		if v := *in.AcceptMappedClaims; v || apiConfigured {
+			api["accept_mapped_claims"] = v
+		}
 	}
 
-	return
+	if v := tf.FlattenStringSlicePtr(in.KnownClientApplications); apiConfigured || len(v) > 0 {
+		api["known_client_applications"] = v
+	}
+
+	if scopes := flattenApplicationOAuth2PermissionScopes(in.OAuth2PermissionScopes); scopes != nil {
+		key := "oauth2_permission_scope"
+		if dataSource {
+			key = "oauth2_permission_scopes"
+		}
+		api[key] = scopes
+	}
+
+	if in.RequestedAccessTokenVersion != nil {
+		if v := *in.RequestedAccessTokenVersion; v > 1 || apiConfigured {
+			api["requested_access_token_version"] = int(v)
+		}
+	}
+
+	if len(api) > 0 {
+		result = append(result, api)
+	}
+
+	return //nolint:nakedret
 }
 
 func flattenApplicationAppRoles(in *[]msgraph.AppRole) []map[string]interface{} {

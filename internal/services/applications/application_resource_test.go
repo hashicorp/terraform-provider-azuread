@@ -341,6 +341,14 @@ resource "azuread_user" "test" {
   password            = "%[2]s"
 }
 
+resource "azuread_application" "known1" {
+  display_name = "acctest-APP-known1-%[1]d"
+}
+
+resource "azuread_application" "known2" {
+  display_name = "acctest-APP-known2-%[1]d"
+}
+
 resource "azuread_application" "test" {
   display_name            = "acctest-APP-complete-%[1]d"
   identifier_uris         = ["api://hashicorptestapp-%[1]d"]
@@ -348,6 +356,14 @@ resource "azuread_application" "test" {
   sign_in_audience        = "AzureADMultipleOrgs"
 
   api {
+    accept_mapped_claims           = true
+    requested_access_token_version = 2
+
+    known_client_applications = [
+      azuread_application.known1.application_id,
+      azuread_application.known2.application_id,
+    ]
+
     oauth2_permission_scope {
       admin_consent_description  = "Administer the application"
       admin_consent_display_name = "Administer"

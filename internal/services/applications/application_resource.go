@@ -8,8 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
-
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +16,7 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
@@ -71,6 +71,22 @@ func applicationResource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accept_mapped_claims": {
+							Description: "Allows an application to use claims mapping without specifying a custom signing key",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"known_client_applications": {
+							Description: "Used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app",
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: validate.UUID,
+							},
+						},
+
 						// TODO: v2.0 also consider another computed typemap attribute `oauth2_permission_scope_ids` for easier consumption
 						"oauth2_permission_scope": {
 							Description: "One or more `oauth2_permission_scope` blocks to describe delegated permissions exposed by the web API represented by this application",
@@ -79,9 +95,10 @@ func applicationResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Description: "The unique identifier of the delegated permission",
-										Type:        schema.TypeString,
-										Required:    true,
+										Description:      "The unique identifier of the delegated permission",
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: validate.UUID,
 									},
 
 									"admin_consent_description": {
@@ -139,6 +156,32 @@ func applicationResource() *schema.Resource {
 								},
 							},
 						},
+
+						"requested_access_token_version": {
+							Description: "Specifies the access token version expected by this resource",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Default:     1,
+							ValidateDiagFunc: func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+								v, ok := i.(int)
+								if !ok {
+									ret = append(ret, diag.Diagnostic{
+										Severity:      diag.Error,
+										Summary:       "Expected an integer value",
+										AttributePath: path,
+									})
+									return
+								}
+								if v < 1 || v > 2 {
+									ret = append(ret, diag.Diagnostic{
+										Severity:      diag.Error,
+										Summary:       "Value must be one of: 1, 2",
+										AttributePath: path,
+									})
+								}
+								return
+							},
+						},
 					},
 				},
 			},
@@ -150,10 +193,10 @@ func applicationResource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Description:  "The unique identifier of the app role",
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsUUID,
+							Description:      "The unique identifier of the app role",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.UUID,
 						},
 
 						"allowed_member_types": {
@@ -417,6 +460,13 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		return fmt.Errorf("checking for duplicate app role / oauth2_permissions values: %v", err)
 	}
 
+	if s := diff.Get("sign_in_audience").(string); s == string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount) || s == string(msgraph.SignInAudiencePersonalMicrosoftAccount) {
+		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
+			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+	}
+
 	return nil
 }
 
@@ -543,7 +593,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
 	}
 
-	tf.Set(d, "api", flattenApplicationApi(app.Api, false))
+	tf.Set(d, "api", flattenApplicationApi(app.Api, d.Get("api.#").(int) > 0, false))
 	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
 	tf.Set(d, "display_name", app.DisplayName)
