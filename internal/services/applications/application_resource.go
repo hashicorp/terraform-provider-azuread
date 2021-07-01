@@ -71,12 +71,6 @@ func applicationResource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"accept_mapped_claims": {
-							Description: "Allows an application to use claims mapping without specifying a custom signing key",
-							Type:        schema.TypeBool,
-							Optional:    true,
-						},
-
 						"known_client_applications": {
 							Description: "Used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app",
 							Type:        schema.TypeSet,
@@ -85,6 +79,12 @@ func applicationResource() *schema.Resource {
 								Type:             schema.TypeString,
 								ValidateDiagFunc: validate.UUID,
 							},
+						},
+
+						"mapped_claims_enabled": {
+							Description: "Allows an application to use claims mapping without specifying a custom signing key",
+							Type:        schema.TypeBool,
+							Optional:    true,
 						},
 
 						// TODO: v2.0 also consider another computed typemap attribute `oauth2_permission_scope_ids` for easier consumption

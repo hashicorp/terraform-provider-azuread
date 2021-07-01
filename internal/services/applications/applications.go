@@ -378,7 +378,7 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 	}
 
 	in := input[0].(map[string]interface{})
-	if v, ok := in["accept_mapped_claims"]; ok {
+	if v, ok := in["mapped_claims_enabled"]; ok {
 		result.AcceptMappedClaims = utils.Bool(v.(bool))
 	}
 	if v, ok := in["known_client_applications"]; ok {
@@ -611,7 +611,7 @@ func flattenApplicationApi(in *msgraph.ApplicationApi, apiConfigured bool, dataS
 
 	if in.AcceptMappedClaims != nil {
 		if v := *in.AcceptMappedClaims; v || apiConfigured {
-			api["accept_mapped_claims"] = v
+			api["mapped_claims_enabled"] = v
 		}
 	}
 

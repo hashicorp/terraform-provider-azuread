@@ -365,7 +365,7 @@ resource "azuread_application" "test" {
   terms_of_service_url  = "https://hashitown-%[1]d.com/terms"
 
   api {
-    accept_mapped_claims           = true
+    mapped_claims_enabled          = true
     requested_access_token_version = 2
 
     known_client_applications = [
