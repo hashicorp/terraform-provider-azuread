@@ -39,16 +39,20 @@ The following attributes are exported:
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
-* `info` - (Optional) An `info` block as documented below.
+* `logo_url` - CDN URL to the application's logo.
+* `marketing_url` - URL of the application's marketing page.
 * `oauth2_post_response_required` - Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.
 * `object_id` - The application's object ID.
 * `optional_claims` - An `optional_claims` block as documented below.
 * `owners` - A list of object IDs of principals that are assigned ownership of the application.
+* `privacy_statement_url` - URL of the application's privacy statement.
 * `public_client` - A `public_client` block as documented below.
 * `publisher_domain` - The verified publisher domain for the application.
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `single_page_application` - A `single_page_application` block as documented below.
+* `support_url` - URL of the application's support page.
+* `terms_of_service_url` - URL of the application's terms of service statement.
 * `web` - A `web` block as documented below.
 
 ---
@@ -83,16 +87,6 @@ The following attributes are exported:
 * `enabled` - Determines if the app role is enabled.
 * `id` - The unique identifier of the app role.
 * `value` - The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
-
----
-
-`info` block exports the following:
-
-* `logo_url` - CDN URL to the application's logo.
-* `marketing_url` - URL of the application's marketing page.
-* `privacy_statement_url` - URL of the application's privacy statement.
-* `support_url` - URL of the application's support page.
-* `terms_of_service_url` - URL of the application's terms of service statement.
 
 ---
 

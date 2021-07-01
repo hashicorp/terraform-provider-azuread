@@ -224,43 +224,16 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
-			"info": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"logo_url": {
-							Description: "CDN URL to the application's logo",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
+			"logo_url": {
+				Description: "CDN URL to the application's logo",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 
-						"marketing_url": {
-							Description: "URL of the application's marketing page",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-
-						"privacy_statement_url": {
-							Description: "URL of the application's privacy statement",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-
-						"support_url": {
-							Description: "URL of the application's support page",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-
-						"terms_of_service_url": {
-							Description: "URL of the application's terms of service statement",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-					},
-				},
+			"marketing_url": {
+				Description: "URL of the application's marketing page",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 
 			"oauth2_post_response_required": {
@@ -288,6 +261,12 @@ func applicationDataSource() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+
+			"privacy_statement_url": {
+				Description: "URL of the application's privacy statement",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 
 			"public_client": {
@@ -369,6 +348,18 @@ func applicationDataSource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"support_url": {
+				Description: "URL of the application's support page",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"terms_of_service_url": {
+				Description: "URL of the application's terms of service statement",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 
 			"web": {
@@ -512,6 +503,14 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa, d.Get("single_page_application.#").(int) > 0))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, true, true))
+
+	if app.Info != nil {
+		tf.Set(d, "logo_url", app.Info.LogoUrl)
+		tf.Set(d, "marketing_url", app.Info.MarketingUrl)
+		tf.Set(d, "privacy_statement_url", app.Info.PrivacyStatementUrl)
+		tf.Set(d, "support_url", app.Info.SupportUrl)
+		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
+	}
 
 	owners, _, err := client.ListOwners(ctx, *app.ID)
 	if err != nil {

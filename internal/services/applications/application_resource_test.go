@@ -359,6 +359,11 @@ resource "azuread_application" "test" {
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
 
+  marketing_url         = "https://hashitown-%[1]d.com/"
+  privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
+  support_url           = "https://support.hashitown-%[1]d.com/"
+  terms_of_service_url  = "https://hashitown-%[1]d.com/terms"
+
   api {
     accept_mapped_claims           = true
     requested_access_token_version = 2
@@ -405,13 +410,6 @@ resource "azuread_application" "test" {
     enabled              = true
     id                   = "%[6]s"
     value                = "User"
-  }
-
-  info {
-    marketing_url         = "https://hashitown-%[1]d.com/"
-    privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
-    support_url           = "https://support.hashitown-%[1]d.com/"
-    terms_of_service_url  = "https://hashitown-%[1]d.com/terms"
   }
 
   optional_claims {

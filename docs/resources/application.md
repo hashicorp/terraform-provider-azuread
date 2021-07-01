@@ -132,15 +132,18 @@ The following arguments are supported:
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `identifier_uris` - (Optional) The user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
-* `info` - (Optional) An `info` block as documented below.
+* `marketing_url` - (Optional) URL of the application's marketing page.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A list of object IDs of principals that will be granted ownership of the application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
+* `privacy_statement_url` - (Optional) URL of the application's privacy statement.
 * `public_client` - (Optional) A `public_client` block as documented below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
 * `required_resource_access` - (Optional) A collection of `required_resource_access` blocks as documented below.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
+* `support_url` - (Optional) URL of the application's support page.
+* `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 * `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
 -> **Application Name Uniqueness** Application names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing applications if you want to avoid name collisions.
@@ -189,15 +192,6 @@ The following arguments are supported:
 * `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles (`app_role`) and permission scopes (`oauth2_permission_scope`) exported by an application share the same namespace and cannot contain duplicate `value`s. Terraform will attempt to detect this during a plan or apply operation.
-
----
-
-`info` block supports the following:
-
-* `marketing_url` - (Optional) URL of the application's marketing page.
-* `privacy_statement_url` - (Optional) URL of the application's privacy statement.
-* `support_url` - (Optional) URL of the application's support page.
-* `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 
 ---
 

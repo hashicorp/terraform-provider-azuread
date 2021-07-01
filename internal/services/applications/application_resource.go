@@ -284,43 +284,10 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
-			"info": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"logo_url": {
-							Description: "CDN URL to the application's logo",
-							Type:        schema.TypeString,
-							Computed:    true,
-						},
-
-						"marketing_url": {
-							Description: "URL of the application's marketing page",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-
-						"privacy_statement_url": {
-							Description: "URL of the application's privacy statement",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-
-						"support_url": {
-							Description: "URL of the application's support page",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-
-						"terms_of_service_url": {
-							Description: "URL of the application's terms of service statement",
-							Type:        schema.TypeString,
-							Optional:    true,
-						},
-					},
-				},
+			"marketing_url": {
+				Description: "URL of the application's marketing page",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 
 			"oauth2_post_response_required": {
@@ -350,6 +317,12 @@ func applicationResource() *schema.Resource {
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
+			},
+
+			"privacy_statement_url": {
+				Description: "URL of the application's privacy statement",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 
 			"public_client": {
@@ -446,6 +419,18 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"support_url": {
+				Description: "URL of the application's support page",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"terms_of_service_url": {
+				Description: "URL of the application's terms of service statement",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"web": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -508,6 +493,12 @@ func applicationResource() *schema.Resource {
 
 			"object_id": {
 				Description: "The application's object ID",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"logo_url": {
+				Description: "CDN URL to the application's logo",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -590,12 +581,17 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	properties := msgraph.Application{
-		Api:                       expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:                  expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:               utils.String(displayName),
-		GroupMembershipClaims:     expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:            tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
-		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
+		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
+		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		DisplayName:           utils.String(displayName),
+		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info: &msgraph.InformationalUrl{
+			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
+			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
+			SupportUrl:          utils.String(d.Get("support_url").(string)),
+			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
+		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
@@ -651,13 +647,18 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	properties := msgraph.Application{
-		ID:                        utils.String(applicationId),
-		Api:                       expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:                  expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:               utils.String(displayName),
-		GroupMembershipClaims:     expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:            tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
-		Info:                      expandApplicationInfo(d.Get("info").([]interface{})),
+		ID:                    utils.String(applicationId),
+		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
+		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		DisplayName:           utils.String(displayName),
+		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		Info: &msgraph.InformationalUrl{
+			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
+			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
+			SupportUrl:          utils.String(d.Get("support_url").(string)),
+			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
+		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
@@ -712,7 +713,6 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
-	tf.Set(d, "info", flattenApplicationInfo(app.Info, d.Get("info.#").(int) > 0))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
@@ -722,6 +722,14 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "sign_in_audience", string(app.SignInAudience))
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa, d.Get("single_page_application.#").(int) > 0))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web, d.Get("web.#").(int) > 0, d.Get("web.0.implicit_grant.#").(int) > 0))
+
+	if app.Info != nil {
+		tf.Set(d, "logo_url", app.Info.LogoUrl)
+		tf.Set(d, "marketing_url", app.Info.MarketingUrl)
+		tf.Set(d, "privacy_statement_url", app.Info.PrivacyStatementUrl)
+		tf.Set(d, "support_url", app.Info.SupportUrl)
+		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
+	}
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
