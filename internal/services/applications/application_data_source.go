@@ -43,7 +43,7 @@ func applicationDataSource() *schema.Resource {
 				ValidateDiagFunc: validate.UUID,
 			},
 
-			"disabled_by_microsoft_status": {
+			"disabled_by_microsoft": {
 				Description: "Whether Microsoft has disabled the registered application",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -489,7 +489,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
-	tf.Set(d, "disabled_by_microsoft_status", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
+	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))

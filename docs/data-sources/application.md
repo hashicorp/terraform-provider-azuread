@@ -34,7 +34,7 @@ The following attributes are exported:
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_id` - The Application ID (also called Client ID).
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.
-* `disabled_by_microsoft_status` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
+* `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
