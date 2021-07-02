@@ -622,6 +622,23 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 			}
 		}
 
+		// maximum number of scopes is 100 with personal account sign-ins
+		if len(oauth2PermissionScopes) > 100 {
+			return fmt.Errorf("maximum of 100 `oauth2_permission_scope` blocks are supported when `sign_in_audience` is %q or %q",
+				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
+		}
+
+		// scope name maximum length is 40 characters with personal account sign-ins
+		for _, raw := range oauth2PermissionScopes {
+			scope := raw.(map[string]interface{})
+			if v, ok := scope["value"]; ok {
+				if len(v.(string)) > 40 {
+					return fmt.Errorf("`value` property in the `oauth2_permission_scope` block must be 40 characters or less when `sign_in_audience` is %q or %q",
+						msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
+				}
+			}
+		}
+
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
 			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
@@ -684,13 +701,6 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
 			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
 				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
-		}
-	}
-
-	if s := diff.Get("sign_in_audience").(string); s == string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount) || s == string(msgraph.SignInAudiencePersonalMicrosoftAccount) {
-		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
-			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
-				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
 		}
 	}
 
