@@ -556,6 +556,15 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
 				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
 		}
+
+		// urn scheme not supported with personal account sign-ins
+		for _, v := range diff.Get("identifier_uris").([]interface{}) {
+			p := cty.Path{}
+			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false)(v, p); diags.HasError() {
+				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
+					string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+			}
+		}
 	}
 
 	return nil
