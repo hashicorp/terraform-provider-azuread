@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -335,9 +337,10 @@ func applicationResource() *schema.Resource {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
 							Type:        schema.TypeSet,
 							Optional:    true,
+							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+								ValidateDiagFunc: validate.IsRedirectURI,
 							},
 						},
 					},
@@ -410,9 +413,10 @@ func applicationResource() *schema.Resource {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
 							Type:        schema.TypeSet,
 							Optional:    true,
+							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+								ValidateDiagFunc: validate.IsRedirectURI,
 							},
 						},
 					},
@@ -448,16 +452,17 @@ func applicationResource() *schema.Resource {
 							Description:      "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+							ValidateDiagFunc: validate.IsLogoutURL,
 						},
 
 						"redirect_uris": {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
 							Type:        schema.TypeSet,
 							Optional:    true,
+							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+								ValidateDiagFunc: validate.IsRedirectURI,
 							},
 						},
 
@@ -551,18 +556,94 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		return fmt.Errorf("checking for duplicate app role / oauth2_permissions values: %v", err)
 	}
 
+	// The following validation is taken from https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
+	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
+	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount) || s == string(msgraph.SignInAudiencePersonalMicrosoftAccount) {
+		oauth2PermissionScopes := diff.Get("api.0.oauth2_permission_scope").(*schema.Set).List()
+		identifierUris := diff.Get("identifier_uris").([]interface{})
+		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*schema.Set).List()
+		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*schema.Set).List()
+		webRedirectUris := diff.Get("web.0.redirect_uris").(*schema.Set).List()
+		allRedirectUris := append(pubRedirectUris, append(spaRedirectUris, webRedirectUris...)...)
+
+		// applications must use v2 access tokens with personal account sign-ins
 		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
 			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
 				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
 		}
 
+		// maximum number of scopes is 100 with personal account sign-ins
+		if len(oauth2PermissionScopes) > 100 {
+			return fmt.Errorf("maximum of 100 `oauth2_permission_scope` blocks are supported when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+
+		// scope name maximum length is 40 characters with personal account sign-ins
+		for _, raw := range oauth2PermissionScopes {
+			scope := raw.(map[string]interface{})
+			if v, ok := scope["value"]; ok {
+				if len(v.(string)) > 40 {
+					return fmt.Errorf("`value` property in the `oauth2_permission_scope` block must be 40 characters or less when `sign_in_audience` is %q or %q",
+						string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+				}
+			}
+		}
+
 		// urn scheme not supported with personal account sign-ins
-		for _, v := range diff.Get("identifier_uris").([]interface{}) {
-			p := cty.Path{}
-			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false)(v, p); diags.HasError() {
+		for _, v := range identifierUris {
+			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+			}
+		}
+
+		// maximum of 50 identifier_uris with personal account sign-ins
+		if len(identifierUris) > 50 {
+			return fmt.Errorf("`identifier_uris` must have no more than 50 URIs when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+
+		// maximum of 100 redirect URIs are supported with personal account sign-ins
+		if len(pubRedirectUris) > 100 || len(spaRedirectUris) > 100 || len(webRedirectUris) > 100 {
+			return fmt.Errorf("`redirect_uris` must have no more than 100 URIs when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+
+		// redirect URIs containing wildcards not supported with personal account sign-ins
+		for _, v := range allRedirectUris {
+			u, err := url.Parse(v.(string))
+			if err == nil {
+				if strings.Contains(u.Host, "*") {
+					return fmt.Errorf("`redirect_uris` having wildcard hosts are not supported when `sign_in_audience` is %q or %q",
+						string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+				}
+			}
+		}
+
+		// requiredResourceAccess limitations with personal sign-ins:
+		// 50 resources per application
+		// 30 permissions per resource
+		// 200 permissions per application
+		requiredResourceAccess := diff.Get("required_resource_access").(*schema.Set).List()
+		if len(requiredResourceAccess) > 50 {
+			return fmt.Errorf("maximum of 50 `required_resource_access` blocks are supported when `sign_in_audience` is %q or %q",
+				string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+		}
+		totalPermissions := 0
+		for _, raw := range requiredResourceAccess {
+			v := raw.(map[string]interface{})
+			if resourceAccess, ok := v["resource_access"]; ok {
+				permissionCount := len(resourceAccess.([]interface{}))
+				if permissionCount > 30 {
+					return fmt.Errorf("maximum of 30 `resource_access` blocks for each `required_resource_access` block are supported when `sign_in_audience` is %q or %q",
+						string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+				}
+				totalPermissions += permissionCount
+				if totalPermissions > 200 {
+					return fmt.Errorf("maximum of 30 `resource_access` blocks per application are supported when `sign_in_audience` is %q or %q",
+						string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount), string(msgraph.SignInAudiencePersonalMicrosoftAccount))
+				}
 			}
 		}
 	}

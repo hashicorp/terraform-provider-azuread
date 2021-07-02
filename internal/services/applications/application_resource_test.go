@@ -353,7 +353,7 @@ resource "azuread_application" "test" {
   display_name            = "acctest-APP-complete-%[1]d"
   identifier_uris         = ["api://hashicorptestapp-%[1]d"]
   group_membership_claims = ["All"]
-  sign_in_audience        = "AzureADMultipleOrgs"
+  sign_in_audience        = "AzureADandPersonalMicrosoftAccount"
 
   device_only_auth_enabled       = true
   fallback_public_client_enabled = true
@@ -470,7 +470,7 @@ resource "azuread_application" "test" {
 
   single_page_application {
     redirect_uris = [
-      "https://beta.hashitown-%[1]d.com",
+      "https://beta.hashitown-%[1]d.com/",
     ]
   }
 
@@ -479,8 +479,8 @@ resource "azuread_application" "test" {
     logout_url   = "https://app.hashitown-%[1]d.com/logout"
 
     redirect_uris = [
-      "https://app.hashitown-%[1]d.com",
-      "https://classic.hashitown-%[1]d.com"
+      "https://app.hashitown-%[1]d.com/",
+      "https://classic.hashitown-%[1]d.com/",
     ]
 
     implicit_grant {
