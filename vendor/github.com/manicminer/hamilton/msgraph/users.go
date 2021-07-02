@@ -214,6 +214,31 @@ func (c *UsersClient) ListDeleted(ctx context.Context, filter string) (*[]User, 
 	return &data.DeletedUsers, status, nil
 }
 
+// RestoreDeleted restores a recently deleted User.
+func (c *UsersClient) RestoreDeleted(ctx context.Context, id string) (*User, int, error) {
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directory/deletedItems/%s/restore", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("UsersClient.BaseClient.Post(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+	var restoredUser User
+	if err = json.Unmarshal(respBody, &restoredUser); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &restoredUser, status, nil
+}
+
 // ListGroupMemberships returns a list of Groups the user is member of, optionally filtered using OData.
 func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, filter string) (*[]Group, int, error) {
 	params := url.Values{}
