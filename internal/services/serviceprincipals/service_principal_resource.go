@@ -72,7 +72,25 @@ func servicePrincipalResource() *schema.Resource {
 
 			"app_roles": schemaAppRolesComputed(),
 
+			"app_role_ids": {
+				Description: "Mapping of app role names to UUIDs",
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
 			"oauth2_permission_scopes": schemaOauth2PermissionScopesComputed(),
+
+			"oauth2_permission_scope_ids": {
+				Description: "Mapping of OAuth2.0 permission scope names to UUIDs",
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 
 			"tags": {
 				Description: "A set of tags to apply to the service principal",
@@ -141,9 +159,11 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
+	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
+	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
 	tf.Set(d, "tags", servicePrincipal.Tags)

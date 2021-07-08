@@ -33,9 +33,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `app_roles` - A list of app roles published b the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
+* `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `display_name` - The display name of the application associated with this service principal.
-* `oauth2_permission_scopes` - A list of OAuth 2.0 delegated permission scopes published by the associated application, as documented below.
+* `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, as exposed by the associated application, intended to be useful when referencing permission scopes in other resources in your configuration.
+* `oauth2_permission_scopes` - A list of OAuth 2.0 delegated permission scopes exposed by the associated application, as documented below.
 * `object_id` - The object ID of the service principal.
 
 ---

@@ -42,6 +42,8 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
 			),
 		},
@@ -58,6 +60,10 @@ func TestAccServicePrincipal_update(t *testing.T) {
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),
@@ -65,6 +71,10 @@ func TestAccServicePrincipal_update(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
@@ -72,6 +82,10 @@ func TestAccServicePrincipal_update(t *testing.T) {
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),

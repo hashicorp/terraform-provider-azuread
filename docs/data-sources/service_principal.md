@@ -6,7 +6,9 @@ subcategory: "Service Principals"
 
 Gets information about an existing service principal associated with an application within Azure Active Directory.
 
-## Example Usage (by Application Display Name)
+## Example Usage
+
+**Look up by application display name**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -14,7 +16,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Example Usage (by Application ID)
+**Look up by application ID**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -22,7 +24,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Example Usage (by Object ID)
+**Look up by service principal object ID**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -44,8 +46,10 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `app_roles` - A collection of `app_roles` blocks as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
+* `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `object_id` - The object ID for the service principal.
+* `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, as exposed by the associated application, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_permission_scopes` - A collection of OAuth 2.0 delegated permissions exposed by the associated application. Each permission is covered by an `oauth2_permission_scopes` block as documented below.
 
 ---
