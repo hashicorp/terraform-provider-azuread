@@ -286,7 +286,7 @@ func applicationResource() *schema.Resource {
 
 			"identifier_uris": {
 				Description: "The user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
@@ -593,7 +593,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount || s == msgraph.SignInAudiencePersonalMicrosoftAccount {
 		oauth2PermissionScopes := diff.Get("api.0.oauth2_permission_scope").(*schema.Set).List()
-		identifierUris := diff.Get("identifier_uris").([]interface{})
+		identifierUris := diff.Get("identifier_uris").(*schema.Set).List()
 		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*schema.Set).List()
 		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*schema.Set).List()
 		webRedirectUris := diff.Get("web.0.redirect_uris").(*schema.Set).List()
@@ -828,7 +828,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
@@ -895,7 +895,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),

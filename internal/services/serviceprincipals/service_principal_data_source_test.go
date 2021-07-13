@@ -2,6 +2,7 @@ package serviceprincipals_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,15 +20,7 @@ func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: r.byApplicationId(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("display_name").Exists(),
-				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
-				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
-			),
+			Check:  r.testCheckFunc(data),
 		},
 	})
 }
@@ -39,15 +32,7 @@ func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: r.byDisplayName(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("display_name").Exists(),
-				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
-				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
-			),
+			Check:  r.testCheckFunc(data),
 		},
 	})
 }
@@ -59,17 +44,37 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: r.byObjectId(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("display_name").Exists(),
-				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
-				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
-			),
+			Check:  r.testCheckFunc(data),
 		},
 	})
+}
+
+func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
+	tenantId := os.Getenv("ARM_TENANT_ID")
+	return resource.ComposeTestCheckFunc(
+		check.That(data.ResourceName).Key("account_enabled").HasValue("false"),
+		check.That(data.ResourceName).Key("alternative_names.#").HasValue("2"),
+		check.That(data.ResourceName).Key("app_role_assignment_required").HasValue("true"),
+		check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
+		check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
+		check.That(data.ResourceName).Key("application_id").Exists(),
+		check.That(data.ResourceName).Key("application_tenant_id").HasValue(tenantId),
+		check.That(data.ResourceName).Key("description").HasValue("An internal app for testing"),
+		check.That(data.ResourceName).Key("display_name").Exists(),
+		check.That(data.ResourceName).Key("homepage_url").HasValue(fmt.Sprintf("https://test-%d.internal", data.RandomInteger)),
+		check.That(data.ResourceName).Key("login").HasValue(fmt.Sprintf("https://test-%d.internal/login", data.RandomInteger)),
+		check.That(data.ResourceName).Key("logout_url").HasValue(fmt.Sprintf("https://test-%d.internal/logout", data.RandomInteger)),
+		check.That(data.ResourceName).Key("notes").HasValue("Just testing something"),
+		check.That(data.ResourceName).Key("notification_email_addresses.#").HasValue("2"),
+		check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
+		check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
+		check.That(data.ResourceName).Key("object_id").Exists(),
+		check.That(data.ResourceName).Key("redirect_uris.#").HasValue("2"),
+		check.That(data.ResourceName).Key("service_principal_names.#").HasValue("2"),
+		check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADMyOrg"),
+		check.That(data.ResourceName).Key("tags.#").HasValue("3"),
+		check.That(data.ResourceName).Key("type").HasValue("Application"),
+	)
 }
 
 func (ServicePrincipalDataSource) byApplicationId(data acceptance.TestData) string {
