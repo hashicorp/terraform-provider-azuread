@@ -8,6 +8,8 @@ Manages a password credential associated with an application within Azure Active
 
 ## Example Usage
 
+*Basic example*
+
 ```terraform
 resource "azuread_application" "example" {
   display_name = "example"
@@ -15,6 +17,25 @@ resource "azuread_application" "example" {
 
 resource "azuread_application_password" "example" {
   application_object_id = azuread_application.example.object_id
+}
+```
+
+*Time-based rotation*
+
+```terraform
+resource "azuread_application" "example" {
+  display_name = "example"
+}
+
+resource "time_rotating" "example" {
+  rotation_days = 7
+}
+
+resource "azuread_application_password" "example" {
+  application_object_id = azuread_application.example.object_id
+  keepers = {
+    rotation = time_rotating.example.id
+  }
 }
 ```
 
