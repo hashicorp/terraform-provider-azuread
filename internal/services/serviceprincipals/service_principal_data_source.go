@@ -69,6 +69,12 @@ func servicePrincipalData() *schema.Resource {
 				},
 			},
 
+			"app_role_assignment_required": {
+				Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
 			"application_tenant_id": {
 				Description: "The tenant ID where the associated application is registered",
 				Type:        schema.TypeString,
@@ -283,6 +289,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 
 	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled)
 	tf.Set(d, "alternative_names", tf.FlattenStringSlicePtr(servicePrincipal.AlternativeNames))
+	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
 	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)

@@ -48,6 +48,7 @@ The following attributes are exported:
 
 * `account_enabled` - - Whether or not the service principal account is enabled.
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
+* `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
 * `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_tenant_id` - The tenant ID where the associated application is registered.
