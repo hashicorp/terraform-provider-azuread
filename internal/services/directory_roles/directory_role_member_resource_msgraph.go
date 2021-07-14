@@ -53,6 +53,17 @@ func directoryRoleMemberResourceCreateMsGraph(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(id.String())
+
+	if _, err := msgraph.WaitForListAdd(ctx, id.MemberId, func() ([]string, error) {
+		members, _, err := client.ListMembers(ctx, id.DirectoryRoleId)
+		if members == nil {
+			return make([]string, 0), err
+		}
+		return *members, err
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for directory role membership creation")
+	}
+
 	return directoryRoleMemberResourceRead(ctx, d, meta)
 }
 
