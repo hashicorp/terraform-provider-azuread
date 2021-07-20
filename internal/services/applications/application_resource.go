@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
+
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,6 +47,15 @@ func applicationResource() *schema.Resource {
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {
