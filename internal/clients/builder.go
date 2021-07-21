@@ -42,7 +42,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		}
 		client.TenantID = cli.TenantID
 		if clientId, ok := environments.PublishedApis["MicrosoftAzureCli"]; ok && clientId != "" {
-			client.ClientID = string(clientId)
+			client.ClientID = clientId
 		}
 	}
 

@@ -8,6 +8,8 @@ Manages a password credential associated with a service principal within Azure A
 
 ## Example Usage
 
+*Basic example*
+
 ```terraform
 resource "azuread_application" "example" {
   display_name = "example"
@@ -21,6 +23,30 @@ resource "azuread_service_principal_password" "example" {
   service_principal_id = azuread_service_principal.example.object_id
 }
 ```
+
+*Time-based rotation*
+
+```terraform
+resource "azuread_application" "example" {
+  display_name = "example"
+}
+
+resource "azuread_service_principal" "example" {
+  application_id = azuread_application.example.application_id
+}
+
+resource "time_rotating" "example" {
+  rotation_days = 7
+}
+
+resource "azuread_service_principal_password" "example" {
+  service_principal_id = azuread_service_principal.example.object_id
+  keepers = {
+    rotation = time_rotating.example.id
+  }
+}
+```
+
 
 ## Argument Reference
 

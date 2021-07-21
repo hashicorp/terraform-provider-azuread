@@ -164,6 +164,16 @@ const (
 	PermissionScopeTypeUser  PermissionScopeType = "User"
 )
 
+type PreferredSingleSignOnMode = StringNullWhenEmpty
+
+const (
+	PreferredSingleSignOnModeNone         PreferredSingleSignOnMode = ""
+	PreferredSingleSignOnModeNotSupported PreferredSingleSignOnMode = "notSupported"
+	PreferredSingleSignOnModeOidc         PreferredSingleSignOnMode = "oidc"
+	PreferredSingleSignOnModePassword     PreferredSingleSignOnMode = "password"
+	PreferredSingleSignOnModeSaml         PreferredSingleSignOnMode = "saml"
+)
+
 type ResourceAccessType = string
 
 const (

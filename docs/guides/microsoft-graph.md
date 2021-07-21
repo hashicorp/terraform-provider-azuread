@@ -104,7 +104,7 @@ The `mail_enabled` and `security_enabled` fields are no longer read-only, and at
 
 ## Removal of deprecated fields
 
-The following attributes/properties have been deprecated in the AzureAD provider, and has been removed in version 2.0.
+The following attributes/properties were deprecated in the AzureAD provider, and have now been removed in version 2.0.
 
 ~> **Compatibility Note** You will need to update your Terraform configuration in the latest v1.x release to use the new fields, prior to upgrading to 2.0.
 
@@ -249,11 +249,13 @@ The `id` field in the `app_role` block was previously currently Computed (read-o
 
 The `id` field in the deprecated `oauth2_permissions` block was previously Computed (read-only) but its replacement field `id` in the `oauth2_permission_scope` block is Required.
 
-## Computed fields
+## Computed fields and other breaking changes
 
 In previous version of the provider, many fields were introduced as Optional + Computed fields. This meant that omitting such fields would cause Terraform to ignore them and not attempt to manage them. However, this approach has many side effects including the inability to unset or clear these fields, and sometimes being forced to accept an undesired default value.
 
 To resolve these issues, many of these fields are no longer Computed in version 2.0 of the provider. This means that Terraform will manage these fields and if you do not specify their values in your configuration, they will be unset or set to their default or zero values. In some cases it's appropriate for a field to be Computed, particularly where it helps prevent disruption to services or users.
+
+Additionally, some fields have been updated in ways that may break existing configurations, for example changing their type.
 
 Accordingly, in version 2.0 of the provider the following fields have changed.
 
@@ -265,7 +267,7 @@ The `value` field in the `app_role` block is no longer Computed, omitting this f
 
 The `fallback_public_client_enabled` field is no longer Computed, omitting this field will cause Terraform to default this value to `false`.
 
-The `identifier_uris` field is no longer Computed, omitting this field will cause Terraform to remove any identifier URIs configured for an application.
+The `identifier_uris` field was previously a List type field and is now a Set type field. This is due to API ordering and means you can no longer reference this field and index it sequentially without first converting it to a list. Additional, this field is no longer Computed, so omitting this field will cause Terraform to remove any identifier URIs configured for an application.
 
 The `oauth2_permission_scope` block is no longer Computed, omitting this block will cause Terraform to remove any OAuth2 permission scopes published by an application.
 

@@ -1,6 +1,6 @@
 package environments
 
-type ApiAppId string
+type ApiAppId = string
 
 // PublishedApis is a map containing Application IDs for well known APIs published by Microsoft.
 // They can be used to acquire access tokens, but are primarily described here for easy inclusion in

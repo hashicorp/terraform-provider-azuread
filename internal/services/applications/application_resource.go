@@ -286,7 +286,7 @@ func applicationResource() *schema.Resource {
 
 			"identifier_uris": {
 				Description: "The user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
@@ -593,7 +593,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount || s == msgraph.SignInAudiencePersonalMicrosoftAccount {
 		oauth2PermissionScopes := diff.Get("api.0.oauth2_permission_scope").(*schema.Set).List()
-		identifierUris := diff.Get("identifier_uris").([]interface{})
+		identifierUris := diff.Get("identifier_uris").(*schema.Set).List()
 		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*schema.Set).List()
 		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*schema.Set).List()
 		webRedirectUris := diff.Get("web.0.redirect_uris").(*schema.Set).List()
@@ -603,6 +603,23 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
 			return fmt.Errorf("`requested_access_token_version` must be 2 when `sign_in_audience` is %q or %q",
 				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
+		}
+
+		// maximum number of scopes is 100 with personal account sign-ins
+		if len(oauth2PermissionScopes) > 100 {
+			return fmt.Errorf("maximum of 100 `oauth2_permission_scope` blocks are supported when `sign_in_audience` is %q or %q",
+				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
+		}
+
+		// scope name maximum length is 40 characters with personal account sign-ins
+		for _, raw := range oauth2PermissionScopes {
+			scope := raw.(map[string]interface{})
+			if v, ok := scope["value"]; ok {
+				if len(v.(string)) > 40 {
+					return fmt.Errorf("`value` property in the `oauth2_permission_scope` block must be 40 characters or less when `sign_in_audience` is %q or %q",
+						msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
+				}
+			}
 		}
 
 		// maximum number of scopes is 100 with personal account sign-ins
@@ -811,7 +828,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
@@ -878,7 +895,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").([]interface{})),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),

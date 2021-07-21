@@ -854,19 +854,22 @@ type ServicePrincipal struct {
 	AppRoleAssignmentRequired           *bool                         `json:"appRoleAssignmentRequired,omitempty"`
 	AppRoles                            *[]AppRole                    `json:"appRoles,omitempty"`
 	DeletedDateTime                     *time.Time                    `json:"deletedDateTime,omitempty"`
+	Description                         *StringNullWhenEmpty          `json:"description,omitempty"`
 	DisplayName                         *string                       `json:"displayName,omitempty"`
 	Homepage                            *string                       `json:"homepage,omitempty"`
 	Info                                *InformationalUrl             `json:"info,omitempty"`
 	KeyCredentials                      *[]KeyCredential              `json:"keyCredentials,omitempty"`
-	LoginUrl                            *string                       `json:"loginUrl,omitempty"`
+	LoginUrl                            *StringNullWhenEmpty          `json:"loginUrl,omitempty"`
 	LogoutUrl                           *string                       `json:"logoutUrl,omitempty"`
+	Notes                               *StringNullWhenEmpty          `json:"notes,omitempty"`
 	NotificationEmailAddresses          *[]string                     `json:"notificationEmailAddresses,omitempty"`
 	PasswordCredentials                 *[]PasswordCredential         `json:"passwordCredentials,omitempty"`
 	PasswordSingleSignOnSettings        *PasswordSingleSignOnSettings `json:"passwordSingleSignOnSettings,omitempty"`
-	PreferredSingleSignOnMode           *string                       `json:"preferredSingleSignOnMode,omitempty"`
+	PreferredSingleSignOnMode           *PreferredSingleSignOnMode    `json:"preferredSingleSignOnMode,omitempty"`
 	PreferredTokenSigningKeyEndDateTime *time.Time                    `json:"preferredTokenSigningKeyEndDateTime,omitempty"`
 	PublishedPermissionScopes           *[]PermissionScope            `json:"publishedPermissionScopes,omitempty"`
 	ReplyUrls                           *[]string                     `json:"replyUrls,omitempty"`
+	SamlMetadataUrl                     *StringNullWhenEmpty          `json:"samlMetadataUrl,omitempty"`
 	SamlSingleSignOnSettings            *SamlSingleSignOnSettings     `json:"samlSingleSignOnSettings,omitempty"`
 	ServicePrincipalNames               *[]string                     `json:"servicePrincipalNames,omitempty"`
 	ServicePrincipalType                *string                       `json:"servicePrincipalType,omitempty"`

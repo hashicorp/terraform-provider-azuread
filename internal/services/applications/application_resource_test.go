@@ -394,9 +394,13 @@ resource "azuread_application" "known2" {
 
 resource "azuread_application" "test" {
   display_name            = "acctest-APP-complete-%[1]d"
-  identifier_uris         = ["api://hashicorptestapp-%[1]d"]
   group_membership_claims = ["All"]
   sign_in_audience        = "AzureADandPersonalMicrosoftAccount"
+
+  identifier_uris = [
+    "api://hashicorptestapp-%[1]d",
+    "api://acctest-APP-complete-%[1]d",
+  ]
 
   device_only_auth_enabled       = true
   fallback_public_client_enabled = true

@@ -455,7 +455,7 @@ func expandApplicationGroupMembershipClaims(in []interface{}) *[]msgraph.GroupMe
 func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.ImplicitGrantSettings {
 	var enableAccessTokenIssuance, enableIdTokenIssuance bool
 
-	if input != nil || len(input) > 0 {
+	if len(input) > 0 {
 		in := input[0].(map[string]interface{})
 		enableAccessTokenIssuance = in["access_token_issuance_enabled"].(bool)
 		enableIdTokenIssuance = in["id_token_issuance_enabled"].(bool)

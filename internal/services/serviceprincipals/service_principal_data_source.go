@@ -54,9 +54,144 @@ func servicePrincipalData() *schema.Resource {
 				ValidateDiagFunc: validate.UUID,
 			},
 
+			"account_enabled": {
+				Description: "Whether or not the service principal account is enabled",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"alternative_names": {
+				Description: "A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"app_role_assignment_required": {
+				Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"application_tenant_id": {
+				Description: "The tenant ID where the associated application is registered",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"app_roles": schemaAppRolesComputed(),
 
+			"app_role_ids": {
+				Description: "Mapping of app role names to UUIDs",
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"description": {
+				Description: "Description of the service principal provided for internal end-users",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"homepage_url": {
+				Description: "Home page or landing page of the application",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"login_url": {
+				Description: "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"logout_url": {
+				Description: "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"notes": {
+				Description: "Free text field to capture information about the service principal, typically used for operational purposes",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"notification_email_addresses": {
+				Description: "List of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
 			"oauth2_permission_scopes": schemaOauth2PermissionScopesComputed(),
+
+			"oauth2_permission_scope_ids": {
+				Description: "Mapping of OAuth2.0 permission scope names to UUIDs",
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"preferred_single_sign_on_mode": {
+				Description: "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"redirect_uris": {
+				Description: "The URLs where user tokens are sent for sign-in with the associated application, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent for the associated application",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"saml_metadata_url": {
+				Description: "The URL where the service exposes SAML metadata for federation",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"service_principal_names": {
+				Description: "A list of identifier URI(s), copied over from the associated application",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"sign_in_audience": {
+				Description: "The Microsoft account types that are supported for the associated application",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"tags": {
+				Description: "A set of tags to apply to the service principal",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"type": {
+				Description: "Identifies whether the service principal represents an application or a managed identity",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -142,11 +277,40 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(*servicePrincipal.ID)
 
+	servicePrincipalNames := make([]string, 0)
+	if servicePrincipal.ServicePrincipalNames != nil {
+		for _, name := range *servicePrincipal.ServicePrincipalNames {
+			// Exclude the app ID from the list of service principal names
+			if servicePrincipal.AppId == nil || name != *servicePrincipal.AppId {
+				servicePrincipalNames = append(servicePrincipalNames, name)
+			}
+		}
+	}
+
+	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled)
+	tf.Set(d, "alternative_names", tf.FlattenStringSlicePtr(servicePrincipal.AlternativeNames))
+	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
+	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
+	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
+	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
+	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
+	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
+	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
+	tf.Set(d, "notes", servicePrincipal.Notes)
+	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
+	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
+	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
+	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
+	tf.Set(d, "service_principal_names", servicePrincipalNames)
+	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
+	tf.Set(d, "tags", servicePrincipal.Tags)
+	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
 
 	return nil
 }

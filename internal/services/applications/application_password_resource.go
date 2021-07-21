@@ -52,12 +52,6 @@ func applicationPasswordResource() *schema.Resource {
 				ValidateDiagFunc: validate.UUID,
 			},
 
-			"key_id": {
-				Description: "A UUID used to uniquely identify this password credential",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
 			"display_name": {
 				Description: "A display name for the password",
 				Type:        schema.TypeString,
@@ -92,6 +86,22 @@ func applicationPasswordResource() *schema.Resource {
 				ForceNew:         true,
 				ConflictsWith:    []string{"end_date"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"keepers": {
+				Description: "Arbitrary map of values that, when changed, will trigger rotation of the password",
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"key_id": {
+				Description: "A UUID used to uniquely identify this password credential",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 
 			"value": {
