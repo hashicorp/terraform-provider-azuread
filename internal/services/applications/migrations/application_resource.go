@@ -547,7 +547,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 }
 
 func ResourceApplicationInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
+	log.Println("[DEBUG] Migrating `group_membership_claims` from v0 to v1 format")
 	groupMembershipClaimsOld := rawState["group_membership_claims"].(string)
 	rawState["group_membership_claims"] = []string{groupMembershipClaimsOld}
 	return rawState, nil
