@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -175,7 +176,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 	var credential *msgraph.PasswordCredential
 	if app.PasswordCredentials != nil {
 		for _, cred := range *app.PasswordCredentials {
-			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
 				credential = &cred
 				break
 			}
