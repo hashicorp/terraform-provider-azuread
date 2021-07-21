@@ -7,6 +7,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source** `azuread_application_published_app_ids` [GH-481]
 * **New Resource** `application_pre_authorized` [GH-472]
 
 IMPROVEMENTS:
@@ -26,6 +27,11 @@ IMPROVEMENTS:
 * `data.azuread_group` - export the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` attributes [GH-476]
 * `data.azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes [GH-476]
 * `data.azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
+* `data.azuread_service_principal` - export the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` attributes [GH-481]
+* `data.azuread_service_principal` - export the `alternative_names`, `description`, `notes` and `notification_email_addresses` attributes [GH-481]
+* `data.azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-481]
+* `data.azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes [GH-481]
+* `data.azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes [GH-481]
 * `data.azuread_user` - export the `age_group` and `consent_provided_for_minor` attributes [GH-476]
 * `data.azuread_user` - export the `business_phones`, `employee_id`, `fax_number` and `preferred_language` attributes [GH-476]
 * `data.azuread_user` - export the `mail`, `other_mails` and `show_in_address_list` attributes [GH-476]
@@ -42,12 +48,20 @@ IMPROVEMENTS:
 * `azuread_application` - support for the `public_client` block [GH-474]
 * `azuread_application` - support for the `single_page_application` block [GH-474]
 * `azuread_application` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-474]
+* `azuread_application_password` - support the `keepers` property [GH-481]
 * `azuread_group` - support for creating mail-enabled groups [GH-461]
 * `azuread_group` - support for creating Microsoft 365 groups [GH-461]
 * `azuread_group` - support for updating groups without recreating them [GH-461]
 * `azuread_group` - support the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` properties [GH-476]
 * `azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes [GH-476]
 * `azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
+* `azuread_service_principal` - support the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` properties [GH-481]
+* `azuread_service_principal` - support the `alternative_names`, `description`, `notes` and `notification_email_addresses` properties [GH-481]
+* `azuread_service_principal` - support the `use_existing` property [GH-481]
+* `azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-481]
+* `azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes [GH-481]
+* `azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes [GH-481]
+* `azuread_service_principal_password` - support the `keepers` property [GH-481]
 * `azuread_user` - support the `age_group` and `consent_provided_for_minor` properties [GH-476]
 * `azuread_user` - support the `business_phones`, `employee_id`, `fax_number` and `preferred_language` properties [GH-476]
 * `azuread_user` - support the `mail`, `other_mails` and `show_in_address_list` properties [GH-476]
@@ -96,6 +110,7 @@ BREAKING CHANGES:
 * `azuread_application` - the `group_membership_claims` property has changed from a string to a set of strings [GH-461]
 * `azuread_application` - the deprecated property `homepage` has been removed [GH-461]
 * `azuread_application` - the `identifier_uris` property is no longer Computed, omitting this property will cause it to be removed from your configuration [GH-461]
+* `azuread_application` - the `identifier_uris` property has changed from a List to a Set to resolve an API ordering issue [GH-481]
 * `azuread_application` - the deprecated property `logout_url` has been removed [GH-461]
 * `azuread_application` - the deprecated property `oauth2_allow_implicit_flow` has been removed [GH-461]
 * `azuread_application` - the `oauth2_permission_scope` block is no longer Computed, omitting this block will cause it to be removed from your configuration [GH-461]
