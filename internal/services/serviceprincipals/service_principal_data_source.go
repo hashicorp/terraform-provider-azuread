@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -281,7 +282,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	if servicePrincipal.ServicePrincipalNames != nil {
 		for _, name := range *servicePrincipal.ServicePrincipalNames {
 			// Exclude the app ID from the list of service principal names
-			if servicePrincipal.AppId == nil || name != *servicePrincipal.AppId {
+			if servicePrincipal.AppId == nil || !strings.EqualFold(name, *servicePrincipal.AppId) {
 				servicePrincipalNames = append(servicePrincipalNames, name)
 			}
 		}

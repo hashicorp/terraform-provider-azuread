@@ -259,6 +259,10 @@ Additionally, some fields have been updated in ways that may break existing conf
 
 Accordingly, in version 2.0 of the provider the following fields have changed.
 
+### Data source: `azuread_application`
+
+The `display_name` property is now matched case-insensitively which mirrors the behaviour of Azure Active Directory.
+
 ### Resource: `azuread_application`
 
 The `app_role` block is no longer Computed, omitting this block will cause Terraform to remove any app roles published by an application.

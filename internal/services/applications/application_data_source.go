@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -478,14 +479,14 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 			if app.AppId == nil {
 				return tf.ErrorDiagF(fmt.Errorf("nil AppID for applications matching filter: %q", filter), "Bad API Response")
 			}
-			if *app.AppId != fieldValue {
+			if !strings.EqualFold(*app.AppId, fieldValue) {
 				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppId, fieldValue, filter), "Bad API Response")
 			}
 		case "displayName":
 			if app.DisplayName == nil {
 				return tf.ErrorDiagF(fmt.Errorf("nil displayName for applications matching filter: %q", filter), "Bad API Response")
 			}
-			if *app.DisplayName != fieldValue {
+			if !strings.EqualFold(*app.DisplayName, fieldValue) {
 				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "Bad API Response")
 			}
 		}
