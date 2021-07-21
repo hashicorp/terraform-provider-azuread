@@ -12,6 +12,10 @@ import (
 // FromResponse parses an http.Response and returns an unmarshalled OData
 // If no odata is present in the response, or the content type is invalid, returns nil
 func FromResponse(resp *http.Response) (*OData, error) {
+	if resp == nil {
+		return nil, nil
+	}
+
 	var o OData
 
 	// Check for json content before looking for odata metadata

@@ -86,12 +86,13 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 }
 
 // Get retrieves a Service Principal.
-func (c *ServicePrincipalsClient) Get(ctx context.Context, id string) (*ServicePrincipal, int, error) {
+func (c *ServicePrincipalsClient) Get(ctx context.Context, id string, query odata.Query) (*ServicePrincipal, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -430,12 +431,13 @@ func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id strin
 }
 
 // ListAppRoleAssignments retrieves a list of appRoleAssignment that users, groups, or client service principals have been granted for the given resource service principal.
-func (c *ServicePrincipalsClient) ListAppRoleAssignments(ctx context.Context, resourceId string) (*[]AppRoleAssignment, int, error) {
+func (c *ServicePrincipalsClient) ListAppRoleAssignments(ctx context.Context, resourceId string, query odata.Query) (*[]AppRoleAssignment, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

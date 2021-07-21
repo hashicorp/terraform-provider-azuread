@@ -101,7 +101,7 @@ func (a *Application) UnmarshalJSON(data []byte) error {
 	}{
 		application: (*application)(a),
 	}
-	if err := json.Unmarshal(data, &app); err != nil {
+	if err := json.Unmarshal(data, app); err != nil {
 		return err
 	}
 	if app.GroupMembershipClaims != nil {
@@ -551,8 +551,52 @@ type Group struct {
 	Visibility                    *GroupVisibility                    `json:"visibility,omitempty"`
 	IsAssignableToRole            *bool                               `json:"isAssignableToRole,omitempty"`
 
+	SchemaExtensions *[]SchemaExtensionData `json:"-"`
+
 	Members *[]string `json:"members@odata.bind,omitempty"`
 	Owners  *[]string `json:"owners@odata.bind,omitempty"`
+}
+
+func (g Group) MarshalJSON() ([]byte, error) {
+	docs := make([][]byte, 0)
+	type group Group
+	d, err := json.Marshal(group(g))
+	if err != nil {
+		return d, err
+	}
+	docs = append(docs, d)
+	if g.SchemaExtensions != nil {
+		for _, se := range *g.SchemaExtensions {
+			d, err := json.Marshal(se)
+			if err != nil {
+				return d, err
+			}
+			docs = append(docs, d)
+		}
+	}
+	return MarshalDocs(docs)
+}
+
+func (g *Group) UnmarshalJSON(data []byte) error {
+	type group Group
+	g2 := (*group)(g)
+	if err := json.Unmarshal(data, g2); err != nil {
+		return err
+	}
+	if g.SchemaExtensions != nil {
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(data, &fields); err != nil {
+			return err
+		}
+		for _, ext := range *g.SchemaExtensions {
+			if v, ok := fields[ext.ID]; ok {
+				if err := json.Unmarshal(v, &ext.Properties); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // AppendMember appends a new member object URI to the Members slice.
@@ -838,7 +882,19 @@ type SchemaExtension struct {
 	Owner       *string                      `json:"owner,omitempty"`
 	Properties  *[]ExtensionSchemaProperty   `json:"properties,omitempty"`
 	TargetTypes *[]ExtensionSchemaTargetType `json:"targetTypes,omitempty"`
-	Status      *string                      `json:"status,omitempty"`
+	Status      SchemaExtensionStatus        `json:"status,omitempty"`
+}
+
+type SchemaExtensionData struct {
+	ID         string
+	Properties SchemaExtensionProperties
+}
+
+func (se SchemaExtensionData) MarshalJSON() ([]byte, error) {
+	in := map[string]interface{}{
+		se.ID: se.Properties,
+	}
+	return json.Marshal(in)
 }
 
 // ServicePrincipal describes a Service Principal object.
@@ -993,6 +1049,7 @@ type User struct {
 	OnPremisesUserPrincipalName     *string                  `json:"onPremisesUserPrincipalName,omitempty"`
 	OtherMails                      *[]string                `json:"otherMails,omitempty"`
 	PasswordPolicies                *string                  `json:"passwordPolicies,omitempty"`
+	PasswordProfile                 *UserPasswordProfile     `json:"passwordProfile,omitempty"`
 	PastProjects                    *[]string                `json:"pastProjects,omitempty"`
 	PostalCode                      *StringNullWhenEmpty     `json:"postalCode,omitempty"`
 	PreferredDataLocation           *string                  `json:"preferredDataLocation,omitempty"`
@@ -1013,7 +1070,49 @@ type User struct {
 	UserPrincipalName               *string                  `json:"userPrincipalName,omitempty"`
 	UserType                        *string                  `json:"userType,omitempty"`
 
-	PasswordProfile *UserPasswordProfile `json:"passwordProfile,omitempty"`
+	SchemaExtensions *[]SchemaExtensionData `json:"-"`
+}
+
+func (u User) MarshalJSON() ([]byte, error) {
+	docs := make([][]byte, 0)
+	type user User
+	d, err := json.Marshal(user(u))
+	if err != nil {
+		return d, err
+	}
+	docs = append(docs, d)
+	if u.SchemaExtensions != nil {
+		for _, se := range *u.SchemaExtensions {
+			d, err := json.Marshal(se)
+			if err != nil {
+				return d, err
+			}
+			docs = append(docs, d)
+		}
+	}
+	return MarshalDocs(docs)
+}
+
+func (u *User) UnmarshalJSON(data []byte) error {
+	type user User
+	u2 := (*user)(u)
+	if err := json.Unmarshal(data, u2); err != nil {
+		return err
+	}
+	if u.SchemaExtensions != nil {
+		var fields map[string]json.RawMessage
+		if err := json.Unmarshal(data, &fields); err != nil {
+			return err
+		}
+		for _, ext := range *u.SchemaExtensions {
+			if v, ok := fields[ext.ID]; ok {
+				if err := json.Unmarshal(v, &ext.Properties); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
 type UserIdentity struct {

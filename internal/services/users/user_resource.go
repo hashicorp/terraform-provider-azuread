@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -483,7 +484,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	objectId := d.Id()
 
-	user, status, err := client.Get(ctx, objectId)
+	user, status, err := client.Get(ctx, objectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] User with Object ID %q was not found - removing from state!", objectId)
@@ -540,7 +541,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 
-	_, status, err := client.Get(ctx, d.Id())
+	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", d.Id())

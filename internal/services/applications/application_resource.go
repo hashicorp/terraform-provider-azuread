@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -638,7 +639,6 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 				}
 			}
 		}
-
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
 			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
@@ -936,7 +936,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
-	app, status, err := client.Get(ctx, d.Id())
+	app, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state", d.Id())
@@ -997,7 +997,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
-	_, status, err := client.Get(ctx, d.Id())
+	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", d.Id())

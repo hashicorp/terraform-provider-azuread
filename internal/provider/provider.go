@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -75,35 +76,43 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_ID", ""),
-				Description: "The Client ID which should be used for service principal authentication.",
+				Description: "The Client ID which should be used for service principal authentication",
 			},
 
 			"tenant_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_TENANT_ID", ""),
-				Description: "The Tenant ID which should be used. Works with all authentication methods except Managed Identity.",
+				Description: "The Tenant ID which should be used. Works with all authentication methods except Managed Identity",
 			},
 
 			"environment": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
-				Description: "The cloud environment which should be used. Possible values are `global` (formerly `public`), `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`.",
+				Description: "The cloud environment which should be used. Possible values are `global` (formerly `public`), `usgovernment`, `dod`, `germany`, and `china`. Defaults to `global`",
 			},
 
 			// Client Certificate specific fields
+			"client_certificate": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE", ""),
+				Description: "Base64 encoded PKCS#12 certificate bundle to use when authenticating as a Service Principal using a Client Certificate",
+			},
+
 			"client_certificate_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PASSWORD", ""),
+				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
 			},
 
 			"client_certificate_path": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PATH", ""),
-				Description: "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate.",
+				Description: "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate",
 			},
 
 			// Client Secret specific fields
@@ -111,7 +120,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
-				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
+				Description: "The application password to use when authenticating as a Service Principal using a Client Secret",
 			},
 
 			// CLI authentication specific fields
@@ -119,7 +128,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_CLI", true),
-				Description: "Allow Azure CLI to be used for Authentication.",
+				Description: "Allow Azure CLI to be used for Authentication",
 			},
 
 			// Managed Identity specific fields
@@ -127,14 +136,14 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_MSI", false),
-				Description: "Allow Managed Identity to be used for Authentication.",
+				Description: "Allow Managed Identity to be used for Authentication",
 			},
 
 			"msi_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
-				Description: "The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. ",
+				Description: "The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically",
 			},
 
 			// Managed Tracking GUID for User-agent
@@ -143,14 +152,14 @@ func AzureADProvider() *schema.Provider {
 				Optional:     true,
 				ValidateFunc: validation.Any(validation.IsUUID, validation.StringIsEmpty),
 				DefaultFunc:  schema.EnvDefaultFunc("ARM_PARTNER_ID", ""),
-				Description:  "A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution.",
+				Description:  "A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution",
 			},
 
 			"disable_terraform_partner_id": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
-				Description: "Disable the Terraform Partner ID which is used if a custom `partner_id` isn't specified.",
+				Description: "Disable the Terraform Partner ID, which is used if a custom `partner_id` isn't specified",
 			},
 		},
 
@@ -165,10 +174,20 @@ func AzureADProvider() *schema.Provider {
 
 func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		var certData []byte
+		if encodedCert := d.Get("client_certificate").(string); encodedCert != "" {
+			var err error
+			certData, err = decodeCertificate(encodedCert)
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+		}
+
 		authConfig := &auth.Config{
 			Environment:            environment(d.Get("environment").(string)),
 			TenantID:               d.Get("tenant_id").(string),
 			ClientID:               d.Get("client_id").(string),
+			ClientCertData:         certData,
 			ClientCertPassword:     d.Get("client_certificate_password").(string),
 			ClientCertPath:         d.Get("client_certificate_path").(string),
 			ClientSecret:           d.Get("client_secret").(string),
@@ -225,4 +244,17 @@ func environment(name string) (env environments.Environment) {
 		env = environments.China
 	}
 	return
+}
+
+func decodeCertificate(clientCertificate string) ([]byte, error) {
+	var pfx []byte
+	if clientCertificate != "" {
+		out := make([]byte, base64.StdEncoding.DecodedLen(len(clientCertificate)))
+		n, err := base64.StdEncoding.Decode(out, []byte(clientCertificate))
+		if err != nil {
+			return pfx, fmt.Errorf("could not decode client certificate data: %v", err)
+		}
+		pfx = out[:n]
+	}
+	return pfx, nil
 }

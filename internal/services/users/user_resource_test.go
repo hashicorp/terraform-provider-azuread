@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -101,7 +102,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 	client := clients.Users.UsersClient
 	client.BaseClient.DisableRetries = true
 
-	user, status, err := client.Get(ctx, state.ID)
+	user, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("User with object ID %q does not exist", state.ID)

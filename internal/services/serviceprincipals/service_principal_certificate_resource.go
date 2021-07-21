@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -141,7 +142,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", id.ObjectId)
@@ -182,7 +183,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -238,7 +239,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)

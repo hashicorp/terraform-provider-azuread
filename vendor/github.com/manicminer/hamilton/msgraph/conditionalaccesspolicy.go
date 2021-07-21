@@ -82,12 +82,13 @@ func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalA
 }
 
 // Get retrieves a ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string) (*ConditionalAccessPolicy, int, error) {
+func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, query odata.Query) (*ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

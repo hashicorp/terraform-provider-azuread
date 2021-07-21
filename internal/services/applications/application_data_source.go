@@ -438,7 +438,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		var status int
 		var err error
-		app, status, err = client.Get(ctx, objectId)
+		app, status, err = client.Get(ctx, objectId, odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)

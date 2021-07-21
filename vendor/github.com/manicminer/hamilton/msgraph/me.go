@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // MeClient performs operations on the authenticated user.
@@ -21,12 +23,13 @@ func NewMeClient(tenantId string) *MeClient {
 }
 
 // Get retrieves information about the authenticated user.
-func (c *MeClient) Get(ctx context.Context) (*Me, int, error) {
+func (c *MeClient) Get(ctx context.Context, query odata.Query) (*Me, int, error) {
 	var status int
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/me",
+			Params:      query.Values(),
 			HasTenantId: false,
 		},
 	})
@@ -46,12 +49,13 @@ func (c *MeClient) Get(ctx context.Context) (*Me, int, error) {
 }
 
 // GetProfile retrieves the profile of the authenticated user.
-func (c *MeClient) GetProfile(ctx context.Context) (*Me, int, error) {
+func (c *MeClient) GetProfile(ctx context.Context, query odata.Query) (*Me, int, error) {
 	var status int
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/me/profile",
+			Params:      query.Values(),
 			HasTenantId: false,
 		},
 	})

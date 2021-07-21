@@ -82,12 +82,13 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 }
 
 // Get retrieves an Application manifest.
-func (c *ApplicationsClient) Get(ctx context.Context, id string) (*Application, int, error) {
+func (c *ApplicationsClient) Get(ctx context.Context, id string, query odata.Query) (*Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -108,12 +109,13 @@ func (c *ApplicationsClient) Get(ctx context.Context, id string) (*Application, 
 
 // GetDeleted retrieves a deleted Application manifest.
 // id is the object ID of the application.
-func (c *ApplicationsClient) GetDeleted(ctx context.Context, id string) (*Application, int, error) {
+func (c *ApplicationsClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -458,12 +460,13 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 	return status, nil
 }
 
-func (c *ApplicationsClient) ListExtensions(ctx context.Context, id string) (*[]ApplicationExtension, int, error) {
+func (c *ApplicationsClient) ListExtensions(ctx context.Context, id string, query odata.Query) (*[]ApplicationExtension, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s/extensionProperties", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

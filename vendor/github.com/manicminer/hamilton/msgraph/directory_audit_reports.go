@@ -51,12 +51,13 @@ func (c *DirectoryAuditReportsClient) List(ctx context.Context, query odata.Quer
 }
 
 // Get retrieves a Directory audit report.
-func (c *DirectoryAuditReportsClient) Get(ctx context.Context, id string) (*DirectoryAudit, int, error) {
+func (c *DirectoryAuditReportsClient) Get(ctx context.Context, id string, query odata.Query) (*DirectoryAudit, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/auditLogs/directoryAudits/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -28,7 +28,7 @@ type OData struct {
 
 	Error *Error `json:"-"`
 
-	Value *[]json.RawMessage `json:"value"`
+	Value interface{} `json:"value"`
 }
 
 func (o *OData) UnmarshalJSON(data []byte) error {

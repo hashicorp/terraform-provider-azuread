@@ -13,38 +13,25 @@ type DomainsDataSource struct{}
 
 func TestAccDomainsDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
+	r := DomainsDataSource{}
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: DomainsDataSource{}.basic(),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
-				check.That(data.ResourceName).Key("domains.0.authentication_type").Exists(),
-				check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
-				check.That(data.ResourceName).Key("domains.0.default").Exists(),
-				check.That(data.ResourceName).Key("domains.0.initial").Exists(),
-				check.That(data.ResourceName).Key("domains.0.root").Exists(),
-				check.That(data.ResourceName).Key("domains.0.supported_services.#").Exists(),
-				check.That(data.ResourceName).Key("domains.0.verified").Exists(),
-			),
+			Config: r.basic(),
+			Check:  r.testCheckFunc(data),
 		},
 	})
 }
 
 func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
+	r := DomainsDataSource{}
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: DomainsDataSource{}.onlyDefault(),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
-				check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
+			Config: r.onlyDefault(),
+			Check: r.testCheckFunc(data,
 				check.That(data.ResourceName).Key("domains.0.default").HasValue("true"),
-				check.That(data.ResourceName).Key("domains.0.initial").Exists(),
-				check.That(data.ResourceName).Key("domains.0.root").Exists(),
-				check.That(data.ResourceName).Key("domains.0.supported_services.#").Exists(),
-				check.That(data.ResourceName).Key("domains.0.verified").Exists(),
 			),
 		},
 	})
@@ -52,18 +39,27 @@ func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 
 func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
+	r := DomainsDataSource{}
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: DomainsDataSource{}.onlyInitial(),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
-				check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
-				check.That(data.ResourceName).Key("domains.0.default").Exists(),
+			Config: r.onlyInitial(),
+			Check: r.testCheckFunc(data,
 				check.That(data.ResourceName).Key("domains.0.initial").HasValue("true"),
-				check.That(data.ResourceName).Key("domains.0.root").Exists(),
-				check.That(data.ResourceName).Key("domains.0.supported_services.#").Exists(),
-				check.That(data.ResourceName).Key("domains.0.verified").Exists(),
+			),
+		},
+	})
+}
+
+func TestAccDomainsDataSource_onlyRoot(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
+	r := DomainsDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.onlyRoot(),
+			Check: r.testCheckFunc(data,
+				check.That(data.ResourceName).Key("domains.0.initial").HasValue("true"),
 			),
 		},
 	})
@@ -71,21 +67,28 @@ func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 
 func TestAccDomainsDataSource_supportsServices(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
+	r := DomainsDataSource{}
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: DomainsDataSource{}.supportsServices(),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
-				check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
-				check.That(data.ResourceName).Key("domains.0.default").Exists(),
-				check.That(data.ResourceName).Key("domains.0.initial").Exists(),
-				check.That(data.ResourceName).Key("domains.0.root").Exists(),
-				check.That(data.ResourceName).Key("domains.0.supported_services.#").Exists(),
-				check.That(data.ResourceName).Key("domains.0.verified").Exists(),
-			),
+			Check:  r.testCheckFunc(data),
 		},
 	})
+}
+
+func (DomainsDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...resource.TestCheckFunc) resource.TestCheckFunc {
+	checks := []resource.TestCheckFunc{
+		check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
+		check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
+		check.That(data.ResourceName).Key("domains.0.default").Exists(),
+		check.That(data.ResourceName).Key("domains.0.initial").Exists(),
+		check.That(data.ResourceName).Key("domains.0.root").Exists(),
+		check.That(data.ResourceName).Key("domains.0.supported_services.#").Exists(),
+		check.That(data.ResourceName).Key("domains.0.verified").Exists(),
+	}
+	checks = append(checks, additionalChecks...)
+	return resource.ComposeTestCheckFunc(checks...)
 }
 
 func (DomainsDataSource) basic() string {
@@ -104,6 +107,14 @@ func (DomainsDataSource) onlyInitial() string {
 	return `
 data "azuread_domains" "test" {
   only_initial = true
+}
+`
+}
+
+func (DomainsDataSource) onlyRoot() string {
+	return `
+data "azuread_domains" "test" {
+  only_root = true
 }
 `
 }

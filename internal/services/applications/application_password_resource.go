@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -133,7 +134,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 	tf.LockByName(applicationResourceName, objectId)
 	defer tf.UnlockByName(applicationResourceName, objectId)
 
-	app, status, err := client.Get(ctx, objectId)
+	app, status, err := client.Get(ctx, objectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", objectId)
@@ -173,7 +174,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)

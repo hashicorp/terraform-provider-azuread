@@ -9,14 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -314,7 +312,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Id()
 
-	servicePrincipal, status, err := client.Get(ctx, objectId)
+	servicePrincipal, status, err := client.Get(ctx, objectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
@@ -366,7 +364,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
-	_, status, err := client.Get(ctx, d.Id())
+	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", d.Id())
