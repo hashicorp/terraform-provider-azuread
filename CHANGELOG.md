@@ -85,6 +85,7 @@ BUG FIXES:
 BREAKING CHANGES:
 
 * `data.azuread_domains` - the `is_` prefix has been dropped from all exported attributes [GH-461]
+* `data.azuread_application` - the `display_name` property is now matched case-insensitively which mirrors the behaviour of Azure Active Directory [GH-492]
 * `data.azuread_application` - the deprecated property `name` has been removed [GH-461]
 * `data.azuread_application` - the deprecated attribute `available_to_other_tenants` has been removed [GH-461]
 * `data.azuread_application` - the `group_membership_claims` attribute has changed from a string to a list of strings [GH-461]
