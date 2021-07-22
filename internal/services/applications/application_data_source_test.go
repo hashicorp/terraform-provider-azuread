@@ -86,7 +86,7 @@ func (ApplicationDataSource) applicationId(data acceptance.TestData) string {
 %[1]s
 
 data "azuread_application" "test" {
-  application_id = azuread_application.test.application_id
+  application_id = upper(azuread_application.test.application_id)
 }
 `, ApplicationResource{}.complete(data))
 }
@@ -96,7 +96,7 @@ func (ApplicationDataSource) displayName(data acceptance.TestData) string {
 %[1]s
 
 data "azuread_application" "test" {
-  display_name = azuread_application.test.display_name
+  display_name = upper(azuread_application.test.display_name)
 }
 `, ApplicationResource{}.complete(data))
 }
