@@ -549,5 +549,12 @@ func ResourceApplicationInstanceStateUpgradeV0(_ context.Context, rawState map[s
 	log.Println("[DEBUG] Migrating `group_membership_claims` from v0 to v1 format")
 	groupMembershipClaimsOld := rawState["group_membership_claims"].(string)
 	rawState["group_membership_claims"] = []string{groupMembershipClaimsOld}
+
+	log.Println("[DEBUG] Migrating `public_client` from v0 to v1 format (new attribute name)")
+	if v, ok := rawState["fallback_public_client_enabled"]; !ok || v == nil {
+		rawState["fallback_public_client_enabled"] = rawState["public_client"]
+	}
+	delete(rawState, "public_client")
+
 	return rawState, nil
 }
