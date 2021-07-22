@@ -183,7 +183,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 			expectedCount = len(objectIds)
 			for _, v := range objectIds {
-				u, status, err := client.Get(ctx, v.(string))
+				u, status, err := client.Get(ctx, v.(string), odata.Query{})
 				if err != nil {
 					if status == http.StatusNotFound {
 						if ignoreMissing {

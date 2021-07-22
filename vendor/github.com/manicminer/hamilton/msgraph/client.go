@@ -8,9 +8,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
-	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
@@ -24,15 +24,14 @@ const (
 	VersionBeta ApiVersion = "beta"
 )
 
-const (
-	retryBackoffInitialDelay       = 1 * time.Second
-	retryBackoffDelayCap           = 64 * time.Second
-	requestAttemptsForRateLimiting = 10
-	requestAttemptsForConsistency  = 6
-)
-
 // ConsistencyFailureFunc is a function that determines whether an HTTP request has failed due to eventual consistency and should be retried
 type ConsistencyFailureFunc func(*http.Response, *odata.OData) bool
+
+// RequestMiddleware can manipulate or log a request before it is sent
+type RequestMiddleware func(*http.Request) (*http.Request, error)
+
+// ResponseMiddleware can manipulate or log a response before it is parsed and returned
+type ResponseMiddleware func(*http.Request, *http.Response) (*http.Response, error)
 
 // RetryOn404ConsistencyFailureFunc can be used to retry a request when a 404 response is received
 func RetryOn404ConsistencyFailureFunc(resp *http.Response, _ *odata.OData) bool {
@@ -78,17 +77,29 @@ type Client struct {
 	// This does not impact handling of retries related to rate limiting, which are always performed.
 	DisableRetries bool
 
-	httpClient *http.Client
+	// RequestMiddlewares is a slice of functions that are called in order before a request is sent
+	RequestMiddlewares *[]RequestMiddleware
+
+	// ResponseMiddlewares is a slice of functions that are called in order before a response is parsed and returned
+	ResponseMiddlewares *[]ResponseMiddleware
+
+	// HttpClient is the underlying http.Client, which by default uses a retryable client
+	HttpClient      *http.Client
+	retryableClient *retryablehttp.Client
 }
 
 // NewClient returns a new Client configured with the specified API version and tenant ID.
 func NewClient(apiVersion ApiVersion, tenantId string) Client {
+	r := retryablehttp.NewClient()
+	r.Logger = nil
+
 	return Client{
-		Endpoint:   environments.MsGraphGlobal.Endpoint,
-		ApiVersion: apiVersion,
-		TenantId:   tenantId,
-		UserAgent:  "Hamilton (Go-http-client/1.1)",
-		httpClient: &http.Client{},
+		Endpoint:        environments.MsGraphGlobal.Endpoint,
+		ApiVersion:      apiVersion,
+		TenantId:        tenantId,
+		UserAgent:       "Hamilton (Go-http-client/1.1)",
+		HttpClient:      r.StandardClient(),
+		retryableClient: r,
 	}
 }
 
@@ -133,14 +144,6 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 	var o *odata.OData
 	var err error
 
-	var backoffPower func(int64, int64) int64
-	backoffPower = func(base, exp int64) int64 {
-		if exp <= 1 {
-			return base
-		}
-		return base * backoffPower(base, exp-1)
-	}
-
 	var reqBody []byte
 	if req.Body != nil {
 		reqBody, err = io.ReadAll(req.Body)
@@ -149,83 +152,83 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 		}
 	}
 
-	var attempts, backoff, multiplier int64
-	for attempts = 0; attempts < requestAttemptsForRateLimiting; attempts++ {
-		// sleep after the previous failed attempt
-		if attempts > 0 {
-			time.Sleep(time.Duration(backoff))
-		}
+	c.retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && !c.DisableRetries {
+			if resp.StatusCode == http.StatusFailedDependency {
+				return true, nil
+			}
 
-		// default exponential backoff
-		multiplier++
-		backoff = int64(retryBackoffInitialDelay) * backoffPower(2, multiplier)
-		if cap := int64(retryBackoffDelayCap); backoff > cap {
-			backoff = cap
-		}
+			o, err = odata.FromResponse(resp)
+			if err != nil {
+				return false, err
+			}
 
-		req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
-		resp, err = c.httpClient.Do(req)
-		if err != nil {
-			return nil, status, nil, err
-		}
-
-		o, err = odata.FromResponse(resp)
-		if err != nil {
-			return nil, status, o, err
-		}
-
-		if !c.DisableRetries {
 			f := input.GetConsistencyFailureFunc()
 			if f != nil && f(resp, o) {
-				// eventual consistency, just try again
-				if attempts < requestAttemptsForConsistency {
-					continue
-				}
+				return true, nil
 			}
 		}
+		return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+	}
 
-		status = resp.StatusCode
-		if !containsStatusCode(input.GetValidStatusCodes(), status) {
-			f := input.GetValidStatusFunc()
-			if f != nil && f(resp, o) {
-				return resp, status, o, nil
-			}
+	req.Body = io.NopCloser(bytes.NewBuffer(reqBody))
 
-			rateLimitingStatuses := []int{
-				http.StatusFailedDependency,
-				http.StatusTooManyRequests,
-				http.StatusInternalServerError,
-				http.StatusBadGateway,
-				http.StatusServiceUnavailable,
+	if c.RequestMiddlewares != nil {
+		for _, m := range *c.RequestMiddlewares {
+			r, err := m(req)
+			if err != nil {
+				return nil, status, nil, err
 			}
-			if containsStatusCode(rateLimitingStatuses, status) {
-				// rate limiting
-				if retryAfter := resp.Header.Get("Retry-After"); retryAfter != "" {
-					if r, err := strconv.ParseFloat(retryAfter, 64); err == nil && r > 0 {
-						// Retry-After header detected, use that instead of exponential backoff
-						backoff = int64(r * float64(time.Second))
-						multiplier = 0
-					}
-				}
-				continue
-			}
+			req = r
+		}
+	}
 
-			var errText string
-			switch {
-			case o != nil && o.Error != nil && o.Error.String() != "":
-				errText = fmt.Sprintf("OData error: %s", o.Error)
-			default:
-				defer resp.Body.Close()
-				respBody, err := io.ReadAll(resp.Body)
-				if err != nil {
-					return nil, status, o, fmt.Errorf("unexpected status %d, could not read response body", resp.StatusCode)
-				}
-				errText = fmt.Sprintf("response: %s", respBody)
+	resp, err = c.HttpClient.Do(req)
+	if err != nil {
+		return nil, status, nil, err
+	}
+
+	if c.ResponseMiddlewares != nil {
+		for _, m := range *c.ResponseMiddlewares {
+			r, err := m(req, resp)
+			if err != nil {
+				return nil, status, nil, err
 			}
-			return nil, status, o, fmt.Errorf("unexpected status %d with %s", resp.StatusCode, errText)
+			resp = r
+		}
+	}
+
+	o, err = odata.FromResponse(resp)
+	if err != nil {
+		return nil, status, o, err
+	}
+	if resp == nil {
+		return resp, status, o, fmt.Errorf("nil response received")
+	}
+
+	status = resp.StatusCode
+	if !containsStatusCode(input.GetValidStatusCodes(), status) {
+		f := input.GetValidStatusFunc()
+		if f != nil && f(resp, o) {
+			return resp, status, o, nil
 		}
 
-		break
+		var errText string
+		switch {
+		case o != nil && o.Error != nil && o.Error.String() != "":
+			errText = fmt.Sprintf("OData error: %s", o.Error)
+		default:
+			defer resp.Body.Close()
+			respBody, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, status, o, fmt.Errorf("unexpected status %d, could not read response body", status)
+			}
+			if len(respBody) == 0 {
+				return nil, status, o, fmt.Errorf("unexpected status %d received with no body", status)
+			}
+			errText = fmt.Sprintf("response: %s", respBody)
+		}
+		return nil, status, o, fmt.Errorf("unexpected status %d with %s", status, errText)
 	}
 
 	return resp, status, o, nil
@@ -350,7 +353,8 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 			return nil, status, o, err
 		}
 
-		if input.DisablePaging || firstOdata.NextLink == nil || firstOdata.Value == nil {
+		firstValue, ok := firstOdata.Value.([]interface{})
+		if input.DisablePaging || firstOdata.NextLink == nil || firstValue == nil || !ok {
 			// No more pages, reassign response body and return
 			resp.Body = io.NopCloser(bytes.NewBuffer(respBody))
 			return resp, status, o, nil
@@ -377,9 +381,9 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 			return resp, status, o, err
 		}
 
-		if nextOdata.Value != nil {
+		if nextValue, ok := nextOdata.Value.([]interface{}); ok {
 			// Next page has results, append to current page
-			value := append(*firstOdata.Value, *nextOdata.Value...)
+			value := append(firstValue, nextValue...)
 			nextOdata.Value = &value
 		}
 

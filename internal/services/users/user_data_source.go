@@ -312,7 +312,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		user = (*users)[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		u, status, err := client.Get(ctx, objectId)
+		u, status, err := client.Get(ctx, objectId, odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)

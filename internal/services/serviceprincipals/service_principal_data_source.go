@@ -203,7 +203,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("object_id"); ok {
 		objectId := v.(string)
-		sp, status, err := client.Get(ctx, objectId)
+		sp, status, err := client.Get(ctx, objectId, odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				return tf.ErrorDiagPathF(nil, "object_id", "Service principal with object ID %q was not found", objectId)

@@ -233,7 +233,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		group = (*groups)[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		g, status, err := client.Get(ctx, objectId)
+		g, status, err := client.Get(ctx, objectId, odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				return tf.ErrorDiagPathF(nil, "object_id", "No group found with object ID: %q", objectId)

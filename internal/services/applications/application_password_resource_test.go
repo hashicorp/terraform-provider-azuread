@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -85,7 +86,7 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("parsing Application Password ID: %v", err)
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)

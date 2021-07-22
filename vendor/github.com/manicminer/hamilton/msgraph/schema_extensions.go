@@ -51,12 +51,13 @@ func (c *SchemaExtensionsClient) List(ctx context.Context, query odata.Query) (*
 }
 
 // Get retrieves a Schema Extension.
-func (c *SchemaExtensionsClient) Get(ctx context.Context, id string) (*SchemaExtension, int, error) {
+func (c *SchemaExtensionsClient) Get(ctx context.Context, id string, query odata.Query) (*SchemaExtension, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/schemaExtensions/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -115,7 +116,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 	tf.LockByName(servicePrincipalResourceName, objectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
 
-	sp, status, err := client.Get(ctx, objectId)
+	sp, status, err := client.Get(ctx, objectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", objectId)
@@ -155,7 +156,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)

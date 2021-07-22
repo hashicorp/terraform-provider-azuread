@@ -26,7 +26,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		newRoles = &[]msgraph.AppRole{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID)
+	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return fmt.Errorf("application with ID %q was not found", *application.ID)
@@ -99,7 +99,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID)
+				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
 				if err != nil {
 					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
 				}
@@ -139,7 +139,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 		newScopes = &[]msgraph.PermissionScope{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID)
+	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return fmt.Errorf("application with ID %q was not found", *application.ID)
@@ -214,7 +214,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID)
+				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
 				if err != nil {
 					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
 				}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -133,17 +134,18 @@ func domainsDataSource() *schema.Resource {
 func domainsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Domains.DomainsClient
 
-	result, _, err := client.List(ctx)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not list domains")
-	}
-
 	adminManaged := d.Get("admin_managed").(bool)
 	onlyDefault := d.Get("only_default").(bool)
 	onlyInitial := d.Get("only_initial").(bool)
 	onlyRoot := d.Get("only_root").(bool)
 	includeUnverified := d.Get("include_unverified").(bool)
 	supportsServices := d.Get("supports_services").([]interface{})
+
+	// OData filters are not supported for domains
+	result, _, err := client.List(ctx, odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not list domains")
+	}
 
 	var domains []interface{}
 	var domainNames []string

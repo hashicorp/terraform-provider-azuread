@@ -81,12 +81,13 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 }
 
 // Get retrieves a Group.
-func (c *GroupsClient) Get(ctx context.Context, id string) (*Group, int, error) {
+func (c *GroupsClient) Get(ctx context.Context, id string, query odata.Query) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -105,13 +106,57 @@ func (c *GroupsClient) Get(ctx context.Context, id string) (*Group, int, error) 
 	return &group, status, nil
 }
 
+// GetWithSchemaExtensions retrieves a Group, including the values for any specified schema extensions
+func (c *GroupsClient) GetWithSchemaExtensions(ctx context.Context, id string, query odata.Query, schemaExtensions *[]SchemaExtensionData) (*Group, int, error) {
+	var sel []string
+	if len(query.Select) > 0 {
+		sel = query.Select
+		query.Select = []string{}
+	}
+
+	group, status, err := c.Get(ctx, id, query)
+	if err != nil {
+		return group, status, err
+	}
+
+	if len(sel) > 0 {
+		query.Select = sel
+	}
+
+	var resp *http.Response
+	resp, status, _, err = c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/groups/%s", id),
+			Params:      query.Values(),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+
+	group.SchemaExtensions = schemaExtensions
+	if err := json.Unmarshal(respBody, group); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return group, status, nil
+}
+
 // GetDeleted retrieves a deleted O365 Group.
-func (c *GroupsClient) GetDeleted(ctx context.Context, id string) (*Group, int, error) {
+func (c *GroupsClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

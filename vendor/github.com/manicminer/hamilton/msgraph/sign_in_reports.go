@@ -51,12 +51,13 @@ func (c *SignInReportsClient) List(ctx context.Context, query odata.Query) (*[]S
 }
 
 // Get retrieves a Sign-in Report.
-func (c *SignInReportsClient) Get(ctx context.Context, id string) (*SignInReport, int, error) {
+func (c *SignInReportsClient) Get(ctx context.Context, id string, query odata.Query) (*SignInReport, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/auditLogs/signIns/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // DomainsClient performs operations on Domains.
@@ -21,12 +23,13 @@ func NewDomainsClient(tenantId string) *DomainsClient {
 }
 
 // List returns a list of Domains.
-func (c *DomainsClient) List(ctx context.Context) (*[]Domain, int, error) {
+func (c *DomainsClient) List(ctx context.Context, query odata.Query) (*[]Domain, int, error) {
 	var status int
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/domains",
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -53,13 +56,14 @@ func (c *DomainsClient) List(ctx context.Context) (*[]Domain, int, error) {
 }
 
 // Get retrieves a Domain.
-func (c *DomainsClient) Get(ctx context.Context, id string) (*Domain, int, error) {
+func (c *DomainsClient) Get(ctx context.Context, id string, query odata.Query) (*Domain, int, error) {
 	var status int
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/domains/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
