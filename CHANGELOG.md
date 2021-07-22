@@ -7,8 +7,9 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source** `azuread_application_published_app_ids` [GH-481]
-* **New Resource** `application_pre_authorized` [GH-472]
+* **Provider:** Client Certificate authentication now supports specifying an inline certificate [GH-490]
+* **New Data Source:** `azuread_application_published_app_ids` [GH-481]
+* **New Resource:** `application_pre_authorized` [GH-472]
 
 IMPROVEMENTS:
 
