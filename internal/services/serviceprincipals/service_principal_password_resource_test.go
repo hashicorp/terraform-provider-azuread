@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -45,7 +46,7 @@ func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *c
 		return nil, fmt.Errorf("parsing Service Principal Password ID: %v", err)
 	}
 
-	servicePrincipal, status, err := client.Get(ctx, id.ObjectId)
+	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)

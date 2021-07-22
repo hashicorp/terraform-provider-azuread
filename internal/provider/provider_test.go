@@ -91,6 +91,49 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 	}
 }
 
+func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		return
+	}
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	// Support only client certificate authentication
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		var certData []byte
+		if encodedCert := d.Get("client_certificate").(string); encodedCert != "" {
+			var err error
+			certData, err = decodeCertificate(encodedCert)
+			if err != nil {
+				return nil, diag.FromErr(err)
+			}
+		}
+		authConfig := &auth.Config{
+			Environment: environment(d.Get("environment").(string)),
+			TenantID:    d.Get("tenant_id").(string),
+			ClientID:    d.Get("client_id").(string),
+
+			EnableClientCertAuth: true,
+			ClientCertData:       certData,
+			ClientCertPassword:   d.Get("client_certificate_password").(string),
+		}
+
+		return buildClient(ctx, provider, authConfig, "")
+	}
+
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProvider(provider); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
 func TestAccProvider_clientSecretAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		return

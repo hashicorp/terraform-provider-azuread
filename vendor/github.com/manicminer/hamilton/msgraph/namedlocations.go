@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 
 	"github.com/manicminer/hamilton/internal/utils"
 	"github.com/manicminer/hamilton/odata"
@@ -24,18 +23,14 @@ func NewNamedLocationsClient(tenantId string) *NamedLocationsClient {
 	}
 }
 
-// List returns a list of Named Locations, optionally filtered using OData.
-func (c *NamedLocationsClient) List(ctx context.Context, filter string) (*[]NamedLocation, int, error) {
-	params := url.Values{}
-	if filter != "" {
-		params.Add("$filter", filter)
-	}
-
+// List returns a list of Named Locations, optionally queried using OData.
+func (c *NamedLocationsClient) List(ctx context.Context, query odata.Query) (*[]NamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identity/conditionalAccess/namedLocations",
-			Params:      params,
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -177,12 +172,13 @@ func (c *NamedLocationsClient) CreateCountry(ctx context.Context, countryNamedLo
 }
 
 // GetIP retrieves an IP Named Location.
-func (c *NamedLocationsClient) GetIP(ctx context.Context, id string) (*IPNamedLocation, int, error) {
+func (c *NamedLocationsClient) GetIP(ctx context.Context, id string, query odata.Query) (*IPNamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -202,12 +198,13 @@ func (c *NamedLocationsClient) GetIP(ctx context.Context, id string) (*IPNamedLo
 }
 
 // Get retrieves a Named Location which can be type asserted back to IP or Country Named Location.
-func (c *NamedLocationsClient) Get(ctx context.Context, id string) (*NamedLocation, int, error) {
+func (c *NamedLocationsClient) Get(ctx context.Context, id string, query odata.Query) (*NamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -253,12 +250,13 @@ func (c *NamedLocationsClient) Get(ctx context.Context, id string) (*NamedLocati
 }
 
 // GetCountry retrieves an Country Named Location.
-func (c *NamedLocationsClient) GetCountry(ctx context.Context, id string) (*CountryNamedLocation, int, error) {
+func (c *NamedLocationsClient) GetCountry(ctx context.Context, id string, query odata.Query) (*CountryNamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

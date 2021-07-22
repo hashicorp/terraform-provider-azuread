@@ -69,10 +69,10 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  string(msgraph.PermissionScopeTypeUser),
+										Default:  msgraph.PermissionScopeTypeUser,
 										ValidateFunc: validation.StringInSlice([]string{
-											string(msgraph.PermissionScopeTypeAdmin),
-											string(msgraph.PermissionScopeTypeUser),
+											msgraph.PermissionScopeTypeAdmin,
+											msgraph.PermissionScopeTypeUser,
 										}, false),
 									},
 
@@ -120,8 +120,8 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice(
 									[]string{
-										string(msgraph.AppRoleAllowedMemberTypeApplication),
-										string(msgraph.AppRoleAllowedMemberTypeUser),
+										msgraph.AppRoleAllowedMemberTypeApplication,
+										msgraph.AppRoleAllowedMemberTypeUser,
 									}, false,
 								),
 							},
@@ -182,11 +182,11 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 				Optional:   true,
 				Deprecated: "[NOTE] This attribute will become a list in version 2.0 of the AzureAD provider",
 				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.GroupMembershipClaimAll),
-					string(msgraph.GroupMembershipClaimNone),
-					string(msgraph.GroupMembershipClaimApplicationGroup),
-					string(msgraph.GroupMembershipClaimDirectoryRole),
-					string(msgraph.GroupMembershipClaimSecurityGroup),
+					msgraph.GroupMembershipClaimAll,
+					msgraph.GroupMembershipClaimNone,
+					msgraph.GroupMembershipClaimApplicationGroup,
+					msgraph.GroupMembershipClaimDirectoryRole,
+					msgraph.GroupMembershipClaimSecurityGroup,
 				}, false),
 			},
 
@@ -445,8 +445,8 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.StringInSlice(
 											[]string{
-												string(msgraph.ResourceAccessTypeRole),
-												string(msgraph.ResourceAccessTypeScope),
+												msgraph.ResourceAccessTypeRole,
+												msgraph.ResourceAccessTypeScope,
 											},
 											false, // force case sensitivity
 										),
@@ -464,9 +464,8 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"available_to_other_tenants"},
 				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.SignInAudienceAzureADMyOrg),
-					string(msgraph.SignInAudienceAzureADMultipleOrgs),
-					//string(msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount),
+					msgraph.SignInAudienceAzureADMyOrg,
+					msgraph.SignInAudienceAzureADMultipleOrgs,
 				}, false),
 			},
 
@@ -547,7 +546,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 }
 
 func ResourceApplicationInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
-	log.Println("[DEBUG] Migrating ID from v0 to v1 format")
+	log.Println("[DEBUG] Migrating `group_membership_claims` from v0 to v1 format")
 	groupMembershipClaimsOld := rawState["group_membership_claims"].(string)
 	rawState["group_membership_claims"] = []string{groupMembershipClaimsOld}
 	return rawState, nil

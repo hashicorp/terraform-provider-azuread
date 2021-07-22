@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
@@ -64,7 +65,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	tf.LockByName(groupResourceName, id.GroupId)
 	defer tf.UnlockByName(groupResourceName, id.GroupId)
 
-	group, status, err := client.Get(ctx, groupId)
+	group, status, err := client.Get(ctx, groupId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "object_id", "Group with object ID %q was not found", groupId)

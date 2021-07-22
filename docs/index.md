@@ -85,16 +85,17 @@ If you have configuration questions, or general questions about using the provid
 
 The following arguments are supported:
 
-* `client_id` - (Optional) The Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID` Environment Variable.
+* `client_id` - (Optional) The Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID` environment variable.
 * `environment` - (Optional) The Cloud Environment which be used. Possible values are `global`, `germany`, `china`, `usgovernmentl4` and `usgovernmentl5`. Defaults to `global`. This can also be sourced from the `ARM_ENVIRONMENT` environment variable.
-* `tenant_id` - (Optional) The Tenant ID which should be used. This can also be sourced from the `ARM_TENANT_ID` Environment Variable.
+* `tenant_id` - (Optional) The Tenant ID which should be used. This can also be sourced from the `ARM_TENANT_ID` environment variable.
 
 ---
 
 When authenticating as a Service Principal using a Client Certificate, the following fields can be set:
 
-* `client_certificate_password` - (Optional) The password associated with the Client Certificate. This can also be sourced from the `ARM_CLIENT_CERTIFICATE_PASSWORD` Environment Variable.
-* `client_certificate_path` - (Optional) The path to the Client Certificate associated with the Service Principal which should be used. This can also be sourced from the `ARM_CLIENT_CERTIFICATE_PATH` Environment Variable.
+* `client_certificate` - (Optional) A base64-encoded PKCS#12 bundle to be used as the client certificate for authentication. This can also be sourced from the `ARM_CLIENT_CERTIFICATE` environment variable.
+* `client_certificate_password` - (Optional) The password for decrypting the client certificate bundle. This can also be sourced from the `ARM_CLIENT_CERTIFICATE_PASSWORD` environment variable.
+* `client_certificate_path` - (Optional) The path to a PKCS#12 bundle (.pfx file) to be used as the client certificate for authentication. This can also be sourced from the `ARM_CLIENT_CERTIFICATE_PATH` environment variable.
 
 More information on [how to configure a Service Principal using a Client Certificate can be found in this guide](guides/service_principal_client_certificate.html).
 
@@ -102,7 +103,7 @@ More information on [how to configure a Service Principal using a Client Certifi
 
 When authenticating as a Service Principal using a Client Secret, the following fields can be set:
 
-* `client_secret` - (Optional) The Client Secret which should be used. This can also be sourced from the `ARM_CLIENT_SECRET` Environment Variable.
+* `client_secret` - (Optional) The application password to be used when authenticating using a client secret. This can also be sourced from the `ARM_CLIENT_SECRET` environment variable.
 
 More information on [how to configure a Service Principal using a Client Secret can be found in this guide](guides/service_principal_client_secret.html).
 
@@ -110,8 +111,8 @@ More information on [how to configure a Service Principal using a Client Secret 
 
 When authenticating using Managed Identity, the following fields can be set:
 
-* `msi_endpoint` - (Optional) The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. This can also be sourced from the `ARM_MSI_ENDPOINT` Environment Variable.
-* `use_msi` - (Optional) Should Managed Identity be used for authentication? This can also be sourced from the `ARM_USE_MSI` Environment Variable. Defaults to `false`.
+* `msi_endpoint` - (Optional) The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. This can also be sourced from the `ARM_MSI_ENDPOINT` environment variable.
+* `use_msi` - (Optional) Should Managed Identity be used for authentication? This can also be sourced from the `ARM_USE_MSI` environment variable. Defaults to `false`.
 
 More information on [how to configure a Service Principal using Managed Identity can be found in this guide](guides/managed_service_identity.html).
 
@@ -119,7 +120,7 @@ More information on [how to configure a Service Principal using Managed Identity
 
 For Azure CLI authentication, the following fields can be set:
 
-* `use_cli` - (Optional) Should Azure CLI be used for authentication? This can also be sourced from the `ARM_USE_CLI` Environment Variable. Defaults to `true`.
+* `use_cli` - (Optional) Should Azure CLI be used for authentication? This can also be sourced from the `ARM_USE_CLI` environment variable. Defaults to `true`.
 
 ---
 
@@ -129,6 +130,14 @@ For more advanced scenarios, the following additional arguments are supported:
 
 * `disable_terraform_partner_id` - (Optional) Disable sending the Terraform Partner ID if a custom `partner_id` isn't specified. The default Partner ID allows Microsoft to better understand the usage of Terraform and does not give HashiCorp any direct access to usage information. This can also be sourced from the `ARM_DISABLE_TERRAFORM_PARTNER_ID` environment variable. Defaults to `false`.
 
-* `partner_id` - (Optional) A GUID/UUID that is [registered](https://docs.microsoft.com/azure/marketplace/azure-partner-customer-usage-attribution#register-guids-and-offers) with Microsoft to facilitate partner resource usage attribution. This can also be sourced from the `ARM_PARTNER_ID` Environment Variable.
+* `partner_id` - (Optional) A UUID that is [registered](https://docs.microsoft.com/azure/marketplace/azure-partner-customer-usage-attribution#register-guids-and-offers) with Microsoft to facilitate partner resource usage attribution. This can also be sourced from the `ARM_PARTNER_ID` environment variable.
 
-It's also possible to use multiple Provider blocks within a single Terraform configuration, for example to work with resources across multiple Azure Active Directory Environments - more information can be found [in the documentation for Providers](https://www.terraform.io/docs/configuration/providers.html#multiple-provider-instances).
+It's also possible to use multiple Provider blocks within a single Terraform configuration, for example to work with resources across multiple Azure Active Directory Tenants or Environments - more information can be found [in the documentation for Providers](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
+
+---
+
+## Logging and Tracing
+
+Logging output can be controlled with the `TF_LOG` or `TF_PROVIDER_LOG` environment variables. Exporting `TF_LOG=DEBUG` will increase the log verbosity and emit HTTP request and response traces to stdout when running Terraform. This output is very useful when reporting a bug in the provider.
+
+Note that whilst we make every effort to remove authentication tokens from HTTP traces, they can still contain very identifiable and personal information which you should carefully censor before posting on our issue tracker.

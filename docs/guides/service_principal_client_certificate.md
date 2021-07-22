@@ -71,10 +71,13 @@ The Public Key associated with the generated Certificate can be uploaded by sele
 
 Now that we have our Client Certificate uploaded to Azure and ready to use, it's possible to configure Terraform in a few different ways.
 
+The provider can be configured to read the certificate bundle from the .pfx file in your filesystem, or alternatively you can pass a base64-encoded copy of the certificate bundle directly to the provider.
+
 ### Environment Variables
 
 Our recommended approach is storing the credentials as Environment Variables, for example:
 
+*Reading the certificate bundle from the filesystem*
 ```bash
 # sh
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
@@ -83,10 +86,25 @@ $ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
 
 # PowerShell
-$env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
-$env:ARM_CLIENT_CERTIFICATE_PATH = "/path/to/my/client/certificate.pfx"
-$env:ARM_CLIENT_CERTIFICATE_PASSWORD = "Pa55w0rd123"
-$env:ARM_TENANT_ID = "10000000-2000-3000-4000-500000000000"
+> $env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
+> $env:ARM_CLIENT_CERTIFICATE_PATH = "/path/to/my/client/certificate.pfx"
+> $env:ARM_CLIENT_CERTIFICATE_PASSWORD = "Pa55w0rd123"
+> $env:ARM_TENANT_ID = "10000000-2000-3000-4000-500000000000"
+```
+
+*Passing the encoded certificate bundle directly*
+```bash
+# sh
+$ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
+$ export ARM_CLIENT_CERTIFICATE="$(base64 /path/to/my/client/certificate.pfx)"
+$ export ARM_CLIENT_CERTIFICATE_PASSWORD="Pa55w0rd123"
+$ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
+
+# PowerShell
+> $env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
+> $env:ARM_CLIENT_CERTIFICATE = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes("/path/to/my/client/certificate.pfx"))
+> $env:ARM_CLIENT_CERTIFICATE_PASSWORD = "Pa55w0rd123"
+> $env:ARM_TENANT_ID = "10000000-2000-3000-4000-500000000000"
 ```
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to authenticate using the Client Certificate.
@@ -99,6 +117,7 @@ It's also possible to configure these variables either directly, or from variabl
 
 ~> We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
+*Reading the certificate bundle from the filesystem*
 ```hcl
 variable "client_certificate_path" {}
 variable "client_certificate_password" {}
@@ -106,6 +125,19 @@ variable "client_certificate_password" {}
 provider "azuread" {
   client_id                   = "00000000-0000-0000-0000-000000000000"
   client_certificate_path     = var.client_certificate_path
+  client_certificate_password = var.client_certificate_password
+  tenant_id                   = "10000000-2000-3000-4000-500000000000"
+}
+```
+
+*Passing the encoded certificate bundle directly*
+```hcl
+variable "client_certificate" {}
+variable "client_certificate_password" {}
+
+provider "azuread" {
+  client_id                   = "00000000-0000-0000-0000-000000000000"
+  client_certificate          = var.client_certificate
   client_certificate_password = var.client_certificate_password
   tenant_id                   = "10000000-2000-3000-4000-500000000000"
 }

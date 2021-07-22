@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -74,8 +75,10 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
 			displayName := v.(string)
-			filter := fmt.Sprintf("displayName eq '%s'", displayName)
-			result, _, err := client.List(ctx, filter)
+			query := odata.Query{
+				Filter: fmt.Sprintf("displayName eq '%s'", displayName),
+			}
+			result, _, err := client.List(ctx, query)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
 			}
@@ -93,7 +96,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		expectedCount = len(objectIds)
 		for _, v := range objectIds {
 			objectId := v.(string)
-			group, status, err := client.Get(ctx, objectId)
+			group, status, err := client.Get(ctx, objectId, odata.Query{})
 			if err != nil {
 				if status == http.StatusNotFound {
 					return tf.ErrorDiagPathF(err, "object_id", "No group found with object ID: %q", objectId)

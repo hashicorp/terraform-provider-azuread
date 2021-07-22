@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
@@ -76,7 +77,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
@@ -128,7 +129,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
@@ -176,7 +177,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *schema.Resourc
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for pre-authorized application %q was not found - removing from state!", id.ObjectId, id.AppId)
@@ -219,7 +220,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for pre-authorized application %q was not found - removing from state!", id.ObjectId, id.AppId)

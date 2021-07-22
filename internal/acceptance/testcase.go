@@ -35,6 +35,15 @@ func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, s
 	td.runAcceptanceTest(t, testCase)
 }
 
+func (td TestData) ResourceTestIgnoreDangling(t *testing.T, _ types.TestResource, steps []resource.TestStep) {
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		Steps:    steps,
+	}
+
+	td.runAcceptanceTest(t, testCase)
+}
+
 func (td TestData) runAcceptanceTest(t *testing.T, testCase resource.TestCase) {
 	testCase.ProviderFactories = map[string]func() (*schema.Provider, error){
 		"azuread": func() (*schema.Provider, error) {

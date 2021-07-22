@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // ConditionalAccessPolicyClient performs operations on ConditionalAccessPolicy.
@@ -22,17 +23,14 @@ func NewConditionalAccessPolicyClient(tenantId string) *ConditionalAccessPolicyC
 	}
 }
 
-// List returns a list of ConditionalAccessPolicy, optionally filtered using OData.
-func (c *ConditionalAccessPolicyClient) List(ctx context.Context, filter string) (*[]ConditionalAccessPolicy, int, error) {
-	params := url.Values{}
-	if filter != "" {
-		params.Add("$filter", filter)
-	}
+// List returns a list of ConditionalAccessPolicy, optionally queried using OData.
+func (c *ConditionalAccessPolicyClient) List(ctx context.Context, query odata.Query) (*[]ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identity/conditionalAccess/policies",
-			Params:      params,
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -84,12 +82,13 @@ func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalA
 }
 
 // Get retrieves a ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string) (*ConditionalAccessPolicy, int, error) {
+func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, query odata.Query) (*ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

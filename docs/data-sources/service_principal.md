@@ -6,7 +6,9 @@ subcategory: "Service Principals"
 
 Gets information about an existing service principal associated with an application within Azure Active Directory.
 
-## Example Usage (by Application Display Name)
+## Example Usage
+
+**Look up by application display name**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -14,7 +16,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Example Usage (by Application ID)
+**Look up by application ID**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -22,7 +24,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-## Example Usage (by Object ID)
+**Look up by service principal object ID**
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -44,9 +46,27 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `app_roles` - A collection of `app_roles` blocks as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `account_enabled` - - Whether or not the service principal account is enabled.
+* `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
+* `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
+* `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
+* `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `application_tenant_id` - The tenant ID where the associated application is registered.
+* `description` - A description of the service principal provided for internal end-users.
+* `homepage_url` - Home page or landing page of the associated application.
+* `login_url` - The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps.
+* `logout_url` - The URL that will be used by Microsoft's authorization service to logout an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.
+* `notes` - A free text field to capture information about the service principal, typically used for operational purposes.
+* `notification_email_addresses` - A list of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.
 * `object_id` - The object ID for the service principal.
+* `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, as exposed by the associated application, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_permission_scopes` - A collection of OAuth 2.0 delegated permissions exposed by the associated application. Each permission is covered by an `oauth2_permission_scopes` block as documented below.
+* `redirect_uris` - A list of URLs where user tokens are sent for sign-in with the associated application, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent for the associated application.
+* `saml_metadata_url` - The URL where the service exposes SAML metadata for federation.
+* `service_principal_names` - A list of identifier URI(s), copied over from the associated application.
+* `sign_in_audience` - The Microsoft account types that are supported for the associated application. Possible values include `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
+* `tags` - A list of tags applied to the service principal.
+* `type` - Identifies whether the service principal represents an application or a managed identity. Possible values include `Application` or `ManagedIdentity`.
 
 ---
 

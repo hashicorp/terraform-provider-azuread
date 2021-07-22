@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -103,8 +105,8 @@ func servicePrincipalCertificateResource() *schema.Resource {
 				Optional:    true,
 				ForceNew:    true,
 				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.KeyCredentialTypeAsymmetricX509Cert),
-					string(msgraph.KeyCredentialTypeX509CertAndPassword),
+					msgraph.KeyCredentialTypeAsymmetricX509Cert,
+					msgraph.KeyCredentialTypeX509CertAndPassword,
 				}, false),
 			},
 
@@ -140,7 +142,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", id.ObjectId)
@@ -151,7 +153,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 	newCredentials := make([]msgraph.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && *cred.KeyId == *credential.KeyId {
+			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, *credential.KeyId) {
 				return tf.ImportAsExistsDiag("azuread_service_principal_certificate", id.String())
 			}
 			newCredentials = append(newCredentials, cred)
@@ -181,7 +183,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -194,7 +196,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 	var credential *msgraph.KeyCredential
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
 				credential = &cred
 				break
 			}
@@ -209,7 +211,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 
 	tf.Set(d, "service_principal_id", id.ObjectId)
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "type", string(credential.Type))
+	tf.Set(d, "type", credential.Type)
 
 	startDate := ""
 	if v := credential.StartDateTime; v != nil {
@@ -237,7 +239,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId)
+	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
@@ -248,7 +250,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 	newCredentials := make([]msgraph.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && *cred.KeyId != id.KeyId {
+			if cred.KeyId != nil && !strings.EqualFold(*cred.KeyId, id.KeyId) {
 				newCredentials = append(newCredentials, cred)
 			}
 		}

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 // UsersClient performs operations on Users.
@@ -21,17 +22,14 @@ func NewUsersClient(tenantId string) *UsersClient {
 	}
 }
 
-// List returns a list of Users, optionally filtered using OData.
-func (c *UsersClient) List(ctx context.Context, filter string) (*[]User, int, error) {
-	params := url.Values{}
-	if filter != "" {
-		params.Add("$filter", filter)
-	}
+// List returns a list of Users, optionally queried using OData.
+func (c *UsersClient) List(ctx context.Context, query odata.Query) (*[]User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/users",
-			Params:      params,
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -83,12 +81,13 @@ func (c *UsersClient) Create(ctx context.Context, user User) (*User, int, error)
 }
 
 // Get retrieves a User.
-func (c *UsersClient) Get(ctx context.Context, id string) (*User, int, error) {
+func (c *UsersClient) Get(ctx context.Context, id string, query odata.Query) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -107,13 +106,57 @@ func (c *UsersClient) Get(ctx context.Context, id string) (*User, int, error) {
 	return &user, status, nil
 }
 
+// GetWithSchemaExtensions retrieves a User, including the values for any specified schema extensions
+func (c *UsersClient) GetWithSchemaExtensions(ctx context.Context, id string, query odata.Query, schemaExtensions *[]SchemaExtensionData) (*User, int, error) {
+	var sel []string
+	if len(query.Select) > 0 {
+		sel = query.Select
+		query.Select = []string{}
+	}
+
+	user, status, err := c.Get(ctx, id, query)
+	if err != nil {
+		return user, status, err
+	}
+
+	if len(sel) > 0 {
+		query.Select = sel
+	}
+
+	var resp *http.Response
+	resp, status, _, err = c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/users/%s", id),
+			Params:      query.Values(),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("UsersClient.BaseClient.Get(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+	}
+
+	user.SchemaExtensions = schemaExtensions
+	if err := json.Unmarshal(respBody, user); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return user, status, nil
+}
+
 // GetDeleted retrieves a deleted User.
-func (c *UsersClient) GetDeleted(ctx context.Context, id string) (*User, int, error) {
+func (c *UsersClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -186,17 +229,14 @@ func (c *UsersClient) DeletePermanently(ctx context.Context, id string) (int, er
 	return status, nil
 }
 
-// ListDeleted retrieves a list of recently deleted users, optionally filtered using OData.
-func (c *UsersClient) ListDeleted(ctx context.Context, filter string) (*[]User, int, error) {
-	params := url.Values{}
-	if filter != "" {
-		params.Add("$filter", filter)
-	}
+// ListDeleted retrieves a list of recently deleted users, optionally queried using OData.
+func (c *UsersClient) ListDeleted(ctx context.Context, query odata.Query) (*[]User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/directory/deleteditems/microsoft.graph.user",
-			Params:      params,
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -239,18 +279,15 @@ func (c *UsersClient) RestoreDeleted(ctx context.Context, id string) (*User, int
 	return &restoredUser, status, nil
 }
 
-// ListGroupMemberships returns a list of Groups the user is member of, optionally filtered using OData.
-func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, filter string) (*[]Group, int, error) {
-	params := url.Values{}
-	if filter != "" {
-		params.Add("$filter", filter)
-	}
+// ListGroupMemberships returns a list of Groups the user is member of, optionally queried using OData.
+func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, query odata.Query) (*[]Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		DisablePaging:          query.Top > 0,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/transitiveMemberOf", id),
-			Params:      params,
+			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
