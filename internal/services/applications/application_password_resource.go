@@ -205,7 +205,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 
 	if credential.DisplayName != nil {
 		tf.Set(d, "display_name", credential.DisplayName)
-	} else {
+	} else if credential.CustomKeyIdentifier != nil {
 		displayName, err := b64.StdEncoding.DecodeString(*credential.CustomKeyIdentifier)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "display_name", "Parsing CustomKeyIdentifier")
