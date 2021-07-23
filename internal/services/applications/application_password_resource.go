@@ -2,7 +2,7 @@ package applications
 
 import (
 	"context"
-	b64 "encoding/base64"
+	"encoding/base64"
 	"errors"
 	"log"
 	"net/http"
@@ -206,7 +206,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *schema.ResourceData
 	if credential.DisplayName != nil {
 		tf.Set(d, "display_name", credential.DisplayName)
 	} else if credential.CustomKeyIdentifier != nil {
-		displayName, err := b64.StdEncoding.DecodeString(*credential.CustomKeyIdentifier)
+		displayName, err := base64.StdEncoding.DecodeString(*credential.CustomKeyIdentifier)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "display_name", "Parsing CustomKeyIdentifier")
 		}

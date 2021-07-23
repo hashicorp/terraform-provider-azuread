@@ -2,13 +2,12 @@ package serviceprincipals
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"log"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -182,7 +182,16 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		return nil
 	}
 
-	tf.Set(d, "display_name", credential.DisplayName)
+	if credential.DisplayName != nil {
+		tf.Set(d, "display_name", credential.DisplayName)
+	} else if credential.CustomKeyIdentifier != nil {
+		displayName, err := base64.StdEncoding.DecodeString(*credential.CustomKeyIdentifier)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "display_name", "Parsing CustomKeyIdentifier")
+		}
+		tf.Set(d, "display_name", string(displayName))
+	}
+
 	tf.Set(d, "key_id", id.KeyId)
 	tf.Set(d, "service_principal_id", id.ObjectId)
 
