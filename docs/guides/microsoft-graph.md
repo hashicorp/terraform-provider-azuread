@@ -60,11 +60,17 @@ However, you may need to assign new API permissions depending on your configurat
 
 For users connecting to national clouds (e.g. germany, china and usgovernment), these are all supported using the existing provider configuration property `environment`, or the environment variable `ARM_ENVIRONMENT`. The "usgovernment" environment has been split into two environments "usgovernmentl4" and "usgovernmentl5" - see [this post](https://developer.microsoft.com/en-us/office/blogs/new-microsoft-graph-endpoints-in-us-government-cloud/) for more information. Specifying the "usgovernment" environment will use the "usgovernmentl4" cloud.
 
+### Additional option for Client Certificate authentication
+
+If you are using Client Certificate authentication, it's now possible to specify the certificate bundle data as an inline variable, in addition to the pre-existing method of specifying the filesystem path for a `.pfx` file. This may be useful when running Terraform in a non-interactive context, such as CI/CD pipelines.
+
+For more information, consult the [Client Certificate Authentication Guide](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_client_certificate).
+
 ## New API permissions
 
 Microsoft Graph is a different web service to Azure Active Directory Graph, and as such if you are authenticating using a service principal, you may need to assign new permissions to [your authenticated principal](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_configuration).
 
--> If you have assigned API permissions specific to the Azure Directory Graph API, you can safely unassign these permissions after upgrading to version 2.0.
+-> If you have assigned API permissions specific to the Azure Directory Graph API, you can safely un-assign these permissions after upgrading to version 2.0.
 
 ### Assigning directory roles
 
