@@ -96,6 +96,14 @@ Depending on the configuration of your AAD tenant, you may also need to grant th
 
 After assigning permissions, you will need to grant consent for the service principal to utilise them. The easiest way to do this is by clicking the Grant Admin Consent button in the same API Permissions pane, which will create the necessary app role assignments for the Service Principal.
 
+## New API Constraints
+
+Due to differences between the Azure Active Directory Graph API and the Microsoft Graph API, you may encounter some constraints after upgrading. These are due to implementation changes within Azure, and are outside the control of the provider, but where known these are detailed here for your convenience.
+
+### New requirements for groups
+
+Microsoft 365 groups are required to have at least one owner that is a user principal, i.e. not a service principal. When creating or managing Microsoft 365 groups, you should explicitly assign at least one user to be an owner of the group in your Terraform configuration. Note that whilst this requirement officially pertains to Microsoft 365 groups, you may encounter this constraint with newly created "traditional" security groups, such as the type supported by the AzureAD provider prior to version 2.0.
+
 ## New required fields
 
 ### Resource: `azuread_group`
