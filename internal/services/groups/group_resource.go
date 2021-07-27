@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -254,7 +253,19 @@ func groupResource() *schema.Resource {
 
 func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	callerId := meta.(*clients.Client).Claims.ObjectId
 
+	// Suppress the diff when the only change is to remove the calling principal as a group owner
+	// as we always want to retain such ownership in order to avoid orphaning the group
+	existingOwnersRaw, newOwnersRaw := diff.GetChange("owners")
+	existingOwners := tf.ExpandStringSlice(existingOwnersRaw.(*schema.Set).List())
+	newOwners := tf.ExpandStringSlice(newOwnersRaw.(*schema.Set).List())
+	ownersToRemove := utils.Difference(existingOwners, newOwners)
+	if len(ownersToRemove) == 1 && ownersToRemove[0] == callerId {
+		diff.Clear("owners")
+	}
+
+	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
 	if diff.Get("prevent_duplicate_names").(bool) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
@@ -397,9 +408,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		properties.Visibility = utils.String(visibility)
 	}
 
-	// Add the caller as the group owner to prevent lock-out after creation
+	// The calling principal is the initial owner (retained after other owners are also set)
 	properties.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, callerId)
-	removeInitialOwner := true
 
 	group, _, err := client.Create(ctx, properties)
 	if err != nil {
@@ -417,11 +427,6 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		owners := v.(*schema.Set).List()
 		for _, o := range owners {
 			group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
-
-			// If the authenticated principal is included in the owners list, make sure to not remove them after the fact
-			if strings.EqualFold(callerId, o.(string)) {
-				removeInitialOwner = false
-			}
 		}
 		if _, err := client.AddOwners(ctx, group); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
@@ -439,19 +444,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// Remove the initial owner
-	if removeInitialOwner {
-		ownersToRemove := []string{callerId}
-		if _, err := client.RemoveOwners(ctx, *group.ID, &ownersToRemove); err != nil {
-			return tf.ErrorDiagF(err, "Could not remove temporary owner of group with ID: %q", d.Id())
-		}
-	}
-
 	return groupResourceRead(ctx, d, meta)
 }
 
 func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	callerId := meta.(*clients.Client).Claims.ObjectId
 	groupId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -531,8 +529,10 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return tf.ErrorDiagF(err, "Could not retrieve owners for group with ID: %q", d.Id())
 		}
 
+		// The calling principal should always be an owner, regardless of the owners property
+		desiredOwners := utils.EnsureStringInSlice(*tf.ExpandStringSlicePtr(v.(*schema.Set).List()), callerId)
+
 		existingOwners := *owners
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
