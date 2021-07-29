@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -137,7 +138,7 @@ func TestAccNamedLocation_updateCountry(t *testing.T) {
 }
 
 func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	namedLocation, status, err := clients.NamedLocations.MsClient.Get(ctx, state.ID)
+	namedLocation, status, err := clients.NamedLocations.MsClient.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Named Location with object ID %q does not exist", state.ID)

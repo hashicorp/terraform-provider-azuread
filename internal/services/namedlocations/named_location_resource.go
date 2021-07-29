@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -180,7 +181,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).NamedLocations.MsClient
 
-	location, status, err := client.Get(ctx, d.Id())
+	location, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Named Location with Object ID %q was not found - removing from state", d.Id())
@@ -208,7 +209,7 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*clients.Client).NamedLocations.MsClient
 
 	if _, ok := d.GetOk("ip"); ok {
-		_, status, err := client.GetIP(ctx, d.Id())
+		_, status, err := client.GetIP(ctx, d.Id(), odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				log.Printf("[DEBUG] Named Location with ID %q already deleted", d.Id())
@@ -220,7 +221,7 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if _, ok := d.GetOk("country"); ok {
-		_, status, err := client.GetCountry(ctx, d.Id())
+		_, status, err := client.GetCountry(ctx, d.Id(), odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
 				log.Printf("[DEBUG] Named Location with ID %q already deleted", d.Id())
