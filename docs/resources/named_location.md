@@ -12,7 +12,7 @@ Manages a Named Location within Azure Active Directory.
 
 ```terraform
 resource "azuread_named_location" "example-ip" {
-  display_name        = "IP Named Location"
+  display_name = "IP Named Location"
   ip {
     ip_ranges = [
       "1.1.1.1/32",
@@ -23,7 +23,7 @@ resource "azuread_named_location" "example-ip" {
 }
 
 resource "azuread_named_location" "example-country" {
-  display_name        = "Country Named Location"
+  display_name = "Country Named Location"
   country {
     countries_and_regions = [
       "GB",
@@ -38,18 +38,11 @@ resource "azuread_named_location" "example-country" {
 
 The following arguments are supported:
 
+* `country` - (Optional) A `country` block as documented below, which configures a Country based Named Location.
 * `display_name` - (Required) The friendly name for this Named Location.
 * `ip` - (Optional) An `ip` block as documented below, which configures an IP based Named Location.
-* `country` - (Optional) A `country` block as documented below, which configures a Country based Named Location.
 
 -> **NOTE:** Exactly one of `ip` or `country` must be used. Changing between these forces a new resource to be created.
-
----
-
-`ip` block supports the following:
-
-* `ip_ranges` - (Required) List of IP address ranges in IPv4 CIDR format (e.g. 1.2.3.4/32) or any allowable IPv6 format from IETF RFC596 .
-* `trusted` - (Optional) Determines if the Named Location is trusted: Defaults to `false`.
 
 ---
 
@@ -57,6 +50,13 @@ The following arguments are supported:
 
 * `countries_and_regions` - (Required) List of countries and/or regions in two-letter format specified by ISO 3166-2. 
 * `include_unknown_countries_and_regions` - (Optional) True if IP addresses that don't map to a country or region should be included in the named location: Defaults to `false`.
+
+---
+
+`ip` block supports the following:
+
+* `ip_ranges` - (Required) List of IP address ranges in IPv4 CIDR format (e.g. 1.2.3.4/32) or any allowable IPv6 format from IETF RFC596 .
+* `trusted` - (Optional) Determines if the Named Location is trusted: Defaults to `false`.
 
 ---
 

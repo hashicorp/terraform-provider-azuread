@@ -159,7 +159,7 @@ func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Clie
 func (NamedLocationResource) basicIP(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_named_location" "test" {
-  display_name        = "acctestNLIP-%[1]d"
+  display_name = "acctestNLIP-%[1]d"
   ip {
     ip_ranges = [
       "1.1.1.1/32",
@@ -173,7 +173,7 @@ resource "azuread_named_location" "test" {
 func (NamedLocationResource) completeIP(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_named_location" "test" {
-  display_name        = "acctestNLIP-%[1]d"
+  display_name = "acctestNLIP-%[1]d"
   ip {
     ip_ranges = [
       "1.1.1.1/32",
@@ -181,7 +181,7 @@ resource "azuread_named_location" "test" {
       "3.3.3.3/32",
       "64:ff9b::/96",
     ]
-	trusted = true
+    trusted = true
   }
 }
 `, data.RandomInteger)
@@ -190,7 +190,7 @@ resource "azuread_named_location" "test" {
 func (NamedLocationResource) basicCountry(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_named_location" "test" {
-  display_name        = "acctestNLC-%[1]d"
+  display_name = "acctestNLC-%[1]d"
   country {
     countries_and_regions = [
       "GB",
@@ -204,14 +204,14 @@ resource "azuread_named_location" "test" {
 func (NamedLocationResource) completeCountry(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_named_location" "test" {
-  display_name        = "acctestNLC-%[1]d"
+  display_name = "acctestNLC-%[1]d"
   country {
     countries_and_regions = [
       "GB",
       "US",
       "JP",
     ]
-	include_unknown_countries_and_regions = true
+    include_unknown_countries_and_regions = true
   }
 }
 `, data.RandomInteger)

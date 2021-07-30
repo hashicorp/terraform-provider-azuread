@@ -121,7 +121,6 @@ func namedLocationResourceCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 		d.SetId(*location.ID)
 		return namedLocationResourceRead(ctx, d, meta)
-
 	}
 
 	if v, ok := d.GetOk("country"); ok {
@@ -137,11 +136,9 @@ func namedLocationResourceCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 		d.SetId(*location.ID)
 		return namedLocationResourceRead(ctx, d, meta)
-
 	}
 
 	return tf.ErrorDiagF(errors.New("Could not match named location"), "The named location object provided couldn't be matched to a country/ip object")
-
 }
 
 func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -163,7 +160,6 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 		if _, err := client.UpdateIP(ctx, *properties); err != nil {
 			return tf.ErrorDiagF(err, "Could not update named location with ID: %q", d.Id())
 		}
-
 	}
 	if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
@@ -172,7 +168,6 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 		if _, err := client.UpdateCountry(ctx, *properties); err != nil {
 			return tf.ErrorDiagF(err, "Could not update named location with ID: %q", d.Id())
 		}
-
 	}
 
 	return nil
@@ -258,7 +253,6 @@ func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
 }
 
 func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIPRange {
-
 	if len(in) == 0 {
 		return nil
 	}
@@ -271,7 +265,6 @@ func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIP
 	}
 
 	return &result
-
 }
 
 func expandCountryNamedLocation(in []interface{}) *msgraph.CountryNamedLocation {
