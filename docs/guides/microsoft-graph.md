@@ -110,6 +110,8 @@ Due to differences between the Azure Active Directory Graph API and the Microsof
 
 Microsoft 365 groups are required to have at least one owner that is a user principal, i.e. not a service principal. When creating or managing Microsoft 365 groups, you should explicitly assign at least one user to be an owner of the group in your Terraform configuration. Note that whilst this requirement officially pertains to Microsoft 365 groups, you may encounter this constraint with newly created "traditional" security groups, such as the type supported by the AzureAD provider prior to version 2.0.
 
+When executing Terraform with a user principal, we recommend assigning the directory role `Groups Administrator` or a role with the same effective permissions, when managing groups using the AzureAD provider.
+
 ## New required fields
 
 ### Resource: `azuread_group`
