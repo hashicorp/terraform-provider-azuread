@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 	"strings"
@@ -33,13 +34,20 @@ func allUsersData() *schema.Resource {
 				Description:  "The object IDs of the users",
 				Type:         schema.TypeList,
 				Computed:     true,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
+				},
 			},
 
 			"user_principal_names": {
 				Description:  "The user principal names (UPNs) of the users",
 				Type:         schema.TypeList,
 				Computed:     true,
-
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
+				},
 			},
 
 			"users": {
