@@ -23,6 +23,7 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"azuread_user":  userDataSource(),
 		"azuread_users": usersData(),
+		"azuread_all_users": allUsersData(),
 	}
 }
 
