@@ -31,9 +31,9 @@ func allUsersData() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 
 			"object_ids": {
-				Description:  "The object IDs of the users",
-				Type:         schema.TypeList,
-				Computed:     true,
+				Description: "The object IDs of the users",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -41,9 +41,9 @@ func allUsersData() *schema.Resource {
 			},
 
 			"user_principal_names": {
-				Description:  "The user principal names (UPNs) of the users",
-				Type:         schema.TypeList,
-				Computed:     true,
+				Description: "The user principal names (UPNs) of the users",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
