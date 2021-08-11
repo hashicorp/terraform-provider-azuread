@@ -106,6 +106,31 @@ func TestAccUsersDataSource_noNames(t *testing.T) {
 	}})
 }
 
+func TestAccUsersDataSource_showAll(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.showAll(),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").Exists(),
+			check.That(data.ResourceName).Key("object_ids.#").Exists(),
+			check.That(data.ResourceName).Key("mail_nicknames.#").Exists(),
+			check.That(data.ResourceName).Key("users.#").Exists(),
+		),
+	}})
+}
+
+//func TestAccUsersDataSource_showAllAndIgnoreMissing(t *testing.T) {
+//	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+//
+//	data.DataSourceTest(t, []resource.TestStep{{
+//		Config: UsersDataSource{}.showAllAndIgnoreMissing(),
+//		Check: resource.ComposeTestCheckFunc(
+//			check, .
+//		),
+//	}})
+//}
+
 func (UsersDataSource) byUserPrincipalNames(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -189,6 +214,23 @@ func (UsersDataSource) noNames() string {
 	return `
 data "azuread_users" "test" {
   user_principal_names = []
+}
+`
+}
+
+func (UsersDataSource) showAll() string {
+	return `
+data "azuread_users" "test" {
+	show_all_users = true
+}
+`
+}
+
+func (UsersDataSource) showAllAndIgnoreMissing() string {
+	return `
+data "azuread_users" "test" {
+	show_all_users = true
+	ignore_missing = true
 }
 `
 }

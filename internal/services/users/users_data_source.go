@@ -70,11 +70,11 @@ func usersData() *schema.Resource {
 			},
 
 			"show_all_users": {
-				Description: "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found",
-				Type: schema.TypeBool,
-				Optional: true,
-				Computed: false,
-				Default: false,
+				Description:  "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found",
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Computed:     false,
+				Default:      false,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
 			},
 
@@ -167,7 +167,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// validate that flags where set correctly for showAllUsers + ignoreMissing as well as
 	if ignoreMissing && showAllUsers {
-		return tf.ErrorDiagF(errors.New("Both the ignore_missing and show_all_users flags were set. Please only use ignore_missing with a filter applied"),"Contradicting flags set")
+		return tf.ErrorDiagF(errors.New("Both the ignore_missing and show_all_users flags were set. Please only use ignore_missing with a filter applied"), "Contradicting flags set")
 	} else if !showAllUsers && len(d.Get("user_principal_names").([]interface{})) == 0 && len(d.Get("object_ids").([]interface{})) == 0 && len(d.Get("mail_nicknames").([]interface{})) == 0 {
 		return tf.ErrorDiagF(errors.New("show_all_users set to false but no filter specified. Please either set to true or define a filter with user_principle_names, object_ids or mail_nicknames."), "Flags/filter set incorrectly")
 	} // This error might be redundant with the ExactlyOneOf
@@ -261,7 +261,6 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 			users = append(users, user)
 		}
 	}
-
 
 	upns := make([]string, 0)
 	objectIds := make([]string, 0)
