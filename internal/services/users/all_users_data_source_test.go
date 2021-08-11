@@ -1,10 +1,11 @@
 package users_test
 
 import (
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
-	"testing"
 )
 
 type AllUsersDataSource struct{}
@@ -25,4 +26,3 @@ func (AllUsersDataSource) testCheckFunc(data acceptance.TestData) resource.TestC
 		check.That(data.ResourceName).Key("users.#").Exists(),
 	)
 }
-
