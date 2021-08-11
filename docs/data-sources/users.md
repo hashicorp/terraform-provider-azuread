@@ -20,10 +20,13 @@ The following arguments are supported:
 
 * `mail_nicknames` - (Optional) The email aliases of the users.
 * `ignore_missing` - (Optional) Ignore missing users and return users that were found. The data source will still fail if no users are found. Defaults to false.
+* `show_all_users` - (Optional) Return all users. The data source will still fail if no users are found. Defaults to false.
 * `object_ids` - (Optional) The object IDs of the users.
 * `user_principal_names` - (Optional) The user principal names (UPNs) of the users.
 
-~> **NOTE:** One of `user_principal_names`, `object_ids` or `mail_nicknames` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+~> **NOTE:** One of `user_principal_names`, `object_ids`, `mail_nicknames`, `show_all_users` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+
+~> **NOTE:** `show_all_users`is a boolean value and not a list. If `show_all_users`and `ignore_missing`are both set to true then an error will be thrown.
 
 ## Attributes Reference
 
