@@ -249,15 +249,15 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	// Fetch all users
 	if showAllUsers {
-		results, _, err := client.List(ctx, odata.Query{})
+		result, _, err := client.List(ctx, odata.Query{})
 		if err != nil {
 			return tf.ErrorDiagF(err, "Error retrieving users from API.")
 		}
-		if results == nil {
+		if result == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		for _, user := range *results {
-			users = append(users, user)
+		for x := range *result {
+			users = append(users, (*result)[x])
 		}
 	}
 
