@@ -225,12 +225,3 @@ data "azuread_users" "test" {
 }
 `
 }
-
-//func (UsersDataSource) showAllAndIgnoreMissing() string {
-//	return `
-//data "azuread_users" "test" {
-//	show_all_users = true
-//	ignore_missing = true
-//}
-//`
-//}
