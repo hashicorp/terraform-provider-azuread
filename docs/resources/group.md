@@ -61,6 +61,11 @@ The following arguments are supported:
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation. Required for mail-enabled groups. Changing this forces a new resource to be created.
 * `members` - (Optional) A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals.
 * `owners` - (Optional) A set of owners who own this group. Supported object types are Users or Service Principals.
+
+~> **Group Ownership and Permissions** Terraform always adds its own principal as a group owner to ensure that groups can continue to be managed. If using a user principal to execute Terraform, we recommend assigning the directory role `Groups Administrator` (or a role with the same effective permissions) to that user, in order to help prevent scenarios where groups may become unmanageable without administrative intervention.
+
+-> **Ownership of Microsoft 365 Groups** Microsoft 365 groups are required to have at least one owner which _must be a user_ (i.e. not a service principal). If you are running Terraform with an Azure AD user principal, you do not need to specify any owners for a group, although we suggest always specifying at least one user as an owner in your configuration.
+
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing group is found with the same name. Defaults to `false`.
 * `provisioning_options` - (Optional) A set of provisioning options for a Microsoft 365 group. The only supported value is `Team`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details. Changing this forces a new resource to be created.
 * `security_enabled` - (Optional) Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A group can be security enabled _and_ mail enabled.

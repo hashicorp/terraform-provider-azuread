@@ -60,11 +60,17 @@ However, you may need to assign new API permissions depending on your configurat
 
 For users connecting to national clouds (e.g. germany, china and usgovernment), these are all supported using the existing provider configuration property `environment`, or the environment variable `ARM_ENVIRONMENT`. The "usgovernment" environment has been split into two environments "usgovernmentl4" and "usgovernmentl5" - see [this post](https://developer.microsoft.com/en-us/office/blogs/new-microsoft-graph-endpoints-in-us-government-cloud/) for more information. Specifying the "usgovernment" environment will use the "usgovernmentl4" cloud.
 
+### Additional option for Client Certificate authentication
+
+If you are using Client Certificate authentication, it's now possible to specify the certificate bundle data as an inline variable, in addition to the pre-existing method of specifying the filesystem path for a `.pfx` file. This may be useful when running Terraform in a non-interactive context, such as CI/CD pipelines.
+
+For more information, consult the [Client Certificate Authentication Guide](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_client_certificate).
+
 ## New API permissions
 
 Microsoft Graph is a different web service to Azure Active Directory Graph, and as such if you are authenticating using a service principal, you may need to assign new permissions to [your authenticated principal](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_configuration).
 
--> If you have assigned API permissions specific to the Azure Directory Graph API, you can safely unassign these permissions after upgrading to version 2.0.
+-> If you have assigned API permissions specific to the Azure Directory Graph API, you can safely un-assign these permissions after upgrading to version 2.0.
 
 ### Assigning directory roles
 
@@ -95,6 +101,16 @@ Resource(s) | Role Name(s)
 Depending on the configuration of your AAD tenant, you may also need to grant the Directory.Read.All and/or Directory.ReadWrite.All roles.
 
 After assigning permissions, you will need to grant consent for the service principal to utilise them. The easiest way to do this is by clicking the Grant Admin Consent button in the same API Permissions pane, which will create the necessary app role assignments for the Service Principal.
+
+## New API Constraints
+
+Due to differences between the Azure Active Directory Graph API and the Microsoft Graph API, you may encounter some constraints after upgrading. These are due to implementation changes within Azure, and are outside the control of the provider, but where known these are detailed here for your convenience.
+
+### New requirements for groups
+
+Microsoft 365 groups are required to have at least one owner that is a user principal, i.e. not a service principal. When creating or managing Microsoft 365 groups, you should explicitly assign at least one user to be an owner of the group in your Terraform configuration. Note that whilst this requirement officially pertains to Microsoft 365 groups, you may encounter this constraint with newly created "traditional" security groups, such as the type supported by the AzureAD provider prior to version 2.0.
+
+When executing Terraform with a user principal, we recommend assigning the directory role `Groups Administrator` or a role with the same effective permissions, when managing groups using the AzureAD provider.
 
 ## New required fields
 
