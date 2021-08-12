@@ -73,7 +73,6 @@ func usersData() *schema.Resource {
 				Description:  "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found",
 				Type:         schema.TypeBool,
 				Optional:     true,
-				Computed:     false,
 				Default:      false,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
 			},
