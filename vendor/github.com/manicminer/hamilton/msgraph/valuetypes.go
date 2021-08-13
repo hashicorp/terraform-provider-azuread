@@ -1,6 +1,11 @@
 package msgraph
 
-import "encoding/json"
+import (
+	"encoding/json"
+	goerrors "errors"
+
+	"github.com/manicminer/hamilton/odata"
+)
 
 // StringNullWhenEmpty is a string type that marshals its JSON representation as null when set to its zero value.
 // Can be used with a pointer reference with the `omitempty` tag to omit a field when the pointer is nil, but send a
@@ -51,6 +56,16 @@ const (
 	AppRoleAllowedMemberTypeUser        AppRoleAllowedMemberType = "User"
 )
 
+type AuthenticationMethodFeature = string
+
+const (
+	AuthenticationMethodFeatureSsprRegistered      AuthenticationMethodFeature = "ssprRegistered"
+	AuthenticationMethodFeatureSsprEnabled         AuthenticationMethodFeature = "ssprEnabled"
+	AuthenticationMethodFeatureSsprCapable         AuthenticationMethodFeature = "ssprCapable"
+	AuthenticationMethodFeaturePasswordlessCapable AuthenticationMethodFeature = "passwordlessCapable"
+	AuthenticationMethodFeatureMfaCapable          AuthenticationMethodFeature = "mfaCapable"
+)
+
 type BodyType = string
 
 const (
@@ -65,6 +80,14 @@ const (
 	ConsentProvidedForMinorDenied      ConsentProvidedForMinor = "Denied"
 	ConsentProvidedForMinorGranted     ConsentProvidedForMinor = "Granted"
 	ConsentProvidedForMinorNotRequired ConsentProvidedForMinor = "NotRequired"
+)
+
+type CredentialUsageSummaryPeriod = string
+
+const (
+	CredentialUsageSummaryPeriod30 CredentialUsageSummaryPeriod = "D30"
+	CredentialUsageSummaryPeriod7  CredentialUsageSummaryPeriod = "D7"
+	CredentialUsageSummaryPeriod1  CredentialUsageSummaryPeriod = "D1"
 )
 
 type ExtensionSchemaTargetType = string
@@ -89,6 +112,14 @@ const (
 	ExtensionSchemaPropertyDataDateTime ExtensionSchemaPropertyDataType = "DateTime"
 	ExtensionSchemaPropertyDataInteger  ExtensionSchemaPropertyDataType = "Integer"
 	ExtensionSchemaPropertyDataString   ExtensionSchemaPropertyDataType = "String"
+)
+
+type FeatureType = string
+
+const (
+	FeatureTypeRegistration       FeatureType = "registration"
+	FeatureTypeReset              FeatureType = "reset"
+	FeatureTypeUnknownFutureValue FeatureType = "unknownFutureValue"
 )
 
 type GroupType = string
@@ -157,6 +188,54 @@ const (
 	KeyCredentialUsageVerify KeyCredentialUsage = "Verify"
 )
 
+type Members []DirectoryObject
+
+func (o Members) MarshalJSON() ([]byte, error) {
+	members := make([]odata.Id, len(o))
+	for i, v := range o {
+		if v.ODataId == nil {
+			return nil, goerrors.New("marshaling Members: encountered DirectoryObject with nil ODataId")
+		}
+		members[i] = *v.ODataId
+	}
+	return json.Marshal(members)
+}
+
+func (o *Members) UnmarshalJSON(data []byte) error {
+	var members []odata.Id
+	if err := json.Unmarshal(data, &members); err != nil {
+		return err
+	}
+	for _, v := range members {
+		*o = append(*o, DirectoryObject{ODataId: &v})
+	}
+	return nil
+}
+
+type Owners []DirectoryObject
+
+func (o Owners) MarshalJSON() ([]byte, error) {
+	owners := make([]odata.Id, len(o))
+	for i, v := range o {
+		if v.ODataId == nil {
+			return nil, goerrors.New("marshaling Owners: encountered DirectoryObject with nil ODataId")
+		}
+		owners[i] = *v.ODataId
+	}
+	return json.Marshal(owners)
+}
+
+func (o *Owners) UnmarshalJSON(data []byte) error {
+	var owners []odata.Id
+	if err := json.Unmarshal(data, &owners); err != nil {
+		return err
+	}
+	for _, v := range owners {
+		*o = append(*o, DirectoryObject{ODataId: &v})
+	}
+	return nil
+}
+
 type PermissionScopeType = string
 
 const (
@@ -172,6 +251,30 @@ const (
 	PreferredSingleSignOnModeOidc         PreferredSingleSignOnMode = "oidc"
 	PreferredSingleSignOnModePassword     PreferredSingleSignOnMode = "password"
 	PreferredSingleSignOnModeSaml         PreferredSingleSignOnMode = "saml"
+)
+
+type RegistrationAuthMethod = string
+
+const (
+	RegistrationAuthMethodEmail                RegistrationAuthMethod = "email"
+	RegistrationAuthMethodMobilePhone          RegistrationAuthMethod = "mobilePhone"
+	RegistrationAuthMethodOfficePhone          RegistrationAuthMethod = "officePhone"
+	RegistrationAuthMethodSecurityQuestion     RegistrationAuthMethod = "securityQuestion"
+	RegistrationAuthMethodAppNotification      RegistrationAuthMethod = "appNotification"
+	RegistrationAuthMethodAppCode              RegistrationAuthMethod = "appCode"
+	RegistrationAuthMethodAlternateMobilePhone RegistrationAuthMethod = "alternateMobilePhone"
+	RegistrationAuthMethodFido                 RegistrationAuthMethod = "fido"
+	RegistrationAuthMethodAppPassword          RegistrationAuthMethod = "appPassword"
+	RegistrationAuthMethodUnknownFutureValue   RegistrationAuthMethod = "unknownFutureValue"
+)
+
+type RegistrationStatus = string
+
+const (
+	RegistrationStatusRegistered    RegistrationStatus = "registered"
+	RegistrationStatusEnabled       RegistrationStatus = "enabled"
+	RegistrationStatusCapable       RegistrationStatus = "capable"
+	RegistrationStatusMfaRegistered RegistrationStatus = "mfaRegistered"
 )
 
 type ResourceAccessType = string
@@ -208,4 +311,37 @@ const (
 	SignInAudienceAzureADMultipleOrgs                SignInAudience = "AzureADMultipleOrgs"
 	SignInAudienceAzureADandPersonalMicrosoftAccount SignInAudience = "AzureADandPersonalMicrosoftAccount"
 	SignInAudiencePersonalMicrosoftAccount           SignInAudience = "PersonalMicrosoftAccount"
+)
+
+type UsageAuthMethod = string
+
+const (
+	UsageAuthMethodEmail                 UsageAuthMethod = "email"
+	UsageAuthMethodMobileSMS             UsageAuthMethod = "mobileSMS"
+	UsageAuthMethodMobileCall            UsageAuthMethod = "mobileCall"
+	UsageAuthMethodOfficePhone           UsageAuthMethod = "officePhone"
+	UsageAuthMethodSecurityQuestion      UsageAuthMethod = "securityQuestion"
+	UsageAuthMethodAppNotification       UsageAuthMethod = "appNotification"
+	UsageAuthMethodAppCode               UsageAuthMethod = "appCode"
+	UsageAuthMethodAlternativeMobileCall UsageAuthMethod = "alternateMobileCall"
+	UsageAuthMethodFido                  UsageAuthMethod = "fido"
+	UsageAuthMethodAppPassword           UsageAuthMethod = "appPassword"
+	UsageAuthMethodUnknownFutureValue    UsageAuthMethod = "unknownFutureValue"
+)
+
+type IncludedUserRoles = string
+
+const (
+	IncludedUserRolesAll             IncludedUserRoles = "all"
+	IncludedUserRolesPrivilegedAdmin IncludedUserRoles = "privilegedAdmin"
+	IncludedUserRolesAdmin           IncludedUserRoles = "admin"
+	IncludedUserRolesUser            IncludedUserRoles = "user"
+)
+
+type IncludedUserTypes = string
+
+const (
+	IncludedUserTypesAll    IncludedUserTypes = "all"
+	IncludedUserTypesMember IncludedUserTypes = "member"
+	IncludedUserTypesGuest  IncludedUserTypes = "guest"
 )

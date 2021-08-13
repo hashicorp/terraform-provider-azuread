@@ -31,7 +31,6 @@ type AzureCliAuthorizer struct {
 
 // Token returns an access token using the Azure CLI as an authentication mechanism.
 func (a AzureCliAuthorizer) Token() (*oauth2.Token, error) {
-	// We don't need to handle token caching and refreshing since az-cli does that for us
 	var token struct {
 		AccessToken string `json:"accessToken"`
 		ExpiresOn   string `json:"expiresOn"`
@@ -86,11 +85,12 @@ func NewAzureCliConfig(api Api, tenantId string) (*AzureCliConfig, error) {
 
 // TokenSource provides a source for obtaining access tokens using AzureCliAuthorizer.
 func (c *AzureCliConfig) TokenSource(ctx context.Context) Authorizer {
-	return &AzureCliAuthorizer{
+	// Cache access tokens internally to avoid unnecessary `az` invocations
+	return CachedAuthorizer(AzureCliAuthorizer{
 		TenantID: c.TenantID,
 		ctx:      ctx,
 		conf:     c,
-	}
+	})
 }
 
 // checkAzVersion tries to determine the version of Azure CLI in the path and checks for a compatible version

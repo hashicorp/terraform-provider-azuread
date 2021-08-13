@@ -10,20 +10,72 @@ import (
 const (
 	ErrorAddedObjectReferencesAlreadyExist   = "One or more added object references already exist"
 	ErrorConflictingObjectPresentInDirectory = "A conflicting object with one or more of the specified property values is present in the directory"
+	ErrorResourceDoesNotExist                = "Resource '.+' does not exist or one of its queried reference-property objects are not present"
 	ErrorRemovedObjectReferencesDoNotExist   = "One or more removed object references do not exist"
-	ErrorServicePrincipalInvalidAppId        = "The appId '.+' of the service principal does not reference a valid application object."
+	ErrorServicePrincipalInvalidAppId        = "The appId '.+' of the service principal does not reference a valid application object"
+)
+
+type Id string
+
+func (o *Id) UnmarshalJSON(data []byte) error {
+	var id string
+	if err := json.Unmarshal(data, &id); err != nil {
+		return err
+	}
+	*o = Id(regexp.MustCompile(`/v2/`).ReplaceAllString(id, `/v1.0/`))
+	return nil
+}
+
+type ShortType = string
+
+const (
+	ShortTypeAdministrativeUnit      ShortType = "administrativeUnit"
+	ShortTypeApplication             ShortType = "application"
+	ShortTypeConditionalAccessPolicy ShortType = "conditionalAccessPolicy"
+	ShortTypeCountryNamedLocation    ShortType = "countryNamedLocation"
+	ShortTypeDevice                  ShortType = "device"
+	ShortTypeDirectoryRole           ShortType = "directoryRole"
+	ShortTypeDirectoryRoleTemplate   ShortType = "directoryRoleTemplate"
+	ShortTypeDomain                  ShortType = "domain"
+	ShortTypeGroup                   ShortType = "group"
+	ShortTypeIpNamedLocation         ShortType = "ipNamedLocation"
+	ShortTypeNamedLocation           ShortType = "namedLocation"
+	ShortTypeOrganization            ShortType = "organization"
+	ShortTypeServicePrincipal        ShortType = "servicePrincipal"
+	ShortTypeSocialIdentityProvider  ShortType = "socialIdentityProvider"
+	ShortTypeUser                    ShortType = "user"
+)
+
+type Type = string
+
+const (
+	TypeAdministrativeUnit      Type = "#microsoft.graph.administrativeUnit"
+	TypeApplication             Type = "#microsoft.graph.application"
+	TypeConditionalAccessPolicy Type = "#microsoft.graph.conditionalAccessPolicy"
+	TypeCountryNamedLocation    Type = "#microsoft.graph.countryNamedLocation"
+	TypeDevice                  Type = "#microsoft.graph.device"
+	TypeDirectoryRole           Type = "#microsoft.graph.directoryRole"
+	TypeDirectoryRoleTemplate   Type = "#microsoft.graph.directoryRoleTemplate"
+	TypeDomain                  Type = "#microsoft.graph.domain"
+	TypeGroup                   Type = "#microsoft.graph.group"
+	TypeIpNamedLocation         Type = "#microsoft.graph.ipNamedLocation"
+	TypeNamedLocation           Type = "#microsoft.graph.namedLocation"
+	TypeOrganization            Type = "#microsoft.graph.organization"
+	TypeServicePrincipal        Type = "#microsoft.graph.servicePrincipal"
+	TypeSocialIdentityProvider  Type = "#microsoft.graph.socialIdentityProvider"
+	TypeUser                    Type = "#microsoft.graph.user"
 )
 
 // OData is used to unmarshall OData metadata from an API response.
 type OData struct {
 	Context      *string `json:"@odata.context"`
 	MetadataEtag *string `json:"@odata.metadataEtag"`
-	Type         *string `json:"@odata.type"`
+	Type         *Type   `json:"@odata.type"`
 	Count        *string `json:"@odata.count"`
 	NextLink     *string `json:"@odata.nextLink"`
 	Delta        *string `json:"@odata.delta"`
 	DeltaLink    *string `json:"@odata.deltaLink"`
-	Id           *string `json:"@odata.id"`
+	Id           *Id     `json:"@odata.id"`
 	Etag         *string `json:"@odata.etag"`
 
 	Error *Error `json:"-"`
