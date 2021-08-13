@@ -39,6 +39,8 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 	}
 	*c.RequestMiddlewares = append(*c.RequestMiddlewares, o.requestLogger)
 	*c.ResponseMiddlewares = append(*c.ResponseMiddlewares, o.responseLogger)
+
+	c.RetryableClient.RetryMax = 20
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

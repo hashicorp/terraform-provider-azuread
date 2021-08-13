@@ -267,6 +267,22 @@ func TestAccApplication_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.singleOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.threeOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -279,6 +295,38 @@ func TestAccApplication_owners(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_createWithNoOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_manyOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.manyOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
 			),
 		},
 		data.ImportStep(),
@@ -888,6 +936,17 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
+func (ApplicationResource) noOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  owners       = []
+}
+`, data.RandomInteger)
+}
+
 func (r ApplicationResource) singleOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -914,4 +973,41 @@ resource "azuread_application" "test" {
   ]
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (r ApplicationResource) manyOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_application" "owner" {
+  count        = 27
+  display_name = "acctestApplicationOwner${count.index}-%[1]d"
+}
+
+resource "azuread_service_principal" "owner" {
+  count          = 27
+  application_id = azuread_application.owner[count.index].application_id
+}
+
+resource "azuread_user" "owner" {
+  count               = 17
+  user_principal_name = "acctestApplicationOwner${count.index}-%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestApplicationOwner${count.index}-%[1]d"
+  password            = "Qwer5678!@#"
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  owners = flatten([
+    data.azuread_client_config.test.object_id,
+    azuread_service_principal.owner.*.object_id,
+    azuread_user.owner.*.object_id,
+  ])
+}
+`, data.RandomInteger)
 }

@@ -38,9 +38,9 @@ func applicationResource() *schema.Resource {
 		CustomizeDiff: applicationResourceCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -332,12 +332,13 @@ func applicationResource() *schema.Resource {
 			},
 
 			"owners": {
-				Description: "A list of object IDs of principals that will be granted ownership of the application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated",
+				Description: "A list of object IDs of principals that will be granted ownership of the application",
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Set:         schema.HashString,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -806,6 +807,8 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
+	callerId := meta.(*clients.Client).Claims.ObjectId
 	displayName := d.Get("display_name").(string)
 
 	// Perform this check at apply time to catch any duplicate names created during the same apply
@@ -846,6 +849,52 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
+	// Chunk the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
+	ownerChunks := make([]msgraph.Owners, 2)
+
+	// The calling principal should always be in the first block of owners
+	callerObject, _, err := directoryObjectsClient.Get(ctx, callerId, odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
+	}
+	if callerObject == nil {
+		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
+	}
+	ownerChunks[0] = msgraph.Owners{*callerObject}
+
+	// Track whether we need to remove the calling principal later on
+	removeCallerOwner := true
+
+	// Retrieve and set the initial owners, which can be up to 20 in total when creating the application
+	if v, ok := d.GetOk("owners"); ok {
+		c := 0
+		for _, id := range v.(*schema.Set).List() {
+			i := 0
+			if c >= 19 {
+				i = 1
+			}
+			if strings.EqualFold(id.(string), callerId) {
+				removeCallerOwner = false
+				continue
+			}
+			ownerObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+			}
+			if ownerObject == nil {
+				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", id)
+			}
+			if ownerObject.ODataId == nil {
+				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
+			}
+			ownerChunks[i] = append(ownerChunks[i], *ownerObject)
+			c++
+		}
+	}
+
+	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
+	properties.Owners = &ownerChunks[0]
+
 	app, _, err := client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create application")
@@ -857,9 +906,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*app.ID)
 
-	owners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
-	if err := applicationSetOwners(ctx, client, app, owners); err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not set owners for application with object ID: %q", *app.ID)
+	if len(ownerChunks[1]) > 0 {
+		// Add any remaining owners after the application is created
+		app.Owners = &ownerChunks[1]
+		if _, err := client.AddOwners(ctx, app); err != nil {
+			return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", d.Id())
+		}
+	}
+
+	// If the calling principal was not included in configuration, remove it now
+	if removeCallerOwner {
+		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
+			return tf.ErrorDiagF(err, "Could not remove initial owner from group with object ID: %q", d.Id())
+		}
 	}
 
 	return applicationResourceRead(ctx, d, meta)
@@ -867,6 +926,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -890,7 +950,9 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	properties := msgraph.Application{
-		ID:                    utils.String(applicationId),
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(applicationId),
+		},
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		DisplayName:           utils.String(displayName),
@@ -922,12 +984,44 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Could not update application with ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", d.Id())
 	}
 
-	owners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
-	if err := applicationSetOwners(ctx, client, &properties, owners); err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not set owners for application with object ID: %q", d.Id())
+	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+		owners, _, err := client.ListOwners(ctx, applicationId)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
+		}
+
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		existingOwners := *owners
+		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
+		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
+
+		if len(ownersToAdd) > 0 {
+			newOwners := make(msgraph.Owners, 0)
+			for _, m := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+				}
+				if ownerObject == nil {
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+				}
+				newOwners = append(newOwners, *ownerObject)
+			}
+
+			properties.Owners = &newOwners
+			if _, err := client.AddOwners(ctx, &properties); err != nil {
+				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", d.Id())
+			}
+		}
+
+		if len(ownersForRemoval) > 0 {
+			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove owners from application with object ID: %q", d.Id())
+			}
+		}
 	}
 
 	return applicationResourceRead(ctx, d, meta)

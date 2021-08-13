@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -33,9 +34,9 @@ func groupResource() *schema.Resource {
 		CustomizeDiff: groupResourceCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(20 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -115,7 +116,6 @@ func groupResource() *schema.Resource {
 				Description: "A set of owners who own this group. Supported object types are Users or Service Principals",
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Computed:    true,
 				Set:         schema.HashString,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
@@ -253,17 +253,6 @@ func groupResource() *schema.Resource {
 
 func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Groups.GroupsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
-
-	// Suppress the diff when the only change is to remove the calling principal as a group owner
-	// as we always want to retain such ownership in order to avoid orphaning the group
-	existingOwnersRaw, newOwnersRaw := diff.GetChange("owners")
-	existingOwners := tf.ExpandStringSlice(existingOwnersRaw.(*schema.Set).List())
-	newOwners := tf.ExpandStringSlice(newOwnersRaw.(*schema.Set).List())
-	ownersToRemove := utils.Difference(existingOwners, newOwners)
-	if len(ownersToRemove) == 1 && ownersToRemove[0] == callerId {
-		diff.Clear("owners")
-	}
 
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
@@ -346,6 +335,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 
 func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).Claims.ObjectId
 	displayName := d.Get("display_name").(string)
 
@@ -408,8 +398,59 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		properties.Visibility = utils.String(visibility)
 	}
 
-	// The calling principal is the initial owner (retained after other owners are also set)
-	properties.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, callerId)
+	// Chunk the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
+	ownerChunks := make([]msgraph.Owners, 2)
+
+	// The calling principal should always be in the first block of owners
+	callerObject, _, err := directoryObjectsClient.Get(ctx, callerId, odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
+	}
+	if callerObject == nil {
+		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
+	}
+	ownerChunks[0] = msgraph.Owners{*callerObject}
+
+	// Track whether we need to remove the calling principal later on
+	removeCallerOwner := true
+
+	// Retrieve and set the initial owners, which can be up to 20 in total when creating the group.
+	// Prefer users first, then service principals, to try and avoid API validation errors for Microsoft 365 groups.
+	if v, ok := d.GetOk("owners"); ok {
+		c := 0
+		for _, t := range []odata.Type{odata.TypeUser, odata.TypeServicePrincipal, odata.TypeGroup} {
+			for _, id := range v.(*schema.Set).List() {
+				i := 0
+				if c >= 19 {
+					i = 1
+				}
+				if strings.EqualFold(id.(string), callerId) {
+					removeCallerOwner = false
+					continue
+				}
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+				}
+				if ownerObject == nil {
+					return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", id)
+				}
+				if ownerObject.ODataType == nil {
+					return tf.ErrorDiagF(errors.New("ODataType was nil"), "Could not retrieve owner principal object %q", id)
+				}
+				if *ownerObject.ODataType == t {
+					if ownerObject.ODataId == nil {
+						return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
+					}
+					ownerChunks[i] = append(ownerChunks[i], *ownerObject)
+					c++
+				}
+			}
+		}
+	}
+
+	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
+	properties.Owners = &ownerChunks[0]
 
 	group, _, err := client.Create(ctx, properties)
 	if err != nil {
@@ -422,25 +463,42 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ID)
 
-	// Configure owners after the group is created, so they can be set one-by-one
-	if v, ok := d.GetOk("owners"); ok {
-		owners := v.(*schema.Set).List()
-		for _, o := range owners {
-			group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
-		}
+	// Add any remaining owners after the group is created
+	if len(ownerChunks[1]) > 0 {
+		group.Owners = &ownerChunks[1]
 		if _, err := client.AddOwners(ctx, group); err != nil {
-			return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not add owners to group with object ID: %q", d.Id())
 		}
 	}
 
-	// Configure members after the group is created, so they can be reliably batched
-	if v, ok := d.GetOk("members"); ok {
-		members := v.(*schema.Set).List()
-		for _, o := range members {
-			group.AppendMember(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, o.(string))
+	// If the calling principal was not included in configuration, remove it now
+	if removeCallerOwner {
+		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
+			return tf.ErrorDiagF(err, "Could not remove initial owner from group with object ID: %q", d.Id())
 		}
+	}
+
+	// Add members after the group is created
+	members := make(msgraph.Members, 0)
+	if v, ok := d.GetOk("members"); ok {
+		for _, id := range v.(*schema.Set).List() {
+			memberObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", id)
+			}
+			if memberObject == nil {
+				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", id)
+			}
+			if memberObject.ODataId == nil {
+				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id)
+			}
+			members = append(members, *memberObject)
+		}
+	}
+	if len(members) > 0 {
+		group.Members = &members
 		if _, err := client.AddMembers(ctx, group); err != nil {
-			return tf.ErrorDiagF(err, "Could not add members to group with ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not add members to group with object ID: %q", d.Id())
 		}
 	}
 
@@ -449,7 +507,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	groupId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -476,7 +534,9 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	group := msgraph.Group{
-		ID:              utils.String(groupId),
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(groupId),
+		},
 		Description:     utils.NullableString(d.Get("description").(string)),
 		DisplayName:     utils.String(displayName),
 		MailEnabled:     utils.Bool(d.Get("mail_enabled").(bool)),
@@ -498,7 +558,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("members"); ok && d.HasChange("members") {
 		members, _, err := client.ListMembers(ctx, *group.ID)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve members for group with ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not retrieve members for group with object ID: %q", d.Id())
 		}
 
 		existingMembers := *members
@@ -506,19 +566,28 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
 		membersToAdd := utils.Difference(desiredMembers, existingMembers)
 
-		if membersForRemoval != nil {
+		if len(membersForRemoval) > 0 {
 			if _, err = client.RemoveMembers(ctx, d.Id(), &membersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove members from group with ID: %q", d.Id())
+				return tf.ErrorDiagF(err, "Could not remove members from group with object ID: %q", d.Id())
 			}
 		}
 
-		if membersToAdd != nil {
+		if len(membersToAdd) > 0 {
+			newMembers := make(msgraph.Members, 0)
 			for _, m := range membersToAdd {
-				group.AppendMember(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
+				memberObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not retrieve principal object %q", m)
+				}
+				if memberObject == nil {
+					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", m)
+				}
+				newMembers = append(newMembers, *memberObject)
 			}
 
+			group.Members = &newMembers
 			if _, err := client.AddMembers(ctx, &group); err != nil {
-				return tf.ErrorDiagF(err, "Could not add members to group with ID: %q", d.Id())
+				return tf.ErrorDiagF(err, "Could not add members to group with object ID: %q", d.Id())
 			}
 		}
 	}
@@ -526,29 +595,36 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
 		owners, _, err := client.ListOwners(ctx, *group.ID)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve owners for group with ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not retrieve owners for group with object ID: %q", d.Id())
 		}
 
-		// The calling principal should always be an owner, regardless of the owners property
-		desiredOwners := utils.EnsureStringInSlice(*tf.ExpandStringSlicePtr(v.(*schema.Set).List()), callerId)
-
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
 
-		if ownersToAdd != nil {
+		if len(ownersToAdd) > 0 {
+			newOwners := make(msgraph.Owners, 0)
 			for _, m := range ownersToAdd {
-				group.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+				}
+				if ownerObject == nil {
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+				}
+				newOwners = append(newOwners, *ownerObject)
 			}
 
+			group.Owners = &newOwners
 			if _, err := client.AddOwners(ctx, &group); err != nil {
-				return tf.ErrorDiagF(err, "Could not add owners to group with ID: %q", d.Id())
+				return tf.ErrorDiagF(err, "Could not add owners to group with object ID: %q", d.Id())
 			}
 		}
 
-		if ownersForRemoval != nil {
+		if len(ownersForRemoval) > 0 {
 			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove owners from group with ID: %q", d.Id())
+				return tf.ErrorDiagF(err, "Could not remove owners from group with object ID: %q", d.Id())
 			}
 		}
 	}

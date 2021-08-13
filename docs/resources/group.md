@@ -11,8 +11,11 @@ Manages a group within Azure Active Directory.
 *Basic example*
 
 ```terraform
+data "azuread_client_config" "current" {}
+
 resource "azuread_group" "example" {
   display_name     = "example"
+  owners           = [data.azuread_client_config.current.object_id]
   security_enabled = true
 }
 ```
@@ -20,26 +23,44 @@ resource "azuread_group" "example" {
 *Microsoft 365 group*
 
 ```terraform
+data "azuread_client_config" "current" {}
+
+resource "azuread_user" "group_owner" {
+  user_principal_name = "example-group-owner@hashicorp.com"
+  display_name        = "Group Owner"
+  mail_nickname       = "example-group-owner"
+  password            = "SecretP@sswd99!"
+}
+
 resource "azuread_group" "example" {
   display_name     = "example"
   mail_enabled     = true
   mail_nickname    = "ExampleGroup"
   security_enabled = true
   types            = ["Unified"]
+
+  owners = [
+    data.azuread_client_config.current.object_id,
+    azuread_user.group_owner.object_id,
+  ]
 }
 ```
 
 *Group with members*
 
 ```terraform
+data "azuread_client_config" "current" {}
+
 resource "azuread_user" "example" {
   display_name        = "J Doe"
+  owners              = [data.azuread_client_config.current.object_id]
   password            = "notSecure123"
   user_principal_name = "jdoe@hashicorp.com"
 }
 
 resource "azuread_group" "example" {
   display_name     = "MyGroup"
+  owners           = [data.azuread_client_config.current.object_id]
   security_enabled = true
 
   members = [
@@ -60,11 +81,9 @@ The following arguments are supported:
 * `mail_enabled` - (Optional) Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. A group can be mail enabled _and_ security enabled.
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation. Required for mail-enabled groups. Changing this forces a new resource to be created.
 * `members` - (Optional) A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals.
-* `owners` - (Optional) A set of owners who own this group. Supported object types are Users or Service Principals.
+* `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, no owners are assigned.
 
-~> **Group Ownership and Permissions** Terraform always adds its own principal as a group owner to ensure that groups can continue to be managed. If using a user principal to execute Terraform, we recommend assigning the directory role `Groups Administrator` (or a role with the same effective permissions) to that user, in order to help prevent scenarios where groups may become unmanageable without administrative intervention.
-
--> **Ownership of Microsoft 365 Groups** Microsoft 365 groups are required to have at least one owner which _must be a user_ (i.e. not a service principal). If you are running Terraform with an Azure AD user principal, you do not need to specify any owners for a group, although we suggest always specifying at least one user as an owner in your configuration.
+-> **Group Ownership** It's recommended to always specify one or more group owners, including the principal being used to execute Terraform, such as in the example above. Microsoft 365 groups are required to have at least one owner which _must be a user_ (i.e. not a service principal).
 
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing group is found with the same name. Defaults to `false`.
 * `provisioning_options` - (Optional) A set of provisioning options for a Microsoft 365 group. The only supported value is `Team`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for details. Changing this forces a new resource to be created.

@@ -80,7 +80,9 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 	if disable {
 		// Disable any changed or removed roles
 		properties := msgraph.Application{
-			ID:       application.ID,
+			DirectoryObject: msgraph.DirectoryObject{
+				ID: application.ID,
+			},
 			AppRoles: &existingRoles,
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
@@ -193,7 +195,9 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 	if disable {
 		// Disable any changed or removed scopes
 		properties := msgraph.Application{
-			ID: application.ID,
+			DirectoryObject: msgraph.DirectoryObject{
+				ID: application.ID,
+			},
 			Api: &msgraph.ApplicationApi{
 				OAuth2PermissionScopes: &existingScopes,
 			},
@@ -300,39 +304,6 @@ func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClie
 	}
 
 	return &result, nil
-}
-
-func applicationSetOwners(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, desiredOwners []string) error {
-	if application.ID == nil {
-		return fmt.Errorf("Cannot use Application model with nil ID")
-	}
-
-	owners, _, err := client.ListOwners(ctx, *application.ID)
-	if err != nil {
-		return fmt.Errorf("retrieving owners for Application with object ID %q: %+v", *application.ID, err)
-	}
-
-	existingOwners := *owners
-	ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
-	ownersToAdd := utils.Difference(desiredOwners, existingOwners)
-
-	if ownersToAdd != nil {
-		for _, m := range ownersToAdd {
-			application.AppendOwner(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, m)
-		}
-
-		if _, err := client.AddOwners(ctx, application); err != nil {
-			return fmt.Errorf("adding owners to Application with object ID %q: %+v", *application.ID, err)
-		}
-	}
-
-	if ownersForRemoval != nil {
-		if _, err = client.RemoveOwners(ctx, *application.ID, &ownersForRemoval); err != nil {
-			return fmt.Errorf("removing owner from Application with object ID %q: %+v", *application.ID, err)
-		}
-	}
-
-	return nil
 }
 
 func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {

@@ -104,7 +104,9 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 	})
 
 	properties := msgraph.Application{
-		ID: app.ID,
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: app.ID,
+		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
 		},
@@ -157,7 +159,9 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	properties := msgraph.Application{
-		ID: app.ID,
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: app.ID,
+		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
 		},
@@ -245,7 +249,9 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 	}
 
 	properties := msgraph.Application{
-		ID: app.ID,
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: app.ID,
+		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
 		},
