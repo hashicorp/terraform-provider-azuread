@@ -54,9 +54,9 @@ func groupsDataSource() *schema.Resource {
 			},
 
 			"show_all": {
-				Description: "Boolean flag for no filter on groups returned.",
-				Type: schema.TypeBool,
-				Optional: true,
+				Description:  "Boolean flag for no filter on groups returned.",
+				Type:         schema.TypeBool,
+				Optional:     true,
 				ExactlyOneOf: []string{"display_names", "object_ids", "show_all"},
 			},
 		},
@@ -119,7 +119,6 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			groups = append(groups, *group)
 		}
 	}
-
 
 	if len(groups) != expectedCount && !showAll {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
