@@ -34,7 +34,7 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids"},
+				ExactlyOneOf: []string{"display_names", "object_ids", "show_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -46,11 +46,18 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids"},
+				ExactlyOneOf: []string{"display_names", "object_ids", "show_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
+			},
+
+			"show_all": {
+				Description: "Boolean flag for no filter on groups returned.",
+				Type: schema.TypeBool,
+				Optional: true,
+				ExactlyOneOf: []string{"display_names", "object_ids", "show_all"},
 			},
 		},
 	}
@@ -61,13 +68,22 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var groups []msgraph.Group
 	var expectedCount int
+	var showAll = d.Get("show_all").(bool)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {
 		displayNames = v.([]interface{})
 	}
 
-	if len(displayNames) > 0 {
+	if showAll {
+		result, _, err := client.List(ctx, odata.Query{})
+		if err != nil || len(*result) < 1 {
+			return tf.ErrorDiagPathF(err, "show_all", "No groups found.")
+		}
+
+		groups = append(groups, (*result)[0])
+
+	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
 			displayName := v.(string)
@@ -104,7 +120,8 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if len(groups) != expectedCount {
+
+	if len(groups) != expectedCount && !showAll {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
