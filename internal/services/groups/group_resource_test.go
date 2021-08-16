@@ -117,7 +117,7 @@ func TestAccGroup_owners(t *testing.T) {
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
 		},
 		data.ImportStep(),
@@ -126,14 +126,6 @@ func TestAccGroup_owners(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withNoOwners(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),
@@ -173,22 +165,7 @@ func TestAccGroup_owners(t *testing.T) {
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-func TestAccGroup_createWithNoOwners(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	r := GroupResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.withNoOwners(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
@@ -513,16 +490,6 @@ resource "azuread_group" "test" {
   visibility    = "%[2]s"
 }
 `, data.RandomInteger, visibility)
-}
-
-func (GroupResource) withNoOwners(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
-  security_enabled = true
-  owners           = []
-}
-`, data.RandomInteger)
 }
 
 func (r GroupResource) withOneOwner(data acceptance.TestData) string {
