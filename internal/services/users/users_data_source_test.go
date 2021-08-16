@@ -221,7 +221,7 @@ data "azuread_users" "test" {
 func (UsersDataSource) showAll() string {
 	return `
 data "azuread_users" "test" {
-	show_all_users = true
+  show_all_users = true
 }
 `
 }
