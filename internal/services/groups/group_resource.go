@@ -627,8 +627,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// If all owners are removed, restore the calling principal as the sole owner, in order to meet API
 		// restrictions about removing all owners, and maintain consistency with the Create behaviour.
-		// In theory this path should never be reached, since the property is Computed and conditionally ForceNew for
-		// the case of changing from some owners to zero owners, but we handle it anyway.
+		// In theory this path should never be reached, since the property is Computed and has MinItems: 1, but we handle it anyway.
 		desiredOwners := tf.ExpandStringSlice(v.(*schema.Set).List())
 		if len(desiredOwners) == 0 {
 			desiredOwners = []string{callerId}
