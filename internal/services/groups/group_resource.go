@@ -117,6 +117,7 @@ func groupResource() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				MinItems:    1,
+				MaxItems:    100,
 				Set:         schema.HashString,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
