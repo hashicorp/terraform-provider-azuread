@@ -336,6 +336,7 @@ func applicationResource() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Set:         schema.HashString,
+				MaxItems:    100,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
