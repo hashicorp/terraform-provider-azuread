@@ -917,7 +917,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	// If the calling principal was not included in configuration, remove it now
 	if removeCallerOwner {
 		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
-			return tf.ErrorDiagF(err, "Could not remove initial owner from group with object ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not remove initial owner from application with object ID: %q", d.Id())
 		}
 	}
 

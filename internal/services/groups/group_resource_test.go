@@ -181,7 +181,7 @@ func TestAccGroup_members(t *testing.T) {
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("members.#").HasValue("1"),
+				check.That(data.ResourceName).Key("members.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),
@@ -256,6 +256,15 @@ func TestAccGroup_manyMembersAndOwners(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("members.#").HasValue("66"),
 				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withOneOwnerAndNoMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("0"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
 		},
 		data.ImportStep(),
@@ -641,7 +650,7 @@ resource "azuread_group" "test" {
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (r GroupResource) withManyOwnersAndMembers(data acceptance.TestData) string {
+func (GroupResource) manyObjectsTemplate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 data "azuread_client_config" "test" {}
 
@@ -671,9 +680,15 @@ resource "azuread_user" "test" {
   display_name        = "acctestGroupParticipant${count.index}-%[1]d"
   password            = "Qwer5678!@#"
 }
+`, data.RandomInteger)
+}
+
+func (r GroupResource) withManyOwnersAndMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
 
 resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
+  display_name     = "acctestGroup-%[2]d"
   security_enabled = true
 
   owners = flatten([
@@ -689,7 +704,20 @@ resource "azuread_group" "test" {
     azuread_user.test.*.object_id,
   ])
 }
-`, data.RandomInteger)
+`, r.manyObjectsTemplate(data), data.RandomInteger)
+}
+
+func (r GroupResource) withOneOwnerAndNoMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  owners           = [azuread_user.test.0.object_id]
+  members          = []
+}
+`, r.manyObjectsTemplate(data), data.RandomInteger)
 }
 
 func (GroupResource) preventDuplicateNamesPass(data acceptance.TestData) string {

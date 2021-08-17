@@ -352,7 +352,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	// If the calling principal was not included in configuration, remove it now
 	if removeCallerOwner {
 		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
-			return tf.ErrorDiagF(err, "Could not remove initial owner from group with object ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not remove initial owner from service principal with object ID: %q", d.Id())
 		}
 	}
 
