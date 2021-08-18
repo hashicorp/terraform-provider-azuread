@@ -6,9 +6,17 @@ subcategory: "Service Principals"
 
 Gets information about an existing service principal associated with an application within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `Application.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
+
 ## Example Usage
 
-**Look up by application display name**
+*Look up by application display name*
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -16,7 +24,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-**Look up by application ID**
+*Look up by application ID (client ID)*
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -24,7 +32,7 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-**Look up by service principal object ID**
+*Look up by service principal object ID*
 
 ```terraform
 data "azuread_service_principal" "example" {
@@ -40,7 +48,7 @@ The following arguments are supported:
 * `display_name` - (Optional) The display name of the application associated with this service principal.
 * `object_id` - (Optional) The object ID of the service principal.
 
-~> **NOTE:** At least one of `application_id`, `display_name` or `object_id` must be specified.
+~> One of `application_id`, `display_name` or `object_id` must be specified.
 
 ## Attributes Reference
 
@@ -48,19 +56,22 @@ The following attributes are exported:
 
 * `account_enabled` - - Whether or not the service principal account is enabled.
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
+* `application_id` - The application ID (client ID) of the application associated with this service principal.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
 * `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `description` - A description of the service principal provided for internal end-users.
+* `display_name` - The display name of the application associated with this service principal.
 * `homepage_url` - Home page or landing page of the associated application.
 * `login_url` - The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps.
 * `logout_url` - The URL that will be used by Microsoft's authorization service to logout an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.
 * `notes` - A free text field to capture information about the service principal, typically used for operational purposes.
 * `notification_email_addresses` - A list of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.
-* `object_id` - The object ID for the service principal.
+* `object_id` - The object ID of the service principal.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, as exposed by the associated application, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_permission_scopes` - A collection of OAuth 2.0 delegated permissions exposed by the associated application. Each permission is covered by an `oauth2_permission_scopes` block as documented below.
+* `preferred_single_sign_on_mode` - The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps.
 * `redirect_uris` - A list of URLs where user tokens are sent for sign-in with the associated application, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent for the associated application.
 * `saml_metadata_url` - The URL where the service exposes SAML metadata for federation.
 * `service_principal_names` - A list of identifier URI(s), copied over from the associated application.

@@ -20,7 +20,7 @@ We recommend using either a Service Principal or Managed Identity when running T
 
 A Service Principal represents an application within Azure Active Directory whose properties and authentication tokens can be used as the `tenant_id`, `client_id` and `client_secret` fields needed by Terraform.
 
-Depending on how the service principal authenticates to Azure it can be created and configured in a number of different ways: 
+Depending on how the service principal authenticates to Azure it can be created and configured in a number of different ways:
 * [Authenticating to Azure using a Service Principal and a Client Certificate](service_principal_client_certificate.html)
 * [Authenticating to Azure using a Service Principal and a Client Secret](service_principal_client_secret.html)
 
@@ -49,6 +49,8 @@ Resource(s) | Role Name(s)
 `azuread_application`<br>`azuread_application_certificate`<br>`azuread_application_password`<br>`azuread_service_principal`<br>`azuread_service_principal_certificate`<br>`azuread_service_principal_password` | Application.ReadWrite.All
 `azuread_group`<br>`azuread_group_member` | Group.ReadWrite.All
 `azuread_user` | User.ReadWrite.All
+
+<br>
 
 -> **Permissions for other resources** If the resource you are using is not shown in the above table, consult the documentation page for the resource for a guide to the required permissions.
 

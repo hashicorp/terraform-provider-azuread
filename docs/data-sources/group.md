@@ -6,6 +6,14 @@ subcategory: "Groups"
 
 Gets information about an Azure Active Directory group.
 
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `Group.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
+
 ## Example Usage (by Group Display Name)
 
 ```terraform
@@ -24,7 +32,7 @@ The following arguments are supported:
 * `object_id` - (Optional) Specifies the object ID of the group.
 * `security_enabled` - (Optional) Whether the group is a security group.
 
-~> **NOTE:** One of `display_name` or `object_id` must be specified.
+~> One of `display_name` or `object_id` must be specified.
 
 ## Attributes Reference
 
