@@ -6,19 +6,27 @@ subcategory: "Domains"
 
 Use this data source to access information about existing Domains within Azure Active Directory.
 
--> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to `Directory.Read.All` within the `Windows Azure Active Directory` API.
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `Domain.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
 
 ## Example Usage
 
 ```terraform
 data "azuread_domains" "aad_domains" {}
 
-output "domains" {
-  value = data.azuread_domains.aad_domains.domains
+output "domain_names" {
+  value = data.azuread_domains.aad_domains.domains.*.domain_name
 }
 ```
 
 ## Argument Reference
+
+The following arguments are supported:
 
 * `admin_managed` - (Optional) Set to `true` to only return domains whose DNS is managed by Microsoft 365. Defaults to `false`.
 * `include_unverified` - (Optional) Set to `true` if unverified Azure AD domains should be included. Defaults to `false`.
@@ -27,11 +35,15 @@ output "domains" {
 * `only_root` - (Optional) Set to `true` to only return verified root domains. Excludes subdomains and unverified domains.
 * `supports_services` - (Optional) A list of supported services that must be supported by a domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`.
 
-~> **NOTE:** If `include_unverified` is set to `true` you cannot specify `only_default` or `only_initial`. Additionally, you cannot combine `only_default` with `only_initial`.
+-> **Note on filters** If `include_unverified` is set to `true`, you cannot specify `only_default` or `only_initial`. Additionally, you cannot combine `only_default` with `only_initial`.
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `domains` - A list of tenant domains. Each `domain` object provides the attributes documented below.
+
+---
 
 `domain` object exports the following:
 

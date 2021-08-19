@@ -6,6 +6,16 @@ subcategory: "Applications"
 
 Manages a password credential associated with an application within Azure Active Directory. These are also referred to as client secrets during authentication.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+
+-> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+
 ## Example Usage
 
 *Basic example*
