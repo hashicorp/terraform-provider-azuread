@@ -433,6 +433,7 @@ func applicationDataSource() *schema.Resource {
 
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client.BaseClient.DisableRetries = true
 
 	var app *msgraph.Application
 

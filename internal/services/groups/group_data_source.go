@@ -190,6 +190,7 @@ func groupDataSource() *schema.Resource {
 
 func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	client.BaseClient.DisableRetries = true
 
 	var group msgraph.Group
 	var displayName string
