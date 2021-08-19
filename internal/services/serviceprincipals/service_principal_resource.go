@@ -285,10 +285,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
 	}
 
-	// Chunk the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
-	ownerChunks := make([]msgraph.Owners, 2)
-
-	// The calling principal should always be in the first block of owners
+	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
+	// The calling principal should always be in the first slice of owners
 	callerObject, _, err := directoryObjectsClient.Get(ctx, callerId, odata.Query{})
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
@@ -296,19 +294,16 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	if callerObject == nil {
 		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
 	}
-	ownerChunks[0] = msgraph.Owners{*callerObject}
+	ownersFirst20 := msgraph.Owners{*callerObject}
+	var ownersExtra msgraph.Owners
 
 	// Track whether we need to remove the calling principal later on
 	removeCallerOwner := true
 
 	// Retrieve and set the initial owners, which can be up to 20 in total when creating the service principal
 	if v, ok := d.GetOk("owners"); ok {
-		c := 0
+		ownerCount := 0
 		for _, id := range v.(*schema.Set).List() {
-			i := 0
-			if c >= 19 {
-				i = 1
-			}
 			if strings.EqualFold(id.(string), callerId) {
 				removeCallerOwner = false
 				continue
@@ -323,13 +318,17 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 			if ownerObject.ODataId == nil {
 				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
 			}
-			ownerChunks[i] = append(ownerChunks[i], *ownerObject)
-			c++
+			if ownerCount < 19 {
+				ownersFirst20 = append(ownersFirst20, *ownerObject)
+			} else {
+				ownersExtra = append(ownersExtra, *ownerObject)
+			}
+			ownerCount++
 		}
 	}
 
 	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
-	properties.Owners = &ownerChunks[0]
+	properties.Owners = &ownersFirst20
 
 	servicePrincipal, _, err = client.Create(ctx, properties)
 	if err != nil {
@@ -342,8 +341,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	d.SetId(*servicePrincipal.ID)
 
 	// Add any remaining owners after the service principal is created
-	if len(ownerChunks[1]) > 0 {
-		servicePrincipal.Owners = &ownerChunks[1]
+	if len(ownersExtra) > 0 {
+		servicePrincipal.Owners = &ownersExtra
 		if _, err := client.AddOwners(ctx, servicePrincipal); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
 		}

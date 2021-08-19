@@ -401,8 +401,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		properties.Visibility = utils.String(visibility)
 	}
 
-	// Chunk the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
-	ownerChunks := make([]msgraph.Owners, 2)
+	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
+	var ownersFirst20, ownersExtra msgraph.Owners
 
 	// getOwnerObject retrieves and validates a DirectoryObject for a given object ID
 	getOwnerObject := func(ctx context.Context, id string) (*msgraph.DirectoryObject, error) {
@@ -430,15 +430,11 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// ownership-related API validation errors for Microsoft 365 groups.
 	if v, ok := d.GetOk("owners"); ok {
 		owners := v.(*schema.Set).List()
-		c := 0
+		ownerCount := 0
 
 		// First look for the calling principal in the specified owners; it should always be included in the initial
 		// owners to avoid orphaning a group when the caller doesn't have the Groups.ReadWrite.All scope.
 		for _, id := range owners {
-			i := 0
-			if c >= 20 {
-				i = 1
-			}
 			ownerObject, err := getOwnerObject(ctx, id.(string))
 			if err != nil {
 				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
@@ -447,42 +443,46 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				if ownerObject.ODataId == nil {
 					return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
 				}
-				ownerChunks[i] = append(ownerChunks[i], *ownerObject)
-				c++
+				if ownerCount < 20 {
+					ownersFirst20 = append(ownersFirst20, *ownerObject)
+				} else {
+					ownersExtra = append(ownersExtra, *ownerObject)
+				}
+				ownerCount++
 			}
 		}
 
 		// Then look for users, and finally service principals
 		for _, t := range []odata.Type{odata.TypeUser, odata.TypeServicePrincipal} {
 			for _, id := range owners {
-				i := 0
-				if c >= 20 {
-					i = 1
-				}
 				ownerObject, err := getOwnerObject(ctx, id.(string))
 				if err != nil {
 					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
 				}
 				if *ownerObject.ODataType == t {
-					ownerChunks[i] = append(ownerChunks[i], *ownerObject)
-					c++
+					if ownerCount < 20 {
+						ownersFirst20 = append(ownersFirst20, *ownerObject)
+					} else {
+						ownersExtra = append(ownersExtra, *ownerObject)
+					}
+					ownerCount++
 				}
 			}
 		}
 	}
 
-	if len(ownerChunks[0]) == 0 {
+	if len(ownersFirst20) == 0 {
 		// The calling principal is the default owner if no others are specified. This is the default API behaviour, so
 		// we're being explicit about this in order to minimise confusion and avoid inconsistent API behaviours.
 		callerObject, err := getOwnerObject(ctx, callerId)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
 		}
-		ownerChunks[0] = msgraph.Owners{*callerObject}
+		ownersFirst20 = msgraph.Owners{*callerObject}
 	}
 
 	// Set the initial owners, which either be the calling principal, or up to 20 of the owners specified in configuration
-	properties.Owners = &ownerChunks[0]
+	properties.Owners = &ownersFirst20
 
 	group, _, err := client.Create(ctx, properties)
 	if err != nil {
@@ -496,8 +496,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(*group.ID)
 
 	// Add any remaining owners after the group is created
-	if len(ownerChunks[1]) > 0 {
-		group.Owners = &ownerChunks[1]
+	if len(ownersExtra) > 0 {
+		group.Owners = &ownersExtra
 		if _, err := client.AddOwners(ctx, group); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to group with object ID: %q", d.Id())
 		}
