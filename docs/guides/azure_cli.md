@@ -25,17 +25,11 @@ We recommend using either a Service Principal or Managed Identity when running T
 
 ## Logging into the Azure CLI
 
-~> **Using other clouds** If you're using the **China**, **German** or **Government** Azure Clouds - you'll need to first configure the Azure CLI to work with that Cloud, so that the correct authentication service is used.  You can do this by running:
-
-```shell
-$ az cloud set --name AzureChinaCloud|AzureGermanCloud|AzureUSGovernment
-```
-
----
+-> **Using other clouds** If you're using the **China**, **German** or **Government** Azure Clouds - you'll need to first configure the Azure CLI to work with that Cloud, so that the correct authentication service is used.  You can do this by running: <br><br>`$ az cloud set --name AzureChinaCloud|AzureGermanCloud|AzureUSGovernment`
 
 Firstly, login to the Azure CLI using:
 
-```shell
+```shell-session
 $ az login --allow-no-subscriptions
 ```
 
@@ -43,52 +37,47 @@ The `--allow-no-subscriptions` argument enables access to tenants that have no l
 
 Once logged in - it's possible to list the Subscriptions and Tenants associated with the account via:
 
-```shell
-$ az account list
+```shell-session
+$ az account list -o table --all --query "[].{TenantID: tenantId, Subscription: name, Default: isDefault}"
 ```
 
 The output (similar to below) will display one or more Tenants and/or Subscriptions.
 
-```json
-[
-  {
-    "cloudName": "AzureCloud",
-    "id": "00000000-0000-0000-0000-000000000000",
-    "isDefault": true,
-    "name": "PAYG Subscription",
-    "state": "Enabled",
-    "tenantId": "00000000-0000-0000-0000-000000000000",
-    "user": {
-      "name": "user@example.com",
-      "type": "user"
-    }
-  }
-]
+```
+TenantID                              Subscription                         Default
+------------------------------------  -----------------------------------  ---------
+00000000-0000-1111-1111-111111111111  N/A(tenant level account)            False
+00000000-0000-2222-2222-222222222222  N/A(tenant level account)            False
+00000000-0000-1111-1111-111111111111  My Subscription                      True
+00000000-0000-1111-1111-111111111111  My Other Subscription                False
 ```
 
-Each entry shown is referred to as an `Azure CLI account`, which represents either a subscription with its linked tenant, or a tenant without any accessible subscriptions. The provider will select the tenant ID from your default Azure CLI account. If you have more than one tenant listed in the output of `az account list`, for example if you are a guest user in other tenants, you can specify the tenant to use.
+Each entry shown is referred to as an `Azure CLI account`, which represents either a subscription with its linked tenant, or a tenant without any accessible subscriptions (Azure CLI does not show tenant names or domains). The provider will select the tenant ID from your default Azure CLI account. If you have more than one tenant listed in the output of `az account list`, for example if you are a guest user in other tenants, you can specify the tenant to use.
 
-```shell
+```shell-session
 # sh
-export ARM_TENANT_ID=00000000-0000-0000-0000-000000000000
-
+export ARM_TENANT_ID=00000000-0000-2222-2222-222222222222
+```
+```powershell
 # PowerShell
-$env:ARM_TENANT_ID = 00000000-0000-0000-0000-000000000000
+$env:ARM_TENANT_ID = 00000000-0000-2222-2222-222222222222
 ```
 
 You can also configure the tenant ID from within the provider block.
 
 ```hcl
 provider "azuread" {
-  tenant_id = "00000000-0000-0000-0000-000000000000"
+  tenant_id = "00000000-0000-2222-2222-222222222222"
 }
 ```
 
 Alternatively, you can configure the Azure CLI to default to the tenant you are managing with Terraform.
 
-```bash
+```shell-session
 $ az login --allow-no-subscriptions --tenant "TENANT_ID_OR_DOMAIN"
 ```
+
+<br>
 
 -> **Tenants and Subscriptions** The AzureAD provider operates on tenants and not on subscriptions. We recommend always specifying `az login --allow-no-subscriptions` as it will force the Azure CLI to report tenants with no associated subscriptions, or where your user account does not have any roles assigned for a subscription.
 
@@ -100,7 +89,7 @@ No specific configuration is required for the provider to use Azure CLI authenti
 
 ```hcl
 provider "azuread" {
-  tenant_id = "10000000-2000-3000-4000-500000000000"
+  tenant_id = "00000000-0000-1111-1111-111111111111"
 }
 ```
 

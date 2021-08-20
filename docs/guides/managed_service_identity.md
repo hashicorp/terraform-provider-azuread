@@ -34,11 +34,11 @@ When using a managed identity, you can only manage resources in the tenant where
 
 The (simplified) Terraform configuration below configures a Virtual Machine with a system-assigned identity, and then outputs the Object ID of the corresponding Service Principal:
 
-```hcl
+```terraform
 data "azurerm_subscription" "current" {}
 
-resource "azurerm_linux_virtual_machine" "example" {
-  name = "test-vm"
+resource "azurerm_linux_virtual_machine" "management_host" {
+  name = "management-vm"
 
   # ...
 
@@ -47,14 +47,33 @@ resource "azurerm_linux_virtual_machine" "example" {
   }
 }
 
-output "example_msi_object_id" {
-  value = azurerm_linux_virtual_machine.test.identity.0.principal_id
+output "management_host_identity_object_id" {
+  value = azurerm_linux_virtual_machine.management_host.identity.0.principal_id
 }
 ```
 
 Refer to the [azurerm_linux_virtual_machine][azurerm_linux_virtual_machine] and [azurerm_windows_virtual_machine][azurerm_windows_virtual_machine] documentation for more information on how to use these resources to launch a new virtual machine.
 
 The implicitly created Service Principal should have the same or similar name as your virtual machine. At this point you will need to assign permissions to access Azure Active Directory to create and modify Azure Active Directory objects such as users and groups. See the [Configuring a Service Principal for managing Azure Active Directory][azuread-service-principal-permissions] guide for more information.
+
+## Using a user-assigned identity
+
+As an alternative to using a system-assigned managed identity, you can create a user-assigned identity that can be allocated to one or more resources such as virtual machines.
+
+```terraform
+resource "azurerm_user_assigned_identity" "terraform" {
+  name = "terraform"
+  # ...
+}
+
+output "terraform_identity_object_id" {
+  value = azurerm_user_assigned_identity.terraform.principal_id
+}
+```
+
+Refer to the [azurerm_user_assigned_identity][azurerm_user_assigned_identity] documentation for more information on how to configure this resource.
+
+The implicitly created Service Principal should have the same or similar name as the user assigned identity. At this point you will need to assign permissions to access Azure Active Directory to create and modify Azure Active Directory objects such as users and groups. See the [Configuring a Service Principal for managing Azure Active Directory][azuread-service-principal-permissions] guide for more information.
 
 ## Configuring Managed Identity in Terraform
 
@@ -108,3 +127,4 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 [azuread-service-principal-permissions]: https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/service_principal_configuration#method-1-api-roles-recommended-for-service-principals
 [azurerm_linux_virtual_machine]: https://www.terraform.io/docs/providers/azurerm/r/linux_virtual_machine.html
 [azurerm_windows_virtual_machine]: https://www.terraform.io/docs/providers/azurerm/r/windows_virtual_machine.html
+[azurerm_user_assigned_identity]: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity

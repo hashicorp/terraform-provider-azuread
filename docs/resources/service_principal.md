@@ -6,6 +6,14 @@ subcategory: "Service Principals"
 
 Manages a service principal associated with an application within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+
 ## Example Usage
 
 ```terraform

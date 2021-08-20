@@ -6,6 +6,16 @@ subcategory: "Applications"
 
 Manages an application registration within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+
+-> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+
 ## Example Usage
 
 ```terraform
@@ -267,15 +277,10 @@ In addition to all arguments above, the following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `application_id` - The Application ID (also called Client ID).
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
+* `logo_url` - CDN URL to the application's logo.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
 * `publisher_domain` - The verified publisher domain for the application.
-
----
-
-`info` block exports the following:
-
-* `logo_url` - CDN URL to the application's logo.
 
 ## Import
 

@@ -6,6 +6,14 @@ subcategory: "Users"
 
 Gets information about an Azure Active Directory user.
 
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `User.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
+
 ## Example Usage
 
 ```terraform
@@ -22,7 +30,7 @@ The following arguments are supported:
 * `object_id` - (Optional) The object ID of the user.
 * `user_principal_name` - (Optional) The user principal name (UPN) of the user.
 
-~> **NOTE:** One of `user_principal_name`, `object_id` or `mail_nickname` must be specified.
+~> One of `user_principal_name`, `object_id` or `mail_nickname` must be specified.
 
 ## Attributes Reference
 
@@ -44,9 +52,10 @@ The following attributes are exported:
 * `given_name` - The given name (first name) of the user.
 * `im_addresses` - A list of instant message voice over IP (VOIP) session initiation protocol (SIP) addresses for the user.
 * `job_title` - The user’s job title.
-* `mail_nickname` - The email alias of the user.
 * `mail` - The SMTP address for the user.
+* `mail_nickname` - The email alias of the user.
 * `mobile_phone` - The primary cellular telephone number for the user.
+* `object_id` - The object ID of the user.
 * `office_location` - The office location in the user's place of business.
 * `onpremises_distinguished_name` - The on-premises distinguished name (DN) of the user, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_domain_name` - The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.

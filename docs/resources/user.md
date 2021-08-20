@@ -6,6 +6,14 @@ subcategory: "Users"
 
 Manages a user within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `User.ReadWrite.All` or `Directory.ReadWrite.All`
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `User Administrator` or `Global Administrator`
+
 ## Example Usage
 
 ```terraform
