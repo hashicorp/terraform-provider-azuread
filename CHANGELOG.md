@@ -58,6 +58,7 @@ IMPROVEMENTS:
 * `azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
 * `azuread_service_principal` - support the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` properties [GH-481]
 * `azuread_service_principal` - support the `alternative_names`, `description`, `notes` and `notification_email_addresses` properties [GH-481]
+* `azuread_service_principal` - support the `owners` property [GH-519]
 * `azuread_service_principal` - support the `use_existing` property [GH-481]
 * `azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-481]
 * `azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes [GH-481]
@@ -80,6 +81,8 @@ BUG FIXES:
 * `azuread_application` - resolved an issue where the default scope could not be removed from an application [GH-461]
 * `azuread_application` - resolved an issue where multiple `group_membership_claims` could not be specified [GH-461]
 * `azuread_application_password` - the `display_name` / `description` properties are no longer stored using the `customKeyIdentifier` API field, lifting the 32 byte limit [GH-461]
+* `azuread_group` - fix a bug where `owners` or `members` would sometimes not be updated [GH-519]
+* `azuread_group` - fix some ownership-related bugs where groups could sometimes not be created or updated [GH-519]
 * `azuread_user` - resolved an issue where importing users would inadvertently reset their password [GH-461]
 
 BREAKING CHANGES:
