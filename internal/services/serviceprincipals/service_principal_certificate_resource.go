@@ -163,7 +163,9 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 	newCredentials = append(newCredentials, *credential)
 
 	properties := msgraph.ServicePrincipal{
-		ID:             &id.ObjectId,
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: &id.ObjectId,
+		},
 		KeyCredentials: &newCredentials,
 	}
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -257,7 +259,9 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 	}
 
 	properties := msgraph.ServicePrincipal{
-		ID:             &id.ObjectId,
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: &id.ObjectId,
+		},
 		KeyCredentials: &newCredentials,
 	}
 	if _, err := client.Update(ctx, properties); err != nil {

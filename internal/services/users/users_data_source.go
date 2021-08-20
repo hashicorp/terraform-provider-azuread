@@ -146,6 +146,7 @@ func usersData() *schema.Resource {
 
 func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	client.BaseClient.DisableRetries = true
 
 	var users []msgraph.User
 	var expectedCount int

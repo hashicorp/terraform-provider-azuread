@@ -425,7 +425,9 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	client := meta.(*clients.Client).Users.UsersClient
 
 	properties := msgraph.User{
-		ID:                      utils.String(d.Id()),
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(d.Id()),
+		},
 		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
 		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
 		City:                    utils.NullableString(d.Get("city").(string)),

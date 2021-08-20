@@ -102,6 +102,94 @@ func TestAccServicePrincipal_update(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipal_owners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.singleOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.singleOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.threeOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_createWithNoOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccServicePrincipal_manyOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.manyOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccServicePrincipal_useExisting(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "msgraph")
 	r := ServicePrincipalResource{}
@@ -228,6 +316,125 @@ resource "azuread_service_principal" "test" {
   tags              = ["test", "multiple", "CapitalS"]
 }
 `, data.RandomInteger, data.UUID(), data.UUID(), data.UUID(), data.UUID())
+}
+
+func (ServicePrincipalResource) templateThreeUsers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "testA" {
+  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-A"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testB" {
+  user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-B"
+  mail_nickname       = "acctestUser-%[1]d-B"
+  password            = "%[2]s"
+}
+
+resource "azuread_user" "testC" {
+  user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d-C"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, data.RandomPassword)
+}
+
+func (ServicePrincipalResource) noOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+  owners         = []
+}
+`, data.RandomInteger)
+}
+
+func (r ServicePrincipalResource) singleOwner(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[2]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+  owners = [
+    azuread_user.testA.object_id,
+  ]
+}
+`, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (r ServicePrincipalResource) threeOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[2]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+  owners = [
+    azuread_user.testA.object_id,
+    azuread_user.testB.object_id,
+    azuread_user.testC.object_id,
+  ]
+}
+`, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (r ServicePrincipalResource) manyOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_application" "owner" {
+  count        = 27
+  display_name = "acctestServicePrincipalOwner${count.index}-%[1]d"
+}
+
+resource "azuread_service_principal" "owner" {
+  count          = 27
+  application_id = azuread_application.owner[count.index].application_id
+}
+
+resource "azuread_user" "owner" {
+  count               = 17
+  user_principal_name = "acctestServicePrincipalOwner${count.index}-%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestServicePrincipalOwner${count.index}-%[1]d"
+  password            = "Qwer5678!@#"
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+
+  owners = flatten([
+    data.azuread_client_config.test.object_id,
+    azuread_service_principal.owner.*.object_id,
+    azuread_user.owner.*.object_id,
+  ])
+}
+`, data.RandomInteger)
 }
 
 func (ServicePrincipalResource) useExisting(_ acceptance.TestData) string {

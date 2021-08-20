@@ -2,6 +2,7 @@ package groups
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -57,6 +59,7 @@ func groupMemberResource() *schema.Resource {
 
 func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	groupId := d.Get("group_object_id").(string)
 	memberId := d.Get("member_object_id").(string)
 
@@ -85,7 +88,17 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	group.AppendMember(client.BaseClient.Endpoint, client.BaseClient.ApiVersion, memberId)
+	memberObject, _, err := directoryObjectsClient.Get(ctx, memberId, odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not retrieve principal object %q", memberId)
+	}
+	if memberObject == nil {
+		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
+	}
+	if memberObject.ODataId == nil {
+		return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
+	}
+	group.Members = &msgraph.Members{*memberObject}
 
 	if _, err := client.AddMembers(ctx, group); err != nil {
 		return tf.ErrorDiagF(err, "Adding group member %q to group %q", memberId, groupId)
