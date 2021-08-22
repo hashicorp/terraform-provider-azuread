@@ -117,7 +117,7 @@ data "azuread_groups" "test" {
 func (GroupsDataSource) showAll() string {
 	return `
 data "azuread_groups" "test" {
-	show_all = true
+  show_all = true
 }
 `
 }
