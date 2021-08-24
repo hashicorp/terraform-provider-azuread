@@ -4,6 +4,10 @@ The Azure Provider can be used to configure infrastructure in [Azure Active Dire
 
 Interested in the provider's latest features, or want to make sure you're up to date? Check out the [changelog](https://github.com/hashicorp/terraform-provider-azuread/blob/main/CHANGELOG.md) for version information and release notes.
 
+## Getting Started
+
+If you're new to the AzureAD provider, check out our [Learn tutorial](https://learn.hashicorp.com/tutorials/terraform/azure-ad), which guides practitioners through learning the Terraform configuration language and the AzureAD provider, with an example workflow for managing users and groups.
+
 ## Example Usage
 
 ```hcl
