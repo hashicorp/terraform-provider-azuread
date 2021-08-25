@@ -1,27 +1,30 @@
 package client
 
 import (
-	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/manicminer/hamilton/msgraph"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
 type Client struct {
-	MsClient                 *msgraph.DirectoryRolesClient
+	DirectoryObjectsClient   *msgraph.DirectoryObjectsClient
+	DirectoryRolesClient     *msgraph.DirectoryRolesClient
 	DirRoleTemplatesMsClient *msgraph.DirectoryRoleTemplatesClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	aadClient := graphrbac.NewGroupsClientWithBaseURI(o.AadGraphEndpoint, o.TenantID)
-	dirRolesMsClient := msgraph.NewDirectoryRolesClient(o.TenantID)
-	dirRoleTemplatesMsClient := msgraph.NewDirectoryRoleTemplatesClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
-	o.ConfigureClient(&dirRolesMsClient.BaseClient, &aadClient.Client)
-	o.ConfigureClient(&dirRoleTemplatesMsClient.BaseClient, &aadClient.Client)
+	dirRolesClient := msgraph.NewDirectoryRolesClient(o.TenantID)
+	o.ConfigureClient(&dirRolesClient.BaseClient)
+
+	dirRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient(o.TenantID)
+	o.ConfigureClient(&dirRoleTemplatesClient.BaseClient)
 
 	return &Client{
-		MsClient:                 dirRolesMsClient,
-		DirRoleTemplatesMsClient: dirRoleTemplatesMsClient,
+		DirectoryObjectsClient:   directoryObjectsClient,
+		DirectoryRolesClient:     dirRolesClient,
+		DirRoleTemplatesMsClient: dirRoleTemplatesClient,
 	}
 }

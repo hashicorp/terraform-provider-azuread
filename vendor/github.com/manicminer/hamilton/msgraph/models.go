@@ -1185,15 +1185,3 @@ type VerifiedPublisher struct {
 	DisplayName         *string    `json:"displayName,omitempty"`
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
 }
-
-type AppRoleAssignment struct {
-	Id                   *string    `json:"id,omitempty"`
-	DeletedDateTime      *time.Time `json:"deletedDateTime,omitempty"`
-	AppRoleId            *string    `json:"appRoleId,omitempty"`
-	CreatedDateTime      *time.Time `json:"createdDateTime,omitempty"`
-	PrincipalDisplayName *string    `json:"principalDisplayName,omitempty"`
-	PrincipalId          *string    `json:"principalId,omitempty"`
-	PrincipalType        *string    `json:"principalType,omitempty"`
-	ResourceDisplayName  *string    `json:"resourceDisplayName,omitempty"`
-	ResourceId           *string    `json:"resourceId,omitempty"`
-}

@@ -43,7 +43,7 @@ func TestAccDirectoryRole_basic(t *testing.T) {
 func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
-	dirRole, status, err := clients.DirectoryRoles.MsClient.Get(ctx, state.ID)
+	dirRole, status, err := clients.DirectoryRoles.DirectoryRolesClient.Get(ctx, state.ID)
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("directory role with object ID %q does not exist", state.ID)
