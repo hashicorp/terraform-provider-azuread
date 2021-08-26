@@ -1,4 +1,4 @@
-## 2.0.0 (Unreleased)
+## 2.0.0 (August 26, 2021)
 
 NOTES:
 
@@ -7,134 +7,134 @@ NOTES:
 
 FEATURES:
 
-* **Provider:** Client Certificate authentication now supports specifying an inline certificate [GH-490]
-* **New Data Source:** `azuread_application_published_app_ids` [GH-481]
-* **New Resource:** `application_pre_authorized` [GH-472]
+* **Provider:** Client Certificate authentication now supports specifying an inline certificate ([#490](https://github.com/terraform-providers/terraform-provider-azuread/issues/490))
+* **New Data Source:** `azuread_application_published_app_ids` ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* **New Resource:** `application_pre_authorized` ([#472](https://github.com/terraform-providers/terraform-provider-azuread/issues/472))
 
 IMPROVEMENTS:
 
-* `data.azuread_application` - the `api` block now supports the `accept_mapped_claims`, `known_client_applications` and `requested_access_token_version` attributes [GH-474]
-* `data.azuread_application` - the `implicit_grant` block now supports the `id_token_issuance_enabled` attribute [GH-461]
-* `data.azuread_application` - the `optional_claims` block now supports the `saml2_token` attribute [GH-461]
-* `data.azuread_application` - export the `disabled_by_microsoft` attribute [GH-474]
-* `data.azuread_application` - export the `device_only_auth_enabled` and `oauth2_post_response_required` attributes [GH-474]
-* `data.azuread_application` - export the `logo_url`, `marketing_url`, `privacy_statement_url` and `terms_of_service_url` attributes [GH-474]
-* `data.azuread_application` - export the `publisher_domain` attribute [GH-474]
-* `data.azuread_application` - export the `public_client` block [GH-474]
-* `data.azuread_application` - export the `single_page_application` block [GH-474]
-* `data.azuread_application` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-474]
-* `data.azuread_domains` - export the `admin_managed`, `root` and `supported_services` attributes for each domain [GH-461]
-* `data.azuread_domains` - support the `admin_managed`, `only_root` and `supports_services` properties [GH-461]
-* `data.azuread_group` - export the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` attributes [GH-476]
-* `data.azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes [GH-476]
-* `data.azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
-* `data.azuread_service_principal` - export the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` attributes [GH-481]
-* `data.azuread_service_principal` - export the `alternative_names`, `description`, `notes` and `notification_email_addresses` attributes [GH-481]
-* `data.azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-481]
-* `data.azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes [GH-481]
-* `data.azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes [GH-481]
-* `data.azuread_user` - export the `age_group` and `consent_provided_for_minor` attributes [GH-476]
-* `data.azuread_user` - export the `business_phones`, `employee_id`, `fax_number` and `preferred_language` attributes [GH-476]
-* `data.azuread_user` - export the `mail`, `other_mails` and `show_in_address_list` attributes [GH-476]
-* `data.azuread_user` - export the `creation_type`, `external_user_state`, `im_addresses` and `proxy_addresses` attributes [GH-476]
-* `data.azuread_user` - export the `onpremises_distinguished_name`, `onpremises_domain_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
-* `azuread_application` - the `api` block now supports the `accept_mapped_claims`, `known_client_applications` and `requested_access_token_version` properties [GH-474]
-* `azuread_application` - the `implicit_grant` block now supports the `id_token_issuance_enabled` property [GH-461]
-* `azuread_application` - the `optional_claims` block now supports the `saml2_token` block [GH-461]
-* `azuread_application` - the `sign_in_audience` property now supports the `AzureADandPersonalMicrosoftAccount` and `PersonalMicrosoftAccount` values [GH-461]
-* `azuread_application` - export the `disabled_by_microsoft` attribute [GH-474]
-* `azuread_application` - export the `publisher_domain` attribute [GH-474]
-* `azuread_application` - support the `device_only_auth_enabled` and `oauth2_post_response_required` properties [GH-474]
-* `azuread_application` - support the `logo_url`, `marketing_url`, `privacy_statement_url` and `terms_of_service_url` properties [GH-474]
-* `azuread_application` - support for the `public_client` block [GH-474]
-* `azuread_application` - support for the `single_page_application` block [GH-474]
-* `azuread_application` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-474]
-* `azuread_application_password` - support the `keepers` property [GH-481]
-* `azuread_group` - support for creating mail-enabled groups [GH-461]
-* `azuread_group` - support for creating Microsoft 365 groups [GH-461]
-* `azuread_group` - support for updating groups without recreating them [GH-461]
-* `azuread_group` - support the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` properties [GH-476]
-* `azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes [GH-476]
-* `azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
-* `azuread_service_principal` - support the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` properties [GH-481]
-* `azuread_service_principal` - support the `alternative_names`, `description`, `notes` and `notification_email_addresses` properties [GH-481]
-* `azuread_service_principal` - support the `owners` property [GH-519]
-* `azuread_service_principal` - support the `use_existing` property [GH-481]
-* `azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes [GH-481]
-* `azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes [GH-481]
-* `azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes [GH-481]
-* `azuread_service_principal_password` - support the `keepers` property [GH-481]
-* `azuread_user` - support the `age_group` and `consent_provided_for_minor` properties [GH-476]
-* `azuread_user` - support the `business_phones`, `employee_id`, `fax_number` and `preferred_language` properties [GH-476]
-* `azuread_user` - support the `mail`, `other_mails` and `show_in_address_list` properties [GH-476]
-* `azuread_user` - export the `creation_type`, `external_user_state`, `im_addresses` and `proxy_addresses` attributes [GH-476]
-* `azuread_user` - export the `onpremises_distinguished_name`, `onpremises_domain_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes [GH-476]
+* `data.azuread_application` - the `api` block now supports the `accept_mapped_claims`, `known_client_applications` and `requested_access_token_version` attributes ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - the `implicit_grant` block now supports the `id_token_issuance_enabled` attribute ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the `optional_claims` block now supports the `saml2_token` attribute ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - export the `disabled_by_microsoft` attribute ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `device_only_auth_enabled` and `oauth2_post_response_required` attributes ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `logo_url`, `marketing_url`, `privacy_statement_url` and `terms_of_service_url` attributes ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `publisher_domain` attribute ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `public_client` block ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `single_page_application` block ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_application` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `data.azuread_domains` - export the `admin_managed`, `root` and `supported_services` attributes for each domain ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_domains` - support the `admin_managed`, `only_root` and `supports_services` properties ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_group` - export the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_service_principal` - export the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `data.azuread_service_principal` - export the `alternative_names`, `description`, `notes` and `notification_email_addresses` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `data.azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `data.azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `data.azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `data.azuread_user` - export the `age_group` and `consent_provided_for_minor` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_user` - export the `business_phones`, `employee_id`, `fax_number` and `preferred_language` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_user` - export the `mail`, `other_mails` and `show_in_address_list` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_user` - export the `creation_type`, `external_user_state`, `im_addresses` and `proxy_addresses` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `data.azuread_user` - export the `onpremises_distinguished_name`, `onpremises_domain_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_application` - the `api` block now supports the `accept_mapped_claims`, `known_client_applications` and `requested_access_token_version` properties ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - the `implicit_grant` block now supports the `id_token_issuance_enabled` property ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `optional_claims` block now supports the `saml2_token` block ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `sign_in_audience` property now supports the `AzureADandPersonalMicrosoftAccount` and `PersonalMicrosoftAccount` values ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - export the `disabled_by_microsoft` attribute ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - export the `publisher_domain` attribute ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - support the `device_only_auth_enabled` and `oauth2_post_response_required` properties ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - support the `logo_url`, `marketing_url`, `privacy_statement_url` and `terms_of_service_url` properties ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - support for the `public_client` block ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - support for the `single_page_application` block ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes ([#474](https://github.com/terraform-providers/terraform-provider-azuread/issues/474))
+* `azuread_application_password` - support the `keepers` property ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_group` - support for creating mail-enabled groups ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - support for creating Microsoft 365 groups ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - support for updating groups without recreating them ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - support the `assignable_to_role`, `behaviors`, `mail_nickname`, `theme` and `visibility` properties ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_group` - export the `mail`, `preferred_language` and `proxy_addresses` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_group` - export the `onpremises_domain_name`, `onpremises_netbios_name`, `onpremises_sam_account_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_service_principal` - support the `account_enabled`, `login_url` and `preferred_single_sign_on_mode` properties ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal` - support the `alternative_names`, `description`, `notes` and `notification_email_addresses` properties ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal` - support the `owners` property ([#519](https://github.com/terraform-providers/terraform-provider-azuread/issues/519))
+* `azuread_service_principal` - support the `use_existing` property ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal` - export the `app_role_ids` and `oauth2_permission_scope_ids` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal` - export the `application_tenant_id`, `display_name`, `service_principal_names`, `sign_in_audience` and `type` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal` - export the `homepage_url`, `logout_url`, `redirect_uris` and `saml_metadata_url` attributes ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_service_principal_password` - support the `keepers` property ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_user` - support the `age_group` and `consent_provided_for_minor` properties ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_user` - support the `business_phones`, `employee_id`, `fax_number` and `preferred_language` properties ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_user` - support the `mail`, `other_mails` and `show_in_address_list` properties ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_user` - export the `creation_type`, `external_user_state`, `im_addresses` and `proxy_addresses` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
+* `azuread_user` - export the `onpremises_distinguished_name`, `onpremises_domain_name`, `onpremises_security_identifier` and `onpremises_sync_enabled` attributes ([#476](https://github.com/terraform-providers/terraform-provider-azuread/issues/476))
 
 BUG FIXES:
 
-* `azuread_application` - resolved an issue where `identifier_uris` could be reordered and cause a persistent diff [GH-461]
-* `azuread_application` - the `identifier_uris` property can now be set for all applications regardless of target platform [GH-461]
-* `azuread_application` - fixed a bug where app roles could be duplicated or left in a disabled state [GH-461]
-* `azuread_application` - fixed a bug where app roles could not be removed from an application [GH-461]
-* `azuread_application` - fixed a bug where the `enabled` property of app roles could be ignored [GH-461]
-* `azuread_application` - fixed a bug where the `id` property of app roles could be undesirably changed [GH-461]
-* `azuread_application` - resolved an issue where the default scope could not be removed from an application [GH-461]
-* `azuread_application` - resolved an issue where multiple `group_membership_claims` could not be specified [GH-461]
-* `azuread_application_password` - the `display_name` / `description` properties are no longer stored using the `customKeyIdentifier` API field, lifting the 32 byte limit [GH-461]
-* `azuread_group` - fix a bug where `owners` or `members` would sometimes not be updated [GH-519]
-* `azuread_group` - fix some ownership-related bugs where groups could sometimes not be created or updated [GH-519]
-* `azuread_user` - resolved an issue where importing users would inadvertently reset their password [GH-461]
+* `azuread_application` - resolved an issue where `identifier_uris` could be reordered and cause a persistent diff ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `identifier_uris` property can now be set for all applications regardless of target platform ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - fixed a bug where app roles could be duplicated or left in a disabled state ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - fixed a bug where app roles could not be removed from an application ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - fixed a bug where the `enabled` property of app roles could be ignored ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - fixed a bug where the `id` property of app roles could be undesirably changed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - resolved an issue where the default scope could not be removed from an application ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - resolved an issue where multiple `group_membership_claims` could not be specified ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application_password` - the `display_name` / `description` properties are no longer stored using the `customKeyIdentifier` API field, lifting the 32 byte limit ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - fix a bug where `owners` or `members` would sometimes not be updated ([#519](https://github.com/terraform-providers/terraform-provider-azuread/issues/519))
+* `azuread_group` - fix some ownership-related bugs where groups could sometimes not be created or updated ([#519](https://github.com/terraform-providers/terraform-provider-azuread/issues/519))
+* `azuread_user` - resolved an issue where importing users would inadvertently reset their password ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
 
 BREAKING CHANGES:
 
-* `data.azuread_domains` - the `is_` prefix has been dropped from all exported attributes [GH-461]
-* `data.azuread_application` - the `display_name` property is now matched case-insensitively which mirrors the behaviour of Azure Active Directory [GH-492]
-* `data.azuread_application` - the deprecated property `name` has been removed [GH-461]
-* `data.azuread_application` - the deprecated attribute `available_to_other_tenants` has been removed [GH-461]
-* `data.azuread_application` - the `group_membership_claims` attribute has changed from a string to a list of strings [GH-461]
-* `data.azuread_application` - the deprecated attribute `homepage` has been removed [GH-461]
-* `data.azuread_application` - the deprecated attribute `logout_url` has been removed [GH-461]
-* `data.azuread_application` - the deprecated attribute `oauth2_allow_implicit_flow` has been removed [GH-461]
-* `data.azuread_application` - the deprecated attribute `oauth2_permissions` has been removed [GH-461]
-* `data.azuread_application` - the `public_client` attribute is now a block containing public client settings [GH-461]
-* `data.azuread_application` - the deprecated attribute `reply_urls` has been removed [GH-461]
-* `data.azuread_application` - the deprecated attribute `type` has been removed [GH-461]
-* `data.azuread_group` - the deprecated property `name` has been removed [GH-461]
-* `data.azuread_groups` - the deprecated property `names` has been removed [GH-461]
-* `data.azuread_service_principal` - the deprecated attribute `oauth2_permissions` has been removed [GH-461]
-* `data.azuread_user` - the deprecated attribute `immutable_id` has been removed [GH-461]
-* `data.azuread_user` - the deprecated attribute `physical_delivery_office_name` has been removed [GH-461]
-* `data.azuread_user` - the deprecated attribute `mobile` has been removed [GH-461]
-* `data.azuread_users` - the deprecated attribute `immutable_id` in the `users` block has been removed [GH-461]
-* `azuread_application` - the deprecated property `name` has been removed [GH-461]
-* `azuread_application` - the `api` block is no longer Computed, omitting this block will cause it to be removed from your configuration [GH-461]
-* `azuread_application` - the `app_role` block is no longer Computed, omitting this block will cause it to be removed from your configuration [GH-461]
-* `azuread_application` - the `id` property in the `app_role` block is now Required [GH-461]
-* `azuread_application` - the deprecated property `available_to_other_tenants` has been removed [GH-461]
-* `azuread_application` - the `fallback_public_client_enabled` property is no longer Computed, omitting this property will cause the default value to be applied [GH-461]
-* `azuread_application` - the `group_membership_claims` property has changed from a string to a set of strings [GH-461]
-* `azuread_application` - the deprecated property `homepage` has been removed [GH-461]
-* `azuread_application` - the `identifier_uris` property is no longer Computed, omitting this property will cause it to be removed from your configuration [GH-461]
-* `azuread_application` - the `identifier_uris` property has changed from a List to a Set to resolve an API ordering issue [GH-481]
-* `azuread_application` - the deprecated property `logout_url` has been removed [GH-461]
-* `azuread_application` - the deprecated property `oauth2_allow_implicit_flow` has been removed [GH-461]
-* `azuread_application` - the `oauth2_permission_scope` block is no longer Computed, omitting this block will cause it to be removed from your configuration [GH-461]
-* `azuread_application` - the deprecated block `oauth2_permissions` has been removed [GH-461]
-* `azuread_application` - the `owners` property is no longer Computed, omitting this property will cause it to be removed from your configuration [GH-461]
-* `azuread_application` - the `public_client` property is now a block containing public client settings [GH-461]
-* `azuread_application` - the deprecated property `reply_urls` has been removed [GH-461]
-* `azuread_application` - the `sign_in_audience` property is no longer Computed, omitting this property will cause the default value to be applied [GH-461]
-* `azuread_application` - the deprecated property `type` has been removed [GH-461]
-* `azuread_application` - the `web` block is no longer Computed, omitting this block will cause it to be removed from your configuration [GH-461]
-* `azuread_application_password` - the `key_id` and `value` properties are now Computed, due to API changes it is no longer possible to specify these values [GH-461]
-* `azuread_group` - the deprecated property `name` has been removed [GH-461]
-* `azuread_group` - at least one of the `mail_enabled` or `security_enabled` properties are now Required [GH-461]
-* `azuread_service_principal` - the deprecated attribute `oauth2_permissions` has been removed [GH-461]
-* `azuread_service_principal_password` - the `key_id` and `value` properties are now Computed, due to API changes it is no longer possible to specify these values [GH-461]
-* `azuread_service_principal_password` - the `start_date` and `end_date` properties are now Computed, due to an API issue it is no longer possible to specify these values [GH-461]
-* `azuread_user` - the deprecated property `immutable_id` has been removed [GH-461]
-* `azuread_user` - the deprecated property `physical_delivery_office_name` has been removed [GH-461]
-* `azuread_user` - the deprecated property `mobile` has been removed [GH-461]
+* `data.azuread_domains` - the `is_` prefix has been dropped from all exported attributes ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the `display_name` property is now matched case-insensitively which mirrors the behaviour of Azure Active Directory ([#492](https://github.com/terraform-providers/terraform-provider-azuread/issues/492))
+* `data.azuread_application` - the deprecated property `name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `available_to_other_tenants` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the `group_membership_claims` attribute has changed from a string to a list of strings ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `homepage` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `logout_url` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `oauth2_allow_implicit_flow` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `oauth2_permissions` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the `public_client` attribute is now a block containing public client settings ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `reply_urls` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_application` - the deprecated attribute `type` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_group` - the deprecated property `name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_groups` - the deprecated property `names` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_service_principal` - the deprecated attribute `oauth2_permissions` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_user` - the deprecated attribute `immutable_id` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_user` - the deprecated attribute `physical_delivery_office_name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_user` - the deprecated attribute `mobile` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `data.azuread_users` - the deprecated attribute `immutable_id` in the `users` block has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `api` block is no longer Computed, omitting this block will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `app_role` block is no longer Computed, omitting this block will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `id` property in the `app_role` block is now Required ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `available_to_other_tenants` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `fallback_public_client_enabled` property is no longer Computed, omitting this property will cause the default value to be applied ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `group_membership_claims` property has changed from a string to a set of strings ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `homepage` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `identifier_uris` property is no longer Computed, omitting this property will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `identifier_uris` property has changed from a List to a Set to resolve an API ordering issue ([#481](https://github.com/terraform-providers/terraform-provider-azuread/issues/481))
+* `azuread_application` - the deprecated property `logout_url` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `oauth2_allow_implicit_flow` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `oauth2_permission_scope` block is no longer Computed, omitting this block will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated block `oauth2_permissions` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `owners` property is no longer Computed, omitting this property will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `public_client` property is now a block containing public client settings ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `reply_urls` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `sign_in_audience` property is no longer Computed, omitting this property will cause the default value to be applied ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the deprecated property `type` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application` - the `web` block is no longer Computed, omitting this block will cause it to be removed from your configuration ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_application_password` - the `key_id` and `value` properties are now Computed, due to API changes it is no longer possible to specify these values ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - the deprecated property `name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_group` - at least one of the `mail_enabled` or `security_enabled` properties are now Required ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_service_principal` - the deprecated attribute `oauth2_permissions` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_service_principal_password` - the `key_id` and `value` properties are now Computed, due to API changes it is no longer possible to specify these values ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_service_principal_password` - the `start_date` and `end_date` properties are now Computed, due to an API issue it is no longer possible to specify these values ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_user` - the deprecated property `immutable_id` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_user` - the deprecated property `physical_delivery_office_name` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
+* `azuread_user` - the deprecated property `mobile` has been removed ([#461](https://github.com/terraform-providers/terraform-provider-azuread/issues/461))
 
 ## 1.6.0 (June 24, 2021)
 
