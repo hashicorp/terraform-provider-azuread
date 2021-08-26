@@ -61,7 +61,8 @@ resource "azuread_application" "example" {
     allowed_member_types = ["User", "Application"]
     description          = "Admins can manage roles and perform all task actions"
     display_name         = "Admin"
-    is_enabled           = true
+    enabled              = true
+    id                   = "1b19509b-32b1-4e9f-b71d-4992aa991967"
     value                = "admin"
   }
 
@@ -70,7 +71,7 @@ resource "azuread_application" "example" {
     description          = "ReadOnly roles have limited query access"
     display_name         = "ReadOnly"
     enabled              = true
-    id                   = "%[6]s"
+    id                   = "497406e4-012a-4267-bf18-45a1cb148a01"
     value                = "User"
   }
 

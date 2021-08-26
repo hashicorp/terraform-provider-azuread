@@ -45,6 +45,12 @@ func (td TestData) ResourceTestIgnoreDangling(t *testing.T, _ types.TestResource
 }
 
 func (td TestData) runAcceptanceTest(t *testing.T, testCase resource.TestCase) {
+	testCase.ExternalProviders = map[string]resource.ExternalProvider{
+		"random": {
+			Source:            "hashicorp/random",
+			VersionConstraint: ">= 3.0.0",
+		},
+	}
 	testCase.ProviderFactories = map[string]func() (*schema.Provider, error){
 		"azuread": func() (*schema.Provider, error) {
 			return AzureADProvider, nil

@@ -146,6 +146,23 @@ func TestAccApplication_appRoles(t *testing.T) {
 	})
 }
 
+func TestAccApplication_duplicateAppRolesOauth2PermissionsIdsUnknown(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsIdsUnknown(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("1"),
+			),
+		},
+	})
+}
+
 func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -875,6 +892,41 @@ resource "azuread_application" "test" {
   }
 }
 `, data.RandomInteger, uuids[0], uuids[1], uuids[2], uuids[3])
+}
+
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsIdsUnknown(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+provider "random" {}
+
+resource "random_uuid" "test" {
+  count = 2
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = random_uuid.test[0].id
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    enabled              = true
+    id                   = random_uuid.test[1].id
+    value                = "administrate"
+  }
+}
+`, data.RandomInteger, data.UUID(), data.UUID())
 }
 
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsValues(data acceptance.TestData) string {

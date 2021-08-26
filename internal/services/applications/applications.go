@@ -311,20 +311,20 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 
 	for _, roleRaw := range appRoles {
 		role := roleRaw.(map[string]interface{})
-		if id := role["id"].(string); id != "" {
+		if id := role["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
 			ids = append(ids, id)
 		}
-		if val := role["value"].(string); val != "" {
+		if val := role["value"].(string); val != "" && val != tf.PluginSdkUnknownValue {
 			values = append(values, val)
 		}
 	}
 
 	for _, scopeRaw := range oauth2Permissions {
 		scope := scopeRaw.(map[string]interface{})
-		if id := scope["id"].(string); id != "" {
+		if id := scope["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
 			ids = append(ids, id)
 		}
-		if val := scope["value"].(string); val != "" {
+		if val := scope["value"].(string); val != "" && val != tf.PluginSdkUnknownValue {
 			values = append(values, val)
 		}
 	}
