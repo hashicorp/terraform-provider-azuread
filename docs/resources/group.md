@@ -90,7 +90,7 @@ The following arguments are supported:
 * `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation. Required for mail-enabled groups. Changing this forces a new resource to be created.
 * `members` - (Optional) A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals.
 
-!> **Warning** Do not use the `azuread_group_member` resource at the same time as the `members` argument.
+!> **Warning** Do not use the `members` property at the same time as the [azuread_group_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/group_member) resource for the same group. Doing so will cause a conflict and group members will be removed.
 
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.
 
