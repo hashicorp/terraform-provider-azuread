@@ -1,3 +1,9 @@
+## 2.0.1 (August 26, 2021)
+
+BUG FIXES:
+
+* `azuread_application` - fix a bug where unknown IDs or values for roles/scopes were incorrectly flagged as duplicates [GH-528]
+
 ## 2.0.0 (August 26, 2021)
 
 NOTES:
