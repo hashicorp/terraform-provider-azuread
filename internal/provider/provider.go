@@ -161,6 +161,13 @@ func AzureADProvider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
 				Description: "Disable the Terraform Partner ID, which is used if a custom `partner_id` isn't specified",
 			},
+
+			"retry_limit": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("AAD_RETRY_LIMIT", 0),
+				Description: "Specifies a custom default retry limit for API requests, can be increased to smooth out eventual consistency errors",
+			},
 		},
 
 		ResourcesMap:   resources,
@@ -206,14 +213,20 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			partnerId = terraformPartnerId
 		}
 
-		return buildClient(ctx, p, authConfig, partnerId)
+		retryMax := d.Get("retry_limit").(int)
+		if retryMax < 1 || retryMax > 100 {
+			retryMax = 9
+		}
+
+		return buildClient(ctx, p, authConfig, partnerId, retryMax)
 	}
 }
 
-func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Config, partnerId string) (*clients.Client, diag.Diagnostics) {
+func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Config, partnerId string, retryMax int) (*clients.Client, diag.Diagnostics) {
 	clientBuilder := clients.ClientBuilder{
 		AuthConfig:       authConfig,
 		PartnerID:        partnerId,
+		RetryMax:         retryMax,
 		TerraformVersion: p.TerraformVersion,
 	}
 

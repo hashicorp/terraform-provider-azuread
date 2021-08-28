@@ -14,6 +14,7 @@ import (
 type ClientBuilder struct {
 	AuthConfig       *auth.Config
 	PartnerID        string
+	RetryMax         int
 	TerraformVersion string
 }
 
@@ -51,6 +52,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 	o := &common.ClientOptions{
 		Authorizer:  authorizer,
 		Environment: client.Environment,
+		RetryMax:    b.RetryMax,
 		TenantID:    client.TenantID,
 
 		PartnerID:        b.PartnerID,

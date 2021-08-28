@@ -136,6 +136,8 @@ For more advanced scenarios, the following additional arguments are supported:
 
 * `partner_id` - (Optional) A UUID that is [registered](https://docs.microsoft.com/azure/marketplace/azure-partner-customer-usage-attribution#register-guids-and-offers) with Microsoft to facilitate partner resource usage attribution. This can also be sourced from the `ARM_PARTNER_ID` environment variable.
 
+* `retry_limit` - (Optional) Specifies a custom default retry limit for API requests. Defaults to 9. Can be increased to smooth out eventual consistency errors. Must be an integer between 1 and 100. This can also be sourced from the `AAD_RETRY_LIMIT` environment variable.
+
 It's also possible to use multiple Provider blocks within a single Terraform configuration, for example to work with resources across multiple Azure Active Directory Tenants or Environments - more information can be found [in the documentation for Providers](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations).
 
 ---

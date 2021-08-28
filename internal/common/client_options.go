@@ -24,6 +24,7 @@ type ClientOptions struct {
 	TerraformVersion string
 
 	Authorizer auth.Authorizer
+	RetryMax   int
 }
 
 func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
@@ -41,7 +42,9 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 	*c.ResponseMiddlewares = append(*c.ResponseMiddlewares, o.responseLogger)
 
 	// Default retry limit, can be overridden from within a resource
-	c.RetryableClient.RetryMax = 8
+	if o.RetryMax > 0 {
+		c.RetryableClient.RetryMax = o.RetryMax
+	}
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

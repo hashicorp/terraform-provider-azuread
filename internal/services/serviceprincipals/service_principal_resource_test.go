@@ -225,6 +225,10 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {
+  retry_limit = 20
+}
+
 resource "azuread_application" "test" {
   display_name = "acctestServicePrincipal-%[1]d"
 }
