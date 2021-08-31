@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/manicminer/hamilton/environments"
-
 	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
@@ -35,17 +34,6 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		return nil, err
 	}
 
-	// Obtain the tenant ID from Azure CLI
-	if cli, ok := authorizer.(*auth.AzureCliAuthorizer); ok {
-		if cli.TenantID == "" {
-			return nil, fmt.Errorf("azure-cli could not determine tenant ID to use")
-		}
-		client.TenantID = cli.TenantID
-		if clientId, ok := environments.PublishedApis["MicrosoftAzureCli"]; ok && clientId != "" {
-			client.ClientID = clientId
-		}
-	}
-
 	client.Environment = b.AuthConfig.Environment
 
 	o := &common.ClientOptions{
@@ -55,6 +43,21 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 		PartnerID:        b.PartnerID,
 		TerraformVersion: client.TerraformVersion,
+	}
+
+	// Obtain the tenant ID from Azure CLI
+	realAuthorizer := authorizer
+	if cache, ok := authorizer.(*auth.CachedAuthorizer); ok {
+		realAuthorizer = cache.Source
+	}
+	if cli, ok := realAuthorizer.(*auth.AzureCliAuthorizer); ok {
+		if cli.TenantID == "" {
+			return nil, fmt.Errorf("azure-cli could not determine tenant ID to use")
+		}
+		client.TenantID = cli.TenantID
+		if clientId, ok := environments.PublishedApis["MicrosoftAzureCli"]; ok && clientId != "" {
+			client.ClientID = clientId
+		}
 	}
 
 	if err := client.build(ctx, o); err != nil {
