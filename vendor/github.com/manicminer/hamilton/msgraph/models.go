@@ -947,7 +947,7 @@ func (se SchemaExtensionData) MarshalJSON() ([]byte, error) {
 // ServicePrincipal describes a Service Principal object.
 type ServicePrincipal struct {
 	DirectoryObject
-	Owners *Owners `json:"-"`
+	Owners *Owners `json:"owners@odata.bind,omitempty"`
 
 	AccountEnabled                      *bool                         `json:"accountEnabled,omitempty"`
 	AddIns                              *[]AddIn                      `json:"addIns,omitempty"`

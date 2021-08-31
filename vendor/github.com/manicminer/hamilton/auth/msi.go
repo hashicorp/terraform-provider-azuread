@@ -115,7 +115,7 @@ func NewMsiConfig(ctx context.Context, resource string, msiEndpoint string) (*Ms
 
 // TokenSource provides a source for obtaining access tokens using MsiAuthorizer.
 func (c *MsiConfig) TokenSource(ctx context.Context) Authorizer {
-	return CachedAuthorizer(&MsiAuthorizer{ctx: ctx, conf: c})
+	return NewCachedAuthorizer(&MsiAuthorizer{ctx: ctx, conf: c})
 }
 
 func azureMetadata(ctx context.Context, url string) (body []byte, err error) {
