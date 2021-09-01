@@ -332,6 +332,8 @@ type AuditActivityInitiator struct {
 	User *UserIdentity `json:"user,omitempty"`
 }
 
+type AuthenticationMethod interface{}
+
 type BaseNamedLocation struct {
 	ODataType        *odata.Type `json:"@odata.type,omitempty"`
 	ID               *string     `json:"id,omitempty"`
@@ -528,9 +530,24 @@ type EmailAddress struct {
 	Name    *string `json:"name,omitempty"`
 }
 
+type EmailAuthenticationMethod struct {
+	ID           *string `json:"id,omitempty"`
+	EmailAddress *string `json:"emailAddress,omitempty"`
+}
+
 type ExtensionSchemaProperty struct {
 	Name *string                         `json:"name,omitempty"`
 	Type ExtensionSchemaPropertyDataType `json:"type,omitempty"`
+}
+
+type Fido2AuthenticationMethod struct {
+	ID                      *string           `json:"id,omitempty"`
+	DisplayName             *string           `json:"displayName,omitempty"`
+	CreatedDateTime         *time.Time        `json:"createdDateTime,omitempty"`
+	AAGuid                  *string           `json:"aaGuid,omitempty"`
+	Model                   *string           `json:"model,omitempty"`
+	AttestationCertificates *[]string         `json:"attestationCertificates,omitempty"`
+	AttestationLevel        *AttestationLevel `json:"attestationLevel,omitempty"`
 }
 
 type GeoCoordinates struct {
@@ -775,6 +792,14 @@ type Message struct {
 	BccRecipients *[]Recipient `json:"bccRecipients,omitempty"`
 }
 
+type MicrosoftAuthenticatorAuthenticationMethod struct {
+	CreatedDateTime *time.Time `json:"createdDateTime,omitempty"`
+	DisplayName     *string    `json:"displayName,omitempty"`
+	ID              *string    `json:"id,omitempty"`
+	DeviceTag       *string    `json:"deviceTag,omitempty"`
+	PhoneAppVersion *string    `json:"phoneAppVersion,omitempty"`
+}
+
 type ModifiedProperty struct {
 	DisplayName *string `json:"displayName,omitempty"`
 	NewValue    *string `json:"newValue,omitempty"`
@@ -845,6 +870,12 @@ type PasswordCredential struct {
 	StartDateTime       *time.Time `json:"startDateTime,omitempty"`
 }
 
+type PasswordAuthenticationMethod struct {
+	CreationDateTime *time.Time `json:"creationDateTime,omitempty"`
+	ID               *string    `json:"id,omitempty"`
+	Password         *string    `json:"password,omitempty"`
+}
+
 type PasswordSingleSignOnSettings struct {
 	Fields *[]SingleSignOnField `json:"fields,omitempty"`
 }
@@ -865,6 +896,11 @@ type PersistentBrowserSessionControl struct {
 	Mode      *string `json:"mode,omitempty"`
 }
 
+type PhoneAuthenticationMethod struct {
+	ID          *string                  `json:"id,omitempty"`
+	PhoneNumber *string                  `json:"phoneNumber,omitempty"`
+	PhoneType   *AuthenticationPhoneType `json:"phoneType,omitempty"`
+}
 type PublicClient struct {
 	RedirectUris *[]string `json:"redirectUris,omitempty"`
 }
@@ -1015,6 +1051,17 @@ type TargetResource struct {
 	UserPrincipalName  *string             `json:"userPrincipalName,omitempty"`
 	GroupType          *string             `json:"groupType,omitempty"`
 	ModifiedProperties *[]ModifiedProperty `json:"modifiedProperties,omitempty"`
+}
+
+type TemporaryAccessPassAuthenticationMethod struct {
+	ID                    *string                `json:"id,omitempty"`
+	TemporaryAccessPass   *string                `json:"temporaryAccessPass,omitempty"`
+	CreatedDateTime       *time.Time             `json:"createdDateTime,omitempty"`
+	StartDateTime         *time.Time             `json:"startDateTime,omitempty"`
+	LifetimeInMinutes     *int32                 `json:"lifetimeInMinutes,omitempty"`
+	IsUsableOnce          *bool                  `json:"isUsableOnce,omitempty"`
+	IsUsable              *bool                  `json:"isUsable,omitempty"`
+	MethodUsabilityReason *MethodUsabilityReason `json:"methodUsabilityReason,omitempty"`
 }
 
 // User describes a User object.
@@ -1184,4 +1231,11 @@ type VerifiedPublisher struct {
 	AddedDateTime       *time.Time `json:"addedDateTime,omitempty"`
 	DisplayName         *string    `json:"displayName,omitempty"`
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
+}
+
+type WindowsHelloForBusinessAuthenticationMethod struct {
+	CreatedDateTime *time.Time                       `json:"createdDateTime,omitempty"`
+	DisplayName     *string                          `json:"displayName,omitempty"`
+	ID              *string                          `json:"id,omitempty"`
+	KeyStrength     *AuthenticationMethodKeyStrength `json:"authenticationMethodKeyStrength,omitempty"`
 }

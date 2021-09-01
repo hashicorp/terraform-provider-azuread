@@ -56,6 +56,13 @@ const (
 	AppRoleAllowedMemberTypeUser        AppRoleAllowedMemberType = "User"
 )
 
+type AttestationLevel = string
+
+const (
+	AttestationLevelAttested    AttestationLevel = "attested"
+	AttestationLevelNotAttested AttestationLevel = "notAttested"
+)
+
 type AuthenticationMethodFeature = string
 
 const (
@@ -64,6 +71,22 @@ const (
 	AuthenticationMethodFeatureSsprCapable         AuthenticationMethodFeature = "ssprCapable"
 	AuthenticationMethodFeaturePasswordlessCapable AuthenticationMethodFeature = "passwordlessCapable"
 	AuthenticationMethodFeatureMfaCapable          AuthenticationMethodFeature = "mfaCapable"
+)
+
+type AuthenticationMethodKeyStrength = string
+
+const (
+	AuthenticationMethodKeyStrengthNormal  AuthenticationMethodKeyStrength = "normal"
+	AuthenticationMethodKeyStrengthWeak    AuthenticationMethodKeyStrength = "weak"
+	AuthenticationMethodKeyStrengthUnknown AuthenticationMethodKeyStrength = "unknown"
+)
+
+type AuthenticationPhoneType = string
+
+const (
+	AuthenticationPhoneTypeMobile          AuthenticationPhoneType = "mobile"
+	AuthenticationPhoneTypeAlternateMobile AuthenticationPhoneType = "alternateMobile"
+	AuthenticationPhoneTypeOffice          AuthenticationPhoneType = "office"
 )
 
 type BodyType = string
@@ -211,6 +234,16 @@ func (o *Members) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+type MethodUsabilityReason string
+
+const (
+	MethodUsabilityReasonEnabledByPolicy  MethodUsabilityReason = "enabledByPolicy"
+	MethodUsabilityReasonDisabledByPolicy MethodUsabilityReason = "disabledByPolicy"
+	MethodUsabilityReasonExpired          MethodUsabilityReason = "expired"
+	MethodUsabilityReasonNotYetValid      MethodUsabilityReason = "notYetValid"
+	MethodUsabilityReasonOneTimeUsed      MethodUsabilityReason = "oneTimeUsed"
+)
 
 type Owners []DirectoryObject
 
