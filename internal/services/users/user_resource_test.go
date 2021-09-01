@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -95,6 +96,33 @@ func TestAccUser_threeUsersABC(t *testing.T) {
 		dataA.ImportStep("force_password_change", "password"),
 		dataB.ImportStep("force_password_change", "password"),
 		dataC.ImportStep("force_password_change", "password"),
+	})
+}
+
+func TestAccUser_withRandomProvider(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_user", "test")
+	r := UserResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withRandomProvider(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("force_password_change", "password"),
+	})
+}
+
+func TestAccUser_passwordOmitted(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_user", "test")
+	r := UserResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config:      r.passwordOmitted(data),
+			ExpectError: regexp.MustCompile("`password` is required when creating a new user"),
+		},
 	})
 }
 
@@ -201,4 +229,40 @@ resource "azuread_user" "testC" {
   password            = "%[2]s"
 }
 `, data.RandomInteger, data.RandomPassword)
+}
+
+func (UserResource) withRandomProvider(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+provider "random" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "random_password" "test" {
+  length = 32
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = random_password.test.result
+}
+`, data.RandomInteger)
+}
+
+func (UserResource) passwordOmitted(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+}
+`, data.RandomInteger)
 }
