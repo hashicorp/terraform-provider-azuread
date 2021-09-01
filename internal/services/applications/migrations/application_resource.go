@@ -3,6 +3,7 @@ package migrations
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -548,7 +549,11 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 func ResourceApplicationInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
 	log.Println("[DEBUG] Migrating `group_membership_claims` from v0 to v1 format")
 	groupMembershipClaimsOld := rawState["group_membership_claims"].(string)
-	rawState["group_membership_claims"] = []string{groupMembershipClaimsOld}
+	if groupMembershipClaimsOld == "" {
+		rawState["group_membership_claims"] = make([]string, 0)
+	} else {
+		rawState["group_membership_claims"] = strings.Split(groupMembershipClaimsOld, ",")
+	}
 
 	log.Println("[DEBUG] Migrating `public_client` from v0 to v1 format (new attribute name)")
 	if v, ok := rawState["fallback_public_client_enabled"]; !ok || v == nil {
