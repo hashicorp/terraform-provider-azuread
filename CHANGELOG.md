@@ -1,8 +1,13 @@
 ## 2.1.0 (Unreleased)
 
+BUG FIXES:
+
+* `data.azuread_client_config` - populate the `tenant_id` and `client_id` attributes when authenticating via Azure CLI [GH-539]
+* `azuread_service_principal` - fix a bug that prevented creation of service principals in some cases due to `owners` being applied incorrectly [GH-539]
+
 IMPROVEMENTS:
 
-* `azuread_application` - Allow `redirect_uris` with a scheme of `ms-appx-web` [GH-540]
+* `azuread_application` - allow `redirect_uris` with a scheme of `ms-appx-web` [GH-540]
 
 ## 2.0.1 (August 26, 2021)
 
