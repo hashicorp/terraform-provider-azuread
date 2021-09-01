@@ -4,6 +4,7 @@ BUG FIXES:
 
 * `data.azuread_client_config` - populate the `tenant_id` and `client_id` attributes when authenticating via Azure CLI [GH-539]
 * `azuread_service_principal` - fix a bug that prevented creation of service principals in some cases due to `owners` being applied incorrectly [GH-539]
+* `azuread_user` - fix a validation bug for the `password` property [GH-543]
 
 IMPROVEMENTS:
 
