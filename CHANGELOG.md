@@ -1,3 +1,9 @@
+## 2.1.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_application` - Allow `redirect_uris` with a scheme of `ms-appx-web` [GH-540]
+
 ## 2.0.1 (August 26, 2021)
 
 BUG FIXES:
