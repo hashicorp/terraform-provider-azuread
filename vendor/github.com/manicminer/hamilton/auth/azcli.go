@@ -86,7 +86,7 @@ func NewAzureCliConfig(api Api, tenantId string) (*AzureCliConfig, error) {
 // TokenSource provides a source for obtaining access tokens using AzureCliAuthorizer.
 func (c *AzureCliConfig) TokenSource(ctx context.Context) Authorizer {
 	// Cache access tokens internally to avoid unnecessary `az` invocations
-	return CachedAuthorizer(AzureCliAuthorizer{
+	return NewCachedAuthorizer(&AzureCliAuthorizer{
 		TenantID: c.TenantID,
 		ctx:      ctx,
 		conf:     c,
