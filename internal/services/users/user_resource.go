@@ -341,10 +341,6 @@ func userResource() *schema.Resource {
 }
 
 func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	if diff.Id() == "" && diff.Get("password").(string) == "" {
-		return fmt.Errorf("`password` is required when creating a new user")
-	}
-
 	ageGroup := diff.Get("age_group").(string)
 	consentRequired := diff.Get("consent_provided_for_minor").(string)
 
@@ -357,6 +353,11 @@ func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, m
 
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+
+	password := d.Get("password").(string)
+	if password == "" {
+		return tf.ErrorDiagPathF(errors.New("`password` is required when creating a new user"), "password", "Could not create user")
+	}
 
 	upn := d.Get("user_principal_name").(string)
 	mailNickName := d.Get("mail_nickname").(string)
@@ -395,7 +396,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		PasswordProfile: &msgraph.UserPasswordProfile{
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
-			Password:                      utils.String(d.Get("password").(string)),
+			Password:                      utils.String(password),
 		},
 	}
 
@@ -453,10 +454,10 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		UsageLocation:           utils.NullableString(d.Get("usage_location").(string)),
 	}
 
-	if d.HasChange("password") {
+	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
 		properties.PasswordProfile = &msgraph.UserPasswordProfile{
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
-			Password:                      utils.String(d.Get("password").(string)),
+			Password:                      utils.String(password),
 		}
 	}
 

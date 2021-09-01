@@ -50,6 +50,9 @@ The following arguments are supported:
 * `onpremises_immutable_id` - (Optional) The value used to associate an on-premise Active Directory user account with their Azure AD user object. This must be specified if you are using a federated domain for the user's `user_principal_name` property when creating a new user account.
 * `other_mails` - (Optional) A list of additional email addresses for the user.
 * `password` - (Optional) The password for the user. The password must satisfy minimum requirements as specified by the password policy. The maximum length is 256 characters. This property is required when creating a new user.
+
+-> **Passwords and importing users** Passwords can be changed but not cleared. Removing the `password` property for an existing user resource, or setting the password value to a blank string, will not remove the password. When importing a user, Terraform will not reset the password unless the value is subsequently changed in your configuration.
+
 * `postal_code` - (Optional) The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code.
 * `preferred_language` - (Optional) The user's preferred language, in ISO 639-1 notation.
 * `show_in_address_list` - (Optional) Whether or not the Outlook global address list should include this user. Defaults to `true`.
