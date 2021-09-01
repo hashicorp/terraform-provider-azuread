@@ -40,7 +40,7 @@ func IsLogoutURL(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 }
 
 func IsRedirectURI(i interface{}, path cty.Path) (ret diag.Diagnostics) {
-	ret = IsURIFunc([]string{"http", "https"}, false, true)(i, path)
+	ret = IsURIFunc([]string{"http", "https", "ms-appx-web"}, false, true)(i, path)
 	if len(ret) > 0 {
 		return
 	}
