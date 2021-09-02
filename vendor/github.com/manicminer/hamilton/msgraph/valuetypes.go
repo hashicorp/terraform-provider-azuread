@@ -113,6 +113,14 @@ const (
 	CredentialUsageSummaryPeriod1  CredentialUsageSummaryPeriod = "D1"
 )
 
+type ConditionalAccessPolicyState = string
+
+const (
+	ConditionalAccessPolicyStateEnabled                           ConditionalAccessPolicyState = "enabled"
+	ConditionalAccessPolicyStateDisabled                          ConditionalAccessPolicyState = "disabled"
+	ConditionalAccessPolicyStateEnabledForReportingButNotEnforced ConditionalAccessPolicyState = "enabledForReportingButNotEnforced"
+)
+
 type ExtensionSchemaTargetType = string
 
 const (
@@ -195,6 +203,13 @@ const (
 	GroupVisibilityHiddenMembership GroupVisibility = "Hiddenmembership"
 	GroupVisibilityPrivate          GroupVisibility = "Private"
 	GroupVisibilityPublic           GroupVisibility = "Public"
+)
+
+type InvitedUserType = string
+
+const (
+	InvitedUserTypeGuest  InvitedUserType = "Guest"
+	InvitedUserTypeMember InvitedUserType = "Member"
 )
 
 type KeyCredentialType = string

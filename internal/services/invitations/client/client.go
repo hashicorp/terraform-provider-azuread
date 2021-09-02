@@ -7,14 +7,19 @@ import (
 )
 
 type Client struct {
-	MsClient *msgraph.InvitationsClient
+	InvitationsClient *msgraph.InvitationsClient
+	UsersClient       *msgraph.UsersClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewInvitationsClient(o.TenantID)
-	o.ConfigureClient(&msClient.BaseClient)
+	invitationsClient := msgraph.NewInvitationsClient(o.TenantID)
+	o.ConfigureClient(&invitationsClient.BaseClient)
+
+	usersClient := msgraph.NewUsersClient(o.TenantID)
+	o.ConfigureClient(&usersClient.BaseClient)
 
 	return &Client{
-		MsClient: msClient,
+		InvitationsClient: invitationsClient,
+		UsersClient:       usersClient,
 	}
 }

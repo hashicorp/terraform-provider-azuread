@@ -389,7 +389,7 @@ type ConditionalAccessPolicy struct {
 	ID               *string                           `json:"id,omitempty"`
 	ModifiedDateTime *time.Time                        `json:"modifiedDateTime,omitempty"`
 	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls,omitempty"`
-	State            *string                           `json:"state,omitempty"`
+	State            *ConditionalAccessPolicyState     `json:"state,omitempty"`
 }
 
 type ConditionalAccessSessionControls struct {
@@ -707,14 +707,14 @@ type InformationalUrl struct {
 
 // Invitation describes a Invitation object.
 type Invitation struct {
-	ID                      *string `json:"id,omitempty"`
-	InvitedUserDisplayName  *string `json:"invitedUserDisplayName,omitempty"`
-	InvitedUserEmailAddress *string `json:"invitedUserEmailAddress,omitempty"`
-	SendInvitationMessage   *bool   `json:"sendInvitationMessage,omitempty"`
-	InviteRedirectURL       *string `json:"inviteRedirectUrl,omitempty"`
-	InviteRedeemURL         *string `json:"inviteRedeemUrl,omitempty"`
-	Status                  *string `json:"status,omitempty"`
-	InvitedUserType         *string `json:"invitedUserType,omitempty"`
+	ID                      *string          `json:"id,omitempty"`
+	InvitedUserDisplayName  *string          `json:"invitedUserDisplayName,omitempty"`
+	InvitedUserEmailAddress *string          `json:"invitedUserEmailAddress,omitempty"`
+	SendInvitationMessage   *bool            `json:"sendInvitationMessage,omitempty"`
+	InviteRedirectURL       *string          `json:"inviteRedirectUrl,omitempty"`
+	InviteRedeemURL         *string          `json:"inviteRedeemUrl,omitempty"`
+	Status                  *string          `json:"status,omitempty"`
+	InvitedUserType         *InvitedUserType `json:"invitedUserType,omitempty"`
 
 	InvitedUserMessageInfo *InvitedUserMessageInfo `json:"invitedUserMessageInfo,omitempty"`
 	InvitedUser            *User                   `json:"invitedUser,omitempty"`
