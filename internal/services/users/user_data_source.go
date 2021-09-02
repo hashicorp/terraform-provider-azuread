@@ -25,10 +25,6 @@ func userDataSource() *schema.Resource {
 			Read: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"mail_nickname": {
 				Description:      "The email alias of the user",
@@ -290,6 +286,7 @@ func userDataSource() *schema.Resource {
 
 func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	client.BaseClient.DisableRetries = true
 
 	var user msgraph.User
 

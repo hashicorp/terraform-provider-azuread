@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/manicminer/hamilton/odata"
+
 	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/errors"
 )
@@ -36,7 +38,9 @@ type AppIdentity struct {
 
 // Application describes an Application object.
 type Application struct {
-	ID                            *string                   `json:"id,omitempty"`
+	DirectoryObject
+	Owners *Owners `json:"owners@odata.bind,omitempty"`
+
 	AddIns                        *[]AddIn                  `json:"addIns,omitempty"`
 	Api                           *ApplicationApi           `json:"api,omitempty"`
 	AppId                         *string                   `json:"appId,omitempty"`
@@ -46,7 +50,7 @@ type Application struct {
 	DeletedDateTime               *time.Time                `json:"deletedDateTime,omitempty"`
 	DisabledByMicrosoftStatus     interface{}               `json:"disabledByMicrosoftStatus,omitempty"`
 	DisplayName                   *string                   `json:"displayName,omitempty"`
-	GroupMembershipClaims         *[]GroupMembershipClaim   `json:"groupMembershipClaims,omitempty"`
+	GroupMembershipClaims         *[]GroupMembershipClaim   `json:"-"` // see Application.MarshalJSON / Application.UnmarshalJSON
 	IdentifierUris                *[]string                 `json:"identifierUris,omitempty"`
 	Info                          *InformationalUrl         `json:"info,omitempty"`
 	IsAuthorizationServiceEnabled *bool                     `json:"isAuthorizationServiceEnabled,omitempty"`
@@ -69,8 +73,6 @@ type Application struct {
 	UniqueName                    *string                   `json:"uniqueName,omitempty"`
 	VerifiedPublisher             *VerifiedPublisher        `json:"verifiedPublisher,omitempty"`
 	Web                           *ApplicationWeb           `json:"web,omitempty"`
-
-	Owners *[]string `json:"owners@odata.bind,omitempty"`
 }
 
 func (a Application) MarshalJSON() ([]byte, error) {
@@ -83,25 +85,30 @@ func (a Application) MarshalJSON() ([]byte, error) {
 		theClaims := StringNullWhenEmpty(strings.Join(claims, ","))
 		val = &theClaims
 	}
+
+	// Local type needed to avoid recursive MarshalJSON calls
 	type application Application
-	return json.Marshal(&struct {
+	app := struct {
 		GroupMembershipClaims *StringNullWhenEmpty `json:"groupMembershipClaims,omitempty"`
 		*application
 	}{
 		GroupMembershipClaims: val,
 		application:           (*application)(&a),
-	})
+	}
+	buf, err := json.Marshal(&app)
+	return buf, err
 }
 
 func (a *Application) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
 	type application Application
-	app := &struct {
+	app := struct {
 		GroupMembershipClaims *string `json:"groupMembershipClaims"`
 		*application
 	}{
 		application: (*application)(a),
 	}
-	if err := json.Unmarshal(data, app); err != nil {
+	if err := json.Unmarshal(data, &app); err != nil {
 		return err
 	}
 	if app.GroupMembershipClaims != nil {
@@ -112,17 +119,6 @@ func (a *Application) UnmarshalJSON(data []byte) error {
 		a.GroupMembershipClaims = &groupMembershipClaims
 	}
 	return nil
-}
-
-// AppendOwner appends a new owner object URI to the Owners slice.
-func (a *Application) AppendOwner(endpoint environments.ApiEndpoint, apiVersion ApiVersion, id string) {
-	val := fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, id)
-	var owners []string
-	if a.Owners != nil {
-		owners = *a.Owners
-	}
-	owners = append(owners, val)
-	a.Owners = &owners
 }
 
 // AppendAppRole adds a new AppRole to an Application, checking to see if it already exists.
@@ -336,12 +332,14 @@ type AuditActivityInitiator struct {
 	User *UserIdentity `json:"user,omitempty"`
 }
 
+type AuthenticationMethod interface{}
+
 type BaseNamedLocation struct {
-	ODataType        *string    `json:"@odata.type,omitempty"`
-	ID               *string    `json:"id,omitempty"`
-	DisplayName      *string    `json:"displayName,omitempty"`
-	CreatedDateTime  *time.Time `json:"createdDateTime,omitempty"`
-	ModifiedDateTime *time.Time `json:"modifiedDateTime,omitempty"`
+	ODataType        *odata.Type `json:"@odata.type,omitempty"`
+	ID               *string     `json:"id,omitempty"`
+	DisplayName      *string     `json:"displayName,omitempty"`
+	CreatedDateTime  *time.Time  `json:"createdDateTime,omitempty"`
+	ModifiedDateTime *time.Time  `json:"modifiedDateTime,omitempty"`
 }
 
 type CloudAppSecurityControl struct {
@@ -417,6 +415,30 @@ type CountryNamedLocation struct {
 	IncludeUnknownCountriesAndRegions *bool     `json:"includeUnknownCountriesAndRegions,omitempty"`
 }
 
+type CredentialUserRegistrationCount struct {
+	ID                     *string                  `json:"id,omitempty"`
+	TotalUserCount         *int64                   `json:"totalUserCount,omitempty"`
+	UserRegistrationCounts *[]UserRegistrationCount `json:"userRegistrationCounts,omitempty"`
+}
+
+type CredentialUsageSummary struct {
+	AuthMethod              *UsageAuthMethod `json:"usageAuthMethod,omitempty"`
+	FailureActivityCount    *int64           `json:"failureActivityCount,omitempty"`
+	Feature                 *FeatureType     `json:"feature,omitempty"`
+	ID                      *string          `json:"id,omitempty"`
+	SuccessfulActivityCount *int64           `json:"successfulActivityCount,omitempty"`
+}
+type CredentialUserRegistrationDetails struct {
+	AuthMethods       *[]RegistrationAuthMethod `json:"authMethods,omitempty"`
+	ID                *string                   `json:"id,omitempty"`
+	IsCapable         *bool                     `json:"isCapable,omitempty"`
+	IsEnabled         *bool                     `json:"isEnabled,omitempty"`
+	IsMfaRegistered   *bool                     `json:"isMfaRegistered,omitempty"`
+	IsRegistered      *bool                     `json:"isRegistered,omitempty"`
+	UserDisplayName   *string                   `json:"userDisplayName,omitempty"`
+	UserPrincipalName *string                   `json:"UserPrincipalName,omitempty"`
+}
+
 type DeviceDetail struct {
 	Browser         *string `json:"browser,omitempty"`
 	DeviceId        *string `json:"deviceId,omitempty"`
@@ -441,24 +463,36 @@ type DirectoryAudit struct {
 	TargetResources     *[]TargetResource       `json:"targetResources,omitempty"`
 }
 
+type DirectoryObject struct {
+	ODataId   *odata.Id   `json:"@odata.id,omitempty"`
+	ODataType *odata.Type `json:"@odata.type,omitempty"`
+	ID        *string     `json:"id,omitempty"`
+}
+
+func (o *DirectoryObject) Uri(endpoint environments.ApiEndpoint, apiVersion ApiVersion) string {
+	if o.ID == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, *o.ID)
+}
+
 type DirectoryRole struct {
-	ID             *string `json:"id,omitempty"`
+	DirectoryObject
+	Members *Members `json:"-"`
+
 	Description    *string `json:"description,omitempty"`
 	DisplayName    *string `json:"displayName,omitempty"`
 	RoleTemplateId *string `json:"roleTemplateId,omitempty"`
-
-	Members *[]string `json:"-"`
 }
 
-// AppendMember appends a new member object URI to the Members slice.
-func (d *DirectoryRole) AppendMember(endpoint environments.ApiEndpoint, apiVersion ApiVersion, id string) {
-	val := fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, id)
-	var members []string
-	if d.Members != nil {
-		members = *d.Members
+func (r *DirectoryRole) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
+	type directoryrole DirectoryRole
+	r2 := (*directoryrole)(r)
+	if err := json.Unmarshal(data, r2); err != nil {
+		return err
 	}
-	members = append(members, val)
-	d.Members = &members
+	return nil
 }
 
 // DirectoryRoleTemplate describes a Directory Role Template.
@@ -496,9 +530,24 @@ type EmailAddress struct {
 	Name    *string `json:"name,omitempty"`
 }
 
+type EmailAuthenticationMethod struct {
+	ID           *string `json:"id,omitempty"`
+	EmailAddress *string `json:"emailAddress,omitempty"`
+}
+
 type ExtensionSchemaProperty struct {
 	Name *string                         `json:"name,omitempty"`
 	Type ExtensionSchemaPropertyDataType `json:"type,omitempty"`
+}
+
+type Fido2AuthenticationMethod struct {
+	ID                      *string           `json:"id,omitempty"`
+	DisplayName             *string           `json:"displayName,omitempty"`
+	CreatedDateTime         *time.Time        `json:"createdDateTime,omitempty"`
+	AAGuid                  *string           `json:"aaGuid,omitempty"`
+	Model                   *string           `json:"model,omitempty"`
+	AttestationCertificates *[]string         `json:"attestationCertificates,omitempty"`
+	AttestationLevel        *AttestationLevel `json:"attestationLevel,omitempty"`
 }
 
 type GeoCoordinates struct {
@@ -509,7 +558,11 @@ type GeoCoordinates struct {
 
 // Group describes a Group object.
 type Group struct {
-	ID                            *string                             `json:"id,omitempty"`
+	DirectoryObject
+	Members          *Members               `json:"members@odata.bind,omitempty"`
+	Owners           *Owners                `json:"owners@odata.bind,omitempty"`
+	SchemaExtensions *[]SchemaExtensionData `json:"-"`
+
 	AllowExternalSenders          *string                             `json:"allowExternalSenders,omitempty"`
 	AssignedLabels                *[]GroupAssignedLabel               `json:"assignedLabels,omitempty"`
 	AssignedLicenses              *[]GroupAssignedLicense             `json:"assignLicenses,omitempty"`
@@ -550,17 +603,13 @@ type Group struct {
 	UnseenCount                   *int                                `json:"unseenCount,omitempty"`
 	Visibility                    *GroupVisibility                    `json:"visibility,omitempty"`
 	IsAssignableToRole            *bool                               `json:"isAssignableToRole,omitempty"`
-
-	SchemaExtensions *[]SchemaExtensionData `json:"-"`
-
-	Members *[]string `json:"members@odata.bind,omitempty"`
-	Owners  *[]string `json:"owners@odata.bind,omitempty"`
 }
 
 func (g Group) MarshalJSON() ([]byte, error) {
 	docs := make([][]byte, 0)
+	// Local type needed to avoid recursive MarshalJSON calls
 	type group Group
-	d, err := json.Marshal(group(g))
+	d, err := json.Marshal((*group)(&g))
 	if err != nil {
 		return d, err
 	}
@@ -578,6 +627,7 @@ func (g Group) MarshalJSON() ([]byte, error) {
 }
 
 func (g *Group) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
 	type group Group
 	g2 := (*group)(g)
 	if err := json.Unmarshal(data, g2); err != nil {
@@ -597,28 +647,6 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 		}
 	}
 	return nil
-}
-
-// AppendMember appends a new member object URI to the Members slice.
-func (g *Group) AppendMember(endpoint environments.ApiEndpoint, apiVersion ApiVersion, id string) {
-	val := fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, id)
-	var members []string
-	if g.Members != nil {
-		members = *g.Members
-	}
-	members = append(members, val)
-	g.Members = &members
-}
-
-// AppendOwner appends a new owner object URI to the Owners slice.
-func (g *Group) AppendOwner(endpoint environments.ApiEndpoint, apiVersion ApiVersion, id string) {
-	val := fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, id)
-	var owners []string
-	if g.Owners != nil {
-		owners = *g.Owners
-	}
-	owners = append(owners, val)
-	g.Owners = &owners
 }
 
 // HasTypes returns true if the group has all the specified GroupTypes
@@ -656,12 +684,12 @@ type GroupOnPremisesProvisioningError struct {
 }
 
 type IdentityProvider struct {
-	ODataType    *string `json:"@odata.type,omitempty"`
-	ID           *string `json:"id,omitempty"`
-	ClientId     *string `json:"clientId,omitempty"`
-	ClientSecret *string `json:"clientSecret,omitempty"`
-	Type         *string `json:"identityProviderType,omitempty"`
-	Name         *string `json:"displayName,omitempty"`
+	ODataType    *odata.Type `json:"@odata.type,omitempty"`
+	ID           *string     `json:"id,omitempty"`
+	ClientId     *string     `json:"clientId,omitempty"`
+	ClientSecret *string     `json:"clientSecret,omitempty"`
+	Type         *string     `json:"identityProviderType,omitempty"`
+	Name         *string     `json:"displayName,omitempty"`
 }
 
 type ImplicitGrantSettings struct {
@@ -764,6 +792,14 @@ type Message struct {
 	BccRecipients *[]Recipient `json:"bccRecipients,omitempty"`
 }
 
+type MicrosoftAuthenticatorAuthenticationMethod struct {
+	CreatedDateTime *time.Time `json:"createdDateTime,omitempty"`
+	DisplayName     *string    `json:"displayName,omitempty"`
+	ID              *string    `json:"id,omitempty"`
+	DeviceTag       *string    `json:"deviceTag,omitempty"`
+	PhoneAppVersion *string    `json:"phoneAppVersion,omitempty"`
+}
+
 type ModifiedProperty struct {
 	DisplayName *string `json:"displayName,omitempty"`
 	NewValue    *string `json:"newValue,omitempty"`
@@ -834,6 +870,12 @@ type PasswordCredential struct {
 	StartDateTime       *time.Time `json:"startDateTime,omitempty"`
 }
 
+type PasswordAuthenticationMethod struct {
+	CreationDateTime *time.Time `json:"creationDateTime,omitempty"`
+	ID               *string    `json:"id,omitempty"`
+	Password         *string    `json:"password,omitempty"`
+}
+
 type PasswordSingleSignOnSettings struct {
 	Fields *[]SingleSignOnField `json:"fields,omitempty"`
 }
@@ -854,6 +896,11 @@ type PersistentBrowserSessionControl struct {
 	Mode      *string `json:"mode,omitempty"`
 }
 
+type PhoneAuthenticationMethod struct {
+	ID          *string                  `json:"id,omitempty"`
+	PhoneNumber *string                  `json:"phoneNumber,omitempty"`
+	PhoneType   *AuthenticationPhoneType `json:"phoneType,omitempty"`
+}
 type PublicClient struct {
 	RedirectUris *[]string `json:"redirectUris,omitempty"`
 }
@@ -899,7 +946,9 @@ func (se SchemaExtensionData) MarshalJSON() ([]byte, error) {
 
 // ServicePrincipal describes a Service Principal object.
 type ServicePrincipal struct {
-	ID                                  *string                       `json:"id,omitempty"`
+	DirectoryObject
+	Owners *Owners `json:"owners@odata.bind,omitempty"`
+
 	AccountEnabled                      *bool                         `json:"accountEnabled,omitempty"`
 	AddIns                              *[]AddIn                      `json:"addIns,omitempty"`
 	AlternativeNames                    *[]string                     `json:"alternativeNames,omitempty"`
@@ -933,19 +982,16 @@ type ServicePrincipal struct {
 	Tags                                *[]string                     `json:"tags,omitempty"`
 	TokenEncryptionKeyId                *string                       `json:"tokenEncryptionKeyId,omitempty"`
 	VerifiedPublisher                   *VerifiedPublisher            `json:"verifiedPublisher,omitempty"`
-
-	Owners *[]string `json:"owners@odata.bind,omitempty"`
 }
 
-// AppendOwner appends a new owner object URI to the Owners slice.
-func (a *ServicePrincipal) AppendOwner(endpoint string, apiVersion string, id string) {
-	val := fmt.Sprintf("%s/%s/directoryObjects/%s", endpoint, apiVersion, id)
-	var owners []string
-	if a.Owners != nil {
-		owners = *a.Owners
+func (s *ServicePrincipal) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
+	type serviceprincipal ServicePrincipal
+	s2 := (*serviceprincipal)(s)
+	if err := json.Unmarshal(data, s2); err != nil {
+		return err
 	}
-	owners = append(owners, val)
-	a.Owners = &owners
+	return nil
 }
 
 type SignInActivity struct {
@@ -1007,9 +1053,21 @@ type TargetResource struct {
 	ModifiedProperties *[]ModifiedProperty `json:"modifiedProperties,omitempty"`
 }
 
+type TemporaryAccessPassAuthenticationMethod struct {
+	ID                    *string                `json:"id,omitempty"`
+	TemporaryAccessPass   *string                `json:"temporaryAccessPass,omitempty"`
+	CreatedDateTime       *time.Time             `json:"createdDateTime,omitempty"`
+	StartDateTime         *time.Time             `json:"startDateTime,omitempty"`
+	LifetimeInMinutes     *int32                 `json:"lifetimeInMinutes,omitempty"`
+	IsUsableOnce          *bool                  `json:"isUsableOnce,omitempty"`
+	IsUsable              *bool                  `json:"isUsable,omitempty"`
+	MethodUsabilityReason *MethodUsabilityReason `json:"methodUsabilityReason,omitempty"`
+}
+
 // User describes a User object.
 type User struct {
-	ID                              *string                  `json:"id,omitempty"`
+	DirectoryObject
+
 	AboutMe                         *string                  `json:"aboutMe,omitempty"`
 	AccountEnabled                  *bool                    `json:"accountEnabled,omitempty"`
 	AgeGroup                        *AgeGroup                `json:"ageGroup,omitempty"`
@@ -1036,6 +1094,7 @@ type User struct {
 	JobTitle                        *StringNullWhenEmpty     `json:"jobTitle,omitempty"`
 	Mail                            *StringNullWhenEmpty     `json:"mail,omitempty"`
 	MailNickname                    *string                  `json:"mailNickname,omitempty"`
+	MemberOf                        *[]DirectoryObject       `json:"memberOf,omitempty"`
 	MobilePhone                     *StringNullWhenEmpty     `json:"mobilePhone,omitempty"`
 	MySite                          *string                  `json:"mySite,omitempty"`
 	OfficeLocation                  *StringNullWhenEmpty     `json:"officeLocation,omitempty"`
@@ -1075,6 +1134,7 @@ type User struct {
 
 func (u User) MarshalJSON() ([]byte, error) {
 	docs := make([][]byte, 0)
+	// Local type needed to avoid recursive MarshalJSON calls
 	type user User
 	d, err := json.Marshal(user(u))
 	if err != nil {
@@ -1094,6 +1154,7 @@ func (u User) MarshalJSON() ([]byte, error) {
 }
 
 func (u *User) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
 	type user User
 	u2 := (*user)(u)
 	if err := json.Unmarshal(data, u2); err != nil {
@@ -1128,8 +1189,53 @@ type UserPasswordProfile struct {
 	Password                             *string `json:"password,omitempty"`
 }
 
+type UserRegistrationCount struct {
+	RegistrationStatus *RegistrationStatus `json:"registrationStatus,omitempty"`
+	RegistrationCount  *int64              `json:"registrationCount,omitempty"`
+}
+
+type UserRegistrationFeatureCount struct {
+	Feature   *AuthenticationMethodFeature `json:"feature,omitempty"`
+	UserCount *int64                       `json:"userCount"`
+}
+type UserRegistrationFeatureSummary struct {
+	TotalUserCount                *int64                          `json:"totalUserCount,omitempty"`
+	UserRegistrationFeatureCounts *[]UserRegistrationFeatureCount `json:"userRegistrationFeatureCounts"`
+	UserRoles                     IncludedUserRoles               `json:"userRoles,omitempty"`
+	UserTypes                     IncludedUserTypes               `json:"userTypes,omitempty"`
+}
+
+type UserRegistrationMethodCount struct {
+	AuthenticationMethod *string `json:"authenticationMethod,omitempty"`
+	UserCount            *int64  `json:"userCount,omitempty"`
+}
+
+type UserRegistrationMethodSummary struct {
+	TotalUserCount               *int64                         `json:"totalUserCount"`
+	UserRegistrationMethodsCount *[]UserRegistrationMethodCount `json:"userRegistrationMethodCounts,omitempty"`
+	UerRoles                     IncludedUserRoles              `json:"userRoles,omitempty"`
+	UserTypes                    IncludedUserTypes              `json:"userTypes,omitempty"`
+}
+
+type UserCredentialUsageDetails struct {
+	AuthMethod        *UsageAuthMethod `json:"authMethod,omitempty"`
+	EventDateTime     *time.Time       `json:"eventDateTime,omitempty"`
+	FailureReason     *string          `json:"failureReason,omitempty"`
+	Feature           *FeatureType     `json:"feature,omitempty"`
+	ID                *string          `json:"id,omitempty"`
+	IsSuccess         *bool            `json:"isSuccess,omitempty"`
+	UserDisplayName   *string          `json:"userDisplayName,omitempty"`
+	UserPrincipalName *string          `json:"userPrincipalName,omitempty"`
+}
 type VerifiedPublisher struct {
 	AddedDateTime       *time.Time `json:"addedDateTime,omitempty"`
 	DisplayName         *string    `json:"displayName,omitempty"`
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
+}
+
+type WindowsHelloForBusinessAuthenticationMethod struct {
+	CreatedDateTime *time.Time                       `json:"createdDateTime,omitempty"`
+	DisplayName     *string                          `json:"displayName,omitempty"`
+	ID              *string                          `json:"id,omitempty"`
+	KeyStrength     *AuthenticationMethodKeyStrength `json:"authenticationMethodKeyStrength,omitempty"`
 }

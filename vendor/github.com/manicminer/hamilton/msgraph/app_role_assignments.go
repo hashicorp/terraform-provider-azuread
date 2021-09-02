@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -58,17 +58,20 @@ func (c *AppRoleAssignmentsClient) List(ctx context.Context, id string) (*[]AppR
 	if err != nil {
 		return nil, status, fmt.Errorf("AppRoleAssignmentsClient.BaseClient.Get(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var data struct {
 		AppRoleAssignments []AppRoleAssignment `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &data.AppRoleAssignments, status, nil
 }
 
@@ -85,12 +88,14 @@ func (c *AppRoleAssignmentsClient) Remove(ctx context.Context, id, appRoleAssign
 	if err != nil {
 		return status, fmt.Errorf("AppRoleAssignmentsClient.BaseClient.Delete(): %v", err)
 	}
+
 	return status, nil
 }
 
 // Assign assigns an app role to a user, group or service principal depending on client resource type.
 func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrincipalId, resourceServicePrincipalId, appRoleId string) (*AppRoleAssignment, int, error) {
 	var status int
+
 	data := struct {
 		PrincipalId string `json:"principalId"`
 		ResourceId  string `json:"resourceId"`
@@ -105,6 +110,7 @@ func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrin
 	if err != nil {
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
+
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
@@ -117,14 +123,17 @@ func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrin
 	if err != nil {
 		return nil, status, fmt.Errorf("AppRoleAssignmentsClient.BaseClient.Post(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var appRoleAssignment AppRoleAssignment
 	if err := json.Unmarshal(respBody, &appRoleAssignment); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &appRoleAssignment, status, nil
 }

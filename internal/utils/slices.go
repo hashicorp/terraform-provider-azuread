@@ -1,5 +1,7 @@
 package utils
 
+import "strings"
+
 // Difference returns the elements in `a` that aren't in `b`.
 func Difference(a, b []string) []string {
 	mb := make(map[string]struct{}, len(b))
@@ -13,4 +15,14 @@ func Difference(a, b []string) []string {
 		}
 	}
 	return diff
+}
+
+// EnsureStringInSlice ensures the given string is contained in a slice
+func EnsureStringInSlice(sl []string, in string) []string {
+	for _, s := range sl {
+		if strings.EqualFold(s, in) {
+			return sl
+		}
+	}
+	return append(sl, in)
 }

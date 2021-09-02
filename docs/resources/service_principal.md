@@ -6,16 +6,28 @@ subcategory: "Service Principals"
 
 Manages a service principal associated with an application within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+
 ## Example Usage
 
 ```terraform
+data "azuread_client_config" "current" {}
+
 resource "azuread_application" "example" {
   display_name = "example"
+  owners       = [data.azuread_client_config.current.object_id]
 }
 
 resource "azuread_service_principal" "example" {
   application_id               = azuread_application.example.application_id
   app_role_assignment_required = false
+  owners                       = [data.azuread_client_config.current.object_id]
 
   tags = ["example", "tags", "here"]
 }
@@ -33,6 +45,10 @@ The following arguments are supported:
 * `login_url` - (Optional) The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on.
 * `notes` - (Optional) A free text field to capture information about the service principal, typically used for operational purposes.
 * `notification_email_addresses` - (Optional) A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.
+* `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the service principal. Supported object types are users or service principals. By default, no owners are assigned.
+
+-> **Ownership of Service Principals** It's recommended to always specify one or more service principal owners, including the principal being used to execute Terraform, such as in the example above.
+
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
 * `tags` - (Optional) A set of tags to apply to the service principal.
 * `use_existing` - (Optional) When true, any existing service principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing service principal.

@@ -28,10 +28,6 @@ func groupsDataSource() *schema.Resource {
 			Read: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"object_ids": {
 				Description:  "The object IDs of the groups",
@@ -62,6 +58,7 @@ func groupsDataSource() *schema.Resource {
 
 func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	client.BaseClient.DisableRetries = true
 
 	var groups []msgraph.Group
 	var expectedCount int

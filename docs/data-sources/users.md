@@ -6,6 +6,14 @@ subcategory: "Users"
 
 Gets object IDs or user principal names for multiple Azure Active Directory users.
 
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `User.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
+
 ## Example Usage
 
 ```terraform
@@ -24,9 +32,9 @@ The following arguments are supported:
 * `object_ids` - (Optional) The object IDs of the users.
 * `user_principal_names` - (Optional) The user principal names (UPNs) of the users.
 
-~> **NOTE:** One of `user_principal_names`, `object_ids`, `mail_nicknames`, `show_all_users` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+One of `user_principal_names`, `object_ids`, `mail_nicknames`, `show_all_users` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
-~> **NOTE:** `show_all_users`is a boolean value and not a list. If `show_all_users`and `ignore_missing`are both set to true then an error will be thrown.
+`show_all_users`is a boolean value and not a list. If `show_all_users`and `ignore_missing`are both set to true then an error will be thrown.
 
 ## Attributes Reference
 

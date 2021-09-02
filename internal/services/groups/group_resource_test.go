@@ -114,9 +114,58 @@ func TestAccGroup_owners(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withOneOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.withThreeOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withOneOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withServicePrincipalOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withDiverseOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("2"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("2"),
 			),
 		},
 		data.ImportStep(),
@@ -129,9 +178,50 @@ func TestAccGroup_members(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.withThreeMembers(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("3"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withOneMember(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withServicePrincipalMember(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withDiverseMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("3"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withNoMembers(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),
@@ -147,6 +237,8 @@ func TestAccGroup_membersAndOwners(t *testing.T) {
 			Config: r.withOwnersAndMembers(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("2"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
 		},
 		data.ImportStep(),
@@ -162,115 +254,17 @@ func TestAccGroup_manyMembersAndOwners(t *testing.T) {
 			Config: r.withManyOwnersAndMembers(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccGroup_membersDiverse(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	r := GroupResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.withDiverseMembers(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccGroup_ownersDiverse(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	r := GroupResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.withDiverseOwners(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccGroup_membersUpdate(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	r := GroupResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("66"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
 			),
 		},
 		data.ImportStep(),
 		{
-			Config: r.withOneMember(data),
+			Config: r.withOneOwnerAndNoMembers(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withThreeMembers(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withServicePrincipalMember(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.noMembers(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccGroup_ownersUpdate(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test")
-	r := GroupResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withThreeOwners(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withOneOwner(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.withServicePrincipalOwner(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("members.#").HasValue("0"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
 		},
 		data.ImportStep(),
@@ -507,12 +501,103 @@ resource "azuread_group" "test" {
 `, data.RandomInteger, visibility)
 }
 
-func (GroupResource) noMembers(data acceptance.TestData) string {
+func (r GroupResource) withOneOwner(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  owners           = [azuread_user.testA.object_id]
+}
+`, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctestGroup-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  owners           = [azuread_service_principal.test.object_id]
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) withDiverseOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  owners = [
+    azuread_service_principal.test.object_id,
+    azuread_user.test.object_id,
+  ]
+}
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
+}
+
+func (r GroupResource) withThreeOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  owners = [
+    azuread_user.testA.object_id,
+    azuread_user.testB.object_id,
+    azuread_user.testC.object_id
+  ]
+}
+`, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (GroupResource) withNoMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[1]d"
   security_enabled = true
   members          = []
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) withOneMember(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  members          = [azuread_user.testA.object_id]
+}
+`, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctestGroup-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  members          = [azuread_service_principal.test.object_id]
 }
 `, data.RandomInteger)
 }
@@ -533,45 +618,6 @@ resource "azuread_group" "test" {
 `, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
-func (r GroupResource) withDiverseOwners(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[2]d"
-  security_enabled = true
-  owners = [
-    azuread_user.test.object_id,
-    azuread_service_principal.test.object_id
-  ]
-}
-`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
-}
-
-func (r GroupResource) withOneMember(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[2]d"
-  security_enabled = true
-  members          = [azuread_user.testA.object_id]
-}
-`, r.templateThreeUsers(data), data.RandomInteger)
-}
-
-func (r GroupResource) withOneOwner(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[2]d"
-  security_enabled = true
-  owners           = [azuread_user.testA.object_id]
-}
-`, r.templateThreeUsers(data), data.RandomInteger)
-}
-
 func (r GroupResource) withThreeMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -580,22 +626,6 @@ resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[2]d"
   security_enabled = true
   members = [
-    azuread_user.testA.object_id,
-    azuread_user.testB.object_id,
-    azuread_user.testC.object_id
-  ]
-}
-`, r.templateThreeUsers(data), data.RandomInteger)
-}
-
-func (r GroupResource) withThreeOwners(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[2]d"
-  security_enabled = true
-  owners = [
     azuread_user.testA.object_id,
     azuread_user.testB.object_id,
     azuread_user.testC.object_id
@@ -620,63 +650,74 @@ resource "azuread_group" "test" {
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (r GroupResource) withManyOwnersAndMembers(data acceptance.TestData) string {
+func (GroupResource) manyObjectsTemplate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
 data "azuread_domains" "test" {
   only_initial = true
 }
 
-resource "azuread_user" "test" {
-  count = 25
+resource "azuread_group" "member" {
+  count            = 21
+  display_name     = "acctestGroupParticipant${count.index}-%[1]d"
+  security_enabled = true
+}
 
+resource "azuread_application" "test" {
+  count        = 27
+  display_name = "acctestGroupParticipant${count.index}-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  count          = 27
+  application_id = azuread_application.test[count.index].application_id
+}
+
+resource "azuread_user" "test" {
+  count               = 17
   user_principal_name = "acctestGroupParticipant${count.index}-%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestGroupParticipant${count.index}-%[1]d"
   password            = "Qwer5678!@#"
 }
-
-resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
-  security_enabled = true
-  owners           = azuread_user.test.*.object_id
-  members          = azuread_user.test.*.object_id
-}
 `, data.RandomInteger)
 }
 
-func (GroupResource) withServicePrincipalMember(data acceptance.TestData) string {
+func (r GroupResource) withManyOwnersAndMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  display_name = "acctestGroup-%[1]d"
-}
-
-resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-}
+%[1]s
 
 resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
+  display_name     = "acctestGroup-%[2]d"
   security_enabled = true
-  members          = [azuread_service_principal.test.object_id]
+
+  owners = flatten([
+    data.azuread_client_config.test.object_id,
+    azuread_service_principal.test.*.object_id,
+    azuread_user.test.*.object_id,
+  ])
+
+  members = flatten([
+    data.azuread_client_config.test.object_id,
+    azuread_group.member.*.object_id,
+    azuread_service_principal.test.*.object_id,
+    azuread_user.test.*.object_id,
+  ])
 }
-`, data.RandomInteger)
+`, r.manyObjectsTemplate(data), data.RandomInteger)
 }
 
-func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
+func (r GroupResource) withOneOwnerAndNoMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_application" "test" {
-  display_name = "acctestGroup-%[1]d"
-}
-
-resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-}
+%[1]s
 
 resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
+  display_name     = "acctestGroup-%[2]d"
   security_enabled = true
-  owners           = [azuread_service_principal.test.object_id]
+  owners           = [azuread_user.test.0.object_id]
+  members          = []
 }
-`, data.RandomInteger)
+`, r.manyObjectsTemplate(data), data.RandomInteger)
 }
 
 func (GroupResource) preventDuplicateNamesPass(data acceptance.TestData) string {

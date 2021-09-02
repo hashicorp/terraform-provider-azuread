@@ -79,9 +79,9 @@ type ClientCredentialsConfig struct {
 func (c *ClientCredentialsConfig) TokenSource(ctx context.Context, authType ClientCredentialsType) (source Authorizer) {
 	switch authType {
 	case ClientCredentialsAssertionType:
-		source = CachedAuthorizer(clientAssertionAuthorizer{ctx, c})
+		source = NewCachedAuthorizer(&clientAssertionAuthorizer{ctx, c})
 	case ClientCredentialsSecretType:
-		source = CachedAuthorizer(clientSecretAuthorizer{ctx, c})
+		source = NewCachedAuthorizer(&clientSecretAuthorizer{ctx, c})
 	}
 	return
 }

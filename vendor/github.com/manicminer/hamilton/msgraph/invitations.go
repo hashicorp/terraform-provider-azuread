@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -23,10 +23,12 @@ func NewInvitationsClient(tenantId string) *InvitationsClient {
 // Create creates a new Invitation.
 func (c *InvitationsClient) Create(ctx context.Context, invitation Invitation) (*Invitation, int, error) {
 	var status int
+
 	body, err := json.Marshal(invitation)
 	if err != nil {
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
+
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
@@ -38,14 +40,17 @@ func (c *InvitationsClient) Create(ctx context.Context, invitation Invitation) (
 	if err != nil {
 		return nil, status, fmt.Errorf("InvitationsClient.BaseClient.Post(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var newInvitation Invitation
 	if err := json.Unmarshal(respBody, &newInvitation); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &newInvitation, status, nil
 }

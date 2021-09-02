@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/manicminer/hamilton/odata"
@@ -35,17 +35,20 @@ func (c *DirectoryRolesClient) List(ctx context.Context) (*[]DirectoryRole, int,
 	if err != nil {
 		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Get(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var data struct {
 		DirectoryRoles []DirectoryRole `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &data.DirectoryRoles, status, nil
 }
 
@@ -61,15 +64,18 @@ func (c *DirectoryRolesClient) Get(ctx context.Context, id string) (*DirectoryRo
 	if err != nil {
 		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Get(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var dirRole DirectoryRole
 	if err := json.Unmarshal(respBody, &dirRole); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &dirRole, status, nil
 }
 
@@ -87,11 +93,13 @@ func (c *DirectoryRolesClient) ListMembers(ctx context.Context, id string) (*[]s
 	if err != nil {
 		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Get(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var data struct {
 		Members []struct {
 			Type string `json:"@odata.type"`
@@ -101,43 +109,45 @@ func (c *DirectoryRolesClient) ListMembers(ctx context.Context, id string) (*[]s
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	ret := make([]string, len(data.Members))
 	for i, v := range data.Members {
 		ret[i] = v.Id
 	}
+
 	return &ret, status, nil
 }
 
-// AddMembers adds a new member to a Directory Role.
-// First populate the Members field of the DirectoryRole using the AppendMember method of the model, then call this method.
+// AddMembers adds new members to a Directory Role.
+// First populate the `members` field, then call this method
 func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *DirectoryRole) (int, error) {
 	var status int
+
 	if directoryRole.ID == nil {
 		return status, errors.New("cannot update directory role with nil ID")
 	}
 	if directoryRole.Members == nil {
 		return status, errors.New("cannot update directory role with nil Owners")
 	}
+
 	for _, member := range *directoryRole.Members {
 		// don't fail if a member already exists
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest {
-				if o.Error != nil {
-					return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
-				}
+			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
 
-		data := struct {
-			Member string `json:"@odata.id"`
+		body, err := json.Marshal(struct {
+			Member odata.Id `json:"@odata.id"`
 		}{
-			Member: member,
-		}
-		body, err := json.Marshal(data)
+			Member: *member.ODataId,
+		})
 		if err != nil {
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
+
 		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
 			Body:             body,
 			ValidStatusCodes: []int{http.StatusNoContent},
@@ -151,6 +161,7 @@ func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *Di
 			return status, fmt.Errorf("DirectoryRolesClient.BaseClient.Post(): %v", err)
 		}
 	}
+
 	return status, nil
 }
 
@@ -159,9 +170,11 @@ func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *Di
 // memberIds is a *[]string containing object IDs of members to remove.
 func (c *DirectoryRolesClient) RemoveMembers(ctx context.Context, directoryRoleId string, memberIds *[]string) (int, error) {
 	var status int
+
 	if memberIds == nil {
 		return status, errors.New("cannot remove, nil memberIds")
 	}
+
 	for _, memberId := range *memberIds {
 		// check for membership before attempting deletion
 		if _, status, err := c.GetMember(ctx, directoryRoleId, memberId); err != nil {
@@ -170,6 +183,7 @@ func (c *DirectoryRolesClient) RemoveMembers(ctx context.Context, directoryRoleI
 			}
 			return status, err
 		}
+
 		var err error
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 			ValidStatusCodes: []int{http.StatusNoContent},
@@ -182,6 +196,7 @@ func (c *DirectoryRolesClient) RemoveMembers(ctx context.Context, directoryRoleI
 			return status, fmt.Errorf("DirectoryRolesClient.BaseClient.Delete(): %v", err)
 		}
 	}
+
 	return status, nil
 }
 
@@ -200,11 +215,13 @@ func (c *DirectoryRolesClient) GetMember(ctx context.Context, directoryRoleId, m
 	if err != nil {
 		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Get(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var data struct {
 		Context string `json:"@odata.context"`
 		Type    string `json:"@odata.type"`
@@ -214,6 +231,7 @@ func (c *DirectoryRolesClient) GetMember(ctx context.Context, directoryRoleId, m
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &data.Id, status, nil
 }
 
@@ -224,10 +242,8 @@ func (c *DirectoryRolesClient) Activate(ctx context.Context, roleTemplateID stri
 
 	// don't fail if a role is already activated
 	checkRoleAlreadyActivated := func(resp *http.Response, o *odata.OData) bool {
-		if resp.StatusCode == http.StatusBadRequest {
-			if o.Error != nil {
-				return o.Error.Match(odata.ErrorConflictingObjectPresentInDirectory)
-			}
+		if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			return o.Error.Match(odata.ErrorConflictingObjectPresentInDirectory)
 		}
 		return false
 	}
@@ -254,14 +270,17 @@ func (c *DirectoryRolesClient) Activate(ctx context.Context, roleTemplateID stri
 	if err != nil {
 		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Post(): %v", err)
 	}
+
 	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, status, fmt.Errorf("ioutil.ReadAll(): %v", err)
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
+
 	var newDirRole DirectoryRole
 	if err := json.Unmarshal(respBody, &newDirRole); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
+
 	return &newDirRole, status, nil
 }
