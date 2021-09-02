@@ -32,13 +32,13 @@ resource "azuread_invitation" "example" {
   user_email_address = "jdoe@hashicorp.com"
   redirect_url       = "https://portal.azure.com"
 
-  user_message_info {
+  message {
     language = "en-US"
   }
 }
 ```
 
-*Invitation with custom message and a CC recipient*
+*Invitation with custom message body and an additional recipient*
 
 ```terraform
 resource "azuread_invitation" "example" {
@@ -46,9 +46,9 @@ resource "azuread_invitation" "example" {
   user_email_address = "bbobson@hashicorp.com"
   redirect_url       = "https://portal.azure.com"
 
-  user_message_info {
-    cc_recipients   = ["aaliceberg@hashicorp.com"]
-    customized_body = "Hello there! You are invited to join my Azure tenant!"
+  message {
+    additional_recipients = ["aaliceberg@hashicorp.com"]
+    body                  = "Hello there! You are invited to join my Azure tenant!"
   }
 }
 ```
@@ -57,19 +57,19 @@ resource "azuread_invitation" "example" {
 
 The following arguments are supported:
 
+* `message` - (Optional) A `message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.
 * `redirect_url` - (Required) The URL that the user should be redirected to once the invitation is redeemed.
 * `user_display_name` - (Optional) The display name of the user being invited.
 * `user_email_address` - (Required) The email address of the user being invited.
-* `user_message` - (Optional) A `user_message` block as documented below, which configures the message being sent to the invited user. If this block is omitted, no message will be sent.
 * `user_type` - (Optional) The user type of the user being invited. Must be one of `Guest` or `Member`. Only Global Administrators can invite users as members. Defaults to `Guest`.
 
 ---
 
-`user_message` block supports the following:
+`message` block supports the following:
 
-* `cc_recipients` - (Optional) Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure.
-* `customized_body` - (Optional) Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.
-* `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Defaults to `en-US`. Cannot be specified with `customized_body`.
+* `additional_recipients` - (Optional) Email addresses of additional recipients the invitation message should be sent to. Only 1 additional recipient is currently supported by Azure.
+* `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.
+* `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Defaults to `en-US`. Cannot be specified with `body`.
 
 
 ## Attributes Reference

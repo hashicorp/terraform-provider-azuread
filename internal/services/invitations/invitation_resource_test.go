@@ -70,7 +70,7 @@ func TestAccInvitation_message(t *testing.T) {
 				check.That(data.ResourceName).Key("user_display_name").HasValue("Test user"),
 				check.That(data.ResourceName).Key("user_email_address").HasValue(fmt.Sprintf("acctest-user-%s@test.com", data.RandomString)),
 				check.That(data.ResourceName).Key("user_id").Exists(),
-				check.That(data.ResourceName).Key("user_message.#").HasValue("1"),
+				check.That(data.ResourceName).Key("message.#").HasValue("1"),
 				check.That(data.ResourceName).Key("user_type").HasValue("Guest"),
 			),
 		},
@@ -91,10 +91,10 @@ func TestAccInvitation_messageWithCustomizedBody(t *testing.T) {
 				check.That(data.ResourceName).Key("user_display_name").HasValue("Test user"),
 				check.That(data.ResourceName).Key("user_email_address").HasValue(fmt.Sprintf("acctest-user-%s@test.com", data.RandomString)),
 				check.That(data.ResourceName).Key("user_id").Exists(),
-				check.That(data.ResourceName).Key("user_message.#").HasValue("1"),
-				check.That(data.ResourceName).Key("user_message.0.cc_recipients.#").HasValue("1"),
-				check.That(data.ResourceName).Key("user_message.0.cc_recipients.0").HasValue(fmt.Sprintf("acctest-another-%s@test.com", data.RandomString)),
-				check.That(data.ResourceName).Key("user_message.0.customized_body").HasValue("Hello there! You are invited to join my Azure tenant."),
+				check.That(data.ResourceName).Key("message.#").HasValue("1"),
+				check.That(data.ResourceName).Key("message.0.additional_recipients.#").HasValue("1"),
+				check.That(data.ResourceName).Key("message.0.additional_recipients.0").HasValue(fmt.Sprintf("acctest-another-%s@test.com", data.RandomString)),
+				check.That(data.ResourceName).Key("message.0.body").HasValue("Hello there! You are invited to join my Azure tenant."),
 				check.That(data.ResourceName).Key("user_type").HasValue("Guest"),
 			),
 		},
@@ -115,8 +115,8 @@ func TestAccInvitation_messageWithLanguage(t *testing.T) {
 				check.That(data.ResourceName).Key("user_display_name").HasValue("Test user"),
 				check.That(data.ResourceName).Key("user_email_address").HasValue(fmt.Sprintf("acctest-user-%s@test.com", data.RandomString)),
 				check.That(data.ResourceName).Key("user_id").Exists(),
-				check.That(data.ResourceName).Key("user_message.#").HasValue("1"),
-				check.That(data.ResourceName).Key("user_message.0.language").HasValue("fr-CA"),
+				check.That(data.ResourceName).Key("message.#").HasValue("1"),
+				check.That(data.ResourceName).Key("message.0.language").HasValue("fr-CA"),
 				check.That(data.ResourceName).Key("user_type").HasValue("Guest"),
 			),
 		},
@@ -166,7 +166,7 @@ resource "azuread_invitation" "test" {
   user_email_address = "acctest-user-%[1]s@test.com"
   user_display_name  = "Test user"
 
-  user_message {}
+  message {}
 }
 `, data.RandomString)
 }
@@ -178,9 +178,9 @@ resource "azuread_invitation" "test" {
   user_email_address = "acctest-user-%[1]s@test.com"
   user_display_name  = "Test user"
 
-  user_message {
-    cc_recipients   = ["acctest-another-%[1]s@test.com"]
-    customized_body = "Hello there! You are invited to join my Azure tenant."
+  message {
+    additional_recipients = ["acctest-another-%[1]s@test.com"]
+    body                  = "Hello there! You are invited to join my Azure tenant."
   }
 }
 `, data.RandomString)
@@ -193,7 +193,7 @@ resource "azuread_invitation" "test" {
   user_email_address = "acctest-user-%[1]s@test.com"
   user_display_name  = "Test user"
 
-  user_message {
+  message {
     language = "fr-CA"
   }
 }

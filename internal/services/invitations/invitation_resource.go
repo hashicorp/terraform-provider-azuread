@@ -59,7 +59,7 @@ func invitationResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			"user_message": {
+			"message": {
 				Description: "Customize the message sent to the invited user",
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -67,7 +67,7 @@ func invitationResource() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cc_recipients": {
+						"additional_recipients": {
 							Description: "Email addresses of additional recipients the invitation message should be sent to",
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -78,11 +78,11 @@ func invitationResource() *schema.Resource {
 							},
 						},
 
-						"customized_body": {
+						"body": {
 							Description:      "Customized message body you want to send if you don't want to send the default message",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ConflictsWith:    []string{"user_message.0.language"},
+							ConflictsWith:    []string{"message.0.language"},
 							ValidateDiagFunc: validate.NoEmptyStrings,
 						},
 
@@ -90,7 +90,7 @@ func invitationResource() *schema.Resource {
 							Description:      "The language you want to send the default message in",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ConflictsWith:    []string{"user_message.0.customized_body"},
+							ConflictsWith:    []string{"message.0.body"},
 							ValidateDiagFunc: validate.ISO639Language,
 						},
 					},
@@ -137,7 +137,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		properties.InvitedUserDisplayName = utils.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("user_message"); ok {
+	if v, ok := d.GetOk("message"); ok {
 		properties.SendInvitationMessage = utils.Bool(true)
 		properties.InvitedUserMessageInfo = expandInvitedUserMessageInfo(v.([]interface{}))
 	}
@@ -247,11 +247,11 @@ func expandInvitedUserMessageInfo(in []interface{}) *msgraph.InvitedUserMessageI
 	result := msgraph.InvitedUserMessageInfo{}
 	config := in[0].(map[string]interface{})
 
-	ccRecipients := config["cc_recipients"].([]interface{})
-	messageBody := config["customized_body"].(string)
+	additionalRecipients := config["additional_recipients"].([]interface{})
+	messageBody := config["body"].(string)
 	messageLanguage := config["language"].(string)
 
-	result.CCRecipients = expandRecipients(ccRecipients)
+	result.CCRecipients = expandRecipients(additionalRecipients)
 	result.CustomizedMessageBody = &messageBody
 	result.MessageLanguage = &messageLanguage
 
