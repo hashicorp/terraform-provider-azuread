@@ -310,6 +310,9 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	var ids, values []string
 
 	for _, roleRaw := range appRoles {
+		if roleRaw == nil {
+			continue
+		}
 		role := roleRaw.(map[string]interface{})
 		if id := role["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
 			ids = append(ids, id)
@@ -320,6 +323,9 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	}
 
 	for _, scopeRaw := range oauth2Permissions {
+		if scopeRaw == nil {
+			continue
+		}
 		scope := scopeRaw.(map[string]interface{})
 		if id := scope["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
 			ids = append(ids, id)
@@ -360,7 +366,7 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 		RequestedAccessTokenVersion: utils.Int32(int32(1)),
 	}
 
-	if len(input) == 0 {
+	if len(input) == 0 || input[0] == nil {
 		return
 	}
 
@@ -387,6 +393,9 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 	}
 
 	for _, appRoleRaw := range input {
+		if appRoleRaw == nil {
+			continue
+		}
 		appRole := appRoleRaw.(map[string]interface{})
 
 		var allowedMemberTypes []msgraph.AppRoleAllowedMemberType
@@ -426,7 +435,7 @@ func expandApplicationGroupMembershipClaims(in []interface{}) *[]msgraph.GroupMe
 func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.ImplicitGrantSettings {
 	var enableAccessTokenIssuance, enableIdTokenIssuance bool
 
-	if len(input) > 0 {
+	if len(input) > 0 && input[0] != nil {
 		in := input[0].(map[string]interface{})
 		enableAccessTokenIssuance = in["access_token_issuance_enabled"].(bool)
 		enableIdTokenIssuance = in["id_token_issuance_enabled"].(bool)
@@ -442,6 +451,9 @@ func expandApplicationOAuth2PermissionScope(in []interface{}) *[]msgraph.Permiss
 	result := make([]msgraph.PermissionScope, 0)
 
 	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
 		oauth2Permissions := raw.(map[string]interface{})
 
 		result = append(result,
@@ -481,6 +493,9 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 	result := make([]msgraph.OptionalClaim, 0)
 
 	for _, optionalClaimRaw := range in {
+		if optionalClaimRaw == nil {
+			continue
+		}
 		optionalClaim := optionalClaimRaw.(map[string]interface{})
 
 		additionalProps := make([]string, 0)
@@ -511,7 +526,7 @@ func expandApplicationPublicClient(input []interface{}) (result *msgraph.PublicC
 		RedirectUris: &[]string{},
 	}
 
-	if len(input) == 0 {
+	if len(input) == 0 || input[0] == nil {
 		return
 	}
 
@@ -525,6 +540,9 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.Requir
 	result := make([]msgraph.RequiredResourceAccess, 0)
 
 	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
 		requiredResourceAccess := raw.(map[string]interface{})
 
 		result = append(result, msgraph.RequiredResourceAccess{
@@ -542,6 +560,9 @@ func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess
 	result := make([]msgraph.ResourceAccess, 0)
 
 	for _, resourceAccessRaw := range in {
+		if resourceAccessRaw == nil {
+			continue
+		}
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
 
 		result = append(result, msgraph.ResourceAccess{
@@ -558,7 +579,7 @@ func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) 
 		RedirectUris: &[]string{},
 	}
 
-	if len(input) == 0 {
+	if len(input) == 0 || input[0] == nil {
 		return
 	}
 
@@ -576,7 +597,7 @@ func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) 
 		RedirectUris:          &[]string{},
 	}
 
-	if len(input) == 0 {
+	if len(input) == 0 || input[0] == nil {
 		return
 	}
 
