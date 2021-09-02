@@ -34,7 +34,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all_users"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -46,7 +46,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all_users"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -58,26 +58,28 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all_users"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
-			"show_all_users": {
-				Description:  "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found",
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Default:      false,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "show_all_users"},
+			"ignore_missing": {
+				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"return_all_users"},
 			},
 
-			"ignore_missing": {
-				Description: "Ignore missing users and return users that were found. The data source will still fail if no users are found",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+			"return_all_users": {
+				Description:   "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found.",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"ignore_missing"},
+				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all_users"},
 			},
 
 			"users": {
@@ -159,17 +161,18 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var users []msgraph.User
 	var expectedCount int
 	ignoreMissing := d.Get("ignore_missing").(bool)
-	showAllUsers := d.Get("show_all_users").(bool)
+	returnAllUsers := d.Get("return_all_users").(bool)
 
-	// validate that flags where set correctly for showAllUsers + ignoreMissing as well as
-	if ignoreMissing && showAllUsers {
-		return tf.ErrorDiagF(errors.New("Both the ignore_missing and show_all_users flags were set. Please only use ignore_missing with a filter applied"), "Contradicting flags set")
-	} else if !showAllUsers && len(d.Get("user_principal_names").([]interface{})) == 0 && len(d.Get("object_ids").([]interface{})) == 0 && len(d.Get("mail_nicknames").([]interface{})) == 0 {
-		return tf.ErrorDiagF(errors.New("show_all_users set to false but no filter specified. Please either set to true or define a filter with user_principle_names, object_ids or mail_nicknames."), "Flags/filter set incorrectly")
-	} // This error might be redundant with the ExactlyOneOf
-
-	// Do the actual querying through a filter
-	if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
+	if returnAllUsers {
+		result, _, err := client.List(ctx, odata.Query{})
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve users")
+		}
+		if result == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		users = append(users, *result...)
+	} else if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
 		expectedCount = len(upns)
 		for _, v := range upns {
 			query := odata.Query{
@@ -240,22 +243,9 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// Check that the right number of users where returned - Does not work for showAllUsers
-	if !showAllUsers && !ignoreMissing && len(users) != expectedCount {
+	// Check that the right number of users were returned
+	if !returnAllUsers && !ignoreMissing && len(users) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(users)), "Unexpected number of users returned")
-	}
-	// Fetch all users
-	if showAllUsers {
-		result, _, err := client.List(ctx, odata.Query{})
-		if err != nil {
-			return tf.ErrorDiagF(err, "Error retrieving users from API.")
-		}
-		if result == nil {
-			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
-		}
-		for x := range *result {
-			users = append(users, (*result)[x])
-		}
 	}
 
 	upns := make([]string, 0)
