@@ -56,12 +56,12 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 	})
 }
 
-func TestAccGroupsDataSource_allNames(t *testing.T) {
+func TestAccGroupsDataSource_returnAll(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: GroupsDataSource{}.showAll(),
+			Config: GroupsDataSource{}.returnAll(),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -114,10 +114,10 @@ data "azuread_groups" "test" {
 `
 }
 
-func (GroupsDataSource) showAll() string {
+func (GroupsDataSource) returnAll() string {
 	return `
 data "azuread_groups" "test" {
-  show_all = true
+  return_all = true
 }
 `
 }
