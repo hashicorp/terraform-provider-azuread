@@ -1,20 +1,20 @@
-## 2.1.0 (Unreleased)
+## 2.1.0 (September 02, 2021)
 
 FEATURES:
 
-* **New Resource:** `azuread_invitation` [GH-445]
+* **New Resource:** `azuread_invitation` ([#445](https://github.com/terraform-providers/terraform-provider-azuread/issues/445))
 
 BUG FIXES:
 
-* `data.azuread_client_config` - populate the `tenant_id` and `client_id` attributes when authenticating via Azure CLI [GH-539]
-* `azuread_service_principal` - fix a bug that prevented creation of service principals in some cases due to `owners` being applied incorrectly [GH-539]
-* `azuread_user` - fix a validation bug for the `password` property [GH-543]
+* `data.azuread_client_config` - populate the `tenant_id` and `client_id` attributes when authenticating via Azure CLI ([#539](https://github.com/terraform-providers/terraform-provider-azuread/issues/539))
+* `azuread_service_principal` - fix a bug that prevented creation of service principals in some cases due to `owners` being applied incorrectly ([#539](https://github.com/terraform-providers/terraform-provider-azuread/issues/539))
+* `azuread_user` - fix a validation bug for the `password` property ([#543](https://github.com/terraform-providers/terraform-provider-azuread/issues/543))
 
 IMPROVEMENTS:
 
-* `data.azuread_groups` - support the `return_all` property [GH-520]
-* `data.azuread_users` - support the `return_all` property [GH-513]
-* `azuread_application` - allow `redirect_uris` with a scheme of `ms-appx-web` [GH-540]
+* `data.azuread_groups` - support the `return_all` property ([#520](https://github.com/terraform-providers/terraform-provider-azuread/issues/520))
+* `data.azuread_users` - support the `return_all` property ([#513](https://github.com/terraform-providers/terraform-provider-azuread/issues/513))
+* `azuread_application` - allow `redirect_uris` with a scheme of `ms-appx-web` ([#540](https://github.com/terraform-providers/terraform-provider-azuread/issues/540))
 
 ## 2.0.1 (August 26, 2021)
 
