@@ -8,7 +8,8 @@ BUG FIXES:
 
 IMPROVEMENTS:
 
-* `data.azuread_users` - support the `return_all_users` property [GH-513]
+* `data.azuread_groups` - support the `return_all` property [GH-520]
+* `data.azuread_users` - support the `return_all` property [GH-513]
 * `azuread_application` - allow `redirect_uris` with a scheme of `ms-appx-web` [GH-540]
 
 ## 2.0.1 (August 26, 2021)
