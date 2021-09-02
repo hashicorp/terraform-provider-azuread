@@ -210,7 +210,7 @@ data "azuread_users" "test" {
 func (UsersDataSource) returnAll() string {
 	return `
 data "azuread_users" "test" {
-  return_all_users = true
+  return_all = true
 }
 `
 }
