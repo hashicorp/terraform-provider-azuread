@@ -34,7 +34,7 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids"},
+				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -46,11 +46,18 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids"},
+				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
+			},
+
+			"return_all": {
+				Description:  "Retrieve all groups with no filter",
+				Type:         schema.TypeBool,
+				Optional:     true,
+				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
 			},
 		},
 	}
@@ -62,13 +69,27 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var groups []msgraph.Group
 	var expectedCount int
+	var returnAll = d.Get("return_all").(bool)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {
 		displayNames = v.([]interface{})
 	}
 
-	if len(displayNames) > 0 {
+	if returnAll {
+		result, _, err := client.List(ctx, odata.Query{})
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve groups")
+		}
+		if result == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		if len(*result) == 0 {
+			return tf.ErrorDiagPathF(err, "return_all", "No groups found")
+		}
+
+		groups = append(groups, *result...)
+	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
 			displayName := v.(string)
@@ -105,7 +126,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if len(groups) != expectedCount {
+	if !returnAll && len(groups) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 

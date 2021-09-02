@@ -16,9 +16,17 @@ When authenticated with a user principal, this data source does not require any 
 
 ## Example Usage
 
+*Look up by group name*
 ```terraform
 data "azuread_groups" "groups" {
   display_names = ["group-a", "group-b"]
+}
+```
+
+*Look up all groups*
+```terraform
+data "azuread_groups" "allGroups" {
+  return_all = true
 }
 ```
 
@@ -28,8 +36,9 @@ The following arguments are supported:
 
 * `display_names` - (Optional) The display names of the groups.
 * `object_ids` - (Optional) The object IDs of the groups.
+* `return_all` - (Optional) A flag to denote if all groups should be fetched and returned.
 
-~> One of `display_names` or `object_ids` should be specified. Either of these _may_ be specified as an empty list, in which case no results will be returned.
+~> One of `display_names`, `object_ids` or `return_all` should be specified. Either of the first two _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 
