@@ -80,7 +80,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheck
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestUser-%d-DisplayName", data.RandomInteger)),
 		check.That(data.ResourceName).Key("given_name").HasValue(fmt.Sprintf("acctestUser-%d-GivenName", data.RandomInteger)),
 		check.That(data.ResourceName).Key("job_title").HasValue(fmt.Sprintf("acctestUser-%d-Job", data.RandomInteger)),
-		//check.That(data.ResourceName).Key("mail").Exists(), // TODO only set for O365 domains
+		// check.That(data.ResourceName).Key("mail").Exists(), // TODO only set for O365 domains
 		check.That(data.ResourceName).Key("mail_nickname").HasValue(fmt.Sprintf("acctestUser-%d-MailNickname", data.RandomInteger)),
 		check.That(data.ResourceName).Key("mobile_phone").HasValue("(555) 555-5555"),
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
