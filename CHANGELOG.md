@@ -1,5 +1,9 @@
 ## 2.1.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `azuread_invitation` [GH-445]
+
 BUG FIXES:
 
 * `data.azuread_client_config` - populate the `tenant_id` and `client_id` attributes when authenticating via Azure CLI [GH-539]
