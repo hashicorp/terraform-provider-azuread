@@ -6,7 +6,15 @@ subcategory: "Groups"
 
 Manages a single group membership within Azure Active Directory.
 
--> **Warning** Do not use this resource at the same time as the `members` property of the `azuread_group` resource.
+~> **Warning** Do not use this resource at the same time as the `members` property of the `azuread_group` resource for the same group. Doing so will cause a conflict and group members will be removed.
+
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Group.ReadWrite.All` or `Directory.ReadWrite.All`
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Groups Administrator`, `User Administrator` or `Global Administrator`
 
 ## Example Usage
 
@@ -48,4 +56,4 @@ Group members can be imported using the object ID of the group and the object ID
 terraform import azuread_group_member.test 00000000-0000-0000-0000-000000000000/member/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Azure AD Group Object ID and the target Member Object ID in the format `{GroupObjectID}/member/{MemberObjectID}`.
+-> This ID format is unique to Terraform and is composed of the Azure AD Group Object ID and the target Member Object ID in the format `{GroupObjectID}/member/{MemberObjectID}`.

@@ -133,6 +133,7 @@ func domainsDataSource() *schema.Resource {
 
 func domainsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Domains.DomainsClient
+	client.BaseClient.DisableRetries = true
 
 	adminManaged := d.Get("admin_managed").(bool)
 	onlyDefault := d.Get("only_default").(bool)

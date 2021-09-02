@@ -6,6 +6,14 @@ subcategory: "Applications"
 
 Use this data source to access information about an existing Application within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this data source.
+
+When authenticated with a service principal, this data source requires one of the following application roles: `Application.Read.All` or `Directory.Read.All`
+
+When authenticated with a user principal, this data source does not require any additional roles.
+
 ## Example Usage
 
 ```terraform
@@ -13,18 +21,20 @@ data "azuread_application" "example" {
   display_name = "My First AzureAD Application"
 }
 
-output "azure_ad_object_id" {
+output "application_object_id" {
   value = data.azuread_application.example.id
 }
 ```
 
 ## Argument Reference
 
+The following arguments are supported:
+
 * `application_id` - (Optional) Specifies the Application ID (also called Client ID).
 * `display_name` - (Optional) Specifies the display name of the application.
 * `object_id` - (Optional) Specifies the Object ID of the application.
 
-~> **NOTE:** One of `object_id`, `application_id` or `display_name` must be specified.
+~> One of `object_id`, `application_id` or `display_name` must be specified.
 
 ## Attributes Reference
 

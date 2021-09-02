@@ -56,16 +56,17 @@ Now we have obtained the necessary credentials, it's possible to configure Terra
 
 Our recommended approach is storing the credentials as Environment Variables, for example:
 
-```bash
+```shell-session
 # sh
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_CLIENT_SECRET="MyCl1eNtSeCr3t"
 $ export ARM_TENANT_ID="10000000-2000-3000-4000-500000000000"
-
+```
+```powershell
 # PowerShell
-$env:ARM_CLIENT_ID = 00000000-0000-0000-0000-000000000000
-$env:ARM_CLIENT_SECRET = 03MWPmH2W3i008UVcucO1E1vifY_bR
-$env:ARM_TENANT_ID = 10000000-2000-3000-4000-500000000000
+$env:ARM_CLIENT_ID = "00000000-0000-0000-0000-000000000000"
+$env:ARM_CLIENT_SECRET = "MyCl1eNtSeCr3t"
+$env:ARM_TENANT_ID = "10000000-2000-3000-4000-500000000000"
 ```
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to authenticate using the Client Secret.
@@ -76,9 +77,9 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 
 It's also possible to configure these variables either directly, or from variables, in your provider block, like so:
 
-~> We recommend not defining these variables in-line since they could easily be checked into Source Control.
+~> **Caution** We recommend not defining these variables in-line since they could easily be checked into Source Control.
 
-```hcl
+```terraform
 variable "client_secret" {}
 
 provider "azuread" {

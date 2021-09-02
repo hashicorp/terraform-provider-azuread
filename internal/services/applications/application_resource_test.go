@@ -146,6 +146,23 @@ func TestAccApplication_appRoles(t *testing.T) {
 	})
 }
 
+func TestAccApplication_duplicateAppRolesOauth2PermissionsIdsUnknown(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsIdsUnknown(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("1"),
+			),
+		},
+	})
+}
+
 func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -267,6 +284,22 @@ func TestAccApplication_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.singleOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.threeOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -279,6 +312,38 @@ func TestAccApplication_owners(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_createWithNoOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.noOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_manyOwners(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.manyOwners(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
 			),
 		},
 		data.ImportStep(),
@@ -485,6 +550,7 @@ resource "azuread_application" "test" {
     redirect_uris = [
       "https://login.microsoftonline.com/common/oauth2/nativeclient",
       "https://login.live.com/oauth20_desktop.srf",
+      "ms-appx-web://Microsoft.AAD.BrokerPlugin/00000000-1111-1111-1111-222222222222",
     ]
   }
 
@@ -829,6 +895,41 @@ resource "azuread_application" "test" {
 `, data.RandomInteger, uuids[0], uuids[1], uuids[2], uuids[3])
 }
 
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsIdsUnknown(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+provider "random" {}
+
+resource "random_uuid" "test" {
+  count = 2
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = random_uuid.test[0].id
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Admins can manage roles and perform all task actions"
+    display_name         = "Admin"
+    enabled              = true
+    id                   = random_uuid.test[1].id
+    value                = "administrate"
+  }
+}
+`, data.RandomInteger, data.UUID(), data.UUID())
+}
+
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsValues(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -888,6 +989,17 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
+func (ApplicationResource) noOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  owners       = []
+}
+`, data.RandomInteger)
+}
+
 func (r ApplicationResource) singleOwner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -914,4 +1026,41 @@ resource "azuread_application" "test" {
   ]
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (r ApplicationResource) manyOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_application" "owner" {
+  count        = 27
+  display_name = "acctestApplicationOwner${count.index}-%[1]d"
+}
+
+resource "azuread_service_principal" "owner" {
+  count          = 27
+  application_id = azuread_application.owner[count.index].application_id
+}
+
+resource "azuread_user" "owner" {
+  count               = 17
+  user_principal_name = "acctestApplicationOwner${count.index}-%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestApplicationOwner${count.index}-%[1]d"
+  password            = "Qwer5678!@#"
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  owners = flatten([
+    data.azuread_client_config.test.object_id,
+    azuread_service_principal.owner.*.object_id,
+    azuread_user.owner.*.object_id,
+  ])
+}
+`, data.RandomInteger)
 }

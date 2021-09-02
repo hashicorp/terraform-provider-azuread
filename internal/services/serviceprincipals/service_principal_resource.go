@@ -33,9 +33,9 @@ func servicePrincipalResource() *schema.Resource {
 		DeleteContext: servicePrincipalResourceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -106,6 +106,17 @@ func servicePrincipalResource() *schema.Resource {
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
+				},
+			},
+
+			"owners": {
+				Description: "A list of object IDs of principals that will be granted ownership of the service principal",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Set:         schema.HashString,
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.UUID,
 				},
 			},
 
@@ -231,6 +242,8 @@ func servicePrincipalResource() *schema.Resource {
 
 func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
+	callerId := meta.(*clients.Client).Claims.ObjectId
 
 	appId := d.Get("application_id").(string)
 	result, _, err := client.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})
@@ -272,6 +285,51 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
 	}
 
+	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
+	// The calling principal should always be in the first slice of owners
+	callerObject, _, err := directoryObjectsClient.Get(ctx, callerId, odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
+	}
+	if callerObject == nil {
+		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
+	}
+	ownersFirst20 := msgraph.Owners{*callerObject}
+	var ownersExtra msgraph.Owners
+
+	// Track whether we need to remove the calling principal later on
+	removeCallerOwner := true
+
+	// Retrieve and set the initial owners, which can be up to 20 in total when creating the service principal
+	if v, ok := d.GetOk("owners"); ok {
+		ownerCount := 0
+		for _, id := range v.(*schema.Set).List() {
+			if strings.EqualFold(id.(string), callerId) {
+				removeCallerOwner = false
+				continue
+			}
+			ownerObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+			}
+			if ownerObject == nil {
+				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", id)
+			}
+			if ownerObject.ODataId == nil {
+				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
+			}
+			if ownerCount < 19 {
+				ownersFirst20 = append(ownersFirst20, *ownerObject)
+			} else {
+				ownersExtra = append(ownersExtra, *ownerObject)
+			}
+			ownerCount++
+		}
+	}
+
+	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
+	properties.Owners = &ownersFirst20
+
 	servicePrincipal, _, err = client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create service principal")
@@ -282,14 +340,32 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.SetId(*servicePrincipal.ID)
 
+	// Add any remaining owners after the service principal is created
+	if len(ownersExtra) > 0 {
+		servicePrincipal.Owners = &ownersExtra
+		if _, err := client.AddOwners(ctx, servicePrincipal); err != nil {
+			return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
+		}
+	}
+
+	// If the calling principal was not included in configuration, remove it now
+	if removeCallerOwner {
+		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
+			return tf.ErrorDiagF(err, "Could not remove initial owner from service principal with object ID: %q", d.Id())
+		}
+	}
+
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 
 	properties := msgraph.ServicePrincipal{
-		ID:                         utils.String(d.Id()),
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(d.Id()),
+		},
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
 		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
@@ -303,6 +379,43 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
+	}
+
+	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+		owners, _, err := client.ListOwners(ctx, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
+		}
+
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		existingOwners := *owners
+		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
+		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
+
+		if len(ownersToAdd) > 0 {
+			newOwners := make(msgraph.Owners, 0)
+			for _, m := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+				}
+				if ownerObject == nil {
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+				}
+				newOwners = append(newOwners, *ownerObject)
+			}
+
+			properties.Owners = &newOwners
+			if _, err := client.AddOwners(ctx, &properties); err != nil {
+				return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
+			}
+		}
+
+		if len(ownersForRemoval) > 0 {
+			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove owners from service principal with object ID: %q", d.Id())
+			}
+		}
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
@@ -357,6 +470,12 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
 	tf.Set(d, "tags", servicePrincipal.Tags)
 	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
+
+	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID)
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for service principal with object ID %q", d.Id())
+	}
+	tf.Set(d, "owners", owners)
 
 	return nil
 }

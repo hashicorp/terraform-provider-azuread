@@ -6,6 +6,16 @@ subcategory: "Applications"
 
 Manages an application registration within Azure Active Directory.
 
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+
+-> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+
 ## Example Usage
 
 ```terraform
@@ -51,7 +61,8 @@ resource "azuread_application" "example" {
     allowed_member_types = ["User", "Application"]
     description          = "Admins can manage roles and perform all task actions"
     display_name         = "Admin"
-    is_enabled           = true
+    enabled              = true
+    id                   = "1b19509b-32b1-4e9f-b71d-4992aa991967"
     value                = "admin"
   }
 
@@ -60,7 +71,7 @@ resource "azuread_application" "example" {
     description          = "ReadOnly roles have limited query access"
     display_name         = "ReadOnly"
     enabled              = true
-    id                   = "%[6]s"
+    id                   = "497406e4-012a-4267-bf18-45a1cb148a01"
     value                = "User"
   }
 
@@ -135,7 +146,10 @@ The following arguments are supported:
 * `marketing_url` - (Optional) URL of the application's marketing page.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
-* `owners` - (Optional) A list of object IDs of principals that will be granted ownership of the application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
+* `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
+
+-> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
+
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
 * `privacy_statement_url` - (Optional) URL of the application's privacy statement.
 * `public_client` - (Optional) A `public_client` block as documented below, which configures non-web app or non-web API application settings, for example mobile or other public clients such as an installed application running on a desktop device.
@@ -264,15 +278,10 @@ In addition to all arguments above, the following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `application_id` - The Application ID (also called Client ID).
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
+* `logo_url` - CDN URL to the application's logo.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
 * `publisher_domain` - The verified publisher domain for the application.
-
----
-
-`info` block exports the following:
-
-* `logo_url` - CDN URL to the application's logo.
 
 ## Import
 

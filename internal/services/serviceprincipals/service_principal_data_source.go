@@ -199,6 +199,7 @@ func servicePrincipalData() *schema.Resource {
 
 func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client.BaseClient.DisableRetries = true
 
 	var servicePrincipal *msgraph.ServicePrincipal
 
