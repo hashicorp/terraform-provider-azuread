@@ -133,6 +133,24 @@ func userResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 16),
 			},
 
+			"employee_type": {
+				Description: "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"cost_center": {
+				Description: "The cost center associated with the user.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"division": {
+				Description: "The name of the division in which the user works.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"force_password_change": {
 				Description: "Whether the user is forced to change the password during the next sign-in. Only takes effect when also changing the password",
 				Type:        schema.TypeBool,
@@ -402,6 +420,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
+		EmployeeType:            utils.String(d.Get("employee_type").(string)),
 		FaxNumber:               utils.NullableString(d.Get("fax_number").(string)),
 		GivenName:               utils.NullableString(d.Get("given_name").(string)),
 		JobTitle:                utils.NullableString(d.Get("job_title").(string)),
@@ -424,6 +443,15 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
 			Password:                      utils.String(password),
 		},
+	}
+
+	costCenter, costCenterExists := d.GetOk("cost_center")
+	division, divisionExists := d.GetOk("division")
+	if costCenterExists || divisionExists {
+		properties.EmployeeOrgData = &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(costCenter.(string)),
+			Division:   utils.String(division.(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("business_phones"); ok {
@@ -476,6 +504,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
+		EmployeeType:            utils.String(d.Get("employee_type").(string)),
 		FaxNumber:               utils.NullableString(d.Get("fax_number").(string)),
 		GivenName:               utils.NullableString(d.Get("given_name").(string)),
 		JobTitle:                utils.NullableString(d.Get("job_title").(string)),
@@ -512,6 +541,13 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("onpremises_immutable_id") {
 		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
+	}
+
+	if d.HasChange("cost_center") || d.HasChange("division") {
+		properties.EmployeeOrgData = &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(d.Get("cost_center").(string)),
+			Division:   utils.String(d.Get("division").(string)),
+		}
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
