@@ -112,10 +112,8 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 			if securityEnabled {
 				groups = append(groups, *result...)
-
 			} else if count > 1 {
 				return tf.ErrorDiagPathF(err, "display_names", "More than one group found with display name: %q", displayName)
-
 			} else if count == 0 {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
 			}
