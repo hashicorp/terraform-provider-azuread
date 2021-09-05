@@ -161,6 +161,10 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			newDisplayNames = append(newDisplayNames, *group.DisplayName)
 		}
 	}
+	// Check if securityEnabled has caused the number of returned groups to be 0
+	if len(newObjectIds) == 0 && securityEnabled{
+		return tf.ErrorDiagF(errors.New("No groups found with 'security_enabled = true'"), "Unexpected Number of groups returned")
+	}
 
 	h := sha1.New()
 	if _, err := h.Write([]byte(strings.Join(newDisplayNames, "-"))); err != nil {
