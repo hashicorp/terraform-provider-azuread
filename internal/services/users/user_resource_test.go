@@ -174,8 +174,10 @@ resource "azuread_user" "test" {
   onpremises_immutable_id = "%[1]d"
   usage_location          = "NO"
 
-  password              = "%[2]s"
-  force_password_change = true
+  password                    = "%[2]s"
+  force_password_change       = true
+  disable_strong_password     = true
+  disable_password_expiration = true
 
   age_group                  = "NotAdult"
   business_phones            = ["12345678901"]

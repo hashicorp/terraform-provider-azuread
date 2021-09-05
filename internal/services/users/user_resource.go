@@ -209,6 +209,19 @@ func userResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256), // Currently the max length for AAD passwords is 256
 			},
 
+			"disable_strong_password": {
+				Description: "Whether the user is allowed weaker passwords than the default policy to be specified.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+			"disable_password_expiration": {
+				Description: "Whether the users password is exempt from expiring",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+
 			"postal_code": {
 				Description: "The postal code for the user's postal address. The postal code is specific to the user's country/region. In the United States of America, this attribute contains the ZIP code",
 				Type:        schema.TypeString,
@@ -367,6 +380,18 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		mailNickName = strings.Split(upn, "@")[0]
 	}
 
+	passwordPolicies := utils.String("")
+	disable_strong_password := d.Get("disable_strong_password").(bool)
+	disable_password_expiration := d.Get("disable_password_expiration").(bool)
+
+	if disable_strong_password && (!disable_password_expiration) {
+		passwordPolicies = utils.String("DisableStrongPassword")
+	} else if (!disable_strong_password) && disable_password_expiration {
+		passwordPolicies = utils.String("DisablePasswordExpiration")
+	} else if disable_strong_password && disable_password_expiration {
+		passwordPolicies = utils.String("DisablePasswordExpiration, DisableStrongPassword")
+	}
+
 	properties := msgraph.User{
 		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
 		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
@@ -385,6 +410,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
 		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
 		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
+		PasswordPolicies:        passwordPolicies,
 		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
 		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
@@ -425,6 +451,18 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 
+	passwordPolicies := utils.String("")
+	disable_strong_password := d.Get("disable_strong_password").(bool)
+	disable_password_expiration := d.Get("disable_password_expiration").(bool)
+
+	if disable_strong_password && (!disable_password_expiration) {
+		passwordPolicies = utils.String("DisableStrongPassword")
+	} else if (!disable_strong_password) && disable_password_expiration {
+		passwordPolicies = utils.String("DisablePasswordExpiration")
+	} else if disable_strong_password && disable_password_expiration {
+		passwordPolicies = utils.String("DisablePasswordExpiration, DisableStrongPassword")
+	}
+
 	properties := msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(d.Id()),
@@ -445,6 +483,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
 		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
 		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
+		PasswordPolicies:        passwordPolicies,
 		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
 		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
@@ -537,6 +576,23 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "usage_location", user.UsageLocation)
 	tf.Set(d, "user_principal_name", user.UserPrincipalName)
 	tf.Set(d, "user_type", user.UserType)
+
+	disable_strong_password := false
+	disable_password_expiration := false
+
+	if user.PasswordPolicies != nil {
+		policies := strings.Split(*user.PasswordPolicies, ",")
+		for _, p := range policies {
+			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
+				disable_strong_password = true
+			}
+			if strings.EqualFold(strings.TrimSpace(p), "DisablePasswordExpiration") {
+				disable_password_expiration = true
+			}
+		}
+	}
+	tf.Set(d, "disable_strong_password", disable_strong_password)
+	tf.Set(d, "disable_password_expiration", disable_password_expiration)
 
 	return nil
 }
