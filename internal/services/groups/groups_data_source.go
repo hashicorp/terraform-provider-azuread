@@ -59,6 +59,12 @@ func groupsDataSource() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
 			},
+
+			"security_enabled": {
+				Description: "Retrieve only groups that are security_enabled groups",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -70,6 +76,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var groups []msgraph.Group
 	var expectedCount int
 	var returnAll = d.Get("return_all").(bool)
+	var securityEnabled = d.Get("security_enabled").(bool)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {
@@ -102,8 +109,13 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			count := len(*result)
-			if count > 1 {
+
+			if securityEnabled {
+				groups = append(groups, *result...)
+
+			} else if count > 1 {
 				return tf.ErrorDiagPathF(err, "display_names", "More than one group found with display name: %q", displayName)
+
 			} else if count == 0 {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
 			}
@@ -126,7 +138,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if !returnAll && len(groups) != expectedCount {
+	if !returnAll && !securityEnabled && len(groups) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
@@ -139,9 +151,15 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if group.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil displayName"), "Bad API response")
 		}
-
-		newObjectIds = append(newObjectIds, *group.ID)
-		newDisplayNames = append(newDisplayNames, *group.DisplayName)
+		if securityEnabled {
+			if *group.SecurityEnabled {
+				newObjectIds = append(newObjectIds, *group.ID)
+				newDisplayNames = append(newDisplayNames, *group.DisplayName)
+			}
+		} else {
+			newObjectIds = append(newObjectIds, *group.ID)
+			newDisplayNames = append(newDisplayNames, *group.DisplayName)
+		}
 	}
 
 	h := sha1.New()
