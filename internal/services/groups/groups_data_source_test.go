@@ -79,7 +79,7 @@ func TestAccGroupsDataSource_securityEnabled(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
-				),
+			),
 		},
 	})
 }
@@ -139,7 +139,7 @@ data "azuread_groups" "test" {
 func (GroupsDataSource) securityEnabled() string {
 	return `
 data "azuread_groups" "test" {
-  return_all = true
+  return_all       = true
   security_enabled = true
 }
 `

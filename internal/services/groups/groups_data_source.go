@@ -162,7 +162,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 	// Check if securityEnabled has caused the number of returned groups to be 0
-	if len(newObjectIds) == 0 && securityEnabled{
+	if len(newObjectIds) == 0 && securityEnabled {
 		return tf.ErrorDiagF(errors.New("No groups found with 'security_enabled = true'"), "Unexpected Number of groups returned")
 	}
 
