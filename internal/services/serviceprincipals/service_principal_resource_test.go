@@ -19,6 +19,8 @@ import (
 
 type ServicePrincipalResource struct{}
 
+const testApplicationTemplateId = "4601ed45-8ff3-4599-8377-b6649007e876" // Marketo
+
 func TestAccServicePrincipal_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
@@ -209,6 +211,21 @@ func TestAccServicePrincipal_useExisting(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.fromApplicationTemplate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+	})
+}
+
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
@@ -225,6 +242,8 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_application" "test" {
   display_name = "acctestServicePrincipal-%[1]d"
 }
@@ -237,6 +256,8 @@ resource "azuread_service_principal" "test" {
 
 func (ServicePrincipalResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_application" "test" {
   display_name     = "acctestServicePrincipal-%[1]d"
   sign_in_audience = "AzureADMyOrg"
@@ -349,6 +370,8 @@ resource "azuread_user" "testC" {
 
 func (ServicePrincipalResource) noOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_application" "test" {
   display_name = "acctestServicePrincipal-%[1]d"
 }
@@ -398,6 +421,8 @@ resource "azuread_service_principal" "test" {
 
 func (r ServicePrincipalResource) manyOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 data "azuread_client_config" "test" {}
 
 data "azuread_domains" "test" {
@@ -439,9 +464,27 @@ resource "azuread_service_principal" "test" {
 
 func (ServicePrincipalResource) useExisting(_ acceptance.TestData) string {
 	return `
+provider "azuread" {}
+
 resource "azuread_service_principal" "msgraph" {
   application_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
   use_existing   = true
 }
 `
+}
+
+func (ServicePrincipalResource) fromApplicationTemplate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  template_id  = "%[2]s"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+  use_existing   = true
+}
+`, data.RandomInteger, testApplicationTemplateId)
 }
