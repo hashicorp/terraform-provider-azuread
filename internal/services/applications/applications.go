@@ -249,42 +249,6 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 	return nil
 }
 
-func ApplicationFindAppRole(app *msgraph.Application, roleId string) (*msgraph.AppRole, error) {
-	if app == nil || app.AppRoles == nil {
-		return nil, nil
-	}
-	if roleId == "" {
-		return nil, fmt.Errorf("specified role ID is empty")
-	}
-	for _, r := range *app.AppRoles {
-		if r.ID == nil {
-			continue
-		}
-		if *r.ID == roleId {
-			return &r, nil
-		}
-	}
-	return nil, nil
-}
-
-func ApplicationFindOAuth2PermissionScope(app *msgraph.Application, scopeId string) (*msgraph.PermissionScope, error) {
-	if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-		return nil, nil
-	}
-	if scopeId == "" {
-		return nil, fmt.Errorf("specified scope ID is empty")
-	}
-	for _, s := range *app.Api.OAuth2PermissionScopes {
-		if s.ID == nil {
-			continue
-		}
-		if *s.ID == scopeId {
-			return &s, nil
-		}
-	}
-	return nil, nil
-}
-
 func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClient, displayName string) (*[]msgraph.Application, error) {
 	query := odata.Query{
 		Filter: fmt.Sprintf("displayName eq '%s'", displayName),
