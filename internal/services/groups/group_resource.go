@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-uuid"
@@ -439,7 +440,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			if err != nil {
 				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
 			}
-			if *ownerObject.ID == callerId {
+			if strings.EqualFold(*ownerObject.ID, callerId) {
 				if ownerObject.ODataId == nil {
 					return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
 				}
@@ -459,7 +460,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				if err != nil {
 					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
 				}
-				if *ownerObject.ODataType == t {
+				if *ownerObject.ODataType == t && !strings.EqualFold(*ownerObject.ID, callerId) {
 					if ownerCount < 20 {
 						ownersFirst20 = append(ownersFirst20, *ownerObject)
 					} else {
