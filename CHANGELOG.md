@@ -1,3 +1,9 @@
+## 2.2.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - fix an API error caused by duplicate `owners` being mistakenly sent when creating new groups [GH-553]
+
 ## 2.1.0 (September 02, 2021)
 
 FEATURES:
