@@ -64,7 +64,7 @@ func groupsDataSource() *schema.Resource {
 				Description: "Whether the groups are security-enabled",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed: true,
+				Computed:    true,
 			},
 		},
 	}
