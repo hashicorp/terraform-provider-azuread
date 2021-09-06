@@ -4,7 +4,7 @@ subcategory: "Applications"
 
 # Data Source: azuread_application_template
 
-Use this data source to access information about an Application Template from the Azure AD App Gallery.
+Use this data source to access information about an Application Template from the [Azure AD App Gallery](https://azuremarketplace.microsoft.com/en-US/marketplace/apps/category/azure-active-directory-apps).
 
 ## API Permissions
 
