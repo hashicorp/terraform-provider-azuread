@@ -37,6 +37,25 @@ func TestAccApplication_basic(t *testing.T) {
 	})
 }
 
+func TestAccApplication_basicFromTemplate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basicFromTemplate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -48,6 +67,26 @@ func TestAccApplication_complete(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_completeFromTemplate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.completeFromTemplate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("app_role.0.id").HasValue(testApplicationTemplateAppRoleId),
 			),
 		},
 		data.ImportStep(),
@@ -425,6 +464,17 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
+func (ApplicationResource) basicFromTemplate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  template_id  = "%[2]s"
+}
+`, data.RandomInteger, testApplicationTemplateId)
+}
+
 func (ApplicationResource) withGroupMembershipClaims(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -599,12 +649,168 @@ resource "azuread_application" "test" {
 
     implicit_grant {
       access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
     }
   }
 
   owners = [azuread_user.test.object_id]
 }
 `, data.RandomInteger, data.RandomPassword, data.UUID(), data.UUID(), data.UUID(), data.UUID())
+}
+
+func (ApplicationResource) completeFromTemplate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = "%[2]s"
+}
+
+resource "azuread_application" "known1" {
+  display_name = "acctest-APP-known1-%[1]d"
+}
+
+resource "azuread_application" "known2" {
+  display_name = "acctest-APP-known2-%[1]d"
+}
+
+resource "azuread_application" "test" {
+  display_name            = "acctest-APP-complete-%[1]d"
+  template_id             = "%[3]s"
+  group_membership_claims = ["All"]
+  sign_in_audience        = "AzureADandPersonalMicrosoftAccount"
+
+  identifier_uris = [
+    "api://hashicorptestapp-%[1]d",
+    "api://acctest-APP-complete-%[1]d",
+  ]
+
+  device_only_auth_enabled       = true
+  fallback_public_client_enabled = true
+  oauth2_post_response_required  = true
+
+  marketing_url         = "https://templatetown-%[1]d.com/"
+  privacy_statement_url = "https://templatetown-%[1]d.com/privacy"
+  support_url           = "https://support.templatetown-%[1]d.com/"
+  terms_of_service_url  = "https://templatetown-%[1]d.com/terms"
+
+  api {
+    mapped_claims_enabled          = true
+    requested_access_token_version = 2
+
+    known_client_applications = [
+      azuread_application.known1.application_id,
+      azuread_application.known2.application_id,
+    ]
+
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[5]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      id                         = "%[6]s"
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "msiam_access"
+    display_name         = "msiam_access"
+    enabled              = true
+    id                   = "%[4]s"
+  }
+
+  optional_claims {
+    access_token {
+      name = "myclaim"
+    }
+
+    access_token {
+      name = "otherclaim"
+    }
+
+    id_token {
+      name                  = "userclaim"
+      source                = "user"
+      essential             = true
+      additional_properties = ["emit_as_roles"]
+    }
+
+    saml2_token {
+      name = "samlexample"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = "00000003-0000-0000-c000-000000000000"
+
+    resource_access {
+      id   = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
+      type = "Role"
+    }
+
+    resource_access {
+      id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
+      type = "Scope"
+    }
+
+    resource_access {
+      id   = "06da0dbc-49e2-44d2-8312-53f166ab848a"
+      type = "Scope"
+    }
+  }
+
+  required_resource_access {
+    resource_app_id = "00000002-0000-0000-c000-000000000000"
+
+    resource_access {
+      id   = "311a71cc-e848-46a1-bdf8-97ff7156d8e6"
+      type = "Scope"
+    }
+  }
+
+  single_page_application {
+    redirect_uris = [
+      "https://beta.templatetown-%[1]d.com/",
+    ]
+  }
+
+  web {
+    homepage_url = "https://app.templatetown-%[1]d.com/"
+    logout_url   = "https://app.templatetown-%[1]d.com/logout"
+
+    redirect_uris = [
+      "https://app.templatetown-%[1]d.com/",
+      "https://classic.templatetown-%[1]d.com/",
+    ]
+
+    implicit_grant {
+      access_token_issuance_enabled = true
+      id_token_issuance_enabled     = true
+    }
+  }
+
+  owners = [azuread_user.test.object_id]
+}
+`, data.RandomInteger, data.RandomPassword, testApplicationTemplateId, testApplicationTemplateAppRoleId, data.UUID(), data.UUID())
 }
 
 func (ApplicationResource) appRole(data acceptance.TestData, roleIDs []string) string {

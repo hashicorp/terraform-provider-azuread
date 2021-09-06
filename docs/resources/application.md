@@ -18,6 +18,8 @@ When authenticated with a user principal, this resource requires one of the foll
 
 ## Example Usage
 
+*Create an application*
+
 ```terraform
 data "azuread_client_config" "current" {}
 
@@ -132,6 +134,24 @@ resource "azuread_application" "example" {
 }
 ```
 
+*Create application from a gallery template*
+
+```terraform
+data "azuread_application_template" "example" {
+  display_name = "Marketo"
+}
+
+resource "azuread_application" "example" {
+  display_name = "example"
+  template_id  = data.azuread_application_template.example.template_id
+}
+
+resource "azuread_service_principal" "example" {
+  application_id = azuread_application.example.application_id
+  use_existing   = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -160,6 +180,7 @@ The following arguments are supported:
 
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
+* `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 * `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
