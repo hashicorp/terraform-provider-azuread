@@ -64,6 +64,7 @@ func groupsDataSource() *schema.Resource {
 				Description: "Retrieve only groups that are security_enabled groups",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed: true,
 			},
 		},
 	}
