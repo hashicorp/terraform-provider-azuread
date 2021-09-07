@@ -48,7 +48,7 @@ Click the "New client secret" button, then enter a short description, choose an 
 
 ---
 
-## Configuring Terraform to use the Client Certificate
+## Configuring Terraform to use the Client Secret
 
 Now we have obtained the necessary credentials, it's possible to configure Terraform in a few different ways.
 
