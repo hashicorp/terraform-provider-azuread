@@ -164,6 +164,21 @@ func servicePrincipalData() *schema.Resource {
 				Computed:    true,
 			},
 
+			"saml_single_sign_on": {
+				Description: "Settings related to SAML single sign-on",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state": {
+							Description: "The relative URI the service provider would redirect to after completion of the single sign-on flow",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"service_principal_names": {
 				Description: "A list of identifier URI(s), copied over from the associated application",
 				Type:        schema.TypeList,
@@ -309,6 +324,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
+	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
 	tf.Set(d, "service_principal_names", servicePrincipalNames)
 	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
 	tf.Set(d, "tags", servicePrincipal.Tags)

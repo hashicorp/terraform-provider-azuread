@@ -216,6 +216,24 @@ func servicePrincipalResource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"saml_single_sign_on": {
+				Description:      "Settings related to SAML single sign-on",
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: servicePrincipalDiffSuppress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state": {
+							Description:      "The relative URI the service provider would redirect to after completion of the single sign-on flow",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
+						},
+					},
+				},
+			},
+
 			"service_principal_names": {
 				Description: "A list of identifier URI(s), copied over from the associated application",
 				Type:        schema.TypeList,
@@ -238,6 +256,24 @@ func servicePrincipalResource() *schema.Resource {
 			},
 		},
 	}
+}
+
+func servicePrincipalDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	suppress := false
+
+	switch {
+	case k == "saml_single_sign_on.#" && old == "1" && new == "0":
+		samlSingleSignOnRaw := d.Get("saml_single_sign_on").([]interface{})
+		if len(samlSingleSignOnRaw) == 1 {
+			suppress = true
+			samlSingleSignOn := samlSingleSignOnRaw[0].(map[string]interface{})
+			if v, ok := samlSingleSignOn["relay_state"]; ok && v.(string) != "" {
+				suppress = false
+			}
+		}
+	}
+
+	return suppress
 }
 
 func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -282,6 +318,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
 		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
 	}
 
@@ -374,6 +411,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
 		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
 	}
 
@@ -466,6 +504,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
+	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
 	tf.Set(d, "service_principal_names", servicePrincipalNames)
 	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
 	tf.Set(d, "tags", servicePrincipal.Tags)

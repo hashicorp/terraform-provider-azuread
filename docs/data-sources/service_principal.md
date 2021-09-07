@@ -74,6 +74,7 @@ The following attributes are exported:
 * `preferred_single_sign_on_mode` - The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps.
 * `redirect_uris` - A list of URLs where user tokens are sent for sign-in with the associated application, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent for the associated application.
 * `saml_metadata_url` - The URL where the service exposes SAML metadata for federation.
+* `saml_single_sign_on` - A `saml_single_sign_on` block as documented below.
 * `service_principal_names` - A list of identifier URI(s), copied over from the associated application.
 * `sign_in_audience` - The Microsoft account types that are supported for the associated application. Possible values include `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `tags` - A list of tags applied to the service principal.
@@ -102,3 +103,9 @@ The following attributes are exported:
 * `user_consent_description` - Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
 * `user_consent_display_name` - Display name for the delegated permission that appears in the end user consent experience.
 * `value` - The value that is used for the `scp` claim in OAuth 2.0 access tokens.
+
+---
+
+`saml_single_sign_on` exports the following:
+
+* `relay_state` - The relative URI the service provider would redirect to after completion of the single sign-on flow.
