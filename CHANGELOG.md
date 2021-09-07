@@ -2,7 +2,12 @@
 
 FEATURES:
 
+* **New Data Source:** `azuread_application_template` [GH-554]
 * **New Resource:** `azuread_named_location` [GH-441]
+
+ENHANCEMENTS:
+
+* `azuread_application` - support for the `template_id` property for creating applications (and service principals) from a template [GH-554]
 
 BUG FIXES:
 
