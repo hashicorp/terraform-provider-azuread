@@ -54,7 +54,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `account_enabled` - - Whether or not the service principal account is enabled.
+* `account_enabled` - Whether or not the service principal account is enabled.
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
 * `application_id` - The application ID (client ID) of the application associated with this service principal.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
