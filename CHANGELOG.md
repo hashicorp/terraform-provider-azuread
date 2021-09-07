@@ -1,5 +1,9 @@
 ## 2.2.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `azuread_named_location` [GH-441]
+
 BUG FIXES:
 
 * `azuread_group` - fix an API error caused by duplicate `owners` being mistakenly sent when creating new groups [GH-553]
