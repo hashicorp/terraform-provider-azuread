@@ -380,16 +380,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		mailNickName = strings.Split(upn, "@")[0]
 	}
 
-	passwordPolicies := utils.String("")
+	passwordPolicies := utils.NullableString("")
 	disable_strong_password := d.Get("disable_strong_password").(bool)
 	disable_password_expiration := d.Get("disable_password_expiration").(bool)
 
 	if disable_strong_password && (!disable_password_expiration) {
-		passwordPolicies = utils.String("DisableStrongPassword")
+		passwordPolicies = utils.NullableString("DisableStrongPassword")
 	} else if (!disable_strong_password) && disable_password_expiration {
-		passwordPolicies = utils.String("DisablePasswordExpiration")
+		passwordPolicies = utils.NullableString("DisablePasswordExpiration")
 	} else if disable_strong_password && disable_password_expiration {
-		passwordPolicies = utils.String("DisablePasswordExpiration, DisableStrongPassword")
+		passwordPolicies = utils.NullableString("DisablePasswordExpiration, DisableStrongPassword")
 	}
 
 	properties := msgraph.User{
@@ -451,16 +451,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 
-	passwordPolicies := utils.String("")
+	passwordPolicies := utils.NullableString("")
 	disable_strong_password := d.Get("disable_strong_password").(bool)
 	disable_password_expiration := d.Get("disable_password_expiration").(bool)
 
 	if disable_strong_password && (!disable_password_expiration) {
-		passwordPolicies = utils.String("DisableStrongPassword")
+		passwordPolicies = utils.NullableString("DisableStrongPassword")
 	} else if (!disable_strong_password) && disable_password_expiration {
-		passwordPolicies = utils.String("DisablePasswordExpiration")
+		passwordPolicies = utils.NullableString("DisablePasswordExpiration")
 	} else if disable_strong_password && disable_password_expiration {
-		passwordPolicies = utils.String("DisablePasswordExpiration, DisableStrongPassword")
+		passwordPolicies = utils.NullableString("DisablePasswordExpiration, DisableStrongPassword")
 	}
 
 	properties := msgraph.User{
@@ -581,7 +581,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	disable_password_expiration := false
 
 	if user.PasswordPolicies != nil {
-		policies := strings.Split(*user.PasswordPolicies, ",")
+		policies := strings.Split(string(*user.PasswordPolicies), ",")
 		for _, p := range policies {
 			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
 				disable_strong_password = true
