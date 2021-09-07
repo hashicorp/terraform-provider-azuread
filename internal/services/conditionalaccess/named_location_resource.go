@@ -332,7 +332,7 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 }
 
 func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -364,7 +364,7 @@ func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIP
 }
 
 func expandCountryNamedLocation(in []interface{}) *msgraph.CountryNamedLocation {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -399,7 +399,7 @@ func flattenIPNamedLocation(in *msgraph.IPNamedLocation) []interface{} {
 }
 
 func flattenIPNamedLocationIPRange(in *[]msgraph.IPNamedLocationIPRange) []interface{} {
-	if len(*in) == 0 {
+	if in == nil || len(*in) == 0 {
 		return []interface{}{}
 	}
 
