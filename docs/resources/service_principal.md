@@ -18,6 +18,8 @@ When authenticated with a user principal, this resource requires one of the foll
 
 ## Example Usage
 
+*Create a service principal for an application*
+
 ```terraform
 data "azuread_client_config" "current" {}
 
@@ -32,6 +34,35 @@ resource "azuread_service_principal" "example" {
   owners                       = [data.azuread_client_config.current.object_id]
 
   tags = ["example", "tags", "here"]
+}
+```
+
+*Manage a service principal for a first-party Microsoft application*
+
+```terraform
+data "azuread_application_published_app_ids" "well_known" {}
+
+resource "azuread_service_principal" "msgraph" {
+  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing   = true
+}
+```
+
+*Create a service principal for an application created from a gallery template*
+
+```terraform
+data "azuread_application_template" "example" {
+  display_name = "Marketo"
+}
+
+resource "azuread_application" "example" {
+  display_name = "example"
+  template_id  = data.azuread_application_template.example.template_id
+}
+
+resource "azuread_service_principal" "example" {
+  application_id = azuread_application.example.application_id
+  use_existing   = true
 }
 ```
 

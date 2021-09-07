@@ -23,6 +23,7 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		"azuread_application":                   applicationDataSource(),
 		"azuread_application_published_app_ids": applicationPublishedAppIdsDataSource(),
+		"azuread_application_template":          applicationTemplateDataSource(),
 	}
 }
 

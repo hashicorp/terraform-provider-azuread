@@ -453,6 +453,15 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"template_id": {
+				Description:      "Unique ID of the application template from which this application is created",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validate.UUID,
+			},
+
 			"terms_of_service_url": {
 				Description: "URL of the application's terms of service statement",
 				Type:        schema.TypeString,
@@ -808,9 +817,11 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 
 func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).Claims.ObjectId
 	displayName := d.Get("display_name").(string)
+	templateId := d.Get("template_id").(string)
 
 	// Perform this check at apply time to catch any duplicate names created during the same apply
 	if d.Get("prevent_duplicate_names").(bool) {
@@ -827,6 +838,32 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	if templateId != "" {
+		// Instantiate application from template gallery and return via the update function
+		properties := msgraph.ApplicationTemplate{
+			ID:          utils.String(templateId),
+			DisplayName: utils.String(displayName),
+		}
+
+		result, _, err := appTemplatesClient.Instantiate(ctx, properties)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not instantiate application from template")
+		}
+
+		if result.Application == nil {
+			return tf.ErrorDiagF(errors.New("Bad API response"), "Nil application object returned for instantiated application")
+		}
+		if result.Application.ID == nil || *result.Application.ID == "" {
+			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
+		}
+
+		d.SetId(*result.Application.ID)
+
+		// The application was created out of band, so we'll update it just as if it was imported
+		return applicationResourceUpdate(ctx, d, meta)
+	}
+
+	// Create a new application
 	properties := msgraph.Application{
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
@@ -1059,6 +1096,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
+	tf.Set(d, "template_id", app.ApplicationTemplateId)
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
 	if app.Api != nil {

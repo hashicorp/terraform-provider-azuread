@@ -17,6 +17,31 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
+func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bool {
+	if !reflect.DeepEqual(existing.AllowedMemberTypes, new.AllowedMemberTypes) {
+		return true
+	}
+	if !reflect.DeepEqual(existing.Description, new.Description) {
+		return true
+	}
+	if !reflect.DeepEqual(existing.DisplayName, new.DisplayName) {
+		return true
+	}
+
+	// The following order is important; we must check for nil, and we consider nil and "" to be equivalent Values
+	if reflect.DeepEqual(existing.Value, new.Value) {
+		return false
+	}
+	if existing.Value == nil && new.Value != nil && *new.Value == "" {
+		return false
+	}
+	if existing.Value != nil && *existing.Value == "" && new.Value == nil {
+		return false
+	}
+
+	return true
+}
+
 func applicationDisableAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
 	if application.ID == nil {
 		return fmt.Errorf("cannot use Application model with nil ID")
@@ -40,7 +65,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		existingRoles = *app.AppRoles
 	}
 
-	// Don't update if no changes to be made
+	// Shortcut: don't update if no changes to be made
 	if reflect.DeepEqual(existingRoles, *newRoles) {
 		return nil
 	}
@@ -53,7 +78,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		}
 		for i, existing := range existingRoles {
 			if existing.ID != nil && *existing.ID == *new.ID {
-				if existing.IsEnabled != nil && *existing.IsEnabled && !reflect.DeepEqual(existing, new) {
+				if existing.IsEnabled != nil && *existing.IsEnabled && applicationAppRoleChanged(existing, new) {
 					*existingRoles[i].IsEnabled = false
 					disable = true
 				}
@@ -247,42 +272,6 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 	}
 
 	return nil
-}
-
-func ApplicationFindAppRole(app *msgraph.Application, roleId string) (*msgraph.AppRole, error) {
-	if app == nil || app.AppRoles == nil {
-		return nil, nil
-	}
-	if roleId == "" {
-		return nil, fmt.Errorf("specified role ID is empty")
-	}
-	for _, r := range *app.AppRoles {
-		if r.ID == nil {
-			continue
-		}
-		if *r.ID == roleId {
-			return &r, nil
-		}
-	}
-	return nil, nil
-}
-
-func ApplicationFindOAuth2PermissionScope(app *msgraph.Application, scopeId string) (*msgraph.PermissionScope, error) {
-	if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-		return nil, nil
-	}
-	if scopeId == "" {
-		return nil, fmt.Errorf("specified scope ID is empty")
-	}
-	for _, s := range *app.Api.OAuth2PermissionScopes {
-		if s.ID == nil {
-			continue
-		}
-		if *s.ID == scopeId {
-			return &s, nil
-		}
-	}
-	return nil, nil
 }
 
 func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClient, displayName string) (*[]msgraph.Application, error) {
