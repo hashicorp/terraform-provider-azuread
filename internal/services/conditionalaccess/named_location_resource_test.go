@@ -1,4 +1,4 @@
-package namedlocations_test
+package conditionalaccess_test
 
 import (
 	"context"
@@ -138,7 +138,7 @@ func TestAccNamedLocation_updateCountry(t *testing.T) {
 }
 
 func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	namedLocation, status, err := clients.NamedLocations.MsClient.Get(ctx, state.ID, odata.Query{})
+	namedLocation, status, err := clients.ConditionalAccess.NamedLocationsClient.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Named Location with object ID %q does not exist", state.ID)

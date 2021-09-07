@@ -7,14 +7,14 @@ import (
 )
 
 type Client struct {
-	MsClient *msgraph.NamedLocationsClient
+	NamedLocationsClient *msgraph.NamedLocationsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewNamedLocationsClient(o.TenantID)
-	o.ConfigureClient(&msClient.BaseClient)
+	namedLocationsClient := msgraph.NewNamedLocationsClient(o.TenantID)
+	o.ConfigureClient(&namedLocationsClient.BaseClient)
 
 	return &Client{
-		MsClient: msClient,
+		NamedLocationsClient: namedLocationsClient,
 	}
 }

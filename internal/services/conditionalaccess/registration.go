@@ -1,4 +1,4 @@
-package namedlocations
+package conditionalaccess
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -8,7 +8,7 @@ type Registration struct{}
 
 // Name is the name of this Service
 func (r Registration) Name() string {
-	return "NamedLocations"
+	return "ConditionalAccess"
 }
 
 // WebsiteCategories returns a list of categories which can be used for the sidebar

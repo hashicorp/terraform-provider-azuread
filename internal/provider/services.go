@@ -2,10 +2,10 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/domains"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/invitations"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/namedlocations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
 )
@@ -13,10 +13,10 @@ import (
 func SupportedServices() []ServiceRegistration {
 	return []ServiceRegistration{
 		applications.Registration{},
+		conditionalaccess.Registration{},
 		domains.Registration{},
 		groups.Registration{},
 		invitations.Registration{},
-		namedlocations.Registration{},
 		serviceprincipals.Registration{},
 		users.Registration{},
 	}
