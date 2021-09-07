@@ -115,35 +115,33 @@ func namedLocationResourceCreate(ctx context.Context, d *schema.ResourceData, me
 		properties := expandIPNamedLocation(v.([]interface{}))
 		properties.BaseNamedLocation = &base
 
-		location, _, err := client.CreateIP(ctx, *properties)
+		ipLocation, _, err := client.CreateIP(ctx, *properties)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not create named location")
 		}
-		if location.ID == nil || *location.ID == "" {
+		if ipLocation.ID == nil || *ipLocation.ID == "" {
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for named location is nil/empty")
 		}
 
-		d.SetId(*location.ID)
-
-		return namedLocationResourceRead(ctx, d, meta)
+		d.SetId(*ipLocation.ID)
 	} else if v, ok := d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
 		properties.BaseNamedLocation = &base
 
-		location, _, err := client.CreateCountry(ctx, *properties)
+		countryLocation, _, err := client.CreateCountry(ctx, *properties)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not create named location")
 		}
-		if location.ID == nil || *location.ID == "" {
+		if countryLocation.ID == nil || *countryLocation.ID == "" {
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for named location is nil/empty")
 		}
 
-		d.SetId(*location.ID)
-
-		return namedLocationResourceRead(ctx, d, meta)
+		d.SetId(*countryLocation.ID)
+	} else {
+		return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
 	}
 
-	return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
+	return namedLocationResourceRead(ctx, d, meta)
 }
 
 func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -238,7 +236,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
-	location, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	result, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Named Location with Object ID %q was not found - removing from state", d.Id())
@@ -246,14 +244,25 @@ func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta
 			return nil
 		}
 	}
+	if result == nil {
+		return tf.ErrorDiagF(errors.New("Bad API response"), "Result is nil")
+	}
 
-	if ipnl, ok := (*location).(msgraph.IPNamedLocation); ok {
+	location := *result
+
+	if ipnl, ok := location.(msgraph.IPNamedLocation); ok {
+		if ipnl.ID == nil {
+			return tf.ErrorDiagF(errors.New("Bad API response"), "ID is nil for returned IP Named Location")
+		}
 		d.SetId(*ipnl.ID)
 		tf.Set(d, "display_name", ipnl.DisplayName)
 		tf.Set(d, "ip", flattenIPNamedLocation(&ipnl))
 	}
 
-	if cnl, ok := (*location).(msgraph.CountryNamedLocation); ok {
+	if cnl, ok := location.(msgraph.CountryNamedLocation); ok {
+		if cnl.ID == nil {
+			return tf.ErrorDiagF(errors.New("Bad API response"), "ID is nil for returned Country Named Location")
+		}
 		d.SetId(*cnl.ID)
 		tf.Set(d, "display_name", cnl.DisplayName)
 		tf.Set(d, "country", flattenCountryNamedLocation(&cnl))
