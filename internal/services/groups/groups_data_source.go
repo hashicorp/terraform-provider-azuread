@@ -103,27 +103,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if len(*result) == 0 {
 			return tf.ErrorDiagPathF(err, "return_all", "No groups found")
 		}
-		if securityEnabled && !mailEnabled {
-			for _, r := range *result {
-				if *r.SecurityEnabled {
-					groups = append(groups, r)
-				}
-			}
-		} else if mailEnabled && !securityEnabled {
-			for _, r := range *result {
-				if *r.MailEnabled {
-					groups = append(groups, r)
-				}
-			}
-		} else if mailEnabled && securityEnabled {
-			for _, r := range *result {
-				if *r.MailEnabled && *r.SecurityEnabled {
-					groups = append(groups, r)
-				}
-			}
-		} else {
-			groups = append(groups, (*result)[0])
-		}
+		groups = filterResults(securityEnabled, mailEnabled, result)
 
 	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
@@ -144,26 +124,8 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 				return tf.ErrorDiagPathF(err, "display_names", "More than one group found with display name: %q", displayName)
 			} else if count == 0 {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
-			} else if securityEnabled && !mailEnabled {
-				for _, r := range *result {
-					if *r.SecurityEnabled {
-						groups = append(groups, r)
-					}
-				}
-			} else if mailEnabled && !securityEnabled {
-				for _, r := range *result {
-					if *r.MailEnabled {
-						groups = append(groups, r)
-					}
-				}
-			} else if mailEnabled && securityEnabled {
-				for _, r := range *result {
-					if *r.MailEnabled && *r.SecurityEnabled {
-						groups = append(groups, r)
-					}
-				}
 			} else {
-				groups = append(groups, (*result)[0])
+				groups = filterResults(securityEnabled, mailEnabled, result)
 			}
 		}
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
@@ -182,7 +144,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if !returnAll && !securityEnabled && len(groups) != expectedCount {
+	if !returnAll && !securityEnabled && !mailEnabled && len(groups) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
@@ -198,9 +160,9 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		newObjectIds = append(newObjectIds, *group.ID)
 		newDisplayNames = append(newDisplayNames, *group.DisplayName)
 	}
-	// Check if securityEnabled has caused the number of returned groups to be 0
-	if len(newObjectIds) == 0 && securityEnabled {
-		return tf.ErrorDiagF(errors.New("No groups found with 'security_enabled = true'"), "Unexpected Number of groups returned")
+	// Check if securityEnabled/mailEnabled has caused the number of returned groups to be 0
+	if len(newObjectIds) == 0 && (securityEnabled || mailEnabled) {
+		return tf.ErrorDiagF(errors.New("No groups found with a filter flag applied"), "Unexpected Number of groups returned")
 	}
 
 	h := sha1.New()
@@ -214,4 +176,32 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	tf.Set(d, "display_names", newDisplayNames)
 
 	return nil
+}
+
+// Extracting the flag functionality to prevent duplication
+func filterResults(securityEnabled, mailEnabled bool, results *[]msgraph.Group) (groups []msgraph.Group) {
+	if securityEnabled && !mailEnabled {
+		for _, r := range *results {
+			if *r.SecurityEnabled {
+				groups = append(groups, r)
+			}
+		}
+	} else if mailEnabled && !securityEnabled {
+		for _, r := range *results {
+			if *r.MailEnabled {
+				groups = append(groups, r)
+			}
+		}
+	} else if mailEnabled && securityEnabled {
+		for _, r := range *results {
+			if *r.MailEnabled && *r.SecurityEnabled {
+				groups = append(groups, r)
+			}
+		}
+	} else {
+		for _, r := range *results {
+			groups = append(groups, r)
+		}
+	}
+	return groups
 }
