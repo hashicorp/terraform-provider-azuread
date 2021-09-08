@@ -61,17 +61,19 @@ func groupsDataSource() *schema.Resource {
 			},
 
 			"security_enabled": {
-				Description: "Whether the groups are security_enabled",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
+				Description:   "Whether the groups are security_enabled",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"object_ids"},
 			},
 
 			"mail_enabled": {
-				Description: "Whether the groups are mail_enabled",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
+				Description:   "Whether the groups are mail_enabled",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"object_ids"},
 			},
 		},
 	}
@@ -104,7 +106,6 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return tf.ErrorDiagPathF(err, "return_all", "No groups found")
 		}
 		groups = filterResults(securityEnabled, mailEnabled, result)
-
 	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
@@ -199,9 +200,7 @@ func filterResults(securityEnabled, mailEnabled bool, results *[]msgraph.Group) 
 			}
 		}
 	} else {
-		for _, r := range *results {
-			groups = append(groups, r)
-		}
+		groups = append(groups, *results...)
 	}
 	return groups
 }
