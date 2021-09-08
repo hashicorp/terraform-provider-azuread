@@ -6,7 +6,13 @@ subcategory: "Conditional Access"
 
 Manages a Conditional Access Policy within Azure Active Directory.
 
--> **NOTE:** If you're authenticating using a Service Principal then it must have permissions to `Policy.Read.All` and `Policy.ReadWrite.ConditionalAccess` within the `Windows Azure Active Directory` API.
+## API Permissions
+
+The following API permissions are required in order to use this resource.
+
+When authenticated with a service principal, this resource requires the following application roles: `Policy.ReadWrite.ConditionalAccess` and `Policy.Read.All`
+
+When authenticated with a user principal, this resource requires one of the following directory roles: `Conditional Access Administrator` or `Global Administrator`
 
 ## Example Usage
 
@@ -75,8 +81,8 @@ The following arguments are supported:
 
 * `applications` - (Optional) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
 * `client_app_types` - (Optional) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
-* `locations` - (Optional) a `locations` block as documented below, which specifies locations included in and excluded from the policy.
-* `platforms` - (Optional) a `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
+* `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
+* `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `sign_in_risk_levels` - (Optional) A list of sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `users` - (Optional) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
@@ -86,7 +92,7 @@ The following arguments are supported:
 `applications` block supports the following:
 
 * `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy.
-* `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`.
+* `included_applications` - (Required) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`.
 * `included_user_actions` - (Optional) A list of user actions to include. Supported values are `urn:user:registersecurityinfo` and `urn:user:registerdevice`.
 
 ---
@@ -100,19 +106,21 @@ The following arguments are supported:
 * `included_roles` - (Optional) A list of role IDs in scope of policy unless explicitly excluded, or `All`.
 * `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`.
 
+-> At least one of `included_groups`, `included_roles` or `included_users` must be specified.
+
 ---
 
 `locations` block supports the following:
 
 * `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy.
-* `included_locations` - (Optional) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.
+* `included_locations` - (Required) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.
 
 ---
 
 `platforms` block supports the following:
 
 * `excluded_platforms` - (Optional) A list of platforms explicitly excluded from the policy. Possible values are: `android`, `iOS`, `windows`, `windowsPhone`, `macOS`, `all`, `unknownFutureValue`.
-* `included_platforms` - (Optional) A list of platforms the policy applies to, unless explicitly excluded. Possible values are: `android`, `iOS`, `windows`, `windowsPhone`, `macOS`, `all`, `unknownFutureValue`.
+* `included_platforms` - (Required) A list of platforms the policy applies to, unless explicitly excluded. Possible values are: `android`, `iOS`, `windows`, `windowsPhone`, `macOS`, `all`, `unknownFutureValue`.
 
 ---
 
@@ -127,14 +135,13 @@ The following arguments are supported:
 
 `session_controls` block supports the following:
 
--> **NOTE:** Only Office 365, Exchange Online and Sharepoint Online support `application_enforced_restrictions`
--> **NOTE:** `persistent_browser` session only works correctly when `included_applications` is set to `All`.
-
-* `application_enforced_restrictions` - (Optional) An `application_enforced_restrictions` block as defined below, which enables session control to enforce application restrictions.
-* `cloud_app_security` - (Optional) A `cloud_app_security` block as defined below, which is used to enforce cloud app security checks.
-* `persistent_browser` - (Optional) A `persistent_browser` block as defined below, which defines whether to persist cookies or not. All apps should be selected for this session control to work correctly.
-* `sign_in_frequency` - (Optional) A `sign_in_frequency` block as defined below, which controls the frequency users will have to sign in.
-
+* `application_enforced_restrictions_enabled` - (Optional) Whether or not application enforced restrictions are enabled. Defaults to `false`.
+-> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
+* `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `mcasConfigured`, `monitorOnly`, `blockDownloads` or `unknownFutureValue`.
+* `persistent_browser_mode` - (Optional) Specifies the persistent browser mode to use. Possible values are: `always`, `never`. Required when `persistent_browser_enabled` is specified.
+-> `persistent_browser_mode` only works correctly when `included_applications` is set to `All`.
+* `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified.
+* `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified.
 ---
 
 `application_enforced_restrictions` block supports the following:
@@ -167,7 +174,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Azure Active Directory Conditional Access Policies can be imported using the `id`, e.g.
+Conditional Access Policies can be imported using the `id`, e.g.
 
 ```shell
 terraform import azuread_conditional_access_policy.my_location 00000000-0000-0000-0000-000000000000

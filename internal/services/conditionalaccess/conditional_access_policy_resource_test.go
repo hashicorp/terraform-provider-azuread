@@ -153,18 +153,10 @@ resource "azuread_conditional_access_policy" "test" {
   }
 
   session_controls {
-    application_enforced_restrictions {
-      enabled = true
-    }
-    cloud_app_security {
-      enabled                 = true
-      cloud_app_security_type = "monitorOnly"
-    }
-    sign_in_frequency {
-      enabled = true
-      type    = "hours"
-      value   = 10
-    }
+    application_enforced_restrictions_enabled = true
+    cloud_app_security_policy                 = "monitorOnly"
+    sign_in_frequency                         = 10
+    sign_in_frequency_period                  = "hours"
   }
 }
 `, data.RandomInteger)
