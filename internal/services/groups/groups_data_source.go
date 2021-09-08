@@ -61,7 +61,14 @@ func groupsDataSource() *schema.Resource {
 			},
 
 			"security_enabled": {
-				Description: "Whether the groups are security-enabled",
+				Description: "Whether the groups are security_enabled",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+			},
+
+			"mail_enabled": {
+				Description: "Whether the groups are mail_enabled",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
@@ -78,6 +85,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var expectedCount int
 	var returnAll = d.Get("return_all").(bool)
 	var securityEnabled = d.Get("security_enabled").(bool)
+	var mailEnabled = d.Get("mail_enabled").(bool)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {
@@ -95,8 +103,28 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if len(*result) == 0 {
 			return tf.ErrorDiagPathF(err, "return_all", "No groups found")
 		}
+		if securityEnabled && !mailEnabled {
+			for _, r := range *result {
+				if *r.SecurityEnabled {
+					groups = append(groups, r)
+				}
+			}
+		} else if mailEnabled && !securityEnabled {
+			for _, r := range *result {
+				if *r.MailEnabled {
+					groups = append(groups, r)
+				}
+			}
+		} else if mailEnabled && securityEnabled {
+			for _, r := range *result {
+				if *r.MailEnabled && *r.SecurityEnabled {
+					groups = append(groups, r)
+				}
+			}
+		} else {
+			groups = append(groups, (*result)[0])
+		}
 
-		groups = append(groups, *result...)
 	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
@@ -111,15 +139,32 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 			count := len(*result)
 
-			if securityEnabled {
-				groups = append(groups, *result...)
-			} else if count > 1 {
+			//Could we make this a switch case?
+			if !mailEnabled && !securityEnabled && count > 1 {
 				return tf.ErrorDiagPathF(err, "display_names", "More than one group found with display name: %q", displayName)
 			} else if count == 0 {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
+			} else if securityEnabled && !mailEnabled {
+				for _, r := range *result {
+					if *r.SecurityEnabled {
+						groups = append(groups, r)
+					}
+				}
+			} else if mailEnabled && !securityEnabled {
+				for _, r := range *result {
+					if *r.MailEnabled {
+						groups = append(groups, r)
+					}
+				}
+			} else if mailEnabled && securityEnabled {
+				for _, r := range *result {
+					if *r.MailEnabled && *r.SecurityEnabled {
+						groups = append(groups, r)
+					}
+				}
+			} else {
+				groups = append(groups, (*result)[0])
 			}
-
-			groups = append(groups, (*result)[0])
 		}
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 		expectedCount = len(objectIds)
@@ -150,15 +195,8 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if group.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil displayName"), "Bad API response")
 		}
-		if securityEnabled {
-			if *group.SecurityEnabled {
-				newObjectIds = append(newObjectIds, *group.ID)
-				newDisplayNames = append(newDisplayNames, *group.DisplayName)
-			}
-		} else {
-			newObjectIds = append(newObjectIds, *group.ID)
-			newDisplayNames = append(newDisplayNames, *group.DisplayName)
-		}
+		newObjectIds = append(newObjectIds, *group.ID)
+		newDisplayNames = append(newDisplayNames, *group.DisplayName)
 	}
 	// Check if securityEnabled has caused the number of returned groups to be 0
 	if len(newObjectIds) == 0 && securityEnabled {
