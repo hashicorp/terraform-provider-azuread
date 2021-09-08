@@ -162,7 +162,7 @@ data "azuread_groups" "test" {
 func (GroupsDataSource) mailEnabled() string {
 	return `
 data "azuread_groups" "test" {
-  return_all       = true
+  return_all   = true
   main_enabled = true
 }
 `
