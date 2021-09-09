@@ -30,7 +30,7 @@ data "azuread_groups" "allGroups" {
 }
 ```
 
-*Look up all security groups*
+*Look up all security-enabled groups*
 ```terraform
 data "azuread_groups" "allGroups" {
   return_all       = true
