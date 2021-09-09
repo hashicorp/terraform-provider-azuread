@@ -380,16 +380,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		mailNickName = strings.Split(upn, "@")[0]
 	}
 
-	passwordPolicies := utils.NullableString("")
-	disable_strong_password := d.Get("disable_strong_password").(bool)
-	disable_password_expiration := d.Get("disable_password_expiration").(bool)
+	var passwordPolicies string
+	disableStrongPassword := d.Get("disable_strong_password").(bool)
+	disablePasswordExpiration := d.Get("disable_password_expiration").(bool)
 
-	if disable_strong_password && (!disable_password_expiration) {
-		passwordPolicies = utils.NullableString("DisableStrongPassword")
-	} else if (!disable_strong_password) && disable_password_expiration {
-		passwordPolicies = utils.NullableString("DisablePasswordExpiration")
-	} else if disable_strong_password && disable_password_expiration {
-		passwordPolicies = utils.NullableString("DisablePasswordExpiration, DisableStrongPassword")
+	if disableStrongPassword && (!disablePasswordExpiration) {
+		passwordPolicies = "DisableStrongPassword"
+	} else if (!disableStrongPassword) && disablePasswordExpiration {
+		passwordPolicies = "DisablePasswordExpiration"
+	} else if disableStrongPassword && disablePasswordExpiration {
+		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
 	}
 
 	properties := msgraph.User{
@@ -410,7 +410,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
 		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
 		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
-		PasswordPolicies:        passwordPolicies,
+		PasswordPolicies:        utils.NullableString(passwordPolicies),
 		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
 		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
@@ -451,16 +451,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 
-	passwordPolicies := utils.NullableString("")
-	disable_strong_password := d.Get("disable_strong_password").(bool)
-	disable_password_expiration := d.Get("disable_password_expiration").(bool)
+	var passwordPolicies string
+	disableStrongPassword := d.Get("disable_strong_password").(bool)
+	disablePasswordExpiration := d.Get("disable_password_expiration").(bool)
 
-	if disable_strong_password && (!disable_password_expiration) {
-		passwordPolicies = utils.NullableString("DisableStrongPassword")
-	} else if (!disable_strong_password) && disable_password_expiration {
-		passwordPolicies = utils.NullableString("DisablePasswordExpiration")
-	} else if disable_strong_password && disable_password_expiration {
-		passwordPolicies = utils.NullableString("DisablePasswordExpiration, DisableStrongPassword")
+	if disableStrongPassword && (!disablePasswordExpiration) {
+		passwordPolicies = "DisableStrongPassword"
+	} else if (!disableStrongPassword) && disablePasswordExpiration {
+		passwordPolicies = "DisablePasswordExpiration"
+	} else if disableStrongPassword && disablePasswordExpiration {
+		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
 	}
 
 	properties := msgraph.User{
@@ -483,7 +483,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
 		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
 		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
-		PasswordPolicies:        passwordPolicies,
+		PasswordPolicies:        utils.NullableString(passwordPolicies),
 		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
 		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
@@ -577,22 +577,22 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "user_principal_name", user.UserPrincipalName)
 	tf.Set(d, "user_type", user.UserType)
 
-	disable_strong_password := false
-	disable_password_expiration := false
+	disableStrongPassword := false
+	disablePasswordExpiration := false
 
 	if user.PasswordPolicies != nil {
 		policies := strings.Split(string(*user.PasswordPolicies), ",")
 		for _, p := range policies {
 			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
-				disable_strong_password = true
+				disableStrongPassword = true
 			}
 			if strings.EqualFold(strings.TrimSpace(p), "DisablePasswordExpiration") {
-				disable_password_expiration = true
+				disablePasswordExpiration = true
 			}
 		}
 	}
-	tf.Set(d, "disable_strong_password", disable_strong_password)
-	tf.Set(d, "disable_password_expiration", disable_password_expiration)
+	tf.Set(d, "disable_strong_password", disableStrongPassword)
+	tf.Set(d, "disable_password_expiration", disablePasswordExpiration)
 
 	return nil
 }
