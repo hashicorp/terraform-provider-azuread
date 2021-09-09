@@ -13,6 +13,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* **Provider:** fix a decoding bug when parsing claims from an access token [GH-560]
+* **Provider:** attempt to detect when using Azure CLI authentication in Azure Cloud Shell and avoid specifying the tenant ID [GH-560]
 * `azuread_group` - fix an API error caused by duplicate `owners` being mistakenly sent when creating new groups [GH-553]
 
 ## 2.1.0 (September 02, 2021)
