@@ -83,10 +83,17 @@ The following arguments are supported:
 -> **Ownership of Service Principals** It's recommended to always specify one or more service principal owners, including the principal being used to execute Terraform, such as in the example above.
 
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
+* `saml_single_sign_on` - (Optional) A `saml_single_sign_on` block as documented below.
 * `tags` - (Optional) A set of tags to apply to the service principal.
 * `use_existing` - (Optional) When true, any existing service principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing service principal.
 
 -> **Caveats of `use_existing`** Enabling this behaviour is useful for managing existing service principals that may already be installed in your tenant for Microsoft-published APIs, as it allows you to make changes where permitted, and then also reference them in your Terraform configuration. However, the behaviour of delete operations is also affected - when `use_existing` is `true`, Terraform will still attempt to delete the service principal on destroy, although it will not raise an error if the deletion fails (as it often the case for first-party Microsoft applications).
+
+---
+
+`saml_single_sign_on` supports the following:
+
+* `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow.
 
 ## Attributes Reference
 

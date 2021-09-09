@@ -333,6 +333,10 @@ resource "azuread_service_principal" "test" {
     "cto@hashitown.net",
   ]
 
+  saml_single_sign_on {
+    relay_state = "/samlHome"
+  }
+
   alternative_names = ["foo", "bar"]
   tags              = ["test", "multiple", "CapitalS"]
 }

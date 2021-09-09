@@ -70,6 +70,8 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) resour
 		check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
 		check.That(data.ResourceName).Key("redirect_uris.#").HasValue("2"),
+		check.That(data.ResourceName).Key("saml_single_sign_on.#").HasValue("1"),
+		check.That(data.ResourceName).Key("saml_single_sign_on.0.relay_state").HasValue("/samlHome"),
 		check.That(data.ResourceName).Key("service_principal_names.#").HasValue("2"),
 		check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADMyOrg"),
 		check.That(data.ResourceName).Key("tags.#").HasValue("3"),
