@@ -163,7 +163,7 @@ func (GroupsDataSource) mailEnabled() string {
 	return `
 data "azuread_groups" "test" {
   return_all   = true
-  main_enabled = true
+  mail_enabled = true
 }
 `
 }
