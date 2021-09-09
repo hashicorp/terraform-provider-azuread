@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `azuread_application_template` [GH-554]
+* **New Data Source:** `azuread_service_principals` [GH-555]
 * **New Resource:** `azuread_named_location` [GH-441]
 
 ENHANCEMENTS:
