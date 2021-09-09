@@ -51,7 +51,7 @@ The following arguments are supported:
 
 ~> One of `display_names`, `object_ids` or `return_all` should be specified. Either of the first two _may_ be specified as an empty list, in which case no results will be returned.
 
-~> `security_enabled` and `mail_enabled` flags work with `return_all` and `display_names` but not `object_ids`
+-> `security_enabled` and `mail_enabled` flags work with `return_all` and `display_names` but not `object_ids`
 
 ## Attributes Reference
 
