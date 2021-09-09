@@ -340,11 +340,6 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								"unknownFutureValue",
 							}, false),
 						},
-						"persistent_browser_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"always", "never"}, false),
-						},
 						"sign_in_frequency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -551,7 +546,6 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		map[string]interface{}{
 			"application_enforced_restrictions_enabled": in.ApplicationEnforcedRestrictions.IsEnabled,
 			"cloud_app_security_policy":                 in.CloudAppSecurity.CloudAppSecurityType,
-			"persistent_browser_mode":                   in.PersistentBrowser.Mode,
 			"sign_in_frequency":                         in.SignInFrequency.Value,
 			"sign_in_frequency_period":                  in.SignInFrequency.Type,
 		},
@@ -559,7 +553,7 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 }
 
 func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -586,7 +580,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 }
 
 func expandConditionalAccessApplications(in []interface{}) *msgraph.ConditionalAccessApplications {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -605,7 +599,7 @@ func expandConditionalAccessApplications(in []interface{}) *msgraph.ConditionalA
 }
 
 func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUsers {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -630,7 +624,7 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 }
 
 func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAccessPlatforms {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -647,7 +641,7 @@ func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAcce
 }
 
 func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAccessLocations {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -664,7 +658,7 @@ func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAcce
 }
 
 func expandConditionalAccessGrantControls(in []interface{}) *msgraph.ConditionalAccessGrantControls {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
@@ -685,39 +679,29 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 }
 
 func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
-	if len(in) == 0 {
+	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessSessionControls{}
 	config := in[0].(map[string]interface{})
 
-	if applicationEnforcedRestrictions := config["application_enforced_restrictions_enabled"]; applicationEnforcedRestrictions != nil {
-		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(applicationEnforcedRestrictions.(bool)),
-		}
-	}
+	applicationEnforcedRestrictions := config["application_enforced_restrictions_enabled"].(bool)
+	cloudAppSecurity := config["cloud_app_security_policy"].(string)
+	signInFrequency := config["sign_in_frequency"].(int)
 
-	if cloudAppSecurity := config["cloud_app_security_policy"]; cloudAppSecurity != nil {
-		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled:            utils.Bool(true),
-			CloudAppSecurityType: utils.String(cloudAppSecurity.(string)),
-		}
-	}
-
-	if persistentBrowser := config["persistent_browser_mode"]; persistentBrowser != nil {
-		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
-			IsEnabled: utils.Bool(true),
-			Mode:      utils.String(persistentBrowser.(string)),
-		}
-	}
-
-	if signInFrequency := config["sign_in_frequency"]; signInFrequency != nil {
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(true),
+	result := msgraph.ConditionalAccessSessionControls{
+		ApplicationEnforcedRestrictions: &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+			IsEnabled: utils.Bool(applicationEnforcedRestrictions),
+		},
+		CloudAppSecurity: &msgraph.CloudAppSecurityControl{
+			IsEnabled:            utils.Bool(cloudAppSecurity != ""),
+			CloudAppSecurityType: utils.String(cloudAppSecurity),
+		},
+		SignInFrequency: &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(signInFrequency > 0),
 			Type:      utils.String(config["sign_in_frequency_period"].(string)),
-			Value:     utils.Int32(int32(signInFrequency.(int))),
-		}
+			Value:     utils.Int32(int32(signInFrequency)),
+		},
 	}
 
 	return &result
