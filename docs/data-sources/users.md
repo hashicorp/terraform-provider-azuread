@@ -4,7 +4,7 @@ subcategory: "Users"
 
 # Data Source: azuread_users
 
-Gets object IDs or user principal names for multiple Azure Active Directory users.
+Gets basic information for multiple Azure Active Directory users.
 
 ## API Permissions
 
@@ -43,7 +43,7 @@ The following attributes are exported:
 * `user_principal_names` - The user principal names (UPNs) of the users.
 * `users` - A list of users. Each `user` object provides the attributes documented below.
 
-___
+---
 
 `user` object exports the following:
 

@@ -488,3 +488,33 @@ resource "azuread_service_principal" "test" {
 }
 `, data.RandomInteger, testApplicationTemplateId)
 }
+
+func (ServicePrincipalResource) threeServicePrincipalsABC(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "testA" {
+  display_name = "acctestServicePrincipalA-%[1]d"
+}
+
+resource "azuread_application" "testB" {
+  display_name = "acctestServicePrincipalB-%[1]d"
+}
+
+resource "azuread_application" "testC" {
+  display_name = "acctestServicePrincipalC-%[1]d"
+}
+
+resource "azuread_service_principal" "testA" {
+  application_id = azuread_application.testA.application_id
+}
+
+resource "azuread_service_principal" "testB" {
+  application_id = azuread_application.testB.application_id
+}
+
+resource "azuread_service_principal" "testC" {
+  application_id = azuread_application.testC.application_id
+}
+`, data.RandomInteger)
+}
