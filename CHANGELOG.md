@@ -1,23 +1,23 @@
-## 2.2.0 (Unreleased)
+## 2.2.0 (September 10, 2021)
 
 FEATURES:
 
-* **New Data Source:** `azuread_application_template` [GH-554]
-* **New Data Source:** `azuread_service_principals` [GH-555]
-* **New Resource:** `azuread_conditional_access_policy` [GH-466]
-* **New Resource:** `azuread_named_location` [GH-441]
+* **New Data Source:** `azuread_application_template` ([#554](https://github.com/terraform-providers/terraform-provider-azuread/issues/554))
+* **New Data Source:** `azuread_service_principals` ([#555](https://github.com/terraform-providers/terraform-provider-azuread/issues/555))
+* **New Resource:** `azuread_conditional_access_policy` ([#466](https://github.com/terraform-providers/terraform-provider-azuread/issues/466))
+* **New Resource:** `azuread_named_location` ([#441](https://github.com/terraform-providers/terraform-provider-azuread/issues/441))
 
 ENHANCEMENTS:
 
-* `azuread_application` - support for the `template_id` property for creating applications (and service principals) from a template [GH-554]
-* `azuread_service_principal` - support the `saml_single_sign_on` block containing the `relay_state` property [GH-557]
-* `azuread_user` - support the `disable_password_expiration` and `disable_strong_password` properties [GH-550]
+* `azuread_application` - support for the `template_id` property for creating applications (and service principals) from a template ([#554](https://github.com/terraform-providers/terraform-provider-azuread/issues/554))
+* `azuread_service_principal` - support the `saml_single_sign_on` block containing the `relay_state` property ([#557](https://github.com/terraform-providers/terraform-provider-azuread/issues/557))
+* `azuread_user` - support the `disable_password_expiration` and `disable_strong_password` properties ([#550](https://github.com/terraform-providers/terraform-provider-azuread/issues/550))
 
 BUG FIXES:
 
-* **Provider:** fix a decoding bug when parsing claims from an access token [GH-560]
-* **Provider:** attempt to detect when using Azure CLI authentication in Azure Cloud Shell and avoid specifying the tenant ID [GH-560]
-* `azuread_group` - fix an API error caused by duplicate `owners` being mistakenly sent when creating new groups [GH-553]
+* **Provider:** fix a decoding bug when parsing claims from an access token ([#560](https://github.com/terraform-providers/terraform-provider-azuread/issues/560))
+* **Provider:** attempt to detect when using Azure CLI authentication in Azure Cloud Shell and avoid specifying the tenant ID ([#560](https://github.com/terraform-providers/terraform-provider-azuread/issues/560))
+* `azuread_group` - fix an API error caused by duplicate `owners` being mistakenly sent when creating new groups ([#553](https://github.com/terraform-providers/terraform-provider-azuread/issues/553))
 
 ## 2.1.0 (September 02, 2021)
 
