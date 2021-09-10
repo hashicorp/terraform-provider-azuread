@@ -1,8 +1,8 @@
-## 2.2.1 (Unreleased)
+## 2.2.1 (September 10, 2021)
 
 BUG FIXES:
 
-* **Provider:** fix a bug in handling retried requests that could cause errors when attempting to read a resource that no longer exists [GH-564]
+* **Provider:** fix a bug in handling retried requests that could cause errors when attempting to read a resource that no longer exists ([#564](https://github.com/terraform-providers/terraform-provider-azuread/issues/564))
 
 ## 2.2.0 (September 10, 2021)
 
