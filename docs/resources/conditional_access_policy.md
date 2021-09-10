@@ -136,7 +136,9 @@ The following arguments are supported:
 `session_controls` block supports the following:
 
 * `application_enforced_restrictions_enabled` - (Optional) Whether or not application enforced restrictions are enabled. Defaults to `false`.
+
 -> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
+
 * `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `mcasConfigured`, `monitorOnly`, `blockDownloads` or `unknownFutureValue`.
 * `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified.
 * `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified.
