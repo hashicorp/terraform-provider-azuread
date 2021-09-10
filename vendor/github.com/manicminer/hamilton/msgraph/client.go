@@ -55,6 +55,12 @@ type Uri struct {
 	HasTenantId bool
 }
 
+// RetryableErrorHandler ensures that the response is returned after exhausting retries for a request
+// We can't return an error here, or net/http will not return the response
+func RetryableErrorHandler(resp *http.Response, err error, numTries int) (*http.Response, error) {
+	return resp, nil
+}
+
 // Client is a base client to be used by clients for specific entities.
 // It can send GET, POST, PUT, PATCH and DELETE requests to Microsoft Graph and is API version and tenant aware.
 type Client struct {
@@ -91,6 +97,7 @@ type Client struct {
 // NewClient returns a new Client configured with the specified API version and tenant ID.
 func NewClient(apiVersion ApiVersion, tenantId string) Client {
 	r := retryablehttp.NewClient()
+	r.ErrorHandler = RetryableErrorHandler
 	r.Logger = nil
 
 	return Client{
