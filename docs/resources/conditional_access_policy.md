@@ -138,32 +138,8 @@ The following arguments are supported:
 * `application_enforced_restrictions_enabled` - (Optional) Whether or not application enforced restrictions are enabled. Defaults to `false`.
 -> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
 * `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `mcasConfigured`, `monitorOnly`, `blockDownloads` or `unknownFutureValue`.
-* `persistent_browser_mode` - (Optional) Specifies the persistent browser mode to use. Possible values are: `always`, `never`. Required when `persistent_browser_enabled` is specified.
--> `persistent_browser_mode` only works correctly when `included_applications` is set to `All`.
 * `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified.
 * `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified.
----
-
-`application_enforced_restrictions` block supports the following:
-
-* `enabled` - (Optional) enables application enforced restrictions.
-
----
-
-`cloud_app_security` block supports the following:
-
-* `cloud_app_security_type` - (Optional) Defines which policy to use. Possible values are: `mcasConfigured`, `monitorOnly`, `blockDownloads` or `unknownFutureValue`.
-* `enabled` - (Optional) enables conditional access application control.
-
----
-
-`persistent_browser` block supports the following:
-
-* `enabled` - (Optional) enables persistent browser session.
-* `mode` - (Optional) Defines which persistent browser mode is enabled. Possible values are: `always`, `never`.
-
-`sign_in_frequency` block supports the following:
-
 ---
 
 ## Attributes Reference
