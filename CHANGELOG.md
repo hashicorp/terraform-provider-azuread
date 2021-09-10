@@ -1,3 +1,9 @@
+## 2.2.1 (Unreleased)
+
+BUG FIXES:
+
+* **Provider:** fix a bug in handling retried requests that could cause errors when attempting to read a resource that no longer exists [GH-564]
+
 ## 2.2.0 (September 10, 2021)
 
 FEATURES:
