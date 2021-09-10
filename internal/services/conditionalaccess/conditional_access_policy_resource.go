@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -442,6 +443,31 @@ func conditionalAccessPolicyResourceDelete(ctx context.Context, d *schema.Resour
 	status, err = client.Delete(ctx, d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting conditional access policy with ID %q, got status %d", d.Id(), status)
+	}
+
+	log.Printf("[DEBUG] Waiting for conditional access policy %q to disappear", d.Id())
+	timeout, _ := ctx.Deadline()
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{"Pending"},
+		Target:                    []string{"Deleted"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			client.BaseClient.DisableRetries = true
+			_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+			if status == http.StatusNotFound {
+				return "stub", "Deleted", nil
+			}
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			return "stub", "Pending", nil
+		},
+	}
+	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
+		return tf.ErrorDiagF(err, "waiting for deletion of conditional access policy with ID %q", d.Id())
 	}
 
 	return nil
