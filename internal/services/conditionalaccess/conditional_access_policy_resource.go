@@ -568,14 +568,22 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		return []interface{}{}
 	}
 
-	return []interface{}{
-		map[string]interface{}{
-			"application_enforced_restrictions_enabled": in.ApplicationEnforcedRestrictions.IsEnabled,
-			"cloud_app_security_policy":                 in.CloudAppSecurity.CloudAppSecurityType,
-			"sign_in_frequency":                         in.SignInFrequency.Value,
-			"sign_in_frequency_period":                  in.SignInFrequency.Type,
-		},
+	result := make(map[string]interface{})
+
+	if in.ApplicationEnforcedRestrictions != nil {
+		result["application_enforced_restrictions_enabled"] = in.ApplicationEnforcedRestrictions.IsEnabled
 	}
+
+	if in.CloudAppSecurity != nil {
+		result["cloud_app_security_policy"] = in.CloudAppSecurity.CloudAppSecurityType
+	}
+
+	if in.SignInFrequency != nil {
+		result["sign_in_frequency"] = in.SignInFrequency.Value
+		result["sign_in_frequency_period"] = in.SignInFrequency.Type
+	}
+
+	return []interface{}{result}
 }
 
 func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
@@ -715,19 +723,27 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 	cloudAppSecurity := config["cloud_app_security_policy"].(string)
 	signInFrequency := config["sign_in_frequency"].(int)
 
-	result := msgraph.ConditionalAccessSessionControls{
-		ApplicationEnforcedRestrictions: &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+	var result msgraph.ConditionalAccessSessionControls
+
+	if applicationEnforcedRestrictions {
+		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
 			IsEnabled: utils.Bool(applicationEnforcedRestrictions),
-		},
-		CloudAppSecurity: &msgraph.CloudAppSecurityControl{
-			IsEnabled:            utils.Bool(cloudAppSecurity != ""),
+		}
+	}
+
+	if cloudAppSecurity != "" {
+		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
+			IsEnabled:            utils.Bool(true),
 			CloudAppSecurityType: utils.String(cloudAppSecurity),
-		},
-		SignInFrequency: &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(signInFrequency > 0),
+		}
+	}
+
+	if signInFrequency > 0 {
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(true),
 			Type:      utils.String(config["sign_in_frequency_period"].(string)),
 			Value:     utils.Int32(int32(signInFrequency)),
-		},
+		}
 	}
 
 	return &result
