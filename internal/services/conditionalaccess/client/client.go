@@ -8,13 +8,18 @@ import (
 
 type Client struct {
 	NamedLocationsClient *msgraph.NamedLocationsClient
+	PoliciesClient       *msgraph.ConditionalAccessPolicyClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
 	namedLocationsClient := msgraph.NewNamedLocationsClient(o.TenantID)
 	o.ConfigureClient(&namedLocationsClient.BaseClient)
 
+	policiesClient := msgraph.NewConditionalAccessPolicyClient(o.TenantID)
+	o.ConfigureClient(&policiesClient.BaseClient)
+
 	return &Client{
 		NamedLocationsClient: namedLocationsClient,
+		PoliciesClient:       policiesClient,
 	}
 }
