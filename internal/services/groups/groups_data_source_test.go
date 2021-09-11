@@ -98,6 +98,20 @@ func TestAccGroupsDataSource_mailEnabled(t *testing.T) {
 	})
 }
 
+func TestAccGroupsDataSource_bothMailSecurityEnabled(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupsDataSource{}.bothMailSecurityEnabled(),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_names.#").Exists(),
+				check.That(data.ResourceName).Key("object_ids.#").Exists(),
+			),
+		},
+	})
+}
+
 func (GroupsDataSource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "testA" {
@@ -164,6 +178,16 @@ func (GroupsDataSource) mailEnabled() string {
 data "azuread_groups" "test" {
   return_all   = true
   mail_enabled = true
+}
+`
+}
+
+func (GroupsDataSource) bothMailSecurityEnabled() string {
+	return `
+data "azuread_groups" "test" {
+  return_all   = true
+  mail_enabled = true
+  security_enabled = true
 }
 `
 }
