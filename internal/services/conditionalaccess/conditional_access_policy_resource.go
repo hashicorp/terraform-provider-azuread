@@ -568,22 +568,31 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		return []interface{}{}
 	}
 
-	result := make(map[string]interface{})
-
+	applicationEnforceRestrictions := false
 	if in.ApplicationEnforcedRestrictions != nil {
-		result["application_enforced_restrictions_enabled"] = in.ApplicationEnforcedRestrictions.IsEnabled
+		applicationEnforceRestrictions = *in.ApplicationEnforcedRestrictions.IsEnabled
 	}
 
-	if in.CloudAppSecurity != nil {
-		result["cloud_app_security_policy"] = in.CloudAppSecurity.CloudAppSecurityType
+	cloudAppSecurity := ""
+	if in.CloudAppSecurity != nil && in.CloudAppSecurity.CloudAppSecurityType != nil {
+		cloudAppSecurity = *in.CloudAppSecurity.CloudAppSecurityType
 	}
 
-	if in.SignInFrequency != nil {
-		result["sign_in_frequency"] = in.SignInFrequency.Value
-		result["sign_in_frequency_period"] = in.SignInFrequency.Type
+	signInFrequency := 0
+	signInFrequencyPeriod := ""
+	if in.SignInFrequency != nil && in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
+		signInFrequency = int(*in.SignInFrequency.Value)
+		signInFrequencyPeriod = *in.SignInFrequency.Type
 	}
 
-	return []interface{}{result}
+	return []interface{}{
+		map[string]interface{}{
+			"application_enforced_restrictions_enabled": applicationEnforceRestrictions,
+			"cloud_app_security_policy":                 cloudAppSecurity,
+			"sign_in_frequency":                         signInFrequency,
+			"sign_in_frequency_period":                  signInFrequencyPeriod,
+		},
+	}
 }
 
 func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
@@ -724,20 +733,20 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 	signInFrequency := config["sign_in_frequency"].(int)
 
 	var result msgraph.ConditionalAccessSessionControls
-
+	// The API doesn't accept boolean false values, we must instead omit them
 	if applicationEnforcedRestrictions {
 		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
 			IsEnabled: utils.Bool(applicationEnforcedRestrictions),
 		}
 	}
-
+	// The API doesn't accept boolean false values, we must instead omit related fields
 	if cloudAppSecurity != "" {
 		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
 			IsEnabled:            utils.Bool(true),
 			CloudAppSecurityType: utils.String(cloudAppSecurity),
 		}
 	}
-
+	// The API doesn't accept boolean false values, we must instead omit related fields
 	if signInFrequency > 0 {
 		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
 			IsEnabled: utils.Bool(true),
