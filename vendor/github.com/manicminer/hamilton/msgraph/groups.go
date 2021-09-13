@@ -63,7 +63,10 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 	}
 
 	ownersNotReplicated := func(resp *http.Response, o *odata.OData) bool {
-		return o != nil && o.Error != nil && o.Error.Match(odata.ErrorResourceDoesNotExist)
+		if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			return o.Error.Match(odata.ErrorResourceDoesNotExist)
+		}
+		return false
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
@@ -398,17 +401,13 @@ func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error
 	for _, member := range *group.Members {
 		// don't fail if an member already exists
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
 
-		body, err := json.Marshal(struct {
-			Member odata.Id `json:"@odata.id"`
-		}{
-			Member: *member.ODataId,
-		})
+		body, err := json.Marshal(DirectoryObject{ODataId: member.ODataId})
 		if err != nil {
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
@@ -452,7 +451,7 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 
 		// despite the above check, sometimes members are just gone
 		checkMemberGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false
@@ -564,17 +563,13 @@ func (c *GroupsClient) AddOwners(ctx context.Context, group *Group) (int, error)
 	for _, owner := range *group.Owners {
 		// don't fail if an owner already exists
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
 
-		body, err := json.Marshal(struct {
-			Owner odata.Id `json:"@odata.id"`
-		}{
-			Owner: *owner.ODataId,
-		})
+		body, err := json.Marshal(DirectoryObject{ODataId: owner.ODataId})
 		if err != nil {
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
@@ -618,7 +613,7 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 
 		// despite the above check, sometimes owners are just gone
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false

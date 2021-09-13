@@ -1099,6 +1099,7 @@ type User struct {
 	DisplayName                     *string                  `json:"displayName,omitempty"`
 	EmployeeHireDate                *time.Time               `json:"employeeHireDate,omitempty"`
 	EmployeeId                      *StringNullWhenEmpty     `json:"employeeId,omitempty"`
+	EmployeeOrgData                 *EmployeeOrgData         `json:"employeeOrgData,omitempty"`
 	EmployeeType                    *string                  `json:"employeeType,omitempty"`
 	ExternalUserState               *string                  `json:"externalUserState,omitempty"`
 	FaxNumber                       *StringNullWhenEmpty     `json:"faxNumber,omitempty"`
@@ -1254,4 +1255,9 @@ type WindowsHelloForBusinessAuthenticationMethod struct {
 	DisplayName     *string                          `json:"displayName,omitempty"`
 	ID              *string                          `json:"id,omitempty"`
 	KeyStrength     *AuthenticationMethodKeyStrength `json:"authenticationMethodKeyStrength,omitempty"`
+}
+
+type EmployeeOrgData struct {
+	CostCenter *string `json:"costCenter,omitempty"`
+	Division   *string `json:"division,omitempty"`
 }

@@ -79,6 +79,33 @@ func (c *DirectoryRolesClient) Get(ctx context.Context, id string) (*DirectoryRo
 	return &dirRole, status, nil
 }
 
+// GetByTemplateId retrieves a DirectoryRole manifest for a DirectoryRoleTemplate id.
+func (c *DirectoryRolesClient) GetByTemplateId(ctx context.Context, templateId string) (*DirectoryRole, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/directoryRoles/roleTemplateId=%s", templateId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("DirectoryRolesClient.BaseClient.Get(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var dirRole DirectoryRole
+	if err := json.Unmarshal(respBody, &dirRole); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &dirRole, status, nil
+}
+
 // ListMembers retrieves the members of the specified directory role.
 // id is the object ID of the directory role.
 func (c *DirectoryRolesClient) ListMembers(ctx context.Context, id string) (*[]string, int, error) {
@@ -133,17 +160,13 @@ func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *Di
 	for _, member := range *directoryRole.Members {
 		// don't fail if a member already exists
 		checkMemberAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
 
-		body, err := json.Marshal(struct {
-			Member odata.Id `json:"@odata.id"`
-		}{
-			Member: *member.ODataId,
-		})
+		body, err := json.Marshal(DirectoryObject{ODataId: member.ODataId})
 		if err != nil {
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
@@ -242,7 +265,7 @@ func (c *DirectoryRolesClient) Activate(ctx context.Context, roleTemplateID stri
 
 	// don't fail if a role is already activated
 	checkRoleAlreadyActivated := func(resp *http.Response, o *odata.OData) bool {
-		if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+		if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 			return o.Error.Match(odata.ErrorConflictingObjectPresentInDirectory)
 		}
 		return false
