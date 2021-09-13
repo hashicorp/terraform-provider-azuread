@@ -6,6 +6,7 @@ const val providerName = "azuread"
 var services = mapOf(
         "applications" to "Applications",
         "conditionalaccess" to "Conditional Access",
+        "directoryroles" to "Directory Roles",
         "domains" to "Domains",
         "groups" to "Groups",
         "invitations" to "Invitations",
