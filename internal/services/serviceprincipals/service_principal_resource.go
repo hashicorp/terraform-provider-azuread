@@ -85,6 +85,42 @@ func servicePrincipalResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
+			"features": {
+				Description:   "Block of features to configure for this service principal using tags",
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"tags"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on_app": {
+							Description: "Whether this service principal represents a custom SAML application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"enterprise_application": {
+							Description: "Whether this service principal represents an Enterprise Application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"gallery_application": {
+							Description: "Whether this service principal represents a gallery application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"visible_to_users": {
+							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+						},
+					},
+				},
+			},
+
 			"login_url": {
 				Description:      "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
 				Type:             schema.TypeString,
@@ -134,10 +170,12 @@ func servicePrincipalResource() *schema.Resource {
 			},
 
 			"tags": {
-				Description: "A set of tags to apply to the service principal",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Set:         schema.HashString,
+				Description:   "A set of tags to apply to the service principal",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Set:           schema.HashString,
+				ConflictsWith: []string{"features"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -308,6 +346,13 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		return servicePrincipalResourceUpdate(ctx, d, meta)
 	}
 
+	var tags []string
+	if v, ok := d.GetOk("features"); ok {
+		tags = expandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	properties := msgraph.ServicePrincipal{
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
@@ -319,7 +364,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
 		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
-		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
+		Tags:                       &tags,
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -399,6 +444,14 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 
+	var tags []string
+	featuresChanged := d.HasChange("features")
+	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
+		tags = expandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(d.Id()),
@@ -412,7 +465,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
 		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
-		Tags:                       tf.ExpandStringSlicePtr(d.Get("tags").(*schema.Set).List()),
+		Tags:                       &tags,
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -493,6 +546,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
+	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)

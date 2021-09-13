@@ -32,8 +32,28 @@ resource "azuread_service_principal" "example" {
   application_id               = azuread_application.example.application_id
   app_role_assignment_required = false
   owners                       = [data.azuread_client_config.current.object_id]
+}
+```
 
-  tags = ["example", "tags", "here"]
+*Create a service principal for an enterprise application*
+
+```terraform
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "example" {
+  display_name = "example"
+  owners       = [data.azuread_client_config.current.object_id]
+}
+
+resource "azuread_service_principal" "example" {
+  application_id               = azuread_application.example.application_id
+  app_role_assignment_required = false
+  owners                       = [data.azuread_client_config.current.object_id]
+
+  features {
+    enterprise_application = true
+    gallery_application    = true
+  }
 }
 ```
 
@@ -75,6 +95,7 @@ The following arguments are supported:
 * `app_role_assignment_required` - (Optional) Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application. Defaults to `false`.
 * `application_id` - (Required) The application ID (client ID) of the application for which to create a service principal.
 * `description` - (Optional) A description of the service principal provided for internal end-users.
+* `features` - (Optional) A `features` block as described below. Cannot be used together with the `tags` property.
 * `login_url` - (Optional) The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on.
 * `notes` - (Optional) A free text field to capture information about the service principal, typically used for operational purposes.
 * `notification_email_addresses` - (Optional) A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications.
@@ -84,10 +105,19 @@ The following arguments are supported:
 
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
 * `saml_single_sign_on` - (Optional) A `saml_single_sign_on` block as documented below.
-* `tags` - (Optional) A set of tags to apply to the service principal.
+* `tags` - (Optional) A set of tags to apply to the service principal. Cannot be used together with the `features` block.
 * `use_existing` - (Optional) When true, any existing service principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing service principal.
 
 -> **Caveats of `use_existing`** Enabling this behaviour is useful for managing existing service principals that may already be installed in your tenant for Microsoft-published APIs, as it allows you to make changes where permitted, and then also reference them in your Terraform configuration. However, the behaviour of delete operations is also affected - when `use_existing` is `true`, Terraform will still attempt to delete the service principal on destroy, although it will not raise an error if the deletion fails (as it often the case for first-party Microsoft applications).
+
+---
+
+`features` block supports the following:
+
+* `custom_single_sign_on_app` - (Optional) Whether this service principal represents a custom SAML application. Defaults to `false`.
+* `enterprise_application` - (Optional) Whether this service principal represents an Enterprise Application. Defaults to `false`.
+* `gallery_application` - (Optional) Whether this service principal represents a gallery application. Defaults to `false`.
+* `visible_to_users` - (Optional) Whether this app is visible to users in My Apps and Office 365 Launcher. Defaults to `true`.
 
 ---
 
