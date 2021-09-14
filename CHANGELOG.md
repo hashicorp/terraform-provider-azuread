@@ -1,5 +1,10 @@
 ## 2.2.1 (September 10, 2021)
 
+ENHANCEMENTS:
+
+* `data.azuread_service_principal` - support the `features` block [GH-571]
+* `azuread_service_principal` - support the `features` block [GH-571]
+
 BUG FIXES:
 
 * **Provider:** fix a bug in handling retried requests that could cause errors when attempting to read a resource that no longer exists ([#564](https://github.com/terraform-providers/terraform-provider-azuread/issues/564))
