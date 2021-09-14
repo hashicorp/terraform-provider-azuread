@@ -2,9 +2,11 @@ package applications
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -293,6 +295,18 @@ func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClie
 	}
 
 	return &result, nil
+}
+
+func applicationParseLogoImage(encodedImage string) (string, []byte, error) {
+	imageData, err := base64.StdEncoding.DecodeString(strings.TrimSpace(encodedImage))
+	if err != nil {
+		return "", nil, err
+	}
+	contentType := http.DetectContentType(imageData)
+	if !strings.HasPrefix(contentType, "image/") {
+		return "", nil, fmt.Errorf("unrecognised MIME type detected: %q", contentType)
+	}
+	return contentType, imageData, nil
 }
 
 func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {
