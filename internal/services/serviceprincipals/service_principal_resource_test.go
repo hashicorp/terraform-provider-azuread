@@ -63,7 +63,7 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipal_update(t *testing.T) {
+func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
@@ -98,6 +98,83 @@ func TestAccServicePrincipal_update(t *testing.T) {
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("0"),
+			),
+		},
+		data.ImportStep("use_existing"),
+	})
+}
+
+func TestAccServicePrincipal_features(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+	tenantId := os.Getenv("ARM_TENANT_ID")
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
+				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
+				check.That(data.ResourceName).Key("application_tenant_id").HasValue(tenantId),
+				check.That(data.ResourceName).Key("homepage_url").HasValue(fmt.Sprintf("https://test-%d.internal", data.RandomInteger)),
+				check.That(data.ResourceName).Key("logout_url").HasValue(fmt.Sprintf("https://test-%d.internal/logout", data.RandomInteger)),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
+				check.That(data.ResourceName).Key("service_principal_names.#").HasValue("2"),
+				check.That(data.ResourceName).Key("redirect_uris.#").HasValue("2"),
+				check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADMyOrg"),
+				check.That(data.ResourceName).Key("type").HasValue("Application"),
+			),
+		},
+		data.ImportStep("use_existing"),
+	})
+}
+
+func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
@@ -254,7 +331,7 @@ resource "azuread_service_principal" "test" {
 `, data.RandomInteger)
 }
 
-func (ServicePrincipalResource) complete(data acceptance.TestData) string {
+func (ServicePrincipalResource) templateComplete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -317,14 +394,21 @@ resource "azuread_application" "test" {
     ]
   }
 }
+`, data.RandomInteger, data.UUID(), data.UUID(), data.UUID(), data.UUID())
+}
+
+func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 
   account_enabled               = false
+  alternative_names             = ["foo", "bar"]
   app_role_assignment_required  = true
   description                   = "An internal app for testing"
-  login_url                     = "https://test-%[1]d.internal/login"
+  login_url                     = "https://test-%[2]d.internal/login"
   notes                         = "Just testing something"
   preferred_single_sign_on_mode = "saml"
 
@@ -337,10 +421,47 @@ resource "azuread_service_principal" "test" {
     relay_state = "/samlHome"
   }
 
-  alternative_names = ["foo", "bar"]
-  tags              = ["test", "multiple", "CapitalS"]
+  tags = [
+    "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
+    "WindowsAzureActiveDirectoryIntegratedApp",
+    "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
+  ]
 }
-`, data.RandomInteger, data.UUID(), data.UUID(), data.UUID(), data.UUID())
+`, r.templateComplete(data), data.RandomInteger)
+}
+
+func (r ServicePrincipalResource) features(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+
+  account_enabled               = false
+  alternative_names             = ["foo", "bar"]
+  app_role_assignment_required  = true
+  description                   = "An internal app for testing"
+  login_url                     = "https://test-%[2]d.internal/login"
+  notes                         = "Just testing something"
+  preferred_single_sign_on_mode = "saml"
+
+  features {
+    custom_single_sign_on_app = true
+    enterprise_application    = true
+    gallery_application       = true
+    visible_to_users          = false
+  }
+
+  notification_email_addresses = [
+    "alerts.internal@hashitown.net",
+    "cto@hashitown.net",
+  ]
+
+  saml_single_sign_on {
+    relay_state = "/samlHome"
+  }
+}
+`, r.templateComplete(data), data.RandomInteger)
 }
 
 func (ServicePrincipalResource) templateThreeUsers(data acceptance.TestData) string {

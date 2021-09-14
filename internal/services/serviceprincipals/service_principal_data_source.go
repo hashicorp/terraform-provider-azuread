@@ -99,6 +99,39 @@ func servicePrincipalData() *schema.Resource {
 				Computed:    true,
 			},
 
+			"features": {
+				Description: "Block of features configured for this service principal using tags",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on_app": {
+							Description: "Whether this service principal represents a custom SAML application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"enterprise_application": {
+							Description: "Whether this service principal represents an Enterprise Application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"gallery_application": {
+							Description: "Whether this service principal represents a gallery application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"visible_to_users": {
+							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"homepage_url": {
 				Description: "Home page or landing page of the application",
 				Type:        schema.TypeString,
@@ -313,6 +346,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
+	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
