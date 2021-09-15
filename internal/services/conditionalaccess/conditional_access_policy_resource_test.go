@@ -73,6 +73,13 @@ func TestAccConditionalAccessPolicy_update(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -98,16 +105,23 @@ resource "azuread_conditional_access_policy" "test" {
   state        = "disabled"
 
   conditions {
+    client_app_types = ["browser"]
+
     applications {
       included_applications = ["All"]
     }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
     users {
       included_users = ["All"]
       excluded_users = ["GuestsOrExternalUsers"]
-    }
-    client_app_types = ["browser"]
-    locations {
-      included_locations = ["All"]
     }
   }
 
@@ -126,25 +140,29 @@ resource "azuread_conditional_access_policy" "test" {
   state        = "disabled"
 
   conditions {
+    client_app_types    = ["all"]
+    sign_in_risk_levels = ["medium"]
+    user_risk_levels    = ["medium"]
+
     applications {
       included_applications = ["All"]
       excluded_applications = ["00000004-0000-0ff1-ce00-000000000000"]
     }
-    users {
-      included_users = ["All"]
-      excluded_users = ["GuestsOrExternalUsers"]
-    }
-    client_app_types = ["all"]
+
     locations {
       included_locations = ["All"]
       excluded_locations = ["AllTrusted"]
     }
+
     platforms {
       included_platforms = ["android"]
       excluded_platforms = ["iOS"]
     }
-    sign_in_risk_levels = ["medium"]
-    user_risk_levels    = ["medium"]
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
   }
 
   grant_controls {

@@ -32,7 +32,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -68,7 +68,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"applications": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -80,6 +80,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_applications": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -88,6 +89,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_user_actions": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -99,9 +101,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"users": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -114,6 +117,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_users": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -122,6 +126,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_groups": {
 										Type:         schema.TypeList,
 										Optional:     true,
@@ -131,6 +136,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_groups": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -139,6 +145,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_roles": {
 										Type:         schema.TypeList,
 										Optional:     true,
@@ -148,6 +155,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_roles": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -159,9 +167,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"client_app_types": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -174,9 +183,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"locations": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -188,6 +198,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_locations": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -199,9 +210,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"platforms": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -221,6 +233,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											}, false),
 										},
 									},
+
 									"excluded_platforms": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -240,6 +253,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"sign_in_risk_levels": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -255,6 +269,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"user_risk_levels": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -302,6 +317,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"custom_authentication_factors": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -310,6 +326,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								ValidateDiagFunc: validate.NoEmptyStrings,
 							},
 						},
+
 						"terms_of_use": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -331,6 +348,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+
 						"cloud_app_security_policy": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -341,12 +359,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								"unknownFutureValue",
 							}, false),
 						},
+
 						"sign_in_frequency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+
 						"sign_in_frequency_period": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -368,7 +388,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), true),
 	}
 
 	policy, _, err := client.Create(ctx, properties)
@@ -394,11 +414,45 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), false),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
+	}
+
+	// Poll for 5 retrievals of the updated policy. We don't check every property as this is prone to getting stuck
+	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
+	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
+	timeout, _ := ctx.Deadline()
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{"Pending"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			client.BaseClient.DisableRetries = true
+			policy, _, err := client.Get(ctx, d.Id(), odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if policy == nil {
+				return "stub", "Pending", nil
+			}
+			if policy.DisplayName == nil || *policy.DisplayName != d.Get("display_name").(string) {
+				return "stub", "Pending", nil
+			}
+			if policy.State == nil || *policy.State != d.Get("state").(string) {
+				return "stub", "Pending", nil
+			}
+
+			return "stub", "Done", nil
+		},
+	}
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return tf.ErrorDiagF(err, "waiting for update of conditional access policy with ID %q", d.Id())
 	}
 
 	return nil
@@ -667,11 +721,11 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 }
 
 func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAccessPlatforms {
+	result := msgraph.ConditionalAccessPlatforms{}
 	if len(in) == 0 || in[0] == nil {
-		return nil
+		return &result
 	}
 
-	result := msgraph.ConditionalAccessPlatforms{}
 	config := in[0].(map[string]interface{})
 
 	includePlatforms := config["included_platforms"].([]interface{})
@@ -721,38 +775,48 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	return &result
 }
 
-func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
-	if len(in) == 0 || in[0] == nil {
+func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgraph.ConditionalAccessSessionControls {
+	// For POST requests, the API doesn't accept empty objects for nested fields here
+	if create && (len(in) == 0 || in[0] == nil) {
 		return nil
+	}
+
+	result := msgraph.ConditionalAccessSessionControls{
+		ApplicationEnforcedRestrictions: &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+			IsEnabled: utils.Bool(false),
+		},
+		CloudAppSecurity: &msgraph.CloudAppSecurityControl{
+			IsEnabled: utils.Bool(false),
+		},
+		SignInFrequency: &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(false),
+		},
+	}
+
+	// API doesn't accept boolean false values for POST requests, we must instead omit the entire object
+	if !create {
+		result.ApplicationEnforcedRestrictions.IsEnabled = utils.Bool(false)
+		result.CloudAppSecurity.IsEnabled = utils.Bool(false)
+		result.SignInFrequency.IsEnabled = utils.Bool(false)
+	}
+
+	if len(in) == 0 || in[0] == nil {
+		return &result
 	}
 
 	config := in[0].(map[string]interface{})
 
-	applicationEnforcedRestrictions := config["application_enforced_restrictions_enabled"].(bool)
-	cloudAppSecurity := config["cloud_app_security_policy"].(string)
-	signInFrequency := config["sign_in_frequency"].(int)
+	result.ApplicationEnforcedRestrictions.IsEnabled = utils.Bool(config["application_enforced_restrictions_enabled"].(bool))
 
-	var result msgraph.ConditionalAccessSessionControls
-	// The API doesn't accept boolean false values, we must instead omit them
-	if applicationEnforcedRestrictions {
-		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(applicationEnforcedRestrictions),
-		}
+	if cloudAppSecurity := config["cloud_app_security_policy"].(string); cloudAppSecurity != "" {
+		result.CloudAppSecurity.IsEnabled = utils.Bool(true)
+		result.CloudAppSecurity.CloudAppSecurityType = utils.String(cloudAppSecurity)
 	}
-	// The API doesn't accept boolean false values, we must instead omit related fields
-	if cloudAppSecurity != "" {
-		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled:            utils.Bool(true),
-			CloudAppSecurityType: utils.String(cloudAppSecurity),
-		}
-	}
-	// The API doesn't accept boolean false values, we must instead omit related fields
-	if signInFrequency > 0 {
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(true),
-			Type:      utils.String(config["sign_in_frequency_period"].(string)),
-			Value:     utils.Int32(int32(signInFrequency)),
-		}
+
+	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
+		result.SignInFrequency.IsEnabled = utils.Bool(true)
+		result.SignInFrequency.Type = utils.String(config["sign_in_frequency_period"].(string))
+		result.SignInFrequency.Value = utils.Int32(int32(signInFrequency))
 	}
 
 	return &result

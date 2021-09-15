@@ -22,25 +22,29 @@ resource "azuread_conditional_access_policy" "example" {
   state        = "disabled"
 
   conditions {
+    client_app_types    = ["all"]
+    sign_in_risk_levels = ["medium"]
+    user_risk_levels    = ["medium"]
+
     applications {
       included_applications = ["All"]
       excluded_applications = ["00000004-0000-0ff1-ce00-000000000000"]
     }
-    users {
-      included_users = ["All"]
-      excluded_users = ["GuestsOrExternalUsers"]
-    }
-    client_app_types = ["all"]
+
     locations {
       included_locations = ["All"]
       excluded_locations = ["AllTrusted"]
     }
+
     platforms {
       included_platforms = ["android"]
       excluded_platforms = ["iOS"]
     }
-    sign_in_risk_levels = ["medium"]
-    user_risk_levels    = ["medium"]
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
   }
 
   grant_controls {
@@ -52,10 +56,12 @@ resource "azuread_conditional_access_policy" "example" {
     application_enforced_restrictions {
       enabled = true
     }
+
     cloud_app_security {
       enabled                 = true
       cloud_app_security_type = "monitorOnly"
     }
+
     sign_in_frequency {
       enabled = true
       type    = "hours"
@@ -79,13 +85,13 @@ The following arguments are supported:
 
 `conditions` block supports the following:
 
-* `applications` - (Optional) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
-* `client_app_types` - (Optional) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
-* `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
-* `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
+* `applications` - (Required) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
+* `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
+* `locations` - (Required) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
+* `platforms` - (Required) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `sign_in_risk_levels` - (Optional) A list of sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
-* `users` - (Optional) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
+* `users` - (Required) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
 
 ---
 
@@ -119,14 +125,14 @@ The following arguments are supported:
 
 `platforms` block supports the following:
 
-* `excluded_platforms` - (Optional) A list of platforms explicitly excluded from the policy. Possible values are: `android`, `iOS`, `windows`, `windowsPhone`, `macOS`, `all`, `unknownFutureValue`.
-* `included_platforms` - (Required) A list of platforms the policy applies to, unless explicitly excluded. Possible values are: `android`, `iOS`, `windows`, `windowsPhone`, `macOS`, `all`, `unknownFutureValue`.
+* `excluded_platforms` - (Optional) A list of platforms explicitly excluded from the policy. Possible values are: `all`, `android`, `iOS`, `macOS`, `windows`, `windowsPhone` or `unknownFutureValue`.
+* `included_platforms` - (Required) A list of platforms the policy applies to, unless explicitly excluded. Possible values are: `all`, `android`, `iOS`, `macOS`, `windows`, `windowsPhone` or `unknownFutureValue`.
 
 ---
 
 `grant_controls` block supports the following:
 
-* `built_in_controls` - (Required) List of built-in controls required by the policy. Possible values are: `block`, `mfa`, `compliantDevice`, `domainJoinedDevice`, `approvedApplication`, `compliantApplication`, `passwordChange`, `unknownFutureValue`.
+* `built_in_controls` - (Required) List of built-in controls required by the policy. Possible values are: `block`, `mfa`, `approvedApplication`, `compliantApplication`, `compliantDevice`, `domainJoinedDevice`, `passwordChange` or `unknownFutureValue`.
 * `custom_authentication_factors` - (Optional) List of custom controls IDs required by the policy.
 * `operator` - (Required) Defines the relationship of the grant controls. Possible values are: `AND`, `OR`.
 * `terms_of_use` - (Optional) List of terms of use IDs required by the policy.
@@ -139,7 +145,7 @@ The following arguments are supported:
 
 -> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
 
-* `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `mcasConfigured`, `monitorOnly`, `blockDownloads` or `unknownFutureValue`.
+* `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `blockDownloads`, `mcasConfigured`, `monitorOnly` or `unknownFutureValue`.
 * `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified.
 * `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified.
 
