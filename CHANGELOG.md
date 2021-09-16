@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * `data.azuread_service_principal` - support the `features` block [GH-571]
+* `azuread_application` - support the `logo_image` property [GH-574]
 * `azuread_service_principal` - support the `features` block [GH-571]
 
 BUG FIXES:
