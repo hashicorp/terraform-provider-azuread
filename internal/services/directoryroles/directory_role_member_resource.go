@@ -77,8 +77,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagPathF(err, "object_id", "Retrieving directory role with object ID: %q", id.DirectoryRoleId)
 	}
 
-	_, status, err = client.GetMember(ctx, id.DirectoryRoleId, id.MemberId)
-	if err == nil {
+	if _, status, err = client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err == nil {
 		return tf.ImportAsExistsDiag("azuread_directory_role_member", id.String())
 	} else if status != http.StatusNotFound {
 		return tf.ErrorDiagF(err, "Checking for existing membership of member %q for directory role with object ID: %q", id.MemberId, id.DirectoryRoleId)
@@ -140,8 +139,7 @@ func directoryRoleMemberResourceRead(ctx context.Context, d *schema.ResourceData
 		return tf.ErrorDiagPathF(err, "id", "Parsing Directory Role Member ID %q", d.Id())
 	}
 
-	_, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId)
-	if err != nil {
+	if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Member with ID %q was not found in directory role %q - removing from state", id.MemberId, id.DirectoryRoleId)
 			d.SetId("")

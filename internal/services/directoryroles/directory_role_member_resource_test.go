@@ -116,8 +116,7 @@ func (r DirectoryRoleMemberResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("parsing Directory Role Member ID: %v", err)
 	}
 
-	_, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId)
-	if err != nil {
+	if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
 		if status == http.StatusNotFound {
 			return utils.Bool(false), nil
 		}
