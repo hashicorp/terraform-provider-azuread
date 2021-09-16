@@ -10,20 +10,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func IsHTTPSURL(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsURIFunc([]string{"https"}, false, false)(i, path)
+func IsAppUri(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsUriFunc([]string{"http", "https", "api", "ms-appx"}, true, false)(i, path)
 }
 
-func IsHTTPOrHTTPSURL(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsURIFunc([]string{"http", "https"}, false, false)(i, path)
+func IsHttpOrHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsUriFunc([]string{"http", "https"}, false, false)(i, path)
 }
 
-func IsAppURI(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsURIFunc([]string{"http", "https", "api", "ms-appx"}, true, false)(i, path)
+func IsHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
+	return IsUriFunc([]string{"https"}, false, false)(i, path)
 }
 
-func IsLogoutURL(i interface{}, path cty.Path) (ret diag.Diagnostics) {
-	ret = IsURIFunc([]string{"http", "https"}, false, false)(i, path)
+func IsLogoutUrl(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+	ret = IsUriFunc([]string{"http", "https"}, false, false)(i, path)
 	if len(ret) > 0 {
 		return
 	}
@@ -39,24 +39,26 @@ func IsLogoutURL(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 	return
 }
 
-func IsRedirectURI(i interface{}, path cty.Path) (ret diag.Diagnostics) {
-	ret = IsURIFunc([]string{"http", "https", "ms-appx-web"}, false, true)(i, path)
-	if len(ret) > 0 {
+func IsRedirectUriFunc(urnAllowed bool) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+		ret = IsUriFunc([]string{"http", "https", "ms-appx-web"}, urnAllowed, true)(i, path)
+		if len(ret) > 0 {
+			return
+		}
+
+		if len(i.(string)) > 256 {
+			ret = append(ret, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "URI must be 256 characters or less",
+				AttributePath: path,
+			})
+		}
+
 		return
 	}
-
-	if len(i.(string)) > 256 {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "URI must be 256 characters or less",
-			AttributePath: path,
-		})
-	}
-
-	return
 }
 
-func IsURIFunc(validURLSchemes []string, URNAllowed bool, forceTrailingSlash bool) schema.SchemaValidateDiagFunc {
+func IsUriFunc(validURLSchemes []string, urnAllowed bool, forceTrailingSlash bool) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		v, ok := i.(string)
 		if !ok {
@@ -77,7 +79,7 @@ func IsURIFunc(validURLSchemes []string, URNAllowed bool, forceTrailingSlash boo
 			return
 		}
 
-		if URNAllowed {
+		if urnAllowed {
 			parts := strings.Split(v, ":")
 			if len(parts) >= 3 && parts[0] == "urn" {
 				return

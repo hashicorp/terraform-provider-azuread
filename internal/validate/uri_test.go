@@ -39,7 +39,7 @@ func TestIsHTTPSURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsHTTPSURL(tc.Url, cty.Path{})
+			diags := IsHttpsUrl(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
@@ -81,7 +81,7 @@ func TestIsHTTPOrHTTPSURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsHTTPOrHTTPSURL(tc.Url, cty.Path{})
+			diags := IsHttpOrHttpsUrl(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsHTTPOrHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
@@ -139,7 +139,7 @@ func TestIsAppURI(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsAppURI(tc.Url, cty.Path{})
+			diags := IsAppUri(tc.Url, cty.Path{})
 
 			if len(diags) != tc.Errors {
 				t.Fatalf("Expected URLIsAppURI to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)

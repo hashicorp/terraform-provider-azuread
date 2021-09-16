@@ -40,7 +40,7 @@ func invitationResource() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 			},
 
 			"user_email_address": {

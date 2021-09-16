@@ -125,7 +125,7 @@ func servicePrincipalResource() *schema.Resource {
 				Description:      "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 			},
 
 			"notes": {
