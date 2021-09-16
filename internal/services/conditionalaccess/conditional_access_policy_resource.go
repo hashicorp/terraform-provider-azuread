@@ -29,6 +29,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 		UpdateContext: conditionalAccessPolicyResourceUpdate,
 		DeleteContext: conditionalAccessPolicyResourceDelete,
 
+		CustomizeDiff: conditionalAccessPolicyCustomizeDiff,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
@@ -339,9 +341,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 				},
 			},
 			"session_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_enforced_restrictions_enabled": {
@@ -378,6 +381,35 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 		},
 	}
+}
+
+func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/93
+	if old, new := diff.GetChange("session_controls.0.sign_in_frequency"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("session_controls.0.sign_in_frequency")
+	}
+	if old, new := diff.GetChange("session_controls.0.sign_in_frequency_period"); old.(string) != "" && new.(string) == "" {
+		diff.ForceNew("session_controls.0.sign_in_frequency")
+	}
+
+	return nil
+}
+
+func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	suppress := false
+
+	switch {
+	case k == "session_controls.#" && old == "0" && new == "1":
+		sessionControlsRaw := d.Get("session_controls").([]interface{})
+		if len(sessionControlsRaw) == 1 {
+			sessionControls := sessionControlsRaw[0].(map[string]interface{})
+			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && !v.(bool) {
+				suppress = true
+			}
+		}
+	}
+
+	return suppress
 }
 
 func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -776,28 +808,24 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 }
 
 func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgraph.ConditionalAccessSessionControls {
-	// For POST requests, the API doesn't accept empty objects for nested fields here
+	result := msgraph.ConditionalAccessSessionControls{}
+
 	if create && (len(in) == 0 || in[0] == nil) {
-		return nil
+		return &result
 	}
 
-	result := msgraph.ConditionalAccessSessionControls{
-		ApplicationEnforcedRestrictions: &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(false),
-		},
-		CloudAppSecurity: &msgraph.CloudAppSecurityControl{
-			IsEnabled: utils.Bool(false),
-		},
-		SignInFrequency: &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(false),
-		},
-	}
-
-	// API doesn't accept boolean false values for POST requests, we must instead omit the entire object
+	// API doesn't accept boolean false values here in POST requests, it should be omitted instead
+	// When updating, omitting a setting doesn't change it, so we default to false
 	if !create {
-		result.ApplicationEnforcedRestrictions.IsEnabled = utils.Bool(false)
-		result.CloudAppSecurity.IsEnabled = utils.Bool(false)
-		result.SignInFrequency.IsEnabled = utils.Bool(false)
+		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+			IsEnabled: utils.Bool(false),
+		}
+		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
+			IsEnabled: utils.Bool(false),
+		}
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(false),
+		}
 	}
 
 	if len(in) == 0 || in[0] == nil {
@@ -806,17 +834,28 @@ func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgr
 
 	config := in[0].(map[string]interface{})
 
-	result.ApplicationEnforcedRestrictions.IsEnabled = utils.Bool(config["application_enforced_restrictions_enabled"].(bool))
+	result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+		IsEnabled: utils.Bool(config["application_enforced_restrictions_enabled"].(bool)),
+	}
 
 	if cloudAppSecurity := config["cloud_app_security_policy"].(string); cloudAppSecurity != "" {
-		result.CloudAppSecurity.IsEnabled = utils.Bool(true)
-		result.CloudAppSecurity.CloudAppSecurityType = utils.String(cloudAppSecurity)
+		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
+			IsEnabled:            utils.Bool(true),
+			CloudAppSecurityType: utils.String(cloudAppSecurity),
+		}
 	}
 
 	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
-		result.SignInFrequency.IsEnabled = utils.Bool(true)
-		result.SignInFrequency.Type = utils.String(config["sign_in_frequency_period"].(string))
-		result.SignInFrequency.Value = utils.Int32(int32(signInFrequency))
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(true),
+			Type:      utils.String(config["sign_in_frequency_period"].(string)),
+			Value:     utils.Int32(int32(signInFrequency)),
+		}
+	}
+
+	// API doesn't accept all disabled settings on POST, instead should be an empty object
+	if create && !*result.ApplicationEnforcedRestrictions.IsEnabled && !*result.CloudAppSecurity.IsEnabled && !*result.SignInFrequency.IsEnabled {
+		return &msgraph.ConditionalAccessSessionControls{}
 	}
 
 	return &result

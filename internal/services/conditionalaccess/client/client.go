@@ -17,6 +17,7 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	policiesClient := msgraph.NewConditionalAccessPolicyClient(o.TenantID)
 	o.ConfigureClient(&policiesClient.BaseClient)
+	policiesClient.BaseClient.ApiVersion = msgraph.Version10
 
 	return &Client{
 		NamedLocationsClient: namedLocationsClient,
