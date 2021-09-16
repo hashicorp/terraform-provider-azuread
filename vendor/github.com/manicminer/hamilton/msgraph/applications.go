@@ -161,9 +161,22 @@ func (c *ApplicationsClient) Update(ctx context.Context, application Application
 		return status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 
+	checkApplicationConsistency := func(resp *http.Response, o *odata.OData) bool {
+		if resp == nil {
+			return false
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return true
+		}
+		if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			return o.Error.Match(odata.ErrorCannotDeleteOrUpdateEnabledEntitlement)
+		}
+		return false
+	}
+
 	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
 		Body:                   body,
-		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ConsistencyFailureFunc: checkApplicationConsistency,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s", *application.ID),
@@ -428,7 +441,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 	for _, owner := range *application.Owners {
 		// don't fail if an owner already exists
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
@@ -478,7 +491,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 
 		// despite the above check, sometimes owners are just gone
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false
@@ -579,6 +592,27 @@ func (c *ApplicationsClient) DeleteExtension(ctx context.Context, applicationId,
 	})
 	if err != nil {
 		return status, fmt.Errorf("ApplicationsClient.BaseClient.Delete(): %v", err)
+	}
+
+	return status, nil
+}
+
+// UploadLogo uploads the application logo which should be a gif, jpeg or png image
+func (c *ApplicationsClient) UploadLogo(ctx context.Context, applicationId, contentType string, logoData []byte) (int, error) {
+	var status int
+
+	_, status, _, err := c.BaseClient.Put(ctx, PutHttpRequestInput{
+		Body:                   logoData,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ContentType:            contentType,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/applications/%s/logo", applicationId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Put(): %v", err)
 	}
 
 	return status, nil

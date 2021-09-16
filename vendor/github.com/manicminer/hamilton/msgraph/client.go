@@ -44,6 +44,7 @@ type ValidStatusFunc func(*http.Response, *odata.OData) bool
 // HttpRequestInput is any type that can validate the response to an HTTP request.
 type HttpRequestInput interface {
 	GetConsistencyFailureFunc() ConsistencyFailureFunc
+	GetContentType() string
 	GetValidStatusCodes() []int
 	GetValidStatusFunc() ValidStatusFunc
 }
@@ -140,7 +141,7 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 	}
 
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req.Header.Add("Content-Type", input.GetContentType())
 	//req.Header.Add("ConsistencyLevel", "eventual")
 
 	if c.UserAgent != "" {
@@ -265,6 +266,11 @@ func (i DeleteHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFu
 	return i.ConsistencyFailureFunc
 }
 
+// GetContentType returns the content type for the request, currently only application/json is supported
+func (i DeleteHttpRequestInput) GetContentType() string {
+	return "application/json; charset=utf-8"
+}
+
 // GetValidStatusCodes returns a []int of status codes considered valid for a DELETE request.
 func (i DeleteHttpRequestInput) GetValidStatusCodes() []int {
 	return i.ValidStatusCodes
@@ -306,6 +312,11 @@ type GetHttpRequestInput struct {
 // GetConsistencyFailureFunc returns a function used to evaluate whether a failed request is due to eventual consistency and should be retried.
 func (i GetHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFunc {
 	return i.ConsistencyFailureFunc
+}
+
+// GetContentType returns the content type for the request, currently only application/json is supported
+func (i GetHttpRequestInput) GetContentType() string {
+	return "application/json; charset=utf-8"
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a GET request.
@@ -421,6 +432,11 @@ func (i PatchHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFun
 	return i.ConsistencyFailureFunc
 }
 
+// GetContentType returns the content type for the request, currently only application/json is supported
+func (i PatchHttpRequestInput) GetContentType() string {
+	return "application/json; charset=utf-8"
+}
+
 // GetValidStatusCodes returns a []int of status codes considered valid for a PATCH request.
 func (i PatchHttpRequestInput) GetValidStatusCodes() []int {
 	return i.ValidStatusCodes
@@ -463,6 +479,11 @@ func (i PostHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFunc
 	return i.ConsistencyFailureFunc
 }
 
+// GetContentType returns the content type for the request, currently only application/json is supported
+func (i PostHttpRequestInput) GetContentType() string {
+	return "application/json; charset=utf-8"
+}
+
 // GetValidStatusCodes returns a []int of status codes considered valid for a POST request.
 func (i PostHttpRequestInput) GetValidStatusCodes() []int {
 	return i.ValidStatusCodes
@@ -494,6 +515,7 @@ func (c Client) Post(ctx context.Context, input PostHttpRequestInput) (*http.Res
 // PutHttpRequestInput configures a PUT request.
 type PutHttpRequestInput struct {
 	ConsistencyFailureFunc ConsistencyFailureFunc
+	ContentType            string
 	Body                   []byte
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
@@ -503,6 +525,14 @@ type PutHttpRequestInput struct {
 // GetConsistencyFailureFunc returns a function used to evaluate whether a failed request is due to eventual consistency and should be retried.
 func (i PutHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFunc {
 	return i.ConsistencyFailureFunc
+}
+
+// GetContentType returns the content type for the request, defaults to application/json
+func (i PutHttpRequestInput) GetContentType() string {
+	if i.ContentType != "" {
+		return i.ContentType
+	}
+	return "application/json; charset=utf-8"
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a PUT request.

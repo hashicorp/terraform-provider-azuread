@@ -64,7 +64,10 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 	}
 
 	appNotReplicated := func(resp *http.Response, o *odata.OData) bool {
-		return o != nil && o.Error != nil && o.Error.Match(odata.ErrorServicePrincipalInvalidAppId)
+		if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			return o.Error.Match(odata.ErrorServicePrincipalInvalidAppId)
+		}
+		return false
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
@@ -260,17 +263,13 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 	for _, owner := range *servicePrincipal.Owners {
 		// don't fail if an owner already exists
 		checkOwnerAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
 			}
 			return false
 		}
 
-		body, err := json.Marshal(struct {
-			Owner odata.Id `json:"@odata.id"`
-		}{
-			Owner: *owner.ODataId,
-		})
+		body, err := json.Marshal(DirectoryObject{ODataId: owner.ODataId})
 		if err != nil {
 			return status, fmt.Errorf("json.Marshal(): %v", err)
 		}
@@ -314,7 +313,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 
 		// despite the above check, sometimes owners are just gone
 		checkOwnerGone := func(resp *http.Response, o *odata.OData) bool {
-			if resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
 				return o.Error.Match(odata.ErrorRemovedObjectReferencesDoNotExist)
 			}
 			return false
