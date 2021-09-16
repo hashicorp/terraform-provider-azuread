@@ -26,6 +26,7 @@ data "azuread_client_config" "current" {}
 resource "azuread_application" "example" {
   display_name     = "example"
   identifier_uris  = ["api://example-app"]
+  logo_image       = filebase64("/path/to/logo.png")
   owners           = [data.azuread_client_config.current.object_id]
   sign_in_audience = "AzureADMultipleOrgs"
 
@@ -163,6 +164,7 @@ The following arguments are supported:
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
 * `marketing_url` - (Optional) URL of the application's marketing page.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
@@ -299,7 +301,7 @@ In addition to all arguments above, the following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `application_id` - The Application ID (also called Client ID).
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
-* `logo_url` - CDN URL to the application's logo.
+* `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
 * `publisher_domain` - The verified publisher domain for the application.

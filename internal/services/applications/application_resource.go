@@ -295,6 +295,13 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"logo_image": {
+				Description:  "Base64 encoded logo image in gif, png or jpeg format",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsBase64,
+			},
+
 			"marketing_url": {
 				Description: "URL of the application's marketing page",
 				Type:        schema.TypeString,
@@ -600,6 +607,11 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		diff.SetNewComputed("oauth2_permission_scope_ids")
 	}
 
+	// If the logo image changes, the CDN URL will change
+	if diff.HasChange("logo_image") {
+		diff.SetNewComputed("logo_url")
+	}
+
 	// The following validation is taken from https://docs.microsoft.com/en-gb/azure/active-directory/develop/supported-accounts-validation
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
@@ -838,6 +850,16 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	var imageContentType string
+	var imageData []byte
+	if v, ok := d.GetOk("logo_image"); ok && v != "" {
+		var err error
+		imageContentType, imageData, err = applicationParseLogoImage(v.(string))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "image", "Could not decode image data")
+		}
+	}
+
 	if templateId != "" {
 		// Instantiate application from template gallery and return via the update function
 		properties := msgraph.ApplicationTemplate{
@@ -958,6 +980,14 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	// Upload the application image
+	if imageContentType != "" && len(imageData) > 0 {
+		_, err := client.UploadLogo(ctx, d.Id(), imageContentType, imageData)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", d.Id())
+		}
+	}
+
 	return applicationResourceRead(ctx, d, meta)
 }
 
@@ -983,6 +1013,16 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 					return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID, displayName)
 				}
 			}
+		}
+	}
+
+	var imageContentType string
+	var imageData []byte
+	if v, ok := d.GetOk("logo_image"); ok && v != "" && d.HasChange("logo_image") {
+		var err error
+		imageContentType, imageData, err = applicationParseLogoImage(v.(string))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "image", "Could not decode image data")
 		}
 	}
 
@@ -1061,6 +1101,14 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	// Upload the application image
+	if imageContentType != "" && len(imageData) > 0 {
+		_, err := client.UploadLogo(ctx, d.Id(), imageContentType, imageData)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", d.Id())
+		}
+	}
+
 	return applicationResourceRead(ctx, d, meta)
 }
 
@@ -1110,6 +1158,12 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		tf.Set(d, "support_url", app.Info.SupportUrl)
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
 	}
+
+	logoImage := ""
+	if v := d.Get("logo_image").(string); v != "" {
+		logoImage = v
+	}
+	tf.Set(d, "logo_image", logoImage)
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
