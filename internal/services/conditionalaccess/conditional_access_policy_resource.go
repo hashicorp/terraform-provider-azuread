@@ -29,10 +29,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 		UpdateContext: conditionalAccessPolicyResourceUpdate,
 		DeleteContext: conditionalAccessPolicyResourceDelete,
 
+		CustomizeDiff: conditionalAccessPolicyCustomizeDiff,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -68,7 +70,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"applications": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -80,6 +82,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_applications": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -88,6 +91,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_user_actions": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -99,9 +103,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"users": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -114,6 +119,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_users": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -122,6 +128,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_groups": {
 										Type:         schema.TypeList,
 										Optional:     true,
@@ -131,6 +138,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_groups": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -139,6 +147,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"included_roles": {
 										Type:         schema.TypeList,
 										Optional:     true,
@@ -148,6 +157,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_roles": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -159,9 +169,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"client_app_types": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -174,9 +185,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"locations": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -188,6 +200,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											ValidateDiagFunc: validate.NoEmptyStrings,
 										},
 									},
+
 									"excluded_locations": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -199,9 +212,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"platforms": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -221,6 +235,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 											}, false),
 										},
 									},
+
 									"excluded_platforms": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -240,6 +255,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								},
 							},
 						},
+
 						"sign_in_risk_levels": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -255,6 +271,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"user_risk_levels": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -302,6 +319,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								}, false),
 							},
 						},
+
 						"custom_authentication_factors": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -310,6 +328,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								ValidateDiagFunc: validate.NoEmptyStrings,
 							},
 						},
+
 						"terms_of_use": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -322,15 +341,17 @@ func conditionalAccessPolicyResource() *schema.Resource {
 				},
 			},
 			"session_controls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_enforced_restrictions_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+
 						"cloud_app_security_policy": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -341,12 +362,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 								"unknownFutureValue",
 							}, false),
 						},
+
 						"sign_in_frequency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
 							ValidateFunc: validation.IntAtLeast(0),
 						},
+
 						"sign_in_frequency_period": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -360,6 +383,35 @@ func conditionalAccessPolicyResource() *schema.Resource {
 	}
 }
 
+func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/93
+	if old, new := diff.GetChange("session_controls.0.sign_in_frequency"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("session_controls.0.sign_in_frequency")
+	}
+	if old, new := diff.GetChange("session_controls.0.sign_in_frequency_period"); old.(string) != "" && new.(string) == "" {
+		diff.ForceNew("session_controls.0.sign_in_frequency")
+	}
+
+	return nil
+}
+
+func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	suppress := false
+
+	switch {
+	case k == "session_controls.#" && old == "0" && new == "1":
+		sessionControlsRaw := d.Get("session_controls").([]interface{})
+		if len(sessionControlsRaw) == 1 {
+			sessionControls := sessionControlsRaw[0].(map[string]interface{})
+			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && !v.(bool) {
+				suppress = true
+			}
+		}
+	}
+
+	return suppress
+}
+
 func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
@@ -368,7 +420,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), true),
 	}
 
 	policy, _, err := client.Create(ctx, properties)
@@ -394,11 +446,45 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), false),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
+	}
+
+	// Poll for 5 retrievals of the updated policy. We don't check every property as this is prone to getting stuck
+	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
+	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
+	timeout, _ := ctx.Deadline()
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{"Pending"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			client.BaseClient.DisableRetries = true
+			policy, _, err := client.Get(ctx, d.Id(), odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if policy == nil {
+				return "stub", "Pending", nil
+			}
+			if policy.DisplayName == nil || *policy.DisplayName != d.Get("display_name").(string) {
+				return "stub", "Pending", nil
+			}
+			if policy.State == nil || *policy.State != d.Get("state").(string) {
+				return "stub", "Pending", nil
+			}
+
+			return "stub", "Done", nil
+		},
+	}
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return tf.ErrorDiagF(err, "waiting for update of conditional access policy with ID %q", d.Id())
 	}
 
 	return nil
@@ -568,12 +654,29 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		return []interface{}{}
 	}
 
+	applicationEnforceRestrictions := false
+	if in.ApplicationEnforcedRestrictions != nil {
+		applicationEnforceRestrictions = *in.ApplicationEnforcedRestrictions.IsEnabled
+	}
+
+	cloudAppSecurity := ""
+	if in.CloudAppSecurity != nil && in.CloudAppSecurity.CloudAppSecurityType != nil {
+		cloudAppSecurity = *in.CloudAppSecurity.CloudAppSecurityType
+	}
+
+	signInFrequency := 0
+	signInFrequencyPeriod := ""
+	if in.SignInFrequency != nil && in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
+		signInFrequency = int(*in.SignInFrequency.Value)
+		signInFrequencyPeriod = *in.SignInFrequency.Type
+	}
+
 	return []interface{}{
 		map[string]interface{}{
-			"application_enforced_restrictions_enabled": in.ApplicationEnforcedRestrictions.IsEnabled,
-			"cloud_app_security_policy":                 in.CloudAppSecurity.CloudAppSecurityType,
-			"sign_in_frequency":                         in.SignInFrequency.Value,
-			"sign_in_frequency_period":                  in.SignInFrequency.Type,
+			"application_enforced_restrictions_enabled": applicationEnforceRestrictions,
+			"cloud_app_security_policy":                 cloudAppSecurity,
+			"sign_in_frequency":                         signInFrequency,
+			"sign_in_frequency_period":                  signInFrequencyPeriod,
 		},
 	}
 }
@@ -650,11 +753,11 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 }
 
 func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAccessPlatforms {
+	result := msgraph.ConditionalAccessPlatforms{}
 	if len(in) == 0 || in[0] == nil {
-		return nil
+		return &result
 	}
 
-	result := msgraph.ConditionalAccessPlatforms{}
 	config := in[0].(map[string]interface{})
 
 	includePlatforms := config["included_platforms"].([]interface{})
@@ -704,30 +807,55 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	return &result
 }
 
-func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
+func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgraph.ConditionalAccessSessionControls {
+	result := msgraph.ConditionalAccessSessionControls{}
+
+	if create && (len(in) == 0 || in[0] == nil) {
+		return &result
+	}
+
+	// API doesn't accept boolean false values here in POST requests, it should be omitted instead
+	// When updating, omitting a setting doesn't change it, so we default to false
+	if !create {
+		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+			IsEnabled: utils.Bool(false),
+		}
+		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
+			IsEnabled: utils.Bool(false),
+		}
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(false),
+		}
+	}
+
 	if len(in) == 0 || in[0] == nil {
-		return nil
+		return &result
 	}
 
 	config := in[0].(map[string]interface{})
 
-	applicationEnforcedRestrictions := config["application_enforced_restrictions_enabled"].(bool)
-	cloudAppSecurity := config["cloud_app_security_policy"].(string)
-	signInFrequency := config["sign_in_frequency"].(int)
+	result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
+		IsEnabled: utils.Bool(config["application_enforced_restrictions_enabled"].(bool)),
+	}
 
-	result := msgraph.ConditionalAccessSessionControls{
-		ApplicationEnforcedRestrictions: &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(applicationEnforcedRestrictions),
-		},
-		CloudAppSecurity: &msgraph.CloudAppSecurityControl{
-			IsEnabled:            utils.Bool(cloudAppSecurity != ""),
+	if cloudAppSecurity := config["cloud_app_security_policy"].(string); cloudAppSecurity != "" {
+		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
+			IsEnabled:            utils.Bool(true),
 			CloudAppSecurityType: utils.String(cloudAppSecurity),
-		},
-		SignInFrequency: &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(signInFrequency > 0),
+		}
+	}
+
+	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+			IsEnabled: utils.Bool(true),
 			Type:      utils.String(config["sign_in_frequency_period"].(string)),
 			Value:     utils.Int32(int32(signInFrequency)),
-		},
+		}
+	}
+
+	// API doesn't accept all disabled settings on POST, instead should be an empty object
+	if create && !*result.ApplicationEnforcedRestrictions.IsEnabled && !*result.CloudAppSecurity.IsEnabled && !*result.SignInFrequency.IsEnabled {
+		return &msgraph.ConditionalAccessSessionControls{}
 	}
 
 	return &result
