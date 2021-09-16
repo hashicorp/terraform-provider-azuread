@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 * `data.azuread_service_principal` - support the `features` block [GH-571]
 * `azuread_application` - support the `logo_image` property [GH-574]
+* `azuread_application` - allow URNs to be specified for web redirect URIs [GH-577]
 * `azuread_service_principal` - support the `features` block [GH-571]
 
 BUG FIXES:
