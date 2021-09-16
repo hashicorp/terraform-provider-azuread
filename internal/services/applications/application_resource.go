@@ -291,7 +291,7 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppURI,
+					ValidateDiagFunc: validate.IsAppUri,
 				},
 			},
 
@@ -370,7 +370,7 @@ func applicationResource() *schema.Resource {
 							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectURI,
+								ValidateDiagFunc: validate.IsRedirectUriFunc(false),
 							},
 						},
 					},
@@ -447,7 +447,7 @@ func applicationResource() *schema.Resource {
 							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectURI,
+								ValidateDiagFunc: validate.IsRedirectUriFunc(false),
 							},
 						},
 					},
@@ -486,14 +486,14 @@ func applicationResource() *schema.Resource {
 							Description:      "Home page or landing page of the application",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
 							Description:      "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validate.IsLogoutURL,
+							ValidateDiagFunc: validate.IsLogoutUrl,
 						},
 
 						"redirect_uris": {
@@ -503,7 +503,7 @@ func applicationResource() *schema.Resource {
 							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectURI,
+								ValidateDiagFunc: validate.IsRedirectUriFunc(true),
 							},
 						},
 
@@ -664,7 +664,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
-			if diags := validate.IsURIFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
+			if diags := validate.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
 			}

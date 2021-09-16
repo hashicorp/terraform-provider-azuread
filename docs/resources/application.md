@@ -254,7 +254,7 @@ The following arguments are supported:
 
 `public_client` block supports the following:
 
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `https` or `ms-appx-web` URL.
 
 ---
 
@@ -276,7 +276,7 @@ The following arguments are supported:
 
 `single_page_application` block supports the following:
 
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `https` URL.
 
 ---
 
@@ -285,7 +285,7 @@ The following arguments are supported:
 * `homepage_url` - (Optional) Home page or landing page of the application.
 * `implicit_grant` - (Optional) An `implicit_grant` block as documented above.
 * `logout_url` - (Optional) The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols.
-* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent.
+* `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `http` URL or a URN.
 
 ---
 

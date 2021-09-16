@@ -194,7 +194,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 				ConflictsWith:    []string{"web.0.homepage_url"},
 				Deprecated:       "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
 			},
@@ -205,14 +205,14 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppURI,
+					ValidateDiagFunc: validate.IsAppUri,
 				},
 			},
 
 			"logout_url": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 				Computed:         true,
 				ConflictsWith:    []string{"web.0.logout_url"},
 				Deprecated:       "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
@@ -488,14 +488,14 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"homepage"},
-							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"logout_url"},
-							ValidateDiagFunc: validate.IsHTTPOrHTTPSURL,
+							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 						},
 
 						"redirect_uris": {

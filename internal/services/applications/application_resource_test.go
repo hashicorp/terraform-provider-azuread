@@ -674,6 +674,7 @@ resource "azuread_application" "test" {
     redirect_uris = [
       "https://app.hashitown-%[1]d.com/",
       "https://classic.hashitown-%[1]d.com/",
+      "urn:ietf:wg:oauth:2.0:oob",
     ]
 
     implicit_grant {
