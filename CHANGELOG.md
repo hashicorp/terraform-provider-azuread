@@ -1,4 +1,4 @@
-## 2.2.1 (September 10, 2021)
+## 2.3.0 (Unreleased)
 
 FEATURES:
 
@@ -10,6 +10,12 @@ ENHANCEMENTS:
 * `data.azuread_service_principal` - support the `features` block [GH-571]
 * `azuread_application` - support the `logo_image` property [GH-574]
 * `azuread_service_principal` - support the `features` block [GH-571]
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - resolve a number of bugs related to updating an existing conditional access policy [GH-569]
+
+## 2.2.1 (September 10, 2021)
 
 BUG FIXES:
 
