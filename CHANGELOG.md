@@ -1,20 +1,20 @@
-## 2.3.0 (Unreleased)
+## 2.3.0 (September 16, 2021)
 
 FEATURES:
 
-* **New Resource:** `azuread_directory_role` [GH-573]
-* **New Resource:** `azuread_directory_role_member` [GH-573]
+* **New Resource:** `azuread_directory_role` ([#573](https://github.com/terraform-providers/terraform-provider-azuread/issues/573))
+* **New Resource:** `azuread_directory_role_member` ([#573](https://github.com/terraform-providers/terraform-provider-azuread/issues/573))
 
 ENHANCEMENTS:
 
-* `data.azuread_service_principal` - support the `features` block [GH-571]
-* `azuread_application` - support the `logo_image` property [GH-574]
-* `azuread_application` - allow URNs to be specified for web redirect URIs [GH-577]
-* `azuread_service_principal` - support the `features` block [GH-571]
+* `data.azuread_service_principal` - support the `features` block ([#571](https://github.com/terraform-providers/terraform-provider-azuread/issues/571))
+* `azuread_application` - support the `logo_image` property ([#574](https://github.com/terraform-providers/terraform-provider-azuread/issues/574))
+* `azuread_application` - allow URNs to be specified for web redirect URIs ([#577](https://github.com/terraform-providers/terraform-provider-azuread/issues/577))
+* `azuread_service_principal` - support the `features` block ([#571](https://github.com/terraform-providers/terraform-provider-azuread/issues/571))
 
 BUG FIXES:
 
-* `azuread_conditional_access_policy` - resolve a number of bugs related to updating an existing conditional access policy [GH-569]
+* `azuread_conditional_access_policy` - resolve a number of bugs related to updating an existing conditional access policy ([#569](https://github.com/terraform-providers/terraform-provider-azuread/issues/569))
 
 ## 2.2.1 (September 10, 2021)
 
