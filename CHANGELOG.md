@@ -1,5 +1,10 @@
 ## 2.2.1 (September 10, 2021)
 
+FEATURES:
+
+* **New Resource:** `azuread_directory_role` [GH-573]
+* **New Resource:** `azuread_directory_role_member` [GH-573]
+
 ENHANCEMENTS:
 
 * `data.azuread_service_principal` - support the `features` block [GH-571]
