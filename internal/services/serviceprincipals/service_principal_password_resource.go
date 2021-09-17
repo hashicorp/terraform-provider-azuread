@@ -53,7 +53,7 @@ func servicePrincipalPasswordResource() *schema.Resource {
 				ValidateDiagFunc: validate.UUID,
 			},
 
-			"keepers": {
+			"rotate_when_changed": {
 				Description: "Arbitrary map of values that, when changed, will trigger rotation of the password",
 				Type:        schema.TypeMap,
 				Optional:    true,
