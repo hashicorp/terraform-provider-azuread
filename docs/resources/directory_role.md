@@ -8,6 +8,8 @@ Manages a Directory Role within Azure Active Directory. Directory Roles are also
 
 Directory Roles are built-in to Azure Active Directory and are immutable. However, by default they are not activated in a tenant (except for the Global Administrator role). This resource ensures a directory role is activated from its associated role template, and exports the object ID of the role, so that role assignments can be made for it.
 
+Once activated, directory roles cannot be deactivated and so this resource does not perform any actions on destroy.
+
 ## API Permissions
 
 The following API permissions are required in order to use this resource.
