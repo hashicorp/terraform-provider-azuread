@@ -5,7 +5,7 @@ FEATURES:
 * **New Resource:** `azuread_directory_role` ([#573](https://github.com/terraform-providers/terraform-provider-azuread/issues/573))
 * **New Resource:** `azuread_directory_role_member` ([#573](https://github.com/terraform-providers/terraform-provider-azuread/issues/573))
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `data.azuread_service_principal` - support the `features` block ([#571](https://github.com/terraform-providers/terraform-provider-azuread/issues/571))
 * `azuread_application` - support the `logo_image` property ([#574](https://github.com/terraform-providers/terraform-provider-azuread/issues/574))
@@ -31,7 +31,7 @@ FEATURES:
 * **New Resource:** `azuread_conditional_access_policy` ([#466](https://github.com/terraform-providers/terraform-provider-azuread/issues/466))
 * **New Resource:** `azuread_named_location` ([#441](https://github.com/terraform-providers/terraform-provider-azuread/issues/441))
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `azuread_application` - support for the `template_id` property for creating applications (and service principals) from a template ([#554](https://github.com/terraform-providers/terraform-provider-azuread/issues/554))
 * `azuread_service_principal` - support the `saml_single_sign_on` block containing the `relay_state` property ([#557](https://github.com/terraform-providers/terraform-provider-azuread/issues/557))
