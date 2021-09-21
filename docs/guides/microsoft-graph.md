@@ -289,6 +289,18 @@ Accordingly, in version 2.0 of the provider the following fields have changed.
 
 The `display_name` property is now matched case-insensitively which mirrors the behaviour of Azure Active Directory.
 
+The `group_membership_claims` property was previously a single string value but has been changed to a list of strings. In some cases this may cause the following error to appear when running `terraform plan` or `terraform refresh` after upgrading:
+
+```shell-session
+Error: .group_membership_claims: missing expected [
+```
+
+If you encounter this error, you will need to perform *one* of the following workarounds:
+
+- Run `terraform state rm data.azuread_application.example` to remove the data source(s) from your state file.
+- Comment out the data source(s) in your configuration, then upgrade the provider version, run `terraform refresh`, and lastly uncomment the data source(s).
+- Manually edit your state file to change the attribute `"group_membership_claims": ""` to `"group_membership_claims": []` (not recommended unless you are confident and the other two options are infeasible).
+
 ### Resource: `azuread_application`
 
 The `app_role` block is no longer Computed, omitting this block will cause Terraform to remove any app roles published by an application.
@@ -296,6 +308,20 @@ The `app_role` block is no longer Computed, omitting this block will cause Terra
 The `value` field in the `app_role` block is no longer Computed, omitting this field will cause Terraform to clear this field for an app role.
 
 The `fallback_public_client_enabled` field is no longer Computed, omitting this field will cause Terraform to default this value to `false`.
+
+The `group_membership_claims` property was previously a single string value but has been changed to a list of strings. If this property is present in your configuration, you will need to update it. For example:
+
+*From:*
+```terraform
+group_membership_claims = "All"
+```
+
+*To:*
+```terraform
+group_membership_claims = ["All"]
+```
+
+Note the square brackets to denote a list for the value. This change means that you can now specify multiple claims for this property.
 
 The `identifier_uris` field was previously a List type field and is now a Set type field. This is due to API ordering and means you can no longer reference this field and index it sequentially without first converting it to a list. Additional, this field is no longer Computed, so omitting this field will cause Terraform to remove any identifier URIs configured for an application.
 
