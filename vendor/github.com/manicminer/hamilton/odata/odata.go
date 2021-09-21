@@ -86,7 +86,7 @@ type OData struct {
 	Context      *string `json:"@odata.context"`
 	MetadataEtag *string `json:"@odata.metadataEtag"`
 	Type         *Type   `json:"@odata.type"`
-	Count        *string `json:"@odata.count"`
+	Count        *int    `json:"@odata.count"`
 	NextLink     *string `json:"@odata.nextLink"`
 	Delta        *string `json:"@odata.delta"`
 	DeltaLink    *string `json:"@odata.deltaLink"`

@@ -3,9 +3,12 @@ package msgraph
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/manicminer/hamilton/odata"
 )
 
 type appRoleAssignmentsResourceType string
@@ -136,4 +139,109 @@ func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrin
 	}
 
 	return &appRoleAssignment, status, nil
+}
+
+// AppRoleAssignedToClient performs operations on AppRoleAssignments.
+type AppRoleAssignedToClient struct {
+	BaseClient Client
+}
+
+// NewAppRoleAssignedToClient returns a new AppRoleAssignedToClient
+func NewAppRoleAssignedToClient(tenantId string) *AppRoleAssignedToClient {
+	return &AppRoleAssignedToClient{
+		BaseClient: NewClient(Version10, tenantId),
+	}
+}
+
+// List returns a list of app role assignments granted for a service principal
+func (c *AppRoleAssignedToClient) List(ctx context.Context, id string, query odata.Query) (*[]AppRoleAssignment, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", id),
+			HasTenantId: true,
+			Params:      query.Values(),
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("AppRoleAssignedToClient.BaseClient.Get(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var data struct {
+		AppRoleAssignments []AppRoleAssignment `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &data.AppRoleAssignments, status, nil
+}
+
+// Remove removes an app role assignment for a service principal
+func (c *AppRoleAssignedToClient) Remove(ctx context.Context, resourceId, appRoleAssignmentId string) (int, error) {
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("AppRoleAssignedToClient.BaseClient.Delete(): %v", err)
+	}
+
+	return status, nil
+}
+
+// Assign assigns an app role for a service principal to the specified user/group/service principal object
+func (c *AppRoleAssignedToClient) Assign(ctx context.Context, appRoleAssignment AppRoleAssignment) (*AppRoleAssignment, int, error) {
+	var status int
+
+	if appRoleAssignment.ResourceId == nil {
+		return nil, status, errors.New("AppRoleAssignedToClient.Assign(): ResourceId was nil for appRoleAssignment")
+	}
+	if appRoleAssignment.AppRoleId == nil {
+		return nil, status, errors.New("AppRoleAssignedToClient.Assign(): AppRoleId was nil for appRoleAssignment")
+	}
+	if appRoleAssignment.PrincipalId == nil {
+		return nil, status, errors.New("AppRoleAssignedToClient.Assign(): PrincipalId was nil for appRoleAssignment")
+	}
+
+	body, err := json.Marshal(appRoleAssignment)
+	if err != nil {
+		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", *appRoleAssignment.ResourceId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("AppRoleAssignedToClient.BaseClient.Post(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var newAppRoleAssignment AppRoleAssignment
+	if err := json.Unmarshal(respBody, &newAppRoleAssignment); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &newAppRoleAssignment, status, nil
 }
