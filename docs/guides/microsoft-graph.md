@@ -58,7 +58,9 @@ Existing authentication methods will continue to work unchanged, whether you aut
 
 However, you may need to assign new API permissions depending on your configuration and authentication scenario.
 
-For users connecting to national clouds (e.g. germany, china and usgovernment), these are all supported using the existing provider configuration property `environment`, or the environment variable `ARM_ENVIRONMENT`. The "usgovernment" environment has been split into two environments "usgovernmentl4" and "usgovernmentl5" - see [this post](https://developer.microsoft.com/en-us/office/blogs/new-microsoft-graph-endpoints-in-us-government-cloud/) for more information. Specifying the "usgovernment" environment will use the "usgovernmentl4" cloud.
+The default Azure public cloud, which was previously specified as `public`, has been renamed to `global`. Existing environment names will continue to work in version 2.0.
+
+For users connecting to national clouds (e.g. germany, china and usgovernment), these are all supported using the existing provider configuration property `environment`, or the environment variable `ARM_ENVIRONMENT`. The `usgovernment` environment has been split into two environments `usgovernmentl4` and `usgovernmentl5` - see [this post](https://developer.microsoft.com/en-us/office/blogs/new-microsoft-graph-endpoints-in-us-government-cloud/) for more information. Specifying the `usgovernment` environment will use the `usgovernmentl4` cloud.
 
 ### Additional option for Client Certificate authentication
 
