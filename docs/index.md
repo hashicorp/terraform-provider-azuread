@@ -90,7 +90,7 @@ If you have configuration questions, or general questions about using the provid
 The following arguments are supported:
 
 * `client_id` - (Optional) The Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID` environment variable.
-* `environment` - (Optional) The Cloud Environment which be used. Possible values are `global`, `germany`, `china`, `usgovernmentl4` and `usgovernmentl5`. Defaults to `global`. This can also be sourced from the `ARM_ENVIRONMENT` environment variable.
+* `environment` - (Optional) The Cloud Environment which be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), `germany` (also `german`), and `china`. Defaults to `global`. This can also be sourced from the `ARM_ENVIRONMENT` environment variable.
 * `tenant_id` - (Optional) The Tenant ID which should be used. This can also be sourced from the `ARM_TENANT_ID` environment variable.
 
 ---
