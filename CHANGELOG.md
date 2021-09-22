@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `axuread_app_role_assignment` [GH-584]
 
+ENHANCEMENTS:
+
+* `azuread_application_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) [GH-572]
+* `azuread_service_principal_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) [GH-572]
+
 ## 2.3.0 (September 16, 2021)
 
 FEATURES:
