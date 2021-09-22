@@ -90,7 +90,7 @@ func applicationPasswordResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			"keepers": {
+			"rotate_when_changed": {
 				Description: "Arbitrary map of values that, when changed, will trigger rotation of the password",
 				Type:        schema.TypeMap,
 				Optional:    true,

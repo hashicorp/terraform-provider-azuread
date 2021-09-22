@@ -49,7 +49,7 @@ resource "time_rotating" "example" {
 
 resource "azuread_service_principal_password" "example" {
   service_principal_id = azuread_service_principal.example.object_id
-  keepers = {
+  rotate_when_changed = {
     rotation = time_rotating.example.id
   }
 }
@@ -60,6 +60,7 @@ resource "azuread_service_principal_password" "example" {
 
 The following arguments are supported:
 
+* `rotate_when_changed` - (Optional) A map of arbitrary key/value pairs that will force recreation of the password when they change, enabling password rotation based on external conditions such as a rotating timestamp. Changing this forces a new resource to be created.
 * `service_principal_id` - (Required) The object ID of the service principal for which this password should be created. Changing this field forces a new resource to be created.
 
 ## Attributes Reference
