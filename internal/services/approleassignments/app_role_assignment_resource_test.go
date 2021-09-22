@@ -99,7 +99,7 @@ func (r AppRoleAssignmentResource) Exists(ctx context.Context, clients *clients.
 	}
 
 	if appRoleAssignments == nil {
-		return nil, fmt.Errorf("failed to retrieve App ROle Assignments for Resource with ID %q: appRoleAssignments was nil", id.ResourceId)
+		return nil, fmt.Errorf("failed to retrieve App Role Assignments for Resource with ID %q: appRoleAssignments was nil", id.ResourceId)
 	}
 
 	for _, assignment := range *appRoleAssignments {

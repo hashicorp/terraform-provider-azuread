@@ -90,8 +90,7 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData
 	appRoleId := d.Get("app_role_id").(string)
 	principalId := d.Get("principal_object_id").(string)
 	resourceId := d.Get("resource_object_id").(string)
-	_, status, err := servicePrincipalsClient.Get(ctx, resourceId, odata.Query{})
-	if err != nil {
+	if _, status, err := servicePrincipalsClient.Get(ctx, resourceId, odata.Query{}); err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(err, "principal_object_id", "Service principal not found for resource (Object ID: %q)", resourceId)
 		}
@@ -175,8 +174,7 @@ func appRoleAssignmentResourceDelete(ctx context.Context, d *schema.ResourceData
 		return tf.ErrorDiagPathF(err, "id", "Parsing app role assignment with ID %q", d.Id())
 	}
 
-	status, err := client.Remove(ctx, id.ResourceId, id.AssignmentId)
-	if err != nil {
+	if status, err := client.Remove(ctx, id.ResourceId, id.AssignmentId); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting app role assignment for resource %q with ID %q, got status %d", id.ResourceId, id.AssignmentId, status)
 	}
 
