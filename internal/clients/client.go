@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
+	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
@@ -29,20 +30,22 @@ type Client struct {
 
 	StopContext context.Context
 
-	Applications      *applications.Client
-	ConditionalAccess *conditionalaccess.Client
-	DirectoryRoles    *directoryroles.Client
-	Domains           *domains.Client
-	Groups            *groups.Client
-	Invitations       *invitations.Client
-	ServicePrincipals *serviceprincipals.Client
-	Users             *users.Client
+	Applications       *applications.Client
+	AppRoleAssignments *approleassignments.Client
+	ConditionalAccess  *conditionalaccess.Client
+	DirectoryRoles     *directoryroles.Client
+	Domains            *domains.Client
+	Groups             *groups.Client
+	Invitations        *invitations.Client
+	ServicePrincipals  *serviceprincipals.Client
+	Users              *users.Client
 }
 
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
 	client.StopContext = ctx
 
 	client.Applications = applications.NewClient(o)
+	client.AppRoleAssignments = approleassignments.NewClient(o)
 	client.Domains = domains.NewClient(o)
 	client.ConditionalAccess = conditionalaccess.NewClient(o)
 	client.DirectoryRoles = directoryroles.NewClient(o)
