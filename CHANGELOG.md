@@ -1,3 +1,9 @@
+## 2.4.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `axuread_app_role_assignment` [GH-584]
+
 ## 2.3.0 (September 16, 2021)
 
 FEATURES:
