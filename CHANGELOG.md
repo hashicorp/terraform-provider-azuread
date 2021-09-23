@@ -2,7 +2,7 @@
 
 FEATURES:
 
-* **New Resource:** `axuread_app_role_assignment` ([#584](https://github.com/terraform-providers/terraform-provider-azuread/issues/584))
+* **New Resource:** `azuread_app_role_assignment` ([#584](https://github.com/terraform-providers/terraform-provider-azuread/issues/584))
 
 ENHANCEMENTS:
 
