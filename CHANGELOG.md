@@ -1,13 +1,13 @@
-## 2.4.0 (Unreleased)
+## 2.4.0 (September 23, 2021)
 
 FEATURES:
 
-* **New Resource:** `axuread_app_role_assignment` [GH-584]
+* **New Resource:** `axuread_app_role_assignment` ([#584](https://github.com/terraform-providers/terraform-provider-azuread/issues/584))
 
 ENHANCEMENTS:
 
-* `azuread_application_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) [GH-572]
-* `azuread_service_principal_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) [GH-572]
+* `azuread_application_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))
+* `azuread_service_principal_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))
 
 ## 2.3.0 (September 16, 2021)
 
