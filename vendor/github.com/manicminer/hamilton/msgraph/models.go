@@ -1250,7 +1250,6 @@ type VerifiedPublisher struct {
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
 }
 
-<<<<<<< HEAD
 type WindowsHelloForBusinessAuthenticationMethod struct {
 	CreatedDateTime *time.Time                       `json:"createdDateTime,omitempty"`
 	DisplayName     *string                          `json:"displayName,omitempty"`
@@ -1261,16 +1260,4 @@ type WindowsHelloForBusinessAuthenticationMethod struct {
 type EmployeeOrgData struct {
 	CostCenter *string `json:"costCenter,omitempty"`
 	Division   *string `json:"division,omitempty"`
-=======
-type AppRoleAssignment struct {
-	Id                   *string    `json:"id,omitempty"`
-	DeletedDateTime      *time.Time `json:"deletedDateTime,omitempty"`
-	AppRoleId            *string    `json:"appRoleId,omitempty"`
-	CreatedDateTime      *time.Time `json:"createdDateTime,omitempty"`
-	PrincipalDisplayName *string    `json:"principalDisplayName,omitempty"`
-	PrincipalId          *string    `json:"principalId,omitempty"`
-	PrincipalType        *string    `json:"principalType,omitempty"`
-	ResourceDisplayName  *string    `json:"resourceDisplayName,omitempty"`
-	ResourceId           *string    `json:"resourceId,omitempty"`
->>>>>>> dir roles support
 }
