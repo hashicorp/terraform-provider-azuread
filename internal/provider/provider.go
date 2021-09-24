@@ -51,7 +51,7 @@ func AzureADProvider() *schema.Provider {
 	dataSources := make(map[string]*schema.Resource)
 	resources := make(map[string]*schema.Resource)
 	for _, service := range SupportedServices() {
-		debugLog("[DEBUG] #TESTING# Registering Resources for %q..", service.Name())
+		debugLog("[DEBUG] Registering Resources for %q..", service.Name())
 		for k, v := range service.SupportedResources() {
 			if existing := resources[k]; existing != nil {
 				panic(fmt.Sprintf("An existing Resource exists for %q", k))

@@ -36,12 +36,6 @@ type TestData struct {
 
 	// resourceLabel is the local used for the resource - generally "test""
 	resourceLabel string
-
-	DirectoryRole struct {
-		DisplayName    string
-		Description    string
-		RoleTemplateId string
-	}
 }
 
 func (t *TestData) UUID() string {
@@ -61,16 +55,6 @@ func BuildTestData(t *testing.T, resourceType string, resourceLabel string) Test
 
 		ResourceType:  resourceType,
 		resourceLabel: resourceLabel,
-
-		DirectoryRole: struct {
-			DisplayName    string
-			Description    string
-			RoleTemplateId string
-		}{
-			DisplayName:    "Global Administrator",
-			Description:    "Can manage all aspects of Azure AD and Microsoft services that use Azure AD identities.",
-			RoleTemplateId: "62e90394-69f5-4237-9190-012177145e10",
-		},
 	}
 
 	return testData
