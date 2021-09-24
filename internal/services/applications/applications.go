@@ -317,10 +317,10 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			continue
 		}
 		role := roleRaw.(map[string]interface{})
-		if id := role["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
+		if id := role["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
 			ids = append(ids, id)
 		}
-		if val := role["value"].(string); val != "" && val != tf.PluginSdkUnknownValue {
+		if val := role["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
 			values = append(values, val)
 		}
 	}
@@ -330,10 +330,10 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			continue
 		}
 		scope := scopeRaw.(map[string]interface{})
-		if id := scope["id"].(string); id != "" && id != tf.PluginSdkUnknownValue {
+		if id := scope["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
 			ids = append(ids, id)
 		}
-		if val := scope["value"].(string); val != "" && val != tf.PluginSdkUnknownValue {
+		if val := scope["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
 			values = append(values, val)
 		}
 	}

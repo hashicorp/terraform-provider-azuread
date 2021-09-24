@@ -576,7 +576,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
 
-	if diff.Get("prevent_duplicate_names").(bool) &&
+	if diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := applicationFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
