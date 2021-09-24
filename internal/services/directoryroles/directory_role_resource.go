@@ -84,11 +84,16 @@ func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, me
 		if templates == nil {
 			return tf.ErrorDiagF(errors.New("API error: nil result returned"), "Retrieving directory role templates")
 		}
+
 		for _, t := range *templates {
 			if t.DisplayName != nil && strings.EqualFold(displayName, *t.DisplayName) {
 				template = &t
 				break
 			}
+		}
+
+		if template == nil {
+			return tf.ErrorDiagPathF(errors.New("template not found"), "Directory role template not found with display name %q", displayName)
 		}
 	} else {
 		var status int
@@ -100,6 +105,14 @@ func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, me
 			}
 			return tf.ErrorDiagPathF(err, "template_id", "Retrieving directory role template with object ID %q: %+v", templateId, err)
 		}
+
+		if template == nil {
+			return tf.ErrorDiagPathF(errors.New("template not found"), "Directory role template not found with object ID %q", templateId)
+		}
+	}
+
+	if template == nil {
+		return tf.ErrorDiagF(errors.New("template was nil"), "No template found")
 	}
 
 	if template.ID == nil {
