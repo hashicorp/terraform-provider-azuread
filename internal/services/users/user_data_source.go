@@ -122,6 +122,24 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"employee_type": {
+				Description: "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"cost_center": {
+				Description: "The cost center associated with the user.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"division": {
+				Description: "The name of the division in which the user works.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"external_user_state": {
 				Description: "For an external user invited to the tenant, this property represents the invited user's invitation status",
 				Type:        schema.TypeString,
@@ -359,6 +377,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tf.Set(d, "department", user.Department)
 	tf.Set(d, "display_name", user.DisplayName)
 	tf.Set(d, "employee_id", user.EmployeeId)
+	tf.Set(d, "employee_type", user.EmployeeType)
 	tf.Set(d, "external_user_state", user.ExternalUserState)
 	tf.Set(d, "fax_number", user.FaxNumber)
 	tf.Set(d, "given_name", user.GivenName)

@@ -47,6 +47,9 @@ The following attributes are exported:
 * `department` - The name for the department in which the user works.
 * `display_name` - The display name of the user.
 * `employee_id` - The employee identifier assigned to the user by the organisation.
+* `employee_type` - (Optional) Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.
+* `cost_center` - (Optional) The cost center associated with the user.
+* `division` - (Optional) The name of the division in which the user works.
 * `external_user_state` - For an external user invited to the tenant, this property represents the invited user's invitation status. Possible values are `PendingAcceptance` or `Accepted`.
 * `fax_number` - The fax number of the user.
 * `given_name` - The given name (first name) of the user.

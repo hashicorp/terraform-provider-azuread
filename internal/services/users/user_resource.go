@@ -133,6 +133,25 @@ func userResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 16),
 			},
 
+			"employee_type": {
+				Description:  "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"Employee", "Contractor", "Consultant", "Vendor"}, false),
+			},
+
+			"cost_center": {
+				Description: "The cost center associated with the user.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
+			"division": {
+				Description: "The name of the division in which the user works.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"force_password_change": {
 				Description: "Whether the user is forced to change the password during the next sign-in. Only takes effect when also changing the password",
 				Type:        schema.TypeBool,
@@ -426,6 +445,19 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		},
 	}
 
+	if v, ok := d.GetOk("employee_type"); ok {
+		properties.EmployeeType = utils.String(v.(string))
+	}
+
+	costCenter, costCenterExists := d.GetOk("cost_center")
+	division, divisionExists := d.GetOk("division")
+	if costCenterExists || divisionExists {
+		properties.EmployeeOrgData = &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(costCenter.(string)),
+			Division:   utils.String(division.(string)),
+		}
+	}
+
 	if v, ok := d.GetOk("business_phones"); ok {
 		properties.BusinessPhones = tf.ExpandStringSlicePtr(v.([]interface{}))
 	}
@@ -476,6 +508,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
+		EmployeeType:            utils.String(d.Get("employee_type").(string)),
 		FaxNumber:               utils.NullableString(d.Get("fax_number").(string)),
 		GivenName:               utils.NullableString(d.Get("given_name").(string)),
 		JobTitle:                utils.NullableString(d.Get("job_title").(string)),
@@ -514,6 +547,13 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
 	}
 
+	if d.HasChange("cost_center") || d.HasChange("division") {
+		properties.EmployeeOrgData = &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(d.Get("cost_center").(string)),
+			Division:   utils.String(d.Get("division").(string)),
+		}
+	}
+
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user with ID: %q", d.Id())
 	}
@@ -548,6 +588,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "department", user.Department)
 	tf.Set(d, "display_name", user.DisplayName)
 	tf.Set(d, "employee_id", user.EmployeeId)
+	tf.Set(d, "employee_type", user.EmployeeType)
 	tf.Set(d, "external_user_state", user.ExternalUserState)
 	tf.Set(d, "fax_number", user.FaxNumber)
 	tf.Set(d, "given_name", user.GivenName)
@@ -593,6 +634,11 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	tf.Set(d, "disable_strong_password", disableStrongPassword)
 	tf.Set(d, "disable_password_expiration", disablePasswordExpiration)
+
+	if user.EmployeeOrgData != nil {
+		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
+		tf.Set(d, "division", user.EmployeeOrgData.Division)
+	}
 
 	return nil
 }

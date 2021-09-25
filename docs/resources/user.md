@@ -41,6 +41,9 @@ The following arguments are supported:
 * `disable_strong_password` - (Optional) Whether the user is allowed weaker passwords than the default policy to be specified. Defaults to `false`.
 * `display_name` - (Required) The name to display in the address book for the user.
 * `employee_id` - (Optional) The employee identifier assigned to the user by the organisation.
+* `employee_type` - (Optional) Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.
+* `cost_center` - (Optional) The cost center associated with the user.
+* `division` - (Optional) The name of the division in which the user works.
 * `fax_number` - (Optional) The fax number of the user.
 * `force_password_change` - (Optional) Whether the user is forced to change the password during the next sign-in. Only takes effect when also changing the password. Defaults to `false`.
 * `given_name` - (Optional) The given name (first name) of the user.
