@@ -35,15 +35,15 @@ The following arguments are supported:
 * `city` - (Optional) The city in which the user is located.
 * `company_name` - (Optional) The company name which the user is associated. This property can be useful for describing the company that an external user comes from.
 * `consent_provided_for_minor` - (Optional) Whether consent has been obtained for minors. Supported values are `Granted`, `Denied` and `NotRequired`. Omit this property or specify a blank string to unset.
+* `cost_center` - (Optional) The cost center associated with the user.
 * `country` - (Optional) The country/region in which the user is located, e.g. `US` or `UK`.
 * `department` - (Optional) The name for the department in which the user works.
 * `disable_password_expiration` - (Optional) Whether the users password is exempt from expiring. Defaults to `false`.
 * `disable_strong_password` - (Optional) Whether the user is allowed weaker passwords than the default policy to be specified. Defaults to `false`.
 * `display_name` - (Required) The name to display in the address book for the user.
+* `division` - (Optional) The name of the division in which the user works.
 * `employee_id` - (Optional) The employee identifier assigned to the user by the organisation.
 * `employee_type` - (Optional) Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.
-* `cost_center` - (Optional) The cost center associated with the user.
-* `division` - (Optional) The name of the division in which the user works.
 * `fax_number` - (Optional) The fax number of the user.
 * `force_password_change` - (Optional) Whether the user is forced to change the password during the next sign-in. Only takes effect when also changing the password. Defaults to `false`.
 * `given_name` - (Optional) The given name (first name) of the user.
