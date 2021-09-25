@@ -183,7 +183,7 @@ resource "azuread_user" "test" {
   business_phones            = ["12345678901"]
   company_name               = "acctestUser-%[1]d-Company"
   consent_provided_for_minor = "NotRequired"
-  cost_center              	 = "acctestUser-%[1]d-CostCenter"
+  cost_center                = "acctestUser-%[1]d-CostCenter"
   department                 = "acctestUser-%[1]d-Dept"
   display_name               = "acctestUser-%[1]d-DisplayName"
   division                   = "acctestUser-%[1]d-Division"
