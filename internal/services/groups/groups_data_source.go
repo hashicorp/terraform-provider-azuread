@@ -118,8 +118,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
 			displayName := v.(string)
-			filter = append(filter, fmt.Sprintf("displayName eq '%s'", displayName))
-			query := odata.Query{Filter: strings.Join(filter, " and ")}
+			query := odata.Query{Filter: strings.Join(append(filter, fmt.Sprintf("displayName eq '%s'", displayName)), " and ")}
 			result, _, err := client.List(ctx, query)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
