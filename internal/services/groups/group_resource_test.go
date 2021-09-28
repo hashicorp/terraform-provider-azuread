@@ -741,3 +741,27 @@ resource "azuread_group" "duplicate" {
 }
 `, r.basic(data))
 }
+
+func (GroupResource) multipleGroupsTemplate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "testA" {
+  display_name     = "acctestSecurityGroup-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_group" "testB" {
+  display_name  = "acctestMailGroup-%[1]d"
+  mail_enabled  = true
+  mail_nickname = "acctestMailGroup-%[1]d"
+  types         = ["Unified"]
+}
+
+resource "azuread_group" "testC" {
+  display_name     = "acctestMailSecurityGroup-%[1]d"
+  mail_enabled     = true
+  mail_nickname    = "acctestMailSecurityGroup-%[1]d"
+  types            = ["Unified"]
+  security_enabled = true
+}
+`, data.RandomInteger)
+}
