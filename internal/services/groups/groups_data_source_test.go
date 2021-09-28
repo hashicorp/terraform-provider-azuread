@@ -199,6 +199,14 @@ resource "azuread_group" "testB" {
   mail_nickname = "acctestGroupB-%[1]d"
   types         = ["Unified"]
 }
+
+resource "azuread_group" "testC" {
+  display_name     = "acctestGroupC-%[1]d"
+  mail_enabled     = true
+  mail_nickname    = "acctestGroupC%[1]d"
+  types            = ["Unified"]
+  security_enabled = true
+}
 `, data.RandomInteger)
 }
 
@@ -238,7 +246,7 @@ data "azuread_groups" "test" {
 `
 }
 
-func (GroupsDataSource) returnAllMailEnabled(data acceptance.TestData) string {
+func (r GroupsDataSource) returnAllMailEnabled(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -246,10 +254,10 @@ data "azuread_groups" "test" {
   mail_enabled = true
   return_all   = true
 }
-`, GroupResource{}.multipleGroupsTemplate(data))
+`, r.template(data))
 }
 
-func (GroupsDataSource) returnAllSecurityEnabled(data acceptance.TestData) string {
+func (r GroupsDataSource) returnAllSecurityEnabled(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -257,10 +265,10 @@ data "azuread_groups" "test" {
   return_all       = true
   security_enabled = true
 }
-`, GroupResource{}.multipleGroupsTemplate(data))
+`, r.template(data))
 }
 
-func (GroupsDataSource) returnAllMailNotSecurityEnabled(data acceptance.TestData) string {
+func (r GroupsDataSource) returnAllMailNotSecurityEnabled(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -269,10 +277,10 @@ data "azuread_groups" "test" {
   return_all       = true
   security_enabled = false
 }
-`, GroupResource{}.multipleGroupsTemplate(data))
+`, r.template(data))
 }
 
-func (GroupsDataSource) returnAllSecurityNotMailEnabled(data acceptance.TestData) string {
+func (r GroupsDataSource) returnAllSecurityNotMailEnabled(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -281,5 +289,5 @@ data "azuread_groups" "test" {
   return_all       = true
   security_enabled = true
 }
-`, GroupResource{}.multipleGroupsTemplate(data))
+`, r.template(data))
 }
