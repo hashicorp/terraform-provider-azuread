@@ -425,6 +425,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			CostCenter: utils.String(d.Get("cost_center").(string)),
 			Division:   utils.String(d.Get("division").(string)),
 		},
+		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
 		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
 		GivenName:         utils.NullableString(d.Get("given_name").(string)),
 		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
@@ -447,10 +448,6 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
 			Password:                      utils.String(password),
 		},
-	}
-
-	if v, ok := d.GetOk("employee_type"); ok {
-		properties.EmployeeType = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("business_phones"); ok {
@@ -503,11 +500,11 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
-		EmployeeType:            utils.String(d.Get("employee_type").(string)),
 		EmployeeOrgData: &msgraph.EmployeeOrgData{
 			CostCenter: utils.String(d.Get("cost_center").(string)),
 			Division:   utils.String(d.Get("division").(string)),
 		},
+		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
 		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
 		GivenName:         utils.NullableString(d.Get("given_name").(string)),
 		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
@@ -544,13 +541,6 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("onpremises_immutable_id") {
 		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
-	}
-
-	if d.HasChange("cost_center") || d.HasChange("division") {
-		properties.EmployeeOrgData = &msgraph.EmployeeOrgData{
-			CostCenter: utils.String(d.Get("cost_center").(string)),
-			Division:   utils.String(d.Get("division").(string)),
-		}
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
