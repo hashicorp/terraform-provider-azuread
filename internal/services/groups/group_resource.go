@@ -259,11 +259,11 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
-	if diff.Get("prevent_duplicate_names").(bool) &&
+	if diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := groupFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
-			return fmt.Errorf("could not check for existing application(s): %+v", err)
+			return fmt.Errorf("could not check for existing group(s): %+v", err)
 		}
 		if result != nil && len(*result) > 0 {
 			for _, existingGroup := range *result {
@@ -283,6 +283,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 	for _, v := range diff.Get("types").(*schema.Set).List() {
 		groupTypes = append(groupTypes, v.(string))
 	}
+
 	hasGroupType := func(value msgraph.GroupType) bool {
 		for _, v := range groupTypes {
 			if value == v {
