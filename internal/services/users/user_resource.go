@@ -114,6 +114,12 @@ func userResource() *schema.Resource {
 				}, false),
 			},
 
+			"cost_center": {
+				Description: "The cost center associated with the user.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"country": {
 				Description: "The country/region in which the user is located, e.g. `US` or `UK`",
 				Type:        schema.TypeString,
@@ -126,11 +132,24 @@ func userResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"division": {
+				Description: "The name of the division in which the user works.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"employee_id": {
 				Description:  "The employee identifier assigned to the user by the organisation",
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16),
+			},
+
+			"employee_type": {
+				Description:  "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"Employee", "Contractor", "Consultant", "Vendor"}, false),
 			},
 
 			"force_password_change": {
@@ -402,23 +421,28 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
-		FaxNumber:               utils.NullableString(d.Get("fax_number").(string)),
-		GivenName:               utils.NullableString(d.Get("given_name").(string)),
-		JobTitle:                utils.NullableString(d.Get("job_title").(string)),
-		Mail:                    utils.NullableString(d.Get("mail").(string)),
-		MailNickname:            utils.String(mailNickName),
-		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
-		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
-		PasswordPolicies:        utils.NullableString(passwordPolicies),
-		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
-		State:                   utils.NullableString(d.Get("state").(string)),
-		StreetAddress:           utils.NullableString(d.Get("street_address").(string)),
-		Surname:                 utils.NullableString(d.Get("surname").(string)),
-		UsageLocation:           utils.NullableString(d.Get("usage_location").(string)),
-		UserPrincipalName:       utils.String(upn),
+		EmployeeOrgData: &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(d.Get("cost_center").(string)),
+			Division:   utils.String(d.Get("division").(string)),
+		},
+		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
+		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
+		GivenName:         utils.NullableString(d.Get("given_name").(string)),
+		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
+		Mail:              utils.NullableString(d.Get("mail").(string)),
+		MailNickname:      utils.String(mailNickName),
+		MobilePhone:       utils.NullableString(d.Get("mobile_phone").(string)),
+		OfficeLocation:    utils.NullableString(d.Get("office_location").(string)),
+		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
+		PasswordPolicies:  utils.NullableString(passwordPolicies),
+		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
+		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
+		ShowInAddressList: utils.Bool(d.Get("show_in_address_list").(bool)),
+		State:             utils.NullableString(d.Get("state").(string)),
+		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
+		Surname:           utils.NullableString(d.Get("surname").(string)),
+		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
+		UserPrincipalName: utils.String(upn),
 
 		PasswordProfile: &msgraph.UserPasswordProfile{
 			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
@@ -476,21 +500,26 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Department:              utils.NullableString(d.Get("department").(string)),
 		DisplayName:             utils.String(d.Get("display_name").(string)),
 		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
-		FaxNumber:               utils.NullableString(d.Get("fax_number").(string)),
-		GivenName:               utils.NullableString(d.Get("given_name").(string)),
-		JobTitle:                utils.NullableString(d.Get("job_title").(string)),
-		MailNickname:            utils.String(d.Get("mail_nickname").(string)),
-		MobilePhone:             utils.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:          utils.NullableString(d.Get("office_location").(string)),
-		OtherMails:              tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
-		PasswordPolicies:        utils.NullableString(passwordPolicies),
-		PostalCode:              utils.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage:       utils.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList:       utils.Bool(d.Get("show_in_address_list").(bool)),
-		State:                   utils.NullableString(d.Get("state").(string)),
-		StreetAddress:           utils.NullableString(d.Get("street_address").(string)),
-		Surname:                 utils.NullableString(d.Get("surname").(string)),
-		UsageLocation:           utils.NullableString(d.Get("usage_location").(string)),
+		EmployeeOrgData: &msgraph.EmployeeOrgData{
+			CostCenter: utils.String(d.Get("cost_center").(string)),
+			Division:   utils.String(d.Get("division").(string)),
+		},
+		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
+		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
+		GivenName:         utils.NullableString(d.Get("given_name").(string)),
+		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
+		MailNickname:      utils.String(d.Get("mail_nickname").(string)),
+		MobilePhone:       utils.NullableString(d.Get("mobile_phone").(string)),
+		OfficeLocation:    utils.NullableString(d.Get("office_location").(string)),
+		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*schema.Set).List()),
+		PasswordPolicies:  utils.NullableString(passwordPolicies),
+		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
+		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
+		ShowInAddressList: utils.Bool(d.Get("show_in_address_list").(bool)),
+		State:             utils.NullableString(d.Get("state").(string)),
+		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
+		Surname:           utils.NullableString(d.Get("surname").(string)),
+		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
 	}
 
 	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
@@ -548,6 +577,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "department", user.Department)
 	tf.Set(d, "display_name", user.DisplayName)
 	tf.Set(d, "employee_id", user.EmployeeId)
+	tf.Set(d, "employee_type", user.EmployeeType)
 	tf.Set(d, "external_user_state", user.ExternalUserState)
 	tf.Set(d, "fax_number", user.FaxNumber)
 	tf.Set(d, "given_name", user.GivenName)
@@ -593,6 +623,11 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	tf.Set(d, "disable_strong_password", disableStrongPassword)
 	tf.Set(d, "disable_password_expiration", disablePasswordExpiration)
+
+	if user.EmployeeOrgData != nil {
+		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
+		tf.Set(d, "division", user.EmployeeOrgData.Division)
+	}
 
 	return nil
 }

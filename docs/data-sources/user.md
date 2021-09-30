@@ -43,10 +43,13 @@ The following attributes are exported:
 * `company_name` - The company name which the user is associated. This property can be useful for describing the company that an external user comes from.
 * `consent_provided_for_minor` - Whether consent has been obtained for minors. Supported values are `Granted`, `Denied` and `NotRequired`.
 * `country` - The country/region in which the user is located, e.g. `US` or `UK`.
+* `cost_center` - The cost center associated with the user.
 * `creation_type` - Indicates whether the user account was created as a regular school or work account (`null`), an external account (`Invitation`), a local account for an Azure Active Directory B2C tenant (`LocalAccount`) or self-service sign-up using email verification (`EmailVerified`).
 * `department` - The name for the department in which the user works.
 * `display_name` - The display name of the user.
+* `division` - The name of the division in which the user works.
 * `employee_id` - The employee identifier assigned to the user by the organisation.
+* `employee_type` - Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.
 * `external_user_state` - For an external user invited to the tenant, this property represents the invited user's invitation status. Possible values are `PendingAcceptance` or `Accepted`.
 * `fax_number` - The fax number of the user.
 * `given_name` - The given name (first name) of the user.

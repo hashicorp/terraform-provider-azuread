@@ -92,6 +92,12 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"cost_center": {
+				Description: "The cost center associated with the user.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"country": {
 				Description: "The country/region in which the user is located, e.g. `US` or `UK`",
 				Type:        schema.TypeString,
@@ -116,8 +122,20 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"division": {
+				Description: "The name of the division in which the user works.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"employee_id": {
 				Description: "The employee identifier assigned to the user by the organisation",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"employee_type": {
+				Description: "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -359,6 +377,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tf.Set(d, "department", user.Department)
 	tf.Set(d, "display_name", user.DisplayName)
 	tf.Set(d, "employee_id", user.EmployeeId)
+	tf.Set(d, "employee_type", user.EmployeeType)
 	tf.Set(d, "external_user_state", user.ExternalUserState)
 	tf.Set(d, "fax_number", user.FaxNumber)
 	tf.Set(d, "given_name", user.GivenName)
@@ -387,6 +406,11 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tf.Set(d, "usage_location", user.UsageLocation)
 	tf.Set(d, "user_principal_name", user.UserPrincipalName)
 	tf.Set(d, "user_type", user.UserType)
+
+	if user.EmployeeOrgData != nil {
+		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
+		tf.Set(d, "division", user.EmployeeOrgData.Division)
+	}
 
 	return nil
 }
