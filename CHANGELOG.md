@@ -3,6 +3,8 @@
 ENHANCEMENTS:
 
 * `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties [GH-603]
+* `data.azuread_user` - support the `cost_center`, `division` and `employee_type` attributes [GH-597]
+* `azuread_user` - support the `cost_center`, `division` and `employee_type` properties [GH-597]
 
 BUG FIXES:
 
