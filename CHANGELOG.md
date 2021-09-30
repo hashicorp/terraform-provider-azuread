@@ -1,3 +1,10 @@
+## 2.5.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
+* `azuread_group` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
+
 ## 2.4.0 (September 23, 2021)
 
 FEATURES:
