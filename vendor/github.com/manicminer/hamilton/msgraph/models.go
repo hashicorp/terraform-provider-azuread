@@ -7,11 +7,144 @@ import (
 	"strings"
 	"time"
 
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/errors"
+	"github.com/manicminer/hamilton/odata"
 )
+
+type AccessPackage struct {
+	ID                  *string    `json:"id,omitempty"`
+	CatalogId           *string    `json:"catalogId,omitempty"`
+	CreatedBy           *string    `json:"createdBy,omitempty"`
+	CreatedDateTime     *time.Time `json:"createdDateTime,omitempty"`
+	Description         *string    `json:"description,omitempty"`
+	DisplayName         *string    `json:"displayName,omitempty"`
+	IsHidden            *bool      `json:"isHidden,omitempty"`
+	IsRoleScopesVisible *bool      `json:"isRoleScopesVisible,omitempty"`
+	ModifiedBy          *string    `json:"modifiedBy,omitempty"`
+	ModifiedDateTime    *time.Time `json:"modifiedDateTime,omitempty"`
+}
+
+type AccessPackageAssignmentPolicy struct {
+	AccessPackageId         *string                   `json:"accessPackageId,omitempty"`
+	AccessReviewSettings    *AssignmentReviewSettings `json:"accessReviewSettings,omitempty"`
+	CanExtend               *bool                     `json:"canExtend,omitempty"`
+	CreatedBy               *string                   `json:"createdBy,omitempty"`
+	CreatedDateTime         *time.Time                `json:"createdDateTime,omitempty"`
+	Description             *string                   `json:"description,omitempty"`
+	DisplayName             *string                   `json:"displayName,omitempty"`
+	DurationInDays          *int32                    `json:"durationInDays,omitempty"`
+	ExpirationDateTime      *time.Time                `json:"expirationDateTime,omitempty"`
+	ID                      *string                   `json:"id,omitempty"`
+	ModifiedBy              *string                   `json:"modifiedBy,omitempty"`
+	ModifiedDateTime        *time.Time                `json:"modifiedDateTime,omitempty"`
+	RequestApprovalSettings *ApprovalSettings         `json:"requestApprovalSettings,omitempty"`
+	RequestorSettings       *RequestorSettings        `json:"requestorSettings,omitempty"`
+	Questions               *[]AccessPackageQuestion  `json:"questions,omitempty"`
+}
+
+type AccessPackageCatalog struct {
+	ID                  *string                    `json:"id,omitempty"`
+	CatalogStatus       AccessPackageCatalogStatus `json:"catalogStatus,omitempty"`
+	CatalogType         AccessPackageCatalogType   `json:"catalogType,omitempty"`
+	CreatedBy           *string                    `json:"createdBy,omitempty"`
+	CreatedDateTime     *time.Time                 `json:"createdDateTime,omitempty"`
+	Description         *string                    `json:"description,omitempty"`
+	DisplayName         *string                    `json:"displayName,omitempty"`
+	IsExternallyVisible *bool                      `json:"isExternallyVisible,omitempty"`
+	ModifiedBy          *string                    `json:"modifiedBy,omitempty"`
+	ModifiedDateTime    *time.Time                 `json:"modifiedDateTime,omitempty"`
+}
+
+type AccessPackageLocalizedContent struct {
+	DefaultText    *string                        `json:"defaultText,omitempty"`
+	LocalizedTexts *[]AccessPackageLocalizedTexts `json:"localizedTexts,omitempty"`
+}
+
+type AccessPackageLocalizedTexts struct {
+	Text         *string `json:"text,omitempty"`
+	LanguageCode *string `json:"languageCode,omitempty"`
+}
+
+type AccessPackageQuestion struct {
+	ID         *string                        `json:"id,omitempty"`
+	IsRequired *bool                          `json:"isRequired,omitempty"`
+	Sequence   *int32                         `json:"sequence,omitempty"`
+	Text       *AccessPackageLocalizedContent `json:"text,omitempty"`
+}
+
+type AccessPackageResource struct {
+	AccessPackageResourceEnvironment *AccessPackageResourceEnvironment `json:"accessPackageResourceEnvironment,omitempty"`
+	AddedBy                          *string                           `json:"addedBy,omitempty"`
+	AddedOn                          *time.Time                        `json:"addedOn,omitempty"`
+	Description                      *bool                             `json:"description,omitempty"`
+	DisplayName                      *string                           `json:"displayName,omitempty"`
+	ID                               *string                           `json:"id,omitempty"`
+	IsPendingOnboarding              *bool                             `json:"isPendingOnboarding,omitempty"`
+	OriginId                         *string                           `json:"originId,omitempty"`
+	OriginSystem                     AccessPackageResourceOriginSystem `json:"originSystem,omitempty"`
+	ResourceType                     *AccessPackageResourceType        `json:"resourceType,omitempty"`
+	Url                              *string                           `json:"url,omitempty"`
+	// Attributes is a returned collection but is not documented or used
+}
+
+type AccessPackageResourceEnvironment struct {
+	ConnectionInfo       *ConnectionInfo                   `json:"connectionInfo,omitempty"`
+	CreatedBy            *string                           `json:"createdBy,omitempty"`
+	CreatedDateTime      *time.Time                        `json:"createdDateTime,omitempty"`
+	Description          *string                           `json:"description,omitempty"`
+	DisplayName          *string                           `json:"displayName,omitempty"`
+	ID                   *string                           `json:"id,omitempty"`
+	IsDefaultEnvironment *bool                             `json:"isDefaultEnvironment,omitempty"`
+	ModifiedBy           *string                           `json:"modifiedBy,omitempty"`
+	ModifiedDateTime     *time.Time                        `json:"modifiedDateTime,omitempty"`
+	OriginId             *string                           `json:"originId,omitempty"`
+	OriginSystem         AccessPackageResourceOriginSystem `json:"originSystem,omitempty"`
+}
+
+type AccessPackageResourceRequest struct {
+	CatalogId             *string                            `json:"catalogId,omitempty"`
+	ExpirationDateTime    *time.Time                         `json:"expirationDateTime,omitempty"`
+	ID                    *string                            `json:"id,omitempty"`
+	IsValidationOnly      *bool                              `json:"isValidationOnly,omitempty"`
+	Justification         *string                            `json:"justification,omitempty"`
+	RequestState          *AccessPackageResourceRequestState `json:"requestState,omitempty"`
+	RequestStatus         *string                            `json:"requestStatus,omitempty"`
+	RequestType           *AccessPackageResourceRequestType  `json:"requestType,omitempty"`
+	AccessPackageResource *AccessPackageResource             `json:"accessPackageResource,omitempty"`
+	ExecuteImmediately    *bool                              `json:"executeImmediately,omitempty"`
+}
+
+type AccessPackageResourceRole struct {
+	Description           *string                           `json:"description"`
+	ID                    *string                           `json:"id,omitempty"`
+	DisplayName           *string                           `json:"displayName,omitempty"`
+	OriginId              *string                           `json:"originId,omitempty"`
+	OriginSystem          AccessPackageResourceOriginSystem `json:"originSystem,omitempty"`
+	AccessPackageResource *AccessPackageResource            `json:"accessPackageResource,omitempty"`
+}
+
+type AccessPackageResourceRoleScope struct {
+	AccessPackageId *string `json:"-"`
+
+	ID                         *string                     `json:"id,omitempty"`
+	CreatedBy                  *string                     `json:"createdBy,omitempty"`
+	CreatedDateTime            *time.Time                  `json:"createdDateTime,omitempty"`
+	ModifiedBy                 *string                     `json:"modifiedBy,omitempty"`
+	ModifiedDateTime           *time.Time                  `json:"modifiedDateTime,omitempty"`
+	AccessPackageResourceRole  *AccessPackageResourceRole  `json:"accessPackageResourceRole,omitempty"`
+	AccessPackageResourceScope *AccessPackageResourceScope `json:"accessPackageResourceScope,omitempty"`
+}
+
+type AccessPackageResourceScope struct {
+	Description  *string                           `json:"description,omitempty"`
+	DisplayName  *string                           `json:"displayName,omitempty"`
+	ID           *string                           `json:"id,omitempty"`
+	IsRootScope  *bool                             `json:"isRootScope,omitempty"`
+	OriginId     *string                           `json:"originId,omitempty"`
+	OriginSystem AccessPackageResourceOriginSystem `json:"originSystem,omitempty"`
+	Url          *string                           `json:"url"`
+}
 
 type AddIn struct {
 	ID         *string          `json:"id,omitempty"`
@@ -343,6 +476,32 @@ type AppRoleAssignment struct {
 	ResourceId           *string    `json:"resourceId,omitempty"`
 }
 
+type ApprovalSettings struct {
+	IsApprovalRequired               *bool            `json:"isApprovalRequired,omitempty"`
+	IsApprovalRequiredForExtension   *bool            `json:"isApprovalRequiredForExtension,omitempty"`
+	IsRequestorJustificationRequired *bool            `json:"isRequestorJustificationRequired,omitempty"`
+	ApprovalMode                     ApprovalMode     `json:"approvalMode,omitempty"`
+	ApprovalStages                   *[]ApprovalStage `json:"approvalStages,omitempty"`
+}
+
+type ApprovalStage struct {
+	ApprovalStageTimeOutInDays      *int32     `json:"approvalStageTimeOutInDays,omitempty"`
+	IsApproverJustificationRequired *bool      `json:"isApproverJustificationRequired,omitempty"`
+	IsEscalationEnabled             *bool      `json:"isEscalationEnabled,omitempty"`
+	EscalationTimeInMinutes         *int32     `json:"escalationTimeInMinutes,omitempty"`
+	PrimaryApprovers                *[]UserSet `json:"primaryApprovers,omitempty"`
+	EscalationApprovers             *[]UserSet `json:"escalationApprovers,omitempty"`
+}
+
+type AssignmentReviewSettings struct {
+	IsEnabled      *bool      `json:"isEnabled,omitempty"`
+	RecurrenceType *string    `json:"recurrenceType,omitempty"`
+	ReviewerType   *string    `json:"reviewerType,omitempty"`
+	StartDateTime  *time.Time `json:"startDateTime,omitempty"`
+	DurationInDays *int32     `json:"durationInDays,omitempty"`
+	Reviewers      *[]UserSet `json:"reviewers,omitempty"`
+}
+
 type AuditActivityInitiator struct {
 	App  *AppIdentity  `json:"app,omitempty"`
 	User *UserIdentity `json:"user,omitempty"`
@@ -422,6 +581,10 @@ type ConditionalAccessUsers struct {
 	ExcludeGroups *[]string `json:"excludeGroups,omitempty"`
 	IncludeRoles  *[]string `json:"includeRoles,omitempty"`
 	ExcludeRoles  *[]string `json:"excludeRoles,omitempty"`
+}
+
+type ConnectionInfo struct {
+	Url *string `json:"url,omitempty"`
 }
 
 // CountryNamedLocation describes an Country Named Location object.
@@ -925,6 +1088,12 @@ type Recipient struct {
 	EmailAddress *EmailAddress `json:"emailAddress,omitempty"`
 }
 
+type RequestorSettings struct {
+	ScopeType         RequestorSettingsScopeType `json:"scopeType,omitempty"`
+	AcceptRequests    *bool                      `json:"acceptRequests,omitempty"`
+	AllowedRequestors *[]UserSet                 `json:"allowedRequestors,omitempty"`
+}
+
 type RequiredResourceAccess struct {
 	ResourceAccess *[]ResourceAccess `json:"resourceAccess,omitempty"`
 	ResourceAppId  *string           `json:"resourceAppId,omitempty"`
@@ -1100,7 +1269,7 @@ type User struct {
 	EmployeeHireDate                *time.Time               `json:"employeeHireDate,omitempty"`
 	EmployeeId                      *StringNullWhenEmpty     `json:"employeeId,omitempty"`
 	EmployeeOrgData                 *EmployeeOrgData         `json:"employeeOrgData,omitempty"`
-	EmployeeType                    *string                  `json:"employeeType,omitempty"`
+	EmployeeType                    *StringNullWhenEmpty     `json:"employeeType,omitempty"`
 	ExternalUserState               *string                  `json:"externalUserState,omitempty"`
 	FaxNumber                       *StringNullWhenEmpty     `json:"faxNumber,omitempty"`
 	GivenName                       *StringNullWhenEmpty     `json:"givenName,omitempty"`
@@ -1232,6 +1401,12 @@ type UserRegistrationMethodSummary struct {
 	UserRegistrationMethodsCount *[]UserRegistrationMethodCount `json:"userRegistrationMethodCounts,omitempty"`
 	UerRoles                     IncludedUserRoles              `json:"userRoles,omitempty"`
 	UserTypes                    IncludedUserTypes              `json:"userTypes,omitempty"`
+}
+
+type UserSet struct {
+	IsBackup    *bool   `json:"isBackup,omitempty"`
+	ID          *string `json:"id,omitempty"` // Either user or group ID
+	Description *string `json:"description,omitempty"`
 }
 
 type UserCredentialUsageDetails struct {

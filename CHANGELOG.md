@@ -1,3 +1,16 @@
+## 2.5.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties [GH-603]
+
+BUG FIXES:
+
+* `azuread_application` - support for "myapp://auth" as a public client redirect URI, to support B2C IEF applications [GH-607]
+* `azuread_application` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
+* `azuread_group` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
+* `azuread_service_principal` - fix a bug that prevented `features` from being empty or having all disabled properties [GH-602]
+
 ## 2.4.0 (September 23, 2021)
 
 FEATURES:
