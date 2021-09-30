@@ -1,17 +1,17 @@
-## 2.5.0 (Unreleased)
+## 2.5.0 (September 30, 2021)
 
 ENHANCEMENTS:
 
-* `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties [GH-603]
-* `data.azuread_user` - support the `cost_center`, `division` and `employee_type` attributes [GH-597]
-* `azuread_user` - support the `cost_center`, `division` and `employee_type` properties [GH-597]
+* `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties ([#603](https://github.com/terraform-providers/terraform-provider-azuread/issues/603))
+* `data.azuread_user` - support the `cost_center`, `division` and `employee_type` attributes ([#597](https://github.com/terraform-providers/terraform-provider-azuread/issues/597))
+* `azuread_user` - support the `cost_center`, `division` and `employee_type` properties ([#597](https://github.com/terraform-providers/terraform-provider-azuread/issues/597))
 
 BUG FIXES:
 
-* `azuread_application` - support for "myapp://auth" as a public client redirect URI, to support B2C IEF applications [GH-607]
-* `azuread_application` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
-* `azuread_group` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
-* `azuread_service_principal` - fix a bug that prevented `features` from being empty or having all disabled properties [GH-602]
+* `azuread_application` - support for "myapp://auth" as a public client redirect URI, to support B2C IEF applications ([#607](https://github.com/terraform-providers/terraform-provider-azuread/issues/607))
+* `azuread_application` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time ([#596](https://github.com/terraform-providers/terraform-provider-azuread/issues/596))
+* `azuread_group` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time ([#596](https://github.com/terraform-providers/terraform-provider-azuread/issues/596))
+* `azuread_service_principal` - fix a bug that prevented `features` from being empty or having all disabled properties ([#602](https://github.com/terraform-providers/terraform-provider-azuread/issues/602))
 
 ## 2.4.0 (September 23, 2021)
 
