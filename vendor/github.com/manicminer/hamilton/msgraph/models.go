@@ -1269,7 +1269,7 @@ type User struct {
 	EmployeeHireDate                *time.Time               `json:"employeeHireDate,omitempty"`
 	EmployeeId                      *StringNullWhenEmpty     `json:"employeeId,omitempty"`
 	EmployeeOrgData                 *EmployeeOrgData         `json:"employeeOrgData,omitempty"`
-	EmployeeType                    *string                  `json:"employeeType,omitempty"`
+	EmployeeType                    *StringNullWhenEmpty     `json:"employeeType,omitempty"`
 	ExternalUserState               *string                  `json:"externalUserState,omitempty"`
 	FaxNumber                       *StringNullWhenEmpty     `json:"faxNumber,omitempty"`
 	GivenName                       *StringNullWhenEmpty     `json:"givenName,omitempty"`
