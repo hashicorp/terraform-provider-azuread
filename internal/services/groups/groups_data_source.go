@@ -53,11 +53,27 @@ func groupsDataSource() *schema.Resource {
 				},
 			},
 
+			"mail_enabled": {
+				Description:   "Whether the groups are mail-enabled",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"object_ids"},
+			},
+
 			"return_all": {
 				Description:  "Retrieve all groups with no filter",
 				Type:         schema.TypeBool,
 				Optional:     true,
 				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
+			},
+
+			"security_enabled": {
+				Description:   "Whether the groups are security-enabled",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"object_ids"},
 			},
 		},
 	}
@@ -76,8 +92,17 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		displayNames = v.([]interface{})
 	}
 
+	var filter []string
+
+	if v, ok := d.GetOkExists("mail_enabled"); ok { //nolint:staticcheck // needed to detect unset booleans
+		filter = append(filter, fmt.Sprintf("mailEnabled eq %t", v.(bool)))
+	}
+	if v, ok := d.GetOkExists("security_enabled"); ok { //nolint:staticcheck // needed to detect unset booleans
+		filter = append(filter, fmt.Sprintf("securityEnabled eq %t", v.(bool)))
+	}
+
 	if returnAll {
-		result, _, err := client.List(ctx, odata.Query{})
+		result, _, err := client.List(ctx, odata.Query{Filter: strings.Join(filter, " and ")})
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve groups")
 		}
@@ -93,9 +118,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
 			displayName := v.(string)
-			query := odata.Query{
-				Filter: fmt.Sprintf("displayName eq '%s'", displayName),
-			}
+			query := odata.Query{Filter: strings.Join(append(filter, fmt.Sprintf("displayName eq '%s'", displayName)), " and ")}
 			result, _, err := client.List(ctx, query)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)

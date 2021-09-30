@@ -1,7 +1,10 @@
 package check
 
 import (
+	"context"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -87,3 +90,29 @@ func (t thatWithKeyType) MatchesOtherKey(other thatWithKeyType) resource.TestChe
 func (t thatWithKeyType) MatchesRegex(r *regexp.Regexp) resource.TestCheckFunc {
 	return resource.TestMatchResourceAttr(t.resourceName, t.key, r)
 }
+
+func (t thatWithKeyType) ValidatesWith(validationFunc KeyValidationFunc) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		ms := state.RootModule()
+		rs, ok := ms.Resources[t.resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s in %s", t.resourceName, ms.Path)
+		}
+		is := rs.Primary
+		if is == nil {
+			return fmt.Errorf("No primary instance: %s in %s", t.resourceName, ms.Path)
+		}
+
+		var values []interface{}
+		for attr, val := range is.Attributes {
+			if attrParts := strings.Split(attr, "."); len(attrParts) == 2 && attrParts[0] == t.key && attrParts[1] != "#" && attrParts[1] != "%" {
+				values = append(values, val)
+			}
+		}
+
+		clients := acceptance.AzureADProvider.Meta().(*clients.Client)
+		return validationFunc(clients.StopContext, clients, values)
+	}
+}
+
+type KeyValidationFunc func(context.Context, *clients.Client, []interface{}) error
