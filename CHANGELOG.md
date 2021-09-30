@@ -1,5 +1,9 @@
 ## 2.5.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties [GH-603]
+
 BUG FIXES:
 
 * `azuread_application` - ensure that `prevent_duplicate_names` does not fail incorrectly when `display_name` is not known at plan time [GH-596]
