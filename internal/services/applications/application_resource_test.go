@@ -627,6 +627,7 @@ resource "azuread_application" "test" {
 
   public_client {
     redirect_uris = [
+      "myapp://auth",
       "https://login.microsoftonline.com/common/oauth2/nativeclient",
       "https://login.live.com/oauth20_desktop.srf",
       "ms-appx-web://Microsoft.AAD.BrokerPlugin/00000000-1111-1111-1111-222222222222",
