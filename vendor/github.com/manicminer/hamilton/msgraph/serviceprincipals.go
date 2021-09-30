@@ -64,8 +64,13 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 	}
 
 	appNotReplicated := func(resp *http.Response, o *odata.OData) bool {
-		if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
-			return o.Error.Match(odata.ErrorServicePrincipalInvalidAppId)
+		if resp != nil && o != nil && o.Error != nil {
+			if resp.StatusCode == http.StatusBadRequest {
+				return o.Error.Match(odata.ErrorServicePrincipalInvalidAppId)
+			}
+			if resp.StatusCode == http.StatusForbidden {
+				return o.Error.Match(odata.ErrorServicePrincipalAppInOtherTenant)
+			}
 		}
 		return false
 	}

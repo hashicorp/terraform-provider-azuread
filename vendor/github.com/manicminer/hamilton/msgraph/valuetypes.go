@@ -19,6 +19,47 @@ func (s StringNullWhenEmpty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(s))
 }
 
+type AccessPackageCatalogStatus = string
+
+const (
+	AccessPackageCatalogStatusPublished AccessPackageCatalogStatus = "Published"
+)
+
+type AccessPackageCatalogType = string
+
+const (
+	AccessPackageCatalogTypeServiceDefault AccessPackageCatalogType = "ServiceDefault"
+	AccessPackageCatalogTypeUserManaged    AccessPackageCatalogType = "UserManaged"
+)
+
+type AccessPackageResourceOriginSystem = string
+
+const (
+	AccessPackageResourceOriginSystemAadApplication   AccessPackageResourceOriginSystem = "AadApplication"
+	AccessPackageResourceOriginSystemAadGroup         AccessPackageResourceOriginSystem = "AadGroup"
+	AccessPackageResourceOriginSystemSharePointOnline AccessPackageResourceOriginSystem = "SharePointOnline"
+)
+
+type AccessPackageResourceRequestState = string
+
+const (
+	AccessPackageResourceRequestStateDelivered AccessPackageResourceRequestState = "Delivered"
+)
+
+type AccessPackageResourceRequestType = string
+
+const (
+	AccessPackageResourceRequestTypeAdminAdd     AccessPackageResourceRequestType = "AdminAdd"
+	AccessPackageResourceRequestTypeAdmminRemove AccessPackageResourceRequestType = "AdminRemove"
+)
+
+type AccessPackageResourceType = string
+
+const (
+	AccessPackageResourceTypeApplication          AccessPackageResourceType = "Application"
+	AccessPackageResourceTypeSharePointOnlineSite AccessPackageResourceType = "SharePoint Online Site"
+)
+
 type AgeGroup = StringNullWhenEmpty
 
 const (
@@ -83,6 +124,14 @@ type AppRoleAllowedMemberType = string
 const (
 	AppRoleAllowedMemberTypeApplication AppRoleAllowedMemberType = "Application"
 	AppRoleAllowedMemberTypeUser        AppRoleAllowedMemberType = "User"
+)
+
+type ApprovalMode = string
+
+const (
+	ApprovalModeNoApproval  ApprovalMode = "NoApproval"
+	ApprovalModeSerial      ApprovalMode = "Serial"
+	ApprovalModeSingleStage ApprovalMode = "SingleStage"
 )
 
 type AttestationLevel = string
@@ -352,6 +401,19 @@ const (
 	RegistrationStatusEnabled       RegistrationStatus = "enabled"
 	RegistrationStatusCapable       RegistrationStatus = "capable"
 	RegistrationStatusMfaRegistered RegistrationStatus = "mfaRegistered"
+)
+
+type RequestorSettingsScopeType = string
+
+const (
+	RequestorSettingsScopeTypeAllConfiguredConnectedOrganizationSubjects RequestorSettingsScopeType = "AllConfiguredConnectedOrganizationSubjects"
+	RequestorSettingsScopeTypeAllExistingConnectedOrganizationSubjects   RequestorSettingsScopeType = "AllExistingConnectedOrganizationSubjects"
+	RequestorSettingsScopeTypeAllExistingDirectoryMemberUsers            RequestorSettingsScopeType = "AllExistingDirectoryMemberUsers"
+	RequestorSettingsScopeTypeAllExistingDirectorySubjects               RequestorSettingsScopeType = "AllExistingDirectorySubjects"
+	RequestorSettingsScopeTypeAllExternalSubjects                        RequestorSettingsScopeType = "AllExternalSubjects"
+	RequestorSettingsScopeTypeNoSubjects                                 RequestorSettingsScopeType = "NoSubjects"
+	RequestorSettingsScopeTypeSpecificConnectedOrganizationSubjects      RequestorSettingsScopeType = "SpecificConnectedOrganizationSubjects"
+	RequestorSettingsScopeTypeSpecificDirectorySubjects                  RequestorSettingsScopeType = "SpecificDirectorySubjects"
 )
 
 type ResourceAccessType = string
