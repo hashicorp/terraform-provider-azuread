@@ -137,6 +137,13 @@ func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
+			Config: r.noFeatures(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -166,6 +173,20 @@ func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
 		data.ImportStep("use_existing"),
 		{
 			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+		{
+			Config: r.noFeatures(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -460,6 +481,35 @@ resource "azuread_service_principal" "test" {
   saml_single_sign_on {
     relay_state = "/samlHome"
   }
+}
+`, r.templateComplete(data), data.RandomInteger)
+}
+
+func (r ServicePrincipalResource) noFeatures(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+
+  account_enabled               = false
+  alternative_names             = ["foo", "bar"]
+  app_role_assignment_required  = true
+  description                   = "An internal app for testing"
+  login_url                     = "https://test-%[2]d.internal/login"
+  notes                         = "Just testing something"
+  preferred_single_sign_on_mode = "saml"
+
+  features {
+    custom_single_sign_on_app = false
+    enterprise_application    = false
+    gallery_application       = false
+  }
+
+  notification_email_addresses = [
+    "alerts.internal@hashitown.net",
+    "cto@hashitown.net",
+  ]
 }
 `, r.templateComplete(data), data.RandomInteger)
 }

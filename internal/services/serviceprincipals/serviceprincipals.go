@@ -7,9 +7,11 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func expandFeatures(in []interface{}) (out []string) {
+func expandFeatures(in []interface{}) []string {
+	out := make([]string, 0)
+
 	if len(in) == 0 || in[0] == nil {
-		return
+		return out
 	}
 
 	features := in[0].(map[string]interface{})
@@ -30,7 +32,7 @@ func expandFeatures(in []interface{}) (out []string) {
 		out = append(out, "HideApp")
 	}
 
-	return
+	return out
 }
 
 func expandSamlSingleSignOn(in []interface{}) *msgraph.SamlSingleSignOnSettings {
