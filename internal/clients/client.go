@@ -11,6 +11,7 @@ import (
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
+	identitygovernance "github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/client"
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
 	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
@@ -33,6 +34,7 @@ type Client struct {
 	Applications       *applications.Client
 	AppRoleAssignments *approleassignments.Client
 	ConditionalAccess  *conditionalaccess.Client
+	IdentityGovernance *identitygovernance.Client
 	DirectoryRoles     *directoryroles.Client
 	Domains            *domains.Client
 	Groups             *groups.Client
@@ -48,6 +50,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.AppRoleAssignments = approleassignments.NewClient(o)
 	client.Domains = domains.NewClient(o)
 	client.ConditionalAccess = conditionalaccess.NewClient(o)
+	client.IdentityGovernance = identitygovernance.NewClient(o)
 	client.DirectoryRoles = directoryroles.NewClient(o)
 	client.Groups = groups.NewClient(o)
 	client.Invitations = invitations.NewClient(o)
