@@ -327,7 +327,7 @@ The `identifier_uris` field was previously a List type field and is now a Set ty
 
 The `oauth2_permission_scope` block is no longer Computed, omitting this block will cause Terraform to remove any OAuth2 permission scopes published by an application.
 
-The `owners` field is no longer Computed, omitting this field will cause Terraform remove any owners for an application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
+The `owners` field is no longer Computed, omitting this field will cause Terraform to remove any owners for an application. It's recommended to specify the object ID of the authenticated principal running Terraform, to ensure sufficient permissions that the application can be subsequently updated.
 
 The `sign_in_audience` field is no longer Computed, omitting this field will cause Terraform to default this value to `AzureADMyOrg`.
 

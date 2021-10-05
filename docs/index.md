@@ -116,7 +116,7 @@ More information on [how to configure a Service Principal using a Client Secret 
 When authenticating using Managed Identity, the following fields can be set:
 
 * `msi_endpoint` - (Optional) The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically. This can also be sourced from the `ARM_MSI_ENDPOINT` environment variable.
-* `use_msi` - (Optional) Should Managed Identity be used for authentication? This can also be sourced from the `ARM_USE_MSI` environment variable. Defaults to `false`.
+* `use_msi` - (Optional) Should a Managed Identity be used for authentication? This can also be sourced from the `ARM_USE_MSI` environment variable. Defaults to `false`.
 
 More information on [how to configure a Service Principal using Managed Identity can be found in this guide](guides/managed_service_identity.html).
 
