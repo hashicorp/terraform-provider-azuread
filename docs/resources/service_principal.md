@@ -134,7 +134,7 @@ In addition to all arguments above, the following attributes are exported:
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `display_name` - The display name of the application associated with this service principal.
 * `homepage_url` - Home page or landing page of the associated application.
-* `logout_url` - The URL that will be used by Microsoft's authorization service to logout an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.
+* `logout_url` - The URL that will be used by Microsoft's authorization service to log out an user using OpenId Connect front-channel, back-channel or SAML logout protocols, taken from the associated application.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, as exposed by the associated application, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_permission_scopes` - A list of OAuth 2.0 delegated permission scopes exposed by the associated application, as documented below.
 * `object_id` - The object ID of the service principal.
