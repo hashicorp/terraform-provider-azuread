@@ -156,11 +156,11 @@ func NewAppRoleAssignedToClient(tenantId string) *AppRoleAssignedToClient {
 // List returns a list of app role assignments granted for a service principal
 func (c *AppRoleAssignedToClient) List(ctx context.Context, id string, query odata.Query) (*[]AppRoleAssignment, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", id),
 			HasTenantId: true,
-			Params:      query.Values(),
 		},
 	})
 	if err != nil {

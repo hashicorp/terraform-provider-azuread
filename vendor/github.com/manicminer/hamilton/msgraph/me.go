@@ -27,10 +27,10 @@ func (c *MeClient) Get(ctx context.Context, query odata.Query) (*Me, int, error)
 	var status int
 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/me",
-			Params:      query.Values(),
 			HasTenantId: false,
 		},
 	})
@@ -57,10 +57,10 @@ func (c *MeClient) GetProfile(ctx context.Context, query odata.Query) (*Me, int,
 	var status int
 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/me/profile",
-			Params:      query.Values(),
 			HasTenantId: false,
 		},
 	})

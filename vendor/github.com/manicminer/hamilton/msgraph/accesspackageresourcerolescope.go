@@ -31,10 +31,10 @@ func (c *AccessPackageResourceRoleScopeClient) List(ctx context.Context, query o
 	}
 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -111,16 +111,15 @@ func (c *AccessPackageResourceRoleScopeClient) Create(ctx context.Context, acces
 // Get retrieves a AccessPackageResourceRoleScope.
 func (c *AccessPackageResourceRoleScopeClient) Get(ctx context.Context, accessPackageId string, id string) (*AccessPackageResourceRoleScope, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData: odata.Query{
+			Expand: odata.Expand{
+				Relationship: "accessPackageResourceRoleScopes",
+				Select:       []string{"accessPackageResourceRole", "accessPackageResourceScope"},
+			},
+		}, //The Resource we made a request to add
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
-			Params: odata.Query{
-				Expand: odata.Expand{
-					Relationship: "accessPackageResourceRoleScopes",
-					Select:       []string{"accessPackageResourceRole", "accessPackageResourceScope"},
-				},
-				//Filter: fmt.Sprintf("startswith(originId,'%s')", id),
-			}.Values(), //The Resource we made a request to add
+			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
 			HasTenantId: true,
 		},
 	})

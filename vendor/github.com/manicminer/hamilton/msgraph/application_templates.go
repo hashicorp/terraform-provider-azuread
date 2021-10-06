@@ -27,10 +27,10 @@ func NewApplicationTemplatesClient(tenantId string) *ApplicationTemplatesClient 
 func (c *ApplicationTemplatesClient) List(ctx context.Context, query odata.Query) (*[]ApplicationTemplate, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/applicationTemplates",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -57,10 +57,10 @@ func (c *ApplicationTemplatesClient) List(ctx context.Context, query odata.Query
 // Get retrieves an ApplicationTemplate
 func (c *ApplicationTemplatesClient) Get(ctx context.Context, id string, query odata.Query) (*ApplicationTemplate, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applicationTemplates/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

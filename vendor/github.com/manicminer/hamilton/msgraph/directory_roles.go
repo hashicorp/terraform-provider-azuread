@@ -110,10 +110,12 @@ func (c *DirectoryRolesClient) GetByTemplateId(ctx context.Context, templateId s
 // id is the object ID of the directory role.
 func (c *DirectoryRolesClient) ListMembers(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directoryRoles/%s/members", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -228,10 +230,12 @@ func (c *DirectoryRolesClient) RemoveMembers(ctx context.Context, directoryRoleI
 // memberId is the object ID of the member object.
 func (c *DirectoryRolesClient) GetMember(ctx context.Context, directoryRoleId, memberId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData: odata.Query{
+			Select: []string{"id", "url"},
+		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directoryRoles/%s/members/%s/$ref", directoryRoleId, memberId),
-			Params:      odata.Query{Select: []string{"id", "url"}}.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -25,12 +25,14 @@ func NewDirectoryObjectsClient(tenantId string) *DirectoryObjectsClient {
 
 // Get retrieves a DirectoryObject.
 func (c *DirectoryObjectsClient) Get(ctx context.Context, id string, query odata.Query) (*DirectoryObject, int, error) {
+	query.Metadata = odata.MetadataFull
+
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directoryObjects/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

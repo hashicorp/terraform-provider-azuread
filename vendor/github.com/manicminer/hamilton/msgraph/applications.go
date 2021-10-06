@@ -27,10 +27,10 @@ func NewApplicationsClient(tenantId string) *ApplicationsClient {
 func (c *ApplicationsClient) List(ctx context.Context, query odata.Query) (*[]Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/applications",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -93,10 +93,10 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 func (c *ApplicationsClient) Get(ctx context.Context, id string, query odata.Query) (*Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -123,10 +123,10 @@ func (c *ApplicationsClient) Get(ctx context.Context, id string, query odata.Que
 func (c *ApplicationsClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -229,10 +229,10 @@ func (c *ApplicationsClient) DeletePermanently(ctx context.Context, id string) (
 func (c *ApplicationsClient) ListDeleted(ctx context.Context, query odata.Query) (*[]Application, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/directory/deleteditems/microsoft.graph.application",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -355,10 +355,12 @@ func (c *ApplicationsClient) RemovePassword(ctx context.Context, applicationId s
 func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s/owners", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -396,10 +398,12 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 func (c *ApplicationsClient) GetOwner(ctx context.Context, applicationId, ownerId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id", "url"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s/owners/%s/$ref", applicationId, ownerId),
-			Params:      odata.Query{Select: []string{"id", "url"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -518,10 +522,10 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 func (c *ApplicationsClient) ListExtensions(ctx context.Context, id string, query odata.Query) (*[]ApplicationExtension, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/applications/%s/extensionProperties", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -26,10 +26,10 @@ func NewGroupsClient(tenantId string) *GroupsClient {
 func (c *GroupsClient) List(ctx context.Context, query odata.Query) (*[]Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/groups",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -100,10 +100,10 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 func (c *GroupsClient) Get(ctx context.Context, id string, query odata.Query) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -145,10 +145,10 @@ func (c *GroupsClient) GetWithSchemaExtensions(ctx context.Context, id string, q
 	var resp *http.Response
 	resp, status, _, err = c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -174,10 +174,10 @@ func (c *GroupsClient) GetWithSchemaExtensions(ctx context.Context, id string, q
 func (c *GroupsClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -262,10 +262,10 @@ func (c *GroupsClient) DeletePermanently(ctx context.Context, id string) (int, e
 func (c *GroupsClient) ListDeleted(ctx context.Context, query odata.Query) (*[]Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/directory/deleteditems/microsoft.graph.group",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -318,10 +318,12 @@ func (c *GroupsClient) RestoreDeleted(ctx context.Context, id string) (*Group, i
 func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/members", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -359,10 +361,12 @@ func (c *GroupsClient) ListMembers(ctx context.Context, id string) (*[]string, i
 func (c *GroupsClient) GetMember(ctx context.Context, groupId, memberId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id", "url"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/members/%s/$ref", groupId, memberId),
-			Params:      odata.Query{Select: []string{"id", "url"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -480,10 +484,12 @@ func (c *GroupsClient) RemoveMembers(ctx context.Context, id string, memberIds *
 func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/owners", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -521,10 +527,12 @@ func (c *GroupsClient) ListOwners(ctx context.Context, id string) (*[]string, in
 func (c *GroupsClient) GetOwner(ctx context.Context, groupId, ownerId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id", "url"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/groups/%s/owners/%s/$ref", groupId, ownerId),
-			Params:      odata.Query{Select: []string{"id", "url"}}.Values(),
 			HasTenantId: true,
 		},
 	})
