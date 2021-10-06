@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
@@ -142,6 +143,39 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 	}
 
 	id := parse.NewCredentialID(*sp.ID, "password", *newCredential.KeyId)
+
+	// Wait for the credential to appear in the service principal manifest, this can take several minutes
+	timeout, _ := ctx.Deadline()
+	polledForCredential, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if servicePrincipal.PasswordCredentials != nil {
+				for _, cred := range *servicePrincipal.PasswordCredentials {
+					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+						return &cred, "Done", nil
+					}
+				}
+			}
+
+			return nil, "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if err != nil {
+		return tf.ErrorDiagF(err, "Waiting for password credential for service principal with object ID %q", id.ObjectId)
+	} else if polledForCredential == nil {
+		return tf.ErrorDiagF(errors.New("password credential not found in service principal manifest"), "Waiting for password credential for service principal with object ID %q", id.ObjectId)
+	}
+
 	d.SetId(id.String())
 	d.Set("value", newCredential.SecretText)
 

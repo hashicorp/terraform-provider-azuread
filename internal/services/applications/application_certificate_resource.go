@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -170,6 +171,38 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 	}
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Adding certificate for application with object ID %q", id.ObjectId)
+	}
+
+	// Wait for the credential to appear in the application manifest, this can take several minutes
+	timeout, _ := ctx.Deadline()
+	polledForCredential, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if app.KeyCredentials != nil {
+				for _, cred := range *app.KeyCredentials {
+					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+						return &cred, "Done", nil
+					}
+				}
+			}
+
+			return nil, "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if err != nil {
+		return tf.ErrorDiagF(err, "Waiting for certificate credential for application with object ID %q", id.ObjectId)
+	} else if polledForCredential == nil {
+		return tf.ErrorDiagF(errors.New("certificate credential not found in application manifest"), "Waiting for certificate credential for application with object ID %q", id.ObjectId)
 	}
 
 	d.SetId(id.String())
