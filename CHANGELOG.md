@@ -1,3 +1,9 @@
+## 2.6.0 (Unreleased)
+
+BUG FIXES:
+
+* **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` [GH-616]
+
 ## 2.5.0 (September 30, 2021)
 
 ENHANCEMENTS:
