@@ -3,6 +3,7 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -95,9 +97,13 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if memberObject == nil {
 		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 	}
-	if memberObject.ODataId == nil {
-		return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
-	}
+	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+	//if memberObject.ODataId == nil {
+	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
+	//}
+	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 	group.Members = &msgraph.Members{*memberObject}
 
 	if _, err := client.AddMembers(ctx, group); err != nil {

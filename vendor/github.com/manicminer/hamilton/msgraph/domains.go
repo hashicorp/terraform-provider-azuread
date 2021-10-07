@@ -27,9 +27,9 @@ func (c *DomainsClient) List(ctx context.Context, query odata.Query) (*[]Domain,
 	var status int
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
+		OData:            query,
 		Uri: Uri{
 			Entity:      "/domains",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -59,10 +59,10 @@ func (c *DomainsClient) Get(ctx context.Context, id string, query odata.Query) (
 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/domains/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

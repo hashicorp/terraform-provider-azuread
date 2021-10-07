@@ -24,10 +24,10 @@ func NewAccessPackageResourceClient(tenantId string) *AccessPackageResourceClien
 func (c *AccessPackageResourceClient) List(ctx context.Context, catalogId string, query odata.Query) (*[]AccessPackageResource, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -56,12 +56,12 @@ func (c *AccessPackageResourceClient) List(ctx context.Context, catalogId string
 func (c *AccessPackageResourceClient) Get(ctx context.Context, catalogId string, originId string) (*AccessPackageResource, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Filter: fmt.Sprintf("startswith(originId,'%s')", originId),
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
-			Params: odata.Query{
-				Filter: fmt.Sprintf("startswith(originId,'%s')", originId),
-			}.Values(),
+			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
 			HasTenantId: true,
 		},
 	})

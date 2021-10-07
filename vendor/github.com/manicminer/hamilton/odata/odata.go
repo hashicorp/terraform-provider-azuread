@@ -7,16 +7,7 @@ import (
 	"strings"
 )
 
-const (
-	ErrorAddedObjectReferencesAlreadyExist      = "One or more added object references already exist"
-	ErrorCannotDeleteOrUpdateEnabledEntitlement = "Permission (scope or role) cannot be deleted or updated unless disabled first"
-	ErrorConflictingObjectPresentInDirectory    = "A conflicting object with one or more of the specified property values is present in the directory"
-	ErrorResourceDoesNotExist                   = "Resource '.+' does not exist or one of its queried reference-property objects are not present"
-	ErrorRemovedObjectReferencesDoNotExist      = "One or more removed object references do not exist"
-	ErrorServicePrincipalAppInOtherTenant       = "When using this permission, the backing application of the service principal being created must in the local tenant"
-	ErrorServicePrincipalInvalidAppId           = "The appId '.+' of the service principal does not reference a valid application object"
-	ErrorUnknownUnsupportedQuery                = "UnknownError: Unsupported Query"
-)
+const ODataVersion = "4.0" // TODO: support 4.01 - https://docs.oasis-open.org/odata/odata-json-format/v4.01/cs01/odata-json-format-v4.01-cs01.html#_Toc499720587
 
 type Id string
 
@@ -29,75 +20,16 @@ func (o *Id) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ShortType = string
+type Link string
 
-const (
-	ShortTypeAccessPackage                               ShortType = "accessPackage"
-	ShortTypeAccessPackageAssignmentPolicy               ShortType = "accessPackageAssignmentPolicy"
-	ShortTypeAccessPackageCatalog                        ShortType = "accessPackageCatalog"
-	ShortTypeAccessPackageResourceRequest                ShortType = "accessPackageResourceRequest"
-	ShortTypeAdministrativeUnit                          ShortType = "administrativeUnit"
-	ShortTypeApplication                                 ShortType = "application"
-	ShortTypeConditionalAccessPolicy                     ShortType = "conditionalAccessPolicy"
-	ShortTypeConnectedOrganizationMembers                ShortType = "connectedOrganizationMembers"
-	ShortTypeConnectionInfo                              ShortType = "connectionInfo"
-	ShortTypeCountryNamedLocation                        ShortType = "countryNamedLocation"
-	ShortTypeDevice                                      ShortType = "device"
-	ShortTypeDirectoryRole                               ShortType = "directoryRole"
-	ShortTypeDirectoryRoleTemplate                       ShortType = "directoryRoleTemplate"
-	ShortTypeDomain                                      ShortType = "domain"
-	ShortTypeEmailAuthenticationMethod                   ShortType = "emailAuthenticationMethod"
-	ShortTypeFido2AuthenticationMethod                   ShortType = "fido2AuthenticationMethod"
-	ShortTypeGroup                                       ShortType = "group"
-	ShortTypeGroupMembers                                ShortType = "groupMembers"
-	ShortTypeIpNamedLocation                             ShortType = "ipNamedLocation"
-	ShortTypeNamedLocation                               ShortType = "namedLocation"
-	ShortTypeMicrosoftAuthenticatorAuthenticationMethod  ShortType = "microsoftAuthenticatorAuthenticationMethod"
-	ShortTypeOrganization                                ShortType = "organization"
-	ShortTypePasswordAuthenticationMethod                ShortType = "passwordAuthenticationMethod"
-	ShortTypePhoneAuthenticationMethod                   ShortType = "phoneAuthenticationMethod"
-	ShortTypeServicePrincipal                            ShortType = "servicePrincipal"
-	ShortTypeSingleUser                                  ShortType = "singleUser"
-	ShortTypeSocialIdentityProvider                      ShortType = "socialIdentityProvider"
-	ShortTypeTemporaryAccessPassAuthenticationMethod     ShortType = "temporaryAccessPassAuthenticationMethod"
-	ShortTypeUser                                        ShortType = "user"
-	ShortTypeWindowsHelloForBusinessAuthenticationMethod ShortType = "windowsHelloForBusinessAuthenticationMethod"
-)
-
-type Type = string
-
-const (
-	TypeAccessPackage                               Type = "#microsoft.graph.accessPackage"
-	TypeAccessPackageAssignmentPolicy               Type = "#microsoft.graph.accessPackageAssignmentPolicy"
-	TypeAccessPackageCatalog                        Type = "#microsoft.graph.accessPackageCatalog"
-	TypeAccessPackageResourceRequest                Type = "#microsoft.graph.accessPackageResourceRequest"
-	TypeAdministrativeUnit                          Type = "#microsoft.graph.administrativeUnit"
-	TypeApplication                                 Type = "#microsoft.graph.application"
-	TypeConditionalAccessPolicy                     Type = "#microsoft.graph.conditionalAccessPolicy"
-	TypeConnectedOrganizationMembers                Type = "#microsoft.graph.connectedOrganizationMembers"
-	TypeConnectionInfo                              Type = "#microsoft.graph.connectionInfo"
-	TypeCountryNamedLocation                        Type = "#microsoft.graph.countryNamedLocation"
-	TypeDevice                                      Type = "#microsoft.graph.device"
-	TypeDirectoryRole                               Type = "#microsoft.graph.directoryRole"
-	TypeDirectoryRoleTemplate                       Type = "#microsoft.graph.directoryRoleTemplate"
-	TypeDomain                                      Type = "#microsoft.graph.domain"
-	TypeEmailAuthenticationMethod                   Type = "#microsoft.graph.emailAuthenticationMethod"
-	TypeFido2AuthenticationMethod                   Type = "#microsoft.graph.fido2AuthenticationMethod"
-	TypeGroup                                       Type = "#microsoft.graph.group"
-	TypeGroupMembers                                Type = "#microsoft.graph.groupMembers"
-	TypeIpNamedLocation                             Type = "#microsoft.graph.ipNamedLocation"
-	TypeNamedLocation                               Type = "#microsoft.graph.namedLocation"
-	TypeMicrosoftAuthenticatorAuthenticationMethod  Type = "#microsoft.graph.microsoftAuthenticatorAuthenticationMethod"
-	TypeOrganization                                Type = "#microsoft.graph.organization"
-	TypePasswordAuthenticationMethod                Type = "#microsoft.graph.passwordAuthenticationMethod"
-	TypePhoneAuthenticationMethod                   Type = "#microsoft.graph.phoneAuthenticationMethod"
-	TypeServicePrincipal                            Type = "#microsoft.graph.servicePrincipal"
-	TypeSingleUser                                  Type = "#microsoft.graph.singleUser"
-	TypeSocialIdentityProvider                      Type = "#microsoft.graph.socialIdentityProvider"
-	TypeTemporaryAccessPassAuthenticationMethod     Type = "#microsoft.graph.temporaryAccessPassAuthenticationMethod"
-	TypeUser                                        Type = "#microsoft.graph.user"
-	TypeWindowsHelloForBusinessAuthenticationMethod Type = "#microsoft.graph.windowsHelloForBusinessAuthenticationMethod"
-)
+func (o *Link) UnmarshalJSON(data []byte) error {
+	var link string
+	if err := json.Unmarshal(data, &link); err != nil {
+		return err
+	}
+	*o = Link(regexp.MustCompile(`/v2/`).ReplaceAllString(link, `/v1.0/`))
+	return nil
+}
 
 // OData is used to unmarshall OData metadata from an API response.
 type OData struct {
@@ -109,6 +41,7 @@ type OData struct {
 	Delta        *string `json:"@odata.delta"`
 	DeltaLink    *string `json:"@odata.deltaLink"`
 	Id           *Id     `json:"@odata.id"`
+	EditLink     *Link   `json:"@odata.editLink"`
 	Etag         *string `json:"@odata.etag"`
 
 	Error *Error `json:"-"`

@@ -26,10 +26,10 @@ func NewUsersClient(tenantId string) *UsersClient {
 func (c *UsersClient) List(ctx context.Context, query odata.Query) (*[]User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/users",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -92,10 +92,10 @@ func (c *UsersClient) Create(ctx context.Context, user User) (*User, int, error)
 func (c *UsersClient) Get(ctx context.Context, id string, query odata.Query) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -137,10 +137,10 @@ func (c *UsersClient) GetWithSchemaExtensions(ctx context.Context, id string, qu
 	var resp *http.Response
 	resp, status, _, err = c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -166,10 +166,10 @@ func (c *UsersClient) GetWithSchemaExtensions(ctx context.Context, id string, qu
 func (c *UsersClient) GetDeleted(ctx context.Context, id string, query odata.Query) (*User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -254,10 +254,10 @@ func (c *UsersClient) DeletePermanently(ctx context.Context, id string) (int, er
 func (c *UsersClient) ListDeleted(ctx context.Context, query odata.Query) (*[]User, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/directory/deleteditems/microsoft.graph.user",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -308,12 +308,12 @@ func (c *UsersClient) RestoreDeleted(ctx context.Context, id string) (*User, int
 // ListGroupMemberships returns a list of Groups the user is member of, optionally queried using OData.
 func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, query odata.Query) (*[]Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		DisablePaging:          query.Top > 0,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		DisablePaging:          query.Top > 0,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/transitiveMemberOf", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -352,6 +352,56 @@ func (c *UsersClient) Sendmail(ctx context.Context, id string, message MailMessa
 		ValidStatusCodes: []int{http.StatusOK, http.StatusAccepted},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/sendMail", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("UsersClient.BaseClient.Post(): %v", err)
+	}
+
+	return status, nil
+}
+
+// GetManager retrieves an user or organizational contact assigned as the user's manager.
+func (c *UsersClient) GetManager(ctx context.Context, id string) (*User, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/users/%s/manager", id),
+		},
+	})
+	if err != nil {
+		return nil, status, err
+	}
+
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	var manager User
+	if err := json.Unmarshal(respBody, &manager); err != nil {
+		return nil, status, err
+	}
+
+	return &manager, status, nil
+}
+
+// AssignManager assigns a user's manager.
+func (c *UsersClient) AssignManager(ctx context.Context, id string, manager User) (int, error) {
+	var status int
+
+	body, err := json.Marshal(struct {
+		Manager odata.Id `json:"@odata.id"`
+	}{
+		Manager: *manager.ODataId,
+	})
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+	_, status, _, err = c.BaseClient.Put(ctx, PutHttpRequestInput{
+		Body:             body,
+		ValidStatusCodes: []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/users/%s/manager/$ref", id),
 			HasTenantId: true,
 		},
 	})

@@ -26,10 +26,10 @@ func NewSchemaExtensionsClient(tenantId string) *SchemaExtensionsClient {
 func (c *SchemaExtensionsClient) List(ctx context.Context, query odata.Query) (*[]SchemaExtension, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/schemaExtensions",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -57,10 +57,10 @@ func (c *SchemaExtensionsClient) List(ctx context.Context, query odata.Query) (*
 func (c *SchemaExtensionsClient) Get(ctx context.Context, id string, query odata.Query) (*SchemaExtension, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/schemaExtensions/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

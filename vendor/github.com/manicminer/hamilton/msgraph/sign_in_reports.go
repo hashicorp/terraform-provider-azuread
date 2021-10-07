@@ -32,12 +32,12 @@ func (c *SignInReportsClient) List(ctx context.Context, query odata.Query) (*[]S
 	}
 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		DisablePaging:          query.Top > 0,
 		ConsistencyFailureFunc: unknownError,
+		DisablePaging:          query.Top > 0,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/auditLogs/signIns",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -65,10 +65,10 @@ func (c *SignInReportsClient) List(ctx context.Context, query odata.Query) (*[]S
 func (c *SignInReportsClient) Get(ctx context.Context, id string, query odata.Query) (*SignInReport, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/auditLogs/signIns/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -418,9 +418,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if ownerObject.ID == nil {
 			return nil, errors.New("ownerObject ID was nil")
 		}
-		if ownerObject.ODataId == nil {
-			return nil, errors.New("ODataId was nil")
-		}
+		// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+		//if ownerObject.ODataId == nil {
+		//	return nil, errors.New("ODataId was nil")
+		//}
+		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+			client.BaseClient.Endpoint, client.BaseClient.TenantId, id)))
+
 		if ownerObject.ODataType == nil {
 			return nil, errors.New("ownerObject ODataType was nil")
 		}
@@ -436,15 +440,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// First look for the calling principal in the specified owners; it should always be included in the initial
 		// owners to avoid orphaning a group when the caller doesn't have the Groups.ReadWrite.All scope.
-		for _, id := range owners {
-			ownerObject, err := getOwnerObject(ctx, id.(string))
+		for _, ownerId := range owners {
+			ownerObject, err := getOwnerObject(ctx, ownerId.(string))
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 			}
 			if strings.EqualFold(*ownerObject.ID, callerId) {
-				if ownerObject.ODataId == nil {
-					return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
-				}
 				if ownerCount < 20 {
 					ownersFirst20 = append(ownersFirst20, *ownerObject)
 				} else {
@@ -456,10 +457,10 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// Then look for users, and finally service principals
 		for _, t := range []odata.Type{odata.TypeUser, odata.TypeServicePrincipal} {
-			for _, id := range owners {
-				ownerObject, err := getOwnerObject(ctx, id.(string))
+			for _, ownerId := range owners {
+				ownerObject, err := getOwnerObject(ctx, ownerId.(string))
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if *ownerObject.ODataType == t && !strings.EqualFold(*ownerObject.ID, callerId) {
 					if ownerCount < 20 {
@@ -508,17 +509,21 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Add members after the group is created
 	members := make(msgraph.Members, 0)
 	if v, ok := d.GetOk("members"); ok {
-		for _, id := range v.(*schema.Set).List() {
-			memberObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+		for _, memberId := range v.(*schema.Set).List() {
+			memberObject, _, err := directoryObjectsClient.Get(ctx, memberId.(string), odata.Query{})
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", memberId)
 			}
 			if memberObject == nil {
-				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", id)
+				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			if memberObject.ODataId == nil {
-				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id)
-			}
+			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+			//if memberObject.ODataId == nil {
+			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
+			//}
+			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 			members = append(members, *memberObject)
 		}
 	}
@@ -603,14 +608,21 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if len(membersToAdd) > 0 {
 			newMembers := make(msgraph.Members, 0)
-			for _, m := range membersToAdd {
-				memberObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, memberId := range membersToAdd {
+				memberObject, _, err := directoryObjectsClient.Get(ctx, memberId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve principal object %q", memberId)
 				}
 				if memberObject == nil {
-					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", memberId)
+				//}
+				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 				newMembers = append(newMembers, *memberObject)
 			}
 
@@ -641,14 +653,21 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
-			for _, m := range ownersToAdd {
-				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, ownerId := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if ownerObject == nil {
-					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+				//}
+				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+
 				newOwners = append(newOwners, *ownerObject)
 			}
 

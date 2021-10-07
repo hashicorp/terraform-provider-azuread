@@ -25,10 +25,10 @@ func NewAccessPackageClient(tenantId string) *AccessPackageClient {
 func (c *AccessPackageClient) List(ctx context.Context, query odata.Query) (*[]AccessPackage, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identityGovernance/entitlementManagement/accessPackages",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -90,10 +90,10 @@ func (c *AccessPackageClient) Create(ctx context.Context, accessPackage AccessPa
 func (c *AccessPackageClient) Get(ctx context.Context, id string, query odata.Query) (*AccessPackage, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

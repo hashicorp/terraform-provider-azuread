@@ -45,6 +45,7 @@ type ValidStatusFunc func(*http.Response, *odata.OData) bool
 type HttpRequestInput interface {
 	GetConsistencyFailureFunc() ConsistencyFailureFunc
 	GetContentType() string
+	GetOData() odata.Query
 	GetValidStatusCodes() []int
 	GetValidStatusFunc() ValidStatusFunc
 }
@@ -132,6 +133,10 @@ func (c Client) buildUri(uri Uri) (string, error) {
 func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http.Response, int, *odata.OData, error) {
 	var status int
 
+	query := input.GetOData()
+	req.Header = query.AppendHeaders(req.Header)
+	req.Header.Add("Content-Type", input.GetContentType())
+
 	if c.Authorizer != nil {
 		token, err := c.Authorizer.Token()
 		if err != nil {
@@ -139,10 +144,6 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 		}
 		token.SetAuthHeader(req)
 	}
-
-	req.Header.Add("Accept", "application/json")
-	req.Header.Add("Content-Type", input.GetContentType())
-	//req.Header.Add("ConsistencyLevel", "eventual")
 
 	if c.UserAgent != "" {
 		req.Header.Add("User-Agent", c.UserAgent)
@@ -256,6 +257,7 @@ func containsStatusCode(expected []int, actual int) bool {
 // DeleteHttpRequestInput configures a DELETE request.
 type DeleteHttpRequestInput struct {
 	ConsistencyFailureFunc ConsistencyFailureFunc
+	OData                  odata.Query
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
 	Uri                    Uri
@@ -269,6 +271,11 @@ func (i DeleteHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFu
 // GetContentType returns the content type for the request, currently only application/json is supported
 func (i DeleteHttpRequestInput) GetContentType() string {
 	return "application/json; charset=utf-8"
+}
+
+// GetOData returns the OData request metadata
+func (i DeleteHttpRequestInput) GetOData() odata.Query {
+	return i.OData
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a DELETE request.
@@ -303,6 +310,7 @@ func (c Client) Delete(ctx context.Context, input DeleteHttpRequestInput) (*http
 type GetHttpRequestInput struct {
 	ConsistencyFailureFunc ConsistencyFailureFunc
 	DisablePaging          bool
+	OData                  odata.Query
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
 	Uri                    Uri
@@ -317,6 +325,11 @@ func (i GetHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFunc 
 // GetContentType returns the content type for the request, currently only application/json is supported
 func (i GetHttpRequestInput) GetContentType() string {
 	return "application/json; charset=utf-8"
+}
+
+// GetOData returns the OData request metadata
+func (i GetHttpRequestInput) GetOData() odata.Query {
+	return i.OData
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a GET request.
@@ -336,6 +349,9 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 	// Check for a raw uri, else build one from the Uri field
 	url := input.rawUri
 	if url == "" {
+		// Append odata query parameters
+		input.Uri.Params = input.OData.AppendValues(input.Uri.Params)
+
 		var err error
 		url, err = c.buildUri(input.Uri)
 		if err != nil {
@@ -422,6 +438,7 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 type PatchHttpRequestInput struct {
 	ConsistencyFailureFunc ConsistencyFailureFunc
 	Body                   []byte
+	OData                  odata.Query
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
 	Uri                    Uri
@@ -435,6 +452,11 @@ func (i PatchHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFun
 // GetContentType returns the content type for the request, currently only application/json is supported
 func (i PatchHttpRequestInput) GetContentType() string {
 	return "application/json; charset=utf-8"
+}
+
+// GetOData returns the OData request metadata
+func (i PatchHttpRequestInput) GetOData() odata.Query {
+	return i.OData
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a PATCH request.
@@ -469,6 +491,7 @@ func (c Client) Patch(ctx context.Context, input PatchHttpRequestInput) (*http.R
 type PostHttpRequestInput struct {
 	Body                   []byte
 	ConsistencyFailureFunc ConsistencyFailureFunc
+	OData                  odata.Query
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
 	Uri                    Uri
@@ -482,6 +505,11 @@ func (i PostHttpRequestInput) GetConsistencyFailureFunc() ConsistencyFailureFunc
 // GetContentType returns the content type for the request, currently only application/json is supported
 func (i PostHttpRequestInput) GetContentType() string {
 	return "application/json; charset=utf-8"
+}
+
+// GetOData returns the OData request metadata
+func (i PostHttpRequestInput) GetOData() odata.Query {
+	return i.OData
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a POST request.
@@ -517,6 +545,7 @@ type PutHttpRequestInput struct {
 	ConsistencyFailureFunc ConsistencyFailureFunc
 	ContentType            string
 	Body                   []byte
+	OData                  odata.Query
 	ValidStatusCodes       []int
 	ValidStatusFunc        ValidStatusFunc
 	Uri                    Uri
@@ -533,6 +562,11 @@ func (i PutHttpRequestInput) GetContentType() string {
 		return i.ContentType
 	}
 	return "application/json; charset=utf-8"
+}
+
+// GetOData returns the OData request metadata
+func (i PutHttpRequestInput) GetOData() odata.Query {
+	return i.OData
 }
 
 // GetValidStatusCodes returns a []int of status codes considered valid for a PUT request.

@@ -27,10 +27,10 @@ func NewConditionalAccessPolicyClient(tenantId string) *ConditionalAccessPolicyC
 func (c *ConditionalAccessPolicyClient) List(ctx context.Context, query odata.Query) (*[]ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identity/conditionalAccess/policies",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -92,10 +92,10 @@ func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalA
 func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, query odata.Query) (*ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

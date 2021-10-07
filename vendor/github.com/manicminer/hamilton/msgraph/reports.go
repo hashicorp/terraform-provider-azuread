@@ -25,10 +25,10 @@ func NewReportsClient(tenantId string) *ReportsClient {
 func (c *ReportsClient) GetCredentialUserRegistrationCount(ctx context.Context, query odata.Query) (*[]CredentialUserRegistrationCount, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/reports/getCredentialUserRegistrationCount",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -55,10 +55,10 @@ func (c *ReportsClient) GetCredentialUserRegistrationCount(ctx context.Context, 
 func (c *ReportsClient) GetCredentialUserRegistrationDetails(ctx context.Context, query odata.Query) (*[]CredentialUserRegistrationDetails, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/reports/credentialUserRegistrationDetails",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -85,10 +85,10 @@ func (c *ReportsClient) GetCredentialUserRegistrationDetails(ctx context.Context
 func (c *ReportsClient) GetUserCredentialUsageDetails(ctx context.Context, query odata.Query) (*[]UserCredentialUsageDetails, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/reports/userCredentialUsageDetails",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -115,10 +115,10 @@ func (c *ReportsClient) GetUserCredentialUsageDetails(ctx context.Context, query
 func (c *ReportsClient) GetCredentialUsageSummary(ctx context.Context, period CredentialUsageSummaryPeriod, query odata.Query) (*[]CredentialUsageSummary, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/reports/getCredentialUsageSummary(period='%s')", period),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -145,10 +145,10 @@ func (c *ReportsClient) GetCredentialUsageSummary(ctx context.Context, period Cr
 func (c *ReportsClient) GetAuthenticationMethodsUsersRegisteredByFeature(ctx context.Context, query odata.Query) (*UserRegistrationFeatureSummary, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/reports/authenticationMethods/usersRegisteredByFeature",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -173,10 +173,10 @@ func (c *ReportsClient) GetAuthenticationMethodsUsersRegisteredByFeature(ctx con
 func (c *ReportsClient) GetAuthenticationMethodsUsersRegisteredByMethod(ctx context.Context, query odata.Query) (*UserRegistrationMethodSummary, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/reports/authenticationMethods/usersRegisteredByMethod",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

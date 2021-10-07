@@ -27,10 +27,10 @@ func NewAuthenticationMethodsClient(tenantId string) *AuthenticationMethodsClien
 func (c *AuthenticationMethodsClient) List(ctx context.Context, userID string, query odata.Query) (*[]AuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/methods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -121,10 +121,10 @@ func (c *AuthenticationMethodsClient) List(ctx context.Context, userID string, q
 func (c *AuthenticationMethodsClient) ListFido2Methods(ctx context.Context, userID string, query odata.Query) (*[]Fido2AuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/fido2Methods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -151,10 +151,10 @@ func (c *AuthenticationMethodsClient) ListFido2Methods(ctx context.Context, user
 func (c *AuthenticationMethodsClient) GetFido2Method(ctx context.Context, userID, id string, query odata.Query) (*Fido2AuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/fido2Methods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -195,10 +195,10 @@ func (c *AuthenticationMethodsClient) DeleteFido2Method(ctx context.Context, use
 func (c *AuthenticationMethodsClient) ListMicrosoftAuthenticatorMethods(ctx context.Context, userID string, query odata.Query) (*[]MicrosoftAuthenticatorAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/microsoftAuthenticatorMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -225,10 +225,10 @@ func (c *AuthenticationMethodsClient) ListMicrosoftAuthenticatorMethods(ctx cont
 func (c *AuthenticationMethodsClient) GetMicrosoftAuthenticatorMethod(ctx context.Context, userID, id string, query odata.Query) (*MicrosoftAuthenticatorAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/microsoftAuthenticatorMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -269,10 +269,10 @@ func (c *AuthenticationMethodsClient) DeleteMicrosoftAuthenticatorMethod(ctx con
 func (c *AuthenticationMethodsClient) ListWindowsHelloMethods(ctx context.Context, userID string, query odata.Query) (*[]WindowsHelloForBusinessAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/windowsHelloForBusinessMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -299,10 +299,10 @@ func (c *AuthenticationMethodsClient) ListWindowsHelloMethods(ctx context.Contex
 func (c *AuthenticationMethodsClient) GetWindowsHelloMethod(ctx context.Context, userID, id string, query odata.Query) (*WindowsHelloForBusinessAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/windowsHelloForBusinessMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -343,10 +343,10 @@ func (c *AuthenticationMethodsClient) DeleteWindowsHelloMethod(ctx context.Conte
 func (c *AuthenticationMethodsClient) ListTemporaryAccessPassMethods(ctx context.Context, userID string, query odata.Query) (*[]TemporaryAccessPassAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/temporaryAccessPassMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -373,10 +373,10 @@ func (c *AuthenticationMethodsClient) ListTemporaryAccessPassMethods(ctx context
 func (c *AuthenticationMethodsClient) GetTemporaryAccessPassMethod(ctx context.Context, userID, id string, query odata.Query) (*TemporaryAccessPassAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/temporaryAccessPassMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -451,10 +451,10 @@ func (c *AuthenticationMethodsClient) DeleteTemporaryAccessPassMethod(ctx contex
 func (c *AuthenticationMethodsClient) ListPhoneMethods(ctx context.Context, userID string, query odata.Query) (*[]PhoneAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/phoneMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -481,10 +481,10 @@ func (c *AuthenticationMethodsClient) ListPhoneMethods(ctx context.Context, user
 func (c *AuthenticationMethodsClient) GetPhoneMethod(ctx context.Context, userID, id string, query odata.Query) (*PhoneAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/phoneMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -623,10 +623,10 @@ func (c *AuthenticationMethodsClient) DisablePhoneSMS(ctx context.Context, userI
 func (c *AuthenticationMethodsClient) ListEmailMethods(ctx context.Context, userID string, query odata.Query) (*[]EmailAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/emailMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -653,10 +653,10 @@ func (c *AuthenticationMethodsClient) ListEmailMethods(ctx context.Context, user
 func (c *AuthenticationMethodsClient) GetEmailMethod(ctx context.Context, userID, id string, query odata.Query) (*EmailAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/emailMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -759,10 +759,10 @@ func (c *AuthenticationMethodsClient) CreateEmailMethod(ctx context.Context, use
 func (c *AuthenticationMethodsClient) ListPasswordMethods(ctx context.Context, userID string, query odata.Query) (*[]PasswordAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/passwordMethods", userID),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -789,10 +789,9 @@ func (c *AuthenticationMethodsClient) ListPasswordMethods(ctx context.Context, u
 func (c *AuthenticationMethodsClient) GetPasswordMethod(ctx context.Context, userID, id string, query odata.Query) (*PasswordAuthenticationMethod, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s/authentication/passwordMethods/%s", userID, id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
