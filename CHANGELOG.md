@@ -1,5 +1,9 @@
 ## 2.6.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* **Provider:** Generate and log request/response correlation IDs for improved inspection ability in HTTP traces [GH-621]
+
 BUG FIXES:
 
 * **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` [GH-616]
