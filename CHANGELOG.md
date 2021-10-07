@@ -1,16 +1,16 @@
-## 2.6.0 (Unreleased)
+## 2.6.0 (October 07, 2021)
 
 ENHANCEMENTS:
 
-* **Provider:** Generate and log request/response correlation IDs for improved inspection ability in HTTP traces [GH-621]
+* **Provider:** Generate and log request/response correlation IDs for improved inspection ability in HTTP traces ([#621](https://github.com/terraform-providers/terraform-provider-azuread/issues/621))
 
 BUG FIXES:
 
-* **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` [GH-616]
-* `azuread_application_certificate` - fix an eventual consistency issue when creating new certificates [GH-618]
-* `azuread_application_password` - fix an eventual consistency issue when creating new passwords [GH-618]
-* `azuread_service_principal_certificate` - fix an eventual consistency issue when creating new certificates [GH-618]
-* `azuread_service_principal_password` - fix an eventual consistency issue when creating new passwords [GH-618]
+* **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` ([#616](https://github.com/terraform-providers/terraform-provider-azuread/issues/616))
+* `azuread_application_certificate` - fix an eventual consistency issue when creating new certificates ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_application_password` - fix an eventual consistency issue when creating new passwords ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_service_principal_certificate` - fix an eventual consistency issue when creating new certificates ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_service_principal_password` - fix an eventual consistency issue when creating new passwords ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
 
 ## 2.5.0 (September 30, 2021)
 
