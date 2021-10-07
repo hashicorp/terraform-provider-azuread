@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -30,7 +31,7 @@ func applicationPasswordResource() *schema.Resource {
 		DeleteContext: applicationPasswordResourceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
@@ -161,6 +162,39 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	id := parse.NewCredentialID(*app.ID, "password", *newCredential.KeyId)
+
+	// Wait for the credential to appear in the application manifest, this can take several minutes
+	timeout, _ := ctx.Deadline()
+	polledForCredential, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if app.PasswordCredentials != nil {
+				for _, cred := range *app.PasswordCredentials {
+					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+						return &cred, "Done", nil
+					}
+				}
+			}
+
+			return nil, "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if err != nil {
+		return tf.ErrorDiagF(err, "Waiting for password credential for application with object ID %q", id.ObjectId)
+	} else if polledForCredential == nil {
+		return tf.ErrorDiagF(errors.New("password credential not found in application manifest"), "Waiting for password credential for application with object ID %q", id.ObjectId)
+	}
+
 	d.SetId(id.String())
 	d.Set("value", newCredential.SecretText)
 
