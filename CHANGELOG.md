@@ -7,6 +7,10 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` [GH-616]
+* `azuread_application_certificate` - fix an eventual consistency issue when creating new certificates [GH-618]
+* `azuread_application_password` - fix an eventual consistency issue when creating new passwords [GH-618]
+* `azuread_service_principal_certificate` - fix an eventual consistency issue when creating new certificates [GH-618]
+* `azuread_service_principal_password` - fix an eventual consistency issue when creating new passwords [GH-618]
 
 ## 2.5.0 (September 30, 2021)
 
