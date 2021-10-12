@@ -3,13 +3,41 @@ package odata
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
+
+	"github.com/hashicorp/go-uuid"
 )
 
 const ODataVersion = "4.0" // TODO: support 4.01 - https://docs.oasis-open.org/odata/odata-json-format/v4.01/cs01/odata-json-format-v4.01-cs01.html#_Toc499720587
 
 type Id string
+
+func (o Id) MarshalJSON() ([]byte, error) {
+	id := regexp.MustCompile(`/v2/`).ReplaceAllString(string(o), `/v1.0/`)
+
+	u, err := url.Parse(id)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		matches := regexp.MustCompile(`([a-zA-Z]+)\(['"]([^'"]+)['"]\)`).FindStringSubmatch(id)
+		if len(matches) != 3 {
+			return nil, fmt.Errorf("Marshaling odata.Id: could not match a GUID")
+		}
+
+		objectType := matches[1]
+		guid := matches[2]
+		if _, err = uuid.ParseUUID(guid); err != nil {
+			return nil, fmt.Errorf("Marshaling odata.Id: %+v", err)
+		}
+
+		// Although we're hard-coding `graph.microsoft.com` here, this doesn't _appear_ to be a problem
+		// The host can seemingly be anything, even complete nonsense, and the API will accept it provided
+		// it can parse out a version number, an object type and a GUID.
+		id = fmt.Sprintf("https://graph.microsoft.com/v1.0/%s/%s", objectType, guid)
+	}
+
+	return json.Marshal(id)
+}
 
 func (o *Id) UnmarshalJSON(data []byte) error {
 	var id string
@@ -17,6 +45,7 @@ func (o *Id) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*o = Id(regexp.MustCompile(`/v2/`).ReplaceAllString(id, `/v1.0/`))
+
 	return nil
 }
 

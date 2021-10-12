@@ -72,7 +72,10 @@ func (c *GroupsClient) Create(ctx context.Context, group Group) (*Group, int, er
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
 		ConsistencyFailureFunc: ownersNotReplicated,
-		ValidStatusCodes:       []int{http.StatusCreated},
+		OData: odata.Query{
+			Metadata: odata.MetadataFull,
+		},
+		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      "/groups",
 			HasTenantId: true,

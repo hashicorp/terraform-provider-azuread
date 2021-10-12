@@ -63,7 +63,10 @@ func (c *UsersClient) Create(ctx context.Context, user User) (*User, int, error)
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
+		Body: body,
+		OData: odata.Query{
+			Metadata: odata.MetadataFull,
+		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      "/users",
@@ -407,6 +410,21 @@ func (c *UsersClient) AssignManager(ctx context.Context, id string, manager User
 	})
 	if err != nil {
 		return status, fmt.Errorf("UsersClient.BaseClient.Post(): %v", err)
+	}
+
+	return status, nil
+}
+
+// DeleteManager removes a user's manager assignment.
+func (c *UsersClient) DeleteManager(ctx context.Context, id string) (int, error) {
+	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+		ValidStatusCodes: []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/users/%s/manager/$ref", id),
+		},
+	})
+	if err != nil {
+		return status, err
 	}
 
 	return status, nil
