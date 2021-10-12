@@ -57,6 +57,7 @@ The following attributes are exported:
 * `job_title` - The user’s job title.
 * `mail` - The SMTP address for the user.
 * `mail_nickname` - The email alias of the user.
+* `manager_id` - The object ID of the user's manager.
 * `mobile_phone` - The primary cellular telephone number for the user.
 * `object_id` - The object ID of the user.
 * `office_location` - The office location in the user's place of business.
