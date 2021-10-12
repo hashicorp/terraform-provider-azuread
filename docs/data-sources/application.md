@@ -48,6 +48,7 @@ The following attributes are exported:
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
+* `features` - A `features` block as described below.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_url` - CDN URL to the application's logo.
@@ -64,6 +65,7 @@ The following attributes are exported:
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `single_page_application` - A `single_page_application` block as documented below.
 * `support_url` - URL of the application's support page.
+* `tags` - A list of tags applied to the application.
 * `terms_of_service_url` - URL of the application's terms of service statement.
 * `web` - A `web` block as documented below.
 
@@ -99,6 +101,15 @@ The following attributes are exported:
 * `enabled` - Determines if the app role is enabled.
 * `id` - The unique identifier of the app role.
 * `value` - The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
+
+---
+
+`features` block exports the following:
+
+* `custom_single_sign_on_app` - Whether this application represents a custom SAML application for linked service principals.
+* `enterprise_application` - Whether this application represents an Enterprise Application for linked service principals.
+* `gallery_application` - Whether this application represents a gallery application for linked service principals.
+* `visible_to_users` - Whether this app is visible to users in My Apps and Office 365 Launcher.
 
 ---
 

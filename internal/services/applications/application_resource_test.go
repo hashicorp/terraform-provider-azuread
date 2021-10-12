@@ -441,6 +441,92 @@ func TestAccApplication_related(t *testing.T) {
 	})
 }
 
+func TestAccApplication_features(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplication_featuresUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.noFeatures(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.tags(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.noFeatures(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.features(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccApplication_logo(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -668,6 +754,12 @@ resource "azuread_application" "test" {
     ]
   }
 
+  tags = [
+    "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
+    "WindowsAzureActiveDirectoryIntegratedApp",
+    "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
+  ]
+
   web {
     homepage_url = "https://app.hashitown-%[1]d.com/"
     logout_url   = "https://app.hashitown-%[1]d.com/logout"
@@ -823,6 +915,12 @@ resource "azuread_application" "test" {
       "https://beta.templatetown-%[1]d.com/",
     ]
   }
+
+  tags = [
+    "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
+    "WindowsAzureActiveDirectoryIntegratedApp",
+    "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
+  ]
 
   web {
     homepage_url = "https://app.templatetown-%[1]d.com/"
@@ -1298,6 +1396,55 @@ resource "azuread_application" "test" {
     azuread_service_principal.owner.*.object_id,
     azuread_user.owner.*.object_id,
   ])
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationResource) features(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  features {
+    custom_single_sign_on_app = true
+    enterprise_application    = true
+    gallery_application       = true
+    visible_to_users          = false
+  }
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationResource) noFeatures(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  features {
+    custom_single_sign_on_app = false
+    enterprise_application    = false
+    gallery_application       = false
+  }
+}
+`, data.RandomInteger)
+}
+
+func (r ApplicationResource) tags(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  tags = [
+    "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
+    "WindowsAzureActiveDirectoryIntegratedApp",
+    "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
+  ]
 }
 `, data.RandomInteger)
 }

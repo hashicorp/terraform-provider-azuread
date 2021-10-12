@@ -78,6 +78,11 @@ resource "azuread_application" "example" {
     value                = "User"
   }
 
+  features {
+    enterprise_application = true
+    gallery_application    = true
+  }
+
   optional_claims {
     access_token {
       name = "myclaim"
@@ -162,6 +167,7 @@ The following arguments are supported:
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
+* `features` - (Optional) A `features` block as described below. Cannot be used together with the `tags` property. Features applied to this application will propagate to, and supplement any features/tags configured for, a linked service principal.
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
@@ -182,6 +188,7 @@ The following arguments are supported:
 
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
+* `tags` - (Optional) A set of tags to apply to the application. Cannot be used together with the `features` block. Tags configured for this application will propagate to, and supplement any features/tags configured for, a linked service principal.
 * `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 * `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
@@ -232,6 +239,15 @@ The following arguments are supported:
 * `value` - (Optional) The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal.
 
 -> **Roles and Permission Scopes** In Azure Active Directory, application roles (`app_role`) and permission scopes (`oauth2_permission_scope`) exported by an application share the same namespace and cannot contain duplicate `value`s. Terraform will attempt to detect this during a plan or apply operation.
+
+---
+
+`features` block supports the following:
+
+* `custom_single_sign_on_app` - (Optional) Whether this application represents a custom SAML application for linked service principals. Defaults to `false`.
+* `enterprise_application` - (Optional) Whether this application represents an Enterprise Application for linked service principals. Defaults to `false`.
+* `gallery_application` - (Optional) Whether this application represents a gallery application for linked service principals. Defaults to `false`.
+* `visible_to_users` - (Optional) Whether this app is visible to users in My Apps and Office 365 Launcher. Defaults to `true`.
 
 ---
 

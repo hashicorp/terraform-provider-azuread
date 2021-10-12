@@ -346,7 +346,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)

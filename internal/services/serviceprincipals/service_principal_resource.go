@@ -348,7 +348,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 	var tags []string
 	if v, ok := d.GetOk("features"); ok {
-		tags = expandFeatures(v.([]interface{}))
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
@@ -458,7 +458,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	var tags []string
 	featuresChanged := d.HasChange("features")
 	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
-		tags = expandFeatures(v.([]interface{}))
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
@@ -563,7 +563,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)

@@ -19,6 +19,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -269,6 +270,42 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"features": {
+				Description:   "Block of features to configure for this application using tags",
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"tags"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on_app": {
+							Description: "Whether this application principal represents a custom SAML application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"enterprise_application": {
+							Description: "Whether this application represents an Enterprise Application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"gallery_application": {
+							Description: "Whether this application represents a gallery application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"visible_to_users": {
+							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+						},
+					},
+				},
+			},
+
 			"group_membership_claims": {
 				Description: "Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects",
 				Type:        schema.TypeSet,
@@ -458,6 +495,18 @@ func applicationResource() *schema.Resource {
 				Description: "URL of the application's support page",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+
+			"tags": {
+				Description:   "A set of tags to apply to the application",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Set:           schema.HashString,
+				ConflictsWith: []string{"features"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"template_id": {
@@ -860,6 +909,13 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	var tags []string
+	if v, ok := d.GetOk("features"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	if templateId != "" {
 		// Instantiate application from template gallery and return via the update function
 		properties := msgraph.ApplicationTemplate{
@@ -906,6 +962,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -1037,6 +1094,14 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	var tags []string
+	featuresChanged := d.HasChange("features")
+	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(applicationId),
@@ -1060,6 +1125,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -1152,6 +1218,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(app.Tags))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
@@ -1162,6 +1229,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
+	tf.Set(d, "tags", app.Tags)
 	tf.Set(d, "template_id", app.ApplicationTemplateId)
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
