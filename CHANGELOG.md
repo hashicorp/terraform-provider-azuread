@@ -1,3 +1,9 @@
+# 2.7.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `azuread_user` - support for the `manager_id` property [GH-628]
+
 ## 2.6.0 (October 07, 2021)
 
 ENHANCEMENTS:

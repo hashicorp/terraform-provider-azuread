@@ -65,7 +65,7 @@ func (c *Config) NewAuthorizer(ctx context.Context, api Api) (Authorizer, error)
 	}
 
 	if c.EnableMsiAuth {
-		a, err := NewMsiAuthorizer(ctx, c.Environment, api, c.MsiEndpoint)
+		a, err := NewMsiAuthorizer(ctx, c.Environment, api, c.MsiEndpoint, c.ClientID)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure MSI Authorizer: %s", err)
 		}
@@ -97,8 +97,8 @@ func NewAzureCliAuthorizer(ctx context.Context, api Api, tenantId string) (Autho
 }
 
 // NewMsiAuthorizer returns an authorizer which uses managed service identity to for authentication.
-func NewMsiAuthorizer(ctx context.Context, environment environments.Environment, api Api, msiEndpoint string) (Authorizer, error) {
-	conf, err := NewMsiConfig(ctx, resource(environment, api), msiEndpoint)
+func NewMsiAuthorizer(ctx context.Context, environment environments.Environment, api Api, msiEndpoint, clientId string) (Authorizer, error) {
+	conf, err := NewMsiConfig(ctx, resource(environment, api), msiEndpoint, clientId)
 	if err != nil {
 		return nil, err
 	}

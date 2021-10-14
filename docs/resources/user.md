@@ -50,6 +50,7 @@ The following arguments are supported:
 * `job_title` - (Optional) The user’s job title.
 * `mail` - (Optional) The SMTP address for the user. This property cannot be unset once specified.
 * `mail_nickname` - (Optional) The mail alias for the user. Defaults to the user name part of the user principal name (UPN).
+* `manager_id` - (Optional) The object ID of the user's manager.
 * `mobile_phone` - (Optional) The primary cellular telephone number for the user.
 * `office_location` - (Optional) The office location in the user's place of business.
 * `onpremises_immutable_id` - (Optional) The value used to associate an on-premise Active Directory user account with their Azure AD user object. This must be specified if you are using a federated domain for the user's `user_principal_name` property when creating a new user account.

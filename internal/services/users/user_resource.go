@@ -191,6 +191,12 @@ func userResource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"manager_id": {
+				Description: "The object ID of the user's manager",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"mobile_phone": {
 				Description: "The primary cellular telephone number for the user",
 				Type:        schema.TypeString,
@@ -385,6 +391,7 @@ func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, m
 
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 
 	password := d.Get("password").(string)
 	if password == "" {
@@ -469,11 +476,18 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(*user.ID)
 
+	if managerId := d.Get("manager_id").(string); managerId != "" {
+		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), managerId); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		}
+	}
+
 	return userResourceRead(ctx, d, meta)
 }
 
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 
 	var passwordPolicies string
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
@@ -545,6 +559,12 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user with ID: %q", d.Id())
+	}
+
+	if d.HasChange("manager_id") {
+		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), d.Get("manager_id").(string)); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		}
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -628,6 +648,18 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
 		tf.Set(d, "division", user.EmployeeOrgData.Division)
 	}
+
+	managerId := ""
+	manager, status, err := client.GetManager(ctx, objectId)
+	if status != http.StatusNotFound {
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", objectId)
+		}
+		if manager != nil && manager.ID != nil {
+			managerId = *manager.ID
+		}
+	}
+	tf.Set(d, "manager_id", managerId)
 
 	return nil
 }

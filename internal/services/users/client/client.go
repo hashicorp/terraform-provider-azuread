@@ -7,14 +7,19 @@ import (
 )
 
 type Client struct {
-	UsersClient *msgraph.UsersClient
+	DirectoryObjectsClient *msgraph.DirectoryObjectsClient
+	UsersClient            *msgraph.UsersClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewUsersClient(o.TenantID)
-	o.ConfigureClient(&msClient.BaseClient)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	o.ConfigureClient(&directoryObjectsClient.BaseClient)
+
+	usersClient := msgraph.NewUsersClient(o.TenantID)
+	o.ConfigureClient(&usersClient.BaseClient)
 
 	return &Client{
-		UsersClient: msClient,
+		DirectoryObjectsClient: directoryObjectsClient,
+		UsersClient:            usersClient,
 	}
 }

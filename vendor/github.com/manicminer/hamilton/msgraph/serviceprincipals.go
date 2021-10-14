@@ -78,7 +78,10 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
 		ConsistencyFailureFunc: appNotReplicated,
-		ValidStatusCodes:       []int{http.StatusCreated},
+		OData: odata.Query{
+			Metadata: odata.MetadataFull,
+		},
+		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      "/servicePrincipals",
 			HasTenantId: true,
