@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* **Provider:** log the claims from access tokens for improved debugging ability [GH-623]
 * `azuread_user` - support for the `manager_id` property [GH-628]
 
 ## 2.6.0 (October 07, 2021)
