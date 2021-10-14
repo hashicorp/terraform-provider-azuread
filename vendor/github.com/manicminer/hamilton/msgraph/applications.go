@@ -64,7 +64,10 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
+		Body: body,
+		OData: odata.Query{
+			Metadata: odata.MetadataFull,
+		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      "/applications",
