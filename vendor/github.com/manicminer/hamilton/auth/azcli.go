@@ -31,7 +31,11 @@ type AzureCliAuthorizer struct {
 }
 
 // Token returns an access token using the Azure CLI as an authentication mechanism.
-func (a AzureCliAuthorizer) Token() (*oauth2.Token, error) {
+func (a *AzureCliAuthorizer) Token() (*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
 	var token struct {
 		AccessToken string `json:"accessToken"`
 		ExpiresOn   string `json:"expiresOn"`
