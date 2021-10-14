@@ -169,7 +169,11 @@ type clientAssertionAuthorizer struct {
 	conf *ClientCredentialsConfig
 }
 
-func (a clientAssertionAuthorizer) Token() (*oauth2.Token, error) {
+func (a *clientAssertionAuthorizer) Token() (*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
 	crt := a.conf.Certificate
 	if der, _ := pem.Decode(a.conf.Certificate); der != nil {
 		crt = der.Bytes
@@ -246,7 +250,11 @@ type clientSecretAuthorizer struct {
 	conf *ClientCredentialsConfig
 }
 
-func (a clientSecretAuthorizer) Token() (*oauth2.Token, error) {
+func (a *clientSecretAuthorizer) Token() (*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
 	v := url.Values{
 		"client_id":     {a.conf.ClientID},
 		"client_secret": {a.conf.ClientSecret},

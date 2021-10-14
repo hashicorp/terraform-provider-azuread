@@ -27,10 +27,19 @@ type MsiAuthorizer struct {
 
 // Token returns an access token acquired from the metadata endpoint.
 func (a *MsiAuthorizer) Token() (*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
 	query := url.Values{
 		"api-version": []string{a.conf.MsiApiVersion},
 		"resource":    []string{a.conf.Resource},
 	}
+
+	if a.conf.ClientID != "" {
+		query["client_id"] = []string{a.conf.ClientID}
+	}
+
 	url := fmt.Sprintf("%s?%s", a.conf.MsiEndpoint, query.Encode())
 
 	body, err := azureMetadata(a.ctx, url)
@@ -38,7 +47,6 @@ func (a *MsiAuthorizer) Token() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("MsiAuthorizer: failed to request token from metadata endpoint: %v", err)
 	}
 
-	// TODO: surface the client ID for use by callers
 	var tokenRes struct {
 		AccessToken  string      `json:"access_token"`
 		ClientID     string      `json:"client_id"`
@@ -76,13 +84,22 @@ func (a *MsiAuthorizer) Token() (*oauth2.Token, error) {
 
 // MsiConfig configures an MsiAuthorizer.
 type MsiConfig struct {
+	// ClientID is optionally used to determine which application to assume when a resource has multiple managed identities
+	ClientID string
+
+	// MsiApiVersion is the API version to use when requesting a token from the metadata service
 	MsiApiVersion string
-	MsiEndpoint   string
-	Resource      string
+
+	// MsiEndpoint is the endpoint where the metadata service can be found
+	MsiEndpoint string
+
+	// Resource is the service for which to request an access token
+	Resource string
 }
 
 // NewMsiConfig returns a new MsiConfig with a configured metadata endpoint and resource.
-func NewMsiConfig(ctx context.Context, resource string, msiEndpoint string) (*MsiConfig, error) {
+// clientId and objectId can be left blank when a single managed identity is available
+func NewMsiConfig(ctx context.Context, resource, msiEndpoint, clientId string) (*MsiConfig, error) {
 	endpoint := msiDefaultEndpoint
 	if msiEndpoint != "" {
 		endpoint = msiEndpoint
@@ -107,6 +124,7 @@ func NewMsiConfig(ctx context.Context, resource string, msiEndpoint string) (*Ms
 	}
 
 	return &MsiConfig{
+		ClientID:      clientId,
 		Resource:      resource,
 		MsiApiVersion: msiDefaultApiVersion,
 		MsiEndpoint:   endpoint,
