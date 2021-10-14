@@ -50,9 +50,9 @@ resource "azuread_service_principal" "example" {
   app_role_assignment_required = false
   owners                       = [data.azuread_client_config.current.object_id]
 
-  features {
-    enterprise_application = true
-    gallery_application    = true
+  feature_tags {
+    enterprise = true
+    gallery    = true
   }
 }
 ```
@@ -95,9 +95,9 @@ The following arguments are supported:
 * `app_role_assignment_required` - (Optional) Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application. Defaults to `false`.
 * `application_id` - (Required) The application ID (client ID) of the application for which to create a service principal.
 * `description` - (Optional) A description of the service principal provided for internal end-users.
-* `features` - (Optional) A `features` block as described below. Cannot be used together with the `tags` property.
+* `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
 
--> **Features and Tags** Features are configured for a service principal using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure features and tags for a service principal at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Any features or tags configured for the linked application will propagate to this service principal.
+-> **Features and Tags** Features are configured for a service principal using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for a service principal at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Any tags configured for the linked application will propagate to this service principal.
 
 * `login_url` - (Optional) The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on.
 * `notes` - (Optional) A free text field to capture information about the service principal, typically used for operational purposes.
@@ -108,9 +108,9 @@ The following arguments are supported:
 
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
 * `saml_single_sign_on` - (Optional) A `saml_single_sign_on` block as documented below.
-* `tags` - (Optional) A set of tags to apply to the service principal. Cannot be used together with the `features` block.
+* `tags` - (Optional) A set of tags to apply to the service principal. Cannot be used together with the `feature_tags` block.
 
--> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of service principals. These can be specified using either the `tags` property or with the `features` block. If you need to set any custom tag values not supported by the `features` block, it's recommended to use the `tags` property. Tag values set for the linked application will also propagate to this service principal.
+-> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of service principals. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values set for the linked application will also propagate to this service principal.
 
 * `use_existing` - (Optional) When true, any existing service principal linked to the same application will be automatically imported. When false, an import error will be raised for any pre-existing service principal.
 
@@ -118,12 +118,12 @@ The following arguments are supported:
 
 ---
 
-`features` block supports the following:
+`feature_tags` block supports the following:
 
-* `custom_single_sign_on_app` - (Optional) Whether this service principal represents a custom SAML application. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
-* `enterprise_application` - (Optional) Whether this service principal represents an Enterprise Application. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
-* `gallery_application` - (Optional) Whether this service principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
-* `visible_to_users` - (Optional) Whether this app is visible to users in My Apps and Office 365 Launcher. Disabling this will assign the `HideApp` tag. Defaults to `true`.
+* `custom_single_sign_on` - (Optional) Whether this service principal represents a custom SAML application. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
+* `enterprise` - (Optional) Whether this service principal represents an Enterprise Application. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
+* `gallery` - (Optional) Whether this service principal represents a gallery application. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
+* `hide` - (Optional) Whether this app is invisible to users in My Apps and Office 365 Launcher. Enabling this will assign the `HideApp` tag. Defaults to `false`.
 
 ---
 

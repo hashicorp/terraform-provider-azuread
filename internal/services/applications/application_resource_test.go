@@ -441,13 +441,13 @@ func TestAccApplication_related(t *testing.T) {
 	})
 }
 
-func TestAccApplication_features(t *testing.T) {
+func TestAccApplication_featureTags(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -456,13 +456,13 @@ func TestAccApplication_features(t *testing.T) {
 	})
 }
 
-func TestAccApplication_featuresUpdate(t *testing.T) {
+func TestAccApplication_featureTagsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.noFeatures(data),
+			Config: r.noFeatureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -476,7 +476,7 @@ func TestAccApplication_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -490,7 +490,7 @@ func TestAccApplication_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -504,21 +504,21 @@ func TestAccApplication_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
-			Config: r.noFeatures(data),
+			Config: r.noFeatureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -755,6 +755,7 @@ resource "azuread_application" "test" {
   }
 
   tags = [
+    "HideApp",
     "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
     "WindowsAzureActiveDirectoryIntegratedApp",
     "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
@@ -1400,34 +1401,35 @@ resource "azuread_application" "test" {
 `, data.RandomInteger)
 }
 
-func (r ApplicationResource) features(data acceptance.TestData) string {
+func (r ApplicationResource) featureTags(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
 
-  features {
-    custom_single_sign_on_app = true
-    enterprise_application    = true
-    gallery_application       = true
-    visible_to_users          = false
+  feature_tags {
+    custom_single_sign_on = true
+    enterprise            = true
+    gallery               = true
+    hide                  = true
   }
 }
 `, data.RandomInteger)
 }
 
-func (r ApplicationResource) noFeatures(data acceptance.TestData) string {
+func (r ApplicationResource) noFeatureTags(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
 
-  features {
-    custom_single_sign_on_app = false
-    enterprise_application    = false
-    gallery_application       = false
+  feature_tags {
+    custom_single_sign_on = false
+    enterprise            = false
+    gallery               = false
+    hide                  = false
   }
 }
 `, data.RandomInteger)

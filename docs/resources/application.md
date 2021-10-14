@@ -78,9 +78,9 @@ resource "azuread_application" "example" {
     value                = "User"
   }
 
-  features {
-    enterprise_application = true
-    gallery_application    = true
+  feature_tags {
+    enterprise = true
+    gallery    = true
   }
 
   optional_claims {
@@ -167,9 +167,9 @@ The following arguments are supported:
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
-* `features` - (Optional) A `features` block as described below. Cannot be used together with the `tags` property.
+* `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
 
--> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure features and tags for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
+-> **Features and Tags** Features are configured for an application using tags, and are provided as a shortcut to set the corresponding magic tag value for each feature. You cannot configure `feature_tags` and `tags` for an application at the same time, so if you need to assign additional custom tags it's recommended to use the `tags` property instead. Tag values also propagate to any linked service principals.
 
 * `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
@@ -191,9 +191,9 @@ The following arguments are supported:
 
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
-* `tags` - (Optional) A set of tags to apply to the application. Cannot be used together with the `features` block.
+* `tags` - (Optional) A set of tags to apply to the application. Cannot be used together with the `feature_tags` block.
 
--> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `features` block. If you need to set any custom tag values not supported by the `features` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
+-> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
 
 * `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
@@ -248,12 +248,12 @@ The following arguments are supported:
 
 ---
 
-`features` block supports the following:
+`feature_tags` block supports the following:
 
-* `custom_single_sign_on_app` - (Optional) Whether this application represents a custom SAML application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
-* `enterprise_application` - (Optional) Whether this application represents an Enterprise Application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
-* `gallery_application` - (Optional) Whether this application represents a gallery application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
-* `visible_to_users` - (Optional) Whether this app is visible to users in My Apps and Office 365 Launcher. Disabling this will assign the `HideApp` tag. Defaults to `true`.
+* `custom_single_sign_on` - (Optional) Whether this application represents a custom SAML application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryCustomSingleSignOnApplication` tag. Defaults to `false`.
+* `enterprise` - (Optional) Whether this application represents an Enterprise Application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryIntegratedApp` tag. Defaults to `false`.
+* `gallery` - (Optional) Whether this application represents a gallery application for linked service principals. Enabling this will assign the `WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1` tag. Defaults to `false`.
+* `hide` - (Optional) Whether this app is invisible to users in My Apps and Office 365 Launcher. Enabling this will assign the `HideApp` tag. Defaults to `false`.
 
 ---
 

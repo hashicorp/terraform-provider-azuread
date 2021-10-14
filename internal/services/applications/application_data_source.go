@@ -215,32 +215,32 @@ func applicationDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"features": {
+			"feature_tags": {
 				Description: "Block of features configured for this application using tags",
 				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"custom_single_sign_on_app": {
+						"custom_single_sign_on": {
 							Description: "Whether this application principal represents a custom SAML application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"enterprise_application": {
+						"enterprise": {
 							Description: "Whether this application represents an Enterprise Application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"gallery_application": {
+						"gallery": {
 							Description: "Whether this application represents a gallery application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"visible_to_users": {
-							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+						"hide": {
+							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
 							Type:        schema.TypeBool,
 							Optional:    true,
 							Default:     true,
@@ -555,7 +555,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
-	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(app.Tags))
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)

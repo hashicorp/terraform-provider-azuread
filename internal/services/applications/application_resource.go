@@ -270,7 +270,7 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 			},
 
-			"features": {
+			"feature_tags": {
 				Description:   "Block of features to configure for this application using tags",
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -278,29 +278,28 @@ func applicationResource() *schema.Resource {
 				ConflictsWith: []string{"tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"custom_single_sign_on_app": {
-							Description: "Whether this application principal represents a custom SAML application for linked service principals",
+						"custom_single_sign_on": {
+							Description: "Whether this application represents a custom SAML application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"enterprise_application": {
+						"enterprise": {
 							Description: "Whether this application represents an Enterprise Application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"gallery_application": {
+						"gallery": {
 							Description: "Whether this application represents a gallery application for linked service principals",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
 
-						"visible_to_users": {
-							Description: "Whether this app is visible to users in My Apps and Office 365 Launcher",
+						"hide": {
+							Description: "Whether this application is invisible to users in My Apps and Office 365 Launcher",
 							Type:        schema.TypeBool,
 							Optional:    true,
-							Default:     true,
 						},
 					},
 				},
@@ -503,7 +502,7 @@ func applicationResource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				Set:           schema.HashString,
-				ConflictsWith: []string{"features"},
+				ConflictsWith: []string{"feature_tags"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -910,7 +909,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var tags []string
-	if v, ok := d.GetOk("features"); ok {
+	if v, ok := d.GetOk("feature_tags"); ok {
 		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
@@ -1095,8 +1094,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var tags []string
-	featuresChanged := d.HasChange("features")
-	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
+	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
 		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
@@ -1218,7 +1216,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
-	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(app.Tags))
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
