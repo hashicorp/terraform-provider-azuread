@@ -106,10 +106,10 @@ The following attributes are exported:
 
 `features` block exports the following:
 
-* `custom_single_sign_on_app` - Whether this application represents a custom SAML application for linked service principals.
-* `enterprise_application` - Whether this application represents an Enterprise Application for linked service principals.
-* `gallery_application` - Whether this application represents a gallery application for linked service principals.
-* `visible_to_users` - Whether this app is visible to users in My Apps and Office 365 Launcher.
+* `custom_single_sign_on` - Whether this application represents a custom SAML application for linked service principals.
+* `enterprise` - Whether this application represents an Enterprise Application for linked service principals.
+* `gallery` - Whether this application represents a gallery application for linked service principals.
+* `hide` - Whether this app is visible to users in My Apps and Office 365 Launcher.
 
 ---
 
