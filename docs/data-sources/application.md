@@ -48,7 +48,7 @@ The following attributes are exported:
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
-* `features` - A `features` block as described below.
+* `feature_tags` - A `features` block as described below.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_url` - CDN URL to the application's logo.
