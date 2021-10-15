@@ -1,11 +1,11 @@
-## 2.7.0 (Unreleased)
+## 2.7.0 (October 15, 2021)
 
 IMPROVEMENTS:
 
-* **Provider:** log the claims from access tokens for improved debugging ability [GH-623]
-* `azuread_user` - support for the `manager_id` property [GH-628]
-* `azuread_application` - support for the `feature_tags` block and the `tags` property [GH-630]
-* `azuread_service_principal` - the `features` block has been deprecated in favour of the `feature_tags` for clarity [GH-630]
+* **Provider:** log the claims from access tokens for improved debugging ability ([#623](https://github.com/terraform-providers/terraform-provider-azuread/issues/623))
+* `azuread_user` - support for the `manager_id` property ([#628](https://github.com/terraform-providers/terraform-provider-azuread/issues/628))
+* `azuread_application` - support for the `feature_tags` block and the `tags` property ([#630](https://github.com/terraform-providers/terraform-provider-azuread/issues/630))
+* `azuread_service_principal` - the `features` block has been deprecated in favour of the `feature_tags` for clarity ([#630](https://github.com/terraform-providers/terraform-provider-azuread/issues/630))
 
 ## 2.6.0 (October 07, 2021)
 
