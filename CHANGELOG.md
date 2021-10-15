@@ -1,13 +1,15 @@
 # 2.7.0 (Unreleased)
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * **Provider:** log the claims from access tokens for improved debugging ability [GH-623]
 * `azuread_user` - support for the `manager_id` property [GH-628]
+* `azuread_application` - support for the `feature_tags` block and the `tags` property [GH-630]
+* `azuread_service_principal` - the features `features` block has been deprecated in favour of the `feature_tags` for clarity [GH-630]
 
 ## 2.6.0 (October 07, 2021)
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * **Provider:** Generate and log request/response correlation IDs for improved inspection ability in HTTP traces ([#621](https://github.com/terraform-providers/terraform-provider-azuread/issues/621))
 
@@ -21,7 +23,7 @@ BUG FIXES:
 
 ## 2.5.0 (September 30, 2021)
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties ([#603](https://github.com/terraform-providers/terraform-provider-azuread/issues/603))
 * `data.azuread_user` - support the `cost_center`, `division` and `employee_type` attributes ([#597](https://github.com/terraform-providers/terraform-provider-azuread/issues/597))
@@ -40,7 +42,7 @@ FEATURES:
 
 * **New Resource:** `azuread_app_role_assignment` ([#584](https://github.com/terraform-providers/terraform-provider-azuread/issues/584))
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `azuread_application_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))
 * `azuread_service_principal_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))
