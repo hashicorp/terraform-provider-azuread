@@ -85,12 +85,48 @@ func servicePrincipalResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
-			"features": {
+			"feature_tags": {
 				Description:   "Block of features to configure for this service principal using tags",
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"tags"},
+				ConflictsWith: []string{"features", "tags"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on": {
+							Description: "Whether this service principal represents a custom SAML application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"enterprise": {
+							Description: "Whether this service principal represents an Enterprise Application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"gallery": {
+							Description: "Whether this service principal represents a gallery application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"hide": {
+							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+					},
+				},
+			},
+
+			"features": {
+				Deprecated:    "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
+				Description:   "Block of features to configure for this service principal using tags",
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"feature_tags", "tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_single_sign_on_app": {
@@ -175,7 +211,7 @@ func servicePrincipalResource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				Set:           schema.HashString,
-				ConflictsWith: []string{"features"},
+				ConflictsWith: []string{"features", "feature_tags"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -347,8 +383,10 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	var tags []string
-	if v, ok := d.GetOk("features"); ok {
-		tags = expandFeatures(v.([]interface{}))
+	if v, ok := d.GetOk("feature_tags"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else if v, ok := d.GetOk("features"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
@@ -456,9 +494,10 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 
 	var tags []string
-	featuresChanged := d.HasChange("features")
-	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
-		tags = expandFeatures(v.([]interface{}))
+	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && d.HasChange("features") {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
@@ -563,7 +602,8 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
