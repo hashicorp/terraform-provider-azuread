@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -316,7 +317,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("userPrincipalName eq '%s'", upn),
+			Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(upn)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -346,7 +347,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("mailNickname eq '%s'", mailNickname),
+			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
