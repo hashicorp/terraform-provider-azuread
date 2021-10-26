@@ -1,3 +1,9 @@
+## 2.8.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - ensure `mail_nickname` is set for all groups when specified in configuration [GH-645]
+
 ## 2.7.0 (October 15, 2021)
 
 IMPROVEMENTS:
