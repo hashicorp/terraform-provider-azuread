@@ -42,11 +42,12 @@ func IsLogoutUrl(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 func IsRedirectUriFunc(urnAllowed bool, publicClient bool) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		// See https://docs.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy#register-the-proxyidentityexperienceframework-application
-		if publicClient && i.(string) == "myapp://auth" {
-			return
+		var allowedSchemes []string
+		if !publicClient {
+			allowedSchemes = []string{"http", "https", "ms-appx-web"}
 		}
 
-		ret = IsUriFunc([]string{"http", "https", "ms-appx-web"}, urnAllowed, true)(i, path)
+		ret = IsUriFunc(allowedSchemes, urnAllowed, true)(i, path)
 		if len(ret) > 0 {
 			return
 		}
@@ -108,6 +109,10 @@ func IsUriFunc(validURLSchemes []string, urnAllowed bool, forceTrailingSlash boo
 				Summary:       "URI has no host",
 				AttributePath: path,
 			})
+			return
+		}
+
+		if validURLSchemes == nil {
 			return
 		}
 
