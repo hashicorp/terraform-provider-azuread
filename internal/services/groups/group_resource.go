@@ -369,8 +369,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Mimic the portal and generate a random mailNickname for security groups
 	mailNickname := groupDefaultMailNickname()
-	if mailEnabled {
-		mailNickname = d.Get("mail_nickname").(string)
+	if v, ok := d.GetOk("mail_nickname"); ok && v.(string) != "" {
+		mailNickname = v.(string)
 	}
 
 	behaviorOptions := make([]msgraph.GroupResourceBehaviorOption, 0)
