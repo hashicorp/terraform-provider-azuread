@@ -97,6 +97,7 @@ Resource(s) | Role Name(s)
 `azuread_application`<br>`azuread_application_certificate`<br>`azuread_application_password`<br>`azuread_service_principal`<br>`azuread_service_principal_certificate`<br>`azuread_service_principal_password` | Application.ReadWrite.All
 `azuread_group`<br>`azuread_group_member` | Group.ReadWrite.All
 `azuread_user` | User.ReadWrite.All
+`azuread_directory_role_member` | RoleManagement.ReadWrite.Directory
 
 -> **Permissions for other resources** If the resource you are using is not shown in the above table, consult the documentation page for the resource for a guide to the required permissions.
 
