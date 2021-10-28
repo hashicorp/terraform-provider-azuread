@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* `azuread_application` - allow custom URI schemes for public client redirect URIs [GH-647]
 * `azuread_group` - ensure `mail_nickname` is set for all groups when specified in configuration [GH-645]
 
 ## 2.7.0 (October 15, 2021)
