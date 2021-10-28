@@ -1,9 +1,9 @@
-## 2.8.0 (Unreleased)
+## 2.8.0 (October 28, 2021)
 
 BUG FIXES:
 
-* `azuread_application` - allow custom URI schemes for public client redirect URIs [GH-647]
-* `azuread_group` - ensure `mail_nickname` is set for all groups when specified in configuration [GH-645]
+* `azuread_application` - allow custom URI schemes for public client redirect URIs ([#647](https://github.com/terraform-providers/terraform-provider-azuread/issues/647))
+* `azuread_group` - ensure `mail_nickname` is set for all groups when specified in configuration ([#645](https://github.com/terraform-providers/terraform-provider-azuread/issues/645))
 
 ## 2.7.0 (October 15, 2021)
 
