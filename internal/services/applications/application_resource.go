@@ -1032,6 +1032,16 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*app.ID)
 
+	// Wait until the application is updatable (the SDK handles retries for us)
+	_, err = client.Update(ctx, msgraph.Application{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: app.ID,
+		},
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+	}
+
 	if len(ownersExtra) > 0 {
 		// Add any remaining owners after the application is created
 		app.Owners = &ownersExtra

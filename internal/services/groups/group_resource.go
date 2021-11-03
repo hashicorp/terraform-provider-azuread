@@ -498,6 +498,16 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ID)
 
+	// Wait until the group is updatable (the SDK handles retries for us)
+	_, err = client.Update(ctx, msgraph.Group{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: group.ID,
+		},
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+	}
+
 	// Add any remaining owners after the group is created
 	if len(ownersExtra) > 0 {
 		group.Owners = &ownersExtra
