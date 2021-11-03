@@ -471,6 +471,16 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.SetId(*servicePrincipal.ID)
 
+	// Wait until the service principal is updatable (the SDK handles retries for us)
+	_, err = client.Update(ctx, msgraph.ServicePrincipal{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: servicePrincipal.ID,
+		},
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
+	}
+
 	// Add any remaining owners after the service principal is created
 	if len(ownersExtra) > 0 {
 		servicePrincipal.Owners = &ownersExtra

@@ -476,6 +476,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(*user.ID)
 
+	// Wait until the user is updatable (the SDK handles retries for us)
+	_, err = client.Update(ctx, msgraph.User{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: user.ID,
+		},
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Timed out whilst waiting for new user to be replicated in Azure AD")
+	}
+
 	if managerId := d.Get("manager_id").(string); managerId != "" {
 		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), managerId); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
