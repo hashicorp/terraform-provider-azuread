@@ -1,3 +1,12 @@
+## 2.9.0 (November 3, 2021)
+
+BUG FIXES:
+
+* `azuread_application` - add mitigation for replication delay when creating new applications [GH-656]
+* `azuread_group` - add mitigation for replication delay when creating new groups [GH-656]
+* `azuread_service_principal` - add mitigation for replication delay when creating new service principals [GH-656]
+* `azuread_user` - add mitigation for replication delay when creating new users [GH-656]
+
 ## 2.8.0 (October 28, 2021)
 
 BUG FIXES:
