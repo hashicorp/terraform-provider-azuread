@@ -2,6 +2,8 @@
 
 BUG FIXES:
 
+* `data.azuread_user` - ensure apostrophes are correctly quoted when matching by `mail_nickname` or `user_principal_name` [GH-643]
+* `data.azuread_users` - ensure apostrophes are correctly quoted when matching by `mail_nicknames` or `user_principal_names` [GH-643]
 * `azuread_application` - add mitigation for replication delay when creating new applications [GH-656]
 * `azuread_group` - add mitigation for replication delay when creating new groups [GH-656]
 * `azuread_service_principal` - add mitigation for replication delay when creating new service principals [GH-656]
