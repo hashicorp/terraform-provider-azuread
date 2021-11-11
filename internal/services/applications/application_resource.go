@@ -940,11 +940,18 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return applicationResourceUpdate(ctx, d, meta)
 	}
 
+	// Set a temporary display name as we'll attempt to patch the application with the correct name after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+
 	// Create a new application
 	properties := msgraph.Application{
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:           utils.String(displayName),
+		DisplayName:           utils.String(tempDisplayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
@@ -1032,14 +1039,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*app.ID)
 
-	// Wait until the application is updatable (the SDK handles retries for us)
-	_, err = client.Update(ctx, msgraph.Application{
+	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: app.ID,
 		},
+		DisplayName: utils.String(displayName),
 	})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch application after creating")
 	}
 
 	if len(ownersExtra) > 0 {
@@ -1276,19 +1288,34 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	appId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, appId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", appId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", appId)
 	}
 
-	status, err = client.Delete(ctx, d.Id())
+	status, err = client.Delete(ctx, appId)
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting application with object ID %q, got status %d", d.Id(), status)
+		return tf.ErrorDiagPathF(err, "id", "Deleting application with object ID %q, got status %d", appId, status)
+	}
+
+	// Wait for application object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, appId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of application with object ID %q", appId)
 	}
 
 	return nil
