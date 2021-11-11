@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -228,16 +229,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	var credential *msgraph.KeyCredential
-	if app.KeyCredentials != nil {
-		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
-				credential = &cred
-				break
-			}
-		}
-	}
-
+	credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Certificate credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -299,6 +291,25 @@ func applicationCertificateResourceDelete(ctx context.Context, d *schema.Resourc
 	}
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+	}
+
+	// Wait for application certificate to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+
+		app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+		if err != nil {
+			return nil, err
+		}
+
+		credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
+		if credential == nil {
+			return utils.Bool(false), nil
+		}
+
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil
