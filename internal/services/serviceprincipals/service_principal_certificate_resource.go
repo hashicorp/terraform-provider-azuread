@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -218,7 +219,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -228,16 +229,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *schema.Reso
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
-	var credential *msgraph.KeyCredential
-	if app.KeyCredentials != nil {
-		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
-				credential = &cred
-				break
-			}
-		}
-	}
-
+	credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Certificate credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -299,6 +291,25 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 	}
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
+	}
+
+	// Wait for service principal certificate to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+
+		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+		if err != nil {
+			return nil, err
+		}
+
+		credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
+		if credential == nil {
+			return utils.Bool(false), nil
+		}
+
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil
