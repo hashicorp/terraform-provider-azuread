@@ -8,7 +8,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.43 // indirect
 	github.com/fatih/color v1.11.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/google/uuid v1.1.2
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-hclog v0.16.1 // indirect
