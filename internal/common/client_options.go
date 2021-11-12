@@ -45,7 +45,7 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 	*c.ResponseMiddlewares = append(*c.ResponseMiddlewares, o.responseLogger)
 
 	// Default retry limit, can be overridden from within a resource
-	c.RetryableClient.RetryMax = 8
+	c.RetryableClient.RetryMax = 9
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

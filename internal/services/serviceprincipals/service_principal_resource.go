@@ -391,12 +391,19 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
 
+	// Set a temporary description as we'll attempt to patch the service principal with the correct description after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+
 	properties := msgraph.ServicePrincipal{
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AppId:                      utils.String(d.Get("application_id").(string)),
 		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
-		Description:                utils.NullableString(d.Get("description").(string)),
+		Description:                utils.NullableString(tempDescription),
 		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
@@ -471,14 +478,19 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 	d.SetId(*servicePrincipal.ID)
 
-	// Wait until the service principal is updatable (the SDK handles retries for us)
-	_, err = client.Update(ctx, msgraph.ServicePrincipal{
+	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: servicePrincipal.ID,
 		},
+		Description: utils.NullableString(d.Get("description").(string)),
 	})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch service principal after creating")
 	}
 
 	// Add any remaining owners after the service principal is created
@@ -642,20 +654,37 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 
 func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	servicePrincipalId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, servicePrincipalId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", servicePrincipalId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", servicePrincipalId)
 	}
 
 	useExisting := d.Get("use_existing").(bool)
-	status, err = client.Delete(ctx, d.Id())
-	if err != nil && !useExisting {
-		return tf.ErrorDiagPathF(err, "id", "Deleting service principal with object ID %q, got status %d", d.Id(), status)
+	status, err = client.Delete(ctx, servicePrincipalId)
+	if !useExisting {
+		if err != nil && !useExisting {
+			return tf.ErrorDiagPathF(err, "id", "Deleting service principal with object ID %q, got status %d", servicePrincipalId, status)
+		}
+
+		// Wait for service principal object to be deleted
+		if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+			client.BaseClient.DisableRetries = true
+			if _, status, err := client.Get(ctx, servicePrincipalId, odata.Query{}); err != nil {
+				if status == http.StatusNotFound {
+					return utils.Bool(false), nil
+				}
+				return nil, err
+			}
+			return utils.Bool(true), nil
+		}); err != nil {
+			return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", servicePrincipalId)
+		}
 	}
 
 	return nil

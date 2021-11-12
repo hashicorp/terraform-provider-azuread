@@ -17,6 +17,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -383,9 +384,16 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
+	// Set a temporary display name as we'll attempt to patch the group with the correct name after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+
 	properties := msgraph.Group{
 		Description:                 utils.NullableString(d.Get("description").(string)),
-		DisplayName:                 utils.String(displayName),
+		DisplayName:                 utils.String(tempDisplayName),
 		GroupTypes:                  groupTypes,
 		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
 		MailEnabled:                 utils.Bool(mailEnabled),
@@ -498,14 +506,19 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ID)
 
-	// Wait until the group is updatable (the SDK handles retries for us)
-	_, err = client.Update(ctx, msgraph.Group{
+	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.Group{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: group.ID,
 		},
+		DisplayName: utils.String(displayName),
 	})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch group after creating")
 	}
 
 	// Add any remaining owners after the group is created
@@ -754,17 +767,32 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	groupId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, groupId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", groupId)
 		}
-		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", groupId)
 	}
 
-	if _, err := client.Delete(ctx, d.Id()); err != nil {
-		return tf.ErrorDiagF(err, "Deleting group with object ID: %q", d.Id())
+	if _, err := client.Delete(ctx, groupId); err != nil {
+		return tf.ErrorDiagF(err, "Deleting group with object ID: %q", groupId)
+	}
+
+	// Wait for group object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, groupId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", groupId)
 	}
 
 	return nil

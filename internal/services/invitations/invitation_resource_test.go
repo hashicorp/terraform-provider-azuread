@@ -123,6 +123,21 @@ func TestAccInvitation_messageWithLanguage(t *testing.T) {
 	})
 }
 
+func TestAccInvitation_withGroupMembership(t *testing.T) {
+	count := 10
+	data := acceptance.BuildTestData(t, "azuread_invitation", fmt.Sprintf("test.%d", count-1))
+	r := InvitationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withGroupMembership(data, count),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+	})
+}
+
 func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Invitations.UsersClient
 	client.BaseClient.DisableRetries = true
@@ -198,4 +213,25 @@ resource "azuread_invitation" "test" {
   }
 }
 `, data.RandomString)
+}
+
+func (InvitationResource) withGroupMembership(data acceptance.TestData, count int) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_invitation" "test" {
+  count              = %[3]d
+  redirect_url       = "https://portal.azure.com"
+  user_email_address = "acctest-user-%[2]s-groupMember-${count.index}@test.com"
+}
+
+resource "azuread_group_member" "test" {
+  count            = %[3]d
+  group_object_id  = azuread_group.test.object_id
+  member_object_id = azuread_invitation.test[count.index].user_id
+}
+`, data.RandomInteger, data.RandomString, count)
 }

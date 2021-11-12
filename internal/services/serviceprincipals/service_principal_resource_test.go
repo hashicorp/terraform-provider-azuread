@@ -344,13 +344,15 @@ func (ServicePrincipalResource) templateComplete(data acceptance.TestData) strin
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_domains" "test" {}
+
 resource "azuread_application" "test" {
   display_name     = "acctestServicePrincipal-%[1]d"
   sign_in_audience = "AzureADMyOrg"
 
   identifier_uris = [
     "api://acctestServicePrincipal-%[1]d",
-    "https://acctestServicePrincipal-%[1]d.net",
+    "https://${data.azuread_domains.test.domains[0].domain_name}/acctestServicePrincipal-%[1]d",
   ]
 
   api {

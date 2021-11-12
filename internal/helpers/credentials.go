@@ -28,6 +28,30 @@ func (e CredentialError) Error() string {
 	return e.str
 }
 
+func GetKeyCredential(keyCredentials *[]msgraph.KeyCredential, id string) (credential *msgraph.KeyCredential) {
+	if keyCredentials != nil {
+		for _, cred := range *keyCredentials {
+			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id) {
+				credential = &cred
+				break
+			}
+		}
+	}
+	return
+}
+
+func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id string) (credential *msgraph.PasswordCredential) {
+	if passwordCredentials != nil {
+		for _, cred := range *passwordCredentials {
+			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id) {
+				credential = &cred
+				break
+			}
+		}
+	}
+	return
+}
+
 func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
 	keyType := d.Get("type").(string)
 	value := d.Get("value").(string)

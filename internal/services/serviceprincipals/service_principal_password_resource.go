@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -190,7 +190,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -200,16 +200,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *schema.Resourc
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
-	var credential *msgraph.PasswordCredential
-	if app.PasswordCredentials != nil {
-		for _, cred := range *app.PasswordCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
-				credential = &cred
-				break
-			}
-		}
-	}
-
+	credential := helpers.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Password credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -257,6 +248,25 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.Resou
 
 	if _, err := client.RemovePassword(ctx, id.ObjectId, id.KeyId); err != nil {
 		return tf.ErrorDiagF(err, "Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
+	}
+
+	// Wait for service principal password to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+
+		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+		if err != nil {
+			return nil, err
+		}
+
+		credential := helpers.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
+		if credential == nil {
+			return utils.Bool(false), nil
+		}
+
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil

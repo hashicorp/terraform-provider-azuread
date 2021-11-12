@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -126,6 +126,7 @@ func invitationResource() *schema.Resource {
 
 func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Invitations.InvitationsClient
+	usersClient := meta.(*clients.Client).Invitations.UsersClient
 
 	properties := msgraph.Invitation{
 		InvitedUserEmailAddress: utils.String(d.Get("user_email_address").(string)),
@@ -161,6 +162,33 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Redeem URL returned for invitation is nil/empty")
 	}
 	d.Set("redeem_url", invitation.InviteRedeemURL)
+
+	// Attempt to patch the newly created guest user, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := usersClient.Update(ctx, msgraph.User{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: invitation.InvitedUser.ID,
+		},
+		CompanyName: utils.NullableString("TERRAFORM_UPDATE"),
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+	}
+	status, err = usersClient.Update(ctx, msgraph.User{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: invitation.InvitedUser.ID,
+		},
+		CompanyName: utils.NullableString(""),
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+	}
 
 	return invitationResourceRead(ctx, d, meta)
 }
@@ -206,71 +234,18 @@ func invitationResourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Wait for user object to be deleted, this seems much slower for invited users
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for deletion of invited user %q", userID)
-	}
-	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Deleted"},
-		Timeout:                   timeout,
-		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			client.BaseClient.DisableRetries = true
-			user, status, err := client.Get(ctx, userID, odata.Query{})
-			if err != nil {
-				if status == http.StatusNotFound {
-					return "stub", "Deleted", nil
-				}
-				return nil, "Error", fmt.Errorf("retrieving Invited User with object ID %q: %+v", userID, err)
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, userID, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
 			}
-			if user == nil {
-				return nil, "Error", fmt.Errorf("retrieving Invited User with object ID %q: user was nil", userID)
-			}
-			return *user, "Waiting", nil
-		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of invited user with object ID %q", userID)
 	}
 
 	return nil
-}
-
-func expandInvitedUserMessageInfo(in []interface{}) *msgraph.InvitedUserMessageInfo {
-	if len(in) == 0 || in[0] == nil {
-		return nil
-	}
-
-	result := msgraph.InvitedUserMessageInfo{}
-	config := in[0].(map[string]interface{})
-
-	additionalRecipients := config["additional_recipients"].([]interface{})
-	messageBody := config["body"].(string)
-	messageLanguage := config["language"].(string)
-
-	result.CCRecipients = expandRecipients(additionalRecipients)
-	result.CustomizedMessageBody = &messageBody
-	result.MessageLanguage = &messageLanguage
-
-	return &result
-}
-
-func expandRecipients(in []interface{}) *[]msgraph.Recipient {
-	recipients := make([]msgraph.Recipient, 0, len(in))
-	for _, recipientRaw := range in {
-		recipient := recipientRaw.(string)
-
-		newRecipient := msgraph.Recipient{
-			EmailAddress: &msgraph.EmailAddress{
-				Address: &recipient,
-			},
-		}
-
-		recipients = append(recipients, newRecipient)
-	}
-
-	return &recipients
 }

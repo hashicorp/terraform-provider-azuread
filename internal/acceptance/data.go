@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/google/uuid"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -39,7 +39,11 @@ type TestData struct {
 }
 
 func (t *TestData) UUID() string {
-	return uuid.New().String()
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		panic(err)
+	}
+	return uuid
 }
 
 // BuildTestData generates some test data for the given resource
@@ -49,13 +53,14 @@ func BuildTestData(t *testing.T, resourceType string, resourceLabel string) Test
 	testData := TestData{
 		RandomInteger:  tf.AccRandTimeInt(),
 		RandomString:   acctest.RandString(5),
-		RandomID:       uuid.New().String(),
 		RandomPassword: fmt.Sprintf("%s%s", "p@$$Wd", acctest.RandString(6)),
 		ResourceName:   fmt.Sprintf("%s.%s", resourceType, resourceLabel),
 
 		ResourceType:  resourceType,
 		resourceLabel: resourceLabel,
 	}
+
+	testData.RandomID = testData.UUID()
 
 	return testData
 }
