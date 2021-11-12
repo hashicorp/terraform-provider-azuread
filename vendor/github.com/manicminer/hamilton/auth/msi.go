@@ -105,24 +105,6 @@ func NewMsiConfig(ctx context.Context, resource, msiEndpoint, clientId string) (
 		endpoint = msiEndpoint
 	}
 
-	// validate the metadata endpoint
-	e, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, fmt.Errorf("NewMsiConfig: invalid MSI endpoint configured: %q", endpoint)
-	}
-
-	// determine the generic metadata URL and check if we can reach it
-	e.Path = "/metadata"
-	e.RawQuery = url.Values{
-		"api-version": []string{msiDefaultApiVersion},
-		"format":      []string{"text"},
-	}.Encode()
-
-	_, err = azureMetadata(ctx, e.String())
-	if err != nil {
-		return nil, fmt.Errorf("NewMsiConfig: could not validate MSI endpoint: %v", err)
-	}
-
 	return &MsiConfig{
 		ClientID:      clientId,
 		Resource:      resource,

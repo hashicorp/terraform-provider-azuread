@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/Azure/go-autorest/autorest"
 	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/oauth2"
 
@@ -85,6 +86,11 @@ func (c *Config) NewAuthorizer(ctx context.Context, api Api) (Authorizer, error)
 	}
 
 	return nil, fmt.Errorf("no Authorizer could be configured, please check your configuration")
+}
+
+// NewAutorestAuthorizerWrapper returns an Authorizer that sources tokens from a supplied autorest.BearerAuthorizer
+func NewAutorestAuthorizerWrapper(bearerAuthorizer *autorest.BearerAuthorizer) (Authorizer, error) {
+	return AutorestAuthorizerWrapper{bearerAuthorizer: bearerAuthorizer}, nil
 }
 
 // NewAzureCliAuthorizer returns an Authorizer which authenticates using the Azure CLI.
