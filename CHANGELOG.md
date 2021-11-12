@@ -1,24 +1,24 @@
-## 2.9.0 (Unreleased)
+## 2.9.0 (November 12, 2021)
 
 BUG FIXES:
 
-* **Provider:** fix an authentication bug that prevented authorizing using a Managed Identity when running in Azure Cloud Shell [GH-660]
-* `data.azuread_user` - ensure apostrophes are correctly quoted when matching by `mail_nickname` or `user_principal_name` [GH-643]
-* `data.azuread_users` - ensure apostrophes are correctly quoted when matching by `mail_nicknames` or `user_principal_names` [GH-643]
-* `azuread_application_certificate` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_application_password` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_application` - add mitigation for replication delay when creating new applications [GH-656]
-* `azuread_directory_role_member` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_group_member` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_group` - add mitigation for replication delay when creating new groups [GH-656]
-* `azuread_group` - work around an API consistency issue when creating and deleting resources [GH-659]
-* `azuread_invitation` - work around an API consistency issue when creating and deleting resources [GH-659]
-* `azuread_service_principal_certificate` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_service_principal_password` - work around an API consistency issue when deleting resources [GH-659]
-* `azuread_service_principal` - add mitigation for replication delay when creating new service principals [GH-656]
-* `azuread_service_principal` - work around an API consistency issue when creating and deleting resources [GH-659]
-* `azuread_user` - add mitigation for replication delay when creating new users [GH-656]
-* `azuread_user` - work around an API consistency issue when deleting resources [GH-659]
+* **Provider:** fix an authentication bug that prevented authorizing using a Managed Identity when running in Azure Cloud Shell ([#660](https://github.com/terraform-providers/terraform-provider-azuread/issues/660))
+* `data.azuread_user` - ensure apostrophes are correctly quoted when matching by `mail_nickname` or `user_principal_name` ([#643](https://github.com/terraform-providers/terraform-provider-azuread/issues/643))
+* `data.azuread_users` - ensure apostrophes are correctly quoted when matching by `mail_nicknames` or `user_principal_names` ([#643](https://github.com/terraform-providers/terraform-provider-azuread/issues/643))
+* `azuread_application_certificate` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_application_password` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_application` - add mitigation for replication delay when creating new applications ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_directory_role_member` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_group_member` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_group` - add mitigation for replication delay when creating new groups ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_group` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_invitation` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal_certificate` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal_password` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal` - add mitigation for replication delay when creating new service principals ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_service_principal` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_user` - add mitigation for replication delay when creating new users ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_user` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
 
 ## 2.8.0 (October 28, 2021)
 
