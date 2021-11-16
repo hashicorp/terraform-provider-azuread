@@ -75,12 +75,12 @@ The following attributes are exported:
 
 * `known_client_applications` - A set of application IDs (client IDs), used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
 * `mapped_claims_enabled` - Allows an application to use claims mapping without specifying a custom signing key.
-* `oauth2_permission_scopes` - One or more `oauth2_permission_scopes` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
+* `oauth2_permission_scopes` - One or more `oauth2_permission_scope` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
 * `requested_access_token_version` - The access token version expected by this resource. Possible values are `1` or `2`.
 
 ---
 
-`oauth2_permission_scopes` block exports the following:
+`oauth2_permission_scope` block exports the following:
 
 * `admin_consent_description` - Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
 * `admin_consent_display_name` - Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
