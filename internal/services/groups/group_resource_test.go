@@ -562,14 +562,16 @@ resource "azuread_group" "test" {
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
 
-func (GroupResource) withNoMembers(data acceptance.TestData) string {
+func (r GroupResource) withNoMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+%[1]s
+
 resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
+  display_name     = "acctestGroup-%[2]d"
   security_enabled = true
   members          = []
 }
-`, data.RandomInteger)
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
 }
 
 func (r GroupResource) withOneMember(data acceptance.TestData) string {
