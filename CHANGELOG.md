@@ -1,3 +1,9 @@
+## 2.10.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - fix a bug that prevented removing all `members` of a group [GH-666]
+
 ## 2.9.0 (November 12, 2021)
 
 BUG FIXES:
