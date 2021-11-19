@@ -612,14 +612,14 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return tf.ErrorDiagF(err, "Updating group with ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("members"); ok && d.HasChange("members") {
+	if d.HasChange("members") {
 		members, _, err := client.ListMembers(ctx, *group.ID)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for group with object ID: %q", d.Id())
 		}
 
 		existingMembers := *members
-		desiredMembers := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*schema.Set).List())
 		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
 		membersToAdd := utils.Difference(desiredMembers, existingMembers)
 
