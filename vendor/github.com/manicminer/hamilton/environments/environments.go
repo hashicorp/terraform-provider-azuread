@@ -10,42 +10,79 @@ type Environment struct {
 	// The Azure AD endpoint for acquiring access tokens.
 	AzureADEndpoint AzureADEndpoint
 
-	// The Microsoft Graph configuration for an environment.
-	MsGraph Api
-
-	// The Azure Active Directory Graph configuration for an environment.
-	AadGraph Api
+	// Management plane API definitions
+	MsGraph             Api
+	AadGraph            Api
+	ResourceManager     Api
+	BatchManagement     Api
+	DataLake            Api
+	KeyVault            Api
+	OperationalInsights Api
+	OSSRDBMS            Api
+	ServiceBus          Api
+	ServiceManagement   Api
+	SQLDatabase         Api
+	Storage             Api
+	Synapse             Api
 }
 
 var (
 	Global = Environment{
-		AzureADEndpoint: AzureADGlobal,
-		MsGraph:         MsGraphGlobal,
-		AadGraph:        AadGraphGlobal,
-	}
-
-	Germany = Environment{
-		AzureADEndpoint: AzureADGermany,
-		MsGraph:         MsGraphGermany,
-		AadGraph:        AadGraphGermany,
+		AzureADEndpoint:     AzureADGlobal,
+		MsGraph:             MsGraphGlobal,
+		AadGraph:            AadGraphGlobal,
+		ResourceManager:     ResourceManagerPublic,
+		BatchManagement:     BatchManagementPublic,
+		DataLake:            DataLakePublic,
+		KeyVault:            KeyVaultPublic,
+		OperationalInsights: OperationalInsightsPublic,
+		OSSRDBMS:            OSSRDBMSPublic,
+		ServiceBus:          ServiceBusPublic,
+		ServiceManagement:   ServiceManagementPublic,
+		SQLDatabase:         SQLDatabasePublic,
+		Storage:             StoragePublic,
+		Synapse:             SynapsePublic,
 	}
 
 	China = Environment{
-		AzureADEndpoint: AzureADChina,
-		MsGraph:         MsGraphChina,
-		AadGraph:        AadGraphChina,
+		AzureADEndpoint:   AzureADChina,
+		MsGraph:           MsGraphChina,
+		AadGraph:          AadGraphChina,
+		ResourceManager:   ResourceManagerChina,
+		BatchManagement:   BatchManagementChina,
+		KeyVault:          KeyVaultChina,
+		OSSRDBMS:          OSSRDBMSChina,
+		ServiceBus:        ServiceBusChina,
+		ServiceManagement: ServiceManagementChina,
+		SQLDatabase:       SQLDatabaseChina,
 	}
 
 	USGovernmentL4 = Environment{
-		AzureADEndpoint: AzureADUSGov,
-		MsGraph:         MsGraphUSGovL4,
-		AadGraph:        AadGraphUSGov,
+		AzureADEndpoint:     AzureADUSGov,
+		MsGraph:             MsGraphUSGovL4,
+		AadGraph:            AadGraphUSGov,
+		ResourceManager:     ResourceManagerUSGov,
+		BatchManagement:     BatchManagementUSGov,
+		KeyVault:            KeyVaultUSGov,
+		OperationalInsights: OperationalInsightsUSGov,
+		OSSRDBMS:            OSSRDBMSUSGov,
+		ServiceBus:          ServiceBusUSGov,
+		ServiceManagement:   ServiceManagementUSGov,
+		SQLDatabase:         SQLDatabaseUSGov,
 	}
 
 	USGovernmentL5 = Environment{
-		AzureADEndpoint: AzureADUSGov,
-		MsGraph:         MsGraphUSGovL5,
-		AadGraph:        AadGraphUSGov,
+		AzureADEndpoint:     AzureADUSGov,
+		MsGraph:             MsGraphUSGovL5,
+		AadGraph:            AadGraphUSGov,
+		ResourceManager:     ResourceManagerUSGov,
+		BatchManagement:     BatchManagementUSGov,
+		KeyVault:            KeyVaultUSGov,
+		OperationalInsights: OperationalInsightsUSGov,
+		OSSRDBMS:            OSSRDBMSUSGov,
+		ServiceBus:          ServiceBusUSGov,
+		ServiceManagement:   ServiceManagementUSGov,
+		SQLDatabase:         SQLDatabaseUSGov,
 	}
 
 	Canary = Environment{
@@ -66,8 +103,6 @@ func EnvironmentFromString(env string) (Environment, error) {
 		return Canary, nil
 	case "china":
 		return China, nil
-	case "germany":
-		return Germany, nil
 	}
 
 	return Environment{}, fmt.Errorf("invalid environment specified: %s", env)

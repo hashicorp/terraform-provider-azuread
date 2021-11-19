@@ -21,6 +21,9 @@ type Config struct {
 	// Azure Active Directory tenant to connect to, should be a valid UUID
 	TenantID string
 
+	// Auxiliary tenant IDs for which to obtain tokens in a multi-tenant scenario
+	AuxiliaryTenantIDs []string
+
 	// Client ID for the application used to authenticate the connection
 	ClientID string
 

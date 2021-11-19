@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
@@ -34,8 +35,14 @@ func TestAccProvider_cliAuth(t *testing.T) {
 
 	// Support only Azure CLI authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
 		authConfig := &auth.Config{
-			Environment: environment(d.Get("environment").(string)),
+			Environment: env,
 			TenantID:    d.Get("tenant_id").(string),
 
 			EnableAzureCliToken: true,
@@ -66,8 +73,14 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 
 	// Support only client certificate authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
 		authConfig := &auth.Config{
-			Environment: environment(d.Get("environment").(string)),
+			Environment: env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
@@ -109,8 +122,15 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 				return nil, diag.FromErr(err)
 			}
 		}
+
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
 		authConfig := &auth.Config{
-			Environment: environment(d.Get("environment").(string)),
+			Environment: env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
@@ -144,8 +164,14 @@ func TestAccProvider_clientSecretAuth(t *testing.T) {
 
 	// Support only client secret authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
 		authConfig := &auth.Config{
-			Environment: environment(d.Get("environment").(string)),
+			Environment: env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 

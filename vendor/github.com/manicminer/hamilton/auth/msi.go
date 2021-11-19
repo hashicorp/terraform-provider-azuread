@@ -82,6 +82,11 @@ func (a *MsiAuthorizer) Token() (*oauth2.Token, error) {
 	return token, nil
 }
 
+// AuxiliaryTokens returns additional tokens for auxiliary tenant IDs, for use in multi-tenant scenarios
+func (a *MsiAuthorizer) AuxiliaryTokens() ([]*oauth2.Token, error) {
+	return nil, fmt.Errorf("auxiliary tokens are not supported with MSI authentication")
+}
+
 // MsiConfig configures an MsiAuthorizer.
 type MsiConfig struct {
 	// ClientID is optionally used to determine which application to assume when a resource has multiple managed identities
@@ -99,7 +104,7 @@ type MsiConfig struct {
 
 // NewMsiConfig returns a new MsiConfig with a configured metadata endpoint and resource.
 // clientId and objectId can be left blank when a single managed identity is available
-func NewMsiConfig(ctx context.Context, resource, msiEndpoint, clientId string) (*MsiConfig, error) {
+func NewMsiConfig(resource, msiEndpoint, clientId string) (*MsiConfig, error) {
 	endpoint := msiDefaultEndpoint
 	if msiEndpoint != "" {
 		endpoint = msiEndpoint
