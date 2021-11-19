@@ -1,8 +1,8 @@
-## 2.10.0 (Unreleased)
+## 2.10.0 (November 19, 2021)
 
 BUG FIXES:
 
-* `azuread_group` - fix a bug that prevented removing all `members` of a group [GH-666]
+* `azuread_group` - fix a bug that prevented removing all `members` of a group ([#666](https://github.com/terraform-providers/terraform-provider-azuread/issues/666))
 
 ## 2.9.0 (November 12, 2021)
 
