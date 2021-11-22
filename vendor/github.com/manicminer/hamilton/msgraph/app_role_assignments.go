@@ -219,9 +219,20 @@ func (c *AppRoleAssignedToClient) Assign(ctx context.Context, appRoleAssignment 
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 
+	consistencyFunc := func(resp *http.Response, o *odata.OData) bool {
+		if resp != nil && o != nil && o.Error != nil {
+			if resp.StatusCode == http.StatusNotFound {
+				return true
+			} else if resp.StatusCode == http.StatusBadRequest {
+				return o.Error.Match(odata.ErrorNotValidReferenceUpdate)
+			}
+		}
+		return false
+	}
+
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
-		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ConsistencyFailureFunc: consistencyFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", *appRoleAssignment.ResourceId),

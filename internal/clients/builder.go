@@ -29,7 +29,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		return nil, fmt.Errorf("building client: AuthConfig is nil")
 	}
 
-	authorizer, err := b.AuthConfig.NewAuthorizer(ctx, auth.MsGraph)
+	authorizer, err := b.AuthConfig.NewAuthorizer(ctx, b.AuthConfig.Environment.MsGraph)
 	if err != nil {
 		return nil, err
 	}

@@ -10,10 +10,11 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
+
+	"github.com/manicminer/hamilton/environments"
 )
 
 const (
@@ -21,64 +22,19 @@ const (
 	azureCliNextMajorVersion = "3.0.0"
 )
 
-// AzureCliAuthorizer is an Authorizer which supports the Azure CLI.
-type AzureCliAuthorizer struct {
-	// TenantID is optional and forces selection of the specified tenant. Must be a valid UUID.
-	TenantID string
-
-	ctx  context.Context
-	conf *AzureCliConfig
-}
-
-// Token returns an access token using the Azure CLI as an authentication mechanism.
-func (a *AzureCliAuthorizer) Token() (*oauth2.Token, error) {
-	if a.conf == nil {
-		return nil, fmt.Errorf("could not request token: conf is nil")
-	}
-
-	var token struct {
-		AccessToken string `json:"accessToken"`
-		ExpiresOn   string `json:"expiresOn"`
-		Tenant      string `json:"tenant"`
-		TokenType   string `json:"tokenType"`
-	}
-
-	var resourceType string
-	switch a.conf.Api {
-	case MsGraph:
-		resourceType = "ms-graph"
-	case AadGraph:
-		resourceType = "aad-graph"
-	}
-
-	azArgs := []string{"account", "get-access-token", fmt.Sprintf("--resource-type=%s", resourceType)}
-
-	// Try to detect if we're running in Cloud Shell
-	if cloudShell := os.Getenv("AZUREPS_HOST_ENVIRONMENT"); !strings.HasPrefix(cloudShell, "cloud-shell/") {
-		// Seemingly not, so we'll append the tenant ID to the az args
-		azArgs = append(azArgs, "--tenant", a.conf.TenantID)
-	}
-
-	err := jsonUnmarshalAzCmd(&token, azArgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	return &oauth2.Token{
-		AccessToken: token.AccessToken,
-		TokenType:   token.TokenType,
-		Expiry:      time.Time{},
-	}, nil
-}
-
 // AzureCliConfig configures an AzureCliAuthorizer.
 type AzureCliConfig struct {
-	Api      Api
+	Endpoint environments.ApiEndpoint
+
+	// TenantID is the required tenant ID for the primary token
 	TenantID string
+
+	// AuxiliaryTenantIDs is an optional list of tenant IDs for which to obtain additional tokens
+	AuxiliaryTenantIDs []string
 }
 
 // NewAzureCliConfig validates the supplied tenant ID and returns a new AzureCliConfig.
-func NewAzureCliConfig(api Api, tenantId string) (*AzureCliConfig, error) {
+func NewAzureCliConfig(api environments.Api, tenantId string) (*AzureCliConfig, error) {
 	var err error
 
 	// check az-cli version
@@ -95,7 +51,7 @@ func NewAzureCliConfig(api Api, tenantId string) (*AzureCliConfig, error) {
 		return nil, errors.New("invalid tenantId or unable to determine tenantId")
 	}
 
-	return &AzureCliConfig{Api: api, TenantID: tenantId}, nil
+	return &AzureCliConfig{Endpoint: api.Endpoint, TenantID: tenantId}, nil
 }
 
 // TokenSource provides a source for obtaining access tokens using AzureCliAuthorizer.
@@ -106,6 +62,76 @@ func (c *AzureCliConfig) TokenSource(ctx context.Context) Authorizer {
 		ctx:      ctx,
 		conf:     c,
 	})
+}
+
+type azureCliToken struct {
+	AccessToken string `json:"accessToken"`
+	ExpiresOn   string `json:"expiresOn"`
+	Tenant      string `json:"tenant"`
+	TokenType   string `json:"tokenType"`
+}
+
+// AzureCliAuthorizer is an Authorizer which supports the Azure CLI.
+type AzureCliAuthorizer struct {
+	// TenantID is optional and forces selection of the specified tenant. Must be a valid UUID.
+	TenantID string
+
+	ctx  context.Context
+	conf *AzureCliConfig
+}
+
+// Token returns an access token using the Azure CLI as an authentication mechanism.
+func (a *AzureCliAuthorizer) Token() (*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
+	azArgs := []string{"account", "get-access-token", fmt.Sprintf("--resource=%s", a.conf.Endpoint)}
+
+	// Try to detect if we're running in Cloud Shell
+	if cloudShell := os.Getenv("AZUREPS_HOST_ENVIRONMENT"); !strings.HasPrefix(cloudShell, "cloud-shell/") {
+		// Seemingly not, so we'll append the tenant ID to the az args
+		azArgs = append(azArgs, "--tenant", a.conf.TenantID)
+	}
+
+	var token azureCliToken
+	err := jsonUnmarshalAzCmd(&token, azArgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &oauth2.Token{
+		AccessToken: token.AccessToken,
+		TokenType:   token.TokenType,
+	}, nil
+}
+
+// AuxiliaryTokens returns additional tokens for auxiliary tenant IDs, for use in multi-tenant scenarios
+func (a *AzureCliAuthorizer) AuxiliaryTokens() ([]*oauth2.Token, error) {
+	if a.conf == nil {
+		return nil, fmt.Errorf("could not request token: conf is nil")
+	}
+
+	// Try to detect if we're running in Cloud Shell
+	if cloudShell := os.Getenv("AZUREPS_HOST_ENVIRONMENT"); strings.HasPrefix(cloudShell, "cloud-shell/") {
+		return nil, fmt.Errorf("auxiliary tokens not supported in Cloud Shell")
+	}
+
+	tokens := make([]*oauth2.Token, 0)
+	for _, tenantId := range a.conf.AuxiliaryTenantIDs {
+		var token azureCliToken
+		err := jsonUnmarshalAzCmd(&token, "account", "get-access-token", fmt.Sprintf("--resource=%s", a.conf.Endpoint), "--tenant", tenantId)
+		if err != nil {
+			return nil, err
+		}
+
+		tokens = append(tokens, &oauth2.Token{
+			AccessToken: token.AccessToken,
+			TokenType:   token.TokenType,
+		})
+	}
+
+	return tokens, nil
 }
 
 // checkAzVersion tries to determine the version of Azure CLI in the path and checks for a compatible version

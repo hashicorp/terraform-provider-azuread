@@ -11,20 +11,20 @@ import (
 	"github.com/manicminer/hamilton/odata"
 )
 
-// ConditionalAccessPolicyClient performs operations on ConditionalAccessPolicy.
-type ConditionalAccessPolicyClient struct {
+// ConditionalAccessPoliciesClient performs operations on ConditionalAccessPolicy.
+type ConditionalAccessPoliciesClient struct {
 	BaseClient Client
 }
 
-// NewConditionalAccessPolicyClient returns a new ConditionalAccessPolicyClient
-func NewConditionalAccessPolicyClient(tenantId string) *ConditionalAccessPolicyClient {
-	return &ConditionalAccessPolicyClient{
+// NewConditionalAccessPoliciesClient returns a new ConditionalAccessPoliciesClient
+func NewConditionalAccessPoliciesClient(tenantId string) *ConditionalAccessPoliciesClient {
+	return &ConditionalAccessPoliciesClient{
 		BaseClient: NewClient(VersionBeta, tenantId),
 	}
 }
 
 // List returns a list of ConditionalAccessPolicy, optionally queried using OData.
-func (c *ConditionalAccessPolicyClient) List(ctx context.Context, query odata.Query) (*[]ConditionalAccessPolicy, int, error) {
+func (c *ConditionalAccessPoliciesClient) List(ctx context.Context, query odata.Query) (*[]ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
 		OData:            query,
@@ -35,7 +35,7 @@ func (c *ConditionalAccessPolicyClient) List(ctx context.Context, query odata.Qu
 		},
 	})
 	if err != nil {
-		return nil, status, fmt.Errorf("ConditionalAccessPolicyClient.BaseClient.Get(): %v", err)
+		return nil, status, fmt.Errorf("ConditionalAccessPoliciesClient.BaseClient.Get(): %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -55,7 +55,7 @@ func (c *ConditionalAccessPolicyClient) List(ctx context.Context, query odata.Qu
 }
 
 // Create creates a new ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalAccessPolicy ConditionalAccessPolicy) (*ConditionalAccessPolicy, int, error) {
+func (c *ConditionalAccessPoliciesClient) Create(ctx context.Context, conditionalAccessPolicy ConditionalAccessPolicy) (*ConditionalAccessPolicy, int, error) {
 	var status int
 	body, err := json.Marshal(conditionalAccessPolicy)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalA
 		},
 	})
 	if err != nil {
-		return nil, status, fmt.Errorf("ConditionalAccessPolicyClient.BaseClient.Post(): %v", err)
+		return nil, status, fmt.Errorf("ConditionalAccessPoliciesClient.BaseClient.Post(): %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -89,7 +89,7 @@ func (c *ConditionalAccessPolicyClient) Create(ctx context.Context, conditionalA
 }
 
 // Get retrieves a ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, query odata.Query) (*ConditionalAccessPolicy, int, error) {
+func (c *ConditionalAccessPoliciesClient) Get(ctx context.Context, id string, query odata.Query) (*ConditionalAccessPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		OData:                  query,
@@ -100,7 +100,7 @@ func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, quer
 		},
 	})
 	if err != nil {
-		return nil, status, fmt.Errorf("ConditionalAccessPolicyClient.BaseClient.Get(): %v", err)
+		return nil, status, fmt.Errorf("ConditionalAccessPoliciesClient.BaseClient.Get(): %v", err)
 	}
 
 	defer resp.Body.Close()
@@ -118,7 +118,7 @@ func (c *ConditionalAccessPolicyClient) Get(ctx context.Context, id string, quer
 }
 
 // Update amends an existing ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Update(ctx context.Context, conditionalAccessPolicy ConditionalAccessPolicy) (int, error) {
+func (c *ConditionalAccessPoliciesClient) Update(ctx context.Context, conditionalAccessPolicy ConditionalAccessPolicy) (int, error) {
 	var status int
 
 	if conditionalAccessPolicy.ID == nil {
@@ -140,14 +140,14 @@ func (c *ConditionalAccessPolicyClient) Update(ctx context.Context, conditionalA
 		},
 	})
 	if err != nil {
-		return status, fmt.Errorf("ConditionalAccessPolicyClient.BaseClient.Patch(): %v", err)
+		return status, fmt.Errorf("ConditionalAccessPoliciesClient.BaseClient.Patch(): %v", err)
 	}
 
 	return status, nil
 }
 
 // Delete removes a ConditionalAccessPolicy.
-func (c *ConditionalAccessPolicyClient) Delete(ctx context.Context, id string) (int, error) {
+func (c *ConditionalAccessPoliciesClient) Delete(ctx context.Context, id string) (int, error) {
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
@@ -157,7 +157,7 @@ func (c *ConditionalAccessPolicyClient) Delete(ctx context.Context, id string) (
 		},
 	})
 	if err != nil {
-		return status, fmt.Errorf("ConditionalAccessPolicyClient.BaseClient.Delete(): %v", err)
+		return status, fmt.Errorf("ConditionalAccessPoliciesClient.BaseClient.Delete(): %v", err)
 	}
 
 	return status, nil

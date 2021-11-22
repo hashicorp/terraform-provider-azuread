@@ -407,8 +407,9 @@ func (c *AuthenticationMethodsClient) CreateTemporaryAccessPassMethod(ctx contex
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/temporaryAccessPassMethods", userID),
 			HasTenantId: true,
@@ -515,8 +516,9 @@ func (c *AuthenticationMethodsClient) CreatePhoneMethod(ctx context.Context, use
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/phoneMethods", userID),
 			HasTenantId: true,
@@ -731,8 +733,9 @@ func (c *AuthenticationMethodsClient) CreateEmailMethod(ctx context.Context, use
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/users/%s/authentication/emailMethods", userID),
 			HasTenantId: true,

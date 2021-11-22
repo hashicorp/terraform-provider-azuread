@@ -90,7 +90,7 @@ func AzureADProvider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
-				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), `germany` (also `german`), and `china`. Defaults to `global`",
+				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`",
 			},
 
 			// Client Certificate specific fields
@@ -183,8 +183,14 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			}
 		}
 
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			return nil, diag.Errorf("Parsing environment %q: %v", envName, err)
+		}
+
 		authConfig := &auth.Config{
-			Environment:            environment(d.Get("environment").(string)),
+			Environment:            env,
 			TenantID:               d.Get("tenant_id").(string),
 			ClientID:               d.Get("client_id").(string),
 			ClientCertData:         certData,
@@ -228,22 +234,6 @@ func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Confi
 	}
 
 	return client, nil
-}
-
-func environment(name string) (env environments.Environment) {
-	switch name {
-	case "global", "public":
-		env = environments.Global
-	case "usgovernment", "usgovernmentl4":
-		env = environments.USGovernmentL4
-	case "dod", "usgovernmentl5":
-		env = environments.USGovernmentL5
-	case "german", "germany":
-		env = environments.Germany
-	case "china":
-		env = environments.China
-	}
-	return
 }
 
 func decodeCertificate(clientCertificate string) ([]byte, error) {
