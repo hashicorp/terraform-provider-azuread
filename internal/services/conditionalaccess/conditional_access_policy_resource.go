@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/suppress"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
@@ -54,13 +55,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"state": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppress.CaseDifference,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.ConditionalAccessPolicyStateDisabled,
 					msgraph.ConditionalAccessPolicyStateEnabled,
 					msgraph.ConditionalAccessPolicyStateEnabledForReportingButNotEnforced,
-				}, false),
+				}, true),
 			},
 
 			"conditions": {
@@ -172,8 +174,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"client_app_types": {
-							Type:     schema.TypeList,
-							Required: true,
+							Type:             schema.TypeList,
+							Required:         true,
+							DiffSuppressFunc: suppress.CaseDifference,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -183,7 +186,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"exchangeActiveSync",
 									"easSupported",
 									"other",
-								}, false),
+								}, true),
 							},
 						},
 
@@ -224,7 +227,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:             schema.TypeString,
+											DiffSuppressFunc: suppress.CaseDifference,
 											ValidateFunc: validation.StringInSlice([]string{
 												"all",
 												"android",
@@ -233,7 +237,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 												"unknownFutureValue",
 												"windows",
 												"windowsPhone",
-											}, false),
+											}, true),
 										},
 									},
 
@@ -241,7 +245,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeString,
+											Type:             schema.TypeString,
+											DiffSuppressFunc: suppress.CaseDifference,
 											ValidateFunc: validation.StringInSlice([]string{
 												"all",
 												"android",
@@ -250,7 +255,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 												"unknownFutureValue",
 												"windows",
 												"windowsPhone",
-											}, false),
+											}, true),
 										},
 									},
 								},
@@ -261,7 +266,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:             schema.TypeString,
+								DiffSuppressFunc: suppress.CaseDifference,
 								ValidateFunc: validation.StringInSlice([]string{
 									"hidden",
 									"high",
@@ -269,7 +275,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"medium",
 									"none",
 									"unknownFutureValue",
-								}, false),
+								}, true),
 							},
 						},
 
@@ -277,7 +283,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:             schema.TypeString,
+								DiffSuppressFunc: suppress.CaseDifference,
 								ValidateFunc: validation.StringInSlice([]string{
 									"hidden",
 									"high",
@@ -285,7 +292,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"medium",
 									"none",
 									"unknownFutureValue",
-								}, false),
+								}, true),
 							},
 						},
 					},
@@ -307,7 +314,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:             schema.TypeString,
+								DiffSuppressFunc: suppress.CaseDifference,
 								ValidateFunc: validation.StringInSlice([]string{
 									"approvedApplication",
 									"block",
@@ -317,7 +325,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"mfa",
 									"passwordChange",
 									"unknownFutureValue",
-								}, false),
+								}, true),
 							},
 						},
 
@@ -354,14 +362,15 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"cloud_app_security_policy": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppress.CaseDifference,
 							ValidateFunc: validation.StringInSlice([]string{
 								"blockDownloads",
 								"mcasConfigured",
 								"monitorOnly",
 								"unknownFutureValue",
-							}, false),
+							}, true),
 						},
 
 						"sign_in_frequency": {
