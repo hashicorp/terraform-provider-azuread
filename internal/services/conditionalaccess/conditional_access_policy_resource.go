@@ -190,6 +190,40 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							},
 						},
 
+						"devices": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"device_filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mode": {
+													Type:             schema.TypeString,
+													Required:         true,
+													DiffSuppressFunc: suppress.CaseDifference,
+													ValidateFunc: validation.StringInSlice([]string{
+														msgraph.ConditionalAccessFilterModeExclude,
+														msgraph.ConditionalAccessFilterModeInclude,
+													}, true),
+												},
+
+												"rule": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validate.NoEmptyStrings,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
 						"locations": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -400,6 +434,13 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 	}
 	if old, new := diff.GetChange("session_controls.0.sign_in_frequency_period"); old.(string) != "" && new.(string) == "" {
 		diff.ForceNew("session_controls.0.sign_in_frequency")
+	}
+
+	if old, new := diff.GetChange("conditions.0.devices.#"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("conditions.0.devices")
+	}
+	if old, new := diff.GetChange("conditions.0.devices.0.device_filter.#"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("conditions.0.devices.0.device_filter")
 	}
 
 	return nil
