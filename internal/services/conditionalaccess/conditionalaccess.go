@@ -306,26 +306,8 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	return &result
 }
 
-func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgraph.ConditionalAccessSessionControls {
+func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
 	result := msgraph.ConditionalAccessSessionControls{}
-
-	if create && (len(in) == 0 || in[0] == nil) {
-		return &result
-	}
-
-	// API doesn't accept boolean false values here in POST requests, it should be omitted instead
-	// When updating, omitting a setting doesn't change it, so we default to false
-	if !create {
-		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(false),
-		}
-		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled: utils.Bool(false),
-		}
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(false),
-		}
-	}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -352,10 +334,6 @@ func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgr
 		}
 	}
 
-	// API doesn't accept all disabled settings on POST, instead should be an empty object
-	if create && !*result.ApplicationEnforcedRestrictions.IsEnabled && !*result.CloudAppSecurity.IsEnabled && !*result.SignInFrequency.IsEnabled {
-		return &msgraph.ConditionalAccessSessionControls{}
-	}
 
 	return &result
 }

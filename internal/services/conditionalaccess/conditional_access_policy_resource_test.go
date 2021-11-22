@@ -84,8 +84,8 @@ func TestAccConditionalAccessPolicy_update(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
-	// This should continue to pass when https://github.com/microsoftgraph/msgraph-metadata/issues/93
-	// is resolved and the conditional ForceNew workaround has been removed
+	// This is in a separate test to avoid ForceNew in the update test due to https://github.com/microsoftgraph/msgraph-metadata/issues/93
+	// session_controls can be added to the complete config, and this rest removed, when this issue is resolved
 
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
@@ -139,6 +139,8 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
+	// Remove this test when https://github.com/microsoftgraph/msgraph-metadata/issues/93 is resolved
+
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
@@ -206,7 +208,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["all"]
+      included_platforms = ["All"]
     }
 
     users {
@@ -245,7 +247,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["android"]
+      included_platforms = ["Android"]
       excluded_platforms = ["iOS"]
     }
 
@@ -260,12 +262,6 @@ resource "azuread_conditional_access_policy" "test" {
     built_in_controls = ["mfa"]
   }
 
-  session_controls {
-    application_enforced_restrictions_enabled = true
-    cloud_app_security_policy                 = "monitorOnly"
-    sign_in_frequency                         = 10
-    sign_in_frequency_period                  = "hours"
-  }
 }
 `, data.RandomInteger)
 }
@@ -288,7 +284,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["all"]
+      included_platforms = ["All"]
     }
 
     users {
@@ -303,7 +299,10 @@ resource "azuread_conditional_access_policy" "test" {
   }
 
   session_controls {
-    cloud_app_security_policy = "monitorOnly"
+    application_enforced_restrictions_enabled = true
+    cloud_app_security_policy                 = "monitorOnly"
+    sign_in_frequency                         = 10
+    sign_in_frequency_period                  = "hours"
   }
 }
 `, data.RandomInteger)
@@ -327,7 +326,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["all"]
+      included_platforms = ["All"]
     }
 
     users {

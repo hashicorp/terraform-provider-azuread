@@ -430,7 +430,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), true),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
 	}
 
 	policy, _, err := client.Create(ctx, properties)
@@ -456,7 +456,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), false),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
