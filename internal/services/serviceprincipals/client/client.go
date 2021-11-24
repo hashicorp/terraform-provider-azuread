@@ -7,11 +7,15 @@ import (
 )
 
 type Client struct {
-	DirectoryObjectsClient  *msgraph.DirectoryObjectsClient
-	ServicePrincipalsClient *msgraph.ServicePrincipalsClient
+	DelegatedPermissionGrantsClient *msgraph.DelegatedPermissionGrantsClient
+	DirectoryObjectsClient          *msgraph.DirectoryObjectsClient
+	ServicePrincipalsClient         *msgraph.ServicePrincipalsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
+	delegatedPermissionGrantsClient := msgraph.NewDelegatedPermissionGrantsClient(o.TenantID)
+	o.ConfigureClient(&delegatedPermissionGrantsClient.BaseClient)
+
 	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
@@ -19,7 +23,8 @@ func NewClient(o *common.ClientOptions) *Client {
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
 	return &Client{
-		DirectoryObjectsClient:  directoryObjectsClient,
-		ServicePrincipalsClient: servicePrincipalsClient,
+		DelegatedPermissionGrantsClient: delegatedPermissionGrantsClient,
+		DirectoryObjectsClient:          directoryObjectsClient,
+		ServicePrincipalsClient:         servicePrincipalsClient,
 	}
 }
