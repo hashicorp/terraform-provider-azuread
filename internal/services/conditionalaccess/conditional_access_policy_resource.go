@@ -364,6 +364,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							}, false),
 						},
 
+						"persistent_browser_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"always", "never"}, false),
+						},
+
 						"sign_in_frequency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -376,12 +382,6 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
 							ValidateFunc: validation.StringInSlice([]string{"days", "hours"}, false),
-						},
-
-						"persistent_browser_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"always", "never"}, false),
 						},
 					},
 				},

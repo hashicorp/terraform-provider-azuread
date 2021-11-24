@@ -128,9 +128,9 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		map[string]interface{}{
 			"application_enforced_restrictions_enabled": applicationEnforceRestrictions,
 			"cloud_app_security_policy":                 cloudAppSecurity,
+			"persistent_browser_mode":                   persistentBrowserMode,
 			"sign_in_frequency":                         signInFrequency,
 			"sign_in_frequency_period":                  signInFrequencyPeriod,
-			"persistent_browser_mode":                   persistentBrowserMode,
 		},
 	}
 }
@@ -328,10 +328,10 @@ func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgr
 		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
 			IsEnabled: utils.Bool(false),
 		}
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
+		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
 			IsEnabled: utils.Bool(false),
 		}
-		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
+		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
 			IsEnabled: utils.Bool(false),
 		}
 	}
@@ -353,18 +353,18 @@ func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgr
 		}
 	}
 
+	if persistentBrowserMode := config["persistent_browser_mode"].(string); persistentBrowserMode != "" {
+		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
+			IsEnabled: utils.Bool(true),
+			Mode:      utils.String(persistentBrowserMode),
+		}
+	}
+
 	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
 		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
 			IsEnabled: utils.Bool(true),
 			Type:      utils.String(config["sign_in_frequency_period"].(string)),
 			Value:     utils.Int32(int32(signInFrequency)),
-		}
-	}
-
-	if persistentBrowserMode := config["persistent_browser_mode"].(string); persistentBrowserMode != "" {
-		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
-			IsEnabled: utils.Bool(true),
-			Mode:      utils.String(persistentBrowserMode),
 		}
 	}
 
