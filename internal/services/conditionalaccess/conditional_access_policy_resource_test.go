@@ -265,6 +265,7 @@ resource "azuread_conditional_access_policy" "test" {
     cloud_app_security_policy                 = "monitorOnly"
     sign_in_frequency                         = 10
     sign_in_frequency_period                  = "hours"
+		persisten_browser_mode										= "never"
   }
 }
 `, data.RandomInteger)

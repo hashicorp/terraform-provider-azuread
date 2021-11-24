@@ -377,6 +377,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
 							ValidateFunc: validation.StringInSlice([]string{"days", "hours"}, false),
 						},
+
+						"persistent_browser_mode": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"always", "never"}, false),
+						},
 					},
 				},
 			},
