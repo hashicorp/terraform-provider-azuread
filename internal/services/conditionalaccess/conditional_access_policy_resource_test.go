@@ -85,8 +85,8 @@ func TestAccConditionalAccessPolicy_update(t *testing.T) {
 
 func TestAccConditionalAccessPolicy_deviceFilter(t *testing.T) {
 	// This is a separate test for two reasons:
-	// 1. To accommodate future properties included_devices/excluded_devices which both conflict with device_filter
-	// 2. Because device_filter is conditionally ForceNew, as the API ignores removal of this property
+	// 1. To accommodate future properties included_devices/excluded_devices which both conflict with devices.0.filter
+	// 2. Because devices.0.filter is conditionally ForceNew, as the API ignores removal of this property
 
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
@@ -257,7 +257,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["All"]
+      included_platforms = ["all"]
     }
 
     users {
@@ -296,7 +296,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["Android"]
+      included_platforms = ["android"]
       excluded_platforms = ["iOS"]
     }
 
@@ -328,7 +328,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     devices {
-      device_filter {
+      filter {
         mode = "exclude"
         rule = "device.operatingSystem eq \"Doors\""
       }
@@ -339,7 +339,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["All"]
+      included_platforms = ["all"]
     }
 
     users {
@@ -370,7 +370,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     devices {
-      device_filter {
+      filter {
         mode = "exclude"
         rule = "device.model eq \"yPhone Z\""
       }
@@ -381,7 +381,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["All"]
+      included_platforms = ["all"]
     }
 
     users {
@@ -416,7 +416,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["All"]
+      included_platforms = ["all"]
     }
 
     users {
@@ -458,7 +458,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["All"]
+      included_platforms = ["all"]
     }
 
     users {

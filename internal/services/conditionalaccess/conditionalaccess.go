@@ -64,7 +64,7 @@ func flattenConditionalAccessDevices(in *msgraph.ConditionalAccessDevices) []int
 
 	return []interface{}{
 		map[string]interface{}{
-			"device_filter": flattenConditionalAccessDeviceFilter(in.DeviceFilter),
+			"filter": flattenConditionalAccessDeviceFilter(in.DeviceFilter),
 		},
 	}
 }
@@ -307,7 +307,7 @@ func expandConditionalAccessDevices(in []interface{}) *msgraph.ConditionalAccess
 
 	config := in[0].(map[string]interface{})
 
-	deviceFilter := config["device_filter"].([]interface{})
+	deviceFilter := config["filter"].([]interface{})
 
 	if len(deviceFilter) > 0 {
 		result.DeviceFilter = expandConditionalAccessFilter(deviceFilter)

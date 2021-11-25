@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/suppress"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
@@ -55,14 +54,13 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"state": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppress.CaseDifference,
+				Type:     schema.TypeString,
+				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.ConditionalAccessPolicyStateDisabled,
 					msgraph.ConditionalAccessPolicyStateEnabled,
 					msgraph.ConditionalAccessPolicyStateEnabledForReportingButNotEnforced,
-				}, true),
+				}, false),
 			},
 
 			"conditions": {
@@ -174,9 +172,8 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"client_app_types": {
-							Type:             schema.TypeList,
-							Required:         true,
-							DiffSuppressFunc: suppress.CaseDifference,
+							Type:     schema.TypeList,
+							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -186,7 +183,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									msgraph.ConditionalAccessClientAppTypeExchangeActiveSync,
 									msgraph.ConditionalAccessClientAppTypeMobileAppsAndDesktopClients,
 									msgraph.ConditionalAccessClientAppTypeOther,
-								}, true),
+								}, false),
 							},
 						},
 
@@ -196,20 +193,19 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_filter": {
+									"filter": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"mode": {
-													Type:             schema.TypeString,
-													Required:         true,
-													DiffSuppressFunc: suppress.CaseDifference,
+													Type:     schema.TypeString,
+													Required: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														msgraph.ConditionalAccessFilterModeExclude,
 														msgraph.ConditionalAccessFilterModeInclude,
-													}, true),
+													}, false),
 												},
 
 												"rule": {
@@ -261,8 +257,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											DiffSuppressFunc: suppress.CaseDifference,
+											Type: schema.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
 												msgraph.ConditionalAccessDevicePlatformAll,
 												msgraph.ConditionalAccessDevicePlatformAndroid,
@@ -271,7 +266,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 												msgraph.ConditionalAccessDevicePlatformUnknownFutureValue,
 												msgraph.ConditionalAccessDevicePlatformWindows,
 												msgraph.ConditionalAccessDevicePlatformWindowsPhone,
-											}, true),
+											}, false),
 										},
 									},
 
@@ -279,8 +274,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											DiffSuppressFunc: suppress.CaseDifference,
+											Type: schema.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
 												msgraph.ConditionalAccessDevicePlatformAll,
 												msgraph.ConditionalAccessDevicePlatformAndroid,
@@ -289,7 +283,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 												msgraph.ConditionalAccessDevicePlatformUnknownFutureValue,
 												msgraph.ConditionalAccessDevicePlatformWindows,
 												msgraph.ConditionalAccessDevicePlatformWindowsPhone,
-											}, true),
+											}, false),
 										},
 									},
 								},
@@ -300,8 +294,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								DiffSuppressFunc: suppress.CaseDifference,
+								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessRiskLevelHidden,
 									msgraph.ConditionalAccessRiskLevelHigh,
@@ -309,7 +302,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									msgraph.ConditionalAccessRiskLevelMedium,
 									msgraph.ConditionalAccessRiskLevelNone,
 									msgraph.ConditionalAccessRiskLevelUnknownFutureValue,
-								}, true),
+								}, false),
 							},
 						},
 
@@ -317,8 +310,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								DiffSuppressFunc: suppress.CaseDifference,
+								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessRiskLevelHidden,
 									msgraph.ConditionalAccessRiskLevelHigh,
@@ -326,7 +318,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									msgraph.ConditionalAccessRiskLevelMedium,
 									msgraph.ConditionalAccessRiskLevelNone,
 									msgraph.ConditionalAccessRiskLevelUnknownFutureValue,
-								}, true),
+								}, false),
 							},
 						},
 					},
@@ -348,8 +340,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								DiffSuppressFunc: suppress.CaseDifference,
+								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessGrantControlApprovedApplication,
 									msgraph.ConditionalAccessGrantControlBlock,
@@ -359,7 +350,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									msgraph.ConditionalAccessGrantControlMfa,
 									msgraph.ConditionalAccessGrantControlPasswordChange,
 									msgraph.ConditionalAccessGrantControlUnknownFutureValue,
-								}, true),
+								}, false),
 							},
 						},
 
@@ -396,15 +387,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"cloud_app_security_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppress.CaseDifference,
+							Type:     schema.TypeString,
+							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeBlockDownloads,
 								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeMcasConfigured,
 								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeMonitorOnly,
 								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeUnknownFutureValue,
-							}, true),
+							}, false),
 						},
 
 						"sign_in_frequency": {
@@ -439,8 +429,8 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 	if old, new := diff.GetChange("conditions.0.devices.#"); old.(int) > 0 && new.(int) == 0 {
 		diff.ForceNew("conditions.0.devices")
 	}
-	if old, new := diff.GetChange("conditions.0.devices.0.device_filter.#"); old.(int) > 0 && new.(int) == 0 {
-		diff.ForceNew("conditions.0.devices.0.device_filter")
+	if old, new := diff.GetChange("conditions.0.devices.0.filter.#"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("conditions.0.devices.0.filter")
 	}
 
 	return nil

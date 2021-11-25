@@ -224,7 +224,7 @@ const (
 type ConditionalAccessDevicePlatform = string
 
 const (
-	ConditionalAccessDevicePlatformAll                ConditionalAccessDevicePlatform = "All"
+	ConditionalAccessDevicePlatformAll                ConditionalAccessDevicePlatform = "all"
 	ConditionalAccessDevicePlatformAndroid            ConditionalAccessDevicePlatform = "android"
 	ConditionalAccessDevicePlatformIos                ConditionalAccessDevicePlatform = "iOS"
 	ConditionalAccessDevicePlatformMacOs              ConditionalAccessDevicePlatform = "macOS"
