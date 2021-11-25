@@ -32,7 +32,7 @@ resource "azuread_conditional_access_policy" "example" {
     }
 
     devices {
-      device_filter {
+      filter {
         mode = "exclude"
         rule = "device.operatingSystem eq \"Doors\""
       }
@@ -94,7 +94,7 @@ The following arguments are supported:
 
 * `applications` - (Required) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
 * `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
-* `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy.
+* `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
 * `locations` - (Required) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
 * `platforms` - (Required) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `sign_in_risk_levels` - (Optional) A list of sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
@@ -113,11 +113,11 @@ The following arguments are supported:
 
 `devices` block supports the following:
 
-* `device_filter` - (Optional) A `device_filter` block as described below.
+* `filter` - (Optional) A `filter` block as described below. A `filter` block can be added to an existing policy, but removing the `filter` block forces a new resource to be created.
 
 ---
 
-`device_filter` block supports the following:
+`filter` block supports the following:
 
 * `mode` - (Required) Whether to include in, or exclude from, matching devices from the policy. Supported values are `include` or `exclude`.
 * `rule` - (Required) Condition filter to match devices. For more information, see [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/concept-condition-filters-for-devices#supported-operators-and-device-properties-for-filters).
