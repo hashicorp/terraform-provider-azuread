@@ -6,6 +6,9 @@ BREAKING CHANGES:
 
 FEATURES:
 
+* **New Data Source:** `azuread_administrative_unit` [GH-672]
+* **New Resource:** `azuread_administrative_unit` [GH-672]
+* **New Resource:** `azuread_administrative_unit_member` [GH-672]
 * **New Resource:** `azuread_service_principal_delegated_permission_grant` [GH-676]
 
 ## 2.10.0 (November 19, 2021)
