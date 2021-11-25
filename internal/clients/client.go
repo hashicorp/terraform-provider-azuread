@@ -10,6 +10,7 @@ import (
 	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
@@ -32,20 +33,22 @@ type Client struct {
 
 	StopContext context.Context
 
-	Applications       *applications.Client
-	AppRoleAssignments *approleassignments.Client
-	ConditionalAccess  *conditionalaccess.Client
-	DirectoryRoles     *directoryroles.Client
-	Domains            *domains.Client
-	Groups             *groups.Client
-	Invitations        *invitations.Client
-	ServicePrincipals  *serviceprincipals.Client
-	Users              *users.Client
+	AdministrativeUnits *administrativeunits.Client
+	Applications        *applications.Client
+	AppRoleAssignments  *approleassignments.Client
+	ConditionalAccess   *conditionalaccess.Client
+	DirectoryRoles      *directoryroles.Client
+	Domains             *domains.Client
+	Groups              *groups.Client
+	Invitations         *invitations.Client
+	ServicePrincipals   *serviceprincipals.Client
+	Users               *users.Client
 }
 
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
 	client.StopContext = ctx
 
+	client.AdministrativeUnits = administrativeunits.NewClient(o)
 	client.Applications = applications.NewClient(o)
 	client.AppRoleAssignments = approleassignments.NewClient(o)
 	client.Domains = domains.NewClient(o)
