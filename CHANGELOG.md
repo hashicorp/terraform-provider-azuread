@@ -11,6 +11,14 @@ FEATURES:
 * **New Resource:** `azuread_administrative_unit_member` [GH-672]
 * **New Resource:** `azuread_service_principal_delegated_permission_grant` [GH-676]
 
+IMPROVEMENTS:
+
+* `azuread_conditional_access_policy` - support the `devices` block [GH-673]
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - fix a bug when removing the `session_controls` block from a policy [GH-673]
+
 ## 2.10.0 (November 19, 2021)
 
 BUG FIXES:
