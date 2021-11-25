@@ -121,7 +121,8 @@ provider "azuread" {}
 resource "azuread_administrative_unit" "test" {
   display_name = "acctestAdministrativeUnit-%[1]d"
   description  = "testing administrative units %[2]s"
-  visibility   = "HiddenMembership"
+
+  hidden_membership_enabled = true
 }
 `, data.RandomInteger, data.RandomString)
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
@@ -80,15 +79,10 @@ func administrativeUnitResource() *schema.Resource {
 				Default:     false,
 			},
 
-			"visibility": {
+			"hidden_membership_enabled": {
 				Description: "Whether the administrative unit and its members are hidden or publicly viewable in the directory",
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.AdministrativeUnitVisibilityHiddenMembership,
-					msgraph.AdministrativeUnitVisibilityPublic,
-				}, false),
 			},
 
 			"object_id": {
@@ -157,10 +151,11 @@ func administrativeUnitResourceCreate(ctx context.Context, d *schema.ResourceDat
 	properties := msgraph.AdministrativeUnit{
 		Description: utils.NullableString(d.Get("description").(string)),
 		DisplayName: utils.String(tempDisplayName),
+		Visibility:  utils.String(msgraph.AdministrativeUnitVisibilityPublic),
 	}
 
-	if v, ok := d.GetOk("visibility"); ok && v.(string) != "" {
-		properties.Visibility = utils.String(v.(string))
+	if d.Get("hidden_membership_enabled").(bool) {
+		properties.Visibility = utils.String(msgraph.AdministrativeUnitVisibilityHiddenMembership)
 	}
 
 	administrativeUnit, _, err := client.Create(ctx, properties)
@@ -250,10 +245,11 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *schema.ResourceDat
 		ID:          utils.String(administrativeUnitId),
 		Description: utils.NullableString(d.Get("description").(string)),
 		DisplayName: utils.String(displayName),
+		Visibility:  utils.String(msgraph.AdministrativeUnitVisibilityPublic),
 	}
 
-	if d.HasChange("visibility") {
-		administrativeUnit.Visibility = utils.String(d.Get("visibility").(string))
+	if d.Get("hidden_membership_enabled").(bool) {
+		administrativeUnit.Visibility = utils.String(msgraph.AdministrativeUnitVisibilityHiddenMembership)
 	}
 
 	if _, err := client.Update(ctx, administrativeUnit); err != nil {
@@ -322,7 +318,9 @@ func administrativeUnitResourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "description", administrativeUnit.Description)
 	tf.Set(d, "display_name", administrativeUnit.DisplayName)
 	tf.Set(d, "object_id", administrativeUnit.ID)
-	tf.Set(d, "visibility", administrativeUnit.Visibility)
+
+	hiddenMembershipEnabled := administrativeUnit.Visibility != nil && *administrativeUnit.Visibility == msgraph.AdministrativeUnitVisibilityHiddenMembership
+	tf.Set(d, "hidden_membership_enabled", hiddenMembershipEnabled)
 
 	members, _, err := client.ListMembers(ctx, *administrativeUnit.ID)
 	if err != nil {
