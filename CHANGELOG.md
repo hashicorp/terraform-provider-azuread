@@ -4,6 +4,10 @@ BREAKING CHANGES:
 
 * **Provider:** support for the German national cloud, which was [closed down as of October 29, 2021](https://www.microsoft.com/en-us/cloud-platform/germany-cloud-regions), has been removed in this release [GH-670]
 
+FEATURES:
+
+* **New Resource:** `azuread_service_principal_delegated_permission_grant` [GH-676]
+
 ## 2.10.0 (November 19, 2021)
 
 BUG FIXES:
