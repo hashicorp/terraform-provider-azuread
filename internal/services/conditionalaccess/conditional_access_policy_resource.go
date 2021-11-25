@@ -177,13 +177,46 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
-									"all",
-									"browser",
-									"mobileAppsAndDesktopClients",
-									"exchangeActiveSync",
-									"easSupported",
-									"other",
+									msgraph.ConditionalAccessClientAppTypeAll,
+									msgraph.ConditionalAccessClientAppTypeBrowser,
+									msgraph.ConditionalAccessClientAppTypeEasSupported,
+									msgraph.ConditionalAccessClientAppTypeExchangeActiveSync,
+									msgraph.ConditionalAccessClientAppTypeMobileAppsAndDesktopClients,
+									msgraph.ConditionalAccessClientAppTypeOther,
 								}, false),
+							},
+						},
+
+						"devices": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filter": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mode": {
+													Type:     schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														msgraph.ConditionalAccessFilterModeExclude,
+														msgraph.ConditionalAccessFilterModeInclude,
+													}, false),
+												},
+
+												"rule": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validate.NoEmptyStrings,
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 
@@ -226,13 +259,13 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
-												"all",
-												"android",
-												"iOS",
-												"macOS",
-												"unknownFutureValue",
-												"windows",
-												"windowsPhone",
+												msgraph.ConditionalAccessDevicePlatformAll,
+												msgraph.ConditionalAccessDevicePlatformAndroid,
+												msgraph.ConditionalAccessDevicePlatformIos,
+												msgraph.ConditionalAccessDevicePlatformMacOs,
+												msgraph.ConditionalAccessDevicePlatformUnknownFutureValue,
+												msgraph.ConditionalAccessDevicePlatformWindows,
+												msgraph.ConditionalAccessDevicePlatformWindowsPhone,
 											}, false),
 										},
 									},
@@ -243,13 +276,13 @@ func conditionalAccessPolicyResource() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
-												"all",
-												"android",
-												"iOS",
-												"macOS",
-												"unknownFutureValue",
-												"windows",
-												"windowsPhone",
+												msgraph.ConditionalAccessDevicePlatformAll,
+												msgraph.ConditionalAccessDevicePlatformAndroid,
+												msgraph.ConditionalAccessDevicePlatformIos,
+												msgraph.ConditionalAccessDevicePlatformMacOs,
+												msgraph.ConditionalAccessDevicePlatformUnknownFutureValue,
+												msgraph.ConditionalAccessDevicePlatformWindows,
+												msgraph.ConditionalAccessDevicePlatformWindowsPhone,
 											}, false),
 										},
 									},
@@ -263,12 +296,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
-									"hidden",
-									"high",
-									"low",
-									"medium",
-									"none",
-									"unknownFutureValue",
+									msgraph.ConditionalAccessRiskLevelHidden,
+									msgraph.ConditionalAccessRiskLevelHigh,
+									msgraph.ConditionalAccessRiskLevelLow,
+									msgraph.ConditionalAccessRiskLevelMedium,
+									msgraph.ConditionalAccessRiskLevelNone,
+									msgraph.ConditionalAccessRiskLevelUnknownFutureValue,
 								}, false),
 							},
 						},
@@ -279,12 +312,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
-									"hidden",
-									"high",
-									"low",
-									"medium",
-									"none",
-									"unknownFutureValue",
+									msgraph.ConditionalAccessRiskLevelHidden,
+									msgraph.ConditionalAccessRiskLevelHigh,
+									msgraph.ConditionalAccessRiskLevelLow,
+									msgraph.ConditionalAccessRiskLevelMedium,
+									msgraph.ConditionalAccessRiskLevelNone,
+									msgraph.ConditionalAccessRiskLevelUnknownFutureValue,
 								}, false),
 							},
 						},
@@ -309,14 +342,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
-									"approvedApplication",
-									"block",
-									"compliantApplication",
-									"compliantDevice",
-									"domainJoinedDevice",
-									"mfa",
-									"passwordChange",
-									"unknownFutureValue",
+									msgraph.ConditionalAccessGrantControlApprovedApplication,
+									msgraph.ConditionalAccessGrantControlBlock,
+									msgraph.ConditionalAccessGrantControlCompliantApplication,
+									msgraph.ConditionalAccessGrantControlCompliantDevice,
+									msgraph.ConditionalAccessGrantControlDomainJoinedDevice,
+									msgraph.ConditionalAccessGrantControlMfa,
+									msgraph.ConditionalAccessGrantControlPasswordChange,
+									msgraph.ConditionalAccessGrantControlUnknownFutureValue,
 								}, false),
 							},
 						},
@@ -357,10 +390,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"blockDownloads",
-								"mcasConfigured",
-								"monitorOnly",
-								"unknownFutureValue",
+								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeBlockDownloads,
+								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeMcasConfigured,
+								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeMonitorOnly,
+								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeUnknownFutureValue,
 							}, false),
 						},
 
@@ -393,6 +426,13 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 		diff.ForceNew("session_controls.0.sign_in_frequency")
 	}
 
+	if old, new := diff.GetChange("conditions.0.devices.#"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("conditions.0.devices")
+	}
+	if old, new := diff.GetChange("conditions.0.devices.0.filter.#"); old.(int) > 0 && new.(int) == 0 {
+		diff.ForceNew("conditions.0.devices.0.filter")
+	}
+
 	return nil
 }
 
@@ -421,7 +461,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), true),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
 	}
 
 	policy, _, err := client.Create(ctx, properties)
@@ -447,7 +487,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 		State:           utils.String(d.Get("state").(string)),
 		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{}), false),
+		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {

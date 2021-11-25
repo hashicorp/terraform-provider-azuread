@@ -17,6 +17,7 @@ func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessCondition
 			"applications":        flattenConditionalAccessApplications(in.Applications),
 			"users":               flattenConditionalAccessUsers(in.Users),
 			"client_app_types":    tf.FlattenStringSlicePtr(in.ClientAppTypes),
+			"devices":             flattenConditionalAccessDevices(in.Devices),
 			"locations":           flattenConditionalAccessLocations(in.Locations),
 			"platforms":           flattenConditionalAccessPlatforms(in.Platforms),
 			"sign_in_risk_levels": tf.FlattenStringSlicePtr(in.SignInRiskLevels),
@@ -52,6 +53,18 @@ func flattenConditionalAccessUsers(in *msgraph.ConditionalAccessUsers) []interfa
 			"excluded_groups": tf.FlattenStringSlicePtr(in.ExcludeGroups),
 			"included_roles":  tf.FlattenStringSlicePtr(in.IncludeRoles),
 			"excluded_roles":  tf.FlattenStringSlicePtr(in.ExcludeRoles),
+		},
+	}
+}
+
+func flattenConditionalAccessDevices(in *msgraph.ConditionalAccessDevices) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"filter": flattenConditionalAccessDeviceFilter(in.DeviceFilter),
 		},
 	}
 }
@@ -129,6 +142,19 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 	}
 }
 
+func flattenConditionalAccessDeviceFilter(in *msgraph.ConditionalAccessFilter) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"mode": in.Mode,
+			"rule": in.Rule,
+		},
+	}
+}
+
 func flattenCountryNamedLocation(in *msgraph.CountryNamedLocation) []interface{} {
 	if in == nil {
 		return []interface{}{}
@@ -191,6 +217,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	applications := config["applications"].([]interface{})
 	users := config["users"].([]interface{})
 	clientAppTypes := config["client_app_types"].([]interface{})
+	devices := config["devices"].([]interface{})
 	locations := config["locations"].([]interface{})
 	platforms := config["platforms"].([]interface{})
 	signInRiskLevels := config["sign_in_risk_levels"].([]interface{})
@@ -199,6 +226,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	result.Applications = expandConditionalAccessApplications(applications)
 	result.Users = expandConditionalAccessUsers(users)
 	result.ClientAppTypes = tf.ExpandStringSlicePtr(clientAppTypes)
+	result.Devices = expandConditionalAccessDevices(devices)
 	result.Locations = expandConditionalAccessLocations(locations)
 	result.Platforms = expandConditionalAccessPlatforms(platforms)
 	result.SignInRiskLevels = tf.ExpandStringSlicePtr(signInRiskLevels)
@@ -268,6 +296,26 @@ func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAcce
 	return &result
 }
 
+func expandConditionalAccessDevices(in []interface{}) *msgraph.ConditionalAccessDevices {
+	result := msgraph.ConditionalAccessDevices{}
+
+	if len(in) == 0 || in[0] == nil {
+		// The devices field cannot be empty on POST, and is currently totally ignored when empty on PATCH,
+		// so for now we'll just return nil here and revisit later.
+		return nil
+	}
+
+	config := in[0].(map[string]interface{})
+
+	deviceFilter := config["filter"].([]interface{})
+
+	if len(deviceFilter) > 0 {
+		result.DeviceFilter = expandConditionalAccessFilter(deviceFilter)
+	}
+
+	return &result
+}
+
 func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAccessLocations {
 	if len(in) == 0 || in[0] == nil {
 		return nil
@@ -306,26 +354,8 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	return &result
 }
 
-func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgraph.ConditionalAccessSessionControls {
+func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
 	result := msgraph.ConditionalAccessSessionControls{}
-
-	if create && (len(in) == 0 || in[0] == nil) {
-		return &result
-	}
-
-	// API doesn't accept boolean false values here in POST requests, it should be omitted instead
-	// When updating, omitting a setting doesn't change it, so we default to false
-	if !create {
-		result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-			IsEnabled: utils.Bool(false),
-		}
-		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled: utils.Bool(false),
-		}
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(false),
-		}
-	}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -352,10 +382,20 @@ func expandConditionalAccessSessionControls(in []interface{}, create bool) *msgr
 		}
 	}
 
-	// API doesn't accept all disabled settings on POST, instead should be an empty object
-	if create && !*result.ApplicationEnforcedRestrictions.IsEnabled && !*result.CloudAppSecurity.IsEnabled && !*result.SignInFrequency.IsEnabled {
-		return &msgraph.ConditionalAccessSessionControls{}
+	return &result
+}
+
+func expandConditionalAccessFilter(in []interface{}) *msgraph.ConditionalAccessFilter {
+	result := msgraph.ConditionalAccessFilter{}
+
+	if len(in) == 0 || in[0] == nil {
+		return &result
 	}
+
+	config := in[0].(map[string]interface{})
+
+	result.Mode = utils.String(config["mode"].(string))
+	result.Rule = utils.String(config["rule"].(string))
 
 	return &result
 }
