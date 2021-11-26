@@ -29,6 +29,7 @@ func TestAccServicePrincipalDelegatedPermissionGrant_allUsers(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 
@@ -43,6 +44,7 @@ func TestAccServicePrincipalDelegatedPermissionGrant_singleUser(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 

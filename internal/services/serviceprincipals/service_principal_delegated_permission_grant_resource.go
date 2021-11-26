@@ -3,6 +3,7 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -31,6 +32,13 @@ func servicePrincipalDelegatedPermissionGrantResource() *schema.Resource {
 			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
+
+		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+			if len(id) == 0 {
+				return fmt.Errorf("specified ID is not valid: %q", id)
+			}
+			return nil
+		}),
 
 		Schema: map[string]*schema.Schema{
 			"claim_values": {
