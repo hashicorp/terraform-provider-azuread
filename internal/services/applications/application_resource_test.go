@@ -718,6 +718,7 @@ resource "azuread_application" "test" {
       "https://login.microsoftonline.com/common/oauth2/nativeclient",
       "https://login.live.com/oauth20_desktop.srf",
       "ms-appx-web://Microsoft.AAD.BrokerPlugin/00000000-1111-1111-1111-222222222222",
+      "urn:ietf:wg:oauth:2.0:oob",
     ]
   }
 
