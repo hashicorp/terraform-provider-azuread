@@ -94,7 +94,7 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagPathF(err, "principal_object_id", "Service principal not found for resource (Object ID: %q)", resourceId)
 		}
-		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", principalId)
+		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceId)
 	}
 	properties := msgraph.AppRoleAssignment{
 		AppRoleId:   utils.String(appRoleId),

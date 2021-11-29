@@ -83,9 +83,58 @@ func TestAccConditionalAccessPolicy_update(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_deviceFilter(t *testing.T) {
+	// This is a separate test for two reasons:
+	// 1. To accommodate future properties included_devices/excluded_devices which both conflict with devices.0.filter
+	// 2. Because devices.0.filter is conditionally ForceNew, as the API ignores removal of this property
+
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.deviceFilter(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.deviceFilter(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.deviceFilterUpdate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
-	// This should continue to pass when https://github.com/microsoftgraph/msgraph-metadata/issues/93
-	// is resolved and the conditional ForceNew workaround has been removed
+	// This is in a separate test to avoid ForceNew in the update test due to https://github.com/microsoftgraph/msgraph-metadata/issues/93
+	// session_controls can be added to the complete config, and this rest removed, when this issue is resolved
 
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
@@ -139,6 +188,8 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
+	// Remove this test when https://github.com/microsoftgraph/msgraph-metadata/issues/93 is resolved
+
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
@@ -259,13 +310,89 @@ resource "azuread_conditional_access_policy" "test" {
     operator          = "OR"
     built_in_controls = ["mfa"]
   }
+}
+`, data.RandomInteger)
+}
 
-  session_controls {
-    application_enforced_restrictions_enabled = true
-    cloud_app_security_policy                 = "monitorOnly"
-    sign_in_frequency                         = 10
-    sign_in_frequency_period                  = "hours"
-    persistent_browser_mode                   = "never"
+func (ConditionalAccessPolicyResource) deviceFilter(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    devices {
+      filter {
+        mode = "exclude"
+        rule = "device.operatingSystem eq \"Doors\""
+      }
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) deviceFilterUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    devices {
+      filter {
+        mode = "exclude"
+        rule = "device.model eq \"yPhone Z\""
+      }
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
   }
 }
 `, data.RandomInteger)
@@ -304,7 +431,10 @@ resource "azuread_conditional_access_policy" "test" {
   }
 
   session_controls {
-    cloud_app_security_policy = "monitorOnly"
+    application_enforced_restrictions_enabled = true
+    cloud_app_security_policy                 = "monitorOnly"
+    sign_in_frequency                         = 10
+    sign_in_frequency_period                  = "hours"
   }
 }
 `, data.RandomInteger)
