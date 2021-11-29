@@ -479,6 +479,11 @@ resource "azuread_conditional_access_policy" "test" {
     }
   }
 
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+
   session_controls {
 		persistent_browser_mode = "never"
   }
@@ -518,6 +523,11 @@ resource "azuread_conditional_access_policy" "test" {
       included_users = ["All"]
       excluded_users = ["GuestsOrExternalUsers"]
     }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
   }
 
   session_controls {
