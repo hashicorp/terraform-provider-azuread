@@ -485,7 +485,7 @@ resource "azuread_conditional_access_policy" "test" {
   }
 
   session_controls {
-		persistent_browser_mode = "never"
+    persistent_browser_mode = "never"
   }
 }
 `, data.RandomInteger)
@@ -531,7 +531,7 @@ resource "azuread_conditional_access_policy" "test" {
   }
 
   session_controls {
-		persistent_browser_mode = "always"
+    persistent_browser_mode = "always"
   }
 }
 `, data.RandomInteger)
