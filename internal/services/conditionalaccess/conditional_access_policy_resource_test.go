@@ -132,6 +132,53 @@ func TestAccConditionalAccessPolicy_deviceFilter(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_persistentBrowserMode(t *testing.T) {
+	// This is a separate test to because persistentBrowserMode works with all cloud apps only (no exclusions allowed).
+
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.persistentBrowserMode(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.persistentBrowserMode(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.persistentBrowserUpdate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 	// This is in a separate test to avoid ForceNew in the update test due to https://github.com/microsoftgraph/msgraph-metadata/issues/93
 	// session_controls can be added to the complete config, and this rest removed, when this issue is resolved
@@ -393,6 +440,88 @@ resource "azuread_conditional_access_policy" "test" {
   grant_controls {
     operator          = "OR"
     built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) persistentBrowserMode(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    devices {
+      filter {
+        mode = "exclude"
+        rule = "device.operatingSystem eq \"Doors\""
+      }
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  session_controls {
+		persistent_browser_mode = "never"
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) persistentBrowserUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    devices {
+      filter {
+        mode = "exclude"
+        rule = "device.operatingSystem eq \"Doors\""
+      }
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  session_controls {
+		persistent_browser_mode = "always"
   }
 }
 `, data.RandomInteger)
