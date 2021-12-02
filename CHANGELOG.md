@@ -1,3 +1,9 @@
+## 2.12.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_service_principal_delegated_permission_grant` - add missing support for importing this resource [GH-685]
+
 ## 2.11.0 (November 25, 2021)
 
 BREAKING CHANGES:
