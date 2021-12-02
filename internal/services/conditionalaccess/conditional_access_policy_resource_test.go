@@ -132,53 +132,6 @@ func TestAccConditionalAccessPolicy_deviceFilter(t *testing.T) {
 	})
 }
 
-func TestAccConditionalAccessPolicy_persistentBrowserMode(t *testing.T) {
-	// This is a separate test to because persistentBrowserMode works with all cloud apps only (no exclusions allowed).
-
-	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
-	r := ConditionalAccessPolicyResource{}
-
-	data.ResourceTest(t, r, []resource.TestStep{
-		{
-			Config: r.persistentBrowserMode(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.persistentBrowserMode(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.persistentBrowserUpdate(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
 func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 	// This is in a separate test to avoid ForceNew in the update test due to https://github.com/microsoftgraph/msgraph-metadata/issues/93
 	// session_controls can be added to the complete config, and this rest removed, when this issue is resolved
@@ -201,6 +154,26 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.sessionControls(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.sessionControlsUpdate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
 			),
 		},
 		data.ImportStep(),
@@ -445,98 +418,6 @@ resource "azuread_conditional_access_policy" "test" {
 `, data.RandomInteger)
 }
 
-func (ConditionalAccessPolicyResource) persistentBrowserMode(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-CONPOLICY-%[1]d"
-  state        = "disabled"
-
-  conditions {
-    client_app_types = ["browser"]
-
-    applications {
-      included_applications = ["All"]
-    }
-
-    devices {
-      filter {
-        mode = "exclude"
-        rule = "device.operatingSystem eq \"Doors\""
-      }
-    }
-
-    locations {
-      included_locations = ["All"]
-    }
-
-    platforms {
-      included_platforms = ["all"]
-    }
-
-    users {
-      included_users = ["All"]
-      excluded_users = ["GuestsOrExternalUsers"]
-    }
-  }
-
-  grant_controls {
-    operator          = "OR"
-    built_in_controls = ["block"]
-  }
-
-  session_controls {
-    persistent_browser_mode = "never"
-  }
-}
-`, data.RandomInteger)
-}
-
-func (ConditionalAccessPolicyResource) persistentBrowserUpdate(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-CONPOLICY-%[1]d"
-  state        = "disabled"
-
-  conditions {
-    client_app_types = ["browser"]
-
-    applications {
-      included_applications = ["All"]
-    }
-
-    devices {
-      filter {
-        mode = "exclude"
-        rule = "device.operatingSystem eq \"Doors\""
-      }
-    }
-
-    locations {
-      included_locations = ["All"]
-    }
-
-    platforms {
-      included_platforms = ["all"]
-    }
-
-    users {
-      included_users = ["All"]
-      excluded_users = ["GuestsOrExternalUsers"]
-    }
-  }
-
-  grant_controls {
-    operator          = "OR"
-    built_in_controls = ["block"]
-  }
-
-  session_controls {
-    persistent_browser_mode = "always"
-  }
-}
-`, data.RandomInteger)
-}
-
 func (ConditionalAccessPolicyResource) sessionControls(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_conditional_access_policy" "test" {
@@ -572,8 +453,52 @@ resource "azuread_conditional_access_policy" "test" {
   session_controls {
     application_enforced_restrictions_enabled = true
     cloud_app_security_policy                 = "monitorOnly"
+    persistent_browser_mode                   = "never"
     sign_in_frequency                         = 10
     sign_in_frequency_period                  = "hours"
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) sessionControlsUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+
+  session_controls {
+    application_enforced_restrictions_enabled = true
+    cloud_app_security_policy                 = "blockDownloads"
+    persistent_browser_mode                   = "always"
+    sign_in_frequency                         = 2
+    sign_in_frequency_period                  = "days"
   }
 }
 `, data.RandomInteger)
