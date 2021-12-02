@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* `azuread_application` - allow URNs to be used in `redirect_uris` in the `public_client` block [GH-684]
 * `azuread_service_principal_delegated_permission_grant` - add missing support for importing this resource [GH-685]
 
 ## 2.11.0 (November 25, 2021)
