@@ -406,7 +406,7 @@ func applicationResource() *schema.Resource {
 							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectUriFunc(false, true),
+								ValidateDiagFunc: validate.IsRedirectUriFunc(true, true),
 							},
 						},
 					},
