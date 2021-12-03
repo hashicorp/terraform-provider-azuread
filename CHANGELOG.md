@@ -1,5 +1,9 @@
 ## 2.12.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `azuread_conditional_access_policy` - support the `persistent_browser_mode` in the `session_controls` block [GH-677]
+
 BUG FIXES:
 
 * `azuread_application` - allow URNs to be used in `redirect_uris` in the `public_client` block [GH-684]
