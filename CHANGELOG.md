@@ -1,13 +1,13 @@
-## 2.12.0 (Unreleased)
+## 2.12.0 (December 03, 2021)
 
 IMPROVEMENTS:
 
-* `azuread_conditional_access_policy` - support the `persistent_browser_mode` in the `session_controls` block [GH-677]
+* `azuread_conditional_access_policy` - support the `persistent_browser_mode` in the `session_controls` block ([#677](https://github.com/terraform-providers/terraform-provider-azuread/issues/677))
 
 BUG FIXES:
 
-* `azuread_application` - allow URNs to be used in `redirect_uris` in the `public_client` block [GH-684]
-* `azuread_service_principal_delegated_permission_grant` - add missing support for importing this resource [GH-685]
+* `azuread_application` - allow URNs to be used in `redirect_uris` in the `public_client` block ([#684](https://github.com/terraform-providers/terraform-provider-azuread/issues/684))
+* `azuread_service_principal_delegated_permission_grant` - add missing support for importing this resource ([#685](https://github.com/terraform-providers/terraform-provider-azuread/issues/685))
 
 ## 2.11.0 (November 25, 2021)
 
