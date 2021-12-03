@@ -397,6 +397,15 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							}, false),
 						},
 
+						"persistent_browser_mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.PersistentBrowserSessionModeAlways,
+								msgraph.PersistentBrowserSessionModeNever,
+							}, false),
+						},
+
 						"sign_in_frequency": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -444,8 +453,21 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceD
 		sessionControlsRaw := d.Get("session_controls").([]interface{})
 		if len(sessionControlsRaw) == 1 {
 			sessionControls := sessionControlsRaw[0].(map[string]interface{})
-			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && !v.(bool) {
-				suppress = true
+			suppress = true
+			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && v.(bool) {
+				suppress = false
+			}
+			if v, ok := sessionControls["cloud_app_security_policy"]; ok && v.(string) != "" {
+				suppress = false
+			}
+			if v, ok := sessionControls["persistent_browser_mode"]; ok && v.(string) != "" {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency"]; ok && v.(int) > 0 {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency_period"]; ok && v.(string) != "" {
+				suppress = false
 			}
 		}
 	}

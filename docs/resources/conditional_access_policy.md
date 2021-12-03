@@ -167,6 +167,7 @@ The following arguments are supported:
 -> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
 
 * `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `blockDownloads`, `mcasConfigured`, `monitorOnly` or `unknownFutureValue`.
+* `persistent_browser_mode` - (Optional) Session control to define whether to persist cookies or not. Possible values are: `always` or `never`.
 * `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
 * `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
 
