@@ -108,6 +108,35 @@ func TestAccGroup_behaviors(t *testing.T) {
 	})
 }
 
+func TestAccGroup_dynamicMembership(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.dynamicMembership(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unified(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.dynamicMembership(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccGroup_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -413,6 +442,7 @@ func (GroupResource) unified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[1]d"
+  description      = "Please delete me as this is a.test.AD group!"
   types            = ["Unified"]
   mail_enabled     = true
   mail_nickname    = "acctestGroup-%[1]d"
@@ -437,7 +467,7 @@ resource "azuread_user" "test" {
 resource "azuread_group" "test" {
   description      = "Please delete me as this is a.test.AD group!"
   display_name     = "acctestGroup-complete-%[1]d"
-  types            = ["Unified"]
+  types            = ["DynamicMembership", "Unified"]
   mail_enabled     = true
   mail_nickname    = "acctestGroup-%[1]d"
   security_enabled = true
@@ -472,6 +502,24 @@ resource "azuread_group" "test" {
     "SubscribeNewGroupMembers",
     "WelcomeEmailDisabled"
   ]
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) dynamicMembership(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  description      = "Please delete me as this is a.test.AD group!"
+  types            = ["DynamicMembership", "Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctestGroup-%[1]d"
+  security_enabled = true
+
+  dynamic_membership {
+    rule               = "user.department -eq \"Sales\""
+    processing_enabled = true
+  }
 }
 `, data.RandomInteger)
 }
