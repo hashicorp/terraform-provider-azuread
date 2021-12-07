@@ -841,8 +841,8 @@ type Group struct {
 	Mail                          *string                             `json:"mail,omitempty"`
 	MailEnabled                   *bool                               `json:"mailEnabled,omitempty"`
 	MailNickname                  *string                             `json:"mailNickname,omitempty"`
-	MembershipRule                *string                             `json:"membershipRule,omitempty"`
-	MembershipRuleProcessingState *string                             `json:"membershipRuleProcessingState,omitempty"`
+	MembershipRule                *StringNullWhenEmpty                `json:"membershipRule,omitempty"`
+	MembershipRuleProcessingState *GroupMembershipRuleProcessingState `json:"membershipRuleProcessingState,omitempty"`
 	OnPremisesDomainName          *string                             `json:"onPremisesDomainName,omitempty"`
 	OnPremisesLastSyncDateTime    *time.Time                          `json:"onPremisesLastSyncDateTime,omitempty"`
 	OnPremisesNetBiosName         *string                             `json:"onPremisesNetBiosName,omitempty"`

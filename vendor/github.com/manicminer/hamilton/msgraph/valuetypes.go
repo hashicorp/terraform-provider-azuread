@@ -324,10 +324,18 @@ const (
 	FeatureTypeUnknownFutureValue FeatureType = "unknownFutureValue"
 )
 
+type GroupMembershipRuleProcessingState = string
+
+const (
+	GroupMembershipRuleProcessingStateOn     GroupMembershipRuleProcessingState = "On"
+	GroupMembershipRuleProcessingStatePaused GroupMembershipRuleProcessingState = "Paused"
+)
+
 type GroupType = string
 
 const (
-	GroupTypeUnified GroupType = "Unified"
+	GroupTypeDynamicMembership GroupType = "DynamicMembership"
+	GroupTypeUnified           GroupType = "Unified"
 )
 
 type GroupMembershipClaim = string
