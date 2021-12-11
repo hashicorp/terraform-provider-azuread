@@ -1,3 +1,7 @@
+<a href="https://terraform.io">
+    <img src=".github/tf.png" alt="Terraform logo" title="Terraform" align="left" height="50" />
+</a>
+
 # Terraform Provider for Azure Active Directory
 
 **NOTE:** Version 1.0 and above of this provider requires Terraform 0.12 or later.
@@ -17,7 +21,7 @@ terraform {
   required_providers {
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 2.0.0"
+      version = "~> 2.7.0"
     }
   }
 }

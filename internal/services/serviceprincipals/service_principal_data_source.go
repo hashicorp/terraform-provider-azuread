@@ -99,7 +99,41 @@ func servicePrincipalData() *schema.Resource {
 				Computed:    true,
 			},
 
+			"feature_tags": {
+				Description: "Block of features configured for this service principal using tags",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on": {
+							Description: "Whether this service principal represents a custom SAML application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"enterprise": {
+							Description: "Whether this service principal represents an Enterprise Application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"gallery": {
+							Description: "Whether this service principal represents a gallery application",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+
+						"hide": {
+							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"features": {
+				Deprecated:  "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
 				Description: "Block of features configured for this service principal using tags",
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -346,7 +380,8 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)

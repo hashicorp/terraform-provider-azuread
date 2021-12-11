@@ -17,6 +17,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -189,6 +190,12 @@ func userResource() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+			},
+
+			"manager_id": {
+				Description: "The object ID of the user's manager",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 
 			"mobile_phone": {
@@ -385,6 +392,7 @@ func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, m
 
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 
 	password := d.Get("password").(string)
 	if password == "" {
@@ -469,11 +477,28 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(*user.ID)
 
+	// Wait until the user is updatable (the SDK handles retries for us)
+	_, err = client.Update(ctx, msgraph.User{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: user.ID,
+		},
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Timed out whilst waiting for new user to be replicated in Azure AD")
+	}
+
+	if managerId := d.Get("manager_id").(string); managerId != "" {
+		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), managerId); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		}
+	}
+
 	return userResourceRead(ctx, d, meta)
 }
 
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 
 	var passwordPolicies string
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
@@ -545,6 +570,12 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user with ID: %q", d.Id())
+	}
+
+	if d.HasChange("manager_id") {
+		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), d.Get("manager_id").(string)); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		}
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -629,24 +660,51 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		tf.Set(d, "division", user.EmployeeOrgData.Division)
 	}
 
+	managerId := ""
+	manager, status, err := client.GetManager(ctx, objectId)
+	if status != http.StatusNotFound {
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", objectId)
+		}
+		if manager != nil && manager.ID != nil {
+			managerId = *manager.ID
+		}
+	}
+	tf.Set(d, "manager_id", managerId)
+
 	return nil
 }
 
 func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
+	userId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, userId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", userId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving user with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving user with object ID %q", userId)
 	}
 
-	status, err = client.Delete(ctx, d.Id())
+	status, err = client.Delete(ctx, userId)
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting user with object ID %q, got status %d", d.Id(), status)
+		return tf.ErrorDiagPathF(err, "id", "Deleting user with object ID %q, got status %d", userId, status)
+	}
+
+	// Wait for user object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, userId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of user with object ID %q", userId)
 	}
 
 	return nil

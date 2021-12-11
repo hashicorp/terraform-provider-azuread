@@ -85,12 +85,48 @@ func servicePrincipalResource() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
-			"features": {
+			"feature_tags": {
 				Description:   "Block of features to configure for this service principal using tags",
 				Type:          schema.TypeList,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"tags"},
+				ConflictsWith: []string{"features", "tags"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on": {
+							Description: "Whether this service principal represents a custom SAML application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"enterprise": {
+							Description: "Whether this service principal represents an Enterprise Application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"gallery": {
+							Description: "Whether this service principal represents a gallery application",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"hide": {
+							Description: "Whether this app is invisible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+					},
+				},
+			},
+
+			"features": {
+				Deprecated:    "This block has been renamed to `feature_tags` and will be removed in version 3.0 of the provider",
+				Description:   "Block of features to configure for this service principal using tags",
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"feature_tags", "tags"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_single_sign_on_app": {
@@ -175,7 +211,7 @@ func servicePrincipalResource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				Set:           schema.HashString,
-				ConflictsWith: []string{"features"},
+				ConflictsWith: []string{"features", "feature_tags"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -347,18 +383,27 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	var tags []string
-	if v, ok := d.GetOk("features"); ok {
-		tags = expandFeatures(v.([]interface{}))
+	if v, ok := d.GetOk("feature_tags"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else if v, ok := d.GetOk("features"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
+
+	// Set a temporary description as we'll attempt to patch the service principal with the correct description after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
 	properties := msgraph.ServicePrincipal{
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AppId:                      utils.String(d.Get("application_id").(string)),
 		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
-		Description:                utils.NullableString(d.Get("description").(string)),
+		Description:                utils.NullableString(tempDescription),
 		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
@@ -376,6 +421,13 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	if callerObject == nil {
 		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
 	}
+	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+	//if callerObject.ODataId == nil {
+	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve calling principal object %q", callerId)
+	//}
+	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
 
@@ -385,21 +437,25 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	// Retrieve and set the initial owners, which can be up to 20 in total when creating the service principal
 	if v, ok := d.GetOk("owners"); ok {
 		ownerCount := 0
-		for _, id := range v.(*schema.Set).List() {
-			if strings.EqualFold(id.(string), callerId) {
+		for _, ownerId := range v.(*schema.Set).List() {
+			if strings.EqualFold(ownerId.(string), callerId) {
 				removeCallerOwner = false
 				continue
 			}
-			ownerObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+			ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId.(string), odata.Query{})
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 			}
 			if ownerObject == nil {
-				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 			}
-			if ownerObject.ODataId == nil {
-				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
-			}
+			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+			//if ownerObject.ODataId == nil {
+			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+			//}
+			ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+
 			if ownerCount < 19 {
 				ownersFirst20 = append(ownersFirst20, *ownerObject)
 			} else {
@@ -421,6 +477,21 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(errors.New("Object ID returned for service principal is nil"), "Bad API response")
 	}
 	d.SetId(*servicePrincipal.ID)
+
+	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.ServicePrincipal{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: servicePrincipal.ID,
+		},
+		Description: utils.NullableString(d.Get("description").(string)),
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch service principal after creating")
+	}
 
 	// Add any remaining owners after the service principal is created
 	if len(ownersExtra) > 0 {
@@ -445,9 +516,10 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 
 	var tags []string
-	featuresChanged := d.HasChange("features")
-	if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && featuresChanged {
-		tags = expandFeatures(v.([]interface{}))
+	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && d.HasChange("features") {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
@@ -485,14 +557,20 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
-			for _, m := range ownersToAdd {
-				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, ownerId := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if ownerObject == nil {
-					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+				//}
+				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
 				newOwners = append(newOwners, *ownerObject)
 			}
 
@@ -546,7 +624,8 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "features", flattenFeatures(servicePrincipal.Tags))
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
 	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
 	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
 	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
@@ -575,20 +654,37 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 
 func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	servicePrincipalId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, servicePrincipalId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", servicePrincipalId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", servicePrincipalId)
 	}
 
 	useExisting := d.Get("use_existing").(bool)
-	status, err = client.Delete(ctx, d.Id())
-	if err != nil && !useExisting {
-		return tf.ErrorDiagPathF(err, "id", "Deleting service principal with object ID %q, got status %d", d.Id(), status)
+	status, err = client.Delete(ctx, servicePrincipalId)
+	if !useExisting {
+		if err != nil && !useExisting {
+			return tf.ErrorDiagPathF(err, "id", "Deleting service principal with object ID %q, got status %d", servicePrincipalId, status)
+		}
+
+		// Wait for service principal object to be deleted
+		if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+			client.BaseClient.DisableRetries = true
+			if _, status, err := client.Get(ctx, servicePrincipalId, odata.Query{}); err != nil {
+				if status == http.StatusNotFound {
+					return utils.Bool(false), nil
+				}
+				return nil, err
+			}
+			return utils.Bool(true), nil
+		}); err != nil {
+			return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", servicePrincipalId)
+		}
 	}
 
 	return nil

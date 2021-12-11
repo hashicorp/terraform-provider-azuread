@@ -19,6 +19,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -269,6 +270,41 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"feature_tags": {
+				Description:   "Block of features to configure for this application using tags",
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"tags"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_single_sign_on": {
+							Description: "Whether this application represents a custom SAML application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"enterprise": {
+							Description: "Whether this application represents an Enterprise Application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"gallery": {
+							Description: "Whether this application represents a gallery application for linked service principals",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"hide": {
+							Description: "Whether this application is invisible to users in My Apps and Office 365 Launcher",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+					},
+				},
+			},
+
 			"group_membership_claims": {
 				Description: "Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects",
 				Type:        schema.TypeSet,
@@ -370,7 +406,7 @@ func applicationResource() *schema.Resource {
 							MaxItems:    256,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectUriFunc(false, true),
+								ValidateDiagFunc: validate.IsRedirectUriFunc(true, true),
 							},
 						},
 					},
@@ -458,6 +494,18 @@ func applicationResource() *schema.Resource {
 				Description: "URL of the application's support page",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+
+			"tags": {
+				Description:   "A set of tags to apply to the application",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Set:           schema.HashString,
+				ConflictsWith: []string{"feature_tags"},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 
 			"template_id": {
@@ -860,6 +908,13 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	var tags []string
+	if v, ok := d.GetOk("feature_tags"); ok {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	if templateId != "" {
 		// Instantiate application from template gallery and return via the update function
 		properties := msgraph.ApplicationTemplate{
@@ -885,11 +940,18 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return applicationResourceUpdate(ctx, d, meta)
 	}
 
+	// Set a temporary display name as we'll attempt to patch the application with the correct name after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+
 	// Create a new application
 	properties := msgraph.Application{
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:           utils.String(displayName),
+		DisplayName:           utils.String(tempDisplayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
@@ -906,6 +968,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -918,6 +981,13 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if callerObject == nil {
 		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
 	}
+	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+	//if callerObject.ODataId == nil {
+	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve calling principal object %q", callerId)
+	//}
+	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
 
@@ -927,21 +997,25 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Retrieve and set the initial owners, which can be up to 20 in total when creating the application
 	if v, ok := d.GetOk("owners"); ok {
 		ownerCount := 0
-		for _, id := range v.(*schema.Set).List() {
-			if strings.EqualFold(id.(string), callerId) {
+		for _, ownerId := range v.(*schema.Set).List() {
+			if strings.EqualFold(ownerId.(string), callerId) {
 				removeCallerOwner = false
 				continue
 			}
-			ownerObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+			ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId.(string), odata.Query{})
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 			}
 			if ownerObject == nil {
-				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 			}
-			if ownerObject.ODataId == nil {
-				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
-			}
+			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+			//if ownerObject.ODataId == nil {
+			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+			//}
+			ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+
 			if ownerCount < 19 {
 				ownersFirst20 = append(ownersFirst20, *ownerObject)
 			} else {
@@ -964,6 +1038,21 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(*app.ID)
+
+	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.Application{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: app.ID,
+		},
+		DisplayName: utils.String(displayName),
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch application after creating")
+	}
 
 	if len(ownersExtra) > 0 {
 		// Add any remaining owners after the application is created
@@ -1026,6 +1115,13 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
+	var tags []string
+	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
+		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+	} else {
+		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+	}
+
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(applicationId),
@@ -1049,6 +1145,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
 		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
 		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
@@ -1077,14 +1174,21 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
-			for _, m := range ownersToAdd {
-				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, ownerId := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if ownerObject == nil {
-					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+				//}
+				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+
 				newOwners = append(newOwners, *ownerObject)
 			}
 
@@ -1134,6 +1238,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
 	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
@@ -1144,6 +1249,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
+	tf.Set(d, "tags", app.Tags)
 	tf.Set(d, "template_id", app.ApplicationTemplateId)
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
@@ -1182,19 +1288,34 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	appId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, appId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", appId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", appId)
 	}
 
-	status, err = client.Delete(ctx, d.Id())
+	status, err = client.Delete(ctx, appId)
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting application with object ID %q, got status %d", d.Id(), status)
+		return tf.ErrorDiagPathF(err, "id", "Deleting application with object ID %q, got status %d", appId, status)
+	}
+
+	// Wait for application object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, appId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of application with object ID %q", appId)
 	}
 
 	return nil

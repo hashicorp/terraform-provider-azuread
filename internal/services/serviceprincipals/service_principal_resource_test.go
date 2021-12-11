@@ -104,40 +104,28 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipal_features(t *testing.T) {
+func TestAccServicePrincipal_featureTags(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
-	tenantId := os.Getenv("ARM_TENANT_ID")
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
-				check.That(data.ResourceName).Key("application_tenant_id").HasValue(tenantId),
-				check.That(data.ResourceName).Key("homepage_url").HasValue(fmt.Sprintf("https://test-%d.internal", data.RandomInteger)),
-				check.That(data.ResourceName).Key("logout_url").HasValue(fmt.Sprintf("https://test-%d.internal/logout", data.RandomInteger)),
-				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
-				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
-				check.That(data.ResourceName).Key("service_principal_names.#").HasValue("2"),
-				check.That(data.ResourceName).Key("redirect_uris.#").HasValue("2"),
-				check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADMyOrg"),
-				check.That(data.ResourceName).Key("type").HasValue("Application"),
 			),
 		},
 		data.ImportStep("use_existing"),
 	})
 }
 
-func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
+func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.noFeatures(data),
+			Config: r.noFeatureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -151,7 +139,7 @@ func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep("use_existing"),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -165,7 +153,7 @@ func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep("use_existing"),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -179,21 +167,21 @@ func TestAccServicePrincipal_featuresUpdate(t *testing.T) {
 		},
 		data.ImportStep("use_existing"),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
-			Config: r.noFeatures(data),
+			Config: r.noFeatureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
-			Config: r.features(data),
+			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -356,13 +344,15 @@ func (ServicePrincipalResource) templateComplete(data acceptance.TestData) strin
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_domains" "test" {}
+
 resource "azuread_application" "test" {
   display_name     = "acctestServicePrincipal-%[1]d"
   sign_in_audience = "AzureADMyOrg"
 
   identifier_uris = [
     "api://acctestServicePrincipal-%[1]d",
-    "https://acctestServicePrincipal-%[1]d.net",
+    "https://${data.azuread_domains.test.domains[0].domain_name}/acctestServicePrincipal-%[1]d",
   ]
 
   api {
@@ -443,6 +433,7 @@ resource "azuread_service_principal" "test" {
   }
 
   tags = [
+    "HideApp",
     "WindowsAzureActiveDirectoryCustomSingleSignOnApplication",
     "WindowsAzureActiveDirectoryIntegratedApp",
     "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
@@ -451,7 +442,7 @@ resource "azuread_service_principal" "test" {
 `, r.templateComplete(data), data.RandomInteger)
 }
 
-func (r ServicePrincipalResource) features(data acceptance.TestData) string {
+func (r ServicePrincipalResource) featureTags(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -466,11 +457,11 @@ resource "azuread_service_principal" "test" {
   notes                         = "Just testing something"
   preferred_single_sign_on_mode = "saml"
 
-  features {
-    custom_single_sign_on_app = true
-    enterprise_application    = true
-    gallery_application       = true
-    visible_to_users          = false
+  feature_tags {
+    custom_single_sign_on = true
+    enterprise            = true
+    gallery               = true
+    hide                  = true
   }
 
   notification_email_addresses = [
@@ -485,7 +476,7 @@ resource "azuread_service_principal" "test" {
 `, r.templateComplete(data), data.RandomInteger)
 }
 
-func (r ServicePrincipalResource) noFeatures(data acceptance.TestData) string {
+func (r ServicePrincipalResource) noFeatureTags(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -500,10 +491,11 @@ resource "azuread_service_principal" "test" {
   notes                         = "Just testing something"
   preferred_single_sign_on_mode = "saml"
 
-  features {
-    custom_single_sign_on_app = false
-    enterprise_application    = false
-    gallery_application       = false
+  feature_tags {
+    custom_single_sign_on = false
+    enterprise            = false
+    gallery               = false
+    hide                  = false
   }
 
   notification_email_addresses = [

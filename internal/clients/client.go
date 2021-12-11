@@ -2,12 +2,15 @@ package clients
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
@@ -31,21 +34,22 @@ type Client struct {
 
 	StopContext context.Context
 
-	Applications       *applications.Client
-	AppRoleAssignments *approleassignments.Client
-	ConditionalAccess  *conditionalaccess.Client
-	IdentityGovernance *identitygovernance.Client
-	DirectoryRoles     *directoryroles.Client
-	Domains            *domains.Client
-	Groups             *groups.Client
-	Invitations        *invitations.Client
-	ServicePrincipals  *serviceprincipals.Client
-	Users              *users.Client
+	AdministrativeUnits *administrativeunits.Client
+	Applications        *applications.Client
+	AppRoleAssignments  *approleassignments.Client
+	ConditionalAccess   *conditionalaccess.Client
+	DirectoryRoles      *directoryroles.Client
+	Domains             *domains.Client
+	Groups              *groups.Client
+	Invitations         *invitations.Client
+	ServicePrincipals   *serviceprincipals.Client
+	Users               *users.Client
 }
 
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
 	client.StopContext = ctx
 
+	client.AdministrativeUnits = administrativeunits.NewClient(o)
 	client.Applications = applications.NewClient(o)
 	client.AppRoleAssignments = approleassignments.NewClient(o)
 	client.Domains = domains.NewClient(o)
@@ -57,7 +61,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
 	client.Users = users.NewClient(o)
 
-	// Acquire an access token upfront so we can decode and populate the JWT claims
+	// Acquire an access token upfront, so we can decode the JWT and populate the claims
 	token, err := o.Authorizer.Token()
 	if err != nil {
 		return fmt.Errorf("unable to obtain access token: %v", err)
@@ -66,6 +70,18 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	if err != nil {
 		return fmt.Errorf("unable to parse claims in access token: %v", err)
 	}
+
+	// Log the claims for debugging
+	claimsJson, err := json.Marshal(client.Claims)
+	if err != nil {
+		log.Printf("[DEBUG] AzureAD Provider could not marshal access token claims for log outout")
+	} else if claimsJson == nil {
+		log.Printf("[DEBUG] AzureAD Provider marshaled access token claims was nil")
+	} else {
+		log.Printf("[DEBUG] AzureAD Provider access token claims: %s", claimsJson)
+	}
+
+	// Missing object ID of token holder will break many things
 	if client.Claims.ObjectId == "" {
 		return fmt.Errorf("parsing claims in access token: oid claim is empty")
 	}

@@ -27,10 +27,10 @@ func NewNamedLocationsClient(tenantId string) *NamedLocationsClient {
 func (c *NamedLocationsClient) List(ctx context.Context, query odata.Query) (*[]NamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identity/conditionalAccess/namedLocations",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -183,10 +183,10 @@ func (c *NamedLocationsClient) CreateCountry(ctx context.Context, countryNamedLo
 func (c *NamedLocationsClient) GetIP(ctx context.Context, id string, query odata.Query) (*IPNamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -212,10 +212,10 @@ func (c *NamedLocationsClient) GetIP(ctx context.Context, id string, query odata
 func (c *NamedLocationsClient) Get(ctx context.Context, id string, query odata.Query) (*NamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -265,10 +265,10 @@ func (c *NamedLocationsClient) Get(ctx context.Context, id string, query odata.Q
 func (c *NamedLocationsClient) GetCountry(ctx context.Context, id string, query odata.Query) (*CountryNamedLocation, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

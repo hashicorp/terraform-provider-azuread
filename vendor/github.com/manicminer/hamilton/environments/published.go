@@ -45,6 +45,7 @@ var PublishedApis = map[string]ApiAppId{
 	"AzureSynapseGateway":               "1ac05c7e-12d2-4605-bf9d-549d7041c6b3",
 	"AzureSynapseStudio":                "ec52d13d-2e85-410e-a89a-8c79fb6a32ac",
 	"AzureTimeSeriesInsights":           "120d688d-1518-4cf7-bd38-182f158850b6",
+	"AzureVPN":                          "41b23e61-6c1e-4545-b367-cd054e0ed4b4",
 	"Bing":                              "9ea1ad79-fdb6-4f9a-8bc3-2b70f96e34c7",
 	"BotFrameworkDevPortal":             "f3723d34-6ff5-4ceb-a148-d99dcd2511fc",
 	"BranchConnectWebService":           "57084ef3-d413-4087-a28f-f6f3b1ad7786",

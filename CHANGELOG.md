@@ -1,6 +1,96 @@
+## 2.12.0 (December 03, 2021)
+
+IMPROVEMENTS:
+
+* `azuread_conditional_access_policy` - support the `persistent_browser_mode` in the `session_controls` block ([#677](https://github.com/terraform-providers/terraform-provider-azuread/issues/677))
+
+BUG FIXES:
+
+* `azuread_application` - allow URNs to be used in `redirect_uris` in the `public_client` block ([#684](https://github.com/terraform-providers/terraform-provider-azuread/issues/684))
+* `azuread_service_principal_delegated_permission_grant` - add missing support for importing this resource ([#685](https://github.com/terraform-providers/terraform-provider-azuread/issues/685))
+
+## 2.11.0 (November 25, 2021)
+
+BREAKING CHANGES:
+
+* **Provider:** support for the German national cloud, which was [closed down as of October 29, 2021](https://www.microsoft.com/en-us/cloud-platform/germany-cloud-regions), has been removed in this release ([#670](https://github.com/terraform-providers/terraform-provider-azuread/issues/670))
+
+FEATURES:
+
+* **New Data Source:** `azuread_administrative_unit` ([#672](https://github.com/terraform-providers/terraform-provider-azuread/issues/672))
+* **New Resource:** `azuread_administrative_unit` ([#672](https://github.com/terraform-providers/terraform-provider-azuread/issues/672))
+* **New Resource:** `azuread_administrative_unit_member` ([#672](https://github.com/terraform-providers/terraform-provider-azuread/issues/672))
+* **New Resource:** `azuread_service_principal_delegated_permission_grant` ([#676](https://github.com/terraform-providers/terraform-provider-azuread/issues/676))
+
+IMPROVEMENTS:
+
+* `azuread_conditional_access_policy` - support the `devices` block ([#673](https://github.com/terraform-providers/terraform-provider-azuread/issues/673))
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - fix a bug when removing the `session_controls` block from a policy ([#673](https://github.com/terraform-providers/terraform-provider-azuread/issues/673))
+
+## 2.10.0 (November 19, 2021)
+
+BUG FIXES:
+
+* `azuread_group` - fix a bug that prevented removing all `members` of a group ([#666](https://github.com/terraform-providers/terraform-provider-azuread/issues/666))
+
+## 2.9.0 (November 12, 2021)
+
+BUG FIXES:
+
+* **Provider:** fix an authentication bug that prevented authorizing using a Managed Identity when running in Azure Cloud Shell ([#660](https://github.com/terraform-providers/terraform-provider-azuread/issues/660))
+* `data.azuread_user` - ensure apostrophes are correctly quoted when matching by `mail_nickname` or `user_principal_name` ([#643](https://github.com/terraform-providers/terraform-provider-azuread/issues/643))
+* `data.azuread_users` - ensure apostrophes are correctly quoted when matching by `mail_nicknames` or `user_principal_names` ([#643](https://github.com/terraform-providers/terraform-provider-azuread/issues/643))
+* `azuread_application_certificate` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_application_password` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_application` - add mitigation for replication delay when creating new applications ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_directory_role_member` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_group_member` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_group` - add mitigation for replication delay when creating new groups ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_group` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_invitation` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal_certificate` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal_password` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_service_principal` - add mitigation for replication delay when creating new service principals ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_service_principal` - work around an API consistency issue when creating and deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+* `azuread_user` - add mitigation for replication delay when creating new users ([#656](https://github.com/terraform-providers/terraform-provider-azuread/issues/656))
+* `azuread_user` - work around an API consistency issue when deleting resources ([#659](https://github.com/terraform-providers/terraform-provider-azuread/issues/659))
+
+## 2.8.0 (October 28, 2021)
+
+BUG FIXES:
+
+* `azuread_application` - allow custom URI schemes for public client redirect URIs ([#647](https://github.com/terraform-providers/terraform-provider-azuread/issues/647))
+* `azuread_group` - ensure `mail_nickname` is set for all groups when specified in configuration ([#645](https://github.com/terraform-providers/terraform-provider-azuread/issues/645))
+
+## 2.7.0 (October 15, 2021)
+
+IMPROVEMENTS:
+
+* **Provider:** log the claims from access tokens for improved debugging ability ([#623](https://github.com/terraform-providers/terraform-provider-azuread/issues/623))
+* `azuread_user` - support for the `manager_id` property ([#628](https://github.com/terraform-providers/terraform-provider-azuread/issues/628))
+* `azuread_application` - support for the `feature_tags` block and the `tags` property ([#630](https://github.com/terraform-providers/terraform-provider-azuread/issues/630))
+* `azuread_service_principal` - the `features` block has been deprecated in favour of the `feature_tags` for clarity ([#630](https://github.com/terraform-providers/terraform-provider-azuread/issues/630))
+
+## 2.6.0 (October 07, 2021)
+
+IMPROVEMENTS:
+
+* **Provider:** Generate and log request/response correlation IDs for improved inspection ability in HTTP traces ([#621](https://github.com/terraform-providers/terraform-provider-azuread/issues/621))
+
+BUG FIXES:
+
+* **Provider:** Implement a workaround for a breaking API change affecting all resources having relationships such as `members` and `owners` ([#616](https://github.com/terraform-providers/terraform-provider-azuread/issues/616))
+* `azuread_application_certificate` - fix an eventual consistency issue when creating new certificates ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_application_password` - fix an eventual consistency issue when creating new passwords ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_service_principal_certificate` - fix an eventual consistency issue when creating new certificates ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+* `azuread_service_principal_password` - fix an eventual consistency issue when creating new passwords ([#618](https://github.com/terraform-providers/terraform-provider-azuread/issues/618))
+
 ## 2.5.0 (September 30, 2021)
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `data.azuread_groups` - support the `mail_enabled` and `security_enabled` properties ([#603](https://github.com/terraform-providers/terraform-provider-azuread/issues/603))
 * `data.azuread_user` - support the `cost_center`, `division` and `employee_type` attributes ([#597](https://github.com/terraform-providers/terraform-provider-azuread/issues/597))
@@ -19,7 +109,7 @@ FEATURES:
 
 * **New Resource:** `azuread_app_role_assignment` ([#584](https://github.com/terraform-providers/terraform-provider-azuread/issues/584))
 
-ENHANCEMENTS:
+IMPROVEMENTS:
 
 * `azuread_application_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))
 * `azuread_service_principal_password` - support the `rotate_when_changed` property (this was previously available as an undocumented property `keepers`) ([#572](https://github.com/terraform-providers/terraform-provider-azuread/issues/572))

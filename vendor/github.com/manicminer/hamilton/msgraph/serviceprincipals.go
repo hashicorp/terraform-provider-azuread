@@ -27,10 +27,10 @@ func NewServicePrincipalsClient(tenantId string) *ServicePrincipalsClient {
 func (c *ServicePrincipalsClient) List(ctx context.Context, query odata.Query) (*[]ServicePrincipal, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/servicePrincipals",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -78,7 +78,10 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
 		ConsistencyFailureFunc: appNotReplicated,
-		ValidStatusCodes:       []int{http.StatusCreated},
+		OData: odata.Query{
+			Metadata: odata.MetadataFull,
+		},
+		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      "/servicePrincipals",
 			HasTenantId: true,
@@ -106,10 +109,10 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 func (c *ServicePrincipalsClient) Get(ctx context.Context, id string, query odata.Query) (*ServicePrincipal, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -182,10 +185,12 @@ func (c *ServicePrincipalsClient) Delete(ctx context.Context, id string) (int, e
 func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -223,10 +228,12 @@ func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[
 func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipalId, ownerId string) (*string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id", "url"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
-			Params:      odata.Query{Select: []string{"id", "url"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -344,12 +351,12 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 // ListGroupMemberships returns a list of Groups the Service Principal is member of, optionally queried using OData.
 func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id string, query odata.Query) (*[]Group, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
-		DisablePaging:          query.Top > 0,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		DisablePaging:          query.Top > 0,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/transitiveMemberOf", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -447,10 +454,12 @@ func (c *ServicePrincipalsClient) RemovePassword(ctx context.Context, servicePri
 func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id string) (*[]string, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
-		ValidStatusCodes:       []int{http.StatusOK},
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/ownedObjects", id),
-			Params:      odata.Query{Select: []string{"id"}}.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -482,10 +491,10 @@ func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id strin
 func (c *ServicePrincipalsClient) ListAppRoleAssignments(ctx context.Context, resourceId string, query odata.Query) (*[]AppRoleAssignment, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

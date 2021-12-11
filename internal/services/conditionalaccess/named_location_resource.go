@@ -17,6 +17,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -273,160 +274,47 @@ func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta
 
 func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
+	namedLocationId := d.Id()
 
 	if _, ok := d.GetOk("ip"); ok {
-		_, status, err := client.GetIP(ctx, d.Id(), odata.Query{})
-		if err != nil {
+		if _, status, err := client.GetIP(ctx, namedLocationId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				log.Printf("[DEBUG] Named Location with ID %q already deleted", d.Id())
+				log.Printf("[DEBUG] Named Location with ID %q already deleted", namedLocationId)
 				return nil
 			}
 
-			return tf.ErrorDiagPathF(err, "id", "Retrieving named location with ID %q", d.Id())
+			return tf.ErrorDiagPathF(err, "id", "Retrieving named location with ID %q", namedLocationId)
 		}
 	}
 
 	if _, ok := d.GetOk("country"); ok {
-		_, status, err := client.GetCountry(ctx, d.Id(), odata.Query{})
-		if err != nil {
+		if _, status, err := client.GetCountry(ctx, namedLocationId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				log.Printf("[DEBUG] Named Location with ID %q already deleted", d.Id())
+				log.Printf("[DEBUG] Named Location with ID %q already deleted", namedLocationId)
 				return nil
 			}
 
-			return tf.ErrorDiagPathF(err, "id", "Retrieving named location with ID %q", d.Id())
+			return tf.ErrorDiagPathF(err, "id", "Retrieving named location with ID %q", namedLocationId)
 		}
 	}
 
-	status, err := client.Delete(ctx, d.Id())
+	status, err := client.Delete(ctx, namedLocationId)
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting named location with ID %q, got status %d", d.Id(), status)
+		return tf.ErrorDiagPathF(err, "id", "Deleting named location with ID %q, got status %d", namedLocationId, status)
 	}
 
-	log.Printf("[DEBUG] Waiting for named location %q to disappear", d.Id())
-	timeout, _ := ctx.Deadline()
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{"Pending"},
-		Target:                    []string{"Deleted"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                5 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			client.BaseClient.DisableRetries = true
-			_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, namedLocationId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return "stub", "Deleted", nil
+				return utils.Bool(false), nil
 			}
-			if err != nil {
-				return nil, "Error", err
-			}
-
-			return "stub", "Pending", nil
-		},
-	}
-	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return tf.ErrorDiagF(err, "waiting for deletion of named location with ID %q", d.Id())
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "waiting for deletion of named location with ID %q", namedLocationId)
 	}
 
 	return nil
-}
-
-func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
-	if len(in) == 0 || in[0] == nil {
-		return nil
-	}
-
-	result := msgraph.IPNamedLocation{}
-	config := in[0].(map[string]interface{})
-
-	ipRanges := config["ip_ranges"].([]interface{})
-	trusted := config["trusted"]
-
-	result.IPRanges = expandIPNamedLocationIPRange(ipRanges)
-	result.IsTrusted = utils.Bool(trusted.(bool))
-
-	return &result
-}
-
-func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIPRange {
-	if len(in) == 0 {
-		return nil
-	}
-
-	result := make([]msgraph.IPNamedLocationIPRange, 0)
-	for _, cidr := range in {
-		result = append(result, msgraph.IPNamedLocationIPRange{
-			CIDRAddress: utils.String(cidr.(string)),
-		})
-	}
-
-	return &result
-}
-
-func expandCountryNamedLocation(in []interface{}) *msgraph.CountryNamedLocation {
-	if len(in) == 0 || in[0] == nil {
-		return nil
-	}
-
-	result := msgraph.CountryNamedLocation{}
-	config := in[0].(map[string]interface{})
-
-	countriesAndRegions := config["countries_and_regions"].([]interface{})
-	includeUnknown := config["include_unknown_countries_and_regions"]
-
-	result.CountriesAndRegions = tf.ExpandStringSlicePtr(countriesAndRegions)
-	result.IncludeUnknownCountriesAndRegions = utils.Bool(includeUnknown.(bool))
-
-	return &result
-}
-
-func flattenIPNamedLocation(in *msgraph.IPNamedLocation) []interface{} {
-	if in == nil {
-		return []interface{}{}
-	}
-
-	trusted := false
-	if in.IsTrusted != nil {
-		trusted = *in.IsTrusted
-	}
-
-	return []interface{}{
-		map[string]interface{}{
-			"ip_ranges": flattenIPNamedLocationIPRange(in.IPRanges),
-			"trusted":   trusted,
-		},
-	}
-}
-
-func flattenIPNamedLocationIPRange(in *[]msgraph.IPNamedLocationIPRange) []interface{} {
-	if in == nil || len(*in) == 0 {
-		return []interface{}{}
-	}
-
-	result := make([]string, 0)
-	for _, cidr := range *in {
-		if cidr.CIDRAddress != nil {
-			result = append(result, *cidr.CIDRAddress)
-		}
-	}
-
-	return tf.FlattenStringSlice(result)
-}
-
-func flattenCountryNamedLocation(in *msgraph.CountryNamedLocation) []interface{} {
-	if in == nil {
-		return []interface{}{}
-	}
-
-	includeUnknown := false
-	if in.IncludeUnknownCountriesAndRegions != nil {
-		includeUnknown = *in.IncludeUnknownCountriesAndRegions
-	}
-
-	return []interface{}{
-		map[string]interface{}{
-			"countries_and_regions":                 tf.FlattenStringSlicePtr(in.CountriesAndRegions),
-			"include_unknown_countries_and_regions": includeUnknown,
-		},
-	}
 }

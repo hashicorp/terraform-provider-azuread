@@ -17,6 +17,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -369,8 +370,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Mimic the portal and generate a random mailNickname for security groups
 	mailNickname := groupDefaultMailNickname()
-	if mailEnabled {
-		mailNickname = d.Get("mail_nickname").(string)
+	if v, ok := d.GetOk("mail_nickname"); ok && v.(string) != "" {
+		mailNickname = v.(string)
 	}
 
 	behaviorOptions := make([]msgraph.GroupResourceBehaviorOption, 0)
@@ -383,9 +384,16 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
+	// Set a temporary display name as we'll attempt to patch the group with the correct name after creating it
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+
 	properties := msgraph.Group{
 		Description:                 utils.NullableString(d.Get("description").(string)),
-		DisplayName:                 utils.String(displayName),
+		DisplayName:                 utils.String(tempDisplayName),
 		GroupTypes:                  groupTypes,
 		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
 		MailEnabled:                 utils.Bool(mailEnabled),
@@ -418,9 +426,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if ownerObject.ID == nil {
 			return nil, errors.New("ownerObject ID was nil")
 		}
-		if ownerObject.ODataId == nil {
-			return nil, errors.New("ODataId was nil")
-		}
+		// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+		//if ownerObject.ODataId == nil {
+		//	return nil, errors.New("ODataId was nil")
+		//}
+		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+			client.BaseClient.Endpoint, client.BaseClient.TenantId, id)))
+
 		if ownerObject.ODataType == nil {
 			return nil, errors.New("ownerObject ODataType was nil")
 		}
@@ -436,15 +448,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// First look for the calling principal in the specified owners; it should always be included in the initial
 		// owners to avoid orphaning a group when the caller doesn't have the Groups.ReadWrite.All scope.
-		for _, id := range owners {
-			ownerObject, err := getOwnerObject(ctx, id.(string))
+		for _, ownerId := range owners {
+			ownerObject, err := getOwnerObject(ctx, ownerId.(string))
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 			}
 			if strings.EqualFold(*ownerObject.ID, callerId) {
-				if ownerObject.ODataId == nil {
-					return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", id)
-				}
 				if ownerCount < 20 {
 					ownersFirst20 = append(ownersFirst20, *ownerObject)
 				} else {
@@ -456,10 +465,10 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// Then look for users, and finally service principals
 		for _, t := range []odata.Type{odata.TypeUser, odata.TypeServicePrincipal} {
-			for _, id := range owners {
-				ownerObject, err := getOwnerObject(ctx, id.(string))
+			for _, ownerId := range owners {
+				ownerObject, err := getOwnerObject(ctx, ownerId.(string))
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", id)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if *ownerObject.ODataType == t && !strings.EqualFold(*ownerObject.ID, callerId) {
 					if ownerCount < 20 {
@@ -497,6 +506,21 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ID)
 
+	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
+	status, err := client.Update(ctx, msgraph.Group{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: group.ID,
+		},
+		DisplayName: utils.String(displayName),
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch group after creating")
+	}
+
 	// Add any remaining owners after the group is created
 	if len(ownersExtra) > 0 {
 		group.Owners = &ownersExtra
@@ -508,17 +532,21 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Add members after the group is created
 	members := make(msgraph.Members, 0)
 	if v, ok := d.GetOk("members"); ok {
-		for _, id := range v.(*schema.Set).List() {
-			memberObject, _, err := directoryObjectsClient.Get(ctx, id.(string), odata.Query{})
+		for _, memberId := range v.(*schema.Set).List() {
+			memberObject, _, err := directoryObjectsClient.Get(ctx, memberId.(string), odata.Query{})
 			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", id)
+				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", memberId)
 			}
 			if memberObject == nil {
-				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", id)
+				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			if memberObject.ODataId == nil {
-				return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id)
-			}
+			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+			//if memberObject.ODataId == nil {
+			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
+			//}
+			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 			members = append(members, *memberObject)
 		}
 	}
@@ -584,14 +612,14 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return tf.ErrorDiagF(err, "Updating group with ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("members"); ok && d.HasChange("members") {
+	if d.HasChange("members") {
 		members, _, err := client.ListMembers(ctx, *group.ID)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for group with object ID: %q", d.Id())
 		}
 
 		existingMembers := *members
-		desiredMembers := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*schema.Set).List())
 		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
 		membersToAdd := utils.Difference(desiredMembers, existingMembers)
 
@@ -603,14 +631,21 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if len(membersToAdd) > 0 {
 			newMembers := make(msgraph.Members, 0)
-			for _, m := range membersToAdd {
-				memberObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, memberId := range membersToAdd {
+				memberObject, _, err := directoryObjectsClient.Get(ctx, memberId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve principal object %q", memberId)
 				}
 				if memberObject == nil {
-					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", memberId)
+				//}
+				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 				newMembers = append(newMembers, *memberObject)
 			}
 
@@ -641,14 +676,21 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
-			for _, m := range ownersToAdd {
-				ownerObject, _, err := directoryObjectsClient.Get(ctx, m, odata.Query{})
+			for _, ownerId := range ownersToAdd {
+				ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId, odata.Query{})
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
 				}
 				if ownerObject == nil {
-					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", m)
+					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
+				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+				//if ownerObject.ODataId == nil {
+				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
+				//}
+				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+
 				newOwners = append(newOwners, *ownerObject)
 			}
 
@@ -725,17 +767,32 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
+	groupId := d.Id()
 
-	_, status, err := client.Get(ctx, d.Id(), odata.Query{})
+	_, status, err := client.Get(ctx, groupId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", d.Id())
+			return tf.ErrorDiagPathF(fmt.Errorf("Group was not found"), "id", "Retrieving group with object ID %q", groupId)
 		}
-		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving group with object ID: %q", groupId)
 	}
 
-	if _, err := client.Delete(ctx, d.Id()); err != nil {
-		return tf.ErrorDiagF(err, "Deleting group with object ID: %q", d.Id())
+	if _, err := client.Delete(ctx, groupId); err != nil {
+		return tf.ErrorDiagF(err, "Deleting group with object ID: %q", groupId)
+	}
+
+	// Wait for group object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, groupId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", groupId)
 	}
 
 	return nil

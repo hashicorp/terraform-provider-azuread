@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -179,6 +180,12 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"manager_id": {
+				Description: "The object ID of the user's manager",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"mobile_phone": {
 				Description: "The primary cellular telephone number for the user",
 				Type:        schema.TypeString,
@@ -310,7 +317,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("userPrincipalName eq '%s'", upn),
+			Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(upn)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -340,7 +347,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("mailNickname eq '%s'", mailNickname),
+			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -411,6 +418,18 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
 		tf.Set(d, "division", user.EmployeeOrgData.Division)
 	}
+
+	managerId := ""
+	manager, status, err := client.GetManager(ctx, *user.ID)
+	if status != http.StatusNotFound {
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID)
+		}
+		if manager != nil && manager.ID != nil {
+			managerId = *manager.ID
+		}
+	}
+	tf.Set(d, "manager_id", managerId)
 
 	return nil
 }

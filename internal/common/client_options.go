@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
@@ -15,6 +17,8 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/version"
 )
+
+type contextKey string
 
 type ClientOptions struct {
 	Environment environments.Environment
@@ -41,7 +45,7 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 	*c.ResponseMiddlewares = append(*c.ResponseMiddlewares, o.responseLogger)
 
 	// Default retry limit, can be overridden from within a resource
-	c.RetryableClient.RetryMax = 8
+	c.RetryableClient.RetryMax = 9
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {
@@ -49,36 +53,64 @@ func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {
 		return nil, nil
 	}
 
+	requestId, err := uuid.GenerateUUID()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := req.Context()
+	newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
+
 	// Don't log the Authorization header
 	authHeaderName := "Authorization"
-	authHeaderValue := req.Header.Get(authHeaderName)
+	authHeaderValue := newReq.Header.Get(authHeaderName)
 	if authHeaderValue != "" {
-		req.Header.Del(authHeaderName)
+		newReq.Header.Del(authHeaderName)
 	}
 
-	if dump, err := httputil.DumpRequestOut(req, true); err == nil {
-		log.Printf("[DEBUG] Begin AzureAD Request: ==========================================\n%s\n========================================= End AzureAD Request\n", dump)
+	if dump, err := httputil.DumpRequestOut(newReq, true); err == nil {
+		log.Printf(`[DEBUG] ============================ Begin AzureAD Request ============================
+Request ID: %s
+
+%s
+============================= End AzureAD Request =============================
+`, requestId, dump)
 	} else {
 		// fallback to basic message
-		log.Printf("[DEBUG] AzureAD Request: %s %s\n", req.Method, req.URL)
+		log.Printf("[DEBUG] AzureAD Request %s: %s %s\n", requestId, newReq.Method, newReq.URL)
 	}
 
 	if authHeaderValue != "" {
-		req.Header.Add(authHeaderName, authHeaderValue)
+		newReq.Header.Add(authHeaderName, authHeaderValue)
 	}
-	return req, nil
+	return newReq, nil
 }
 
 func (o ClientOptions) responseLogger(req *http.Request, resp *http.Response) (*http.Response, error) {
+	requestId := "UNKNOWN"
+
+	if req != nil {
+		if v := req.Context().Value(contextKey("requestId")); v != nil {
+			requestId = v.(string)
+		}
+	}
+
 	if resp != nil {
 		if dump, err2 := httputil.DumpResponse(resp, true); err2 == nil {
-			log.Printf("[DEBUG] Begin AzureAD Response for %s %s: ==========================================\n%s\n========================================== End AzureAD Response\n", req.Method, req.URL, dump)
+			log.Printf(`[DEBUG] ============================ Begin AzureAD Response ===========================
+%s %s
+Request ID: %s
+
+%s
+============================= End AzureAD Response ============================
+`, req.Method, req.URL, requestId, dump)
 		} else {
-			log.Printf("[DEBUG] AzureAD Response: %s for %s %s\n", resp.Status, req.Method, req.URL)
+			log.Printf("[DEBUG] AzureAD Response: %s for %s (%s %s)\n", resp.Status, requestId, req.Method, req.URL)
 		}
 	} else {
-		log.Printf("[DEBUG] AzureAD Request for %s %s completed with no response", req.Method, req.URL)
+		log.Printf("[DEBUG] AzureAD Request for %s (%s %s) completed with no response", requestId, req.Method, req.URL)
 	}
+
 	return resp, nil
 }
 

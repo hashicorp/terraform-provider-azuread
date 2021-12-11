@@ -156,11 +156,11 @@ func NewAppRoleAssignedToClient(tenantId string) *AppRoleAssignedToClient {
 // List returns a list of app role assignments granted for a service principal
 func (c *AppRoleAssignedToClient) List(ctx context.Context, id string, query odata.Query) (*[]AppRoleAssignment, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", id),
 			HasTenantId: true,
-			Params:      query.Values(),
 		},
 	})
 	if err != nil {
@@ -219,9 +219,20 @@ func (c *AppRoleAssignedToClient) Assign(ctx context.Context, appRoleAssignment 
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 
+	consistencyFunc := func(resp *http.Response, o *odata.OData) bool {
+		if resp != nil && o != nil && o.Error != nil {
+			if resp.StatusCode == http.StatusNotFound {
+				return true
+			} else if resp.StatusCode == http.StatusBadRequest {
+				return o.Error.Match(odata.ErrorNotValidReferenceUpdate)
+			}
+		}
+		return false
+	}
+
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:                   body,
-		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ConsistencyFailureFunc: consistencyFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", *appRoleAssignment.ResourceId),

@@ -149,7 +149,7 @@ data "azuread_domains" "test" {
 }
 
 resource "azuread_user" "test" {
-  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "acctestUser'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d"
   password            = "%[2]s"
 }
@@ -164,13 +164,20 @@ data "azuread_domains" "test" {
   only_initial = true
 }
 
+resource "azuread_user" "manager" {
+  user_principal_name = "acctestManager.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestManager-%[1]d"
+  password            = "%[2]s"
+}
+
 resource "azuread_user" "test" {
-  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "acctestUser'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
   mail                = "acctestUser.%[1]d@hashicorp.biz"
   mail_nickname       = "acctestUser-%[1]d-MailNickname"
   other_mails         = ["acctestUser.%[1]d@hashicorp.net", "acctestUser.%[1]d@hashicorp.org"]
 
   account_enabled         = false
+  manager_id              = azuread_user.manager.object_id
   onpremises_immutable_id = "%[1]d"
   usage_location          = "NO"
 
@@ -216,7 +223,7 @@ data "azuread_domains" "test" {
 }
 
 resource "azuread_user" "testA" {
-  user_principal_name = "acctestUser.%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "acctestUser'%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-A"
   password            = "%[2]s"
 }

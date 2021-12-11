@@ -3,6 +3,7 @@ package groups
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -14,8 +15,10 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -95,9 +98,13 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if memberObject == nil {
 		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 	}
-	if memberObject.ODataId == nil {
-		return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
-	}
+	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
+	//if memberObject.ODataId == nil {
+	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
+	//}
+	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+
 	group.Members = &msgraph.Members{*memberObject}
 
 	if _, err := client.AddMembers(ctx, group); err != nil {
@@ -156,6 +163,20 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	if _, err := client.RemoveMembers(ctx, id.GroupId, &[]string{id.MemberId}); err != nil {
 		return tf.ErrorDiagF(err, "Removing member %q from group with object ID: %q", id.MemberId, id.GroupId)
+	}
+
+	// Wait for membership link to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.GetMember(ctx, id.GroupId, id.MemberId); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for removal of member %q from group with object ID %q", id.MemberId, id.GroupId)
 	}
 
 	return nil

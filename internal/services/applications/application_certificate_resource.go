@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -172,6 +174,38 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 		return tf.ErrorDiagF(err, "Adding certificate for application with object ID %q", id.ObjectId)
 	}
 
+	// Wait for the credential to appear in the application manifest, this can take several minutes
+	timeout, _ := ctx.Deadline()
+	polledForCredential, err := (&resource.StateChangeConf{
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Done"},
+		Timeout:                   time.Until(timeout),
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+			if err != nil {
+				return nil, "Error", err
+			}
+
+			if app.KeyCredentials != nil {
+				for _, cred := range *app.KeyCredentials {
+					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+						return &cred, "Done", nil
+					}
+				}
+			}
+
+			return nil, "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if err != nil {
+		return tf.ErrorDiagF(err, "Waiting for certificate credential for application with object ID %q", id.ObjectId)
+	} else if polledForCredential == nil {
+		return tf.ErrorDiagF(errors.New("certificate credential not found in application manifest"), "Waiting for certificate credential for application with object ID %q", id.ObjectId)
+	}
+
 	d.SetId(id.String())
 
 	return applicationCertificateResourceRead(ctx, d, meta)
@@ -195,16 +229,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *schema.ResourceD
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
 
-	var credential *msgraph.KeyCredential
-	if app.KeyCredentials != nil {
-		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
-				credential = &cred
-				break
-			}
-		}
-	}
-
+	credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Certificate credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -266,6 +291,25 @@ func applicationCertificateResourceDelete(ctx context.Context, d *schema.Resourc
 	}
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+	}
+
+	// Wait for application certificate to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+
+		app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+		if err != nil {
+			return nil, err
+		}
+
+		credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
+		if credential == nil {
+			return utils.Bool(false), nil
+		}
+
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	return nil

@@ -31,6 +31,13 @@ resource "azuread_conditional_access_policy" "example" {
       excluded_applications = ["00000004-0000-0ff1-ce00-000000000000"]
     }
 
+    devices {
+      filter {
+        mode = "exclude"
+        rule = "device.operatingSystem eq \"Doors\""
+      }
+    }
+
     locations {
       included_locations = ["All"]
       excluded_locations = ["AllTrusted"]
@@ -87,6 +94,7 @@ The following arguments are supported:
 
 * `applications` - (Required) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
 * `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
+* `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
 * `locations` - (Required) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
 * `platforms` - (Required) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `sign_in_risk_levels` - (Optional) A list of sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
@@ -103,13 +111,26 @@ The following arguments are supported:
 
 ---
 
+`devices` block supports the following:
+
+* `filter` - (Optional) A `filter` block as described below. A `filter` block can be added to an existing policy, but removing the `filter` block forces a new resource to be created.
+
+---
+
+`filter` block supports the following:
+
+* `mode` - (Required) Whether to include in, or exclude from, matching devices from the policy. Supported values are `include` or `exclude`.
+* `rule` - (Required) Condition filter to match devices. For more information, see [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/conditional-access/concept-condition-filters-for-devices#supported-operators-and-device-properties-for-filters).
+
+---
+
 `users` block supports the following:
 
 * `excluded_groups` - (Optional) A list of group IDs excluded from scope of policy.
 * `excluded_roles` - (Optional) A list of role IDs excluded from scope of policy.
 * `excluded_users` - (Optional) A list of user IDs excluded from scope of policy and/or `GuestsOrExternalUsers`.
-* `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded, or `All`.
-* `included_roles` - (Optional) A list of role IDs in scope of policy unless explicitly excluded, or `All`.
+* `included_groups` - (Optional) A list of group IDs in scope of policy unless explicitly excluded.
+* `included_roles` - (Optional) A list of role IDs in scope of policy unless explicitly excluded.
 * `included_users` - (Optional) A list of user IDs in scope of policy unless explicitly excluded, or `None` or `All` or `GuestsOrExternalUsers`.
 
 -> At least one of `included_groups`, `included_roles` or `included_users` must be specified.
@@ -146,6 +167,7 @@ The following arguments are supported:
 -> Only Office 365, Exchange Online and Sharepoint Online support application enforced restrictions.
 
 * `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `blockDownloads`, `mcasConfigured`, `monitorOnly` or `unknownFutureValue`.
+* `persistent_browser_mode` - (Optional) Session control to define whether to persist cookies or not. Possible values are: `always` or `never`.
 * `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
 * `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
 

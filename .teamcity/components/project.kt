@@ -4,6 +4,7 @@ import jetbrains.buildServer.configs.kotlin.v2019_2.Project
 const val providerName = "azuread"
 
 var services = mapOf(
+        "administrativeunits" to "Administrative Units",
         "applications" to "Applications",
         "approleassignments" to "App Role Assignments",
         "conditionalaccess" to "Conditional Access",

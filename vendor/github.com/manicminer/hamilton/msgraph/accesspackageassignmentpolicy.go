@@ -25,10 +25,10 @@ func NewAccessPackageAssignmentPolicyClient(tenantId string) *AccessPackageAssig
 func (c *AccessPackageAssignmentPolicyClient) List(ctx context.Context, query odata.Query) (*[]AccessPackageAssignmentPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		DisablePaging:    query.Top > 0,
+		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      "/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies",
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})
@@ -90,10 +90,10 @@ func (c *AccessPackageAssignmentPolicyClient) Create(ctx context.Context, access
 func (c *AccessPackageAssignmentPolicyClient) Get(ctx context.Context, id string, query odata.Query) (*AccessPackageAssignmentPolicy, int, error) {
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
 			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", id),
-			Params:      query.Values(),
 			HasTenantId: true,
 		},
 	})

@@ -38,7 +38,7 @@ The following arguments are supported:
 * `cost_center` - (Optional) The cost center associated with the user.
 * `country` - (Optional) The country/region in which the user is located, e.g. `US` or `UK`.
 * `department` - (Optional) The name for the department in which the user works.
-* `disable_password_expiration` - (Optional) Whether the users password is exempt from expiring. Defaults to `false`.
+* `disable_password_expiration` - (Optional) Whether the user's password is exempt from expiring. Defaults to `false`.
 * `disable_strong_password` - (Optional) Whether the user is allowed weaker passwords than the default policy to be specified. Defaults to `false`.
 * `display_name` - (Required) The name to display in the address book for the user.
 * `division` - (Optional) The name of the division in which the user works.
@@ -50,6 +50,7 @@ The following arguments are supported:
 * `job_title` - (Optional) The user’s job title.
 * `mail` - (Optional) The SMTP address for the user. This property cannot be unset once specified.
 * `mail_nickname` - (Optional) The mail alias for the user. Defaults to the user name part of the user principal name (UPN).
+* `manager_id` - (Optional) The object ID of the user's manager.
 * `mobile_phone` - (Optional) The primary cellular telephone number for the user.
 * `office_location` - (Optional) The office location in the user's place of business.
 * `onpremises_immutable_id` - (Optional) The value used to associate an on-premise Active Directory user account with their Azure AD user object. This must be specified if you are using a federated domain for the user's `user_principal_name` property when creating a new user account.
