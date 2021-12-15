@@ -517,8 +517,8 @@ resource "azuread_group" "test" {
   security_enabled = true
 
   dynamic_membership {
-    rule               = "user.department -eq \"Sales\""
-    processing_enabled = true
+    enabled = true
+    rule    = "user.department -eq \"Sales\""
   }
 }
 `, data.RandomInteger)

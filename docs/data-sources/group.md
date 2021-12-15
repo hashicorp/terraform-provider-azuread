@@ -66,5 +66,5 @@ The following attributes are exported:
 
 `dynamic_membership` block exports the following:
 
-* `processing_enabled` - Whether rule processing is "On" (true) or "Paused" (false).
+* `enabled` - Whether rule processing is "On" (true) or "Paused" (false).
 * `rule` - The rule that determines membership of this group.

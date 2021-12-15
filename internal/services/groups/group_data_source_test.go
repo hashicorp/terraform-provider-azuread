@@ -85,7 +85,7 @@ func TestAccGroupDataSource_dynamicMembership(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("dynamic_membership.#").HasValue("1"),
-				check.That(data.ResourceName).Key("dynamic_membership.0.processing_enabled").HasValue("true"),
+				check.That(data.ResourceName).Key("dynamic_membership.0.enabled").HasValue("true"),
 				check.That(data.ResourceName).Key("dynamic_membership.0.rule").HasValue("user.department -eq \"Sales\""),
 			),
 		},

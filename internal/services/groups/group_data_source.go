@@ -86,7 +86,7 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"processing_enabled": {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -318,8 +318,8 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 			enabled = false
 		}
 		dynamicMembership = append(dynamicMembership, map[string]interface{}{
-			"processing_enabled": enabled,
-			"rule":               group.MembershipRule,
+			"enabled": enabled,
+			"rule":    group.MembershipRule,
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)

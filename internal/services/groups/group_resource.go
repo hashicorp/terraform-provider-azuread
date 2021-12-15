@@ -93,7 +93,7 @@ func groupResource() *schema.Resource {
 				ConflictsWith: []string{"members"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"processing_enabled": {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -319,6 +319,10 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 		return false
 	}
 
+	if hasGroupType(msgraph.GroupTypeDynamicMembership) && diff.Get("dynamic_membership.#").(int) == 0 {
+		return fmt.Errorf("`dynamic_membership` must be specified when `types` contains %q", msgraph.GroupTypeDynamicMembership)
+	}
+
 	if mailEnabled && !hasGroupType(msgraph.GroupTypeUnified) {
 		return fmt.Errorf("`types` must contain %q for mail-enabled groups", msgraph.GroupTypeUnified)
 	}
@@ -430,7 +434,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
-		if d.Get("dynamic_membership.0.processing_enabled").(bool) {
+		if d.Get("dynamic_membership.0.enabled").(bool) {
 			properties.MembershipRuleProcessingState = utils.String("On")
 		} else {
 			properties.MembershipRuleProcessingState = utils.String("Paused")
@@ -638,7 +642,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
-		if d.Get("dynamic_membership.0.processing_enabled").(bool) {
+		if d.Get("dynamic_membership.0.enabled").(bool) {
 			group.MembershipRuleProcessingState = utils.String("On")
 		} else {
 			group.MembershipRuleProcessingState = utils.String("Paused")
@@ -798,8 +802,8 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			enabled = false
 		}
 		dynamicMembership = append(dynamicMembership, map[string]interface{}{
-			"processing_enabled": enabled,
-			"rule":               group.MembershipRule,
+			"enabled": enabled,
+			"rule":    group.MembershipRule,
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
