@@ -1,8 +1,8 @@
-## 2.13.0 (Unreleased)
+## 2.13.0 (December 15, 2021)
 
 IMPROVEMENTS:
 
-* `azuread_group`: support for `dynamic_memberships` [GH-695]
+* `azuread_group`: support for `dynamic_memberships` ([#695](https://github.com/terraform-providers/terraform-provider-azuread/issues/695))
 
 ## 2.12.0 (December 03, 2021)
 
