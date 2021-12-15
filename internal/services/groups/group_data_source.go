@@ -80,6 +80,26 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"dynamic_membership": {
+				Description: "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"rule": {
+							Description: "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
 			"mail": {
 				Description: "The SMTP address for the group",
 				Type:        schema.TypeString,
@@ -290,6 +310,19 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "theme", group.Theme)
 	tf.Set(d, "types", group.GroupTypes)
 	tf.Set(d, "visibility", group.Visibility)
+
+	dynamicMembership := make([]interface{}, 0)
+	if group.MembershipRule != nil {
+		enabled := true
+		if group.MembershipRuleProcessingState != nil && *group.MembershipRuleProcessingState == "Paused" {
+			enabled = false
+		}
+		dynamicMembership = append(dynamicMembership, map[string]interface{}{
+			"enabled": enabled,
+			"rule":    group.MembershipRule,
+		})
+	}
+	tf.Set(d, "dynamic_membership", dynamicMembership)
 
 	members, _, err := client.ListMembers(ctx, d.Id())
 	if err != nil {

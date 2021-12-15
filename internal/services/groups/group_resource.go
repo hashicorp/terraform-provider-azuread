@@ -85,6 +85,29 @@ func groupResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"dynamic_membership": {
+				Description:   "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"members"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+
+						"rule": {
+							Description:      "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(0, 3072)),
+						},
+					},
+				},
+			},
+
 			"mail_enabled": {
 				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. A group can be mail enabled _and_ security enabled",
 				Type:         schema.TypeBool,
@@ -102,11 +125,12 @@ func groupResource() *schema.Resource {
 			},
 
 			"members": {
-				Description: "A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Set:         schema.HashString,
+				Description:   "A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"dynamic_membership"},
+				Set:           schema.HashString,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -171,13 +195,14 @@ func groupResource() *schema.Resource {
 			},
 
 			"types": {
-				Description: "A set of group types to configure for the group. The only supported type is `Unified`, which specifies a Microsoft 365 group. Required when `mail_enabled` is true",
+				Description: "A set of group types to configure for the group. `Unified` specifies a Microsoft 365 group. Required when `mail_enabled` is true",
 				Type:        schema.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
+						"DynamicMembership",
 						msgraph.GroupTypeUnified,
 					}, false),
 				},
@@ -294,6 +319,10 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 		return false
 	}
 
+	if hasGroupType(msgraph.GroupTypeDynamicMembership) && diff.Get("dynamic_membership.#").(int) == 0 {
+		return fmt.Errorf("`dynamic_membership` must be specified when `types` contains %q", msgraph.GroupTypeDynamicMembership)
+	}
+
 	if mailEnabled && !hasGroupType(msgraph.GroupTypeUnified) {
 		return fmt.Errorf("`types` must contain %q for mail-enabled groups", msgraph.GroupTypeUnified)
 	}
@@ -398,9 +427,20 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
 		MailEnabled:                 utils.Bool(mailEnabled),
 		MailNickname:                utils.String(mailNickname),
+		MembershipRule:              utils.NullableString(""),
 		ResourceBehaviorOptions:     behaviorOptions,
 		ResourceProvisioningOptions: provisioningOptions,
 		SecurityEnabled:             utils.Bool(securityEnabled),
+	}
+
+	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
+		if d.Get("dynamic_membership.0.enabled").(bool) {
+			properties.MembershipRuleProcessingState = utils.String("On")
+		} else {
+			properties.MembershipRuleProcessingState = utils.String("Paused")
+		}
+
+		properties.MembershipRule = utils.NullableString(d.Get("dynamic_membership.0.rule").(string))
 	}
 
 	if theme := d.Get("theme").(string); theme != "" {
@@ -597,7 +637,18 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		Description:     utils.NullableString(d.Get("description").(string)),
 		DisplayName:     utils.String(displayName),
 		MailEnabled:     utils.Bool(d.Get("mail_enabled").(bool)),
+		MembershipRule:  utils.NullableString(""),
 		SecurityEnabled: utils.Bool(d.Get("security_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
+		if d.Get("dynamic_membership.0.enabled").(bool) {
+			group.MembershipRuleProcessingState = utils.String("On")
+		} else {
+			group.MembershipRuleProcessingState = utils.String("Paused")
+		}
+
+		group.MembershipRule = utils.NullableString(d.Get("dynamic_membership.0.rule").(string))
 	}
 
 	if theme := d.Get("theme").(string); theme != "" {
@@ -743,6 +794,19 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	tf.Set(d, "theme", group.Theme)
 	tf.Set(d, "types", group.GroupTypes)
 	tf.Set(d, "visibility", group.Visibility)
+
+	dynamicMembership := make([]interface{}, 0)
+	if group.MembershipRule != nil {
+		enabled := true
+		if group.MembershipRuleProcessingState != nil && *group.MembershipRuleProcessingState == "Paused" {
+			enabled = false
+		}
+		dynamicMembership = append(dynamicMembership, map[string]interface{}{
+			"enabled": enabled,
+			"rule":    group.MembershipRule,
+		})
+	}
+	tf.Set(d, "dynamic_membership", dynamicMembership)
 
 	owners, _, err := client.ListOwners(ctx, *group.ID)
 	if err != nil {

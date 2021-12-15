@@ -42,6 +42,7 @@ The following attributes are exported:
 * `behaviors` - A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.
 * `description` - The optional description of the group.
 * `display_name` - The display name for the group.
+* `dynamic_membership` - A `dynamic_membership` block as documented below.
 * `object_id` - The object ID of the group.
 * `mail` - The SMTP address for the group.
 * `mail_enabled` - Whether the group is mail-enabled.
@@ -58,5 +59,12 @@ The following attributes are exported:
 * `proxy_addresses` - List of email addresses for the group that direct to the same group mailbox.
 * `security_enabled` - Whether the group is a security group.
 * `theme` - The colour theme for a Microsoft 365 group. Possible values are `Blue`, `Green`, `Orange`, `Pink`, `Purple`, `Red` or `Teal`. When no theme is set, the value is `null`.
-* `types` - A list of group types configured for the group. The only supported type is `Unified`, which specifies a Microsoft 365 group.
+* `types` - A list of group types configured for the group. Supported values are `DynamicMembership`, which denotes a group with dynamic membership, and `Unified`, which specifies a Microsoft 365 group.
 * `visibility` - The group join policy and group content visibility. Possible values are `Private`, `Public`, or `Hiddenmembership`. Only Microsoft 365 groups can have `Hiddenmembership` visibility.
+
+---
+
+`dynamic_membership` block exports the following:
+
+* `enabled` - Whether rule processing is "On" (true) or "Paused" (false).
+* `rule` - The rule that determines membership of this group.
