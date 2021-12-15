@@ -1,3 +1,9 @@
+## 2.13.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_group`: support for `dynamic_memberships` [GH-695]
+
 ## 2.12.0 (December 03, 2021)
 
 IMPROVEMENTS:
