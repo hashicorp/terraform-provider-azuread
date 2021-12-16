@@ -33,6 +33,7 @@ website/vendor
 !command/test-fixtures/**/.terraform/
 
 .env.sh
+.env
 
 # goenv version file
 .go-version

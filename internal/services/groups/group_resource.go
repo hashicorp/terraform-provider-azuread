@@ -258,9 +258,29 @@ func groupResource() *schema.Resource {
 func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
+	// The objective is to check if the resource is being replaced and skip the prevent_duplicate_names check.
+	// Ideally, there would be a function in this context to determine it, but I couldn't find one.
+
+	// `groupResourceCustomizeDiff` is called twice when a resource is being replaced.
+	// In the first call, `diff.HasChange` returns the correct value.
+	// However, in the second call `diff.HasChange` the incorrect value.
+	// I found that the Raw State is nil on the 2nd call, so we use this to skip the check too.
+	hasChangeData := true
+	if diff.GetRawState().IsNull() {
+		hasChangeData = false
+	}
+
+	// Check if resource is being replaced
+	// if so, ignore prevent_duplicate_names check
+	resourceReplaced := diff.HasChange("assignable_to_role") ||
+		diff.HasChange("behaviors") ||
+		diff.HasChange("mail_nickname") ||
+		diff.HasChange("provisioning_options") ||
+		diff.HasChange("types")
+
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
-	if diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
+	if !resourceReplaced && hasChangeData && diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := groupFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
