@@ -286,6 +286,28 @@ func TestAccGroup_preventDuplicateNamesPass(t *testing.T) {
 	})
 }
 
+func TestAccGroup_preventDuplicateNamesForceReplace(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.preventDuplicateNamesForceReplace(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep("prevent_duplicate_names"),
+		{
+			Config: r.preventDuplicateNamesForceReplaceUpdate(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep("prevent_duplicate_names"),
+	})
+}
+
 func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -728,6 +750,30 @@ resource "azuread_group" "test" {
   display_name            = "acctestGroup-%[1]d"
   security_enabled        = true
   prevent_duplicate_names = true
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) preventDuplicateNamesForceReplace(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name            = "acctestGroup-%[1]d"
+  security_enabled        = true
+  prevent_duplicate_names = true
+
+  assignable_to_role = true
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) preventDuplicateNamesForceReplaceUpdate(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name            = "acctestGroup-%[1]d"
+  security_enabled        = true
+  prevent_duplicate_names = true
+
+  assignable_to_role = false
 }
 `, data.RandomInteger)
 }
