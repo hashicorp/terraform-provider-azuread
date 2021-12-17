@@ -28,8 +28,6 @@ func accessPackageCatalogResource() *schema.Resource {
 		UpdateContext: accessPackageCatalogResourceUpdate,
 		DeleteContext: accessPackageCatalogResourceDelete,
 
-		// CustomizeDiff: conditionalAccessPolicyCustomizeDiff,
-
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
@@ -66,7 +64,7 @@ func accessPackageCatalogResource() *schema.Resource {
 				Description:      "Description of the catalog",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			
 			"catalog_type": {

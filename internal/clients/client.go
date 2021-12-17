@@ -41,6 +41,7 @@ type Client struct {
 	DirectoryRoles      *directoryroles.Client
 	Domains             *domains.Client
 	Groups              *groups.Client
+	IdentityGovernance *identitygovernance.Client
 	Invitations         *invitations.Client
 	ServicePrincipals   *serviceprincipals.Client
 	Users               *users.Client
