@@ -17,7 +17,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -35,7 +34,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "onpremises_sam_account_names", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -47,10 +46,22 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "onpremises_sam_account_names", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
+				},
+			},
+
+			"onpremises_sam_account_names": {
+				Description:  "The on-prem SAM account names of the users",
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "onpremises_sam_account_names", "return_all"},
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
 			},
 
@@ -59,7 +70,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "onpremises_sam_account_names", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -80,7 +91,7 @@ func usersData() *schema.Resource {
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
-				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "onpremises_sam_account_names", "return_all"},
 			},
 
 			"users": {
@@ -163,6 +174,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var expectedCount int
 	ignoreMissing := d.Get("ignore_missing").(bool)
 	returnAll := d.Get("return_all").(bool)
+	qOptions := QueryOptions{}
 
 	if returnAll {
 		result, _, err := client.List(ctx, odata.Query{})
@@ -178,72 +190,53 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		users = append(users, *result...)
 	} else if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
 		expectedCount = len(upns)
-		for _, v := range upns {
-			query := odata.Query{
-				Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(v.(string))),
-			}
-			result, _, err := client.List(ctx, query)
-			if err != nil {
-				return tf.ErrorDiagF(err, "Finding user with UPN: %q", v)
-			}
-			if result == nil {
-				return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
-			}
-			count := len(*result)
-			if count > 1 {
-				return tf.ErrorDiagPathF(nil, "user_principal_names", "More than one user found with UPN: %q", v)
-			} else if count == 0 {
-				if ignoreMissing {
-					continue
-				}
-				return tf.ErrorDiagPathF(err, "user_principal_names", "User with UPN %q was not found", v)
-			}
-			users = append(users, (*result)[0])
-		}
-	} else {
-		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
-			expectedCount = len(objectIds)
-			for _, v := range objectIds {
-				u, status, err := client.Get(ctx, v.(string), odata.Query{})
-				if err != nil {
-					if status == http.StatusNotFound {
-						if ignoreMissing {
-							continue
-						}
-						return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", v)
-					}
-					return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", v)
-				}
-				if u == nil {
-					return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", v)
-				}
-				users = append(users, *u)
-			}
-		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
-			expectedCount = len(mailNicknames)
-			for _, v := range mailNicknames {
-				query := odata.Query{
-					Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(v.(string))),
-				}
-				result, _, err := client.List(ctx, query)
-				if err != nil {
-					return tf.ErrorDiagF(err, "Finding user with email alias: %q", v)
-				}
-				if result == nil {
-					return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
-				}
 
-				count := len(*result)
-				if count > 1 {
-					return tf.ErrorDiagPathF(nil, "mail_nicknames", "More than one user found with email alias: %q", v)
-				} else if count == 0 {
+		qUsers, diagnostics := listRead(ctx, client, upns, ignoreMissing, qOptions,
+			"userPrincipalName", "user_principal_names", "UPN")
+		if diagnostics != nil {
+			return diagnostics
+		}
+		users = append(users, qUsers...)
+	} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
+		expectedCount = len(mailNicknames)
+
+		qUsers, diagnostics := listRead(ctx, client, mailNicknames, ignoreMissing, qOptions,
+			"mailNickname", "mail_nicknames", "email alias")
+		if diagnostics != nil {
+			return diagnostics
+		}
+		users = append(users, qUsers...)
+	} else if onpremSamAccounts, ok := d.Get("onpremises_sam_account_names").([]interface{}); ok && len(onpremSamAccounts) > 0 {
+		expectedCount = len(onpremSamAccounts)
+
+		// Eventual Consistency and Count parameter need to be set, in order to filter by onPremisesSamAccountName
+		// It is considered an Advanced Query https://docs.microsoft.com/en-us/graph/aad-advanced-queries
+		eventualConsistency := odata.ConsistencyLevelEventual
+		qOptions.ResultCount = true
+		qOptions.ConsistencyLevel = &eventualConsistency
+		qUsers, diagnostics := listRead(ctx, client, onpremSamAccounts, ignoreMissing, qOptions,
+			"onPremisesSamAccountName", "onpremises_sam_account_names", "on-prem SAM account")
+		if diagnostics != nil {
+			return diagnostics
+		}
+		users = append(users, qUsers...)
+	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
+		expectedCount = len(objectIds)
+		for _, v := range objectIds {
+			u, status, err := client.Get(ctx, v.(string), odata.Query{})
+			if err != nil {
+				if status == http.StatusNotFound {
 					if ignoreMissing {
 						continue
 					}
-					return tf.ErrorDiagPathF(err, "mail_nicknames", "User not found with email alias: %q", v)
+					return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", v)
 				}
-				users = append(users, (*result)[0])
+				return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", v)
 			}
+			if u == nil {
+				return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", v)
+			}
+			users = append(users, *u)
 		}
 	}
 
@@ -255,6 +248,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	upns := make([]string, 0)
 	objectIds := make([]string, 0)
 	mailNicknames := make([]string, 0)
+	onpremSamAccounts := make([]string, 0)
 	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
 		if u.ID == nil || u.UserPrincipalName == nil {
@@ -265,6 +259,9 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
+		}
+		if u.OnPremisesSamAccountName != nil {
+			onpremSamAccounts = append(onpremSamAccounts, *u.OnPremisesSamAccountName)
 		}
 
 		user := make(map[string]interface{})
@@ -290,6 +287,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 	tf.Set(d, "mail_nicknames", mailNicknames)
 	tf.Set(d, "object_ids", objectIds)
+	tf.Set(d, "onpremises_sam_account_names", onpremSamAccounts)
 	tf.Set(d, "user_principal_names", upns)
 	tf.Set(d, "users", userList)
 
