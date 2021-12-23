@@ -70,6 +70,25 @@ func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 	}})
 }
 
+func TestAccUserDataSource_byOnPremisesSamAccountName(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byOnPremisesSamAccountName(data),
+		Check:  r.testCheckFunc(data),
+	}})
+}
+
+func TestAccUserDataSource_byOnPremisesSamAccountNameNonexistent(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byOnPremisesSamAccountNameNonexistent(data),
+		ExpectError: regexp.MustCompile("User not found with on-prem SAM account name:"),
+	}})
+}
+
 func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("account_enabled").Exists(),
@@ -155,6 +174,24 @@ data "azuread_domains" "test" {
 
 data "azuread_user" "test" {
   mail_nickname = "not-a-real-user-%[1]d${data.azuread_domains.test.domains.0.domain_name}"
+}
+`, data.RandomInteger)
+}
+
+func (UserDataSource) byOnPremisesSamAccountName(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_user" "test" {
+  onpremises_sam_account_name = azuread_user.test.onpremises_sam_account_name
+}
+`, UserResource{}.complete(data))
+}
+
+func (UserDataSource) byOnPremisesSamAccountNameNonexistent(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_user" "test" {
+  onpremises_sam_account_name = "notarealuser-%[1]d"
 }
 `, data.RandomInteger)
 }
