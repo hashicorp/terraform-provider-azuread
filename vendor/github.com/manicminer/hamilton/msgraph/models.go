@@ -799,6 +799,15 @@ type ExtensionSchemaProperty struct {
 	Type ExtensionSchemaPropertyDataType `json:"type,omitempty"`
 }
 
+type FederatedIdentityCredential struct {
+	Audiences   *[]string            `json:"audiences,omitempty"`
+	Description *StringNullWhenEmpty `json:"description,omitempty"`
+	ID          *string              `json:"id,omitempty"`
+	Issuer      *string              `json:"issuer,omitempty"`
+	Name        *string              `json:"name,omitempty"`
+	Subject     *string              `json:"subject,omitempty"`
+}
+
 type Fido2AuthenticationMethod struct {
 	ID                      *string           `json:"id,omitempty"`
 	DisplayName             *string           `json:"displayName,omitempty"`
@@ -927,7 +936,7 @@ func (g *Group) HasTypes(types []GroupType) bool {
 
 type GroupAssignedLabel struct {
 	LabelId     *string `json:"labelId,omitempty"`
-	DisplayName *string `json:"displayNanme,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
 }
 
 type GroupAssignedLicense struct {

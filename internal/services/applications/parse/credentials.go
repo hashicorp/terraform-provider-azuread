@@ -36,6 +36,19 @@ func CertificateID(idString string) (*CredentialId, error) {
 	}, nil
 }
 
+func FederatedIdentityCredentialID(idString string) (*CredentialId, error) {
+	id, err := ObjectSubResourceID(idString, "federatedIdentityCredential")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse Federated Identity Credential ID: %v", err)
+	}
+
+	return &CredentialId{
+		ObjectId: id.objectId,
+		KeyType:  id.Type,
+		KeyId:    id.subId,
+	}, nil
+}
+
 func PasswordID(idString string) (*CredentialId, error) {
 	id, err := ObjectSubResourceID(idString, "password")
 	if err != nil {
