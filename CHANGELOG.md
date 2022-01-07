@@ -1,12 +1,12 @@
-## 2.14.0 (Unreleased)
+## 2.14.0 (January 07, 2022)
 
 FEATURES:
 
-* **New Resource:** `azuread_application_federated_identity_credential` [GH-705]
+* **New Resource:** `azuread_application_federated_identity_credential` ([#705](https://github.com/terraform-providers/terraform-provider-azuread/issues/705))
 
 IMPROVEMENTS:
 
-* `azuread_service_principal_password`: re-add support for `display_name`, `start_date`, `end_date` and `end_date_relative` properties [GH-706]
+* `azuread_service_principal_password`: re-add support for `display_name`, `start_date`, `end_date` and `end_date_relative` properties ([#706](https://github.com/terraform-providers/terraform-provider-azuread/issues/706))
 
 ## 2.13.0 (December 15, 2021)
 
