@@ -1,3 +1,9 @@
+## 2.14.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_service_principal_password`: re-add support for `display_name`, `start_date`, `end_date` and `end_date_relative` properties [GH-706]
+
 ## 2.13.0 (December 15, 2021)
 
 IMPROVEMENTS:
