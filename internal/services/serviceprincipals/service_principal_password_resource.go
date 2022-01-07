@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -54,6 +56,42 @@ func servicePrincipalPasswordResource() *schema.Resource {
 				ValidateDiagFunc: validate.UUID,
 			},
 
+			"display_name": {
+				Description: "A display name for the password",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+			},
+
+			"start_date": {
+				Description:  "The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
+			"end_date": {
+				Description:   "The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date_relative"},
+				ValidateFunc:  validation.IsRFC3339Time,
+			},
+
+			"end_date_relative": {
+				Description:      "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"end_date"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
 			"rotate_when_changed": {
 				Description: "Arbitrary map of values that, when changed, will trigger rotation of the password",
 				Type:        schema.TypeMap,
@@ -66,24 +104,6 @@ func servicePrincipalPasswordResource() *schema.Resource {
 
 			"key_id": {
 				Description: "A UUID used to uniquely identify this password credential",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"display_name": {
-				Description: "The display name for the password",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"start_date": {
-				Description: "The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"end_date": {
-				Description: "The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
