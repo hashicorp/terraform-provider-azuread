@@ -1,5 +1,9 @@
 ## 2.14.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `azuread_application_federated_identity_credential` [GH-705]
+
 IMPROVEMENTS:
 
 * `azuread_service_principal_password`: re-add support for `display_name`, `start_date`, `end_date` and `end_date_relative` properties [GH-706]
