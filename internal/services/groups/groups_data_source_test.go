@@ -3,6 +3,7 @@ package groups_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -25,6 +26,22 @@ func TestAccGroupsDataSource_byDisplayNames(t *testing.T) {
 			Check: resource.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			),
+		},
+	})
+}
+
+func TestAccGroupsDataSource_byDisplayNamePrefix(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
+	moreThanZero := regexp.MustCompile("^[1-9][0-9]*$")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.byDisplayNamePrefix(data),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				check.That(data.ResourceName).Key("display_names.#").MatchesRegex(moreThanZero),
+				check.That(data.ResourceName).Key("object_ids.#").MatchesRegex(moreThanZero),
 			),
 		},
 	})
@@ -216,6 +233,17 @@ func (r GroupsDataSource) byDisplayNames(data acceptance.TestData) string {
 
 data "azuread_groups" "test" {
   display_names = [azuread_group.testA.display_name, azuread_group.testB.display_name]
+}
+`, r.template(data))
+}
+
+func (r GroupsDataSource) byDisplayNamePrefix(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_groups" "test" {
+  display_name_prefix = "acctestGroup"
+  depends_on          = [azuread_group.testA, azuread_group.testB]
 }
 `, r.template(data))
 }
