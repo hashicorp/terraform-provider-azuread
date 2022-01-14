@@ -1,5 +1,9 @@
 ## 2.15.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `data.azuread_group` - support the `display_name_prefix` property [GH-716]
+
 BUG FIXES:
 
 * `azuread_application` - remove an unnecessary API call that may require additional permissions, when assigning owners [GH-713]
