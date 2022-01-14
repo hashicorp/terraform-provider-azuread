@@ -1,3 +1,10 @@
+## 2.15.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - remove an unnecessary API call that may require additional permissions, when assigning owners [GH-713]
+* `azuread_service_principal` - remove an unnecessary API call that may require additional permissions, when assigning owners [GH-713]
+
 ## 2.14.0 (January 07, 2022)
 
 FEATURES:
