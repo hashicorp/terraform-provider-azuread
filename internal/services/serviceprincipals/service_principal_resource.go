@@ -421,10 +421,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	if callerObject == nil {
 		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
 	}
-	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-	//if callerObject.ODataId == nil {
-	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve calling principal object %q", callerId)
-	//}
+
+	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
 
@@ -437,29 +435,25 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	// Retrieve and set the initial owners, which can be up to 20 in total when creating the service principal
 	if v, ok := d.GetOk("owners"); ok {
 		ownerCount := 0
-		for _, ownerId := range v.(*schema.Set).List() {
-			if strings.EqualFold(ownerId.(string), callerId) {
+		for _, ownerIdRaw := range v.(*schema.Set).List() {
+			ownerId := ownerIdRaw.(string)
+
+			// If the calling principal was found in the specified owners, we won't remove them later
+			if strings.EqualFold(ownerId, callerId) {
 				removeCallerOwner = false
 				continue
 			}
-			ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId.(string), odata.Query{})
-			if err != nil {
-				return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
+
+			ownerObject := msgraph.DirectoryObject{
+				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+				ID: &ownerId,
 			}
-			if ownerObject == nil {
-				return tf.ErrorDiagF(errors.New("ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
-			}
-			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-			//if ownerObject.ODataId == nil {
-			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
-			//}
-			ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-				client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
 
 			if ownerCount < 19 {
-				ownersFirst20 = append(ownersFirst20, *ownerObject)
+				ownersFirst20 = append(ownersFirst20, ownerObject)
 			} else {
-				ownersExtra = append(ownersExtra, *ownerObject)
+				ownersExtra = append(ownersExtra, ownerObject)
 			}
 			ownerCount++
 		}
@@ -513,7 +507,6 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 
 	var tags []string
 	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
@@ -558,20 +551,11 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
 			for _, ownerId := range ownersToAdd {
-				ownerObject, _, err := directoryObjectsClient.Get(ctx, ownerId, odata.Query{})
-				if err != nil {
-					return tf.ErrorDiagF(err, "Could not retrieve owner principal object %q", ownerId)
-				}
-				if ownerObject == nil {
-					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
-				}
-				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-				//if ownerObject.ODataId == nil {
-				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
-				//}
-				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
-				newOwners = append(newOwners, *ownerObject)
+				newOwners = append(newOwners, msgraph.DirectoryObject{
+					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					ID: &ownerId,
+				})
 			}
 
 			properties.Owners = &newOwners
