@@ -1,13 +1,13 @@
-## 2.15.0 (Unreleased)
+## 2.15.0 (January 14, 2022)
 
 IMPROVEMENTS:
 
-* `data.azuread_group` - support the `display_name_prefix` property [GH-716]
+* `data.azuread_group` - support the `display_name_prefix` property ([#716](https://github.com/terraform-providers/terraform-provider-azuread/issues/716))
 
 BUG FIXES:
 
-* `azuread_application` - remove an unnecessary API call that may require additional permissions, when assigning owners [GH-713]
-* `azuread_service_principal` - remove an unnecessary API call that may require additional permissions, when assigning owners [GH-713]
+* `azuread_application` - remove an unnecessary API call that may require additional permissions, when assigning owners ([#713](https://github.com/terraform-providers/terraform-provider-azuread/issues/713))
+* `azuread_service_principal` - remove an unnecessary API call that may require additional permissions, when assigning owners ([#713](https://github.com/terraform-providers/terraform-provider-azuread/issues/713))
 
 ## 2.14.0 (January 07, 2022)
 
