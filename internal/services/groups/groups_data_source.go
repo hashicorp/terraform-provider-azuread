@@ -34,7 +34,7 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -46,11 +46,27 @@ func groupsDataSource() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
 				},
+			},
+
+			"display_name_prefix": {
+				Description:      "Common display name prefix of the groups",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"return_all": {
+				Description:  "Retrieve all groups with no filter",
+				Type:         schema.TypeBool,
+				Optional:     true,
+				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 			},
 
 			"mail_enabled": {
@@ -59,13 +75,6 @@ func groupsDataSource() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"object_ids"},
-			},
-
-			"return_all": {
-				Description:  "Retrieve all groups with no filter",
-				Type:         schema.TypeBool,
-				Optional:     true,
-				ExactlyOneOf: []string{"display_names", "object_ids", "return_all"},
 			},
 
 			"security_enabled": {
@@ -86,6 +95,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var groups []msgraph.Group
 	var expectedCount int
 	var returnAll = d.Get("return_all").(bool)
+	var displayNamePrefix = d.Get("display_name_prefix").(string)
 
 	var displayNames []interface{}
 	if v, ok := d.GetOk("display_names"); ok {
@@ -114,6 +124,20 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		groups = append(groups, *result...)
+	} else if displayNamePrefix != "" {
+		query := odata.Query{Filter: fmt.Sprintf("startsWith(displayName, '%s')", displayNamePrefix)}
+		result, _, err := client.List(ctx, query)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "display_name_prefix", "No groups found with display name prefix: %q", displayNamePrefix)
+		}
+		if result == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API response")
+		}
+		if len(*result) == 0 {
+			return tf.ErrorDiagPathF(err, "display_name_prefix", "No groups found with display name prefix: %q", displayNamePrefix)
+		}
+
+		groups = append(groups, *result...)
 	} else if len(displayNames) > 0 {
 		expectedCount = len(displayNames)
 		for _, v := range displayNames {
@@ -122,6 +146,9 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			result, _, err := client.List(ctx, query)
 			if err != nil {
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
+			}
+			if result == nil {
+				return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API response")
 			}
 
 			count := len(*result)
@@ -144,12 +171,15 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 				}
 				return tf.ErrorDiagPathF(err, "object_id", "Retrieving group with object ID: %q", objectId)
 			}
+			if group == nil {
+				return tf.ErrorDiagF(errors.New("API returned nil group"), "Bad API response")
+			}
 
 			groups = append(groups, *group)
 		}
 	}
 
-	if !returnAll && len(groups) != expectedCount {
+	if !returnAll && displayNamePrefix == "" && len(groups) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 
@@ -176,6 +206,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	tf.Set(d, "object_ids", newObjectIds)
 	tf.Set(d, "display_names", newDisplayNames)
+	tf.Set(d, "display_name_prefix", displayNamePrefix)
 
 	return nil
 }
