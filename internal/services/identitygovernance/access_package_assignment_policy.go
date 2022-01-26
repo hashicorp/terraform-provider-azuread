@@ -355,6 +355,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 						"text": {
 							Required: true,
 							Type: schema.TypeList,
+							RequiredWith: []string{"questions.0.choices"},
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -373,7 +374,60 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 												},
 												"language_code": {
 													Type: schema.TypeString,
-													Required: true, 
+													Required: true,
+													ValidateDiagFunc: validate.ISO639Language,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"is_single_line_question": {
+							Type: schema.TypeBool,
+							Optional: true,
+							ConflictsWith: []string{"questions.0.choices", "questions.0.allows_multiple_selection"},
+						},
+						"allows_multiple_selection": {
+							Type: schema.TypeBool,
+							Optional: true,
+							ConflictsWith: []string{"questions.0.is_single_line_question"},
+						},
+						"choices": {
+							Type: schema.TypeList,
+							Optional: true,
+							RequiredWith: []string{"questions.0.allows_multiple_selection"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"actual_value": {
+										Type: schema.TypeString,
+										Required: true,
+									},
+									"display_value": {
+										Type: schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"default_text": {
+													Type: schema.TypeString,
+													Required: true,
+												},
+												"localized_texts": {
+													Required: true,
+													Type: schema.TypeList,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"text": {
+																Type: schema.TypeString,
+																Required: true,
+															},
+															"language_code": {
+																Type: schema.TypeString,
+																Required: true,
+																ValidateDiagFunc: validate.ISO639Language,
+															},
+														},
+													},
 												},
 											},
 										},
