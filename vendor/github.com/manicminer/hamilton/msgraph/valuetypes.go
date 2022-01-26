@@ -22,10 +22,18 @@ func (s StringNullWhenEmpty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(s))
 }
 
+type AccessPackageCatalogState = string
+
+const (
+	AccessPackageCatalogStatePublished   AccessPackageCatalogState = "published"
+	AccessPackageCatalogStateUnpublished AccessPackageCatalogState = "unpublished"
+)
+
 type AccessPackageCatalogStatus = string
 
 const (
-	AccessPackageCatalogStatusPublished AccessPackageCatalogStatus = "Published"
+	AccessPackageCatalogStatusPublished   AccessPackageCatalogStatus = "Published"
+	AccessPackageCatalogStatusUnpublished AccessPackageCatalogState  = "Unpublished"
 )
 
 type AccessPackageCatalogType = string
@@ -52,7 +60,7 @@ const (
 type AccessPackageResourceRequestType = string
 
 const (
-	AccessPackageResourceRequestTypeAdminAdd    AccessPackageResourceRequestType = "AdminAdd"
+	AccessPackageResourceRequestTypeAdminAdd     AccessPackageResourceRequestType = "AdminAdd"
 	AccessPackageResourceRequestTypeAdminRemove AccessPackageResourceRequestType = "AdminRemove"
 )
 
@@ -61,6 +69,31 @@ type AccessPackageResourceType = string
 const (
 	AccessPackageResourceTypeApplication          AccessPackageResourceType = "Application"
 	AccessPackageResourceTypeSharePointOnlineSite AccessPackageResourceType = "SharePoint Online Site"
+)
+
+type AccessReviewTimeoutBehaviorType = string
+
+const (
+	AccessReviewTimeoutBehaviorTypeAcceptAccessRecommendation AccessReviewTimeoutBehaviorType = "acceptAccessRecommendation"
+	AccessReviewTimeoutBehaviorTypeKeepAccess                 AccessReviewTimeoutBehaviorType = "keepAccess"
+	AccessReviewTimeoutBehaviorTypeRemoveAccess               AccessReviewTimeoutBehaviorType = "removeAccess"
+)
+
+type AccessReviewReviewerType = string
+
+const (
+	AccessReviewReviewerTypeSelf      AccessReviewReviewerType = "Self"
+	AccessReviewReviewerTypeReviewers AccessReviewReviewerType = "Reviewers"
+)
+
+type AccessReviewRecurranceType = string
+
+const (
+	AccessReviewRecurranceTypeWeekly     AccessReviewRecurranceType = "weekly"
+	AccessReviewRecurranceTypeMonthly    AccessReviewRecurranceType = "monthly"
+	AccessReviewRecurranceTypeQuarterly  AccessReviewRecurranceType = "quarterly"
+	AccessReviewRecurranceTypeHalfYearly AccessReviewRecurranceType = "halfyearly"
+	AccessReviewRecurranceTypeAnnual     AccessReviewRecurranceType = "annual"
 )
 
 type AdministrativeUnitVisibility = string
