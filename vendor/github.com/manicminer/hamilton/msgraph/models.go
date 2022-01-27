@@ -13,16 +13,18 @@ import (
 )
 
 type AccessPackage struct {
-	ID                  *string    `json:"id,omitempty"`
-	CatalogId           *string    `json:"catalogId,omitempty"`
-	CreatedBy           *string    `json:"createdBy,omitempty"`
-	CreatedDateTime     *time.Time `json:"createdDateTime,omitempty"`
-	Description         *string    `json:"description,omitempty"`
-	DisplayName         *string    `json:"displayName,omitempty"`
-	IsHidden            *bool      `json:"isHidden,omitempty"`
-	IsRoleScopesVisible *bool      `json:"isRoleScopesVisible,omitempty"`
-	ModifiedBy          *string    `json:"modifiedBy,omitempty"`
-	ModifiedDateTime    *time.Time `json:"modifiedDateTime,omitempty"`
+	ID               *string               `json:"id,omitempty"`
+	Catalog          *AccessPackageCatalog `json:"catalog,omitempty"`
+	CreatedDateTime  *time.Time            `json:"createdDateTime,omitempty"`
+	Description      *string               `json:"description,omitempty"`
+	DisplayName      *string               `json:"displayName,omitempty"`
+	IsHidden         *bool                 `json:"isHidden,omitempty"`
+	ModifiedDateTime *time.Time            `json:"modifiedDateTime,omitempty"`
+	//Beta
+	IsRoleScopesVisible *bool   `json:"isRoleScopesVisible,omitempty"`
+	ModifiedBy          *string `json:"modifiedBy,omitempty"`
+	CatalogId           *string `json:"catalogId,omitempty"`
+	CreatedBy           *string `json:"createdBy,omitempty"`
 }
 
 type AccessPackageAssignmentPolicy struct {
@@ -44,16 +46,18 @@ type AccessPackageAssignmentPolicy struct {
 }
 
 type AccessPackageCatalog struct {
-	ID                  *string                    `json:"id,omitempty"`
-	CatalogStatus       AccessPackageCatalogStatus `json:"catalogStatus,omitempty"`
-	CatalogType         AccessPackageCatalogType   `json:"catalogType,omitempty"`
-	CreatedBy           *string                    `json:"createdBy,omitempty"`
-	CreatedDateTime     *time.Time                 `json:"createdDateTime,omitempty"`
-	Description         *string                    `json:"description,omitempty"`
-	DisplayName         *string                    `json:"displayName,omitempty"`
-	IsExternallyVisible *bool                      `json:"isExternallyVisible,omitempty"`
-	ModifiedBy          *string                    `json:"modifiedBy,omitempty"`
-	ModifiedDateTime    *time.Time                 `json:"modifiedDateTime,omitempty"`
+	ID                  *string                   `json:"id,omitempty"`
+	State               AccessPackageCatalogState `json:"state,omitempty"`
+	CatalogType         AccessPackageCatalogType  `json:"catalogType,omitempty"`
+	CreatedDateTime     *time.Time                `json:"createdDateTime,omitempty"`
+	Description         *string                   `json:"description,omitempty"`
+	DisplayName         *string                   `json:"displayName,omitempty"`
+	IsExternallyVisible *bool                     `json:"isExternallyVisible,omitempty"`
+	ModifiedDateTime    *time.Time                `json:"modifiedDateTime,omitempty"`
+	//Beta
+	CatalogStatus AccessPackageCatalogStatus `json:"catalogStatus,omitempty"`
+	CreatedBy     *string                    `json:"createdBy,omitempty"`
+	ModifiedBy    *string                    `json:"modifiedBy,omitempty"`
 }
 
 type AccessPackageLocalizedContent struct {
@@ -67,10 +71,19 @@ type AccessPackageLocalizedTexts struct {
 }
 
 type AccessPackageQuestion struct {
-	ID         *string                        `json:"id,omitempty"`
-	IsRequired *bool                          `json:"isRequired,omitempty"`
-	Sequence   *int32                         `json:"sequence,omitempty"`
-	Text       *AccessPackageLocalizedContent `json:"text,omitempty"`
+	ODataType            *odata.Type                             `json:"@odata.type,omitempty"`
+	ID                   *string                                 `json:"id,omitempty"`
+	IsRequired           *bool                                   `json:"isRequired,omitempty"`
+	Sequence             *int32                                  `json:"sequence,omitempty"`
+	Text                 *AccessPackageLocalizedContent          `json:"text,omitempty"`
+	Choices              *[]AccessPackageMultipleChoiceQuestions `json:"choices,omitempty"`
+	IsSingleLineQuestion *bool                                   `json:"isSingleLineQuestion,omitempty"`
+}
+
+type AccessPackageMultipleChoiceQuestions struct {
+	ODataType    *odata.Type                    `json:"@odata.type,omitempty"`
+	ActualValue  *string                        `json:"actualValue,string"`
+	DisplayValue *AccessPackageLocalizedContent `json:"displayValue,omitempty"`
 }
 
 type AccessPackageResource struct {
@@ -85,7 +98,7 @@ type AccessPackageResource struct {
 	OriginSystem                     AccessPackageResourceOriginSystem `json:"originSystem,omitempty"`
 	ResourceType                     *AccessPackageResourceType        `json:"resourceType,omitempty"`
 	Url                              *string                           `json:"url,omitempty"`
-	// Attributes is a returned collection but is not documented or used
+	// Attributes is a returned collection but is not documented or used in beta
 }
 
 type AccessPackageResourceEnvironment struct {
@@ -501,12 +514,15 @@ type ApprovalStage struct {
 }
 
 type AssignmentReviewSettings struct {
-	IsEnabled      *bool      `json:"isEnabled,omitempty"`
-	RecurrenceType *string    `json:"recurrenceType,omitempty"`
-	ReviewerType   *string    `json:"reviewerType,omitempty"`
-	StartDateTime  *time.Time `json:"startDateTime,omitempty"`
-	DurationInDays *int32     `json:"durationInDays,omitempty"`
-	Reviewers      *[]UserSet `json:"reviewers,omitempty"`
+	IsEnabled                       *bool                           `json:"isEnabled,omitempty"`
+	RecurrenceType                  AccessReviewRecurranceType      `json:"recurrenceType,omitempty"`
+	ReviewerType                    AccessReviewReviewerType        `json:"reviewerType,omitempty"`
+	StartDateTime                   *time.Time                      `json:"startDateTime,omitempty"`
+	DurationInDays                  *int32                          `json:"durationInDays,omitempty"`
+	Reviewers                       *[]UserSet                      `json:"reviewers,omitempty"`
+	IsAccessRecommendationEnabled   *bool                           `json:"isAccessRecommendationEnabled,omitempty"`
+	IsApprovalJustificationRequired *bool                           `json:"isApprovalJustificationRequired,omitempty"`
+	AccessReviewTimeoutBehavior     AccessReviewTimeoutBehaviorType `json:"accessReviewTimeoutBehavior,omitempty"`
 }
 
 type AuditActivityInitiator struct {
@@ -1351,6 +1367,34 @@ type TemporaryAccessPassAuthenticationMethod struct {
 	MethodUsabilityReason *MethodUsabilityReason `json:"methodUsabilityReason,omitempty"`
 }
 
+type UnifiedRoleAssignment struct {
+	DirectoryObject
+
+	AppScopeId       *string `json:"appScopeId,omitempty"`
+	DirectoryScopeId *string `json:"directoryScopeId,omitempty"`
+	PrincipalId      *string `json:"principalId,omitempty"`
+	RoleDefinitionId *string `json:"roleDefinitionId,omitempty"`
+}
+
+type UnifiedRoleDefinition struct {
+	DirectoryObject
+
+	Description     *string                  `json:"description,omitempty"`
+	DisplayName     *string                  `json:"displayName,omitempty"`
+	IsBuiltIn       *bool                    `json:"isBuiltIn,omitempty"`
+	IsEnabled       *bool                    `json:"isEnabled,omitempty"`
+	ResourceScopes  *[]string                `json:"resourceScopes,omitempty"`
+	RolePermissions *[]UnifiedRolePermission `json:"rolePermissions,omitempty"`
+	TemplateId      *string                  `json:"templateId,omitempty"`
+	Version         *string                  `json:"version,omitempty"`
+}
+
+type UnifiedRolePermission struct {
+	AllowedResourceActions  *[]string `json:"allowedResourceActions,omitempty"`
+	Condition               *string   `json:"condition,omitempty"`
+	ExcludedResourceActions *[]string `json:"excludedResourceActions,omitempty"`
+}
+
 // User describes a User object.
 type User struct {
 	DirectoryObject
@@ -1506,9 +1550,11 @@ type UserRegistrationMethodSummary struct {
 }
 
 type UserSet struct {
-	IsBackup    *bool   `json:"isBackup,omitempty"`
-	ID          *string `json:"id,omitempty"` // Either user or group ID
-	Description *string `json:"description,omitempty"`
+	ODataType    *odata.Type `json:"@odata.type,omitempty"`
+	IsBackup     *bool       `json:"isBackup,omitempty"`
+	ID           *string     `json:"id,omitempty"` // Either user or group ID
+	Description  *string     `json:"description,omitempty"`
+	ManagerLevel *int32      `json:"managerLevel,omitempty"`
 }
 
 type UserCredentialUsageDetails struct {
