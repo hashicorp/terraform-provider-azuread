@@ -59,8 +59,20 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"allow_external_senders": {
+				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"auto_subscribe_new_members": {
+				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
@@ -98,6 +110,18 @@ func groupDataSource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"hide_from_address_lists": {
+				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"hide_from_outlook_clients": {
+				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 
 			"mail": {
@@ -323,6 +347,32 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
+
+	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
+	if hasGroupType(group.GroupTypes, msgraph.GroupTypeUnified) {
+		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
+		}
+
+		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
+			allowExternalSenders = *groupExtra.AllowExternalSenders
+		}
+		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
+			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+		}
+		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
+			hideFromAddressLists = *groupExtra.HideFromAddressLists
+		}
+		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
+			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		}
+	}
+
+	tf.Set(d, "allow_external_senders", allowExternalSenders)
+	tf.Set(d, "auto_subscribe_new_members", autoSubscribeNewMembers)
+	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
+	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
 	members, _, err := client.ListMembers(ctx, d.Id())
 	if err != nil {

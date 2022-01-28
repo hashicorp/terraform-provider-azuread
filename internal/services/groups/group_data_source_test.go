@@ -120,6 +120,23 @@ func TestAccGroupDataSource_owners(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.unifiedWithExtraSettings(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("allow_external_senders").HasValue("true"),
+				check.That(data.ResourceName).Key("auto_subscribe_new_members").HasValue("true"),
+				check.That(data.ResourceName).Key("hide_from_address_lists").HasValue("true"),
+				check.That(data.ResourceName).Key("hide_from_outlook_clients").HasValue("true"),
+			),
+		},
+	})
+}
+
 func (GroupDataSource) displayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -201,4 +218,14 @@ data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
 }
 `, GroupResource{}.withThreeOwners(data))
+}
+
+func (GroupDataSource) unifiedWithExtraSettings(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  object_id = azuread_group.test.object_id
+}
+`, GroupResource{}.unifiedWithExtraSettings(data))
 }

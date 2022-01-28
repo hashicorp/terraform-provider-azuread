@@ -41,3 +41,21 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 
 	return &result, nil
 }
+
+func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
+	query := odata.Query{Select: []string{"allowExternalSenders", "autoSubscribeNewMembers", "hideFromAddressLists", "hideFromOutlookClients"}}
+	groupExtra, _, err := client.Get(ctx, id, query)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
+	}
+	return groupExtra, nil
+}
+
+func hasGroupType(groupTypes []msgraph.GroupType, value msgraph.GroupType) bool {
+	for _, v := range groupTypes {
+		if value == v {
+			return true
+		}
+	}
+	return false
+}
