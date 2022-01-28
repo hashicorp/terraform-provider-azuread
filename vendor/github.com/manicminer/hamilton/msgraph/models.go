@@ -847,7 +847,7 @@ type Group struct {
 	Owners           *Owners                `json:"owners@odata.bind,omitempty"`
 	SchemaExtensions *[]SchemaExtensionData `json:"-"`
 
-	AllowExternalSenders          *string                             `json:"allowExternalSenders,omitempty"`
+	AllowExternalSenders          *bool                               `json:"allowExternalSenders,omitempty"`
 	AssignedLabels                *[]GroupAssignedLabel               `json:"assignedLabels,omitempty"`
 	AssignedLicenses              *[]GroupAssignedLicense             `json:"assignLicenses,omitempty"`
 	AutoSubscribeNewMembers       *bool                               `json:"autoSubscribeNewMembers,omitempty"`
