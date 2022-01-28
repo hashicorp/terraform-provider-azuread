@@ -1,9 +1,9 @@
-## 2.16.0 (Unreleased)
+## 2.16.0 (January 28, 2022)
 
 IMPROVEMENTS:
 
-* `data.azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` attributes [GH-723]
-* `azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` properties [GH-723]
+* `data.azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` attributes ([#723](https://github.com/terraform-providers/terraform-provider-azuread/issues/723))
+* `azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` properties ([#723](https://github.com/terraform-providers/terraform-provider-azuread/issues/723))
 
 ## 2.15.0 (January 14, 2022)
 
