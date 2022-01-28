@@ -56,12 +56,6 @@ func groupResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			"allow_external_senders": {
-				Description: "Indicates whether people external to the organization can send messages to the group.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-			},
-
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. This property can only be `true` for security-enabled groups.",
 				Type:        schema.TypeBool,
@@ -118,6 +112,12 @@ func groupResource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"external_senders_allowed": {
+				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 
 			"hide_from_address_lists": {
@@ -357,16 +357,16 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 	visibilityOld, visibilityNew := diff.GetChange("visibility")
 
 	if !hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
-		if allowExternalSenders, ok := diff.GetOk("allow_external_senders"); ok && allowExternalSenders.(bool) {
-			return fmt.Errorf("`allow_external_senders` is only supported for unified groups")
-		}
-
 		if autoSubscribeNewMembers, ok := diff.GetOk("auto_subscribe_new_members"); ok && autoSubscribeNewMembers.(bool) {
 			return fmt.Errorf("`auto_subscribe_new_members` is only supported for unified groups")
 		}
 
 		if behaviors, ok := diff.GetOk("behaviors"); ok && len(behaviors.(*schema.Set).List()) > 0 {
 			return fmt.Errorf("`behaviors` is only supported for unified groups")
+		}
+
+		if allowExternalSenders, ok := diff.GetOk("external_senders_allowed"); ok && allowExternalSenders.(bool) {
+			return fmt.Errorf("`external_senders_allowed` is only supported for unified groups")
 		}
 
 		if hideFromAddressLists, ok := diff.GetOk("hide_from_address_lists"); ok && hideFromAddressLists.(bool) {
@@ -613,14 +613,14 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
-		if allowExternalSenders := d.Get("allow_external_senders").(bool); allowExternalSenders {
+		if allowExternalSenders := d.Get("external_senders_allowed").(bool); allowExternalSenders {
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
 				},
 				AllowExternalSenders: utils.Bool(allowExternalSenders),
 			}); err != nil {
-				return tf.ErrorDiagF(err, "Failed to set `allow_external_senders` for group with object ID %q", *group.ID)
+				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for group with object ID %q", *group.ID)
 			}
 
 			// Wait for AllowExternalSenders to be updated
@@ -632,7 +632,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 				return utils.Bool(group.AllowExternalSenders != nil && *group.AllowExternalSenders == allowExternalSenders), nil
 			}); err != nil {
-				return tf.ErrorDiagF(err, "Waiting for update of `allow_external_senders` for group with object ID %q", *group.ID)
+				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID)
 			}
 		}
 
@@ -829,14 +829,14 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOk("allow_external_senders"); ok || (groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders) {
+		if v, ok := d.GetOk("external_senders_allowed"); ok || (groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders) {
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
 				},
 				AllowExternalSenders: utils.Bool(v.(bool)),
 			}); err != nil {
-				return tf.ErrorDiagF(err, "Failed to set `allow_external_senders` for group with object ID %q", *group.ID)
+				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for group with object ID %q", *group.ID)
 			}
 
 			// Wait for AllowExternalSenders to be updated
@@ -848,7 +848,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 				return utils.Bool(group.AllowExternalSenders != nil && *group.AllowExternalSenders == v.(bool)), nil
 			}); err != nil {
-				return tf.ErrorDiagF(err, "Waiting for update of `allow_external_senders` for group with object ID %q", *group.ID)
+				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID)
 			}
 		}
 
@@ -1091,8 +1091,8 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	tf.Set(d, "allow_external_senders", allowExternalSenders)
 	tf.Set(d, "auto_subscribe_new_members", autoSubscribeNewMembers)
+	tf.Set(d, "external_senders_allowed", allowExternalSenders)
 	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
 	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 

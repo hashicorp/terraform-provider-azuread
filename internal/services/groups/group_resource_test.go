@@ -508,8 +508,8 @@ resource "azuread_group" "test" {
   security_enabled = true
   theme            = "Pink"
 
-  allow_external_senders     = true
   auto_subscribe_new_members = true
+  external_senders_allowed   = true
   hide_from_address_lists    = true
   hide_from_outlook_clients  = true
 }

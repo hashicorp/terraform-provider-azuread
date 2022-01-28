@@ -59,12 +59,6 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"allow_external_senders": {
-				Description: "Indicates whether people external to the organization can send messages to the group.",
-				Type:        schema.TypeBool,
-				Computed:    true,
-			},
-
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role",
 				Type:        schema.TypeBool,
@@ -110,6 +104,12 @@ func groupDataSource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"external_senders_allowed": {
+				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
@@ -369,8 +369,8 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	tf.Set(d, "allow_external_senders", allowExternalSenders)
 	tf.Set(d, "auto_subscribe_new_members", autoSubscribeNewMembers)
+	tf.Set(d, "external_senders_allowed", allowExternalSenders)
 	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
 	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 

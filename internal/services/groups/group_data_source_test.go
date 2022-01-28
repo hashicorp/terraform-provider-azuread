@@ -128,8 +128,8 @@ func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
 			Config: GroupDataSource{}.unifiedWithExtraSettings(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("allow_external_senders").HasValue("true"),
 				check.That(data.ResourceName).Key("auto_subscribe_new_members").HasValue("true"),
+				check.That(data.ResourceName).Key("external_senders_allowed").HasValue("true"),
 				check.That(data.ResourceName).Key("hide_from_address_lists").HasValue("true"),
 				check.That(data.ResourceName).Key("hide_from_outlook_clients").HasValue("true"),
 			),
