@@ -1,3 +1,10 @@
+## 2.16.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `data.azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` attributes [GH-723]
+* `azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` properties [GH-723]
+
 ## 2.15.0 (January 14, 2022)
 
 IMPROVEMENTS:
