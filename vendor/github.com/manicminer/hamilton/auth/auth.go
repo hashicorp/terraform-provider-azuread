@@ -156,6 +156,21 @@ func NewClientSecretAuthorizer(ctx context.Context, environment environments.Env
 	return conf.TokenSource(ctx, ClientCredentialsSecretType), nil
 }
 
+// NewGitHubOIDCAuthorizer returns an authorizer which acquires a client assertion from a GitHub endpoint, then uses client assertion authentication to obtain an access token.
+func NewGitHubOIDCAuthorizer(ctx context.Context, environment environments.Environment, api environments.Api, tenantId string, auxTenantIds []string, clientId, idTokenRequestUrl, idTokenRequestToken string) (Authorizer, error) {
+	conf := GitHubOIDCConfig{
+		Environment:         environment,
+		TenantID:            tenantId,
+		AuxiliaryTenantIDs:  auxTenantIds,
+		ClientID:            clientId,
+		IDTokenRequestURL:   idTokenRequestUrl,
+		IDTokenRequestToken: idTokenRequestToken,
+		Scopes:              []string{api.DefaultScope()},
+	}
+
+	return conf.TokenSource(ctx), nil
+}
+
 func TokenEndpoint(endpoint environments.AzureADEndpoint, tenant string, version TokenVersion) (e string) {
 	if tenant == "" {
 		tenant = "common"

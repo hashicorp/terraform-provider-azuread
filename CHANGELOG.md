@@ -1,3 +1,37 @@
+## 2.16.0 (January 28, 2022)
+
+IMPROVEMENTS:
+
+* `data.azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` attributes ([#723](https://github.com/terraform-providers/terraform-provider-azuread/issues/723))
+* `azuread_group` - support for the `allow_external_senders`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` properties ([#723](https://github.com/terraform-providers/terraform-provider-azuread/issues/723))
+
+## 2.15.0 (January 14, 2022)
+
+IMPROVEMENTS:
+
+* `data.azuread_group` - support the `display_name_prefix` property ([#716](https://github.com/terraform-providers/terraform-provider-azuread/issues/716))
+
+BUG FIXES:
+
+* `azuread_application` - remove an unnecessary API call that may require additional permissions, when assigning owners ([#713](https://github.com/terraform-providers/terraform-provider-azuread/issues/713))
+* `azuread_service_principal` - remove an unnecessary API call that may require additional permissions, when assigning owners ([#713](https://github.com/terraform-providers/terraform-provider-azuread/issues/713))
+
+## 2.14.0 (January 07, 2022)
+
+FEATURES:
+
+* **New Resource:** `azuread_application_federated_identity_credential` ([#705](https://github.com/terraform-providers/terraform-provider-azuread/issues/705))
+
+IMPROVEMENTS:
+
+* `azuread_service_principal_password`: re-add support for `display_name`, `start_date`, `end_date` and `end_date_relative` properties ([#706](https://github.com/terraform-providers/terraform-provider-azuread/issues/706))
+
+## 2.13.0 (December 15, 2021)
+
+IMPROVEMENTS:
+
+* `azuread_group`: support for `dynamic_memberships` ([#695](https://github.com/terraform-providers/terraform-provider-azuread/issues/695))
+
 ## 2.12.0 (December 03, 2021)
 
 IMPROVEMENTS:

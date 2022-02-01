@@ -65,6 +65,12 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"auto_subscribe_new_members": {
+				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
 			"behaviors": {
 				Description: "The group behaviors for a Microsoft 365 group",
 				Type:        schema.TypeList,
@@ -77,6 +83,44 @@ func groupDataSource() *schema.Resource {
 			"description": {
 				Description: "The optional description of the group",
 				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"dynamic_membership": {
+				Description: "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"rule": {
+							Description: "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+
+			"external_senders_allowed": {
+				Description: "Indicates whether people external to the organization can send messages to the group.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"hide_from_address_lists": {
+				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
+
+			"hide_from_outlook_clients": {
+				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
+				Type:        schema.TypeBool,
 				Computed:    true,
 			},
 
@@ -290,6 +334,45 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "theme", group.Theme)
 	tf.Set(d, "types", group.GroupTypes)
 	tf.Set(d, "visibility", group.Visibility)
+
+	dynamicMembership := make([]interface{}, 0)
+	if group.MembershipRule != nil {
+		enabled := true
+		if group.MembershipRuleProcessingState != nil && *group.MembershipRuleProcessingState == "Paused" {
+			enabled = false
+		}
+		dynamicMembership = append(dynamicMembership, map[string]interface{}{
+			"enabled": enabled,
+			"rule":    group.MembershipRule,
+		})
+	}
+	tf.Set(d, "dynamic_membership", dynamicMembership)
+
+	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
+	if hasGroupType(group.GroupTypes, msgraph.GroupTypeUnified) {
+		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
+		}
+
+		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
+			allowExternalSenders = *groupExtra.AllowExternalSenders
+		}
+		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
+			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+		}
+		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
+			hideFromAddressLists = *groupExtra.HideFromAddressLists
+		}
+		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
+			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		}
+	}
+
+	tf.Set(d, "auto_subscribe_new_members", autoSubscribeNewMembers)
+	tf.Set(d, "external_senders_allowed", allowExternalSenders)
+	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
+	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
 	members, _, err := client.ListMembers(ctx, d.Id())
 	if err != nil {

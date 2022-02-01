@@ -39,9 +39,14 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `assignable_to_role` - Indicates whether this group can be assigned to an Azure Active Directory role.
+* `auto_subscribe_new_members` - Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Only set for Unified groups.
 * `behaviors` - A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.
 * `description` - The optional description of the group.
 * `display_name` - The display name for the group.
+* `dynamic_membership` - A `dynamic_membership` block as documented below.
+* `external_senders_allowed` - Indicates whether people external to the organization can send messages to the group. Only set for Unified groups.
+* `hide_from_address_lists` - Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups. Only set for Unified groups.
+* `hide_from_outlook_clients` - Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web. Only set for Unified groups.
 * `object_id` - The object ID of the group.
 * `mail` - The SMTP address for the group.
 * `mail_enabled` - Whether the group is mail-enabled.
@@ -58,5 +63,12 @@ The following attributes are exported:
 * `proxy_addresses` - List of email addresses for the group that direct to the same group mailbox.
 * `security_enabled` - Whether the group is a security group.
 * `theme` - The colour theme for a Microsoft 365 group. Possible values are `Blue`, `Green`, `Orange`, `Pink`, `Purple`, `Red` or `Teal`. When no theme is set, the value is `null`.
-* `types` - A list of group types configured for the group. The only supported type is `Unified`, which specifies a Microsoft 365 group.
+* `types` - A list of group types configured for the group. Supported values are `DynamicMembership`, which denotes a group with dynamic membership, and `Unified`, which specifies a Microsoft 365 group.
 * `visibility` - The group join policy and group content visibility. Possible values are `Private`, `Public`, or `Hiddenmembership`. Only Microsoft 365 groups can have `Hiddenmembership` visibility.
+
+---
+
+`dynamic_membership` block exports the following:
+
+* `enabled` - Whether rule processing is "On" (true) or "Paused" (false).
+* `rule` - The rule that determines membership of this group.

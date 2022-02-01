@@ -23,16 +23,23 @@ data "azuread_groups" "example" {
 }
 ```
 
+*Look up by display name prefix*
+```terraform
+data "azuread_groups" "sales" {
+  display_name_prefix = "sales-"
+}
+```
+
 *Look up all groups*
 ```terraform
-data "azuread_groups" "example" {
+data "azuread_groups" "all" {
   return_all = true
 }
 ```
 
 *Look up all mail-enabled groups*
 ```terraform
-data "azuread_groups" "example" {
+data "azuread_groups" "mail_enabled" {
   mail_enabled = true
   return_all   = true
 }
@@ -40,7 +47,7 @@ data "azuread_groups" "example" {
 
 *Look up all security-enabled groups that are not mail-enabled*
 ```terraform
-data "azuread_groups" "example" {
+data "azuread_groups" "security_only" {
   mail_enabled     = false
   return_all       = true
   security_enabled = true
@@ -52,12 +59,13 @@ data "azuread_groups" "example" {
 The following arguments are supported:
 
 * `display_names` - (Optional) The display names of the groups.
+* `display_name_prefix` - (Optional) A common display name prefix to match when returning groups.
 * `mail_enabled` - (Optional) Whether the returned groups should be mail-enabled. By itself this does not exclude security-enabled groups. Setting this to `true` ensures all groups are mail-enabled, and setting to `false` ensures that all groups are _not_ mail-enabled. To ignore this filter, omit the property or set it to null. Cannot be specified together with `object_ids`.
 * `object_ids` - (Optional) The object IDs of the groups.
 * `return_all` - (Optional) A flag to denote if all groups should be fetched and returned.
 * `security_enabled` - (Optional) Whether the returned groups should be security-enabled. By itself this does not exclude mail-enabled groups. Setting this to `true` ensures all groups are security-enabled, and setting to `false` ensures that all groups are _not_ security-enabled. To ignore this filter, omit the property or set it to null. Cannot be specified together with `object_ids`.
 
-~> One of `display_names`, `object_ids` or `return_all` should be specified. Either of the first two _may_ be specified as an empty list, in which case no results will be returned.
+~> One of `display_names`, `display_name_prefix`, `object_ids` or `return_all` should be specified. Either `display_name` or `object_ids` _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 

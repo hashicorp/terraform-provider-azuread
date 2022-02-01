@@ -76,6 +76,22 @@ func TestAccGroupDataSource_byObjectIdWithSecurity(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_dynamicMembership(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.dynamicMembership(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("dynamic_membership.#").HasValue("1"),
+				check.That(data.ResourceName).Key("dynamic_membership.0.enabled").HasValue("true"),
+				check.That(data.ResourceName).Key("dynamic_membership.0.rule").HasValue("user.department -eq \"Sales\""),
+			),
+		},
+	})
+}
+
 func TestAccGroupDataSource_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
@@ -99,6 +115,23 @@ func TestAccGroupDataSource_owners(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
+			),
+		},
+	})
+}
+
+func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.unifiedWithExtraSettings(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("auto_subscribe_new_members").HasValue("true"),
+				check.That(data.ResourceName).Key("external_senders_allowed").HasValue("true"),
+				check.That(data.ResourceName).Key("hide_from_address_lists").HasValue("true"),
+				check.That(data.ResourceName).Key("hide_from_outlook_clients").HasValue("true"),
 			),
 		},
 	})
@@ -167,6 +200,16 @@ data "azuread_group" "test" {
 `, GroupResource{}.withThreeMembers(data))
 }
 
+func (GroupDataSource) dynamicMembership(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  object_id = azuread_group.test.object_id
+}
+`, GroupResource{}.dynamicMembership(data))
+}
+
 func (GroupDataSource) owners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -175,4 +218,14 @@ data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
 }
 `, GroupResource{}.withThreeOwners(data))
+}
+
+func (GroupDataSource) unifiedWithExtraSettings(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  object_id = azuread_group.test.object_id
+}
+`, GroupResource{}.unifiedWithExtraSettings(data))
 }
