@@ -30,6 +30,7 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
+		"azuread_claims_mapping_policy":                        servicePrincipalClaimsMappingPolicy(),
 		"azuread_service_principal":                            servicePrincipalResource(),
 		"azuread_service_principal_certificate":                servicePrincipalCertificateResource(),
 		"azuread_service_principal_delegated_permission_grant": servicePrincipalDelegatedPermissionGrantResource(),
