@@ -27,7 +27,7 @@ type GitHubOIDCConfig struct {
 	// ClientID is the application's ID.
 	ClientID string
 
-	// IDTokenRequestURL is URL for GitHub's OIDC provider.
+	// IDTokenRequestURL is the URL for GitHub's OIDC provider.
 	IDTokenRequestURL string
 
 	// IDTokenRequestToken is the bearer token for the request to the OIDC provider.
