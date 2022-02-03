@@ -1,8 +1,8 @@
-## 2.17.0 (Unreleased)
+## 2.17.0 (February 03, 2022)
 
 FEATURES:
 
-* **New Resource:** `azuread_custom_directory_role` [GH-728]
+* **New Resource:** `azuread_custom_directory_role` ([#728](https://github.com/terraform-providers/terraform-provider-azuread/issues/728))
 
 ## 2.16.0 (January 28, 2022)
 
