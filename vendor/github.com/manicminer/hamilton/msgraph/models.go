@@ -1379,7 +1379,7 @@ type UnifiedRoleAssignment struct {
 type UnifiedRoleDefinition struct {
 	DirectoryObject
 
-	Description     *string                  `json:"description,omitempty"`
+	Description     *StringNullWhenEmpty     `json:"description,omitempty"`
 	DisplayName     *string                  `json:"displayName,omitempty"`
 	IsBuiltIn       *bool                    `json:"isBuiltIn,omitempty"`
 	IsEnabled       *bool                    `json:"isEnabled,omitempty"`
@@ -1390,9 +1390,9 @@ type UnifiedRoleDefinition struct {
 }
 
 type UnifiedRolePermission struct {
-	AllowedResourceActions  *[]string `json:"allowedResourceActions,omitempty"`
-	Condition               *string   `json:"condition,omitempty"`
-	ExcludedResourceActions *[]string `json:"excludedResourceActions,omitempty"`
+	AllowedResourceActions  *[]string            `json:"allowedResourceActions,omitempty"`
+	Condition               *StringNullWhenEmpty `json:"condition,omitempty"`
+	ExcludedResourceActions *[]string            `json:"excludedResourceActions,omitempty"`
 }
 
 // User describes a User object.
