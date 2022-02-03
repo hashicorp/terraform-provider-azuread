@@ -1,3 +1,9 @@
+## 2.17.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_custom_directory_role` [GH-728]
+
 ## 2.16.0 (January 28, 2022)
 
 IMPROVEMENTS:
