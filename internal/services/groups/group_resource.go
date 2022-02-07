@@ -67,6 +67,7 @@ func groupResource() *schema.Resource {
 				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 			},
 
 			"behaviors": {
@@ -118,18 +119,21 @@ func groupResource() *schema.Resource {
 				Description: "Indicates whether people external to the organization can send messages to the group.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
 				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
 				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 			},
 
 			"mail_enabled": {
@@ -820,16 +824,11 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
 		// The unified group properties in this block only support delegated auth
 		// Application-authenticated requests will return a 4xx error, so we only
-		// set these when explicitly configured, or when not explicitly configured
-		// (i.e. false) and the group has the property already enabled
+		// set these when explicitly configured
 		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
-		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
-		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
-		}
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOk("external_senders_allowed"); ok || (groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders) {
+		if v, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
@@ -853,7 +852,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// AutoSubscribeNewMembers can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOk("auto_subscribe_new_members"); ok || (groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers) {
+		if v, ok := d.GetOkExists("auto_subscribe_new_members"); ok { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
@@ -877,7 +876,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// HideFromAddressLists can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOk("hide_from_address_lists"); ok || (groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists) {
+		if v, ok := d.GetOkExists("hide_from_address_lists"); ok { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
@@ -901,7 +900,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// HideFromOutlookClients can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOk("hide_from_outlook_clients"); ok || (groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients) {
+		if v, ok := d.GetOkExists("hide_from_outlook_clients"); ok { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					ID: group.ID,
