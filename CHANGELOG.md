@@ -1,8 +1,8 @@
-## 2.18.0 (Unreleased)
+## 2.18.0 (February 11, 2022)
 
 BUG FIXES:
 
-* `azuread_group` - make the `auto_subscribe_new_members`, `external_senders_allowed`, `hide_from_address_lists` and `hide_from_outlook_clients` properties Computed to avoid setting them unnecessarily [GH-731]
+* `azuread_group` - make the `auto_subscribe_new_members`, `external_senders_allowed`, `hide_from_address_lists` and `hide_from_outlook_clients` properties Computed to avoid setting them unnecessarily ([#731](https://github.com/terraform-providers/terraform-provider-azuread/issues/731))
 
 ## 2.17.0 (February 03, 2022)
 
