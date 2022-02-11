@@ -1,3 +1,9 @@
+## 2.18.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - make the `auto_subscribe_new_members`, `external_senders_allowed`, `hide_from_address_lists` and `hide_from_outlook_clients` properties Computed to avoid setting them unnecessarily [GH-731]
+
 ## 2.17.0 (February 03, 2022)
 
 FEATURES:
