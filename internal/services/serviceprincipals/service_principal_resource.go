@@ -317,6 +317,29 @@ func servicePrincipalResource() *schema.Resource {
 				},
 			},
 
+			"token_signing_certificate_name": {
+				Description:  "Name of a token signing certificate created for the service principal. If set 'token_signing_certificate_end_date' must be set as well.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"token_signing_certificate_end_date"},
+				ForceNew:     true,
+			},
+
+			"token_signing_certificate_end_date": {
+				Description:  "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If set 'token_signing_certificate_name' must be set as well.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"token_signing_certificate_name"},
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
+			"preferred_token_signing_key_thumbprint": {
+				Description: "The preferred token signing thumbprint of the principal. Will be filled automatically when a token signing certificate is getting created",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the associated application",
 				Type:        schema.TypeString,
@@ -502,6 +525,27 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("token_signing_certificate_name"); ok {
+		var endDate time.Time
+		if v, ok := d.GetOk("token_signing_certificate_end_date"); ok {
+			endDate, err = time.Parse(time.RFC3339, v.(string))
+			if err != nil {
+				tf.ErrorDiagF(err, "Unable to parse the provided token_signing_certificate_end_date %q: %+v", v, err)
+			}
+		}
+		key, _, err := client.AddTokenSigningCertificate(ctx, d.Id(), msgraph.KeyCredential{
+			DisplayName: utils.String(v.(string)),
+			EndDateTime: &endDate,
+		})
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not add token signing certificate to service principal with object ID: %q", d.Id())
+		}
+
+		if _, err = client.SetPreferredTokenSigningKeyThumbprint(ctx, d.Id(), *key.Thumbprint); err != nil {
+			return tf.ErrorDiagF(err, "Could not set preferred token signing key thumbprint for service principal with object ID: %q", d.Id())
+		}
+	}
+
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
@@ -618,6 +662,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "preferred_token_signing_key_thumbprint", servicePrincipal.PreferredTokenSigningKeyThumbprint)
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
