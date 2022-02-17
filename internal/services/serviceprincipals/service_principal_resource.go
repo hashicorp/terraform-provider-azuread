@@ -317,6 +317,19 @@ func servicePrincipalResource() *schema.Resource {
 				},
 			},
 
+			"token_signing_certificate_name": {
+				Description: "",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
+
+			"preferred_token_signing_key_thumbprint": {
+				Description: "",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the associated application",
 				Type:        schema.TypeString,
@@ -502,6 +515,12 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("token_signing_certificate_name"); ok {
+		client.AddTokenSigningCertificate(ctx, d.Id(), msgraph.KeyCredential{
+			DisplayName: utils.String(v.(string)),
+		})
+	}
+
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
@@ -618,6 +637,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
 	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "preferred_token_signing_key_thumbprint", servicePrincipal.PreferredTokenSigningKeyThumbprint)
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
