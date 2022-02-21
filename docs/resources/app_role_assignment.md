@@ -1,10 +1,14 @@
 ---
-subcategory: "App Role Assignments"
+subcategory: "App Role Assignments (non-authoritative)"
 ---
 
 # Resource: azuread_app_role_assignment
 
 Manages an app role assignment for a group, user or service principal. Can be used to grant admin consent for application permissions.
+
+Use this resource to manage assignments non-authoritatively, allowing other assignments outside of terraform, and only calculating drifts for resources under terraform management.
+
+Note that you should not use both _app_role_assignment_ (nonauthoritative) and _app_role_assignments_ (authoritative) resources to manage app role assignments, or you may get undesired behaviour with multiple successive terraform applies.
 
 ## API Permissions
 

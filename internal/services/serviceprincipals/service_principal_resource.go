@@ -16,6 +16,8 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
+	servicePrincipalsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
+
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -323,6 +325,59 @@ func servicePrincipalResource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"sp_app_role": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Description:      "The unique identifier of the app role",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.UUID,
+						},
+						"allowed_member_types": {
+							Description: "Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both",
+							Type:        schema.TypeSet,
+							Required:    true,
+							MinItems:    1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice(
+									[]string{
+										msgraph.AppRoleAllowedMemberTypeApplication,
+										msgraph.AppRoleAllowedMemberTypeUser,
+									}, false,
+								),
+							},
+						},
+						"description": {
+							Description:      "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
+						},
+						"display_name": {
+							Description:      "Display name for the app role that appears during app role assignment and in consent experiences",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: validate.NoEmptyStrings,
+						},
+						"enabled": {
+							Description: "Determines if the app role is enabled",
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+						},
+						"value": {
+							Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal",
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: servicePrincipalsValidate.RoleScopeClaimValue,
+						},
+					},
+				},
+			},
 			"type": {
 				Description: "Identifies whether the service principal represents an application or a managed identity",
 				Type:        schema.TypeString,
@@ -403,6 +458,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AppId:                      utils.String(d.Get("application_id").(string)),
 		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
+		AppRoles:                   expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List()),
 		Description:                utils.NullableString(tempDescription),
 		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
@@ -524,6 +580,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
 		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
+		AppRoles:                   expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List()),
 		Description:                utils.NullableString(d.Get("description").(string)),
 		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
 		Notes:                      utils.NullableString(d.Get("notes").(string)),
@@ -531,6 +588,10 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       &tags,
+	}
+
+	if err := servicePrincipalDisableAppRoles(ctx, client, &properties, expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List())); err != nil {
+		return tf.ErrorDiagPathF(err, "sp_app_role", "Could not disable App Roles for application with object ID %q", d.Id())
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -604,6 +665,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
 	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
+	tf.Set(d, "sp_app_role", filterServicePrincipalAppRolesByOrigin(servicePrincipal.AppRoles, "ServicePrincipal"))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
 	tf.Set(d, "description", servicePrincipal.Description)

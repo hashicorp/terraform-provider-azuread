@@ -86,6 +86,30 @@ resource "azuread_service_principal" "example" {
 }
 ```
 
+*Create a service principal with service-principal-only AppRoles, eg for AWS SSO federation*
+
+```terraform
+resource "random_uuid" "example_approle1" {}
+
+resource "azuread_application "example" {
+  display_name = "example"
+  ...
+}
+
+resource "azuread_service_principal" "example" {
+  application_id = azuread_application.example.application_id
+
+  sp_app_role {
+    id = random_uuid.example_approle1.result
+    allowed_member_types = [ "User" ]
+    description          = "111111111111-myrole,WAAD"
+    display_name         = "myrole"
+    enabled              = true
+    value                = "arn:aws:iam::111111111111:role/myrole,arn:aws:iam::111111111111:saml-privder/WAAD"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -108,6 +132,7 @@ The following arguments are supported:
 
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
 * `saml_single_sign_on` - (Optional) A `saml_single_sign_on` block as documented below.
+* `sp_app_role` - (Optional)  A collection of `sp_app_role` blocks as documented below. Note that `sp_app_role` are AppRoles which only exist on the Service Principal object. The resultant attribute `approles` below will contain both the underlying Application AppRoles and the Service Principal AppRoles.
 * `tags` - (Optional) A set of tags to apply to the service principal. Cannot be used together with the `feature_tags` block.
 
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of service principals. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values set for the linked application will also propagate to this service principal.
@@ -130,6 +155,18 @@ The following arguments are supported:
 `saml_single_sign_on` supports the following:
 
 * `relay_state` - (Optional) The relative URI the service provider would redirect to after completion of the single sign-on flow.
+
+---
+
+`sp_app_role` block supports the following:
+
+* `allowed_member_types` - (Required) Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both.
+* `description` - (Required) Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences.
+* `display_name` - (Required) Display name for the app role that appears during app role assignment and in consent experiences.
+* `enabled` - (Optional) Determines if the app role is enabled. Defaults to `true`.
+* `id` - (Required) The unique identifier of the app role. Must be a valid UUID.
+
+-> **Tip: Generating a UUID for the `id` field** To generate a value for the `id` field in cases where the actual UUID is not important, you can use the `random_uuid` resource. See the [application example](https://github.com/hashicorp/terraform-provider-azuread/tree/main/examples/application) in the provider repository.
 
 ## Attributes Reference
 
