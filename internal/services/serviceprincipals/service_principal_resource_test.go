@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -32,7 +34,7 @@ func TestAccServicePrincipal_basic(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
@@ -40,10 +42,11 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 	tenantId := os.Getenv("ARM_TENANT_ID")
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
@@ -57,15 +60,17 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 				check.That(data.ResourceName).Key("redirect_uris.#").HasValue("2"),
 				check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADMyOrg"),
 				check.That(data.ResourceName).Key("type").HasValue("Application"),
+				check.That(data.ResourceName).Key("preferred_token_signing_key_thumbprint").MatchesRegex(regexp.MustCompile("^[A-Z0-9]{40}$")),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
 func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
@@ -78,9 +83,9 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("0"),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
@@ -89,7 +94,7 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("2"),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
@@ -100,7 +105,7 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").HasValue("0"),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
@@ -115,13 +120,14 @@ func TestAccServicePrincipal_featureTags(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
 func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
@@ -130,63 +136,63 @@ func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
-			Config: r.complete(data),
+			Config: r.complete(data, endDate),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.noFeatureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 		{
 			Config: r.featureTags(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
@@ -293,7 +299,7 @@ func TestAccServicePrincipal_useExisting(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").Exists(),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
@@ -308,7 +314,7 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("token_signing_certificate_name", "token_signing_certificate_end_date", "use_existing"),
 	})
 }
 
@@ -408,20 +414,22 @@ resource "azuread_application" "test" {
 `, data.RandomInteger, data.UUID(), data.UUID(), data.UUID(), data.UUID())
 }
 
-func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
+func (r ServicePrincipalResource) complete(data acceptance.TestData, endDate string) string {
 	return fmt.Sprintf(`
 %[1]s
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
 
-  account_enabled               = false
-  alternative_names             = ["foo", "bar"]
-  app_role_assignment_required  = true
-  description                   = "An internal app for testing"
-  login_url                     = "https://test-%[2]d.internal/login"
-  notes                         = "Just testing something"
-  preferred_single_sign_on_mode = "saml"
+  account_enabled                = false
+  alternative_names              = ["foo", "bar"]
+  app_role_assignment_required   = true
+  description                    = "An internal app for testing"
+  login_url                      = "https://test-%[2]d.internal/login"
+  notes                          = "Just testing something"
+  preferred_single_sign_on_mode  = "saml"
+  token_signing_certificate_name = "testcert"
+  token_signing_certificate_end_date		 = "%[3]s"
 
   notification_email_addresses = [
     "alerts.internal@hashitown.net",
@@ -439,7 +447,7 @@ resource "azuread_service_principal" "test" {
     "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1",
   ]
 }
-`, r.templateComplete(data), data.RandomInteger)
+`, r.templateComplete(data), data.RandomInteger, endDate)
 }
 
 func (r ServicePrincipalResource) featureTags(data acceptance.TestData) string {

@@ -229,7 +229,7 @@ github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
-# github.com/manicminer/hamilton v0.41.1
+# github.com/manicminer/hamilton v0.41.1 => github.com/o11n/hamilton v0.40.2-0.20220217143703-8395e584f1c4
 ## explicit; go 1.16
 github.com/manicminer/hamilton/auth
 github.com/manicminer/hamilton/environments
@@ -507,3 +507,4 @@ google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/pluginpb
+# github.com/manicminer/hamilton => github.com/o11n/hamilton v0.40.2-0.20220217143703-8395e584f1c4

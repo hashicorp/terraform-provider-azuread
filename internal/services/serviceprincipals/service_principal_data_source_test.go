@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
@@ -85,31 +86,34 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) resour
 }
 
 func (ServicePrincipalDataSource) byApplicationId(data acceptance.TestData) string {
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_service_principal" "test" {
   application_id = azuread_service_principal.test.application_id
 }
-`, ServicePrincipalResource{}.complete(data))
+`, ServicePrincipalResource{}.complete(data, endDate))
 }
 
 func (ServicePrincipalDataSource) byDisplayName(data acceptance.TestData) string {
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_service_principal" "test" {
   display_name = azuread_service_principal.test.display_name
 }
-`, ServicePrincipalResource{}.complete(data))
+`, ServicePrincipalResource{}.complete(data, endDate))
 }
 
 func (ServicePrincipalDataSource) byObjectId(data acceptance.TestData) string {
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_service_principal" "test" {
   object_id = azuread_service_principal.test.object_id
 }
-`, ServicePrincipalResource{}.complete(data))
+`, ServicePrincipalResource{}.complete(data, endDate))
 }

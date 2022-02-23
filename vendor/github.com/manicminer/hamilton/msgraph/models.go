@@ -1044,6 +1044,7 @@ type KeyCredential struct {
 	EndDateTime         *time.Time         `json:"endDateTime,omitempty"`
 	KeyId               *string            `json:"keyId,omitempty"`
 	StartDateTime       *time.Time         `json:"startDateTime,omitempty"`
+	Thumbprint          *string            `json:"thumbprint,omitempty"`
 	Type                KeyCredentialType  `json:"type"`
 	Usage               KeyCredentialUsage `json:"usage"`
 	Key                 *string            `json:"key,omitempty"`
@@ -1274,6 +1275,7 @@ type ServicePrincipal struct {
 	PasswordCredentials                 *[]PasswordCredential         `json:"passwordCredentials,omitempty"`
 	PasswordSingleSignOnSettings        *PasswordSingleSignOnSettings `json:"passwordSingleSignOnSettings,omitempty"`
 	PreferredSingleSignOnMode           *PreferredSingleSignOnMode    `json:"preferredSingleSignOnMode,omitempty"`
+	PreferredTokenSigningKeyThumbprint  *string                       `json:"preferredTokenSigningKeyThumbprint,omitempty"`
 	PreferredTokenSigningKeyEndDateTime *time.Time                    `json:"preferredTokenSigningKeyEndDateTime,omitempty"`
 	PublishedPermissionScopes           *[]PermissionScope            `json:"publishedPermissionScopes,omitempty"`
 	ReplyUrls                           *[]string                     `json:"replyUrls,omitempty"`
