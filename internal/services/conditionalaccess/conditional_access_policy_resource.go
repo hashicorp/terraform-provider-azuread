@@ -451,7 +451,7 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceD
 	switch {
 	case k == "session_controls.#" && old == "0" && new == "1":
 		sessionControlsRaw := d.Get("session_controls").([]interface{})
-		if len(sessionControlsRaw) == 1 {
+		if len(sessionControlsRaw) == 1 && sessionControlsRaw[0] != nil {
 			sessionControls := sessionControlsRaw[0].(map[string]interface{})
 			suppress = true
 			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && v.(bool) {
