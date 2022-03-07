@@ -81,6 +81,7 @@ The following attributes are exported:
 * `application_id` - The application ID (client ID) of the application associated with this service principal.
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `display_name` - The display name of the application associated with this service principal.
+* `object_id` - The object ID of the service principal.
 * `preferred_single_sign_on_mode` - The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps.
 * `saml_metadata_url` - The URL where the service exposes SAML metadata for federation.
 * `service_principal_names` - A list of identifier URI(s), copied over from the associated application.
