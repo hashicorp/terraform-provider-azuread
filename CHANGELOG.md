@@ -1,5 +1,9 @@
 ## 2.19.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* `data.azuread_service_principals` - export the `object_id` property in the `service_principals` list [GH-749]
+
 BUG FIXES:
 
 * `azuread_conditional_access_policy` - fix a crash during the plan phase when `session_controls` is empty [GH-747]
