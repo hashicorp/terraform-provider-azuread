@@ -1,3 +1,9 @@
+## 2.19.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - fix a crash during the plan phase when `session_controls` is empty [GH-747]
+
 ## 2.18.0 (February 11, 2022)
 
 BUG FIXES:
