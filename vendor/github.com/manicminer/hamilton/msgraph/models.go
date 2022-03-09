@@ -540,6 +540,14 @@ type BaseNamedLocation struct {
 	ModifiedDateTime *time.Time  `json:"modifiedDateTime,omitempty"`
 }
 
+type ClaimsMappingPolicy struct {
+	DirectoryObject
+	Definition            *[]string `json:"definition,omitempty"`
+	Description           *string   `json:"description,omitempty"`
+	DisplayName           *string   `json:"displayName,omitempty"`
+	IsOrganizationDefault *bool     `json:"isOrganizationDefault,omitempty"`
+}
+
 type CloudAppSecurityControl struct {
 	IsEnabled            *bool                                                `json:"isEnabled,omitempty"`
 	CloudAppSecurityType *ConditionalAccessCloudAppSecuritySessionControlType `json:"cloudAppSecurityType,omitempty"`
@@ -1250,8 +1258,8 @@ type ScopedRoleMembership struct {
 // ServicePrincipal describes a Service Principal object.
 type ServicePrincipal struct {
 	DirectoryObject
-	Owners *Owners `json:"owners@odata.bind,omitempty"`
-
+	Owners                              *Owners                       `json:"owners@odata.bind,omitempty"`
+	ClaimsMappingPolicies               *[]ClaimsMappingPolicy        `json:"claimsmappingpolicies@odata.bind,omitempty"`
 	AccountEnabled                      *bool                         `json:"accountEnabled,omitempty"`
 	AddIns                              *[]AddIn                      `json:"addIns,omitempty"`
 	AlternativeNames                    *[]string                     `json:"alternativeNames,omitempty"`
