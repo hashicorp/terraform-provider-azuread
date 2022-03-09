@@ -65,6 +65,21 @@ func TestAccAppRoleAssignment_groupForTenantApp(t *testing.T) {
 	})
 }
 
+func TestAccAppRoleAssignment_groupForTenantAppWithoutRole(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
+	r := AppRoleAssignmentResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.groupForTenantAppWithoutRole(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccAppRoleAssignment_userForTenantApp(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
@@ -239,6 +254,31 @@ resource "azuread_app_role_assignment" "test" {
   resource_object_id  = azuread_service_principal.internal.object_id
 }
 `, r.tenantAppTemplate(data), data.RandomInteger)
+}
+
+func (r AppRoleAssignmentResource) groupForTenantAppWithoutRole(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "internal" {
+  display_name = "acctest-AppRoleAssignment-internal-%[1]d"
+}
+
+resource "azuread_service_principal" "internal" {
+  application_id = azuread_application.internal.application_id
+}
+
+resource "azuread_group" "test" {
+  display_name     = "acctest-appRoleAssignment-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_app_role_assignment" "test" {
+  app_role_id         = "00000000-0000-0000-0000-000000000000"
+  principal_object_id = azuread_group.test.object_id
+  resource_object_id  = azuread_service_principal.internal.object_id
+}
+`, data.RandomInteger)
 }
 
 func (r AppRoleAssignmentResource) userForTenantApp(data acceptance.TestData) string {
