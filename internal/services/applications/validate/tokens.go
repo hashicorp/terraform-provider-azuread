@@ -1,9 +1,7 @@
 package validate
 
 import (
-	"fmt"
 	"regexp"
-	"strings"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,15 +40,6 @@ func RoleScopeClaimValue(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
 			Summary:       "Value must be alphanumeric with these allowed characters: !#$%&'()*+,-./:;<=>?@[]^+_`{|}~",
-			AttributePath: path,
-		})
-	}
-
-	// See https://github.com/hashicorp/terraform-provider-azuread/issues/721
-	if strings.EqualFold(v, "User") {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Value cannot have the string value %q", "User"),
 			AttributePath: path,
 		})
 	}
