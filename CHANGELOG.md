@@ -1,8 +1,8 @@
-## 2.19.1 (Unreleased)
+## 2.19.1 (March 11, 2022)
 
 BUG FIXES:
 
-* `azuread_application` - revert an earlier change for validation of role/scope values [GH-756]
+* `azuread_application` - revert an earlier change for validation of role/scope values ([#756](https://github.com/terraform-providers/terraform-provider-azuread/issues/756))
 
 ## 2.19.0 (March 11, 2022)
 
