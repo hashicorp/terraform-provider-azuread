@@ -1,13 +1,13 @@
-## 2.19.0 (Unreleased)
+## 2.19.0 (March 11, 2022)
 
 IMPROVEMENTS:
 
-* `data.azuread_service_principals` - export the `object_id` property in the `service_principals` list [GH-749]
+* `data.azuread_service_principals` - export the `object_id` property in the `service_principals` list ([#749](https://github.com/terraform-providers/terraform-provider-azuread/issues/749))
 
 BUG FIXES:
 
-* `azuread_application` - add a missing validation check for role/scope values [GH-750]
-* `azuread_conditional_access_policy` - fix a crash during the plan phase when `session_controls` is empty [GH-747]
+* `azuread_application` - add a missing validation check for role/scope values ([#750](https://github.com/terraform-providers/terraform-provider-azuread/issues/750))
+* `azuread_conditional_access_policy` - fix a crash during the plan phase when `session_controls` is empty ([#747](https://github.com/terraform-providers/terraform-provider-azuread/issues/747))
 
 ## 2.18.0 (February 11, 2022)
 
