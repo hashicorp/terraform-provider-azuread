@@ -77,7 +77,9 @@ func accessPackageResourceCreate(ctx context.Context, d *schema.ResourceData, me
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
 	properties := msgraph.AccessPackage{
-		CatalogId:     utils.String(d.Get("catalog_id").(string)),
+		Catalog:     &msgraph.AccessPackageCatalog{
+			ID: utils.String(d.Get("catalog_id").(string)),
+		},
 		Description:           utils.String(d.Get("description").(string)),
 		DisplayName:  utils.String(d.Get("display_name").(string)),
 		IsHidden:   utils.Bool(d.Get("is_hidden").(bool)),

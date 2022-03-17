@@ -68,18 +68,20 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							Type: schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"monthly",
-								"quarterly", // Needs models
+								msgraph.AccessReviewRecurranceTypeMonthly,
+								msgraph.AccessReviewRecurranceTypeQuarterly,
+								msgraph.AccessReviewRecurranceTypeHalfYearly,
+								msgraph.AccessReviewRecurranceTypeHalfYearly,
 							}, false),
 						},
 						"reviewer_type": {
 							Type: schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"Self",
-								"Reviewers", // Needs Models
+								msgraph.AccessReviewReviewerTypeSelf,
+								msgraph.AccessReviewReviewerTypeReviewers,
 							}, false),
-							Default: "Self",
+							Default: msgraph.AccessReviewReviewerTypeSelf,
 						},
 						"start_date_time": {
 						Type: schema.TypeString,
@@ -96,6 +98,18 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							//MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"data_type": {
+										Type: schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											odata.ShortTypeSingleUser,
+											odata.ShortTypeGroupMembers,
+											odata.ShortTypeConnectedOrganizationMembers,
+											odata.ShortTypeRequestorManager,
+											odata.ShortTypeInternalSponsors,
+											odata.ShortTypeExternalSponsors,
+										}, false),
+									},
 									"id": {
 										Type: schema.TypeString,
 										Required: true,
@@ -110,6 +124,14 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 										Optional: true,
 										Default: false,
 										Description: "Specify whether user or group is a backup approver",
+									},
+									"manager_level": {
+										Type: schema.TypeInt,
+										Optional: true,
+										ValidateFunc: validation.IntInSlice([]int{
+											1,
+											2,
+											}),
 									},
 								},
 							},
@@ -227,6 +249,18 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 										//MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"data_type": {
+													Type: schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														odata.ShortTypeSingleUser,
+														odata.ShortTypeGroupMembers,
+														odata.ShortTypeConnectedOrganizationMembers,
+														odata.ShortTypeRequestorManager,
+														odata.ShortTypeInternalSponsors,
+														odata.ShortTypeExternalSponsors,
+													}, false),
+												},
 												"id": {
 													Type: schema.TypeString,
 													Required: true,
@@ -241,6 +275,14 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 													Optional: true,
 													Default: false,
 													Description: "Specify whether user or group is a backup approver",
+												},
+												"manager_level": {
+													Type: schema.TypeInt,
+													Optional: true,
+													ValidateFunc: validation.IntInSlice([]int{
+														1,
+														2,
+														}),
 												},
 											},
 										},
@@ -251,6 +293,18 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 										//MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"data_type": {
+													Type: schema.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														odata.ShortTypeSingleUser,
+														odata.ShortTypeGroupMembers,
+														odata.ShortTypeConnectedOrganizationMembers,
+														odata.ShortTypeRequestorManager,
+														odata.ShortTypeInternalSponsors,
+														odata.ShortTypeExternalSponsors,
+													}, false),
+												},
 												"id": {
 													Type: schema.TypeString,
 													Required: true,
@@ -265,6 +319,14 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 													Optional: true,
 													Default: false,
 													Description: "Specify whether user or group is a backup approver",
+												},
+												"manager_level": {
+													Type: schema.TypeInt,
+													Optional: true,
+													ValidateFunc: validation.IntInSlice([]int{
+														1,
+														2,
+														}),
 												},
 											},
 										},
@@ -305,13 +367,18 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 						Optional: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								// "data_type": {
-								// 	Type: schema.TypeString,
-								// 	Required: true,
-								// 	ValidateFunc: validation.StringInSlice([]string{
-								// 		//TODO
-								// 	}, false),
-								// },
+								"data_type": {
+									Type: schema.TypeString,
+									Required: true,
+									ValidateFunc: validation.StringInSlice([]string{
+										odata.ShortTypeSingleUser,
+										odata.ShortTypeGroupMembers,
+										odata.ShortTypeConnectedOrganizationMembers,
+										odata.ShortTypeRequestorManager,
+										odata.ShortTypeInternalSponsors,
+										odata.ShortTypeExternalSponsors,
+									}, false),
+								},
 								"id": {
 									Type: schema.TypeString,
 									Required: true,
@@ -324,6 +391,11 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 								"backup": {
 									Type: schema.TypeBool,
 									Computed: true,
+								},
+								"manager_level": {
+									Type: schema.TypeInt,
+									Computed: true,
+									Default: nil,
 								},
 							},
 						},
@@ -341,7 +413,15 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 						"id": {
 							Type: schema.TypeString,
 							//ValidateFunc: validation.IsUUID,
+							Computed: true,
+						},
+						"data_type": {
+							Type: schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"TextInputQuestion",
+								"MultipleChoiceQuestion",
+							}, false),
 						},
 						"required": {
 							Type: schema.TypeBool,
@@ -355,7 +435,6 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 						"text": {
 							Required: true,
 							Type: schema.TypeList,
-							RequiredWith: []string{"questions.0.choices"},
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -383,20 +462,20 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 								},
 							},
 						},
-						"is_single_line_question": {
+						"single_line_question": {
 							Type: schema.TypeBool,
 							Optional: true,
-							ConflictsWith: []string{"questions.0.choices", "questions.0.allows_multiple_selection"},
+							//ConflictsWith: []string{"questions.0.allows_multiple_selection"},
 						},
 						"allows_multiple_selection": {
 							Type: schema.TypeBool,
 							Optional: true,
-							ConflictsWith: []string{"questions.0.is_single_line_question"},
+							//ConflictsWith: []string{"questions.0.single_line_question"},
 						},
 						"choices": {
 							Type: schema.TypeList,
 							Optional: true,
-							RequiredWith: []string{"questions.0.allows_multiple_selection"},
+							//RequiredWith: []string{"questions.0.allows_multiple_selection"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"actual_value": {
@@ -442,45 +521,66 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 	}
 }
 
+func expandODataTypeShortToLong(shortType string) (odata.Type, error) {
+	switch shortType {
+	case odata.ShortTypeSingleUser:
+		return odata.TypeSingleUser, nil
+	case odata.ShortTypeGroupMembers:
+		return odata.TypeGroupMembers, nil
+	case odata.ShortTypeConnectedOrganizationMembers:
+		return odata.TypeConnectedOrganizationMembers, nil
+	case odata.ShortTypeRequestorManager:
+		return odata.TypeRequestorManager, nil
+	case odata.ShortTypeInternalSponsors:
+		return odata.TypeInternalSponsors, nil
+	case odata.ShortTypeExternalSponsors:
+		return odata.TypeExternalSponsors, nil
+	case "TextInputQuestion":
+		return odata.TypeAccessPackageTextInputQuestion, nil
+	case "MultipleChoiceQuestion":
+		return odata.TypeAccessPackageMultipleChoiceQuestion, nil
+	}
+	return "", fmt.Errorf("No return value from data_type cast %v", utils.String(shortType))
+}
+
+func flattenODataTypeLongToShort(longType odata.Type) (string, error) {
+	switch longType {
+	case odata.TypeSingleUser:
+		return odata.ShortTypeSingleUser, nil
+	case odata.TypeGroupMembers:
+		return odata.ShortTypeGroupMembers, nil
+	case odata.TypeConnectedOrganizationMembers:
+		return odata.ShortTypeConnectedOrganizationMembers, nil
+	case odata.TypeRequestorManager:
+		return odata.ShortTypeRequestorManager, nil
+	case odata.TypeInternalSponsors:
+		return odata.ShortTypeInternalSponsors, nil
+	case odata.TypeExternalSponsors:
+		return odata.ShortTypeExternalSponsors, nil
+	case odata.TypeAccessPackageTextInputQuestion:
+		return "TextInputQuestion", nil
+	case odata.TypeAccessPackageMultipleChoiceQuestion:
+		return "MultipleChoiceQuestion", nil
+	}
+	return "", fmt.Errorf("No return value from data_type cast %v", utils.String(longType))
+}
+
 // Generated via terrassist github.com/manicminer/hamilton/msgraph AccessPackageAssignmentPolicy
-
-// func expandAccessPackageAssignmentPolicy(input []interface{}) msgraph.AccessPackageAssignmentPolicy {
-// 	if len(input) == 0 || input[0] == nil {
-// 			return msgraph.AccessPackageAssignmentPolicy{}
-// 	}
-// 	b := input[0].(map[string]interface{})
-// 	output := msgraph.AccessPackageAssignmentPolicy{
-// 			AccessPackageId:         utils.String(b["access_package_id"].(string)),
-// 			AccessReviewSettings:    expandAssignmentReviewSettingsPtr(b["access_review_settings"].([]interface{})),
-// 			CanExtend:               utils.Bool(b["can_extend"].(bool)),
-// 			CreatedBy:               utils.String(b["created_by"].(string)),
-// 			CreatedDateTime:         expandTimePtr(b["created_date"].([]interface{})),
-// 			Description:             utils.String(b["description"].(string)),
-// 			DisplayName:             utils.String(b["display_name"].(string)),
-// 			DurationInDays:          utils.Int32(b["duration_in_days"].(int32)),
-// 			ExpirationDateTime:      expandTimePtr(b["expiration_date_time"].([]interface{})),
-// 			ID:                      utils.String(b["id"].(string)),
-// 			ModifiedBy:              utils.String(b["modified_by"].(string)),
-// 			ModifiedDateTime:        expandTimePtr(b["modified_date_time"].([]interface{})),
-// 			Questions:               expandAccessPackageQuestionSlicePtr(b["questions"].([]interface{})),
-// 			RequestApprovalSettings: expandApprovalSettingsPtr(b["request_approval_settings"].([]interface{})),
-// 			RequestorSettings:       expandRequestorSettingsPtr(b["requestor_settings"].([]interface{})),
-// 	}
-// 	return output
-// }
-
 func expandAssignmentReviewSettingsPtr(input []interface{}) *msgraph.AssignmentReviewSettings {
 	if len(input) == 0 || input[0] == nil {
 			return nil
 	}
 	b := input[0].(map[string]interface{})
 	output := &msgraph.AssignmentReviewSettings{
-			DurationInDays: utils.Int32(int32(b["duration_in_days"].(int))),
-			IsEnabled:      utils.Bool(b["enabled"].(bool)),
-			RecurrenceType: utils.String(b["recurrence_type"].(string)),
-			ReviewerType:   utils.String(b["reviewer_type"].(string)),
-			Reviewers:      expandUserSetSlicePtr(b["reviewers"].([]interface{})),
-			StartDateTime:  expandTimePtr(b["start_date_time"].(string)),
+			AccessReviewTimeoutBehavior:     b["access_review_timeout_behavior"].(string),
+			DurationInDays:                  utils.Int32(int32(b["duration_in_days"].(int32))),
+			IsAccessRecommendationEnabled:   utils.Bool(b["access_recommendation_enabled"].(bool)),
+			IsApprovalJustificationRequired: utils.Bool(b["approval_justification_required"].(bool)),
+			IsEnabled:                       utils.Bool(b["enabled"].(bool)),
+			RecurrenceType:                  b["recurrence_type"].(string),
+			ReviewerType:                    b["reviewer_type"].(string),
+			Reviewers:                       expandUserSetSlicePtr(b["reviewers"].([]interface{})),
+			StartDateTime:                   expandTimePtr(b["start_date_time"].(string)),
 	}
 	return output
 }
@@ -502,17 +602,29 @@ func expandUserSetSlicePtr(input []interface{}) *[]msgraph.UserSet {
 	output := make([]msgraph.UserSet, 0)
 	for _, elem := range input {
 			elem := elem.(map[string]interface{})
-
-			if elem["backup"] == nil {
-				elem["backup"] = false //UserSet is used for allowed requestors, backup makes no sense so just silently set this here
+			ODataType, err := expandODataTypeShortToLong(elem["data_type"].(string))
+			if err != nil {
+				// Cry about it
+			}
+			//We need to handle omission when its not applicable as cannot nil int so split out 
+			if elem["manager_level"] == nil {
+				output = append(output, msgraph.UserSet{
+					Description:  utils.String(elem["description"].(string)),
+					ID:           utils.String(elem["id"].(string)),
+					IsBackup:     utils.Bool(elem["backup"].(bool)),
+					ODataType:    &ODataType,
+			})
+			}
+			if int32(elem["manager_level"].(int)) > 0 {
+				output = append(output, msgraph.UserSet{
+					Description:  utils.String(elem["description"].(string)),
+					ID:           utils.String(elem["id"].(string)),
+					IsBackup:     utils.Bool(elem["backup"].(bool)),
+					ManagerLevel: utils.Int32(int32(elem["manager_level"].(int))),
+					ODataType:    &ODataType,
+			})
 			}
 
-			output = append(output, msgraph.UserSet{
-					//ODataType:   utils.String(elem["object_type"].(string)),
-					Description: utils.String(elem["description"].(string)),
-					ID:          utils.String(elem["id"].(string)),
-					IsBackup:    utils.Bool(elem["backup"].(bool)),
-			})
 	}
 	return &output
 }
@@ -538,9 +650,9 @@ func expandApprovalStageSlicePtr(input []interface{}) *[]msgraph.ApprovalStage {
 	for _, elem := range input {
 			elem := elem.(map[string]interface{})
 			output = append(output, msgraph.ApprovalStage{
-					ApprovalStageTimeOutInDays:      utils.Int32(int32(elem["timeout_in_days"].(int))),
+					ApprovalStageTimeOutInDays:      utils.Int32(int32(elem["approval_stage_time_out_in_days"].(int32))),
 					EscalationApprovers:             expandUserSetSlicePtr(elem["escalation_approvers"].([]interface{})),
-					EscalationTimeInMinutes:         utils.Int32(int32(elem["escalation_time_in_minutes"].(int))),
+					EscalationTimeInMinutes:         utils.Int32(int32(elem["escalation_time_in_minutes"].(int32))),
 					IsApproverJustificationRequired: utils.Bool(elem["approver_justification_required"].(bool)),
 					IsEscalationEnabled:             utils.Bool(elem["escalation_enabled"].(bool)),
 					PrimaryApprovers:                expandUserSetSlicePtr(elem["primary_approvers"].([]interface{})),
@@ -564,14 +676,22 @@ func expandAccessPackageQuestionSlicePtr(input []interface{}) *[]msgraph.AccessP
 	if len(input) == 0 {
 			return nil
 	}
+
 	output := make([]msgraph.AccessPackageQuestion, 0)
 	for _, elem := range input {
 			elem := elem.(map[string]interface{})
+			ODataType, err := expandODataTypeShortToLong(elem["data_type"].(string))
+			if err != nil {
+				//Cry about it
+			}
 			output = append(output, msgraph.AccessPackageQuestion{
-					ID:         utils.String(elem["id"].(string)),
-					IsRequired: utils.Bool(elem["required"].(bool)),
-					Sequence:   utils.Int32(int32(elem["sequence"].(int))),
-					Text:       expandAccessPackageLocalizedContentPtr(elem["text"].([]interface{})),
+					Choices:              expandAccessPackageMultipleChoiceQuestionsSlicePtr(elem["choices"].([]interface{})),
+					ID:                   utils.String(elem["id"].(string)),
+					IsRequired:           utils.Bool(elem["required"].(bool)),
+					IsSingleLineQuestion: utils.Bool(elem["single_line_question"].(bool)),
+					ODataType:            &ODataType,
+					Sequence:             utils.Int32(int32(elem["sequence"].(int))),
+					Text:                 expandAccessPackageLocalizedContentPtr(elem["text"].([]interface{})),
 			})
 	}
 	return &output
@@ -601,57 +721,21 @@ func expandAccessPackageLocalizedTextsSlicePtr(input []interface{}) *[]msgraph.A
 	}
 	return &output
 }
-// func flattenAccessPackageAssignmentPolicy(input msgraph.AccessPackageAssignmentPolicy) []interface{} {
-// 	var accessPackageId string
-// 	if input.AccessPackageId != nil {
-// 			accessPackageId = *input.AccessPackageId
-// 	}
-// 	var canExtend bool
-// 	if input.CanExtend != nil {
-// 			canExtend = *input.CanExtend
-// 	}
-// 	var createdBy string
-// 	if input.CreatedBy != nil {
-// 			createdBy = *input.CreatedBy
-// 	}
-// 	var description string
-// 	if input.Description != nil {
-// 			description = *input.Description
-// 	}
-// 	var displayName string
-// 	if input.DisplayName != nil {
-// 			displayName = *input.DisplayName
-// 	}
-// 	var durationInDays int32
-// 	if input.DurationInDays != nil {
-// 			durationInDays = *input.DurationInDays
-// 	}
-// 	var id string
-// 	if input.ID != nil {
-// 			id = *input.ID
-// 	}
-// 	var modifiedBy string
-// 	if input.ModifiedBy != nil {
-// 			modifiedBy = *input.ModifiedBy
-// 	}
-// 	return []interface{}{map[string]interface{}{
-// 			"access_package_id":         accessPackageId,
-// 			"access_review_settings":    flattenAssignmentReviewSettingsPtr(input.AccessReviewSettings),
-// 			"can_extend":                canExtend,
-// 			"created_by":                createdBy,
-// 			"created_date":         flattenTimePtr(input.CreatedDateTime),
-// 			"description":               description,
-// 			"display_name":              displayName,
-// 			"duration_in_days":          durationInDays,
-// 			"expiration_date_time":      flattenTimePtr(input.ExpirationDateTime),
-// 			"id":                        id,
-// 			"modified_by":               modifiedBy,
-// 			"modified_date_time":        flattenTimePtr(input.ModifiedDateTime),
-// 			"questions":                 flattenAccessPackageQuestionSlicePtr(input.Questions),
-// 			"request_approval_settings": flattenApprovalSettingsPtr(input.RequestApprovalSettings),
-// 			"requestor_settings":        flattenRequestorSettingsPtr(input.RequestorSettings),
-// 	}}
-// }
+func expandAccessPackageMultipleChoiceQuestionsSlicePtr(input []interface{}) *[]msgraph.AccessPackageMultipleChoiceQuestions {
+	if len(input) == 0 {
+			return nil
+	}
+	output := make([]msgraph.AccessPackageMultipleChoiceQuestions, 0)
+	for _, elem := range input {
+			elem := elem.(map[string]interface{})
+			output = append(output, msgraph.AccessPackageMultipleChoiceQuestions{
+					ActualValue:  utils.String(elem["actual_value"].(string)),
+					DisplayValue: expandAccessPackageLocalizedContentPtr(elem["display_value"].([]interface{})),
+					//ODataType:    utils.String(elem["data_type"].(odata.Type)),
+			})
+	}
+	return &output
+}
 func flattenAssignmentReviewSettingsPtr(input *msgraph.AssignmentReviewSettings) []interface{} {
 	if input == nil {
 			return []interface{}{}
@@ -660,25 +744,28 @@ func flattenAssignmentReviewSettingsPtr(input *msgraph.AssignmentReviewSettings)
 	if input.IsEnabled != nil {
 			isEnabled = *input.IsEnabled
 	}
-	var recurrenceType string
-	if input.RecurrenceType != nil {
-			recurrenceType = *input.RecurrenceType
-	}
-	var reviewerType string
-	if input.ReviewerType != nil {
-			reviewerType = *input.ReviewerType
-	}
 	var durationInDays int32
 	if input.DurationInDays != nil {
 			durationInDays = *input.DurationInDays
 	}
+	var isAccessRecommendationEnabled bool
+	if input.IsAccessRecommendationEnabled != nil {
+			isAccessRecommendationEnabled = *input.IsAccessRecommendationEnabled
+	}
+	var isApprovalJustificationRequired bool
+	if input.IsApprovalJustificationRequired != nil {
+			isApprovalJustificationRequired = *input.IsApprovalJustificationRequired
+	}
 	return []interface{}{map[string]interface{}{
-			"duration_in_days": durationInDays,
-			"enabled":       isEnabled,
-			"recurrence_type":  recurrenceType,
-			"reviewer_type":    reviewerType,
-			"reviewers":        flattenUserSetSlicePtr(input.Reviewers),
-			"start_date_time":  flattenTimePtr(input.StartDateTime),
+			"access_review_timeout_behavior":     input.AccessReviewTimeoutBehavior,
+			"duration_in_days":                   durationInDays,
+			"access_recommendation_enabled":   isAccessRecommendationEnabled,
+			"approval_justification_required": isApprovalJustificationRequired,
+			"enabled":                         isEnabled,
+			"recurrence_type":                    input.RecurrenceType,
+			"reviewer_type":                      input.ReviewerType,
+			"reviewers":                          flattenUserSetSlicePtr(input.Reviewers),
+			"start_date_time":                    flattenTimePtr(input.StartDateTime),
 	}}
 }
 func flattenTimePtr(input *time.Time) []interface{} {
@@ -693,6 +780,10 @@ func flattenUserSetSlicePtr(input *[]msgraph.UserSet) []interface{} {
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
+			var oDataType string
+			if elem.ODataType != nil {
+					oDataType = *elem.ODataType
+			}
 			var isBackup bool
 			if elem.IsBackup != nil {
 					isBackup = *elem.IsBackup
@@ -705,15 +796,16 @@ func flattenUserSetSlicePtr(input *[]msgraph.UserSet) []interface{} {
 			if elem.Description != nil {
 					description = *elem.Description
 			}
-			// var oDataType string
-			// if elem.ODataType != nil {
-			// 		description = *elem.ODataType
-			// }
+			var managerLevel int32
+			if elem.ManagerLevel != nil {
+					managerLevel = *elem.ManagerLevel
+			}
 			output = append(output, map[string]interface{}{
-					//"data_type":  oDataType,
-					"description": description,
-					"id":          id,
-					"backup":   isBackup,
+					"description":   description,
+					"id":            id,
+					"backup":     isBackup,
+					"manager_level": managerLevel,
+					"data_type":   oDataType,
 			})
 	}
 	return output
@@ -765,7 +857,7 @@ func flattenApprovalStageSlicePtr(input *[]msgraph.ApprovalStage) []interface{} 
 					escalationTimeInMinutes = *elem.EscalationTimeInMinutes
 			}
 			output = append(output, map[string]interface{}{
-					"timeout_in_days":    approvalStageTimeOutInDays,
+					"approval_stage_time_out_in_days":    approvalStageTimeOutInDays,
 					"escalation_approvers":               flattenUserSetSlicePtr(elem.EscalationApprovers),
 					"escalation_time_in_minutes":         escalationTimeInMinutes,
 					"approver_justification_required": isApproverJustificationRequired,
@@ -795,6 +887,14 @@ func flattenAccessPackageQuestionSlicePtr(input *[]msgraph.AccessPackageQuestion
 	}
 	output := make([]interface{}, 0)
 	for _, elem := range *input {
+		    var oDataTypeString string
+			var err error
+			if elem.ODataType != nil {
+				oDataTypeString, err = flattenODataTypeLongToShort(*elem.ODataType)
+				if err != nil {
+					//Cry
+				}
+			}
 			var id string
 			if elem.ID != nil {
 					id = *elem.ID
@@ -807,11 +907,18 @@ func flattenAccessPackageQuestionSlicePtr(input *[]msgraph.AccessPackageQuestion
 			if elem.Sequence != nil {
 					sequence = *elem.Sequence
 			}
+			var isSingleLineQuestion bool
+			if elem.IsSingleLineQuestion != nil {
+					isSingleLineQuestion = *elem.IsSingleLineQuestion
+			}
 			output = append(output, map[string]interface{}{
-					"id":          id,
-					"required": isRequired,
-					"sequence":    sequence,
-					"text":        flattenAccessPackageLocalizedContentPtr(elem.Text),
+					"choices":                 flattenAccessPackageMultipleChoiceQuestionsSlicePtr(elem.Choices),
+					"id":                      id,
+					"required":             isRequired,
+					"single_line_question": isSingleLineQuestion,
+					"data_type":             oDataTypeString,
+					"sequence":                sequence,
+					"text":                    flattenAccessPackageLocalizedContentPtr(elem.Text),
 			})
 	}
 	return output
@@ -850,6 +957,29 @@ func flattenAccessPackageLocalizedTextsSlicePtr(input *[]msgraph.AccessPackageLo
 	}
 	return output
 }
+func flattenAccessPackageMultipleChoiceQuestionsSlicePtr(input *[]msgraph.AccessPackageMultipleChoiceQuestions) []interface{} {
+	if input == nil {
+			return []interface{}{}
+	}
+	output := make([]interface{}, 0)
+	for _, elem := range *input {
+			// var oDataType string
+			// if elem.ODataType != nil {
+			// 		oDataType = *elem.ODataType
+			// }
+			var actualValue string
+			if elem.ActualValue != nil {
+					actualValue = *elem.ActualValue
+			}
+			output = append(output, map[string]interface{}{
+					"actual_value":  actualValue,
+					"display_value": flattenAccessPackageLocalizedContentPtr(elem.DisplayValue),
+					//"data_type":   oDataType,
+			})
+	}
+	return output
+}
+
 // End terrassist
 
 func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

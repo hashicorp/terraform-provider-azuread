@@ -54,10 +54,10 @@ func accessPackageCatalogResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.AccessPackageCatalogStatePublished,
-					msgraph.AccessPackagCatalogStateUnPublished,
+					"published",
+					"unpublished",
 				}, false),
-				Default: msgraph.AccessPackageCatalogStatusPublished,
+				Default: "published",
 			},
 
 			"description": {
@@ -92,7 +92,7 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *schema.ResourceD
 
 	properties := msgraph.AccessPackageCatalog{
 		DisplayName:     utils.String(d.Get("display_name").(string)),
-		CatalogStatus:           d.Get("catalog_status").(msgraph.AccessPackageCatalogStatus),
+		State:           d.Get("state").(msgraph.AccessPackageCatalogStatus),
 		CatalogType:  msgraph.AccessPackageCatalogTypeUserManaged,
 		Description:   utils.String(d.Get("description").(string)),
 		IsExternallyVisible: utils.Bool(d.Get("is_externally_visible").(bool)),
@@ -118,8 +118,8 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *schema.ResourceD
 	properties := msgraph.AccessPackageCatalog{
 		ID:              utils.String(d.Id()),
 		DisplayName:     utils.String(d.Get("display_name").(string)),
-		State:           d.Get("catalog_status").(msgraph.AccessPackageCatalogState),
-		//CatalogType:     msgraph.AccessPackageCatalogTypeUserManaged,
+		State:           d.Get("state").(msgraph.AccessPackageCatalogState),
+		CatalogType:     msgraph.AccessPackageCatalogTypeUserManaged,
 		Description:   utils.String(d.Get("description").(string)),
 		IsExternallyVisible: utils.Bool(d.Get("is_externally_visible").(bool)),
 	}
