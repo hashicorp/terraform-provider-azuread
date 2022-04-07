@@ -12,6 +12,7 @@ var services = mapOf(
         "domains" to "Domains",
         "groups" to "Groups",
         "invitations" to "Invitations",
+        "policies" to "Policies",
         "serviceprincipals" to "Service Principals",
         "users" to "Users"
 )
