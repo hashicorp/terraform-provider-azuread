@@ -2,7 +2,7 @@
 subcategory: "Policies"
 ---
 
-# Resource: claims_mapping_policy
+# Resource: azuread_claims_mapping_policy
 
 Manages a Claims Mapping Policy within Azure Active Directory.
 
@@ -17,7 +17,7 @@ When authenticated with a user principal, this resource requires one of the foll
 ## Example Usage
 
 ```terraform
-resource "azuread_claims_mapping_policy" "test" {
+resource "azuread_claims_mapping_policy" "my_policy" {
   definition = [
     jsonencode(
       {
@@ -42,8 +42,8 @@ resource "azuread_claims_mapping_policy" "test" {
       }
     ),
   ]
-  description  = "hcl-created-policy"
-  display_name = "hcl-create-policy"
+  description  = "Policy created with Terraform"
+  display_name = "My Policy"
 }
 ```
 
@@ -51,11 +51,9 @@ resource "azuread_claims_mapping_policy" "test" {
 
 The following arguments are supported:
 
-* `definition` - (Required) The claims mapping policy. This is a JSON formatted
-  string, for which the [`jsonencode()` function](https://www.terraform.io/language/functions/jsonencode)
-  can be used.
+* `definition` - (Required) The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.
 * `description` - (Required) The description for this Claims Mapping Policy.
-* `display_name` - (Required) The friendly name for this Claims Mapping Policy.
+* `display_name` - (Required) The display name for this Claims Mapping Policy.
 
 ## Attributes Reference
 
@@ -68,5 +66,5 @@ In addition to all arguments above, the following attributes are exported:
 Claims Mapping Policy can be imported using the `id`, e.g.
 
 ```shell
-terraform import azuread_claims_mapping_policy.id 00000000-0000-0000-0000-000000000000
+terraform import azuread_claims_mapping_policy.my_policy 00000000-0000-0000-0000-000000000000
 ```

@@ -2,6 +2,7 @@ package serviceprincipals
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -15,29 +16,29 @@ import (
 	"github.com/manicminer/hamilton/odata"
 )
 
-func servicePrincipalClaimsMappingPolicyAssignment() *schema.Resource {
+func servicePrincipalClaimsMappingPolicyAssignmentResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: servicePrincipalClaimsMappingPolicyAssignmentResourceCreate,
 		ReadContext:   servicePrincipalClaimsMappingPolicyAssignmentResourceRead,
 		DeleteContext: servicePrincipalClaimsMappingPolicyAssignmentResourceDelete,
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
-			_, err := parse.ObjectSubResourceID(id, "azuread_claims_mapping_policy")
+			_, err := parse.ObjectSubResourceID(id, "claimsMappingPolicy")
 			return err
 		}),
 
 		Schema: map[string]*schema.Schema{
 			"claims_mapping_policy_id": {
 				Description: "ID of the claims mapping policy to assign",
-				ForceNew:    true,
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 			},
 
 			"service_principal_id": {
-				Description: "ID of the service principal to assign the policy to",
-				ForceNew:    true,
+				Description: "Object ID of the service principal for which to assign the policy",
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 			},
 		},
@@ -45,28 +46,26 @@ func servicePrincipalClaimsMappingPolicyAssignment() *schema.Resource {
 }
 
 func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	policyClient := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
-	policyID := d.Get("claims_mapping_policy_id").(string)
-	policy, _, err := policyClient.Get(ctx, policyID, odata.Query{})
-	if err != nil {
-		return tf.ErrorDiagF(
-			err,
-			"Could not find ClaimsMappingPolicy, claims_mapping_policy_id: %q",
-			policyID,
-		)
-	}
+	policyId := d.Get("claims_mapping_policy_id").(string)
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(d.Get("service_principal_id").(string)),
 		},
 		ClaimsMappingPolicies: &[]msgraph.ClaimsMappingPolicy{
-			*policy,
+			{
+				DirectoryObject: msgraph.DirectoryObject{
+					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+						client.BaseClient.Endpoint, client.BaseClient.TenantId, policyId))),
+					ID: &policyId,
+				},
+			},
 		},
 	}
-	_, err = spClient.AssignClaimsMappingPolicy(ctx, &properties)
+
+	_, err := client.AssignClaimsMappingPolicy(ctx, &properties)
 	if err != nil {
 		return tf.ErrorDiagF(
 			err,
@@ -76,12 +75,12 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 		)
 	}
 
-	resourceID := parse.NewClaimsMappingPolicyAssignmentID(
+	id := parse.NewClaimsMappingPolicyAssignmentID(
 		*properties.DirectoryObject.ID,
 		*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID,
 	)
 
-	d.SetId(resourceID.String())
+	d.SetId(id.String())
 
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)
 }
@@ -94,7 +93,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Conte
 		return tf.ErrorDiagPathF(err, "id", "Parsing Claims Mapping Policy Assignment ID %q", d.Id())
 	}
 
-	spID := id.ServicePolicyId
+	spID := id.ServicePrincipalId
 
 	policyList, status, err := client.ListClaimsMappingPolicy(ctx, spID)
 	if err != nil {
@@ -139,7 +138,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Con
 
 	claimIDs := []string{id.ClaimsMappingPolicyId}
 
-	spID := id.ServicePolicyId
+	spID := id.ServicePrincipalId
 
 	sp := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{

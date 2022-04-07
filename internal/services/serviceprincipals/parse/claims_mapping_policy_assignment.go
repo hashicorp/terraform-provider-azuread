@@ -4,27 +4,27 @@ import "fmt"
 
 type ClaimsMappingPolicyAssignmentId struct {
 	ObjectSubResourceId
-	ServicePolicyId       string
+	ServicePrincipalId    string
 	ClaimsMappingPolicyId string
 }
 
 func NewClaimsMappingPolicyAssignmentID(ServicePolicyId, ClaimsMappingPolicyId string) ClaimsMappingPolicyAssignmentId {
 	return ClaimsMappingPolicyAssignmentId{
-		ObjectSubResourceId:   NewObjectSubResourceID(ServicePolicyId, "azuread_claims_mapping_policy", ClaimsMappingPolicyId),
-		ServicePolicyId:       ServicePolicyId,
+		ObjectSubResourceId:   NewObjectSubResourceID(ServicePolicyId, "claimsMappingPolicy", ClaimsMappingPolicyId),
+		ServicePrincipalId:    ServicePolicyId,
 		ClaimsMappingPolicyId: ClaimsMappingPolicyId,
 	}
 }
 
 func ClaimsMappingPolicyAssignmentID(idString string) (*ClaimsMappingPolicyAssignmentId, error) {
-	id, err := ObjectSubResourceID(idString, "azuread_claims_mapping_policy")
+	id, err := ObjectSubResourceID(idString, "claimsMappingPolicy")
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse azuread_claims_mapping_policy ID: %v", err)
+		return nil, fmt.Errorf("unable to parse Claims Mapping Policy Assignment ID: %v", err)
 	}
 
 	return &ClaimsMappingPolicyAssignmentId{
 		ObjectSubResourceId:   *id,
-		ServicePolicyId:       id.objectId,
+		ServicePrincipalId:    id.objectId,
 		ClaimsMappingPolicyId: id.subId,
 	}, nil
 }

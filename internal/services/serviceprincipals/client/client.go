@@ -1,13 +1,11 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	ClaimsMappingPolicyClient       *msgraph.ClaimsMappingPolicyClient
 	DelegatedPermissionGrantsClient *msgraph.DelegatedPermissionGrantsClient
 	DirectoryObjectsClient          *msgraph.DirectoryObjectsClient
 	ServicePrincipalsClient         *msgraph.ServicePrincipalsClient
@@ -23,13 +21,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	servicePrincipalsClient := msgraph.NewServicePrincipalsClient(o.TenantID)
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
-	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient(o.TenantID)
-	o.ConfigureClient(&claimsMappingPolicyClient.BaseClient)
-
 	return &Client{
 		DelegatedPermissionGrantsClient: delegatedPermissionGrantsClient,
 		DirectoryObjectsClient:          directoryObjectsClient,
 		ServicePrincipalsClient:         servicePrincipalsClient,
-		ClaimsMappingPolicyClient:       claimsMappingPolicyClient,
 	}
 }
