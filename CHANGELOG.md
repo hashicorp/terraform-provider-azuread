@@ -1,9 +1,9 @@
-## 2.20.0 (Unreleased)
+## 2.20.0 (April 08, 2022)
 
 FEATURES:
 
-* **New Resource:** `azuread_claims_mapping_policy` [GH-733] [GH-766]
-* **New Resource:** `azuread_service_principal_claims_mapping_policy_assignment` [GH-733] [GH-766]
+* **New Resource:** `azuread_claims_mapping_policy` ([#733](https://github.com/hashicorp/terraform-provider-azuread/issues/733)) ([#766](https://github.com/hashicorp/terraform-provider-azuread/issues/766))
+* **New Resource:** `azuread_service_principal_claims_mapping_policy_assignment` ([#733](https://github.com/hashicorp/terraform-provider-azuread/issues/733)) ([#766](https://github.com/hashicorp/terraform-provider-azuread/issues/766))
 
 ## 2.19.1 (March 11, 2022)
 
