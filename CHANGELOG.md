@@ -1,3 +1,10 @@
+## 2.20.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_claims_mapping_policy` [GH-733] [GH-766]
+* **New Resource:** `azuread_service_principal_claims_mapping_policy_assignment` [GH-733] [GH-766]
+
 ## 2.19.1 (March 11, 2022)
 
 BUG FIXES:
