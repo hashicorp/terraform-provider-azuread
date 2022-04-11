@@ -42,7 +42,6 @@ resource "azuread_claims_mapping_policy" "my_policy" {
       }
     ),
   ]
-  description  = "Policy created with Terraform"
   display_name = "My Policy"
 }
 ```
@@ -52,7 +51,6 @@ resource "azuread_claims_mapping_policy" "my_policy" {
 The following arguments are supported:
 
 * `definition` - (Required) The claims mapping policy. This is a JSON formatted string, for which the [`jsonencode()`](https://www.terraform.io/language/functions/jsonencode) function can be used.
-* `description` - (Required) The description for this Claims Mapping Policy.
 * `display_name` - (Required) The display name for this Claims Mapping Policy.
 
 ## Attributes Reference
