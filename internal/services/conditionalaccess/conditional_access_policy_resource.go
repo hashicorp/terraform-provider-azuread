@@ -76,8 +76,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"included_applications": {
-										Type:     schema.TypeList,
-										Required: true,
+										Type:         schema.TypeList,
+										Optional:     true,
+										AtLeastOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -94,8 +95,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									},
 
 									"included_user_actions": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Type:         schema.TypeList,
+										Optional:     true,
+										AtLeastOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
