@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
@@ -40,4 +42,75 @@ func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryOb
 	}
 
 	return nil
+}
+
+type QueryOptions struct {
+	ConsistencyLevel *odata.ConsistencyLevel
+	ResultCount      bool
+}
+
+func read(ctx context.Context, client *msgraph.UsersClient, searchValue string, qOptions QueryOptions,
+	queryPropertyName string, schemaPropertyName string, propertyLogSynonym string) (*msgraph.User, diag.Diagnostics) {
+	query := odata.Query{
+		Filter: fmt.Sprintf("%v eq '%s'",
+			queryPropertyName,
+			utils.EscapeSingleQuote(searchValue)),
+	}
+	if qOptions.ConsistencyLevel != nil {
+		query.ConsistencyLevel = *qOptions.ConsistencyLevel
+	}
+	if qOptions.ResultCount {
+		query.Count = qOptions.ResultCount
+	}
+	users, _, err := client.List(ctx, query)
+	if err != nil {
+		return nil, tf.ErrorDiagF(err, "Finding user with %v: %q", propertyLogSynonym, searchValue)
+	}
+	if users == nil {
+		return nil, tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+	}
+	count := len(*users)
+	if count > 1 {
+		return nil, tf.ErrorDiagPathF(nil, schemaPropertyName, "More than one user found with %v: %q", propertyLogSynonym, searchValue)
+	} else if count == 0 {
+		return nil, tf.ErrorDiagPathF(nil, schemaPropertyName, "User with %v %q was not found", propertyLogSynonym, searchValue)
+	}
+
+	return &(*users)[0], nil
+}
+
+func listRead(ctx context.Context, client *msgraph.UsersClient, searchElements []interface{}, ignoreMissing bool, qOptions QueryOptions,
+	queryPropertyName string, schemaPropertyName string, propertyLogSynonym string) ([]msgraph.User, diag.Diagnostics) {
+	users := []msgraph.User{}
+	for _, v := range searchElements {
+		query := odata.Query{
+			Filter: fmt.Sprintf("%v eq '%s'",
+				queryPropertyName,
+				utils.EscapeSingleQuote(v.(string))),
+		}
+		if qOptions.ConsistencyLevel != nil {
+			query.ConsistencyLevel = *qOptions.ConsistencyLevel
+		}
+		if qOptions.ResultCount {
+			query.Count = qOptions.ResultCount
+		}
+		result, _, err := client.List(ctx, query)
+		if err != nil {
+			return users, tf.ErrorDiagF(err, "Finding user with %v: %q", propertyLogSynonym, v)
+		}
+		if result == nil {
+			return users, tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		count := len(*result)
+		if count > 1 {
+			return users, tf.ErrorDiagPathF(nil, schemaPropertyName, "More than one user found with %v: %q", propertyLogSynonym, v)
+		} else if count == 0 {
+			if ignoreMissing {
+				continue
+			}
+			return users, tf.ErrorDiagPathF(nil, schemaPropertyName, "User with %v %q was not found", propertyLogSynonym, v)
+		}
+		users = append(users, (*result)[0])
+	}
+	return users, nil
 }

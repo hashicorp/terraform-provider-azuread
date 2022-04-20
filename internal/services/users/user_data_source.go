@@ -3,7 +3,6 @@ package users
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -31,7 +29,7 @@ func userDataSource() *schema.Resource {
 				Description:      "The email alias of the user",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail_nickname", "object_id", "onpremises_sam_account_name", "user_principal_name"},
 				Computed:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
@@ -41,8 +39,17 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail_nickname", "object_id", "onpremises_sam_account_name", "user_principal_name"},
 				ValidateDiagFunc: validate.UUID,
+			},
+
+			"onpremises_sam_account_name": {
+				Description:      "The on-premise SAM account name of the user",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"mail_nickname", "object_id", "onpremises_sam_account_name", "user_principal_name"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			"user_principal_name": {
@@ -50,7 +57,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail_nickname", "object_id", "onpremises_sam_account_name", "user_principal_name"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
@@ -216,12 +223,6 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"onpremises_sam_account_name": {
-				Description: "The on-premise SAM account name of the user",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
 			"onpremises_security_identifier": {
 				Description: "The on-premise security identifier (SID) of the user",
 				Type:        schema.TypeString,
@@ -314,25 +315,15 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	client.BaseClient.DisableRetries = true
 
 	var user msgraph.User
+	qOptions := QueryOptions{}
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(upn)),
+		rUser, diag := read(ctx, client, upn, qOptions,
+			"userPrincipalName", "user_principal_name", "UPN")
+		if diag != nil {
+			return diag
 		}
-		users, _, err := client.List(ctx, query)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Finding user with UPN: %q", upn)
-		}
-		if users == nil {
-			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
-		}
-		count := len(*users)
-		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "user_principal_name", "More than one user found with UPN: %q", upn)
-		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "user_principal_name", "User with UPN %q was not found", upn)
-		}
-		user = (*users)[0]
+		user = *rUser
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		u, status, err := client.Get(ctx, objectId, odata.Query{})
 		if err != nil {
@@ -346,23 +337,24 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		user = *u
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
+		rUser, diag := read(ctx, client, mailNickname, qOptions,
+			"mailNickname", "mail_nickname", "email alias")
+		if diag != nil {
+			return diag
 		}
-		users, _, err := client.List(ctx, query)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Finding user with email alias: %q", mailNickname)
+		user = *rUser
+	} else if onPremisesSamAccount, ok := d.Get("onpremises_sam_account_name").(string); ok && onPremisesSamAccount != "" {
+		// Eventual Consistency and Count parameter need to be set, in order to filter by onPremisesSamAccountName
+		// It is considered an Advanced Query https://docs.microsoft.com/en-us/graph/aad-advanced-queries
+		eventualConsistency := odata.ConsistencyLevelEventual
+		qOptions.ResultCount = true
+		qOptions.ConsistencyLevel = &eventualConsistency
+		rUser, diag := read(ctx, client, onPremisesSamAccount, qOptions,
+			"onPremisesSamAccountName", "onpremises_sam_account_name", "on-prem SAM account")
+		if diag != nil {
+			return diag
 		}
-		if users == nil {
-			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
-		}
-		count := len(*users)
-		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", upn)
-		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", upn)
-		}
-		user = (*users)[0]
+		user = *rUser
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` or `mail_nickname` must be supplied")
 	}

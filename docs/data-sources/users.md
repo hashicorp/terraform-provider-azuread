@@ -29,10 +29,11 @@ The following arguments are supported:
 * `ignore_missing` - (Optional) Ignore missing users and return users that were found. The data source will still fail if no users are found. Defaults to false.
 * `mail_nicknames` - (Optional) The email aliases of the users.
 * `object_ids` - (Optional) The object IDs of the users.
+* `onpremises_sam_account_names` - (Optional) The on-premise SAM account names of the users.
 * `return_all` - (Optional) When `true`, the data source will return all users. Cannot be used with `ignore_missing`. Defaults to false.
 * `user_principal_names` - (Optional) The user principal names (UPNs) of the users.
 
-~> Either `return_all`, or one of `user_principal_names`, `object_ids` or `mail_nicknames` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+~> Either `return_all`, or one of `user_principal_names`, `object_ids`, `onpremises_sam_account_names` or `mail_nicknames` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 
@@ -40,6 +41,7 @@ The following attributes are exported:
 
 * `mail_nicknames` - The email aliases of the users.
 * `object_ids` - The object IDs of the users.
+* `onpremises_sam_account_names` - The on-premise SAM account names of the users.
 * `user_principal_names` - The user principal names (UPNs) of the users.
 * `users` - A list of users. Each `user` object provides the attributes documented below.
 

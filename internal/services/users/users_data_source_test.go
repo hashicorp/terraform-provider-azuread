@@ -120,6 +120,36 @@ func TestAccUsersDataSource_returnAll(t *testing.T) {
 	}})
 }
 
+func TestAccUsersDataSource_byOnPremisesSamAccountNames(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byOnPremisesSamAccountNames(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("1"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("1"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("1"),
+			check.That(data.ResourceName).Key("onpremises_sam_account_names.#").HasValue("1"),
+			check.That(data.ResourceName).Key("users.#").HasValue("1"),
+		),
+	}})
+}
+
+func TestAccUsersDataSource_byOnPremisesSamAccountNamesIgnoreMissing(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byOnPremisesSamAccountNamesIgnoreMissing(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("1"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("1"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("1"),
+			check.That(data.ResourceName).Key("onpremises_sam_account_names.#").HasValue("1"),
+			check.That(data.ResourceName).Key("users.#").HasValue("1"),
+		),
+	}})
+}
+
 func (UsersDataSource) byUserPrincipalNames(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -194,6 +224,32 @@ data "azuread_users" "test" {
     azuread_user.testA.mail_nickname,
     "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
     azuread_user.testB.mail_nickname,
+  ]
+}
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+}
+
+func (UsersDataSource) byOnPremisesSamAccountNames(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  onpremises_sam_account_names = [azuread_user.testC.onpremises_sam_account_name]
+}
+`, UserResource{}.threeUsersABC(data))
+}
+
+func (UsersDataSource) byOnPremisesSamAccountNamesIgnoreMissing(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  ignore_missing = true
+
+  onpremises_sam_account_names = [
+    azuread_user.testA.onpremises_sam_account_name,
+    "notarealuser-%[2]d",
+    azuread_user.testC.onpremises_sam_account_name,
   ]
 }
 `, UserResource{}.threeUsersABC(data), data.RandomInteger)

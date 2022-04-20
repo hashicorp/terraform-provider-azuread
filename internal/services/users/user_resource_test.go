@@ -236,9 +236,10 @@ resource "azuread_user" "testB" {
 }
 
 resource "azuread_user" "testC" {
-  user_principal_name = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctestUser-%[1]d-C"
-  password            = "%[2]s"
+  user_principal_name     = "acctestUser.%[1]d.C@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name            = "acctestUser-%[1]d-C"
+  onpremises_immutable_id = "%[1]d"
+  password                = "%[2]s"
 }
 `, data.RandomInteger, data.RandomPassword)
 }
