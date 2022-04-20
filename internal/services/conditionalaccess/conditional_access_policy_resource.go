@@ -222,7 +222,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 						"locations": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -249,7 +249,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 						"platforms": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{

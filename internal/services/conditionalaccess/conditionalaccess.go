@@ -288,7 +288,7 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAccessPlatforms {
 	result := msgraph.ConditionalAccessPlatforms{}
 	if len(in) == 0 || in[0] == nil {
-		return &result
+		return nil
 	}
 
 	config := in[0].(map[string]interface{})
