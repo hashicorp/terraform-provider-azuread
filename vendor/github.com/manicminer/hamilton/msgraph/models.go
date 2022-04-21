@@ -564,8 +564,8 @@ type ConditionalAccessConditionSet struct {
 	ClientAppTypes   *[]ConditionalAccessClientAppType `json:"clientAppTypes,omitempty"`
 	Devices          *ConditionalAccessDevices         `json:"devices,omitempty"`
 	DeviceStates     *ConditionalAccessDeviceStates    `json:"deviceStates,omitempty"`
-	Locations        *ConditionalAccessLocations       `json:"locations,omitempty"`
-	Platforms        *ConditionalAccessPlatforms       `json:"platforms,omitempty"`
+	Locations        *ConditionalAccessLocations       `json:"locations"`
+	Platforms        *ConditionalAccessPlatforms       `json:"platforms"`
 	SignInRiskLevels *[]ConditionalAccessRiskLevel     `json:"signInRiskLevels,omitempty"`
 	UserRiskLevels   *[]ConditionalAccessRiskLevel     `json:"userRiskLevels,omitempty"`
 	Users            *ConditionalAccessUsers           `json:"users,omitempty"`
@@ -1052,6 +1052,7 @@ type KeyCredential struct {
 	EndDateTime         *time.Time         `json:"endDateTime,omitempty"`
 	KeyId               *string            `json:"keyId,omitempty"`
 	StartDateTime       *time.Time         `json:"startDateTime,omitempty"`
+	Thumbprint          *string            `json:"thumbprint,omitempty"`
 	Type                KeyCredentialType  `json:"type"`
 	Usage               KeyCredentialUsage `json:"usage"`
 	Key                 *string            `json:"key,omitempty"`
@@ -1282,6 +1283,7 @@ type ServicePrincipal struct {
 	PasswordCredentials                 *[]PasswordCredential         `json:"passwordCredentials,omitempty"`
 	PasswordSingleSignOnSettings        *PasswordSingleSignOnSettings `json:"passwordSingleSignOnSettings,omitempty"`
 	PreferredSingleSignOnMode           *PreferredSingleSignOnMode    `json:"preferredSingleSignOnMode,omitempty"`
+	PreferredTokenSigningKeyThumbprint  *string                       `json:"preferredTokenSigningKeyThumbprint,omitempty"`
 	PreferredTokenSigningKeyEndDateTime *time.Time                    `json:"preferredTokenSigningKeyEndDateTime,omitempty"`
 	PublishedPermissionScopes           *[]PermissionScope            `json:"publishedPermissionScopes,omitempty"`
 	ReplyUrls                           *[]string                     `json:"replyUrls,omitempty"`
