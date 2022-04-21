@@ -19,15 +19,19 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
+const appRoleAssignmentsResourceName = "azuread_app_role_assignments"
+
 func appRoleAssignmentsResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: appRoleAssignmentsResourceCreate,
 		ReadContext:   appRoleAssignmentsResourceRead,
+		UpdateContext: appRoleAssignmentsResourceUpdate,
 		DeleteContext: appRoleAssignmentsResourceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Read:   schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -102,23 +106,28 @@ func appRoleAssignmentsResourceCreate(ctx context.Context, d *schema.ResourceDat
 	servicePrincipalsClient := meta.(*clients.Client).AppRoleAssignments.ServicePrincipalsClient
 
 	appRoleId := d.Get("app_role_id").(string)
-	principalIds := d.Get("principal_object_ids").(*schema.Set).List()
-	resourceId := d.Get("resource_object_id").(string)
+	principalObjectIds := d.Get("principal_object_ids").(*schema.Set).List()
+	resourceObjectId := d.Get("resource_object_id").(string)
 	query := odata.Query{}
-	if _, status, err := servicePrincipalsClient.Get(ctx, resourceId, query); err != nil {
+
+	// Check to see if the resourceId is a valid servicePrincipal resourceId
+	if _, status, err := servicePrincipalsClient.Get(ctx, resourceObjectId, query); err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(err, "principal_object_id", "Service principal not found for resource (Object ID: %q)", resourceId)
+			return tf.ErrorDiagPathF(err, "resource_object_id", "Service principal not found for resource (Object ID: %q)", resourceObjectId)
 		}
-		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceId)
+		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceObjectId)
 	}
 
-	var id string
-	for _, p := range principalIds {
-		principalId := p.(string)
+	// TODO: Check to see if the appRoleId is a valid appRole on the servicePrincipal
+
+	//tf.Set(d, "sp_app_role", filterServicePrincipalAppRolesByOrigin(servicePrincipal.AppRoles, "ServicePrincipal"))
+
+	for _, p := range principalObjectIds {
+		principalObjectId := p.(string)
 		properties := msgraph.AppRoleAssignment{
 			AppRoleId:   utils.String(appRoleId),
-			PrincipalId: utils.String(principalId),
-			ResourceId:  utils.String(resourceId),
+			PrincipalId: utils.String(principalObjectId),
+			ResourceId:  utils.String(resourceObjectId),
 		}
 		appRoleAssignment, _, err := client.Assign(ctx, properties)
 		if err != nil {
@@ -132,75 +141,155 @@ func appRoleAssignmentsResourceCreate(ctx context.Context, d *schema.ResourceDat
 		if appRoleAssignment.ResourceId == nil || *appRoleAssignment.ResourceId == "" {
 			return tf.ErrorDiagF(errors.New("Resource ID returned for app role assignment is nil"), "Bad API response")
 		}
-
-		id = parse.NewAppRoleAssignmentID(*appRoleAssignment.ResourceId, "all").String()
 	}
-	d.SetId(id)
+	d.SetId(appRoleId)
 
-	return appRoleAssignmentResourceRead(ctx, d, meta)
+	return appRoleAssignmentsResourceRead(ctx, d, meta)
 }
 
 func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
-
-	id, err := parse.AppRoleAssignmentID(d.Id())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing app role assignments with ID %q", d.Id())
-	}
-
+	appRoleId := d.Id()
+	resourceObjectId := d.Get("resource_object_id").(string)
 	query := odata.Query{}
-	appRoleAssignments, status, err := client.List(ctx, id.ResourceId, query)
+	appRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
+
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Resource Service Principal %q was not found - removing from state!", id.ResourceId)
+			log.Printf("[DEBUG] AppRole %q on ServicePrincipal %q was not found - removing from state!", appRoleId, resourceObjectId)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "retrieving app role assignments for resource with object ID: %q", id.ResourceId)
+		return tf.ErrorDiagF(err, "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
 	}
+
 	if appRoleAssignments == nil {
-		return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for resource with object ID: %q", id.ResourceId)
+		return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
 	}
 
 	var listAppRoleAssignments []msgraph.AppRoleAssignment
 	var listPrincipalObjectIds []*string
 	var listPrincipalDisplayNames []*string
 	var listPrincipalTypes []*string
+	var listPrincipals []*map[string]string
 	for _, assignment := range *appRoleAssignments {
 		if assignment.Id != nil {
 			appRoleAssignment := &assignment
 			listPrincipalObjectIds = append(listPrincipalObjectIds, appRoleAssignment.PrincipalId)
 			listPrincipalDisplayNames = append(listPrincipalDisplayNames, appRoleAssignment.PrincipalDisplayName)
 			listPrincipalTypes = append(listPrincipalTypes, appRoleAssignment.PrincipalType)
+			// make new principal object
+			principal := make(map[string]string)
+			principal["display_name"] = *appRoleAssignment.PrincipalDisplayName
+			principal["object_id"] = *appRoleAssignment.PrincipalId
+			principal["object_type"] = *appRoleAssignment.PrincipalType
+			listPrincipals = append(listPrincipals, &principal)
 		}
-	}
-	if len(listAppRoleAssignments) == 0 {
-		log.Printf("[DEBUG] App Role Assignments for Resource %q was not found - removing from state!", id.ResourceId)
-		d.SetId("")
-		return nil
 	}
 
 	tf.Set(d, "app_role_id", listAppRoleAssignments[0].AppRoleId)
 	tf.Set(d, "principal_display_names", listPrincipalDisplayNames)
 	tf.Set(d, "principal_object_ids", listPrincipalObjectIds)
 	tf.Set(d, "principal_types", listPrincipalTypes)
+	tf.Set(d, "principals", listPrincipals)
 	tf.Set(d, "resource_display_name", listAppRoleAssignments[0].ResourceDisplayName)
 	tf.Set(d, "resource_object_id", listAppRoleAssignments[0].ResourceId)
 
 	return nil
 }
 
-func appRoleAssignmentsResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 
-	id, err := parse.AppRoleAssignmentID(d.Id())
+	if _, ok := d.GetOk("principal_object_ids"); ok && d.HasChange("principal_object_ids") {
+
+		appRoleId := d.Id()
+		resourceObjectId := d.Get("resource_object_id").(string)
+		query := odata.Query{}
+		currentAppRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
+		if err != nil {
+			if status == http.StatusNotFound {
+				log.Printf("[DEBUG] AppRole %q was not found - removing from state!", appRoleId)
+				d.SetId("")
+				return nil
+			}
+			return tf.ErrorDiagF(err, "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
+		}
+		if currentAppRoleAssignments == nil {
+			return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
+		}
+
+		for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
+			removeCurrentAppRoleAssignment := true
+			for _, tfPrincipalObjectId := range d.Get("principal_object_ids").([]string) {
+				if *currentAppRoleAssignment.PrincipalId == tfPrincipalObjectId {
+					removeCurrentAppRoleAssignment = false
+				}
+			}
+			if removeCurrentAppRoleAssignment {
+				_, err := client.Remove(ctx, appRoleId, *currentAppRoleAssignment.PrincipalId)
+				if err != nil {
+					return tf.ErrorDiagPathF(err, "ids", "Could not remove app role assignment for Principal %q on AppRole %q on ServicePrincipal %q", *currentAppRoleAssignment.PrincipalId, appRoleId, resourceObjectId)
+				}
+			}
+		}
+
+		for _, tfPrincipalObjectId := range d.Get("principal_object_ids").([]string) {
+			addNewAppRoleAssignment := true
+			for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
+				if *currentAppRoleAssignment.PrincipalId == tfPrincipalObjectId {
+					addNewAppRoleAssignment = false
+				}
+			}
+			if addNewAppRoleAssignment {
+				properties := msgraph.AppRoleAssignment{
+					AppRoleId:   utils.String(appRoleId),
+					PrincipalId: utils.String(tfPrincipalObjectId),
+					ResourceId:  utils.String(resourceObjectId),
+				}
+				appRoleAssignment, _, err := client.Assign(ctx, properties)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not update AppRole %q on ServicePrincipal %q with new app role assignment for Principal %q", appRoleId, resourceObjectId, tfPrincipalObjectId)
+				}
+
+				if appRoleAssignment.Id == nil || *appRoleAssignment.Id == "" {
+					return tf.ErrorDiagF(errors.New("ID returned for new app role assignment is nil"), "Bad API response")
+				}
+
+				if appRoleAssignment.ResourceId == nil || *appRoleAssignment.ResourceId == "" {
+					return tf.ErrorDiagF(errors.New("Resource ID returned for new app role assignment is nil"), "Bad API response")
+				}
+			}
+		}
+	}
+	return appRoleAssignmentsResourceRead(ctx, d, meta)
+}
+
+func appRoleAssignmentsResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
+	appRoleId := d.Id()
+
+	query := odata.Query{}
+	currentAppRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing app role assignment with ID %q", d.Id())
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] AppRole %q was not found - removing from state!", appRoleId)
+			d.SetId("")
+			return nil
+		}
+		return tf.ErrorDiagF(err, "retrieving app role assignments for AppRole: %q", appRoleId)
+	}
+	if currentAppRoleAssignments == nil {
+		return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for AppRole: %q", appRoleId)
 	}
 
-	if status, err := client.Remove(ctx, id.ResourceId, id.AssignmentId); err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting app role assignment for resource %q with ID %q, got status %d", id.ResourceId, id.AssignmentId, status)
+	for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
+		_, err := client.Remove(ctx, appRoleId, *currentAppRoleAssignment.PrincipalId)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "ids", "Could not remove app role assignment")
+		}
 	}
 
+	d.SetId("")
 	return nil
 }

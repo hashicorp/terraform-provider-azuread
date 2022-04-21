@@ -561,6 +561,69 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
+func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	objectId := d.Id()
+
+	servicePrincipal, status, err := client.Get(ctx, objectId, odata.Query{})
+	if err != nil {
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
+			d.SetId("")
+			return nil
+		}
+
+		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
+	}
+
+	servicePrincipalNames := make([]string, 0)
+	if servicePrincipal.ServicePrincipalNames != nil {
+		for _, name := range *servicePrincipal.ServicePrincipalNames {
+			// Exclude the app ID from the list of service principal names
+			if servicePrincipal.AppId == nil || name != *servicePrincipal.AppId {
+				servicePrincipalNames = append(servicePrincipalNames, name)
+			}
+		}
+	}
+
+	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled)
+	tf.Set(d, "alternative_names", tf.FlattenStringSlicePtr(servicePrincipal.AlternativeNames))
+	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
+	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
+	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
+	tf.Set(d, "sp_app_role", filterServicePrincipalAppRolesByOrigin(servicePrincipal.AppRoles, "ServicePrincipal"))
+	tf.Set(d, "application_id", servicePrincipal.AppId)
+	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
+	tf.Set(d, "description", servicePrincipal.Description)
+	tf.Set(d, "display_name", servicePrincipal.DisplayName)
+	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
+	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
+	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
+	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
+	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
+	tf.Set(d, "notes", servicePrincipal.Notes)
+	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
+	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
+	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
+	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
+	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
+	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
+	tf.Set(d, "service_principal_names", servicePrincipalNames)
+	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
+	tf.Set(d, "tags", servicePrincipal.Tags)
+	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
+
+	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID)
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for service principal with object ID %q", d.Id())
+	}
+	tf.Set(d, "owners", owners)
+
+	return nil
+}
+
 func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
@@ -633,69 +696,6 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return servicePrincipalResourceRead(ctx, d, meta)
-}
-
-func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	objectId := d.Id()
-
-	servicePrincipal, status, err := client.Get(ctx, objectId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
-			d.SetId("")
-			return nil
-		}
-
-		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
-	}
-
-	servicePrincipalNames := make([]string, 0)
-	if servicePrincipal.ServicePrincipalNames != nil {
-		for _, name := range *servicePrincipal.ServicePrincipalNames {
-			// Exclude the app ID from the list of service principal names
-			if servicePrincipal.AppId == nil || name != *servicePrincipal.AppId {
-				servicePrincipalNames = append(servicePrincipalNames, name)
-			}
-		}
-	}
-
-	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled)
-	tf.Set(d, "alternative_names", tf.FlattenStringSlicePtr(servicePrincipal.AlternativeNames))
-	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
-	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
-	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
-	tf.Set(d, "sp_app_role", filterServicePrincipalAppRolesByOrigin(servicePrincipal.AppRoles, "ServicePrincipal"))
-	tf.Set(d, "application_id", servicePrincipal.AppId)
-	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
-	tf.Set(d, "description", servicePrincipal.Description)
-	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
-	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
-	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
-	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
-	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
-	tf.Set(d, "notes", servicePrincipal.Notes)
-	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
-	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.PublishedPermissionScopes))
-	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.PublishedPermissionScopes))
-	tf.Set(d, "object_id", servicePrincipal.ID)
-	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
-	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
-	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
-	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
-	tf.Set(d, "service_principal_names", servicePrincipalNames)
-	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
-	tf.Set(d, "tags", servicePrincipal.Tags)
-	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
-
-	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for service principal with object ID %q", d.Id())
-	}
-	tf.Set(d, "owners", owners)
-
-	return nil
 }
 
 func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
