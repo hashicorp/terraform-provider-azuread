@@ -78,7 +78,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"included_applications": {
 										Type:         schema.TypeList,
 										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -97,7 +97,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									"included_user_actions": {
 										Type:         schema.TypeList,
 										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -326,6 +326,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					},
 				},
 			},
+
 			"grant_controls": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -376,6 +377,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					},
 				},
 			},
+
 			"session_controls": {
 				Type:             schema.TypeList,
 				Optional:         true,
