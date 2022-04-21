@@ -1,3 +1,10 @@
+## 2.21.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - the `included_applications` property in the `conditions` block is now optional [GH-775]
+* `azuread_conditional_access_policy` - the `locations` and `platforms` blocks are now optional [GH-775]
+
 ## 2.20.0 (April 08, 2022)
 
 FEATURES:
