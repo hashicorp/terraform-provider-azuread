@@ -76,8 +76,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"included_applications": {
-										Type:     schema.TypeList,
-										Required: true,
+										Type:         schema.TypeList,
+										Optional:     true,
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -94,8 +95,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									},
 
 									"included_user_actions": {
-										Type:     schema.TypeList,
-										Optional: true,
+										Type:         schema.TypeList,
+										Optional:     true,
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -222,7 +224,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 						"locations": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -249,7 +251,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 						"platforms": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -324,6 +326,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					},
 				},
 			},
+
 			"grant_controls": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -374,6 +377,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 					},
 				},
 			},
+
 			"session_controls": {
 				Type:             schema.TypeList,
 				Optional:         true,
