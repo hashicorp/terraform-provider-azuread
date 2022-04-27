@@ -307,8 +307,11 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 		if err != nil {
 			return tf.ErrorDiagF(err, "Listing service principals for filter %q", query.Filter)
 		}
-		if result == nil {
-			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		if result == nil || len(*result) == 0 {
+			return tf.ErrorDiagF(fmt.Errorf("No service principals found matching filter: %q", query.Filter), "Service principal not found")
+		}
+		if len(*result) > 1 {
+			return tf.ErrorDiagF(fmt.Errorf("Found multiple service principals matching filter: %q", query.Filter), "Multiple service principals found")
 		}
 
 		for _, sp := range *result {

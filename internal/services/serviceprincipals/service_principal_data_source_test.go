@@ -3,10 +3,10 @@ package serviceprincipals_test
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -33,6 +33,18 @@ func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 		{
 			Config: r.byDisplayName(data),
 			Check:  r.testCheckFunc(data),
+		},
+	})
+}
+
+func TestAccServicePrincipalDataSource_byDisplayNameDuplicates(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
+	r := ServicePrincipalDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config:      r.byDisplayNameDuplicates(data),
+			ExpectError: regexp.MustCompile("Found multiple service principals matching filter:"),
 		},
 	})
 }
@@ -102,6 +114,30 @@ data "azuread_service_principal" "test" {
   display_name = azuread_service_principal.test.display_name
 }
 `, ServicePrincipalResource{}.complete(data))
+}
+
+func (ServicePrincipalDataSource) byDisplayNameDuplicates(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test1" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test1" {
+  application_id = azuread_application.test1.application_id
+}
+
+resource "azuread_application" "test2" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test2" {
+  application_id = azuread_application.test2.application_id
+}
+
+data "azuread_service_principal" "test" {
+  display_name = azuread_service_principal.test1.display_name
+}
+`, data.RandomInteger)
 }
 
 func (ServicePrincipalDataSource) byObjectId(data acceptance.TestData) string {
