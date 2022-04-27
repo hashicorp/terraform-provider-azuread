@@ -12,12 +12,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 )
 
 func groupsDataSource() *schema.Resource {
@@ -62,11 +61,20 @@ func groupsDataSource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"ignore_missing": {
+				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"return_all"},
+			},
+
 			"return_all": {
-				Description:  "Retrieve all groups with no filter",
-				Type:         schema.TypeBool,
-				Optional:     true,
-				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
+				Description:   "Retrieve all groups with no filter",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"ignore_missing"},
+				ExactlyOneOf:  []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 			},
 
 			"mail_enabled": {
@@ -94,6 +102,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var groups []msgraph.Group
 	var expectedCount int
+	var ignoreMissing = d.Get("ignore_missing").(bool)
 	var returnAll = d.Get("return_all").(bool)
 	var displayNamePrefix = d.Get("display_name_prefix").(string)
 
@@ -155,6 +164,9 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			if count > 1 {
 				return tf.ErrorDiagPathF(err, "display_names", "More than one group found with display name: %q", displayName)
 			} else if count == 0 {
+				if ignoreMissing {
+					continue
+				}
 				return tf.ErrorDiagPathF(err, "display_names", "No group found with display name: %q", displayName)
 			}
 
@@ -167,6 +179,9 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			group, status, err := client.Get(ctx, objectId, odata.Query{})
 			if err != nil {
 				if status == http.StatusNotFound {
+					if ignoreMissing {
+						continue
+					}
 					return tf.ErrorDiagPathF(err, "object_id", "No group found with object ID: %q", objectId)
 				}
 				return tf.ErrorDiagPathF(err, "object_id", "Retrieving group with object ID: %q", objectId)
@@ -179,7 +194,7 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if !returnAll && displayNamePrefix == "" && len(groups) != expectedCount {
+	if !returnAll && !ignoreMissing && displayNamePrefix == "" && len(groups) != expectedCount {
 		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(groups)), "Unexpected number of groups returned")
 	}
 

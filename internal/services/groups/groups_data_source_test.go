@@ -7,11 +7,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/manicminer/hamilton/odata"
 )
 
 type GroupsDataSource struct{}
@@ -23,6 +22,21 @@ func TestAccGroupsDataSource_byDisplayNames(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: r.byDisplayNames(data),
+			Check: resource.ComposeAggregateTestCheckFunc(
+				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
+				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			),
+		},
+	})
+}
+
+func TestAccGroupsDataSource_byDisplayNamesIgnoreMissing(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.byDisplayNamesIgnoreMissing(data),
 			Check: resource.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
@@ -235,6 +249,22 @@ data "azuread_groups" "test" {
   display_names = [azuread_group.testA.display_name, azuread_group.testB.display_name]
 }
 `, r.template(data))
+}
+
+func (r GroupsDataSource) byDisplayNamesIgnoreMissing(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_groups" "test" {
+  ignore_missing = true
+
+  display_names = [
+    azuread_group.testA.display_name,
+    "not-a-real-group-%[2]d",
+    azuread_group.testB.display_name,
+  ]
+}
+`, r.template(data), data.RandomInteger)
 }
 
 func (r GroupsDataSource) byDisplayNamePrefix(data acceptance.TestData) string {
