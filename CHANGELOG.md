@@ -2,12 +2,14 @@
 
 IMPROVEMENTS:
 
+* `data.azuread_groups` - support the `ignore_missing` property [GH-783]
 * `azuread_conditional_access_policy` - support `linux` in the `included_platforms` and `excluded_platforms` properties [GH-784]
 * `azuread_group` - support the `SubscribeMembersToCalendarEventsDisabled` value in the `behaviors` property [GH-785]
 
 BUG FIXES:
 
 * `data.azuread_service_principal` - raise an error when multiple results are found for the same `display_name` [GH-781]
+* `azuread_group` - ensure that unified groups can be created without a `description` [GH-783]
 
 ## 2.21.0 (April 21, 2022)
 
