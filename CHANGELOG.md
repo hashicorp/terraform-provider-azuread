@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+* `azuread_conditional_access_policy` - support `linux` in the `included_platforms` and `excluded_platforms` properties [GH-784]
 * `azuread_group` - support the `SubscribeMembersToCalendarEventsDisabled` value in the `behaviors` property [GH-785]
 
 ## 2.21.0 (April 21, 2022)
