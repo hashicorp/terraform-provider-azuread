@@ -1,3 +1,9 @@
+## 2.22.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_group` - support the `SubscribeMembersToCalendarEventsDisabled` value in the `behaviors` property [GH-785]
+
 ## 2.21.0 (April 21, 2022)
 
 BUG FIXES:
