@@ -80,6 +80,7 @@ func groupResource() *schema.Resource {
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupResourceBehaviorOptionAllowOnlyMembersToPost,
 						msgraph.GroupResourceBehaviorOptionHideGroupInOutlook,
+						msgraph.GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled,
 						msgraph.GroupResourceBehaviorOptionSubscribeNewGroupMembers,
 						msgraph.GroupResourceBehaviorOptionWelcomeEmailDisabled,
 					}, false),
