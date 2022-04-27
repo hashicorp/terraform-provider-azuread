@@ -455,8 +455,10 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
+	description := d.Get("description").(string)
+
 	properties := msgraph.Group{
-		Description:                 utils.NullableString(d.Get("description").(string)),
+		Description:                 utils.NullableString(description),
 		DisplayName:                 utils.String(tempDisplayName),
 		GroupTypes:                  groupTypes,
 		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
@@ -609,9 +611,50 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return tf.ErrorDiagF(err, "Waiting for update of `display_name` for group with object ID %q", *group.ID)
 	}
 
-	// The following properties can only be set or unset for Unified groups, other group types will return a 4xx error.
 	if hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
-		// The unified group properties in this block only support delegated auth
+		// Newly created Unified groups now get a description added out-of-band, so we'll wait a couple of minutes to see if this appears and then clear it
+		if description == "" {
+			updated, err := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+				client.BaseClient.DisableRetries = true
+				group, _, err := client.Get(ctx, *group.ID, odata.Query{})
+				if err != nil {
+					return nil, err
+				}
+				return utils.Bool(group.Description != nil && *group.Description != ""), nil
+			})
+			if err != nil {
+				return tf.ErrorDiagF(err, "Waiting for update of `description` for group with object ID %q", *group.ID)
+			}
+
+			if updated {
+				status, err := client.Update(ctx, msgraph.Group{
+					DirectoryObject: msgraph.DirectoryObject{
+						ID: group.ID,
+					},
+					Description: utils.NullableString(""),
+				})
+				if err != nil {
+					if status == http.StatusNotFound {
+						return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+					}
+					return tf.ErrorDiagF(err, "Failed to patch `description` for group with object ID %q after creating", *group.ID)
+				}
+
+				// Wait for Description to be removed
+				if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+					client.BaseClient.DisableRetries = true
+					group, _, err := client.Get(ctx, *group.ID, odata.Query{})
+					if err != nil {
+						return nil, err
+					}
+					return utils.Bool(group.Description == nil || *group.Description == ""), nil
+				}); err != nil {
+					return tf.ErrorDiagF(err, "Waiting to remove `description` for group with object ID %q", *group.ID)
+				}
+			}
+		}
+
+		// The following unified group properties in this block only support delegated auth
 		// Application-authenticated requests will return a 4xx error, so we only
 		// set these when explicitly configured, as they each default to false anyway
 		// See https://docs.microsoft.com/en-us/graph/known-issues#groups

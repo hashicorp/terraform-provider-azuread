@@ -34,6 +34,22 @@ func TestAccGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccGroup_basicUnified(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basicUnified(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccGroup_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -463,6 +479,18 @@ func (GroupResource) basic(data acceptance.TestData) string {
 resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[1]d"
   security_enabled = true
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) basicUnified(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctestGroup-%[1]d"
+  security_enabled = false
 }
 `, data.RandomInteger)
 }
