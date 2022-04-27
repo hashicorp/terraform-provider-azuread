@@ -48,8 +48,12 @@ func WaitForUpdate(ctx context.Context, f ChangeFunc) error {
 		return errors.New("context has no deadline")
 	}
 
-	timeout := time.Until(deadline)
-	_, err := (&resource.StateChangeConf{
+	_, err := WaitForUpdateWithTimeout(ctx, time.Until(deadline), f)
+	return err
+}
+
+func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f ChangeFunc) (bool, error) {
+	res, err := (&resource.StateChangeConf{
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -64,11 +68,11 @@ func WaitForUpdate(ctx context.Context, f ChangeFunc) error {
 				return nil, "Error", fmt.Errorf("retrieving resource: updated was nil")
 			}
 			if *updated {
-				return "stub", "Done", nil
+				return true, "Done", nil
 			}
-			return "stub", "Waiting", nil
+			return false, "Waiting", nil
 		},
 	}).WaitForStateContext(ctx)
 
-	return err
+	return res.(bool), err
 }
