@@ -1,15 +1,15 @@
-## 2.22.0 (Unreleased)
+## 2.22.0 (April 28, 2022)
 
 IMPROVEMENTS:
 
-* `data.azuread_groups` - support the `ignore_missing` property [GH-783]
-* `azuread_conditional_access_policy` - support `linux` in the `included_platforms` and `excluded_platforms` properties [GH-784]
-* `azuread_group` - support the `SubscribeMembersToCalendarEventsDisabled` value in the `behaviors` property [GH-785]
+* `data.azuread_groups` - support the `ignore_missing` property ([#783](https://github.com/hashicorp/terraform-provider-azuread/issues/783))
+* `azuread_conditional_access_policy` - support `linux` in the `included_platforms` and `excluded_platforms` properties ([#784](https://github.com/hashicorp/terraform-provider-azuread/issues/784))
+* `azuread_group` - support the `SubscribeMembersToCalendarEventsDisabled` value in the `behaviors` property ([#785](https://github.com/hashicorp/terraform-provider-azuread/issues/785))
 
 BUG FIXES:
 
-* `data.azuread_service_principal` - raise an error when multiple results are found for the same `display_name` [GH-781]
-* `azuread_group` - ensure that unified groups can be created without a `description` [GH-783]
+* `data.azuread_service_principal` - raise an error when multiple results are found for the same `display_name` ([#781](https://github.com/hashicorp/terraform-provider-azuread/issues/781))
+* `azuread_group` - ensure that unified groups can be created without a `description` ([#783](https://github.com/hashicorp/terraform-provider-azuread/issues/783))
 
 ## 2.21.0 (April 21, 2022)
 
