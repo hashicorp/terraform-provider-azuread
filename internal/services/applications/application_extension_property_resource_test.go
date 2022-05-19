@@ -28,8 +28,9 @@ func TestAccApplicationExtensionProperty_basic(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("data_type").Exists(),
+				check.That(data.ResourceName).Key("target_objects").HasValue("User"),
+				check.That(data.ResourceName).Key("name").HasValue(fmt.Sprintf("acctest_APP_basic_%d", data.RandomInteger)),
 			),
 		},
 		data.ImportStep(),
@@ -46,7 +47,8 @@ func TestAccApplicationExtensionProperty_complete(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("object_id").Exists(),
+				check.That(data.ResourceName).Key("data_type").Exists(),
+				check.That(data.ResourceName).Key("target_objects").Exists(),
 			),
 		},
 		data.ImportStep(),
@@ -56,14 +58,19 @@ func TestAccApplicationExtensionProperty_complete(t *testing.T) {
 func (r ApplicationExtensionPropertyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
-	app, status, err := client.Get(ctx, state.ID, odata.Query{})
+	appId := state.Attributes["application_id"]
+
+	appExts, status, err := client.ListExtensions(ctx, appId, odata.Query{
+		Filter: "id eq '" + state.ID + "'",
+	})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+			return nil, fmt.Errorf("Extension property with ID %q does not exist in application %q", state.ID, appId)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve Application ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(app.ID != nil && *app.ID == state.ID), nil
+	appExt := (*appExts)[0]
+	return utils.Bool(appExt.Id != nil && *appExt.Id == state.ID), nil
 }
 
 func (ApplicationExtensionPropertyResource) basic(data acceptance.TestData) string {
@@ -71,8 +78,11 @@ func (ApplicationExtensionPropertyResource) basic(data acceptance.TestData) stri
 provider "azuread" {}
 
 resource "azuread_application_extension_property" "test" {
-  name = "my-ext-prop-%[1]d"
-  data_type = "string"
+  application_id  = "25589ddd-7aea-4345-b067-3f5946517719"
+
+  name = "acctest_APP_basic_%[1]d"
+  data_type = "String"
+  target_objects = [ "User" ]
 }
 `, data.RandomInteger)
 }
@@ -81,17 +91,11 @@ func (ApplicationExtensionPropertyResource) complete(data acceptance.TestData) s
 	return fmt.Sprintf(`
 provider "azuread" {}
 
-data "azuread_application" "b2capptest" {
-  name = "b2c-extensions-app. Do not modify. Used by AADB2C for storing user data."
-}
-
 resource "azuread_applmication_extension_property" "test" {
-  application_id  = data.azuread_application.b2capptest.id
-  name            = "acctest-APP-complete-%[1]d"
-  data_type       = "string"
-  app_display_name= "AccTest APP Complete %[1]d"
-  target_objects = [ "Users" ]
-  is_synced_from_on_premises = false
+  application_id  = "25589ddd-7aea-4345-b067-3f5946517719"
+  name            = "acctest_APP_complete_%[1]d"
+  data_type       = "String"
+  target_objects = [ "User" ]
 }
 `, data.RandomInteger)
 }

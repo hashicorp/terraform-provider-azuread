@@ -16,7 +16,6 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -29,8 +28,6 @@ func applicationExtensionPropertyResource() *schema.Resource {
 		ReadContext:   applicationExtensionPropertyResourceRead,
 		UpdateContext: applicationExtensionPropertyResourceUpdate,
 		DeleteContext: applicationExtensionPropertyResourceDelete,
-
-		CustomizeDiff: applicationResourceCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -47,13 +44,6 @@ func applicationExtensionPropertyResource() *schema.Resource {
 		}),
 
 		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
-				Version: 0,
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -77,7 +67,7 @@ func applicationExtensionPropertyResource() *schema.Resource {
 			"app_display_name": {
 				Description: "The display name for the application",
 				Type:        schema.TypeString,
-				Required:    true,
+				Computed:    true,
 			},
 
 			"data_type": {
@@ -95,7 +85,7 @@ func applicationExtensionPropertyResource() *schema.Resource {
 			},
 
 			"target_objects": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -115,8 +105,7 @@ func applicationExtensionPropertyResource() *schema.Resource {
 
 			"is_synced_from_on_premises": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 		},
 	}
@@ -125,15 +114,13 @@ func applicationExtensionPropertyResource() *schema.Resource {
 func applicationExtensionPropertyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	applicationId := d.Get("application_id").(string)
-	targetObjects := d.Get("target_objects").([]msgraph.ApplicationExtensionTargetObject)
+	targetObjects := d.Get("target_objects").([]interface{})
 
 	// Create a new application
 	properties := msgraph.ApplicationExtension{
-		Name:                   utils.String(d.Get("name").(string)),
-		AppDisplayName:         utils.String(d.Get("app_display_name").(string)),
-		DataType:               d.Get("data_type").(msgraph.ApplicationExtensionDataType),
-		TargetObjects:          &targetObjects,
-		IsSyncedFromOnPremises: utils.Bool(d.Get("is_synced_from_on_premises").(bool)),
+		Name:          utils.String(d.Get("name").(string)),
+		DataType:      d.Get("data_type").(msgraph.ApplicationExtensionDataType),
+		TargetObjects: tf.ExpandStringSlicePtr(targetObjects),
 	}
 
 	appExt, _, err := client.CreateExtension(ctx, properties, applicationId)
@@ -160,8 +147,9 @@ func applicationExtensionPropertyResourceRead(ctx context.Context, d *schema.Res
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	applicationId := d.Get("application_id").(string)
 
+	log.Printf("[DEBUG] Before listing extensions")
 	appExts, status, err := client.ListExtensions(ctx, applicationId, odata.Query{
-		Filter: "id eq " + d.Id(),
+		Filter: "id eq '" + d.Id() + "'",
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -170,7 +158,7 @@ func applicationExtensionPropertyResourceRead(ctx context.Context, d *schema.Res
 			return nil
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q in application id %q", d.Id(), applicationId)
 	}
 
 	appExt := (*appExts)[0]
@@ -178,7 +166,7 @@ func applicationExtensionPropertyResourceRead(ctx context.Context, d *schema.Res
 	tf.Set(d, "name", appExt.Name)
 	tf.Set(d, "app_display_name", appExt.AppDisplayName)
 	tf.Set(d, "data_type", appExt.DataType)
-	tf.Set(d, "is_synced_from_on_premise", appExt.IsSyncedFromOnPremises)
+	tf.Set(d, "is_synced_from_on_premises", appExt.IsSyncedFromOnPremises)
 	tf.Set(d, "target_objects", appExt.TargetObjects)
 
 	return nil
@@ -192,10 +180,10 @@ func applicationExtensionPropertyResourceDelete(ctx context.Context, d *schema.R
 	status, err := client.DeleteExtension(ctx, appId, extensionId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", appId)
+			return tf.ErrorDiagPathF(fmt.Errorf("Extension property was not found"), "id", "Retrieving Extension property with ID %q", extensionId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", appId)
+		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q on application ID %q", extensionId, appId)
 	}
 
 	return nil
