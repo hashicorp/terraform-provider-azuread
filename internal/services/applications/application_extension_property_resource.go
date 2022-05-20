@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -16,6 +16,7 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
@@ -37,13 +38,9 @@ func applicationExtensionPropertyResource() *schema.Resource {
 		},
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
-			}
-			return nil
+			_, err := parse.ApplicationExtensionPropertyID(id)
+			return err
 		}),
-
-		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -59,9 +56,10 @@ func applicationExtensionPropertyResource() *schema.Resource {
 			},
 
 			"name": {
-				Description: "The extension property name",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:      "The extension property name",
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: applicationExtensionPropertyNameDiffSuppress,
 			},
 
 			"app_display_name": {
@@ -111,6 +109,11 @@ func applicationExtensionPropertyResource() *schema.Resource {
 	}
 }
 
+func applicationExtensionPropertyNameDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	res, _ := regexp.MatchString("extension_.*_"+new, old)
+	return res
+}
+
 func applicationExtensionPropertyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	applicationId := d.Get("application_id").(string)
@@ -132,7 +135,7 @@ func applicationExtensionPropertyResourceCreate(ctx context.Context, d *schema.R
 		return tf.ErrorDiagF(errors.New("Bad API response"), "ID returned for extension property is nil/empty")
 	}
 
-	d.SetId(*appExt.Id)
+	d.SetId(parse.NewApplicationExtensionPropertyID(applicationId, *appExt.Id).String())
 
 	return applicationExtensionPropertyResourceRead(ctx, d, meta)
 }
@@ -145,24 +148,27 @@ func applicationExtensionPropertyResourceUpdate(ctx context.Context, d *schema.R
 
 func applicationExtensionPropertyResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
-	applicationId := d.Get("application_id").(string)
+	extId, err := parse.ApplicationExtensionPropertyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Extension Property ID %q", d.Id())
+	}
 
-	log.Printf("[DEBUG] Before listing extensions")
-	appExts, status, err := client.ListExtensions(ctx, applicationId, odata.Query{
-		Filter: "id eq '" + d.Id() + "'",
+	appExts, status, err := client.ListExtensions(ctx, extId.ApplicationId, odata.Query{
+		Filter: "id eq '" + extId.ExtensionPropertyId + "'",
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Extension property with ID %q was not found in Application %q - removing from state", d.Id(), applicationId)
+			log.Printf("[DEBUG] Extension property with ID %q was not found in Application %q - removing from state", extId.ExtensionPropertyId, extId.ApplicationId)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q in application id %q", d.Id(), applicationId)
+		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q in application id %q", extId.ExtensionPropertyId, extId.ApplicationId)
 	}
 
 	appExt := (*appExts)[0]
 
+	tf.Set(d, "id", appExt.Id)
 	tf.Set(d, "name", appExt.Name)
 	tf.Set(d, "app_display_name", appExt.AppDisplayName)
 	tf.Set(d, "data_type", appExt.DataType)
@@ -174,16 +180,18 @@ func applicationExtensionPropertyResourceRead(ctx context.Context, d *schema.Res
 
 func applicationExtensionPropertyResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
-	extensionId := d.Id()
-	appId := d.Get("application_id").(string)
+	extId, err := parse.ApplicationExtensionPropertyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Extension Property ID %q", d.Id())
+	}
 
-	status, err := client.DeleteExtension(ctx, appId, extensionId)
+	status, err := client.DeleteExtension(ctx, extId.ApplicationId, extId.ExtensionPropertyId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Extension property was not found"), "id", "Retrieving Extension property with ID %q", extensionId)
+			return tf.ErrorDiagPathF(fmt.Errorf("Extension property was not found"), "id", "Retrieving Extension property with ID %q in Application ID %q", extId.ExtensionPropertyId, extId.ApplicationId)
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q on application ID %q", extensionId, appId)
+		return tf.ErrorDiagPathF(err, "id", "Retrieving extension property with ID %q on application ID %q", extId.ExtensionPropertyId, extId.ApplicationId)
 	}
 
 	return nil
