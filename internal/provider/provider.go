@@ -123,6 +123,28 @@ func AzureADProvider() *schema.Provider {
 				Description: "The application password to use when authenticating as a Service Principal using a Client Secret",
 			},
 
+			// OIDC specific fields
+			"use_oidc": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_OIDC", false),
+				Description: "Allow OpenID Connect to be used for authentication",
+			},
+
+			"oidc_request_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, ""),
+				Description: "The bearer token for the request to the OIDC provider. For use when authenticating as a Service Principal using OpenID Connect.",
+			},
+
+			"oidc_request_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, ""),
+				Description: "The URL for the OIDC provider from which to request an ID token. For use when authenticating as a Service Principal using OpenID Connect.",
+			},
+
 			// CLI authentication specific fields
 			"use_cli": {
 				Type:        schema.TypeBool,
@@ -197,8 +219,11 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			ClientCertPassword:     d.Get("client_certificate_password").(string),
 			ClientCertPath:         d.Get("client_certificate_path").(string),
 			ClientSecret:           d.Get("client_secret").(string),
+			IDTokenRequestURL:      d.Get("oidc_request_token").(string),
+			IDTokenRequestToken:    d.Get("oidc_request_url").(string),
 			EnableClientCertAuth:   true,
 			EnableClientSecretAuth: true,
+			EnableGitHubOIDCAuth:   d.Get("use_oidc").(bool),
 			EnableAzureCliToken:    d.Get("use_cli").(bool),
 			EnableMsiAuth:          d.Get("use_msi").(bool),
 			MsiEndpoint:            d.Get("msi_endpoint").(string),
