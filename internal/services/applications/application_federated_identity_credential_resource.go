@@ -57,7 +57,7 @@ func applicationFederatedIdentityCredentialResource() *schema.Resource {
 				Required:    true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppUri,
+					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
