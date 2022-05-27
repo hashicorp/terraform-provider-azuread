@@ -4,7 +4,7 @@ subcategory: "Applications"
 
 # Resource: azuread_application
 
-Manages an application registration within Azure Active Directory.
+Manages an application registration within Azure Active Directory. In the Azure portal an application registration is referred to as an "Enterprise application".
 
 ## API Permissions
 

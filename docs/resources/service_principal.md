@@ -4,7 +4,7 @@ subcategory: "Service Principals"
 
 # Resource: azuread_service_principal
 
-Manages a service principal associated with an application within Azure Active Directory.
+Manages a service principal associated with an application within Azure Active Directory. In the Azure portal a service principal is referred to as an "App registration".
 
 ## API Permissions
 
