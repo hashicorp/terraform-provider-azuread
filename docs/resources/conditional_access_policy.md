@@ -61,10 +61,10 @@ resource "azuread_conditional_access_policy" "example" {
 
   session_controls {
     application_enforced_restrictions_enabled = true
-    sign_in_frequency = 10
-    sign_in_frequency_period = "hours"
-    cloud_app_security_policy = "monitorOnly"
- } 
+    sign_in_frequency                         = 10
+    sign_in_frequency_period                  = "hours"
+    cloud_app_security_policy                 = "monitorOnly"
+  }
 }
 ```
 
