@@ -28,7 +28,7 @@ resource "azuread_conditional_access_policy" "example" {
 
     applications {
       included_applications = ["All"]
-      excluded_applications = ["00000004-0000-0ff1-ce00-000000000000"]
+      excluded_applications = []
     }
 
     devices {
@@ -60,20 +60,10 @@ resource "azuread_conditional_access_policy" "example" {
   }
 
   session_controls {
-    application_enforced_restrictions {
-      enabled = true
-    }
-
-    cloud_app_security {
-      enabled                 = true
-      cloud_app_security_type = "monitorOnly"
-    }
-
-    sign_in_frequency {
-      enabled = true
-      type    = "hours"
-      value   = 10
-    }
+    application_enforced_restrictions_enabled = true
+    sign_in_frequency                         = 10
+    sign_in_frequency_period                  = "hours"
+    cloud_app_security_policy                 = "monitorOnly"
   }
 }
 ```
