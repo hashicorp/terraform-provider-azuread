@@ -1,3 +1,9 @@
+## 2.23.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application_federated_identity_credential` - fix overly restrictive validation for the `audiences` property [GH-808]
+
 ## 2.22.0 (April 28, 2022)
 
 IMPROVEMENTS:
