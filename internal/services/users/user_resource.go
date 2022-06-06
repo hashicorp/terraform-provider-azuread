@@ -51,7 +51,6 @@ func userResource() *schema.Resource {
 				Description:      "The user principal name (UPN) of the user",
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validate.StringIsEmailAddress,
 			},
 
@@ -545,6 +544,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
 		Surname:           utils.NullableString(d.Get("surname").(string)),
 		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
+		UserPrincipalName: utils.String(d.Get("user_principal_name").(string)),
 	}
 
 	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
