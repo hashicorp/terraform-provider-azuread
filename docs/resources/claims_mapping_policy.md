@@ -10,7 +10,7 @@ Manages a Claims Mapping Policy within Azure Active Directory.
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires the following application roles: `Policy.ReadWrite.ApplicationConfiguration` 
+When authenticated with a service principal, this resource requires the following application roles: `Policy.ReadWrite.ApplicationConfiguration` and `Policy.Read.All`
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
