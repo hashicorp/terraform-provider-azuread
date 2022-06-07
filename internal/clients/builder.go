@@ -36,15 +36,6 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 	client.Environment = b.AuthConfig.Environment
 
-	o := &common.ClientOptions{
-		Authorizer:  authorizer,
-		Environment: client.Environment,
-		TenantID:    client.TenantID,
-
-		PartnerID:        b.PartnerID,
-		TerraformVersion: client.TerraformVersion,
-	}
-
 	// Obtain the tenant ID from Azure CLI
 	realAuthorizer := authorizer
 	if cache, ok := authorizer.(*auth.CachedAuthorizer); ok {
@@ -58,6 +49,15 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		if clientId, ok := environments.PublishedApis["MicrosoftAzureCli"]; ok && clientId != "" {
 			client.ClientID = clientId
 		}
+	}
+
+	o := &common.ClientOptions{
+		Authorizer:  authorizer,
+		Environment: client.Environment,
+		TenantID:    client.TenantID,
+
+		PartnerID:        b.PartnerID,
+		TerraformVersion: client.TerraformVersion,
 	}
 
 	if err := client.build(ctx, o); err != nil {
