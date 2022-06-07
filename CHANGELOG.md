@@ -5,6 +5,10 @@ BUG FIXES:
 * `azuread_application_federated_identity_credential` - fix overly restrictive validation for the `audiences` property [GH-808]
 * `azuread_group` - fix a bug that could cause a crash when creating unified groups [GH-816]
 
+IMPROVEMENTS:
+
+* `azuread_user` - allow changing the `user_principal_name` property without recreating the user account [GH-815]
+
 ## 2.22.0 (April 28, 2022)
 
 IMPROVEMENTS:
