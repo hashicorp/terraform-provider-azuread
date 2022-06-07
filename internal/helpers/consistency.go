@@ -74,5 +74,8 @@ func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f Chan
 		},
 	}).WaitForStateContext(ctx)
 
+	if res == nil {
+		return false, err
+	}
 	return res.(bool), err
 }
