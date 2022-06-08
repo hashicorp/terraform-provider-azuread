@@ -1,5 +1,9 @@
 ## 2.23.0 (Unreleased)
 
+FEATURES:
+
+* **New Authentication Method:** Support for authenticating via OIDC with GitHub Actions [GH-805]
+
 BUG FIXES:
 
 * `azuread_application_federated_identity_credential` - fix overly restrictive validation for the `audiences` property [GH-808]
