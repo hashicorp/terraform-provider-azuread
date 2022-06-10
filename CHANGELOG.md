@@ -6,6 +6,7 @@ FEATURES:
 
 BUG FIXES:
 
+* **Provider:** Fix an Azure CLI authentication issue that could fail to autodetect the current tenant ID [GH-819]
 * `azuread_application_federated_identity_credential` - fix overly restrictive validation for the `audiences` property [GH-808]
 * `azuread_group` - fix a bug that could cause a crash when creating unified groups [GH-816]
 
