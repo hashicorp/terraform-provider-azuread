@@ -1,3 +1,9 @@
+## 2.24.0 (Unreleased)
+
+BUG FIXES:
+
+* **Proider:** Fix a bug causing GitHub OIDC authentication to fail when consuming default environment variables [GH-822]
+
 ## 2.23.0 (June 10, 2022)
 
 FEATURES:
