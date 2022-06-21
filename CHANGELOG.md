@@ -2,7 +2,7 @@
 
 BUG FIXES:
 
-* **Proider:** Fix a bug causing GitHub OIDC authentication to fail when consuming default environment variables ([#822](https://github.com/hashicorp/terraform-provider-azuread/issues/822))
+* **Provider:** Fix a bug causing GitHub OIDC authentication to fail when consuming default environment variables ([#822](https://github.com/hashicorp/terraform-provider-azuread/issues/822))
 
 ## 2.23.0 (June 10, 2022)
 
