@@ -42,6 +42,8 @@ func directoryRoleMemberResource() *schema.Resource {
 			return err
 		}),
 
+		DeprecationMessage: "This resource is deprecated and will be removed in version 3.0 of the AzureAD provider. Please use the `azuread_directory_role_assignment` resource instead.",
+
 		Schema: map[string]*schema.Schema{
 			"role_object_id": {
 				Description:      "The object ID of the directory role",

@@ -1,15 +1,15 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
 	DirectoryObjectsClient       *msgraph.DirectoryObjectsClient
 	DirectoryRolesClient         *msgraph.DirectoryRolesClient
 	DirectoryRoleTemplatesClient *msgraph.DirectoryRoleTemplatesClient
+	RoleAssignmentsClient        *msgraph.RoleAssignmentsClient
 	RoleDefinitionsClient        *msgraph.RoleDefinitionsClient
 }
 
@@ -23,6 +23,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	directoryRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient(o.TenantID)
 	o.ConfigureClient(&directoryRoleTemplatesClient.BaseClient)
 
+	roleAssignmentsClient := msgraph.NewRoleAssignmentsClient(o.TenantID)
+	o.ConfigureClient(&roleAssignmentsClient.BaseClient)
+
 	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient(o.TenantID)
 	o.ConfigureClient(&roleDefinitionsClient.BaseClient)
 
@@ -30,6 +33,7 @@ func NewClient(o *common.ClientOptions) *Client {
 		DirectoryObjectsClient:       directoryObjectsClient,
 		DirectoryRolesClient:         directoryRolesClient,
 		DirectoryRoleTemplatesClient: directoryRoleTemplatesClient,
+		RoleAssignmentsClient:        roleAssignmentsClient,
 		RoleDefinitionsClient:        roleDefinitionsClient,
 	}
 }
