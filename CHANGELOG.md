@@ -1,3 +1,9 @@
+## 2.25.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_directory_role_assignment` (deprecates the `azuread_directory_role_member` resource) [GH-826]
+
 ## 2.24.0 (June 16, 2022)
 
 BUG FIXES:
