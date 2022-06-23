@@ -154,7 +154,7 @@ The following arguments are supported:
 `dynamic_membership` block supports the following:
 
 * `enabled` - (Required) Whether rule processing is "On" (true) or "Paused" (false).
-* `rule` - (Optional) The rule that determines membership of this group. For more information, see official documentation on [memmbership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).
+* `rule` - (Optional) The rule that determines membership of this group. For more information, see official documentation on [membership rules syntax](https://docs.microsoft.com/en-gb/azure/active-directory/enterprise-users/groups-dynamic-membership).
 
 ~> **Dynamic Group Memberships** Remember to include `DynamicMembership` in the set of `types` for the group when configuring a dynamic membership rule. Dynamic membership is a premium feature which requires an Azure Active Directory P1 or P2 license.
 
