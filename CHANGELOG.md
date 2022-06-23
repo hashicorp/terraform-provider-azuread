@@ -1,8 +1,8 @@
-## 2.25.0 (Unreleased)
+## 2.25.0 (June 23, 2022)
 
 FEATURES:
 
-* **New Resource:** `azuread_directory_role_assignment` (deprecates the `azuread_directory_role_member` resource) [GH-826]
+* **New Resource:** `azuread_directory_role_assignment` (deprecates the `azuread_directory_role_member` resource) ([#826](https://github.com/hashicorp/terraform-provider-azuread/issues/826))
 
 ## 2.24.0 (June 16, 2022)
 
