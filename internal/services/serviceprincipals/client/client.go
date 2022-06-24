@@ -9,6 +9,7 @@ type Client struct {
 	DelegatedPermissionGrantsClient *msgraph.DelegatedPermissionGrantsClient
 	DirectoryObjectsClient          *msgraph.DirectoryObjectsClient
 	ServicePrincipalsClient         *msgraph.ServicePrincipalsClient
+	SynchronizationJobClient        *msgraph.SynchronizationJobClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -22,9 +23,13 @@ func NewClient(o *common.ClientOptions) *Client {
 	servicePrincipalsClient.BaseClient.ApiVersion = msgraph.Version10
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
+	synchronizationJobClient := msgraph.NewSynchronizationJobClient(o.TenantID)
+	o.ConfigureClient(&synchronizationJobClient.BaseClient)
+
 	return &Client{
 		DelegatedPermissionGrantsClient: delegatedPermissionGrantsClient,
 		DirectoryObjectsClient:          directoryObjectsClient,
 		ServicePrincipalsClient:         servicePrincipalsClient,
+		SynchronizationJobClient:        synchronizationJobClient,
 	}
 }
