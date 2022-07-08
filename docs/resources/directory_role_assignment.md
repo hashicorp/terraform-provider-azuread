@@ -61,12 +61,36 @@ resource "azuread_directory_role_assignment" "example" {
 }
 ```
 
+*Scoped assignment for an application*
+
+```terraform
+resource "azuread_directory_role" "example" {
+  display_name = "Cloud application administrator"
+}
+
+resource "azuread_application" "example" {
+  display_name = "My Application"
+}
+
+data "azuread_user" "example" {
+  user_principal_name = "jdoe@hashicorp.com"
+}
+
+resource "azuread_directory_role_assignment" "test" {
+  role_id             = azuread_directory_role.example.template_id
+  principal_object_id = data.azuread_user.example.object_id
+  directory_scope_id  = format("/%s", azuread_application.example.object_id)
+}
+```
+
+~> Note the use of the `template_id` attribute when referencing built-in roles.
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `app_scope_object_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. Cannot be used with `directory_scope_object_id`. Changing this forces a new resource to be created.
-* `directory_scope_object_id` - (Optional) The object ID of a directory object representing the scope of the assignment. Cannot be used with `app_scope_object_id`. Changing this forces a new resource to be created.
+* `app_scope_id` - (Optional) Identifier of the app-specific scope when the assignment scope is app-specific. Cannot be used with `directory_scope_id`. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Changing this forces a new resource to be created.
+* `directory_scope_id` - (Optional) Identifier of the directory object representing the scope of the assignment. Cannot be used with `app_scope_id`. See [official documentation](https://docs.microsoft.com/en-us/graph/api/rbacapplication-post-roleassignments?view=graph-rest-1.0&tabs=http) for example usage. Changing this forces a new resource to be created.
 * `principal_object_id` - (Required) The object ID of the principal for you want to create a role assignment. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `role_id` - (Required) The template ID (in the case of built-in roles) or object ID (in the case of custom roles) of the directory role you want to assign. Changing this forces a new resource to be created.
 

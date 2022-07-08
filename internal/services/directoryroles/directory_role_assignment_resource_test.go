@@ -51,6 +51,23 @@ func TestAccDirectoryRoleAssignment_servicePrincipalWithCustomRole(t *testing.T)
 	})
 }
 
+func TestAccDirectoryRoleAssignment_servicePrincipalScopedApplication(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "test")
+	r := DirectoryRoleAssignmentResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.servicePrincipalScopedApplication(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("role_id").IsUuid(),
+				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccDirectoryRoleAssignment_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "testA")
 	r := DirectoryRoleAssignmentResource{}
@@ -183,6 +200,32 @@ resource "azuread_directory_role_assignment" "test" {
   principal_object_id = azuread_service_principal.test.object_id
 }
 `, DirectoryRoleResource{}.byTemplateId(data), data.RandomInteger)
+}
+
+func (r DirectoryRoleAssignmentResource) servicePrincipalScopedApplication(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_directory_role" "test" {
+  display_name = "Cloud application administrator"
+}
+
+resource "azuread_application" "admin_test" {
+  display_name = "acctestApplicationAdministrator-%[1]d"
+}
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+
+resource "azuread_directory_role_assignment" "test" {
+  role_id             = azuread_directory_role.test.template_id
+  principal_object_id = azuread_service_principal.test.object_id
+  directory_scope_id  = format("/%%s", azuread_application.admin_test.object_id)
+}
+`, data.RandomInteger)
 }
 
 func (r DirectoryRoleAssignmentResource) servicePrincipalCustomRole(data acceptance.TestData) string {

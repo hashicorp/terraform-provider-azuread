@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
@@ -43,7 +42,7 @@ func directoryRoleAssignmentResource() *schema.Resource {
 			"role_id": {
 				Description:      "The object ID of the directory role for this assignment",
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validate.UUID,
 			},
@@ -51,27 +50,50 @@ func directoryRoleAssignmentResource() *schema.Resource {
 			"principal_object_id": {
 				Description:      "The object ID of the member principal",
 				Type:             schema.TypeString,
-				Optional:         true,
+				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validate.UUID,
 			},
 
-			"directory_scope_object_id": {
-				Description:      "The object ID of a directory object representing the scope of the assignment",
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"app_scope_object_id"},
-				ValidateDiagFunc: validate.UUID,
-			},
-
-			"app_scope_object_id": {
+			"app_scope_id": {
 				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
 				Type:             schema.TypeString,
 				Optional:         true,
+				Computed:         true, // TODO: remove Computed in v3.0
 				ForceNew:         true,
-				ConflictsWith:    []string{"directory_scope_object_id"},
-				ValidateDiagFunc: validate.UUID,
+				ConflictsWith:    []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"app_scope_object_id": {
+				Deprecated:       "`app_scope_object_id` has been renamed to `app_scope_id` and will be removed in version 3.0 or the AzureAD Provider",
+				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"app_scope_id", "directory_scope_id", "directory_scope_object_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"directory_scope_id": {
+				Description:      "Identifier of the directory object representing the scope of the assignment",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true, // TODO: remove Computed in v3.0
+				ForceNew:         true,
+				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"directory_scope_object_id": {
+				Description:      "Identifier of the directory object representing the scope of the assignment",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_id"},
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 		},
 	}
@@ -81,27 +103,36 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	roleId := d.Get("role_id").(string)
-	memberId := d.Get("principal_object_id").(string)
-
-	directoryScopeId := d.Get("directory_scope_object_id").(string)
-	if directoryScopeId == "" {
-		directoryScopeId = "/"
-	}
+	principalId := d.Get("principal_object_id").(string)
 
 	properties := msgraph.UnifiedRoleAssignment{
-		DirectoryScopeId: &directoryScopeId,
-		PrincipalId:      &memberId,
+		PrincipalId:      &principalId,
 		RoleDefinitionId: &roleId,
 	}
 
-	appScopeId := d.Get("app_scope_object_id").(string)
+	var appScopeId, directoryScopeId string
+
+	if v, ok := d.GetOk("app_scope_id"); ok {
+		appScopeId = v.(string)
+	} else if v, ok = d.GetOk("app_scope_object_id"); ok {
+		appScopeId = v.(string)
+	}
+
 	if appScopeId != "" {
 		properties.AppScopeId = &appScopeId
+	} else {
+		if v, ok := d.GetOk("directory_scope_id"); ok {
+			directoryScopeId = v.(string)
+		} else if v, ok = d.GetOk("directory_scope_object_id"); ok {
+			directoryScopeId = v.(string)
+		}
+
+		properties.DirectoryScopeId = &directoryScopeId
 	}
 
 	assignment, status, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding role member %q to directory role %q, received %d with error: %+v", memberId, roleId, status, err)
+		return tf.ErrorDiagF(err, "Assigning directory role %q to directory principal %q, received %d with error: %+v", roleId, principalId, status, err)
 	}
 	if assignment == nil || assignment.ID == nil {
 		return tf.ErrorDiagF(errors.New("returned role assignment ID was nil"), "API Error")
@@ -109,10 +140,10 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(*assignment.ID)
 
-	// Wait for role membership to reflect
+	// Wait for role assignment to reflect
 	deadline, ok := ctx.Deadline()
 	if !ok {
-		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for role member %q to reflect for directory role %q", memberId, roleId)
+		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q assignment to principal %q to take effect", roleId, principalId)
 	}
 	timeout := time.Until(deadline)
 	_, err = (&resource.StateChangeConf{
@@ -133,7 +164,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		},
 	}).WaitForStateContext(ctx)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for role assignment for %q to reflect in directory role %q", memberId, roleId)
+		return tf.ErrorDiagF(err, "Waiting for role assignment for %q to reflect in directory role %q", principalId, roleId)
 	}
 
 	return directoryRoleAssignmentResourceRead(ctx, d, meta)
@@ -153,18 +184,10 @@ func directoryRoleAssignmentResourceRead(ctx context.Context, d *schema.Resource
 		return tf.ErrorDiagF(err, "Retrieving role assignment %q", id)
 	}
 
-	directoryScopeId := assignment.DirectoryScopeId
-	if directoryScopeId == nil || *directoryScopeId == "/" {
-		directoryScopeId = utils.String("")
-	}
-
-	appScopeId := assignment.DirectoryScopeId
-	if appScopeId == nil || *appScopeId == "/" {
-		appScopeId = utils.String("")
-	}
-
-	tf.Set(d, "app_scope_object_id", appScopeId)
-	tf.Set(d, "directory_scope_object_id", directoryScopeId)
+	tf.Set(d, "app_scope_id", assignment.AppScopeId)
+	tf.Set(d, "app_scope_object_id", assignment.AppScopeId)
+	tf.Set(d, "directory_scope_id", assignment.DirectoryScopeId)
+	tf.Set(d, "directory_scope_object_id", assignment.DirectoryScopeId)
 	tf.Set(d, "principal_object_id", assignment.PrincipalId)
 	tf.Set(d, "role_id", assignment.RoleDefinitionId)
 
