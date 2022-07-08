@@ -1,16 +1,16 @@
-## 2.26.0 (Unreleased)
+## 2.26.0 (July 08, 2022)
 
 IMPROVEMENTS:
 
-* `azuread_directory_role_assignment` - deprecate the `app_scope_object_id` property in favor of the `app_scope_id` property [GH-837]
-* `azuread_directory_role_assignment` - deprecate the `directory_scope_object_id` property in favor of the `directory_scope_id` property [GH-837]
+* `azuread_directory_role_assignment` - deprecate the `app_scope_object_id` property in favor of the `app_scope_id` property ([#837](https://github.com/hashicorp/terraform-provider-azuread/issues/837))
+* `azuread_directory_role_assignment` - deprecate the `directory_scope_object_id` property in favor of the `directory_scope_id` property ([#837](https://github.com/hashicorp/terraform-provider-azuread/issues/837))
 
 BUG FIXES:
 
-* `azuread_directory_role_assignment` - fix incorrect schema validation for scoped role assignments [GH-837]
-* `azuread_directory_role_assignment` - fix a bug that was preventing the creation of some scoped role assignments [GH-837]
-* `azuread_group` - fix a bug where new group creation can error out before the timeout due to API inconsistency [GH-838]
-* `azuread_user` - only set `show_in_address_list` when changed in config as it is a potentially read-only attribute [GH-831]
+* `azuread_directory_role_assignment` - fix incorrect schema validation for scoped role assignments ([#837](https://github.com/hashicorp/terraform-provider-azuread/issues/837))
+* `azuread_directory_role_assignment` - fix a bug that was preventing the creation of some scoped role assignments ([#837](https://github.com/hashicorp/terraform-provider-azuread/issues/837))
+* `azuread_group` - fix a bug where new group creation can error out before the timeout due to API inconsistency ([#838](https://github.com/hashicorp/terraform-provider-azuread/issues/838))
+* `azuread_user` - only set `show_in_address_list` when changed in config as it is a potentially read-only attribute ([#831](https://github.com/hashicorp/terraform-provider-azuread/issues/831))
 
 ## 2.25.0 (June 23, 2022)
 
