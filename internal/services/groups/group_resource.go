@@ -603,8 +603,11 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Wait for DisplayName to be updated
 	if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 		client.BaseClient.DisableRetries = true
-		group, _, err := client.Get(ctx, *group.ID, odata.Query{})
+		group, status, err := client.Get(ctx, *group.ID, odata.Query{})
 		if err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
 			return nil, err
 		}
 		return utils.Bool(group.DisplayName != nil && *group.DisplayName == displayName), nil
