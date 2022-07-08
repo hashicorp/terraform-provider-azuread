@@ -1,3 +1,15 @@
+## 2.26.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_directory_role_assignment` - deprecate the `app_scope_object_id` property in favor of the `app_scope_id` property [GH-837]
+* `azuread_directory_role_assignment` - deprecate the `directory_scope_object_id` property in favor of the `directory_scope_id` property [GH-837]
+
+BUG FIXES:
+
+* `azuread_directory_role_assignment` - fix incorrect schema validation for scoped role assignments [GH-837]
+* `azuread_directory_role_assignment` - fix a bug that was preventing the creation of some scoped role assignments [GH-837]
+
 ## 2.25.0 (June 23, 2022)
 
 FEATURES:
