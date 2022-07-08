@@ -9,6 +9,7 @@ BUG FIXES:
 
 * `azuread_directory_role_assignment` - fix incorrect schema validation for scoped role assignments [GH-837]
 * `azuread_directory_role_assignment` - fix a bug that was preventing the creation of some scoped role assignments [GH-837]
+* `azuread_group` - fix a bug where new group creation can error out before the timeout due to API inconsistency [GH-838]
 * `azuread_user` - only set `show_in_address_list` when changed in config as it is a potentially read-only attribute [GH-831]
 
 ## 2.25.0 (June 23, 2022)
