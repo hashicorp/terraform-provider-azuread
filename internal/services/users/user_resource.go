@@ -539,7 +539,6 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		PasswordPolicies:  utils.NullableString(passwordPolicies),
 		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList: utils.Bool(d.Get("show_in_address_list").(bool)),
 		State:             utils.NullableString(d.Get("state").(string)),
 		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
 		Surname:           utils.NullableString(d.Get("surname").(string)),
@@ -566,6 +565,10 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("onpremises_immutable_id") {
 		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
+	}
+
+	if d.HasChange("show_in_address_list") {
+		properties.ShowInAddressList = utils.Bool(d.Get("show_in_address_list").(bool))
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
