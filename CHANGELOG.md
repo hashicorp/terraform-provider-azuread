@@ -36,15 +36,15 @@ FEATURES:
 
 * **New Authentication Method:** Support for authenticating via OIDC with GitHub Actions ([#805](https://github.com/hashicorp/terraform-provider-azuread/issues/805))
 
+IMPROVEMENTS:
+
+* `azuread_user` - allow changing the `user_principal_name` property without recreating the user account ([#815](https://github.com/hashicorp/terraform-provider-azuread/issues/815))
+* 
 BUG FIXES:
 
 * **Provider:** Fix an Azure CLI authentication issue that could fail to autodetect the current tenant ID ([#819](https://github.com/hashicorp/terraform-provider-azuread/issues/819))
 * `azuread_application_federated_identity_credential` - fix overly restrictive validation for the `audiences` property ([#808](https://github.com/hashicorp/terraform-provider-azuread/issues/808))
 * `azuread_group` - fix a bug that could cause a crash when creating unified groups ([#816](https://github.com/hashicorp/terraform-provider-azuread/issues/816))
-
-IMPROVEMENTS:
-
-* `azuread_user` - allow changing the `user_principal_name` property without recreating the user account ([#815](https://github.com/hashicorp/terraform-provider-azuread/issues/815))
 
 ## 2.22.0 (April 28, 2022)
 
