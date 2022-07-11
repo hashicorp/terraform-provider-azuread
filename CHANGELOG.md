@@ -1,8 +1,8 @@
-## 2.26.1 (Unreleased)
+## 2.26.1 (July 11, 2022)
 
 BUG FIXES:
 
-* `azuread_directory_role_assignment` - fix a bug that required `directory_scope_id` to be set for unscoped assignments [GH-840]
+* `azuread_directory_role_assignment` - fix a bug that required `directory_scope_id` to be set for unscoped assignments ([#840](https://github.com/hashicorp/terraform-provider-azuread/issues/840))
 
 ## 2.26.0 (July 08, 2022)
 
