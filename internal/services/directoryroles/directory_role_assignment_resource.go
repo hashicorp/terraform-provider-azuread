@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
@@ -59,7 +60,7 @@ func directoryRoleAssignmentResource() *schema.Resource {
 				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true, // TODO: remove Computed in v3.0
+				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
@@ -80,7 +81,7 @@ func directoryRoleAssignmentResource() *schema.Resource {
 				Description:      "Identifier of the directory object representing the scope of the assignment",
 				Type:             schema.TypeString,
 				Optional:         true,
-				Computed:         true, // TODO: remove Computed in v3.0
+				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
@@ -118,16 +119,18 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		appScopeId = v.(string)
 	}
 
+	if v, ok := d.GetOk("directory_scope_id"); ok {
+		directoryScopeId = v.(string)
+	} else if v, ok = d.GetOk("directory_scope_object_id"); ok {
+		directoryScopeId = v.(string)
+	}
+
 	if appScopeId != "" {
 		properties.AppScopeId = &appScopeId
-	} else {
-		if v, ok := d.GetOk("directory_scope_id"); ok {
-			directoryScopeId = v.(string)
-		} else if v, ok = d.GetOk("directory_scope_object_id"); ok {
-			directoryScopeId = v.(string)
-		}
-
+	} else if directoryScopeId != "" {
 		properties.DirectoryScopeId = &directoryScopeId
+	} else {
+		properties.DirectoryScopeId = utils.String("/")
 	}
 
 	assignment, status, err := client.Create(ctx, properties)
