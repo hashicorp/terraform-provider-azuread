@@ -1,3 +1,9 @@
+## 2.26.1 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_directory_role_assignment` - fix a bug that required `directory_scope_id` to be set for unscoped assignments [GH-840]
+
 ## 2.26.0 (July 08, 2022)
 
 IMPROVEMENTS:
