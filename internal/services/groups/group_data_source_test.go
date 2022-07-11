@@ -37,6 +37,19 @@ func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_byDisplayNameWithSecurityNotMail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.displayNameSecurityNotMail(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
 func TestAccGroupDataSource_byCaseInsensitiveDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
@@ -153,10 +166,22 @@ func (GroupDataSource) displayNameSecurity(data acceptance.TestData) string {
 
 data "azuread_group" "test" {
   display_name     = azuread_group.test.display_name
-  mail_enabled     = false
   security_enabled = true
 }
 `, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) displayNameSecurityNotMail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+
+data "azuread_group" "test" {
+  display_name     = azuread_group.test.display_name
+  mail_enabled     = false
+  security_enabled = true
+}
+`, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
 }
 
 func (GroupDataSource) caseInsensitiveDisplayName(data acceptance.TestData) string {
