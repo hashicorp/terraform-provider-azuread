@@ -244,10 +244,10 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var mailEnabled, securityEnabled *bool
-	if v, exists := d.GetOk("mail_enabled"); exists {
+	if v, exists := d.GetOkExists("mail_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
 		mailEnabled = utils.Bool(v.(bool))
 	}
-	if v, exists := d.GetOk("security_enabled"); exists {
+	if v, exists := d.GetOkExists("security_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
 		securityEnabled = utils.Bool(v.(bool))
 	}
 
