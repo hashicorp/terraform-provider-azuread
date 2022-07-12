@@ -1,3 +1,9 @@
+## 2.27.0 (Unreleased)
+
+BUG FIXES:
+
+* `data.azuread_group` - ensure security/mail enabled groups are excluded when explicitly `false` in config [GH-841]
+
 ## 2.26.1 (July 11, 2022)
 
 BUG FIXES:
