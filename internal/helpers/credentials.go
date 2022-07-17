@@ -170,8 +170,14 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCre
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
-		expiry := time.Now().Add(d)
-		endDate = &expiry
+
+		if credential.StartDateTime == nil {
+			expiry := time.Now().Add(time.Hour * 24 * 365)
+			endDate = &expiry
+		} else {
+			expiry := credential.StartDateTime.Add(d)
+			endDate = &expiry
+		}
 	}
 	if endDate != nil {
 		credential.EndDateTime = endDate
