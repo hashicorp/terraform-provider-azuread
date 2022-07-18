@@ -2,8 +2,8 @@ package directoryobjects
 
 import (
 	"context"
-	"fmt"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/odata"
 	"time"
@@ -48,7 +48,21 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 
-	fmt.Println(obj.ODataType)
+	switch obj.ODataType {
+	// There are many more types to switch here - These are the ones added per the issue
+	case odata.TypeUser:
+		d.Set("type", "User")
+	case odata.TypeSingleUser:
+		d.Set("type", "SingleUser")
+	case odata.TypeGroup:
+		d.Set("type", "Group")
+	case odata.TypeServicePrincipal:
+		d.Set("type", "ServicePrincipal")
+	default:
+		return diag.Errorf("unknown principal type returned: %s", obj.ODataType)
+	}
+
+	tf.Set(d, "type", obj.ODataType)
 
 	return nil
 }
