@@ -2,11 +2,13 @@ package directoryobjects
 
 import (
 	"context"
+	"time"
+
+	"github.com/manicminer/hamilton/odata"
+
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
-	"github.com/manicminer/hamilton/odata"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,7 +31,7 @@ func principalTypeDataSource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 			"type": {
-				Description: "The msgraph type of the principal",
+				Description: "The OData type of the principal",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -48,7 +50,7 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 
-	switch obj.ODataType {
+	switch *obj.ODataType {
 	// There are many more types to switch here - These are the ones added per the issue
 	case odata.TypeUser:
 		d.Set("type", "User")
@@ -59,7 +61,7 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 	case odata.TypeServicePrincipal:
 		d.Set("type", "ServicePrincipal")
 	default:
-		return diag.Errorf("unknown principal type returned: %s", obj.ODataType)
+		return diag.Errorf("unknown principal type returned: %s", *obj.ODataType)
 	}
 
 	tf.Set(d, "type", obj.ODataType)
