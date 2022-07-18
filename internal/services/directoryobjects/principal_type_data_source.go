@@ -1,4 +1,4 @@
-package groups
+package directoryobjects
 
 import (
 	"context"
