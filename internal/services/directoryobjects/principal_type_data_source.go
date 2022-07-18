@@ -26,8 +26,7 @@ func principalTypeDataSource() *schema.Resource {
 			"object_id": {
 				Description:      "The object ID of the principal",
 				Type:             schema.TypeString,
-				Optional:         false,
-				Computed:         true,
+				Required:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 			"type": {
