@@ -172,7 +172,7 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCre
 		}
 
 		if credential.StartDateTime == nil {
-			expiry := time.Now().Add(time.Hour * 24 * 365)
+			expiry := time.Now().Add(d)
 			endDate = &expiry
 		} else {
 			expiry := credential.StartDateTime.Add(d)
