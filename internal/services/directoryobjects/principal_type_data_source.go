@@ -4,10 +4,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/manicminer/hamilton/msgraph"
+
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,6 +45,8 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Users.DirectoryObjectsClient
 	client.BaseClient.DisableRetries = true
 
+	var directoryObject msgraph.DirectoryObject
+
 	objectId := d.Get("object_id").(string)
 
 	obj, _, err := client.Get(context.Background(), objectId, odata.Query{})
@@ -49,21 +54,24 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 		return nil
 	}
 
-	switch *obj.ODataType {
+	// TODO: Not this
+	directoryObject = *obj
+
+	d.SetId(*directoryObject.ID)
+
+	switch *directoryObject.ODataType {
 	// There are many more types to switch here - These are the ones added per the issue
 	case odata.TypeUser:
-		d.Set("type", "User")
+		tf.Set(d, "type", "User")
 	case odata.TypeSingleUser:
-		d.Set("type", "SingleUser")
+		tf.Set(d, "type", "SingleUser")
 	case odata.TypeGroup:
-		d.Set("type", "Group")
+		tf.Set(d, "type", "Group")
 	case odata.TypeServicePrincipal:
-		d.Set("type", "ServicePrincipal")
+		tf.Set(d, "type", "ServicePrincipal")
 	default:
-		return diag.Errorf("unknown principal type returned: %s", *obj.ODataType)
+		return diag.Errorf("unknown principal type returned: %s", *directoryObject.ODataType)
 	}
-
-	tf.Set(d, "type", obj.ODataType)
 
 	return nil
 }
