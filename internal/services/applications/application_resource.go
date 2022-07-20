@@ -354,6 +354,20 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"manage_api": {
+				Description: "Specifies whether terraform should continue to manage the api of the AppRegistration after initially setting it.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
+
+			"manage_approles": {
+				Description: "Specifies whether terraform should continue to manage the approles of the AppRegistration after initially setting it.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
+
 			"oauth2_post_response_required": {
 				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
 				Type:        schema.TypeBool,
@@ -451,6 +465,22 @@ func applicationResource() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+
+			"service_principal": {
+				Description: "ServicePrincipal specific configuration necessary for the full configuration of the current appliaction that cannot live in the service principal resource",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"preferred_single_signon_mode": {
+							Description: "Set the preferred single signon mode",
+							Type:        schema.TypeString,
+							Required:    true,
 						},
 					},
 				},
@@ -1076,8 +1106,106 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
+
+	app, _, err := client.Get(ctx, d.Id(), odata.Query{})
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
+	}
+	appId := *app.AppId
+
+	properties := msgraph.Application{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(applicationId),
+		},
+	}
+
+	// Set the owners first. This is important as Update() is the main method called
+	// When instantiating a Gallery application, in which case owners should be set
+	// Before the call to set the preferred_single_signon_mode.
+	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+		owners, _, err := client.ListOwners(ctx, applicationId)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
+		}
+
+		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		existingOwners := *owners
+		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
+		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
+
+		if len(ownersToAdd) > 0 {
+			newOwners := make(msgraph.Owners, 0)
+			for _, ownerId := range ownersToAdd {
+				newOwners = append(newOwners, msgraph.DirectoryObject{
+					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					ID: &ownerId,
+				})
+			}
+
+			properties.Owners = &newOwners
+			if _, err := client.AddOwners(ctx, &properties); err != nil {
+				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", d.Id())
+			}
+		}
+
+		if len(ownersForRemoval) > 0 {
+			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove owners from application with object ID: %q", d.Id())
+			}
+		}
+	}
+
+	// reset the properties for the next patch
+	properties = msgraph.Application{
+		DirectoryObject: msgraph.DirectoryObject{
+			ID: utils.String(applicationId),
+		},
+	}
+
+	// For AWS Gallery Applications, A ServicePrincipal setting must be set in order to be able to specify
+	// The correct identifierURIs
+	if _, ok := d.GetOk("service_principal"); ok {
+		servicePrincipalRaw := d.Get("service_principal").([]interface{})
+		servicePrincipal := servicePrincipalRaw[0].(map[string]interface{})
+		if v, ok := servicePrincipal["preferred_single_signon_mode"]; ok {
+			var preferredSingleSignonMode msgraph.StringNullWhenEmpty
+			if v2, ok := v.(string); ok {
+				preferredSingleSignonMode = msgraph.StringNullWhenEmpty(v2)
+			}
+			result, _, err := spClient.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})
+			//result, _, err := spClient.List(ctx, odata.Query{Search: fmt.Sprintf("appId:%s", appId)})
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not find corresponding servicePrincipal with appId '%s' (when updating application)", appId)
+			}
+			var servicePrincipal *msgraph.ServicePrincipal
+			if result != nil {
+				for _, r := range *result {
+					if r.AppId != nil && strings.EqualFold(*r.AppId, appId) {
+						servicePrincipal = &r
+						break
+					}
+				}
+			}
+			if servicePrincipal == nil {
+				return tf.ErrorDiagF(errors.New("Could not find a service principal associated with the main application"), "No results from filter 'appId eq %s'", appId)
+			}
+			associatedServicePrincipalId := servicePrincipal.ID
+			patch := msgraph.ServicePrincipal{
+				DirectoryObject: msgraph.DirectoryObject{
+					ID: utils.String(*associatedServicePrincipalId),
+				},
+				PreferredSingleSignOnMode: &preferredSingleSignonMode,
+			}
+			if _, err := spClient.Update(ctx, patch); err != nil {
+				return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", associatedServicePrincipalId)
+			}
+			tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
+		}
+	}
 
 	// Perform this check at apply time to catch any duplicate names created during the same apply
 	if d.Get("prevent_duplicate_names").(bool) {
@@ -1115,77 +1243,43 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
 	}
 
-	properties := msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(applicationId),
-		},
-		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
-		DisplayName:           utils.String(displayName),
-		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
-		Info: &msgraph.InformationalUrl{
-			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
-			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
-			SupportUrl:          utils.String(d.Get("support_url").(string)),
-			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
-		},
-		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                      &tags,
-		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
+	properties.DisplayName = utils.String(displayName)
+	properties.GroupMembershipClaims = expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List())
+	properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List())
+	properties.Info = &msgraph.InformationalUrl{
+		MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
+		PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
+		SupportUrl:          utils.String(d.Get("support_url").(string)),
+		TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
+	}
+	properties.IsDeviceOnlyAuthSupported = utils.Bool(d.Get("device_only_auth_enabled").(bool))
+	properties.IsFallbackPublicClient = utils.Bool(d.Get("fallback_public_client_enabled").(bool))
+	properties.Oauth2RequirePostResponse = utils.Bool(d.Get("oauth2_post_response_required").(bool))
+	properties.OptionalClaims = expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{}))
+	properties.PublicClient = expandApplicationPublicClient(d.Get("public_client").([]interface{}))
+	properties.RequiredResourceAccess = expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List())
+	properties.SignInAudience = utils.String(d.Get("sign_in_audience").(string))
+	properties.Spa = expandApplicationSpa(d.Get("single_page_application").([]interface{}))
+	properties.Tags = &tags
+	properties.Web = expandApplicationWeb(d.Get("web").([]interface{}))
+
+	if d.Get("manage_api").(bool) == true {
+		properties.Api = expandApplicationApi(d.Get("api").([]interface{}))
 	}
 
 	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
 		return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", d.Id())
 	}
 
-	if err := applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*schema.Set).List())); err != nil {
-		return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", d.Id())
+	if d.Get("manage_approles").(bool) == true {
+		properties.AppRoles = expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())
+		if err := applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*schema.Set).List())); err != nil {
+			return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", d.Id())
+		}
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", d.Id())
-	}
-
-	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
-		owners, _, err := client.ListOwners(ctx, applicationId)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
-		}
-
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
-		existingOwners := *owners
-		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
-		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
-
-		if len(ownersToAdd) > 0 {
-			newOwners := make(msgraph.Owners, 0)
-			for _, ownerId := range ownersToAdd {
-				newOwners = append(newOwners, msgraph.DirectoryObject{
-					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-					ID: &ownerId,
-				})
-			}
-
-			properties.Owners = &newOwners
-			if _, err := client.AddOwners(ctx, &properties); err != nil {
-				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", d.Id())
-			}
-		}
-
-		if len(ownersForRemoval) > 0 {
-			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove owners from application with object ID: %q", d.Id())
-			}
-		}
 	}
 
 	// Upload the application image
@@ -1201,6 +1295,11 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+
+	log.Printf("[INFO] This is a line of info")
+	log.Printf("[DEBUG] This is a line of debug")
+	log.Printf("[WARN] This is a line of warn")
 
 	app, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
@@ -1211,6 +1310,21 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", d.Id())
+	}
+
+	appId := app.AppId
+	var servicePrincipal *msgraph.ServicePrincipal
+	result, _, err := spClient.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})
+	if err != nil {
+		log.Printf("[DEBUG] Could not find a corresponding servicePrincipal when reading application")
+	}
+	if result != nil {
+		for _, r := range *result {
+			if r.AppId != nil && strings.EqualFold(*r.AppId, *appId) {
+				servicePrincipal = &r
+				break
+			}
+		}
 	}
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, false))
@@ -1230,6 +1344,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "service_principal", flattenApplicationServicePrincipal(servicePrincipal))
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)

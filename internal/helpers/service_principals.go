@@ -53,8 +53,8 @@ func ServicePrincipalFilterAppRolesByOrigin(in *[]msgraph.AppRole, filterOrigin 
 	if in == nil {
 		return
 	}
-
-	for _, role := range *in {
+	out := AppRolesFilterByOrigin(in, filterOrigin)
+	for _, role := range *out {
 		roleId := ""
 		if role.ID != nil {
 			roleId = *role.ID
@@ -81,20 +81,14 @@ func ServicePrincipalFilterAppRolesByOrigin(in *[]msgraph.AppRole, filterOrigin 
 		if role.Value != nil {
 			value = *role.Value
 		}
-		origin := ""
-		if role.Origin != nil {
-			origin = *role.Origin
-		}
-		if origin == filterOrigin {
-			result = append(result, map[string]interface{}{
-				"id":                   roleId,
-				"allowed_member_types": allowedMemberTypes,
-				"description":          description,
-				"display_name":         displayName,
-				"enabled":              enabled,
-				"value":                value,
-			})
-		}
+		result = append(result, map[string]interface{}{
+			"id":                   roleId,
+			"allowed_member_types": allowedMemberTypes,
+			"description":          description,
+			"display_name":         displayName,
+			"enabled":              enabled,
+			"value":                value,
+		})
 	}
 
 	return //nolint:nakedret

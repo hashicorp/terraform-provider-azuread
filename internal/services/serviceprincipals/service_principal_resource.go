@@ -80,6 +80,13 @@ func servicePrincipalResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"claims_mapping_policy_id": {
+				Description:      "ID of a claims mapping policy to be assigned",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.UUID,
+			},
+
 			"description": {
 				Description:  "Description of the service principal provided for internal end-users",
 				Type:         schema.TypeString,
@@ -166,6 +173,13 @@ func servicePrincipalResource() *schema.Resource {
 				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
 			},
 
+			"manage_preferred_single_sign_on_mode": {
+				Description: "Specifies whether terraform should continue to manage the preferred_single_sign_on_mode of the ServicePrincipal after initially setting it.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
+
 			"notes": {
 				Description:  "Free text field to capture information about the service principal, typically used for operational purposes",
 				Type:         schema.TypeString,
@@ -216,6 +230,34 @@ func servicePrincipalResource() *schema.Resource {
 				ConflictsWith: []string{"features", "feature_tags"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+				},
+			},
+
+			"token_signing_certificate": {
+				Description: "Block of certificate data to be generated and applied to the configuration",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"display_name": {
+							Description: "A name for the certificate",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+
+						"expiry_date": {
+							Description: "When the certificate expires",
+							Type:        schema.TypeString,
+							Optional:    true,
+						},
+
+						"set_preferred": {
+							Description: "Whether this certificate should be set as the preferred signing certificate",
+							Type:        schema.TypeBool,
+							Optional:    true,
+						},
+					},
 				},
 			},
 
@@ -640,21 +682,34 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		DirectoryObject: msgraph.DirectoryObject{
 			ID: utils.String(d.Id()),
 		},
-		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
-		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
-		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
-		AppRoles:                   expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List()),
-		Description:                utils.NullableString(d.Get("description").(string)),
-		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
-		Notes:                      utils.NullableString(d.Get("notes").(string)),
-		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List()),
-		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
-		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
-		Tags:                       &tags,
 	}
 
-	if err := servicePrincipalDisableAppRoles(ctx, client, &properties, expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List())); err != nil {
-		return tf.ErrorDiagPathF(err, "sp_app_role", "Could not disable App Roles for application with object ID %q", d.Id())
+	// when patching the sp approles, we have to keep the application approles counterparts
+	currentApplicationAppRoles, _, _, err := servicePrincipalGetAppRoles(ctx, client, &properties)
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "sp_app_role", "Could not get desired AppRoles for servicePrincipal %q", d.Id())
+	}
+
+	desiredAppRoles := append(currentApplicationAppRoles, *expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List())...)
+	properties.AlternativeNames = tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List())
+	properties.AccountEnabled = utils.Bool(d.Get("account_enabled").(bool))
+	properties.AppRoleAssignmentRequired = utils.Bool(d.Get("app_role_assignment_required").(bool))
+	properties.AppRoles = &desiredAppRoles
+	properties.Description = utils.NullableString(d.Get("description").(string))
+	properties.LoginUrl = utils.NullableString(d.Get("login_url").(string))
+	properties.Notes = utils.NullableString(d.Get("notes").(string))
+	properties.NotificationEmailAddresses = tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*schema.Set).List())
+	properties.SamlSingleSignOnSettings = expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{}))
+	properties.Tags = &tags
+
+	// In the case of an AWS gallery application, it is necessary to manage this property on the application object instead of here
+	// So we disable updating it in the servicePrincipal resource
+	if d.Get("manage_preferred_single_sign_on_mode").(bool) == true {
+		properties.PreferredSingleSignOnMode = utils.NullableString(d.Get("preferred_single_sign_on_mode").(string))
+	}
+
+	if err := servicePrincipalDisableUnwantedAppRoles(ctx, client, &properties, expandServicePrincipalAppRoles(d.Get("sp_app_role").(*schema.Set).List())); err != nil {
+		return tf.ErrorDiagPathF(err, "sp_app_role", "Could not disable unwanted AppRoles for servicePrincipal %q", d.Id())
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {

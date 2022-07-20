@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e -x
+
+rm -f ~/terraform-libs/terraform-provider-azuread ~/go/bin/terraform-provider-azuread
+make build
+cp ~/go/bin/terraform-provider-azuread ~/terraform-libs/
+

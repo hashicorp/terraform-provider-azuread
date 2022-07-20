@@ -39,43 +39,64 @@ func servicePrincipalAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRol
 	return true
 }
 
-func servicePrincipalDisableAppRoles(ctx context.Context, client *msgraph.ServicePrincipalsClient, servicePrincipal *msgraph.ServicePrincipal, newRoles *[]msgraph.AppRole) error {
+func servicePrincipalGetAppRoles(ctx context.Context, client *msgraph.ServicePrincipalsClient, servicePrincipal *msgraph.ServicePrincipal) ([]msgraph.AppRole, []msgraph.AppRole, []msgraph.AppRole, error) {
+	if servicePrincipal.ID == nil {
+		return nil, nil, nil, fmt.Errorf("cannot use ServicePrincipal model with nil ID")
+	}
+
+	sp, status, err := client.Get(ctx, *servicePrincipal.ID, odata.Query{})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return nil, nil, nil, fmt.Errorf("servicePrincipal with ID %q was not found", *servicePrincipal.ID)
+		}
+
+		return nil, nil, nil, fmt.Errorf("retrieving ServicePrincipal with object ID %q: %+v", *servicePrincipal.ID, err)
+	}
+
+	var spAppRoles []msgraph.AppRole
+	var applicationAppRoles []msgraph.AppRole
+	var allAppRoles []msgraph.AppRole
+	if sp.AppRoles != nil {
+		spAppRoles = *helpers.AppRolesFilterByOrigin(sp.AppRoles, "ServicePrincipal")
+		applicationAppRoles = *helpers.AppRolesFilterByOrigin(sp.AppRoles, "Application")
+	} else {
+		spAppRoles = []msgraph.AppRole{}
+		applicationAppRoles = []msgraph.AppRole{}
+	}
+	allAppRoles = append(applicationAppRoles, spAppRoles...)
+	return applicationAppRoles, spAppRoles, allAppRoles, nil
+}
+
+func servicePrincipalDisableUnwantedAppRoles(ctx context.Context, client *msgraph.ServicePrincipalsClient, servicePrincipal *msgraph.ServicePrincipal, desiredAppRoles *[]msgraph.AppRole) error {
 	if servicePrincipal.ID == nil {
 		return fmt.Errorf("cannot use ServicePrincipal model with nil ID")
 	}
 
-	if newRoles == nil {
-		newRoles = &[]msgraph.AppRole{}
+	if desiredAppRoles == nil {
+		desiredAppRoles = &[]msgraph.AppRole{}
 	}
 
-	app, status, err := client.Get(ctx, *servicePrincipal.ID, odata.Query{})
+	existingApplicationAppRoles, existingSpAppRoles, _, err := servicePrincipalGetAppRoles(ctx, client, servicePrincipal)
+
 	if err != nil {
-		if status == http.StatusNotFound {
-			return fmt.Errorf("servicePrincipal with ID %q was not found", *servicePrincipal.ID)
-		}
-
-		return fmt.Errorf("retrieving ServicePrincipal with object ID %q: %+v", *servicePrincipal.ID, err)
+		return err
 	}
 
-	var existingRoles []msgraph.AppRole
-	if app.AppRoles != nil {
-		existingRoles = *app.AppRoles
-	}
 	// Shortcut: don't update if no changes to be made
-	if reflect.DeepEqual(existingRoles, *newRoles) {
+	if reflect.DeepEqual(existingSpAppRoles, *desiredAppRoles) {
 		return nil
 	}
 
 	// Identify any roles to be changed
 	var disable bool
-	for _, new := range *newRoles {
+	for _, new := range *desiredAppRoles {
 		if new.ID == nil || *new.ID == "" {
 			return fmt.Errorf("new role provided with nil or empty ID")
 		}
-		for i, existing := range existingRoles {
+		for i, existing := range existingSpAppRoles {
 			if existing.ID != nil && *existing.ID == *new.ID {
 				if existing.IsEnabled != nil && *existing.IsEnabled && servicePrincipalAppRoleChanged(existing, new) {
-					*existingRoles[i].IsEnabled = false
+					*existingSpAppRoles[i].IsEnabled = false
 					disable = true
 				}
 				break
@@ -84,33 +105,34 @@ func servicePrincipalDisableAppRoles(ctx context.Context, client *msgraph.Servic
 	}
 
 	// Identify any roles to be removed
-	for i, existing := range existingRoles {
+	for i, existing := range existingSpAppRoles {
 		found := false
-		for _, new := range *newRoles {
+		for _, new := range *desiredAppRoles {
 			if existing.ID != nil && *new.ID == *existing.ID {
 				found = true
 				break
 			}
 		}
 		if !found {
-			*existingRoles[i].IsEnabled = false
+			*existingSpAppRoles[i].IsEnabled = false
 			disable = true
 		}
 	}
 
 	if disable {
+		patchAppRoles := append(existingApplicationAppRoles, existingSpAppRoles...)
 		// Disable any changed or removed roles
 		properties := msgraph.ServicePrincipal{
 			DirectoryObject: msgraph.DirectoryObject{
 				ID: servicePrincipal.ID,
 			},
-			AppRoles: &existingRoles,
+			AppRoles: &patchAppRoles,
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling App Roles for ServicePrincipal with object ID %q: %+v", *servicePrincipal.ID, err)
+			return fmt.Errorf("disabling AppRoles for ServicePrincipal %q: %+v", *servicePrincipal.ID, err)
 		}
 
-		// Wait for application manifest to reflect the disabled roles
+		// Wait for servicePrincipal manifest to reflect the disabled roles
 		deadline, ok := ctx.Deadline()
 		if !ok {
 			return fmt.Errorf("context has no deadline")
@@ -124,13 +146,13 @@ func servicePrincipalDisableAppRoles(ctx context.Context, client *msgraph.Servic
 			Refresh: func() (interface{}, string, error) {
 				sp, _, err := client.Get(ctx, *servicePrincipal.ID, odata.Query{})
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *servicePrincipal.ID, err)
+					return nil, "Error", fmt.Errorf("retrieving ServicePrincipal %q: %+v", *servicePrincipal.ID, err)
 				}
 				if sp == nil || sp.AppRoles == nil {
-					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *servicePrincipal.ID, err)
+					return nil, "Error", fmt.Errorf("reading AppRoles for ServicePrincipal %q: %+v", *servicePrincipal.ID, err)
 				}
 				actualRoles := *sp.AppRoles
-				for _, expectedRole := range existingRoles {
+				for _, expectedRole := range existingSpAppRoles {
 					if expectedRole.IsEnabled != nil && !*expectedRole.IsEnabled {
 						for _, actualRole := range actualRoles {
 							if expectedRole.ID != nil && actualRole.ID != nil && *expectedRole.ID == *actualRole.ID {
@@ -146,7 +168,7 @@ func servicePrincipalDisableAppRoles(ctx context.Context, client *msgraph.Servic
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for App Roles to be disabled for ServicePrincipal with object ID %q: %+v", *servicePrincipal.ID, err)
+			return fmt.Errorf("waiting for AppRoles to be disabled for ServicePrincipal %q: %+v", *servicePrincipal.ID, err)
 		}
 	}
 	return nil

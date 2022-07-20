@@ -766,6 +766,20 @@ func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{
 	return accesses
 }
 
+func flattenApplicationServicePrincipal(in *msgraph.ServicePrincipal) []map[string]interface{} {
+	if in == nil {
+		return []map[string]interface{}{}
+	}
+
+	preferredSingleSignOnMode := ""
+	if in.PreferredSingleSignOnMode != nil {
+		preferredSingleSignOnMode = string(*in.PreferredSingleSignOnMode)
+	}
+	return []map[string]interface{}{{
+		"preferred_single_signon_mode": preferredSingleSignOnMode,
+	}}
+}
+
 func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
