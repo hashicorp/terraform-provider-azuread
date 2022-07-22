@@ -105,29 +105,11 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 		keyId = kid
 	}
 
-	var endDate time.Time
-	if v := d.Get("end_date").(string); v != "" {
-		var err error
-		endDate, err = time.Parse(time.RFC3339, v)
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
-		}
-	} else if v := d.Get("end_date_relative").(string); v != "" {
-		d, err := time.ParseDuration(v)
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
-		}
-		endDate = time.Now().Add(d)
-	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
-	}
-
 	credential := msgraph.KeyCredential{
-		KeyId:       utils.String(keyId),
-		Type:        keyType,
-		Usage:       msgraph.KeyCredentialUsageVerify,
-		Key:         utils.String(encodedValue),
-		EndDateTime: &endDate,
+		KeyId: utils.String(keyId),
+		Type:  keyType,
+		Usage: msgraph.KeyCredentialUsageVerify,
+		Key:   utils.String(encodedValue),
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -136,6 +118,33 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDateTime = &startDate
+	}
+
+	var endDate *time.Time
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
+		var err error
+		expiry, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+		}
+		endDate = &expiry
+	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
+		d, err := time.ParseDuration(v.(string))
+		if err != nil {
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+		}
+
+		if credential.StartDateTime == nil {
+			expiry := time.Now().Add(d)
+			endDate = &expiry
+		} else {
+			expiry := credential.StartDateTime.Add(d)
+			endDate = &expiry
+		}
+	}
+
+	if endDate != nil {
+		credential.EndDateTime = endDate
 	}
 
 	return &credential, nil
