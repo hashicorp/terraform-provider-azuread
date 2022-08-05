@@ -1,4 +1,4 @@
-## 2.27.0 (Unreleased)
+## 2.27.0 (August 05, 2022)
 
 NOTES:
 
@@ -6,11 +6,11 @@ NOTES:
 
 BUG FIXES:
 
-* `data.azuread_group` - ensure security/mail enabled groups are excluded when explicitly `false` in config [GH-841]
-* `azuread_application_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
-* `azuread_application_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
-* `azuread_service_principal_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
-* `azuread_service_principal_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
+* `data.azuread_group` - ensure security/mail enabled groups are excluded when explicitly `false` in config ([#841](https://github.com/hashicorp/terraform-provider-azuread/issues/841))
+* `azuread_application_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp ([#844](https://github.com/hashicorp/terraform-provider-azuread/issues/844))
+* `azuread_application_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp ([#844](https://github.com/hashicorp/terraform-provider-azuread/issues/844))
+* `azuread_service_principal_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp ([#844](https://github.com/hashicorp/terraform-provider-azuread/issues/844))
+* `azuread_service_principal_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp ([#844](https://github.com/hashicorp/terraform-provider-azuread/issues/844))
 
 ## 2.26.1 (July 11, 2022)
 
