@@ -1,8 +1,16 @@
 ## 2.27.0 (Unreleased)
 
+NOTES:
+
+* This release contains a behavioral change for application/service principal passwords and certificates, when using a relative end date.
+
 BUG FIXES:
 
 * `data.azuread_group` - ensure security/mail enabled groups are excluded when explicitly `false` in config [GH-841]
+* `azuread_application_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
+* `azuread_application_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
+* `azuread_service_principal_certificate` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
+* `azuread_service_principal_password` - calculate `end_date_relative` from the `start_date` and not the current timestamp [GH-844]
 
 ## 2.26.1 (July 11, 2022)
 
