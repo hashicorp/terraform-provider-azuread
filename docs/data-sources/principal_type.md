@@ -4,7 +4,7 @@ subcategory: "Base"
 
 # Data Source: azuread_principal_type
 
-Gets the OData Object type for a single given Object ID.
+Retrieves the OData type for a generic directory object having the provided object ID.
 
 ## API Permissions
 
