@@ -23,7 +23,7 @@ data "azuread_principal_type" "example" {
 }
 
 output "principal_type" {
-  value = "${data.azuread_principal_type.example.type}"
+  value = data.azuread_principal_type.example.type
 }
 ```
 
