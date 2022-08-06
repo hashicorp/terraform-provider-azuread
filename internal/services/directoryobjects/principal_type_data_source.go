@@ -2,6 +2,7 @@ package directoryobjects
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,22 +42,21 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Users.DirectoryObjectsClient
 	client.BaseClient.DisableRetries = true
 
-	var directoryObject msgraph.DirectoryObject
+	var directoryObject *msgraph.DirectoryObject
 
 	objectId := d.Get("object_id").(string)
 
-	obj, _, err := client.Get(context.Background(), objectId, odata.Query{})
+	directoryObject, _, err := client.Get(context.Background(), objectId, odata.Query{})
 	if err != nil {
-		return nil
+		return tf.ErrorDiagPathF(nil, "object_id", "Directory Object with ID %q was not found", objectId)
 	}
-
-	// TODO: Not this
-	directoryObject = *obj
+	if directoryObject == nil {
+		return tf.ErrorDiagF(fmt.Errorf("nil object returned for directory object with ID: %q", objectId), "Bad API Response")
+	}
 
 	d.SetId(*directoryObject.ID)
 
 	switch *directoryObject.ODataType {
-	// There are many more types to switch here - These are the ones added per the issue
 	case odata.TypeUser:
 		tf.Set(d, "type", "User")
 	case odata.TypeSingleUser:
