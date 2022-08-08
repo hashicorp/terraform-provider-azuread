@@ -59,8 +59,6 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 	switch *directoryObject.ODataType {
 	case odata.TypeUser:
 		tf.Set(d, "type", "User")
-	case odata.TypeSingleUser:
-		tf.Set(d, "type", "SingleUser")
 	case odata.TypeGroup:
 		tf.Set(d, "type", "Group")
 	case odata.TypeServicePrincipal:
