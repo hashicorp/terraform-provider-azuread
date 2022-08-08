@@ -30,7 +30,7 @@ func TestAccPrincipalTypeDataSource_userByObjectId(t *testing.T) {
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: PrincipalTypeDataSource{}.objectTypeFromGroup(data),
+			Config: PrincipalTypeDataSource{}.objectTypeFromUser(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("type").HasValue("User"),
 			),
