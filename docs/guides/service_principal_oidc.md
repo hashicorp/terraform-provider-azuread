@@ -17,7 +17,7 @@ We recommend using either a Service Principal or Managed Identity when running T
 
 Once you have configured a Service Principal as described in this guide, you should follow the [Configuring a Service Principal for managing Azure Active Directory](service_principal_configuration.html) guide to grant the Service Principal necessary permissions to create and modify Azure Active Directory objects such as users and groups.
 
-~> **Note:** WARNING: the current implementation of OIDC authentication only works in GitHub actions. A generic implementation where a token can be provided is being tracked in [this issue](https://github.com/hashicorp/terraform-provider-azurerm/issues/16901)
+~> **Note:** The current implementation of OIDC authentication currently only works in GitHub actions.
 
 ---
 
