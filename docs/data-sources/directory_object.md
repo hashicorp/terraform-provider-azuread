@@ -2,7 +2,7 @@
 subcategory: "Base"
 ---
 
-# Data Source: azuread_principal_type
+# Data Source: azuread_directory_object
 
 Retrieves the OData type for a generic directory object having the provided object ID.
 
@@ -18,12 +18,12 @@ When authenticated with a user principal, this data source does not require any 
 
 *Look up and output type of object by ID*
 ```terraform
-data "azuread_principal_type" "example" {
+data "azuread_directory_object" "example" {
   object_id = "object-id"
 }
 
-output "principal_type" {
-  value = data.azuread_principal_type.example.type
+output "object_type" {
+  value = data.azuread_directory_object.example.type
 }
 ```
 
