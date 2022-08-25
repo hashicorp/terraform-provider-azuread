@@ -131,6 +131,13 @@ func AzureADProvider() *schema.Provider {
 				Description: "Allow OpenID Connect to be used for authentication",
 			},
 
+			"oidc_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_OIDC_TOKEN", ""),
+				Description: "The ID token for use when authenticating as a Service Principal using OpenID Connect.",
+			},
+
 			"oidc_request_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -212,21 +219,23 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		}
 
 		authConfig := &auth.Config{
-			Environment:            env,
-			TenantID:               d.Get("tenant_id").(string),
-			ClientID:               d.Get("client_id").(string),
-			ClientCertData:         certData,
-			ClientCertPassword:     d.Get("client_certificate_password").(string),
-			ClientCertPath:         d.Get("client_certificate_path").(string),
-			ClientSecret:           d.Get("client_secret").(string),
-			IDTokenRequestURL:      d.Get("oidc_request_url").(string),
-			IDTokenRequestToken:    d.Get("oidc_request_token").(string),
-			EnableClientCertAuth:   true,
-			EnableClientSecretAuth: true,
-			EnableGitHubOIDCAuth:   d.Get("use_oidc").(bool),
-			EnableAzureCliToken:    d.Get("use_cli").(bool),
-			EnableMsiAuth:          d.Get("use_msi").(bool),
-			MsiEndpoint:            d.Get("msi_endpoint").(string),
+			Environment:               env,
+			TenantID:                  d.Get("tenant_id").(string),
+			ClientID:                  d.Get("client_id").(string),
+			ClientCertData:            certData,
+			ClientCertPassword:        d.Get("client_certificate_password").(string),
+			ClientCertPath:            d.Get("client_certificate_path").(string),
+			ClientSecret:              d.Get("client_secret").(string),
+			FederatedAssertion:        d.Get("oidc_token").(string),
+			IDTokenRequestURL:         d.Get("oidc_request_url").(string),
+			IDTokenRequestToken:       d.Get("oidc_request_token").(string),
+			EnableClientCertAuth:      true,
+			EnableClientSecretAuth:    true,
+			EnableClientFederatedAuth: d.Get("use_oidc").(bool),
+			EnableGitHubOIDCAuth:      d.Get("use_oidc").(bool),
+			EnableAzureCliToken:       d.Get("use_cli").(bool),
+			EnableMsiAuth:             d.Get("use_msi").(bool),
+			MsiEndpoint:               d.Get("msi_endpoint").(string),
 		}
 
 		// only one pid can be interpreted currently
