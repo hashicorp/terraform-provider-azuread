@@ -54,7 +54,8 @@ func TestAccPrincipalTypeDataSource_servicePrincipalByObjectId(t *testing.T) {
 func (PrincipalTypeDataSource) basicGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
-  display_name = "acctestGroup-%d"
+  display_name     = "acctestGroup-%d"
+  security_enabled = true
 }
 `, data.RandomInteger)
 }
@@ -76,11 +77,15 @@ resource "azuread_user" "test" {
 }
 
 func (PrincipalTypeDataSource) basicServicePrincipal(data acceptance.TestData) string {
-	return `
-resource "azuread_service_principal" "test" {
-  display_names = []
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctest-%[1]d"
 }
-`
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+`, data.RandomInteger)
 }
 
 func (PrincipalTypeDataSource) objectTypeFromGroup(data acceptance.TestData) string {
@@ -88,7 +93,7 @@ func (PrincipalTypeDataSource) objectTypeFromGroup(data acceptance.TestData) str
 %[1]s
 
 data "azuread_principal_type" "test" {
-  object_id = "azuread_group.test.object_id"
+  object_id = azuread_group.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicGroup(data))
 }
@@ -98,7 +103,7 @@ func (PrincipalTypeDataSource) objectTypeFromUser(data acceptance.TestData) stri
 %[1]s
 
 data "azuread_principal_type" "test" {
-  object_id = "azuread_user.test.object_id"
+  object_id = azuread_user.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicUser(data))
 }
@@ -108,7 +113,7 @@ func (PrincipalTypeDataSource) objectTypeFromServicePrincipal(data acceptance.Te
 %[1]s
 
 data "azuread_principal_type" "test" {
-  object_id = "azuread_service_principal.test.object_id"
+  object_id = azuread_service_principal.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicServicePrincipal(data))
 }

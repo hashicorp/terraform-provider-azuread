@@ -39,7 +39,7 @@ func principalTypeDataSource() *schema.Resource {
 	}
 }
 
-func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func principalTypeDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.DirectoryObjectsClient
 	client.BaseClient.DisableRetries = true
 
@@ -47,7 +47,7 @@ func principalTypeDataSourceRead(_ context.Context, d *schema.ResourceData, meta
 
 	objectId := d.Get("object_id").(string)
 
-	directoryObject, _, err := client.Get(context.Background(), objectId, odata.Query{})
+	directoryObject, _, err := client.Get(ctx, objectId, odata.Query{})
 	if err != nil {
 		return tf.ErrorDiagPathF(nil, "object_id", "Directory Object with ID %q was not found", objectId)
 	}
