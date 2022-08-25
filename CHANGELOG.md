@@ -2,6 +2,7 @@
 
 FEATURES
 
+* **Provider:** support for generic OIDC authentication providers [GH-874]
 * **New Data Source:** `azuread_directory_object` [GH-847]
 
 IMPROVEMENTS:
