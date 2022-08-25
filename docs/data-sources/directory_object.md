@@ -10,7 +10,7 @@ Retrieves the OData type for a generic directory object having the provided obje
 
 The following API permissions are required in order to use this data source.
 
-When authenticated with a service principal, this data source requires either `Group.Read.All` or `Directory.Read.All`
+When authenticated with a service principal, this data source requires either `User.Read.All`, `Group.Read.All` or `Directory.Read.All`, depending on the type of object being queried.
 
 When authenticated with a user principal, this data source does not require any additional roles.
 
@@ -19,7 +19,7 @@ When authenticated with a user principal, this data source does not require any 
 *Look up and output type of object by ID*
 ```terraform
 data "azuread_directory_object" "example" {
-  object_id = "object-id"
+  object_id = "00000000-0000-0000-0000-000000000000"
 }
 
 output "object_type" {
@@ -27,9 +27,15 @@ output "object_type" {
 }
 ```
 
+## Argument Reference
+
+The following arguments are supported:
+
+* `object_id` - (Optional) Specifies the Object ID of the directory object to look up.
+
 ## Attributes Reference 
 
 The following attributes are exported:
 
-*`object_id` - The object_id specified.
-*`type` - The type of the object
+*`object_id` - The object ID of the directory object.
+*`type` - The shortened OData type of the directory object. Possible values include: `Group`, `User` or `ServicePrincipal`.
