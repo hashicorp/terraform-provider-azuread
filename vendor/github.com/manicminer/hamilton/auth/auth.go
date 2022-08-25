@@ -61,6 +61,16 @@ func (c *Config) NewAuthorizer(ctx context.Context, api environments.Api) (Autho
 		}
 	}
 
+	if c.EnableClientFederatedAuth {
+		a, err := NewClientFederatedAuthorizer(ctx, c.Environment, api, c.Version, c.TenantID, c.AuxiliaryTenantIDs, c.ClientID, c.FederatedAssertion)
+		if err != nil {
+			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
+		}
+		if a != nil {
+			return a, nil
+		}
+	}
+
 	if c.EnableGitHubOIDCAuth {
 		a, err := NewGitHubOIDCAuthorizer(context.Background(), c.Environment, api, c.TenantID, c.AuxiliaryTenantIDs, c.ClientID, c.IDTokenRequestURL, c.IDTokenRequestToken)
 		if err != nil {
@@ -161,6 +171,22 @@ func NewClientSecretAuthorizer(ctx context.Context, environment environments.Env
 	}
 
 	return conf.TokenSource(ctx, ClientCredentialsSecretType), nil
+}
+
+// NewClientSecretAuthorizer returns an authorizer which uses client secret authentication.
+func NewClientFederatedAuthorizer(ctx context.Context, environment environments.Environment, api environments.Api, tokenVersion TokenVersion, tenantId string, auxTenantIds []string, clientId, federatedAssertion string) (Authorizer, error) {
+	conf := ClientCredentialsConfig{
+		Environment:        environment,
+		TenantID:           tenantId,
+		AuxiliaryTenantIDs: auxTenantIds,
+		ClientID:           clientId,
+		FederatedAssertion: federatedAssertion,
+		Resource:           api.Resource(),
+		Scopes:             []string{api.DefaultScope()},
+		TokenVersion:       tokenVersion,
+	}
+
+	return conf.TokenSource(ctx, ClientCredentialsAssertionType), nil
 }
 
 // NewGitHubOIDCAuthorizer returns an authorizer which acquires a client assertion from a GitHub endpoint, then uses client assertion authentication to obtain an access token.
