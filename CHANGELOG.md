@@ -4,6 +4,10 @@ FEATURES
 
 * **New Data Source:** `azuread_directory_object` [GH-847]
 
+IMPROVEMENTS:
+
+* `azuread_application` - support `max_size_limit` as a value for the `additional_properties` property in the `optional_claims` block [GH-864]
+
 ## 2.27.0 (August 05, 2022)
 
 NOTES:
