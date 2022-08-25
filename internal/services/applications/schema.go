@@ -46,6 +46,7 @@ func schemaOptionalClaims() *schema.Schema {
 								"emit_as_roles",
 								"include_externally_authenticated_upn",
 								"include_externally_authenticated_upn_without_hash",
+								"max_size_limit",
 								"netbios_domain_and_sam_account_name",
 								"on_premise_security_identifier",
 								"sam_account_name",
