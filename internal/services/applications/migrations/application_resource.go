@@ -375,7 +375,6 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 													"emit_as_roles",
 													"include_externally_authenticated_upn",
 													"include_externally_authenticated_upn_without_hash",
-													"max_size_limit",
 													"netbios_domain_and_sam_account_name",
 													"sam_account_name",
 													"use_guid",
