@@ -194,7 +194,47 @@ func TestAccProvider_clientSecretAuth(t *testing.T) {
 	}
 }
 
-func TestAccProvider_oidcAuth(t *testing.T) {
+func TestAccProvider_genericOidcAuth(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		return
+	}
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	// Support only oidc authentication
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.EnvironmentFromString(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
+		authConfig := &auth.Config{
+			Environment: env,
+			TenantID:    d.Get("tenant_id").(string),
+			ClientID:    d.Get("client_id").(string),
+
+			EnableClientFederatedAuth: true,
+			FederatedAssertion:        d.Get("oidc_token").(string),
+		}
+
+		return buildClient(ctx, provider, authConfig, "")
+	}
+
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProvider(provider); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
+func TestAccProvider_githubOidcAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		return
 	}
