@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
-func principalTypeDataSource() *schema.Resource {
+func directoryObjectDataSource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: principalTypeDataSourceRead,
+		ReadContext: directoryObjectDataSourceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(5 * time.Minute),
@@ -39,7 +39,7 @@ func principalTypeDataSource() *schema.Resource {
 	}
 }
 
-func principalTypeDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryObjectDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.DirectoryObjectsClient
 	client.BaseClient.DisableRetries = true
 
@@ -54,6 +54,12 @@ func principalTypeDataSourceRead(ctx context.Context, d *schema.ResourceData, me
 	if directoryObject == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil object returned for directory object with ID: %q", objectId), "Bad API Response")
 	}
+	if directoryObject.ID == nil {
+		return tf.ErrorDiagF(fmt.Errorf("nil object ID returned for directory object with ID: %q", objectId), "Bad API Response")
+	}
+	if directoryObject.ODataType == nil {
+		return tf.ErrorDiagF(fmt.Errorf("nil OData Type returned for directory object with ID: %q", objectId), "Bad API Response")
+	}
 
 	d.SetId(*directoryObject.ID)
 
@@ -65,7 +71,7 @@ func principalTypeDataSourceRead(ctx context.Context, d *schema.ResourceData, me
 	case odata.TypeServicePrincipal:
 		tf.Set(d, "type", "ServicePrincipal")
 	default:
-		return diag.Errorf("unknown principal type returned: %s", *directoryObject.ODataType)
+		return diag.Errorf("unknown object type %q returned for directory object with ID: %q", *directoryObject.ODataType, objectId)
 	}
 
 	return nil
