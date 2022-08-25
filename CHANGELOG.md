@@ -1,13 +1,13 @@
-## 2.28.0 (Unreleased)
+## 2.28.0 (August 25, 2022)
 
 FEATURES
 
-* **Provider:** support for generic OIDC authentication providers [GH-874]
-* **New Data Source:** `azuread_directory_object` [GH-847]
+* **Provider:** support for generic OIDC authentication providers ([#874](https://github.com/hashicorp/terraform-provider-azuread/issues/874))
+* **New Data Source:** `azuread_directory_object` ([#847](https://github.com/hashicorp/terraform-provider-azuread/issues/847))
 
 IMPROVEMENTS:
 
-* `azuread_application` - support `max_size_limit` as a value for the `additional_properties` property in the `optional_claims` block [GH-864]
+* `azuread_application` - support `max_size_limit` as a value for the `additional_properties` property in the `optional_claims` block ([#864](https://github.com/hashicorp/terraform-provider-azuread/issues/864))
 
 ## 2.27.0 (August 05, 2022)
 
