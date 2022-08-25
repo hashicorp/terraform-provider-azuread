@@ -1,3 +1,9 @@
+## 2.28.0 (Unreleased)
+
+FEATURES
+
+* **New Data Source:** `azuread_directory_object` [GH-847]
+
 ## 2.27.0 (August 05, 2022)
 
 NOTES:
@@ -53,7 +59,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * `azuread_user` - allow changing the `user_principal_name` property without recreating the user account ([#815](https://github.com/hashicorp/terraform-provider-azuread/issues/815))
-* 
+
 BUG FIXES:
 
 * **Provider:** Fix an Azure CLI authentication issue that could fail to autodetect the current tenant ID ([#819](https://github.com/hashicorp/terraform-provider-azuread/issues/819))
