@@ -1,0 +1,41 @@
+---
+name: "Acceptance Tests: OIDC"
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - '.github/workflows/acctest-oidc.yaml'
+      - 'internal/provider/**'
+      - 'vendor/github.com/manicminer/hamilton/auth/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  go-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.go-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - id: go-version
+        run: echo "::set-output name=version::$(cat ./.go-version)"
+
+  acctest-oidc:
+    needs: go-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '${{ needs.go-version.outputs.version }}'
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: |
+          echo "ARM_OIDC_TOKEN=$(curl -H "Accept: application/json; api-version=2.0" -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Content-Type: application/json" -G --data-urlencode "audience=api://AzureADTokenExchange" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')"  >>$GITHUB_ENV
+      - run: make testacc TEST=./internal/provider TESTARGS="-run '(?i)(TestAccProvider_.*oidc.*)'"
+        env:
+          ARM_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

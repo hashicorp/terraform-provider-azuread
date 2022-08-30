@@ -61,7 +61,7 @@ func (c *Config) NewAuthorizer(ctx context.Context, api environments.Api) (Autho
 		}
 	}
 
-	if c.EnableClientFederatedAuth {
+	if c.EnableClientFederatedAuth && strings.TrimSpace(c.TenantID) != "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.FederatedAssertion) != "" {
 		a, err := NewClientFederatedAuthorizer(ctx, c.Environment, api, c.Version, c.TenantID, c.AuxiliaryTenantIDs, c.ClientID, c.FederatedAssertion)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure ClientCertificate Authorizer: %s", err)
@@ -71,7 +71,7 @@ func (c *Config) NewAuthorizer(ctx context.Context, api environments.Api) (Autho
 		}
 	}
 
-	if c.EnableGitHubOIDCAuth {
+	if c.EnableGitHubOIDCAuth && strings.TrimSpace(c.TenantID) != "" && strings.TrimSpace(c.ClientID) != "" && strings.TrimSpace(c.IDTokenRequestURL) != "" && strings.TrimSpace(c.IDTokenRequestToken) != "" {
 		a, err := NewGitHubOIDCAuthorizer(context.Background(), c.Environment, api, c.TenantID, c.AuxiliaryTenantIDs, c.ClientID, c.IDTokenRequestURL, c.IDTokenRequestToken)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure GitHubOIDC Authorizer: %s", err)
