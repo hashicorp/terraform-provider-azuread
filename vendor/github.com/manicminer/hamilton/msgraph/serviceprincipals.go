@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
+	"time"
 	"github.com/manicminer/hamilton/odata"
 )
 
@@ -583,4 +583,76 @@ func (c *ServicePrincipalsClient) AssignAppRoleForResource(ctx context.Context, 
 	}
 
 	return &appRoleAssignment, status, nil
+}
+
+func (c *ServicePrincipalsClient) AddTokenSigningCertificate(ctx context.Context, servicePrincipalId string) (*TokenSigningCertificate, int, error) {
+	var status int
+	var tokenSigningCertificate TokenSigningCertificate
+
+	current_time_human := time.Now()
+	current_time_unix := current_time_human.Unix()
+	expiry_time_unix := current_time_unix + 63072000 // 2 years in seconds
+	expiry_time_rfc3339 := time.Unix(expiry_time_unix, 0).Format(time.RFC3339)
+
+
+	data := struct {
+		displayName string `json:"displayName"`
+		endDateTime  string `json:"endDateTime"`
+	}{
+		displayName: "CN=AWSContoso",
+		endDateTime:  expiry_time_rfc3339,
+	}
+	body, err := json.Marshal(data)
+	if err != nil {
+		return &tokenSigningCertificate, status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+
+	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s/addTokenSigningCertificate", servicePrincipalId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return &tokenSigningCertificate, status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return &tokenSigningCertificate, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	if err := json.Unmarshal(respBody, &tokenSigningCertificate); err != nil {
+		return &tokenSigningCertificate, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+	return &tokenSigningCertificate, status, nil
+}
+
+
+func (c *ServicePrincipalsClient) ActivateSigningToken(ctx context.Context, servicePrincipalId string, thumbprint string) (int, error) {
+	data := struct {
+		PreferredTokenSigningKeyThumbprint string `json:"preferredTokenSigningKeyThumbprint"`
+	}{
+		PreferredTokenSigningKeyThumbprint: thumbprint,
+	}
+	body, err := json.Marshal(data)
+
+	_, status, _, err := c.BaseClient.Patch(ctx, PatchHttpRequestInput{
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/servicePrincipals/%s", servicePrincipalId),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Post(): %v", err)
+	}
+	return status, nil
 }
