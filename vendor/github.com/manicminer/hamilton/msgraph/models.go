@@ -1297,6 +1297,19 @@ func (s *ServicePrincipal) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type TokenSigningCertificate struct {
+	CustomKeyIdentifier *string `json:"customKeyIdentifier"`
+	DisplayName *string `json:"displayName"`
+	EndDateTime *time.Time  `json:"endDateTime"`
+	Key *string `json:"key"`
+	KeyID *string `json:"keyId"`
+	StartDateTime *time.Time `json:"startDateTime"`
+	Thumbprint *string `json:"thumbprint"`
+	Type *string `json:"type"`
+	Usage *string `json:"usage"`
+}
+
+
 type SignInActivity struct {
 	LastSignInDateTime  *time.Time `json:"lastSignInDateTime,omitempty"`
 	LastSignInRequestId *string    `json:"lastSignInRequestId,omitempty"`
