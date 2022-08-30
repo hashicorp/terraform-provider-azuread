@@ -609,16 +609,6 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	//
-	// return tf.ErrorDiagF(err, "Could not remove initial owner from service principal with object ID: %q", tokenSigningCertificate)
-	// PATCH https://graph.microsoft.com/v1.0/servicePrincipals/a750f6cf-2319-464a-bcc3-456926736a91
-	// Content-type: application/json
-
-	// {
-	//   "preferredTokenSigningKeyThumbprint": "A7D3C4626B8A84FDA868CCC67D274D402FFD0A10"
-	// }
-	// }
-
 	// If the calling principal was not included in configuration, remove it now
 	if removeCallerOwner {
 		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
