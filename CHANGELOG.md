@@ -1,8 +1,8 @@
-## 2.28.1 (Unreleased)
+## 2.28.1 (August 30, 2022)
 
 BUG FIXES:
 
-* **Provider:** fix a bug that could cause GitHub OIDC authentication to fail [GH-876]
+* **Provider:** fix a bug that could cause GitHub OIDC authentication to fail ([#876](https://github.com/hashicorp/terraform-provider-azuread/issues/876))
 
 ## 2.28.0 (August 25, 2022)
 
