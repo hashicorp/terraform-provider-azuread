@@ -425,6 +425,12 @@ func servicePrincipalResource() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			"add_token_signing_certificate": {
+				Description: "When true, create a new saml certificate and add it to the service principal.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
 		},
 	}
 }
@@ -592,6 +598,26 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 			return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
 		}
 	}
+	if _, ok := d.GetOk("add_token_signing_certificate"); ok {
+		tokenSigningCertificate, _, err := client.AddTokenSigningCertificate(ctx, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not add saml token signing certificate to service principal with object ID: %q", d.Id())
+		}
+		_, err = client.ActivateSigningToken(ctx, d.Id(), *tokenSigningCertificate.Thumbprint)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not activate signing token from service principal with object ID: %q", d.Id())
+		}
+	}
+
+	//
+	// return tf.ErrorDiagF(err, "Could not remove initial owner from service principal with object ID: %q", tokenSigningCertificate)
+	// PATCH https://graph.microsoft.com/v1.0/servicePrincipals/a750f6cf-2319-464a-bcc3-456926736a91
+	// Content-type: application/json
+
+	// {
+	//   "preferredTokenSigningKeyThumbprint": "A7D3C4626B8A84FDA868CCC67D274D402FFD0A10"
+	// }
+	// }
 
 	// If the calling principal was not included in configuration, remove it now
 	if removeCallerOwner {
@@ -714,6 +740,17 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
+	}
+
+	if _, ok := d.GetOk("add_token_signing_certificate"); ok {
+		tokenSigningCertificate, _, err := client.AddTokenSigningCertificate(ctx, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not add saml token signing certificate to service principal with object ID: %q", d.Id())
+		}
+		_, err = client.ActivateSigningToken(ctx, d.Id(), *tokenSigningCertificate.Thumbprint)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not activate signing token from service principal with object ID: %q", d.Id())
+		}
 	}
 
 	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
