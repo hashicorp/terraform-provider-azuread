@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/b2cuserflow"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryobjects"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles"
@@ -20,6 +21,7 @@ func SupportedServices() []ServiceRegistration {
 		administrativeunits.Registration{},
 		applications.Registration{},
 		approleassignments.Registration{},
+		b2cuserflow.Registration{},
 		conditionalaccess.Registration{},
 		directoryobjects.Registration{},
 		directoryroles.Registration{},
