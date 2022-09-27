@@ -16,6 +16,7 @@ import (
 	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
+	userflow "github.com/hashicorp/terraform-provider-azuread/internal/services/b2cuserflow/client"
 	conditionalaccess "github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/client"
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
@@ -43,6 +44,7 @@ type Client struct {
 	AdministrativeUnits *administrativeunits.Client
 	Applications        *applications.Client
 	AppRoleAssignments  *approleassignments.Client
+	B2CUserFlow         *userflow.Client
 	ConditionalAccess   *conditionalaccess.Client
 	DirectoryRoles      *directoryroles.Client
 	Domains             *domains.Client
@@ -71,6 +73,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
 	client.UserFlows = userflows.NewClient(o)
 	client.Users = users.NewClient(o)
+	client.B2CUserFlow = userflow.NewClient(o)
 
 	// Acquire an access token upfront, so we can decode the JWT and populate the claims
 	token, err := o.Authorizer.Token(ctx, &http.Request{})
