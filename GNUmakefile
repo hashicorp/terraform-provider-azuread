@@ -2,12 +2,26 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 PKG_NAME=internal
 PROVIDER=azuread
 
+# Values to install the provider locally for testing purposes
+HOSTNAME=registry.terraform.io
+NAMESPACE=hashicorp
+NAME=azuread
+BINARY=terraform-provider-${NAME}
+VERSION=9.9.9
+OS_ARCH=linux_amd64
 
 .EXPORT_ALL_VARIABLES:
   TF_SCHEMA_PANIC_ON_ERROR=1
   GO111MODULE=on
 
 default: build
+
+local-build:
+	go build -o ${BINARY}
+
+local-install: local-build
+	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
 tools:
 	@echo "==> installing required tooling..."
