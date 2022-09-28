@@ -16,7 +16,9 @@ import (
 	"github.com/manicminer/hamilton/odata"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 )
 
@@ -110,7 +112,36 @@ func b2cuserflowResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func b2cuserflowResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	objectId := d.Id()
+	if d.HasChange("user_flow_type") {
+		return tf.ErrorDiagF(errors.New("Cannot update user_flow_type"), "Cannot update user_flow_type")
+	}
+	if d.HasChange("user_flow_type_version") {
+		return tf.ErrorDiagF(errors.New("Cannot update user_flow_type_version"), "Cannot update user_flow_type_version")
+	}
+
+	if d.HasChange("name") {
+		return tf.ErrorDiagF(errors.New("Cannot update name"), "Cannot update name")
+	}
+	userflowType := d.Get("user_flow_type").(string)
+	userflowTypeVersion := float32(d.Get("user_flow_type_version").(float64))
+	defaultTag := d.Get("default_language_tag").(string)
+	isLanguageCustomizationEnabled := d.Get("is_language_customization_enabled").(bool)
+
+	userflow := msgraph.B2CUserFlow{
+		ID:                             &objectId,
+		UserFlowType:                   &userflowType,
+		UserFlowTypeVersion:            &userflowTypeVersion,
+		DefaultLanguageTag:             &defaultTag,
+		IsLanguageCustomizationEnabled: &isLanguageCustomizationEnabled,
+	}
+
+	client := meta.(*clients.Client).B2CUserFlow.UserFlowClient
+	_, err := client.Update(ctx, userflow)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Could not update userflow with ID: %q", d.Id())
+	}
+	return b2cuserflowResourceRead(ctx, d, meta)
 }
 
 func b2cuserflowResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,5 +168,33 @@ func b2cuserflowResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func b2cuserflowResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*clients.Client).B2CUserFlow.UserFlowClient
+
+	objectId := d.Id()
+
+	status, err := client.Delete(ctx, objectId)
+	if err != nil {
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] Userflow with Object ID %q was not found - removing from state!", objectId)
+			d.SetId("")
+			return nil
+		}
+		return tf.ErrorDiagPathF(err, "id", "Deleting userflow with object ID %q, got status %d", objectId, status)
+	}
+
+	// Wait for user object to be deleted
+	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		client.BaseClient.DisableRetries = true
+		if _, status, err := client.Get(ctx, objectId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
+			}
+			return nil, err
+		}
+		return utils.Bool(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for deletion of userflow with object ID %q", objectId)
+	}
+
 	return nil
 }
