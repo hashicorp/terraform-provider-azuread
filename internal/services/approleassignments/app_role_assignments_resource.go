@@ -290,9 +290,11 @@ func appRoleAssignmentsResourceDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
-		_, err := client.Remove(ctx, appRoleId, *currentAppRoleAssignment.PrincipalId)
-		if err != nil {
-			return tf.ErrorDiagPathF(err, "ids", "Could not remove app role assignment")
+		if *currentAppRoleAssignment.AppRoleId == appRoleId {
+			_, err := client.Remove(ctx, resourceObjectId, *currentAppRoleAssignment.Id)
+			if err != nil {
+				return tf.ErrorDiagPathF(err, "ids", "Could not remove app role assignment")
+			}
 		}
 	}
 
