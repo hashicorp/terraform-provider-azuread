@@ -3,14 +3,13 @@ package approleassignments
 import (
 	"context"
 	"errors"
-	"log"
-	"net/http"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
+	"log"
+	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
@@ -124,9 +123,6 @@ func appRoleAssignmentsResourceCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// TODO: Check to see if the appRoleId is a valid appRole on the servicePrincipal
-
-	//tf.Set(d, "sp_app_role", filterServicePrincipalAppRolesByOrigin(servicePrincipal.AppRoles, "ServicePrincipal"))
-
 	for _, p := range principalObjectIds {
 		principalObjectId := p.(string)
 		properties := msgraph.AppRoleAssignment{
@@ -147,6 +143,7 @@ func appRoleAssignmentsResourceCreate(ctx context.Context, d *schema.ResourceDat
 			return tf.ErrorDiagF(errors.New("Resource ID returned for app role assignment is nil"), "Bad API response")
 		}
 	}
+
 	d.SetId(appRoleId)
 
 	return appRoleAssignmentsResourceRead(ctx, d, meta)
