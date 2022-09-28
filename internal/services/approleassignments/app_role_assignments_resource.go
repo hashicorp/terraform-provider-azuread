@@ -157,7 +157,7 @@ func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData,
 	appRoleId := d.Get("app_role_id").(string)
 	resourceObjectId := d.Get("resource_object_id").(string)
 	query := odata.Query{}
-	appRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
+	appRoleAssignments, status, err := client.List(ctx, resourceObjectId, query) // brings back all appRoleAssignments
 
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -211,7 +211,8 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 		appRoleId := d.Id()
 		resourceObjectId := d.Get("resource_object_id").(string)
 		query := odata.Query{}
-		currentAppRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
+		currentAppRoleAssignments, status, err := client.List(ctx, resourceObjectId, query) // brings back all appRoleAssignments
+
 		if err != nil {
 			if status == http.StatusNotFound {
 				log.Printf("[DEBUG] AppRole %q was not found - removing from state!", appRoleId)
@@ -232,7 +233,7 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 				}
 			}
 			if removeCurrentAppRoleAssignment {
-				_, err := client.Remove(ctx, appRoleId, *currentAppRoleAssignment.PrincipalId)
+				_, err := client.Remove(ctx, resourceObjectId, *currentAppRoleAssignment.Id)
 				if err != nil {
 					return tf.ErrorDiagPathF(err, "ids", "Could not remove app role assignment for Principal %q on AppRole %q on ServicePrincipal %q", *currentAppRoleAssignment.PrincipalId, appRoleId, resourceObjectId)
 				}
@@ -273,9 +274,9 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 func appRoleAssignmentsResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 	appRoleId := d.Id()
-
+	resourceObjectId := d.Get("resource_object_id").(string)
 	query := odata.Query{}
-	currentAppRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
+	currentAppRoleAssignments, status, err := client.List(ctx, resourceObjectId, query) // brings back all appRoleAssignments
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] AppRole %q was not found - removing from state!", appRoleId)
