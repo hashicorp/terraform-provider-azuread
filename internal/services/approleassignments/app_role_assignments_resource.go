@@ -172,11 +172,12 @@ func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
 	}
 
-	var listAppRoleAssignments []msgraph.AppRoleAssignment
 	var listPrincipalObjectIds []*string
 	var listPrincipalDisplayNames []*string
 	var listPrincipalTypes []*string
 	var listPrincipals []*map[string]string
+	var resourceDisplayName string
+
 	for _, assignment := range *appRoleAssignments {
 		if assignment.Id != nil {
 			appRoleAssignment := &assignment
@@ -224,10 +225,11 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 		if currentAppRoleAssignments == nil {
 			return tf.ErrorDiagF(errors.New("appRoleAssignments was nil"), "retrieving app role assignments for AppRole %q on ServicePrincipal %q", appRoleId, resourceObjectId)
 		}
+		principalObjectIds := d.Get("principal_object_ids").(*schema.Set).List()
 
 		for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
 			removeCurrentAppRoleAssignment := true
-			for _, tfPrincipalObjectId := range d.Get("principal_object_ids").([]string) {
+			for _, tfPrincipalObjectId := range principalObjectIds {
 				if *currentAppRoleAssignment.PrincipalId == tfPrincipalObjectId {
 					removeCurrentAppRoleAssignment = false
 				}
@@ -240,7 +242,7 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		for _, tfPrincipalObjectId := range d.Get("principal_object_ids").([]string) {
+		for _, tfPrincipalObjectId := range principalObjectIds {
 			addNewAppRoleAssignment := true
 			for _, currentAppRoleAssignment := range *currentAppRoleAssignments {
 				if *currentAppRoleAssignment.PrincipalId == tfPrincipalObjectId {
@@ -250,7 +252,7 @@ func appRoleAssignmentsResourceUpdate(ctx context.Context, d *schema.ResourceDat
 			if addNewAppRoleAssignment {
 				properties := msgraph.AppRoleAssignment{
 					AppRoleId:   utils.String(appRoleId),
-					PrincipalId: utils.String(tfPrincipalObjectId),
+					PrincipalId: utils.String(tfPrincipalObjectId.(string)),
 					ResourceId:  utils.String(resourceObjectId),
 				}
 				appRoleAssignment, _, err := client.Assign(ctx, properties)
