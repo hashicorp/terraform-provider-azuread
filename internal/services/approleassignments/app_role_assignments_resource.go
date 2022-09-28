@@ -70,6 +70,11 @@ func appRoleAssignmentsResource() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"assignment_id": {
+							Description: "The assignment ID of the app role to principal",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -149,7 +154,7 @@ func appRoleAssignmentsResourceCreate(ctx context.Context, d *schema.ResourceDat
 
 func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
-	appRoleId := d.Id()
+	appRoleId := d.Get("app_role_id").(string)
 	resourceObjectId := d.Get("resource_object_id").(string)
 	query := odata.Query{}
 	appRoleAssignments, status, err := client.List(ctx, appRoleId, query) // brings back all appRoleAssignments
@@ -182,18 +187,18 @@ func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData,
 			principal := make(map[string]string)
 			principal["display_name"] = *appRoleAssignment.PrincipalDisplayName
 			principal["object_id"] = *appRoleAssignment.PrincipalId
+			principal["assignment_id"] = *appRoleAssignment.Id
 			principal["object_type"] = *appRoleAssignment.PrincipalType
 			listPrincipals = append(listPrincipals, &principal)
+			resourceDisplayName = *appRoleAssignment.ResourceDisplayName
 		}
 	}
 
-	tf.Set(d, "app_role_id", listAppRoleAssignments[0].AppRoleId)
-	tf.Set(d, "principal_display_names", listPrincipalDisplayNames)
+	tf.Set(d, "app_role_id", appRoleId)
 	tf.Set(d, "principal_object_ids", listPrincipalObjectIds)
-	tf.Set(d, "principal_types", listPrincipalTypes)
 	tf.Set(d, "principals", listPrincipals)
-	tf.Set(d, "resource_display_name", listAppRoleAssignments[0].ResourceDisplayName)
-	tf.Set(d, "resource_object_id", listAppRoleAssignments[0].ResourceId)
+	tf.Set(d, "resource_display_name", resourceDisplayName)
+	tf.Set(d, "resource_object_id", resourceObjectId)
 
 	return nil
 }
