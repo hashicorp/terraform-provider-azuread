@@ -1,3 +1,10 @@
+## 2.29.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `data.azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API [GH-896]
+* `azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API [GH-896]
+
 ## 2.28.1 (August 30, 2022)
 
 BUG FIXES:
