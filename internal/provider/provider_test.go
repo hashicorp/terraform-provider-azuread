@@ -27,7 +27,7 @@ func TestProvider_impl(t *testing.T) {
 
 func TestAccProvider_cliAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
@@ -65,7 +65,7 @@ func TestAccProvider_cliAuth(t *testing.T) {
 
 func TestAccProvider_clientCertificateAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
@@ -106,7 +106,7 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 
 func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
@@ -156,7 +156,7 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 
 func TestAccProvider_clientSecretAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
@@ -196,7 +196,7 @@ func TestAccProvider_clientSecretAuth(t *testing.T) {
 
 func TestAccProvider_genericOidcAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
@@ -210,13 +210,18 @@ func TestAccProvider_genericOidcAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
+		idToken, err := oidcToken(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
 		authConfig := &auth.Config{
 			Environment: env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
 			EnableClientFederatedAuth: true,
-			FederatedAssertion:        d.Get("oidc_token").(string),
+			FederatedAssertion:        idToken,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -236,7 +241,7 @@ func TestAccProvider_genericOidcAuth(t *testing.T) {
 
 func TestAccProvider_githubOidcAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
-		return
+		t.Skip("TF_ACC not set")
 	}
 
 	provider := AzureADProvider()
