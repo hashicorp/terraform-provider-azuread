@@ -129,7 +129,7 @@ The following arguments are supported:
 
 `locations` block supports the following:
 
-* `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy.
+* `excluded_locations` - (Optional) A list of location IDs excluded from scope of policy. Can also be set to `AllTrusted`.
 * `included_locations` - (Required) A list of location IDs in scope of policy unless explicitly excluded. Can also be set to `All`, or `AllTrusted`.
 
 ---
