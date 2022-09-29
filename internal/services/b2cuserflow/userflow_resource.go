@@ -44,6 +44,14 @@ func b2cUserflowResource() *schema.Resource {
 		}),
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Description:      "The id of the user flow. The ID value is name prefixed with the value of B2C_1_ after creation.",
+				Type:             schema.TypeString,
+				Required:         false,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
 			"name": {
 				Description:      "The name of the user flow. This is a required value and is immutable after it's created. The name will be prefixed with the value of B2C_1_ after creation.",
 				Type:             schema.TypeString,
@@ -85,14 +93,13 @@ func b2cUserflowResource() *schema.Resource {
 
 func b2cuserflowResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).B2CUserFlow.UserFlowClient
-	id := d.Get("name").(string)
+	name := d.Get("name").(string)
 	userflowType := d.Get("user_flow_type").(string)
 	userflowTypeVersion := float32(d.Get("user_flow_type_version").(float64))
 	defaultTag := d.Get("default_language_tag").(string)
 	isLanguageCustomizationEnabled := d.Get("is_language_customization_enabled").(bool)
-
 	userflow := msgraph.B2CUserFlow{
-		ID:                             &id,
+		ID:                             &name,
 		UserFlowType:                   &userflowType,
 		UserFlowTypeVersion:            &userflowTypeVersion,
 		DefaultLanguageTag:             &defaultTag,
@@ -100,19 +107,18 @@ func b2cuserflowResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	userflowResp, _, err := client.Create(ctx, userflow)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating userflow %q", userflow)
+		return tf.ErrorDiagF(err, "Creating userflow %+v", userflow)
 	}
 
 	if userflowResp.ID == nil || *userflowResp.ID == "" {
 		return tf.ErrorDiagF(errors.New("API returned nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(fmt.Sprintf("B2C_1_%s", *userflow.ID))
+	d.SetId(fmt.Sprintf("B2C_1_%s", name))
 	return b2cuserflowResourceRead(ctx, d, meta)
 }
 
 func b2cuserflowResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	objectId := d.Id()
 	if d.HasChange("user_flow_type") {
 		return tf.ErrorDiagF(errors.New("Cannot update user_flow_type"), "Cannot update user_flow_type")
 	}
@@ -123,15 +129,12 @@ func b2cuserflowResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("name") {
 		return tf.ErrorDiagF(errors.New("Cannot update name"), "Cannot update name")
 	}
-	userflowType := d.Get("user_flow_type").(string)
-	userflowTypeVersion := float32(d.Get("user_flow_type_version").(float64))
+	objectId := d.Id()
 	defaultTag := d.Get("default_language_tag").(string)
 	isLanguageCustomizationEnabled := d.Get("is_language_customization_enabled").(bool)
 
 	userflow := msgraph.B2CUserFlow{
 		ID:                             &objectId,
-		UserFlowType:                   &userflowType,
-		UserFlowTypeVersion:            &userflowTypeVersion,
 		DefaultLanguageTag:             &defaultTag,
 		IsLanguageCustomizationEnabled: &isLanguageCustomizationEnabled,
 	}
@@ -182,7 +185,7 @@ func b2cuserflowResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagPathF(err, "id", "Deleting userflow with object ID %q, got status %d", objectId, status)
 	}
 
-	// Wait for user object to be deleted
+	// Wait for userflow object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, objectId, odata.Query{}); err != nil {

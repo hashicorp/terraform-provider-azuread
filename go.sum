@@ -233,6 +233,8 @@ github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348/go.mod h1:B69LE
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
 github.com/manicminer/hamilton v0.47.1 h1:nMH4oOa2lPAfCeLGEB1o+XzhyJUHPRimlWz/hB2WC5E=
 github.com/manicminer/hamilton v0.47.1/go.mod h1:lbVyngC+/nCWuDp8UhC6Bw+bh7jcP/E+YwqzHTmzemk=
+github.com/manicminer/hamilton v0.47.2-0.20220929104724-1b9c0367b2c2 h1:fpvL5Jyr9j2dg/2BJu8C8PlR4sp9T6VsBKZ1RULGI+o=
+github.com/manicminer/hamilton v0.47.2-0.20220929104724-1b9c0367b2c2/go.mod h1:lbVyngC+/nCWuDp8UhC6Bw+bh7jcP/E+YwqzHTmzemk=
 github.com/matryer/is v1.2.0/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
