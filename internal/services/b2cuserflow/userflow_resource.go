@@ -44,13 +44,10 @@ func b2cUserflowResource() *schema.Resource {
 		}),
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Description:      "The id of the user flow. The ID value is name prefixed with the value of B2C_1_ after creation.",
-				Type:             schema.TypeString,
-				Required:         false,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+			"object_id": {
+				Description: "The object ID of the userflow",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"name": {
 				Description:      "The name of the user flow. This is a required value and is immutable after it's created. The name will be prefixed with the value of B2C_1_ after creation.",
@@ -162,7 +159,7 @@ func b2cuserflowResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return tf.ErrorDiagF(err, "Retrieving userflow with object ID: %q", objectId)
 	}
 
-	tf.Set(d, "id", *userflow.ID)
+	tf.Set(d, "object_id", *userflow.ID)
 	tf.Set(d, "user_flow_type", *userflow.UserFlowType)
 	tf.Set(d, "user_flow_type_version", *userflow.UserFlowTypeVersion)
 	tf.Set(d, "default_language_tag", *userflow.DefaultLanguageTag)
