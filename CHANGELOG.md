@@ -1,10 +1,10 @@
-## 2.29.0 (Unreleased)
+## 2.29.0 (September 29, 2022)
 
 IMPROVEMENTS:
 
-* Provider: support for the `oidc_token_file_path` property & `ARM_OIDC_TOKEN_FILE_PATH` environment variable [GH-897]
-* `data.azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API [GH-896]
-* `azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API [GH-896]
+* Provider: support for the `oidc_token_file_path` property & `ARM_OIDC_TOKEN_FILE_PATH` environment variable ([#897](https://github.com/hashicorp/terraform-provider-azuread/issues/897))
+* `data.azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API ([#896](https://github.com/hashicorp/terraform-provider-azuread/issues/896))
+* `azuread_service_principal` - this resource now makes use of the MS Graph v1.0 API instead of the beta API ([#896](https://github.com/hashicorp/terraform-provider-azuread/issues/896))
 
 ## 2.28.1 (August 30, 2022)
 
