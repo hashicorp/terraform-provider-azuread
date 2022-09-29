@@ -747,9 +747,11 @@ type DirectoryAudit struct {
 }
 
 type DirectoryObject struct {
-	ODataId   *odata.Id   `json:"@odata.id,omitempty"`
-	ODataType *odata.Type `json:"@odata.type,omitempty"`
-	ID        *string     `json:"id,omitempty"`
+	ODataId        *odata.Id              `json:"@odata.id,omitempty"`
+	ODataType      *odata.Type            `json:"@odata.type,omitempty"`
+	ID             *string                `json:"id,omitempty"`
+	DisplayName    *string                `json:"displayName,omitempty"`
+	AdditionalData map[string]interface{} `json:"-"`
 }
 
 func (o *DirectoryObject) Uri(endpoint environments.ApiEndpoint, apiVersion ApiVersion) string {
@@ -865,7 +867,7 @@ type Group struct {
 	Description                   *StringNullWhenEmpty                `json:"description,omitempty"`
 	DisplayName                   *string                             `json:"displayName,omitempty"`
 	ExpirationDateTime            *time.Time                          `json:"expirationDateTime,omitempty"`
-	GroupTypes                    []GroupType                         `json:"groupTypes,omitempty"`
+	GroupTypes                    *[]GroupType                        `json:"groupTypes,omitempty"`
 	HasMembersWithLicenseErrors   *bool                               `json:"hasMembersWithLicenseErrors,omitempty"`
 	HideFromAddressLists          *bool                               `json:"hideFromAddressLists,omitempty"`
 	HideFromOutlookClients        *bool                               `json:"hideFromOutlookClients,omitempty"`
@@ -887,8 +889,8 @@ type Group struct {
 	PreferredLanguage             *string                             `json:"preferredLanguage,omitempty"`
 	ProxyAddresses                *[]string                           `json:"proxyAddresses,omitempty"`
 	RenewedDateTime               *time.Time                          `json:"renewedDateTime,omitempty"`
-	ResourceBehaviorOptions       []GroupResourceBehaviorOption       `json:"resourceBehaviorOptions,omitempty"`
-	ResourceProvisioningOptions   []GroupResourceProvisioningOption   `json:"resourceProvisioningOptions,omitempty"`
+	ResourceBehaviorOptions       *[]GroupResourceBehaviorOption      `json:"resourceBehaviorOptions,omitempty"`
+	ResourceProvisioningOptions   *[]GroupResourceProvisioningOption  `json:"resourceProvisioningOptions,omitempty"`
 	SecurityEnabled               *bool                               `json:"securityEnabled,omitempty"`
 	SecurityIdentifier            *string                             `json:"securityIdentifier,omitempty"`
 	Theme                         *GroupTheme                         `json:"theme,omitempty"`
@@ -945,7 +947,7 @@ func (g *Group) UnmarshalJSON(data []byte) error {
 func (g *Group) HasTypes(types []GroupType) bool {
 	for _, t := range types {
 		found := false
-		for _, gt := range g.GroupTypes {
+		for _, gt := range *g.GroupTypes {
 			if t == gt {
 				found = true
 				break
@@ -1280,6 +1282,7 @@ type ServicePrincipal struct {
 	LogoutUrl                           *string                       `json:"logoutUrl,omitempty"`
 	Notes                               *StringNullWhenEmpty          `json:"notes,omitempty"`
 	NotificationEmailAddresses          *[]string                     `json:"notificationEmailAddresses,omitempty"`
+	OAuth2PermissionScopes              *[]PermissionScope            `json:"oauth2PermissionScopes,omitempty"`
 	PasswordCredentials                 *[]PasswordCredential         `json:"passwordCredentials,omitempty"`
 	PasswordSingleSignOnSettings        *PasswordSingleSignOnSettings `json:"passwordSingleSignOnSettings,omitempty"`
 	PreferredSingleSignOnMode           *PreferredSingleSignOnMode    `json:"preferredSingleSignOnMode,omitempty"`
@@ -1315,7 +1318,7 @@ type SynchronizationSchedule struct {
 
 type SynchronizationTaskExecution struct {
 	ActivityIdentifier *string `json:"activityIdentifier,omitempty"`
-	CountEntitled      *string `json:"countEntitled,omitempty"`
+	CountEntitled      *int64  `json:"countEntitled,omitempty"`
 	State              *string `json:"state,omitempty"`
 }
 
@@ -1684,4 +1687,22 @@ type WindowsHelloForBusinessAuthenticationMethod struct {
 type EmployeeOrgData struct {
 	CostCenter *string `json:"costCenter,omitempty"`
 	Division   *string `json:"division,omitempty"`
+}
+
+type B2CUserFlow struct {
+	ID                  *string  `json:"id,omitempty"`
+	UserFlowType        *string  `json:"userFlowType,omitempty"`
+	UserFlowTypeVersion *float32 `json:"userFlowTypeVersion,omitempty"`
+	// The property that determines whether language customization is enabled within the B2C user flow. Language customization is not enabled by default for B2C user flows.
+	IsLanguageCustomizationEnabled *bool `json:"IsLanguageCustomizationEnabled,omitempty"`
+	// Indicates the default language of the b2cIdentityUserFlow that is used when no ui_locale tag is specified in the request. This field is RFC 5646 compliant.
+	DefaultLanguageTag *string `json:"defaultLanguageTag,omitempty"`
+}
+
+type UserFlowAttribute struct {
+	ID                    *string                    `json:"id,omitempty"`
+	Description           *string                    `json:"description,omitempty"`
+	DisplayName           *string                    `json:"displayName,omitempty"`
+	UserFlowAttributeType *string                    `json:"userFlowAttributeType,omitempty"`
+	DataType              *UserflowAttributeDataType `json:"dataType,omitempty"`
 }
