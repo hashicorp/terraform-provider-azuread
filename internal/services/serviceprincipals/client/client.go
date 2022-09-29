@@ -19,6 +19,7 @@ func NewClient(o *common.ClientOptions) *Client {
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
 	servicePrincipalsClient := msgraph.NewServicePrincipalsClient(o.TenantID)
+	servicePrincipalsClient.BaseClient.ApiVersion = msgraph.Version10
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
 	return &Client{
