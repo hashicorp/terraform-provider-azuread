@@ -20,6 +20,7 @@ import (
 	invitations "github.com/hashicorp/terraform-provider-azuread/internal/services/invitations/client"
 	policies "github.com/hashicorp/terraform-provider-azuread/internal/services/policies/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
+	userflowattributes "github.com/hashicorp/terraform-provider-azuread/internal/services/userflowattributes/client"
 	users "github.com/hashicorp/terraform-provider-azuread/internal/services/users/client"
 )
 
@@ -44,6 +45,7 @@ type Client struct {
 	Invitations         *invitations.Client
 	Policies            *policies.Client
 	ServicePrincipals   *serviceprincipals.Client
+	UserflowAttributes  *userflowattributes.Client
 	Users               *users.Client
 }
 
@@ -60,6 +62,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.Invitations = invitations.NewClient(o)
 	client.Policies = policies.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
+	client.UserflowAttributes = userflowattributes.NewClient(o)
 	client.Users = users.NewClient(o)
 
 	// Acquire an access token upfront, so we can decode the JWT and populate the claims

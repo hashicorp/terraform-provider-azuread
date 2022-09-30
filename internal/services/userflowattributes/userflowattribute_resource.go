@@ -1,4 +1,4 @@
-package users
+package userflowattributes
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,26 +46,30 @@ func userflowAttributeResource() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			"desciption": {
+			"description": {
 				Description: "The description of the user flow attribute that's shown to the user at the time of sign-up.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 			"userflow_attribute_type": {
 				Description: "The type of the user flow attribute. This is a read-only attribute that is automatically set. Depending on the type of attribute, the values for this property will be builtIn, custom, or required.",
+				Type:        schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{
 					string("builtIn"),
 					string("custom"),
 					string("required"),
 				}, false),
+				Required: true,
 			},
 			"data_type": {
 				Description: "The data type of the user flow attribute. This cannot be modified after the custom user flow attribute is created. The supported values for dataType are: string, boolean, int64, stringCollection, dateTime.",
+				Type:        schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{
 					string(msgraph.UserflowAttributeDataTypeString),
 					string(msgraph.UserflowAttributeDataTypeInt64),
 					string(msgraph.UserflowAttributeDataTypeBoolean),
 				}, false),
+				Required: true,
 			},
 		},
 	}
@@ -74,19 +79,15 @@ func userflowAttributeResource() *schema.Resource {
 func userflowAttributeResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).UserflowAttributes.Client
 
-	displayName := d.Get("display_name").(string)
-	description := d.Get("description").(string)
-	userflowType := d.Get("userflow_attribute_type").(string)
-	dataType := msgraph.UserflowAttributeDataType(d.Get("data_type").(string))
 	attr := msgraph.UserFlowAttribute{
-		DisplayName:           &displayName,
-		Description:           &description,
-		DataType:              &dataType,
-		UserFlowAttributeType: &userflowType,
+		DisplayName:           utils.String(d.Get("display_name").(string)),
+		DataType:              utils.String(msgraph.UserflowAttributeDataType(d.Get("data_type").(string))),
+		UserFlowAttributeType: utils.String(d.Get("userflow_attribute_type").(string)),
+		Description:           utils.String(d.Get("description").(string)),
 	}
 	userflowAttr, _, err := client.Create(ctx, attr)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating userflow attribute %+v", attr)
+		return tf.ErrorDiagF(err, "Creating userflow attribute %q", spew.Sdump(attr))
 	}
 
 	if userflowAttr.ID == nil || *userflowAttr.ID == "" {
