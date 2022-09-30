@@ -138,6 +138,13 @@ func AzureADProvider() *schema.Provider {
 				Description: "The ID token for use when authenticating as a Service Principal using OpenID Connect.",
 			},
 
+			"oidc_token_file_path": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ARM_OIDC_TOKEN_FILE_PATH", ""),
+				Description: "The path to a file containing an ID token for use when authenticating as a Service Principal using OpenID Connect.",
+			},
+
 			"oidc_request_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -218,6 +225,11 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			return nil, diag.Errorf("Parsing environment %q: %v", envName, err)
 		}
 
+		idToken, err := oidcToken(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
 		authConfig := &auth.Config{
 			Environment:               env,
 			TenantID:                  d.Get("tenant_id").(string),
@@ -226,7 +238,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			ClientCertPassword:        d.Get("client_certificate_password").(string),
 			ClientCertPath:            d.Get("client_certificate_path").(string),
 			ClientSecret:              d.Get("client_secret").(string),
-			FederatedAssertion:        d.Get("oidc_token").(string),
+			FederatedAssertion:        idToken,
 			IDTokenRequestURL:         d.Get("oidc_request_url").(string),
 			IDTokenRequestToken:       d.Get("oidc_request_token").(string),
 			EnableClientCertAuth:      true,
@@ -281,4 +293,24 @@ func decodeCertificate(clientCertificate string) ([]byte, error) {
 		pfx = out[:n]
 	}
 	return pfx, nil
+}
+
+func oidcToken(d *schema.ResourceData) (string, error) {
+	idToken := d.Get("oidc_token").(string)
+
+	if path := d.Get("oidc_token_file_path").(string); path != "" {
+		fileToken, err := os.ReadFile(path)
+
+		if err != nil {
+			return "", fmt.Errorf("reading OIDC Token from file %q: %v", path, err)
+		}
+
+		if idToken != "" && idToken != string(fileToken) {
+			return "", fmt.Errorf("mismatch between supplied OIDC token and supplied OIDC token file contents - please either remove one or ensure they match")
+		}
+
+		idToken = string(fileToken)
+	}
+
+	return idToken, nil
 }

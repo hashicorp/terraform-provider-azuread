@@ -146,7 +146,7 @@ github.com/hashicorp/terraform-svchost
 # github.com/hashicorp/yamux v0.0.0-20211028200310-0bc27b27de87
 ## explicit; go 1.15
 github.com/hashicorp/yamux
-# github.com/manicminer/hamilton v0.47.1
+# github.com/manicminer/hamilton v0.49.0
 ## explicit; go 1.16
 github.com/manicminer/hamilton/auth
 github.com/manicminer/hamilton/environments

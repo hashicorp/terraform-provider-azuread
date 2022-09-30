@@ -315,7 +315,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(*group.ID)
 
 	tf.Set(d, "assignable_to_role", group.IsAssignableToRole)
-	tf.Set(d, "behaviors", tf.FlattenStringSlice(group.ResourceBehaviorOptions))
+	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(group.ResourceBehaviorOptions))
 	tf.Set(d, "description", group.Description)
 	tf.Set(d, "display_name", group.DisplayName)
 	tf.Set(d, "mail", group.Mail)
@@ -328,7 +328,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "onpremises_security_identifier", group.OnPremisesSecurityIdentifier)
 	tf.Set(d, "onpremises_sync_enabled", group.OnPremisesSyncEnabled)
 	tf.Set(d, "preferred_language", group.PreferredLanguage)
-	tf.Set(d, "provisioning_options", tf.FlattenStringSlice(group.ResourceProvisioningOptions))
+	tf.Set(d, "provisioning_options", tf.FlattenStringSlicePtr(group.ResourceProvisioningOptions))
 	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(group.ProxyAddresses))
 	tf.Set(d, "security_enabled", group.SecurityEnabled)
 	tf.Set(d, "theme", group.Theme)
@@ -349,7 +349,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
-	if hasGroupType(group.GroupTypes, msgraph.GroupTypeUnified) {
+	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
 		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
