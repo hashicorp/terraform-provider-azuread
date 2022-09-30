@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/accessmanagement"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments"
@@ -17,6 +18,7 @@ import (
 
 func SupportedServices() []ServiceRegistration {
 	return []ServiceRegistration{
+		accessmanagement.Registration{},
 		administrativeunits.Registration{},
 		applications.Registration{},
 		approleassignments.Registration{},
