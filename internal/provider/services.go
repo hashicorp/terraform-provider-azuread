@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/invitations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/userflowattributeassignment"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
 )
 
@@ -30,6 +31,7 @@ func SupportedServices() []ServiceRegistration {
 		invitations.Registration{},
 		policies.Registration{},
 		serviceprincipals.Registration{},
+		userflowattributeassignment.Registration{},
 		users.Registration{},
 	}
 }
