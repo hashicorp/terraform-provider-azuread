@@ -183,10 +183,11 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 				},
 			},
 			"assignment_review_settings": {
-				Description: "The settings of whether assignment review is needed and how it's conducted.",
-				Type:        schema.TypeList,
-				MaxItems:    1,
-				Optional:    true,
+				Description:      "The settings of whether assignment review is needed and how it's conducted.",
+				Type:             schema.TypeList,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
+				MaxItems:         1,
+				Optional:         true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"is_enabled": {
@@ -219,7 +220,6 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							Description:  "This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC(e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date",
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      time.Now().UTC().Format(time.RFC3339),
 							ValidateFunc: validation.IsRFC3339Time,
 						},
 						"duration_in_days": {
@@ -257,9 +257,10 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 				},
 			},
 			"question": {
-				Description: "One ore more questions to the requestor.",
-				Type:        schema.TypeList,
-				Optional:    true,
+				Description:      "One ore more questions to the requestor.",
+				Type:             schema.TypeList,
+				DiffSuppressFunc: assignmentPolicyDiffSuppress,
+				Optional:         true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"is_required": {
@@ -468,6 +469,10 @@ func assignmentPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bo
 	}
 
 	if k == "requestor_settings.0.scope_type" && old == msgraph.RequestorSettingsScopeTypeNoSubjects && len(new) == 0 {
+		return true
+	}
+
+	if k == "assignment_review_settings.0.starting_on" && len(new) == 0 {
 		return true
 	}
 

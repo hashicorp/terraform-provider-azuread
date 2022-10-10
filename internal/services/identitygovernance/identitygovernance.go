@@ -100,10 +100,6 @@ func buildAssignmentPolicyReviewSettings(input []interface{}) (*msgraph.Assignme
 		return nil, nil
 	}
 	in := input[0].(map[string]interface{})
-	startOn, err := time.Parse(time.RFC3339, in["starting_on"].(string))
-	if err != nil {
-		return nil, fmt.Errorf("Error converting starting date %q to a valid date: %q", in["starting_on"].(string), err)
-	}
 
 	result := msgraph.AssignmentReviewSettings{
 		IsEnabled:                       utils.Bool(in["is_enabled"].(bool)),
@@ -113,7 +109,15 @@ func buildAssignmentPolicyReviewSettings(input []interface{}) (*msgraph.Assignme
 		IsAccessRecommendationEnabled:   utils.Bool(in["is_access_recommendation_enabled"].(bool)),
 		IsApprovalJustificationRequired: utils.Bool(in["is_approver_justification_required"].(bool)),
 		AccessReviewTimeoutBehavior:     in["access_review_timeout_behavior"].(string),
-		StartDateTime:                   &startOn,
+	}
+
+	startOnDate := in["starting_on"].(string)
+	if startOnDate != "" {
+		startOn, err := time.Parse(time.RFC3339, startOnDate)
+		if err != nil {
+			return nil, fmt.Errorf("Error converting starting date %q to a valid date: %q", in["starting_on"].(string), err)
+		}
+		result.StartDateTime = &startOn
 	}
 
 	result.Reviewers = buildUserSet(in["reviewer"].([]interface{}))

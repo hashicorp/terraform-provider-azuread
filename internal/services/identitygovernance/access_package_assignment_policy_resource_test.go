@@ -132,10 +132,6 @@ func (AccessPackageAssignmentPolicyResource) basic(data acceptance.TestData) str
 	return fmt.Sprintf(`
 provider "azuread" {}
 
-data "azuread_domains" "test" {
-  only_initial = true
-}
-
 resource "azuread_group" "test" {
   display_name     = "test-group-%[1]d"
   security_enabled = true
@@ -183,31 +179,25 @@ resource "azuread_access_package_assignment_policy" "test" {
 	}	
   }
 }
-`, data.RandomInteger, data.RandomPassword)
+`, data.RandomInteger)
 }
 
 func (AccessPackageAssignmentPolicyResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
-data "azuread_domains" "test" {
-  only_initial = true
+resource "azuread_group" "requestor" {
+  display_name     = "test-requestor-%[1]d"
+  security_enabled = true
 }
 
-resource "azuread_user" "requestor" {
-  user_principal_name = "testAccAssignmentPolicyCR'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctestUserCR-%[1]d"
-  password            = "%[2]s"
-}
-
-resource "azuread_user" "first_approver" {
-  user_principal_name = "testAccAssignmentPolicyCF'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctestUserCF-%[1]d"
-  password            = "%[2]s"
+resource "azuread_group" "first_approver" {
+  display_name     = "test-approver-%[1]d"
+  security_enabled = true
 }
 
 resource "azuread_group" "second_approver" {
-  display_name     = "test-group-%[1]d"
+  display_name     = "test-s-approver-%[1]d"
   security_enabled = true
 }
 
@@ -232,8 +222,8 @@ resource "azuread_access_package_assignment_policy" "test" {
     scope_type      = "SpecificDirectorySubjects"
     accept_requests = true
     requestor {
-      object_id    = azuread_user.requestor.object_id
-	  subject_type = "singleUser"
+      object_id    = azuread_group.requestor.object_id
+	  subject_type = "groupMembers"
     }
   }
   approval_settings {
@@ -246,8 +236,8 @@ resource "azuread_access_package_assignment_policy" "test" {
       is_alternative_approval_enabled     = true
       enable_alternative_approval_in_days = 8
       primary_approver {
-        object_id    = azuread_user.first_approver.object_id
-		subject_type = "singleUser"	
+        object_id    = azuread_group.first_approver.object_id
+		subject_type = "groupMembers"	
       }
       alternative_approver {
         object_id    = azuread_group.second_approver.object_id
@@ -262,8 +252,8 @@ resource "azuread_access_package_assignment_policy" "test" {
 		subject_type = "groupMembers"
       }
       primary_approver {
-        object_id    = azuread_user.first_approver.object_id
-		subject_type = "singleUser"
+        object_id    = azuread_group.first_approver.object_id
+		subject_type = "groupMembers"
 		is_backup    = true
       }
     }
@@ -276,8 +266,8 @@ resource "azuread_access_package_assignment_policy" "test" {
 	is_access_recommendation_enabled   = true
 	access_review_timeout_behavior     = "acceptAccessRecommendation"
 	reviewer {
-	  object_id    = azuread_user.first_approver.object_id
-	  subject_type = "singleUser"
+	  object_id    = azuread_group.first_approver.object_id
+	  subject_type = "groupMembers"
     }
   }
 
@@ -316,5 +306,5 @@ resource "azuread_access_package_assignment_policy" "test" {
   }
 }
 
-`, data.RandomInteger, data.RandomPassword)
+`, data.RandomInteger)
 }
