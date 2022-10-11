@@ -147,10 +147,13 @@ func buildUserSet(input []interface{}) *[]msgraph.UserSet {
 	userSets := make([]msgraph.UserSet, 0)
 	for _, v := range input {
 		v_map := v.(map[string]interface{})
+		oDataType, needId := userSetODataType(v_map["subject_type"].(string))
 		userSet := msgraph.UserSet{
-			ODataType: userSetODataType(v_map["subject_type"].(string)),
-			ID:        utils.String(v_map["object_id"].(string)),
+			ODataType: oDataType,
 			IsBackup:  utils.Bool(v_map["is_backup"].(bool)),
+		}
+		if needId {
+			userSet.ID = utils.String(v_map["object_id"].(string))
 		}
 
 		userSets = append(userSets, userSet)
@@ -176,8 +179,9 @@ func flattenUserSet(input *[]msgraph.UserSet) []interface{} {
 	return userSets
 }
 
-func userSetODataType(in string) *string {
+func userSetODataType(in string) (*string, bool) {
 	odataType := odata.TypeSingleUser
+	needId := true
 	switch in {
 	case odata.ShortTypeGroupMembers:
 		odataType = odata.TypeGroupMembers
@@ -185,13 +189,16 @@ func userSetODataType(in string) *string {
 		odataType = odata.TypeConnectedOrganizationMembers
 	case odata.ShortTypeRequestorManager:
 		odataType = odata.TypeRequestorManager
+		needId = false
 	case odata.ShortTypeInternalSponsors:
 		odataType = odata.TypeInternalSponsors
+		needId = false
 	case odata.ShortTypeExternalSponsors:
 		odataType = odata.TypeExternalSponsors
+		needId = false
 	}
 
-	return &odataType
+	return &odataType, needId
 }
 
 func userSetShortType(in string) *string {

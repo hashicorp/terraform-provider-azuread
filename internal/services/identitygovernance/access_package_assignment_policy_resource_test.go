@@ -236,8 +236,7 @@ resource "azuread_access_package_assignment_policy" "test" {
       is_alternative_approval_enabled     = true
       enable_alternative_approval_in_days = 8
       primary_approver {
-        object_id    = azuread_group.first_approver.object_id
-		subject_type = "groupMembers"	
+		subject_type = "requestorManager"	
       }
       alternative_approver {
         object_id    = azuread_group.second_approver.object_id
