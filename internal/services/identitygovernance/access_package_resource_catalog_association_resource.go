@@ -111,13 +111,13 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 	accessPackageResource, status, err := resourceClient.Get(ctx, catalogId, resourceOriginId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package resource and catalog association with resource %q@%q and catalog id %q was not found - removing from state!",
-				resourceOriginId, accessPackageResource.OriginSystem, catalogId)
+			log.Printf("[DEBUG] Access package resource and catalog association with resource origin id %q and catalog id %q was not found - removing from state!",
+				resourceOriginId, catalogId)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource %q@%q and catalog id %q.",
-			resourceOriginId, accessPackageResource.OriginSystem, catalogId)
+		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource origin id %q and catalog id %q.",
+			resourceOriginId, catalogId)
 	}
 
 	tf.Set(d, "catalog_id", catalogId)
