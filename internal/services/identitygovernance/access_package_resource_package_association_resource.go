@@ -19,8 +19,6 @@ import (
 	"github.com/manicminer/hamilton/odata"
 )
 
-const resourcePackageAssociationResourceName = "azuread_access_package_resource_catalog_association"
-
 func accessPackageResourcePackageAssociationResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: accessPackageResourcePackageAssociationResourceCreate,
@@ -49,7 +47,7 @@ func accessPackageResourcePackageAssociationResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_package_id": {
-				Description:  "The ID of access package this resouce association is configured to.",
+				Description:  "The ID of access package this resource association is configured to.",
 				Type:         schema.TypeString,
 				ValidateFunc: validation.IsUUID,
 				ForceNew:     true,
@@ -153,7 +151,7 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 }
 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Println("There is no destory implemented because Microsoft doesn't provide a valid API doing so for resource roles in an access package, you have to delete it manually, remove this resource from state now.")
+	log.Println("There is no destroy implemented because Microsoft doesn't provide a valid API doing so for resource roles in an access package, you have to delete it manually, remove this resource from state now.")
 	d.SetId("")
 	return nil
 }

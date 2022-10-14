@@ -138,18 +138,18 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-asscess-assignemnt-%[1]d"
+  display_name = "testacc-asscess-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-asscess-assignemnt-%[1]d"
+  display_name = "testacc-asscess-assignment-%[1]d"
   description  = "TestAcc Access Package %[1]d for access assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "testacc-asscess-assignemnt-%[1]d"
+  display_name      = "testacc-asscess-assignment-%[1]d"
   description       = "TestAcc Access Package Assignnment Policy %[1]d"
   duration_in_days  = 90
   access_package_id = azuread_access_package.test.id
@@ -202,12 +202,12 @@ resource "azuread_group" "second_approver" {
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-asscess-assignemnt-%[1]d"
+  display_name = "testacc-asscess-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-asscess-assignemnt-%[1]d"
+  display_name = "testacc-asscess-assignment-%[1]d"
   description  = "Test Access Package %[1]d for assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }

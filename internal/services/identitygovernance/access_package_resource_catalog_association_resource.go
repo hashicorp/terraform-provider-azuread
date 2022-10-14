@@ -18,8 +18,6 @@ import (
 	"github.com/manicminer/hamilton/odata"
 )
 
-const resourceCatalogAssociationResourceName = "azuread_access_package_resource_catalog_association"
-
 func accessPackageResourceCatalogAssociationResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: accessPackageResourceCatalogAssociationResourceCreate,
@@ -154,7 +152,7 @@ func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, 
 		CatalogId:             &catalogId,
 		AccessPackageResource: resource,
 	}
-	status, err = client.Delete(ctx, resourceCatalogAssociation)
+	_, err = client.Delete(ctx, resourceCatalogAssociation)
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting access package resource and catalog association with resource %q@%q and catalog id %q.",
 			*resourceCatalogAssociation.AccessPackageResource.OriginId, resourceCatalogAssociation.AccessPackageResource.OriginSystem, *resourceCatalogAssociation.CatalogId)

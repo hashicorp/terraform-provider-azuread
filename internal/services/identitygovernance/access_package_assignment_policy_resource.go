@@ -191,7 +191,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"is_enabled": {
-							Description: "Whether to enable assignemnt reivew.",
+							Description: "Whether to enable assignment reivew.",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
@@ -223,7 +223,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							ValidateFunc: validation.IsRFC3339Time,
 						},
 						"duration_in_days": {
-							Description: "How many days each occurence of the access review series will run.",
+							Description: "How many days each occurrence of the access review series will run.",
 							Type:        schema.TypeInt,
 							Optional:    true,
 						},
@@ -317,7 +317,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
-	properties := msgraph.AccessPackageAssignmentPolicy{}
+	var properties msgraph.AccessPackageAssignmentPolicy
 	var err error
 	if properties, err = buildAssignmentPolicyResourceData(ctx, d, meta); err != nil {
 		return tf.ErrorDiagF(err, "Error building resource data from supplied parameters!")
@@ -335,7 +335,7 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.
 func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
-	properties := msgraph.AccessPackageAssignmentPolicy{}
+	var properties msgraph.AccessPackageAssignmentPolicy
 	var err error
 	if properties, err = buildAssignmentPolicyResourceData(ctx, d, meta); err != nil {
 		return tf.ErrorDiagF(err, "Error building resource data from supplied parameters!")

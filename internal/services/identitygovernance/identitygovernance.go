@@ -233,12 +233,12 @@ func expandAccessPakcageAssignmentPolicyQuestions(questions []interface{}) *[]ms
 			Text:       expandAccessPakcageAssignmentPolicyQuestionContent(v_text),
 		}
 
-		v_map_chocies := v_map["choice"].([]interface{})
+		v_map_choices := v_map["choice"].([]interface{})
 		q.ODataType = utils.String(odata.TypeAccessPackageTextInputQuestion)
-		if len(v_map_chocies) > 0 {
+		if len(v_map_choices) > 0 {
 			q.ODataType = utils.String(odata.TypeAccessPackageMultipleChoiceQuestion)
 			choices := make([]msgraph.AccessPackageMultipleChoiceQuestions, 0)
-			for _, c := range v_map_chocies {
+			for _, c := range v_map_choices {
 				c_map := c.(map[string]interface{})
 				c_map_display_value := c_map["display_value"].([]interface{})
 				choices = append(choices, msgraph.AccessPackageMultipleChoiceQuestions{
