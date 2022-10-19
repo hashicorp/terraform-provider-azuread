@@ -174,7 +174,7 @@ resource "azuread_app_role_assignment" "example" {
 
 The following arguments are supported:
 
-* `app_role_id` - (Required) The ID of the app role to be assigned. Changing this forces a new resource to be created.
+* `app_role_id` - (Required) The ID of the app role to be assigned, or the default role ID `00000000-0000-0000-0000-000000000000`. Changing this forces a new resource to be created.
 * `principal_object_id` - (Required) The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `resource_object_id` - (Required) The object ID of the service principal representing the resource. Changing this forces a new resource to be created.
 
