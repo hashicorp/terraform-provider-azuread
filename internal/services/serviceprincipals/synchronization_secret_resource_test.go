@@ -60,18 +60,22 @@ func (SynchronizationSecretResource) template(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 data "azuread_application_template" "test" {
-	display_name = "Azure Databricks SCIM Provisioning Connector"
+  display_name = "Azure Databricks SCIM Provisioning Connector"
 }
 
 resource "azuread_application" "test" {
   display_name = "acctestSynchronizationJob-%[1]d"
+  owners       = [data.azuread_client_config.test.object_id]
   template_id  = data.azuread_application_template.test.template_id
 }
 
 resource "azuread_service_principal" "test" {
-	application_id = azuread_application.test.application_id
-	use_existing   = true
+  application_id = azuread_application.test.application_id
+  owners         = [data.azuread_client_config.test.object_id]
+  use_existing   = true
 }
 `, data.RandomInteger)
 }
@@ -81,16 +85,16 @@ func (r SynchronizationSecretResource) basic(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_synchronization_secret" "test" {
-	service_principal_id = azuread_service_principal.test.id
+  service_principal_id = azuread_service_principal.test.id
 
-	credential {
-		key   = "BaseAddress"
-		value = "https://test-address.azuredatabricks.net"
-	}
-	credential {
-		key   = "SecretToken"
-		value = "password-value"
-	}
+  credential {
+    key   = "BaseAddress"
+    value = "https://test-address.azuredatabricks.net"
+  }
+  credential {
+    key   = "SecretToken"
+    value = "password-value"
+  }
 }
 `, r.template(data))
 }

@@ -378,7 +378,6 @@ func applicationResource() *schema.Resource {
 				Description: "A list of object IDs of principals that will be granted ownership of the application",
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Computed:    true,
 				Set:         schema.HashString,
 				MaxItems:    100,
 				Elem: &schema.Schema{

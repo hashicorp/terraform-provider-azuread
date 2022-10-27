@@ -185,7 +185,6 @@ func servicePrincipalResource() *schema.Resource {
 				Description: "A list of object IDs of principals that will be granted ownership of the service principal",
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Computed:    true,
 				Set:         schema.HashString,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
