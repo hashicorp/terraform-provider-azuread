@@ -1,3 +1,10 @@
+## 2.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_synchronization_job` [GH-830]
+* **New Resource:** `azuread_synchronization_secret` [GH-830]
+
 ## 2.29.0 (September 29, 2022)
 
 IMPROVEMENTS:
