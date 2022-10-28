@@ -1154,13 +1154,13 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+	if d.HasChange("owners") {
 		owners, _, err := client.ListOwners(ctx, applicationId)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
