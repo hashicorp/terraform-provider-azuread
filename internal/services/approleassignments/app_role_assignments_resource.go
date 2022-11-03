@@ -3,13 +3,14 @@ package approleassignments
 import (
 	"context"
 	"errors"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
-	"log"
-	"net/http"
-	"time"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
@@ -176,7 +177,7 @@ func appRoleAssignmentsResourceRead(ctx context.Context, d *schema.ResourceData,
 	var resourceDisplayName string
 
 	for _, assignment := range *appRoleAssignments {
-		if assignment.Id != nil {
+		if assignment.Id != nil && *assignment.AppRoleId == appRoleId {
 			appRoleAssignment := &assignment
 			listPrincipalObjectIds = append(listPrincipalObjectIds, appRoleAssignment.PrincipalId)
 			listPrincipalDisplayNames = append(listPrincipalDisplayNames, appRoleAssignment.PrincipalDisplayName)
