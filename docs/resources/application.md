@@ -12,7 +12,7 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
 
--> It _may_ be possible to create applications using this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property. However, this is not officially supported by the API so your experience may vary.
+-> It is usually possible to create applications using this resource with just the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property. However, this is not officially supported by the API so if you receive a `403` you need to investigate what API call is failing and add additional permissions as necessary. One commonly needed additional permission is `User.Read.All`, in case you specify additional `owners`.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
