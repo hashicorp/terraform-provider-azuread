@@ -12,7 +12,7 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
 
-It is not currently possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted.
+It is possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted, however only the service principal itself can be set as the owner.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
