@@ -732,7 +732,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
 	}
 
-	if _, ok := d.GetOk("add_token_signing_certificate"); ok {
+	if _, ok := d.GetOk("add_token_signing_certificate"); ok && d.HasChange("add_token_signing_certificate") {
 		tokenSigningCertificate, _, err := client.AddTokenSigningCertificate(ctx, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not add saml token signing certificate to service principal with object ID: %q", d.Id())
