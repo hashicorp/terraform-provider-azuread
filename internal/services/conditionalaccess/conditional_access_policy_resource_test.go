@@ -298,7 +298,7 @@ resource "azuread_conditional_access_policy" "test" {
     client_app_types = ["browser"]
 
     applications {
-      included_applications = ["All"]
+      included_applications = ["None"]
     }
 
     users {
