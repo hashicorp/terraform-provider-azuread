@@ -147,3 +147,66 @@ func TestIsAppURI(t *testing.T) {
 		})
 	}
 }
+
+func TestIsUriFunc(t *testing.T) {
+	cases := []struct {
+		TestName           string
+		Url                string
+		UrnAllowed         bool
+		forceTrailingSlash bool
+		Errors             int
+		Schemes            []string
+	}{
+		{
+			TestName:           "no path with trailing slash not allowed should error",
+			Url:                "http://www.example.com/",
+			UrnAllowed:         true,
+			forceTrailingSlash: false,
+			Errors:             1,
+			Schemes:            []string{"http"},
+		},
+		{
+			TestName:           "no path with no trailing slash valid",
+			Url:                "http://www.example.com",
+			UrnAllowed:         true,
+			forceTrailingSlash: false,
+			Errors:             0,
+			Schemes:            []string{"http"},
+		},
+		{
+			TestName:           "no path with trailing slash allowed is valid",
+			Url:                "http://www.example.com/",
+			UrnAllowed:         true,
+			forceTrailingSlash: true,
+			Errors:             0,
+			Schemes:            []string{"http"},
+		},
+		{
+			TestName:           "uri empty should not be valid",
+			Url:                "",
+			UrnAllowed:         true,
+			forceTrailingSlash: false,
+			Errors:             1,
+			Schemes:            []string{"http"},
+		},
+		{
+			TestName:           "uri with trailing slash and force trailing slash required should fail",
+			Url:                "http://www.example.com/",
+			UrnAllowed:         true,
+			forceTrailingSlash: false,
+			Errors:             1,
+			Schemes:            []string{"http"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.TestName, func(t *testing.T) {
+
+			diags := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.forceTrailingSlash)
+
+			if len(diags(tc.Url, cty.Path{})) != tc.Errors {
+				t.Fatalf("Expected IsUriFunc to have %d errors for %v", tc.Errors, tc.Url)
+			}
+		})
+	}
+}

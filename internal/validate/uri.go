@@ -11,19 +11,19 @@ import (
 )
 
 func IsAppUri(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"http", "https", "api", "ms-appx"}, true, false, false)(i, path)
+	return IsUriFunc([]string{"http", "https", "api", "ms-appx"}, true, false)(i, path)
 }
 
 func IsHttpOrHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"http", "https"}, false, true, false)(i, path)
+	return IsUriFunc([]string{"http", "https"}, false, false)(i, path)
 }
 
 func IsHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"https"}, false, true, false)(i, path)
+	return IsUriFunc([]string{"https"}, false, false)(i, path)
 }
 
 func IsLogoutUrl(i interface{}, path cty.Path) (ret diag.Diagnostics) {
-	ret = IsUriFunc([]string{"http", "https"}, false, true, false)(i, path)
+	ret = IsUriFunc([]string{"http", "https"}, false, false)(i, path)
 	if len(ret) > 0 {
 		return
 	}
@@ -47,7 +47,7 @@ func IsRedirectUriFunc(urnAllowed bool, publicClient bool) schema.SchemaValidate
 			allowedSchemes = []string{"http", "https", "ms-appx-web"}
 		}
 
-		ret = IsUriFunc(allowedSchemes, urnAllowed, true, true)(i, path)
+		ret = IsUriFunc(allowedSchemes, urnAllowed, true)(i, path)
 		if len(ret) > 0 {
 			return
 		}
@@ -64,7 +64,7 @@ func IsRedirectUriFunc(urnAllowed bool, publicClient bool) schema.SchemaValidate
 	}
 }
 
-func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash bool, forceTrailingSlash bool) schema.SchemaValidateDiagFunc {
+func IsUriFunc(validURLSchemes []string, urnAllowed bool, forceTrailingSlash bool) schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		v, ok := i.(string)
 		if !ok {
@@ -103,7 +103,7 @@ func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash boo
 			return
 		}
 
-		if !allowTrailingSlash && u.Path == "/" {
+		if !forceTrailingSlash && u.Path == "/" {
 			ret = append(ret, diag.Diagnostic{
 				Severity:      diag.Error,
 				Summary:       "URI must not have a trailing slash when there is no path segment",
