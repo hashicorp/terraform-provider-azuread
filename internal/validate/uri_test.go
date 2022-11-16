@@ -201,9 +201,7 @@ func TestIsUriFunc(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-
 			diags := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.forceTrailingSlash)
-
 			if len(diags(tc.Url, cty.Path{})) != tc.Errors {
 				t.Fatalf("Expected IsUriFunc to have %d errors for %v", tc.Errors, tc.Url)
 			}
