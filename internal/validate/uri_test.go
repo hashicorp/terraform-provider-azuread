@@ -153,8 +153,8 @@ func TestIsUriFunc(t *testing.T) {
 		TestName           string
 		Url                string
 		UrnAllowed         bool
-		allowTrailingSlash bool
-		forceTrailingSlash bool
+		AllowTrailingSlash bool
+		ForceTrailingSlash bool
 		Errors             int
 		Schemes            []string
 	}{
@@ -162,8 +162,8 @@ func TestIsUriFunc(t *testing.T) {
 			TestName:           "no path with trailing slash not allowed should error",
 			Url:                "http://www.example.com/",
 			UrnAllowed:         true,
-			allowTrailingSlash: false,
-			forceTrailingSlash: false,
+			AllowTrailingSlash: false,
+			ForceTrailingSlash: false,
 			Errors:             1,
 			Schemes:            []string{"http"},
 		},
@@ -171,8 +171,8 @@ func TestIsUriFunc(t *testing.T) {
 			TestName:           "no path with no trailing slash valid",
 			Url:                "http://www.example.com",
 			UrnAllowed:         true,
-			allowTrailingSlash: false,
-			forceTrailingSlash: false,
+			AllowTrailingSlash: false,
+			ForceTrailingSlash: false,
 			Errors:             0,
 			Schemes:            []string{"http"},
 		},
@@ -180,8 +180,8 @@ func TestIsUriFunc(t *testing.T) {
 			TestName:           "path with no trailing slash is valid",
 			Url:                "http://www.example.com/path",
 			UrnAllowed:         true,
-			allowTrailingSlash: false,
-			forceTrailingSlash: false,
+			AllowTrailingSlash: false,
+			ForceTrailingSlash: false,
 			Errors:             0,
 			Schemes:            []string{"http"},
 		},
@@ -189,8 +189,8 @@ func TestIsUriFunc(t *testing.T) {
 			TestName:           "uri empty should not be valid",
 			Url:                "",
 			UrnAllowed:         true,
-			allowTrailingSlash: false,
-			forceTrailingSlash: false,
+			AllowTrailingSlash: false,
+			ForceTrailingSlash: false,
 			Errors:             1,
 			Schemes:            []string{"http"},
 		},
@@ -198,7 +198,7 @@ func TestIsUriFunc(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			diags := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.allowTrailingSlash, tc.forceTrailingSlash)
+			diags := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.AllowTrailingSlash, tc.ForceTrailingSlash)
 			if len(diags(tc.Url, cty.Path{})) != tc.Errors {
 				t.Fatalf("Expected IsUriFunc to have %d errors for %v", tc.Errors, tc.Url)
 			}
