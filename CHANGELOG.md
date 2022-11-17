@@ -1,3 +1,9 @@
+## 2.31.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_application` - validation for `identifier_uris` to detect trailing slash with no path [GH-928]
+
 ## 2.30.0 (October 28, 2022)
 
 FEATURES:
