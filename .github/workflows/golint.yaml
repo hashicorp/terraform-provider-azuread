@@ -1,20 +1,21 @@
 ---
-name: Documentation Linting
+name: GoLang Linting
 on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
-      - 'docs/**'
-      - '.github/workflows/**'
+      - '.github/workflows/golint.yaml'
+      - 'vendor/**'
+      - '**.go'
 
 jobs:
-  docs-lint:
+  golint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: .go-version
-      - run: bash scripts/gogetcookie.sh
-      - run: make tools
-      - run: make docs-lint
+      - uses: golangci/golangci-lint-action@v2
+        with:
+          version: 'v1.49.0'

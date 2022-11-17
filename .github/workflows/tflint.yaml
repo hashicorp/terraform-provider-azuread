@@ -1,15 +1,15 @@
 ---
-name: 32 Bit Build
+name: Terraform Schema Linting
 on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
-      - '**.go'
+      - '.github/workflows/tflint.yaml'
       - 'vendor/**'
-      - '.github/workflows/**'
+      - '**.go'
 
 jobs:
-  compatibility-32bit-test:
+  tflint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,4 +18,4 @@ jobs:
           go-version-file: .go-version
       - run: bash scripts/gogetcookie.sh
       - run: make tools
-      - run: GOARCH=386 GOOS=linux go build -o 32bitbuild .
+      - run: make tflint

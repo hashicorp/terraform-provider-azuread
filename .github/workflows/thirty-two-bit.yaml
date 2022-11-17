@@ -1,15 +1,15 @@
 ---
-name: Unit Tests
+name: 32 Bit Build
 on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
-      - '**.go'
+      - '.github/workflows/thirty-two-bit.yaml'
       - 'vendor/**'
-      - '.github/workflows/**'
+      - '**.go'
 
 jobs:
-  test:
+  compatibility-32bit-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,4 +17,5 @@ jobs:
         with:
           go-version-file: .go-version
       - run: bash scripts/gogetcookie.sh
-      - run: make test
+      - run: make tools
+      - run: GOARCH=386 GOOS=linux go build -o 32bitbuild .

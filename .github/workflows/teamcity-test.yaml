@@ -4,10 +4,10 @@ on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
+      - '.github/workflows/teamcity-test.yaml'
       - '!.teamcity/components/generated/**'
       - '!.teamcity/target/**'
       - '.teamcity/**'
-      - '.github/workflows/**'
 
 jobs:
   teamcity-test:

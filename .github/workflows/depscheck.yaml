@@ -1,21 +1,21 @@
 ---
-name: Terraform Schema Linting
+name: Vendor Dependencies Check
 on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
-      - '**.go'
+      - '.github/workflows/depscheck.yaml'
       - 'vendor/**'
-      - '.github/workflows/**'
+      - '**.go'
 
 jobs:
-  tflint:
+  depscheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - uses: actions/setup-go@v3
         with:
           go-version-file: .go-version
       - run: bash scripts/gogetcookie.sh
       - run: make tools
-      - run: make tflint
+      - run: make depscheck
