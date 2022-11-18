@@ -16,12 +16,11 @@ jobs:
   oidc-check:
     runs-on: ubuntu-latest
     outputs:
-      available: "${{ steps.oidc-check.outputs.available }}"
+      available: "${{ steps.check-oidc.outputs.available }}"
     steps:
-      - id: oidc-check
+      - id: check-oidc
         run: |
-          set -v 
-          if [ "${ACTIONS_ID_TOKEN_REQUEST_URL}" = "" ]; then
+          if [[ "${ACTIONS_ID_TOKEN_REQUEST_URL}" == "" ]]; then
             echo "available=false" | tee ${GITHUB_OUTPUT}
           else
             echo "available=true" | tee ${GITHUB_OUTPUT}
@@ -30,17 +29,8 @@ jobs:
   acctest-oidc:
     runs-on: ubuntu-latest
     needs: [oidc-check]
-    if: "${{ needs.oidc-check.outputs.available == 'true' }}"
-    permissions:
-      contents: read
-      id-token: write
+    if: needs.oidc-check.outputs.available == 'true'
     steps:
-      - run: echo |
-          echo AVAIL_BOOL="${AVAIL_BOOL}"
-          echo AVAIL_RAW="${AVAIL_RAW}"
-        env:
-          AVAIL_BOOL: "${{ needs.oidc-check.outputs.available == 'true' }}"
-          AVAIL_RAW: "${{ needs.oidc-check.outputs.available }}"
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
