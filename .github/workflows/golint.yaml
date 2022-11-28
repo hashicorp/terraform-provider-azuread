@@ -1,0 +1,21 @@
+---
+name: GoLang Linting
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - '.github/workflows/golint.yaml'
+      - 'vendor/**'
+      - '**.go'
+
+jobs:
+  golint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - uses: golangci/golangci-lint-action@v2
+        with:
+          version: 'v1.49.0'

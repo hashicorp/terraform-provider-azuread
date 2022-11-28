@@ -1,0 +1,22 @@
+---
+name: Terraform Schema Linting
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - '.github/workflows/tflint.yaml'
+      - 'vendor/**'
+      - '**.go'
+
+jobs:
+  tflint:
+    runs-on: ubuntu-latest
+    if: false # skip until https://github.com/bflad/tfproviderlint/issues/255 is fixed
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make tflint

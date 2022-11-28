@@ -13,28 +13,32 @@ permissions:
   id-token: write
 
 jobs:
-  go-version:
+  oidc-check:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.go-version.outputs.version }}
+      available: "${{ steps.check-oidc.outputs.available }}"
     steps:
-      - uses: actions/checkout@v2
-
-      - id: go-version
-        run: echo "::set-output name=version::$(cat ./.go-version)"
+      - id: check-oidc
+        run: |
+          if [[ "${ACTIONS_ID_TOKEN_REQUEST_URL}" == "" ]]; then
+            echo "available=false" | tee ${GITHUB_OUTPUT}
+          else
+            echo "available=true" | tee ${GITHUB_OUTPUT}
+          fi
 
   acctest-oidc:
-    needs: go-version
     runs-on: ubuntu-latest
+    needs: [oidc-check]
+    if: needs.oidc-check.outputs.available == 'true'
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          go-version: '${{ needs.go-version.outputs.version }}'
+          go-version-file: .go-version
       - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: |
-          echo "ARM_OIDC_TOKEN=$(curl -H "Accept: application/json; api-version=2.0" -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Content-Type: application/json" -G --data-urlencode "audience=api://AzureADTokenExchange" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')"  >>$GITHUB_ENV
+          echo "ARM_OIDC_TOKEN=$(curl -H "Accept: application/json; api-version=2.0" -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" -H "Content-Type: application/json" -G --data-urlencode "audience=api://AzureADTokenExchange" "${ACTIONS_ID_TOKEN_REQUEST_URL}" | jq -r '.value')"  >>${GITHUB_ENV}
       - run: make testacc TEST=./internal/provider TESTARGS="-run '(?i)(TestAccProvider_.*oidc.*)'"
         env:
           ARM_CLIENT_ID: ${{ secrets.OIDC_CLIENT_ID }}

@@ -1,0 +1,21 @@
+---
+name: Vendor Dependencies Check
+on:
+  pull_request:
+    types: ['opened', 'synchronize']
+    paths:
+      - '.github/workflows/depscheck.yaml'
+      - 'vendor/**'
+      - '**.go'
+
+jobs:
+  depscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - run: bash scripts/gogetcookie.sh
+      - run: make tools
+      - run: make depscheck
