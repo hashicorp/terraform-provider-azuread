@@ -20,7 +20,7 @@ func NewClient(o *common.ClientOptions) *Client {
 	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient(o.TenantID)
 
 	if o.Environment.MsGraph.Endpoint == environments.MsGraphUSGovL4Endpoint {
-		//Short term fix while we wait for Microsoft to fix an intermitent 504 error causing an applicationTemplate instantiate
+		//Short term fix while we wait for Microsoft to fix an intermittent 504 error causing an applicationTemplate instantiate
 		//call creating multiple app registrations and service principals
 		//Expected fix Feb 2023
 		applicationTemplatesClient.BaseClient.ApiVersion = msgraph.VersionBeta
