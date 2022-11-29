@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
@@ -930,11 +931,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		if result.Application == nil {
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Nil application object returned for instantiated application")
 		}
-		if result.Application.ID == nil || *result.Application.ID == "" {
-			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
-		}
 
-		d.SetId(*result.Application.ID)
+		switch appTemplatesClient.BaseClient.ApiVersion {
+		case msgraph.ApiVersion(environments.MsGraphUSGovL4Endpoint):
+			if result.Application.ObjectId == nil || *result.Application.ObjectId == "" {
+				return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
+			}
+			d.SetId(*result.Application.ObjectId)
+		default:
+			if result.Application.ID == nil || *result.Application.ID == "" {
+				return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
+			}
+			d.SetId(*result.Application.ID)
+		}
 
 		// The application was created out of band, so we'll update it just as if it was imported
 		return applicationResourceUpdate(ctx, d, meta)
