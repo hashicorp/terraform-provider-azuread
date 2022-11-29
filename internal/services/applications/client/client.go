@@ -21,7 +21,8 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	if o.Environment.MsGraph.Endpoint == environments.MsGraphUSGovL4Endpoint {
 		//Short term fix while we wait for Microsoft to fix an intermittent 504 error causing an applicationTemplate instantiate
-		//call creating multiple app registrations and service principals
+		//call to produce a 504. However MS api doesnt cancel request and you end up creating multiple app registrations and service principals
+		//as the client retries. Bug is not present in the beta API.
 		//Expected fix Feb 2023
 		applicationTemplatesClient.BaseClient.ApiVersion = msgraph.VersionBeta
 	}
