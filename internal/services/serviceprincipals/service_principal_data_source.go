@@ -358,11 +358,11 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if servicePrincipal.ID == nil {
+	if servicePrincipal.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned service principal with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*servicePrincipal.ID)
+	d.SetId(*servicePrincipal.ID())
 
 	servicePrincipalNames := make([]string, 0)
 	if servicePrincipal.ServicePrincipalNames != nil {

@@ -308,11 +308,11 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		group = *g
 	}
 
-	if group.ID == nil {
+	if group.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*group.ID)
+	d.SetId(*group.ID())
 
 	tf.Set(d, "assignable_to_role", group.IsAssignableToRole)
 	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(group.ResourceBehaviorOptions))

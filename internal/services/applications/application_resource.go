@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/msgraph"
 	"github.com/manicminer/hamilton/odata"
 
@@ -633,11 +632,11 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 		if result != nil && len(*result) > 0 {
 			for _, existingApp := range *result {
-				if existingApp.ID == nil {
+				if existingApp.ID() == nil {
 					return fmt.Errorf("API error: application returned with nil object ID during duplicate name check")
 				}
-				if diff.Id() == "" || diff.Id() == *existingApp.ID {
-					return tf.ImportAsDuplicateError("azuread_application", *existingApp.ID, newDisplayName.(string))
+				if diff.Id() == "" || diff.Id() == *existingApp.ID() {
+					return tf.ImportAsDuplicateError("azuread_application", *existingApp.ID(), newDisplayName.(string))
 				}
 			}
 		}
@@ -892,10 +891,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 		if result != nil && len(*result) > 0 {
 			existingApp := (*result)[0]
-			if existingApp.ID == nil {
+			if existingApp.ID() == nil {
 				return tf.ErrorDiagF(errors.New("API returned application with nil object ID during duplicate name check"), "Bad API response")
 			}
-			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID, displayName)
+			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID(), displayName)
 		}
 	}
 
@@ -932,18 +931,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Nil application object returned for instantiated application")
 		}
 
-		switch appTemplatesClient.BaseClient.ApiVersion {
-		case msgraph.ApiVersion(environments.MsGraphUSGovL4Endpoint):
-			if result.Application.ObjectId == nil || *result.Application.ObjectId == "" {
-				return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
-			}
-			d.SetId(*result.Application.ObjectId)
-		default:
-			if result.Application.ID == nil || *result.Application.ID == "" {
-				return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
-			}
-			d.SetId(*result.Application.ID)
+		if result.Application.ID() == nil || *result.Application.ID() == "" {
+			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
 		}
+		d.SetId(*result.Application.ID())
 
 		// The application was created out of band, so we'll update it just as if it was imported
 		return applicationResourceUpdate(ctx, d, meta)
@@ -1016,7 +1007,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-				ID: &ownerId,
+				Id: &ownerId,
 			}
 
 			if ownerCount < 19 {
@@ -1036,17 +1027,17 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(err, "Could not create application")
 	}
 
-	if app.ID == nil || *app.ID == "" {
+	if app.ID() == nil || *app.ID() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for application is nil/empty")
 	}
 
-	d.SetId(*app.ID)
+	d.SetId(*app.ID())
 
 	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	status, err := client.Update(ctx, msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.Id,
 		},
 		DisplayName: utils.String(displayName),
 	})
@@ -1096,12 +1087,12 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 		if result != nil && len(*result) > 0 {
 			for _, existingApp := range *result {
-				if existingApp.ID == nil {
+				if existingApp.ID() == nil {
 					return tf.ErrorDiagF(errors.New("API returned application with nil object ID during duplicate name check"), "Bad API response")
 				}
 
-				if *existingApp.ID != applicationId {
-					return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID, displayName)
+				if *existingApp.ID() != applicationId {
+					return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID(), displayName)
 				}
 			}
 		}
@@ -1126,7 +1117,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(applicationId),
+			Id: utils.String(applicationId),
 		},
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
@@ -1180,7 +1171,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-					ID: &ownerId,
+					Id: &ownerId,
 				})
 			}
 
@@ -1269,9 +1260,9 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	tf.Set(d, "prevent_duplicate_names", preventDuplicates)
 
-	owners, _, err := client.ListOwners(ctx, *app.ID)
+	owners, _, err := client.ListOwners(ctx, *app.ID())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID)
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID())
 	}
 	tf.Set(d, "owners", owners)
 

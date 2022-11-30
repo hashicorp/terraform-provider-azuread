@@ -152,7 +152,7 @@ func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client,
 		return nil, fmt.Errorf("failed to retrieve invited user with object ID %q: %+v", userID, err)
 	}
 
-	return utils.Bool(user.ID != nil && *user.ID == userID), nil
+	return utils.Bool(user.ID != nil && *user.ID() == userID), nil
 }
 
 func (InvitationResource) basic(data acceptance.TestData) string {

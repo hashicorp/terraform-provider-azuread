@@ -276,11 +276,11 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData
 	objectIds := make([]string, 0)
 	spList := make([]map[string]interface{}, 0)
 	for _, s := range servicePrincipals {
-		if s.ID == nil || s.DisplayName == nil {
+		if s.ID() == nil || s.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned service principal with nil object ID or displayName"), "Bad API Response")
 		}
 
-		objectIds = append(objectIds, *s.ID)
+		objectIds = append(objectIds, *s.ID())
 		displayNames = append(displayNames, *s.DisplayName)
 		if s.AppId != nil {
 			applicationIds = append(applicationIds, *s.AppId)

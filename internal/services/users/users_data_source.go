@@ -257,11 +257,11 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	mailNicknames := make([]string, 0)
 	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
-		if u.ID == nil || u.UserPrincipalName == nil {
+		if u.ID() == nil || u.UserPrincipalName == nil {
 			return tf.ErrorDiagF(errors.New("API returned user with nil object ID or userPrincipalName"), "Bad API Response")
 		}
 
-		objectIds = append(objectIds, *u.ID)
+		objectIds = append(objectIds, *u.ID())
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)

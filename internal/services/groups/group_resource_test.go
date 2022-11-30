@@ -417,7 +417,7 @@ func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, stat
 		}
 		return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(group.ID != nil && *group.ID == state.ID), nil
+	return utils.Bool(group.ID() != nil && *group.ID() == state.ID), nil
 }
 
 func (GroupResource) templateDiverseDirectoryObjects(data acceptance.TestData) string {

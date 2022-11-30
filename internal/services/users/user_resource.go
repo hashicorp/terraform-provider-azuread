@@ -470,16 +470,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
-	if user.ID == nil || *user.ID == "" {
+	if user.ID() == nil || *user.ID() == "" {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID)
+	d.SetId(*user.ID())
 
 	// Wait until the user is updatable (the SDK handles retries for us)
 	_, err = client.Update(ctx, msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: user.ID,
+			Id: user.ID(),
 		},
 	})
 	if err != nil {
@@ -513,7 +513,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	properties := msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(d.Id()),
+			Id: utils.String(d.Id()),
 		},
 		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
 		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
@@ -669,8 +669,8 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", objectId)
 		}
-		if manager != nil && manager.ID != nil {
-			managerId = *manager.ID
+		if manager != nil && manager.ID() != nil {
+			managerId = *manager.ID()
 		}
 	}
 	tf.Set(d, "manager_id", managerId)

@@ -566,7 +566,7 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 		}
 		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(app.ID != nil && *app.ID == state.ID), nil
+	return utils.Bool(app.ID() != nil && *app.ID() == state.ID), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {

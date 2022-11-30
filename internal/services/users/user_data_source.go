@@ -367,11 +367,11 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` or `mail_nickname` must be supplied")
 	}
 
-	if user.ID == nil {
+	if user.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID)
+	d.SetId(*user.ID())
 
 	tf.Set(d, "account_enabled", user.AccountEnabled)
 	tf.Set(d, "age_group", user.AgeGroup)
@@ -420,13 +420,13 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	managerId := ""
-	manager, status, err := client.GetManager(ctx, *user.ID)
+	manager, status, err := client.GetManager(ctx, *user.ID())
 	if status != http.StatusNotFound {
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID)
+			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID())
 		}
-		if manager != nil && manager.ID != nil {
-			managerId = *manager.ID
+		if manager != nil && manager.ID() != nil {
+			managerId = *manager.ID()
 		}
 	}
 	tf.Set(d, "manager_id", managerId)

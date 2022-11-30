@@ -153,7 +153,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.SetId(*invitation.ID)
 
-	if invitation.InvitedUser == nil || invitation.InvitedUser.ID == nil || *invitation.InvitedUser.ID == "" {
+	if invitation.InvitedUser == nil || invitation.InvitedUser.ID() == nil || *invitation.InvitedUser.ID() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Invited user object ID returned for invitation is nil/empty")
 	}
 	d.Set("user_id", invitation.InvitedUser.ID)
@@ -167,7 +167,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	status, err := usersClient.Update(ctx, msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: invitation.InvitedUser.ID,
+			Id: invitation.InvitedUser.ID(),
 		},
 		CompanyName: utils.NullableString("TERRAFORM_UPDATE"),
 	})
@@ -179,7 +179,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	status, err = usersClient.Update(ctx, msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: invitation.InvitedUser.ID,
+			Id: invitation.InvitedUser.ID(),
 		},
 		CompanyName: utils.NullableString(""),
 	})

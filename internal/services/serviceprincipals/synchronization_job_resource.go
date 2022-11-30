@@ -105,7 +105,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
 	}
-	if servicePrincipal == nil || servicePrincipal.ID == nil {
+	if servicePrincipal == nil || servicePrincipal.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
 	}
 
@@ -114,18 +114,18 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 		TemplateId: utils.String(d.Get("template_id").(string)),
 	}
 
-	newJob, _, err := client.Create(ctx, synchronizationJob, *servicePrincipal.ID)
+	newJob, _, err := client.Create(ctx, synchronizationJob, *servicePrincipal.ID())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating synchronization job for service principal ID %q", *servicePrincipal.ID)
+		return tf.ErrorDiagF(err, "Creating synchronization job for service principal ID %q", *servicePrincipal.ID())
 	}
 	if newJob == nil {
-		return tf.ErrorDiagF(errors.New("nil received when creating synchronization Job"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID)
+		return tf.ErrorDiagF(errors.New("nil received when creating synchronization Job"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID())
 	}
 	if newJob.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty id received"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty id received"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID())
 	}
 
-	id := parse.NewSynchronizationJobID(*servicePrincipal.ID, *newJob.ID)
+	id := parse.NewSynchronizationJobID(*servicePrincipal.ID(), *newJob.ID)
 
 	// Wait for the job to appear, this can take several moments
 	timeout, _ := ctx.Deadline()

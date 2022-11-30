@@ -45,7 +45,7 @@ func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bo
 }
 
 func applicationDisableAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
-	if application.ID == nil {
+	if application.ID() == nil {
 		return fmt.Errorf("cannot use Application model with nil ID")
 	}
 
@@ -53,13 +53,13 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		newRoles = &[]msgraph.AppRole{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
+	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID)
+			return fmt.Errorf("application with ID %q was not found", *application.ID())
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 	}
 
 	var existingRoles []msgraph.AppRole
@@ -108,12 +108,12 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		// Disable any changed or removed roles
 		properties := msgraph.Application{
 			DirectoryObject: msgraph.DirectoryObject{
-				ID: application.ID,
+				Id: application.ID(),
 			},
 			AppRoles: &existingRoles,
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling App Roles for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("disabling App Roles for Application with object ID %q: %+v", *application.ID(), err)
 		}
 
 		// Wait for application manifest to reflect the disabled roles
@@ -128,12 +128,12 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
+				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 				}
 				if app == nil || app.AppRoles == nil {
-					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *application.ID(), err)
 				}
 				actualRoles := *app.AppRoles
 				for _, expectedRole := range existingRoles {
@@ -152,7 +152,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for App Roles to be disabled for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("waiting for App Roles to be disabled for Application with object ID %q: %+v", *application.ID(), err)
 		}
 	}
 
@@ -160,7 +160,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 }
 
 func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newScopes *[]msgraph.PermissionScope) error {
-	if application.ID == nil {
+	if application.ID() == nil {
 		return fmt.Errorf("Cannot use Application model with nil ID")
 	}
 
@@ -168,13 +168,13 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 		newScopes = &[]msgraph.PermissionScope{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
+	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID)
+			return fmt.Errorf("application with ID %q was not found", *application.ID())
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 	}
 
 	var existingScopes []msgraph.PermissionScope
@@ -223,14 +223,14 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 		// Disable any changed or removed scopes
 		properties := msgraph.Application{
 			DirectoryObject: msgraph.DirectoryObject{
-				ID: application.ID,
+				Id: application.ID(),
 			},
 			Api: &msgraph.ApplicationApi{
 				OAuth2PermissionScopes: &existingScopes,
 			},
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling OAuth2 Permission Scopes for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("disabling OAuth2 Permission Scopes for Application with object ID %q: %+v", *application.ID(), err)
 		}
 
 		// Wait for application manifest to reflect the disabled scopes
@@ -245,12 +245,12 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
+				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 				}
 				if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-					return nil, "Error", fmt.Errorf("reading scopes for Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("reading scopes for Application with object ID %q: %+v", *application.ID(), err)
 				}
 				actualScopes := *app.Api.OAuth2PermissionScopes
 				for _, expectedScope := range existingScopes {
@@ -269,7 +269,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for Application with object ID %q: %+v", *application.ID(), err)
 		}
 	}
 
