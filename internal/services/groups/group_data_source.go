@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
@@ -227,6 +228,35 @@ func groupDataSource() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+
+			"writeback": {
+				Description: "An optional block to configure writing the group back to the on-premises directory",
+				Type:        schema.TypeList,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+
+						// TODO: if this is a security group, this parameter must be empty msgraph.UniversalSecurityGroup
+						// Should that be part of the validation or do we just let the api throw out the error?
+						"on_premises_group_type": {
+							Description: "Indicates the target on-premise group type the cloud object will be written back as",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.UniversalDistributionGroup,
+								msgraph.UniversalSecurityGroup,
+								msgraph.UniversalMailEnabledSecurityGroup,
+							}, false),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -346,6 +376,15 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
+
+	writeback := make([]interface{}, 0)
+	if group.WritebackConfiguration != nil { // TODO: 34r check if this mapping needs some checks
+		writeback = append(writeback, map[string]interface{}{
+			"enabled":                group.WritebackConfiguration.IsEnabled,
+			"on_premises_group_type": group.WritebackConfiguration.OnPremisesGroupType,
+		})
+	}
+	tf.Set(d, "writeback", writeback)
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
