@@ -377,7 +377,7 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *schema.Re
 	}
 
 	tf.Set(d, "requestor_settings", flattenRequestorSettings(accessPackageAssignmentPolicy.RequestorSettings))
-	tf.Set(d, "approval_settings", falttenApprovalSettings(accessPackageAssignmentPolicy.RequestApprovalSettings))
+	tf.Set(d, "approval_settings", flattenApprovalSettings(accessPackageAssignmentPolicy.RequestApprovalSettings))
 	tf.Set(d, "assignment_review_settings", flattenReviewSettings(accessPackageAssignmentPolicy.AccessReviewSettings))
 	tf.Set(d, "question", flattenAssignmentPolicyQuestions(accessPackageAssignmentPolicy.Questions))
 

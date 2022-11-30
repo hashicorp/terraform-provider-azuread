@@ -66,7 +66,7 @@ func buildAssignmentPolicyApprovalSettings(input []interface{}) *msgraph.Approva
 	return &result
 }
 
-func falttenApprovalSettings(input *msgraph.ApprovalSettings) []map[string]interface{} {
+func flattenApprovalSettings(input *msgraph.ApprovalSettings) []map[string]interface{} {
 	if input == nil {
 		return nil
 	}
