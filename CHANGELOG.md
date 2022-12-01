@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * `azuread_application` - validation for `identifier_uris` to detect trailing slash with no path [GH-928]
 
+BUG FIXES:
+
+* `azuread_application` - fix a bug where `owners` where not correctly removed [GH-916]
+
 ## 2.30.0 (October 28, 2022)
 
 FEATURES:
