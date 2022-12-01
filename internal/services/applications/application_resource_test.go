@@ -347,7 +347,7 @@ func TestAccApplication_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.noOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
@@ -1327,15 +1327,15 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
-func (ApplicationResource) noOwners(data acceptance.TestData) string {
+func (r ApplicationResource) noOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-provider "azuread" {}
+%[1]s
 
 resource "azuread_application" "test" {
-  display_name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[2]d"
   owners       = []
 }
-`, data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r ApplicationResource) singleOwner(data acceptance.TestData) string {
