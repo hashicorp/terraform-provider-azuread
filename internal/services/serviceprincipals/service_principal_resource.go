@@ -617,7 +617,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
 	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.OAuth2PermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.OAuth2PermissionScopes))
-	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "object_id", servicePrincipal.ID())
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)

@@ -272,7 +272,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		user["display_name"] = u.DisplayName
 		user["mail"] = u.Mail
 		user["mail_nickname"] = u.MailNickname
-		user["object_id"] = u.ID
+		user["object_id"] = u.ID()
 		user["onpremises_immutable_id"] = u.OnPremisesImmutableId
 		user["onpremises_sam_account_name"] = u.OnPremisesSamAccountName
 		user["onpremises_user_principal_name"] = u.OnPremisesUserPrincipalName

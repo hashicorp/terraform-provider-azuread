@@ -321,7 +321,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "mail", group.Mail)
 	tf.Set(d, "mail_enabled", group.MailEnabled)
 	tf.Set(d, "mail_nickname", group.MailNickname)
-	tf.Set(d, "object_id", group.ID)
+	tf.Set(d, "object_id", group.ID())
 	tf.Set(d, "onpremises_domain_name", group.OnPremisesDomainName)
 	tf.Set(d, "onpremises_netbios_name", group.OnPremisesNetBiosName)
 	tf.Set(d, "onpremises_sam_account_name", group.OnPremisesSamAccountName)

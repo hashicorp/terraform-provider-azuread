@@ -13,7 +13,7 @@ import (
 type PrincipalTypeDataSource struct{}
 
 func TestAccPrincipalTypeDataSource_groupByObjectId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "data.azuread_principal_type", "test")
+	data := acceptance.BuildTestData(t, "data.azuread_directory_object", "test")
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
@@ -26,7 +26,7 @@ func TestAccPrincipalTypeDataSource_groupByObjectId(t *testing.T) {
 }
 
 func TestAccPrincipalTypeDataSource_userByObjectId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "data.azuread_principal_type", "test")
+	data := acceptance.BuildTestData(t, "data.azuread_directory_object", "test")
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
@@ -39,7 +39,7 @@ func TestAccPrincipalTypeDataSource_userByObjectId(t *testing.T) {
 }
 
 func TestAccPrincipalTypeDataSource_servicePrincipalByObjectId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "data.azuread_principal_type", "test")
+	data := acceptance.BuildTestData(t, "data.azuread_directory_object", "test")
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
@@ -92,7 +92,7 @@ func (PrincipalTypeDataSource) objectTypeFromGroup(data acceptance.TestData) str
 	return fmt.Sprintf(`
 %[1]s
 
-data "azuread_principal_type" "test" {
+data "azuread_directory_object" "test" {
   object_id = azuread_group.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicGroup(data))
@@ -102,7 +102,7 @@ func (PrincipalTypeDataSource) objectTypeFromUser(data acceptance.TestData) stri
 	return fmt.Sprintf(`
 %[1]s
 
-data "azuread_principal_type" "test" {
+data "azuread_directory_object" "test" {
   object_id = azuread_user.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicUser(data))
@@ -112,7 +112,7 @@ func (PrincipalTypeDataSource) objectTypeFromServicePrincipal(data acceptance.Te
 	return fmt.Sprintf(`
 %[1]s
 
-data "azuread_principal_type" "test" {
+data "azuread_directory_object" "test" {
   object_id = azuread_service_principal.test.object_id
 }
 `, PrincipalTypeDataSource{}.basicServicePrincipal(data))

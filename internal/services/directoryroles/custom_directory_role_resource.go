@@ -183,7 +183,7 @@ func customDirectoryRoleResourceRead(ctx context.Context, d *schema.ResourceData
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
 	tf.Set(d, "enabled", role.IsEnabled)
-	tf.Set(d, "object_id", role.ID)
+	tf.Set(d, "object_id", role.ID())
 	tf.Set(d, "permissions", flattenCustomRolePermissions(role.RolePermissions))
 	tf.Set(d, "template_id", role.TemplateId)
 	tf.Set(d, "version", role.Version)

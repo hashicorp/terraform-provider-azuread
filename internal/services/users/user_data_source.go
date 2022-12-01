@@ -393,7 +393,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tf.Set(d, "mail", user.Mail)
 	tf.Set(d, "mail_nickname", user.MailNickname)
 	tf.Set(d, "mobile_phone", user.MobilePhone)
-	tf.Set(d, "object_id", user.ID)
+	tf.Set(d, "object_id", user.ID())
 	tf.Set(d, "office_location", user.OfficeLocation)
 	tf.Set(d, "onpremises_distinguished_name", user.OnPremisesDistinguishedName)
 	tf.Set(d, "onpremises_domain_name", user.OnPremisesDomainName)

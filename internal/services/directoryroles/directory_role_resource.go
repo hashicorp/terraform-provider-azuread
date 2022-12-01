@@ -165,7 +165,7 @@ func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta
 
 	tf.Set(d, "description", directoryRole.Description)
 	tf.Set(d, "display_name", directoryRole.DisplayName)
-	tf.Set(d, "object_id", directoryRole.ID)
+	tf.Set(d, "object_id", directoryRole.ID())
 	tf.Set(d, "template_id", directoryRole.RoleTemplateId)
 
 	return nil

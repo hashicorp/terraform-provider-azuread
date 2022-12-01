@@ -156,7 +156,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if invitation.InvitedUser == nil || invitation.InvitedUser.ID() == nil || *invitation.InvitedUser.ID() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Invited user object ID returned for invitation is nil/empty")
 	}
-	d.Set("user_id", invitation.InvitedUser.ID)
+	d.Set("user_id", invitation.InvitedUser.ID())
 
 	if invitation.InviteRedeemURL == nil || *invitation.InviteRedeemURL == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Redeem URL returned for invitation is nil/empty")
@@ -208,7 +208,7 @@ func invitationResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return tf.ErrorDiagF(err, "Retrieving invited user with object ID: %q", userID)
 	}
 
-	tf.Set(d, "user_id", user.ID)
+	tf.Set(d, "user_id", user.ID())
 	tf.Set(d, "user_email_address", user.Mail)
 
 	return nil
