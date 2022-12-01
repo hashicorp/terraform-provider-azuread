@@ -6,7 +6,9 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+* `data.azuread_application_template` - work around an API bug in the US Government cloud, by using the beta API [GH-936]
 * `azuread_application` - fix a bug where `owners` where not correctly removed [GH-916]
+* `azuread_application` - work around an API bug in the US Government cloud, by using the beta API when `template_id` is specified [GH-936]
 
 ## 2.30.0 (October 28, 2022)
 
