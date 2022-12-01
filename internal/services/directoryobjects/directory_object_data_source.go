@@ -54,14 +54,14 @@ func directoryObjectDataSourceRead(ctx context.Context, d *schema.ResourceData, 
 	if directoryObject == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil object returned for directory object with ID: %q", objectId), "Bad API Response")
 	}
-	if directoryObject.ID == nil {
+	if directoryObject.ID() == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil object ID returned for directory object with ID: %q", objectId), "Bad API Response")
 	}
 	if directoryObject.ODataType == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil OData Type returned for directory object with ID: %q", objectId), "Bad API Response")
 	}
 
-	d.SetId(*directoryObject.ID)
+	d.SetId(*directoryObject.ID())
 
 	switch *directoryObject.ODataType {
 	case odata.TypeUser:

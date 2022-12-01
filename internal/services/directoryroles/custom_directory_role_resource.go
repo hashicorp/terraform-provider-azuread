@@ -128,11 +128,11 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagF(err, "Creating custom directory role %q", displayName)
 	}
 
-	if role.ID == nil || *role.ID == "" {
+	if role.ID() == nil || *role.ID() == "" {
 		return tf.ErrorDiagF(errors.New("API returned custom directory role with nil ID"), "Bad API Response")
 	}
 
-	d.SetId(*role.ID)
+	d.SetId(*role.ID())
 
 	return customDirectoryRoleResourceRead(ctx, d, meta)
 }
@@ -145,7 +145,7 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *schema.ResourceDa
 
 	properties := msgraph.UnifiedRoleDefinition{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &roleId,
+			Id: &roleId,
 		},
 		Description:     utils.NullableString(d.Get("description").(string)),
 		DisplayName:     utils.String(displayName),
@@ -183,7 +183,7 @@ func customDirectoryRoleResourceRead(ctx context.Context, d *schema.ResourceData
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
 	tf.Set(d, "enabled", role.IsEnabled)
-	tf.Set(d, "object_id", role.ID)
+	tf.Set(d, "object_id", role.ID())
 	tf.Set(d, "permissions", flattenCustomRolePermissions(role.RolePermissions))
 	tf.Set(d, "template_id", role.TemplateId)
 	tf.Set(d, "version", role.Version)

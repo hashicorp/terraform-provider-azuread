@@ -74,7 +74,7 @@ func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx contex
 
 	// Check the assignment is found in the currently assigned policies
 	for _, policy := range *policyList {
-		if policy.ID != nil && *policy.ID == id.ClaimsMappingPolicyId {
+		if policy.ID() != nil && *policy.ID() == id.ClaimsMappingPolicyId {
 			return utils.Bool(true), nil
 		}
 	}

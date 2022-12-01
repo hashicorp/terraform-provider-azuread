@@ -323,7 +323,7 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 		}
 		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(servicePrincipal.ID != nil && *servicePrincipal.ID == state.ID), nil
+	return utils.Bool(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
 }
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {

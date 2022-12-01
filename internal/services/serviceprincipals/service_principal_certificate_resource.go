@@ -166,7 +166,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *schema.Re
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &id.ObjectId,
+			Id: &id.ObjectId,
 		},
 		KeyCredentials: &newCredentials,
 	}
@@ -285,7 +285,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *schema.Re
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &id.ObjectId,
+			Id: &id.ObjectId,
 		},
 		KeyCredentials: &newCredentials,
 	}

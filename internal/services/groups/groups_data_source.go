@@ -201,14 +201,14 @@ func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	newDisplayNames := make([]string, 0)
 	newObjectIds := make([]string, 0)
 	for _, group := range groups {
-		if group.ID == nil {
+		if group.ID() == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API response")
 		}
 		if group.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned group with nil displayName"), "Bad API response")
 		}
 
-		newObjectIds = append(newObjectIds, *group.ID)
+		newObjectIds = append(newObjectIds, *group.ID())
 		newDisplayNames = append(newDisplayNames, *group.DisplayName)
 	}
 

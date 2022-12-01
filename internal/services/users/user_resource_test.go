@@ -137,7 +137,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 		}
 		return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(user.ID != nil && *user.ID == state.ID), nil
+	return utils.Bool(user.ID() != nil && *user.ID() == state.ID), nil
 }
 
 func (UserResource) basic(data acceptance.TestData) string {

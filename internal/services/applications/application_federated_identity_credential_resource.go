@@ -110,7 +110,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
 	}
 
@@ -122,18 +122,18 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		Subject:     utils.String(d.Get("subject").(string)),
 	}
 
-	newCredential, _, err := client.CreateFederatedIdentityCredential(ctx, *app.ID, credential)
+	newCredential, _, err := client.CreateFederatedIdentityCredential(ctx, *app.ID(), credential)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(err, "Adding federated identity credential for application with object ID %q", *app.ID())
 	}
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for application with object ID %q", *app.ID())
 	}
 	if newCredential.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for application with object ID %q", *app.ID())
 	}
 
-	id := parse.NewCredentialID(*app.ID, "federatedIdentityCredential", *newCredential.ID)
+	id := parse.NewCredentialID(*app.ID(), "federatedIdentityCredential", *newCredential.ID)
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()

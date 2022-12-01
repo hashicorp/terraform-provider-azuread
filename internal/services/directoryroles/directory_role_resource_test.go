@@ -62,7 +62,7 @@ func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Clie
 		}
 		return nil, fmt.Errorf("failed to retrieve Directory Role with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(role.ID != nil && *role.ID == state.ID), nil
+	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (DirectoryRoleResource) byDisplayName(_ acceptance.TestData) string {

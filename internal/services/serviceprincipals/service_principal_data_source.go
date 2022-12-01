@@ -358,11 +358,11 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if servicePrincipal.ID == nil {
+	if servicePrincipal.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned service principal with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*servicePrincipal.ID)
+	d.SetId(*servicePrincipal.ID())
 
 	servicePrincipalNames := make([]string, 0)
 	if servicePrincipal.ServicePrincipalNames != nil {
@@ -392,7 +392,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *schema.ResourceData,
 	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
 	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.OAuth2PermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.OAuth2PermissionScopes))
-	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "object_id", servicePrincipal.ID())
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)

@@ -371,14 +371,14 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if servicePrincipal != nil {
-		if servicePrincipal.ID == nil || *servicePrincipal.ID == "" {
+		if servicePrincipal.ID() == nil || *servicePrincipal.ID() == "" {
 			return tf.ErrorDiagF(fmt.Errorf("service principal returned with nil or empty object ID"), "API error")
 		}
 		if !d.Get("use_existing").(bool) {
-			return tf.ImportAsExistsDiag("azuread_service_principal", *servicePrincipal.ID)
+			return tf.ImportAsExistsDiag("azuread_service_principal", *servicePrincipal.ID())
 		}
 
-		d.SetId(*servicePrincipal.ID)
+		d.SetId(*servicePrincipal.ID())
 		return servicePrincipalResourceUpdate(ctx, d, meta)
 	}
 
@@ -447,7 +447,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-				ID: &ownerId,
+				Id: &ownerId,
 			}
 
 			if ownerCount < 19 {
@@ -467,16 +467,16 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(err, "Could not create service principal")
 	}
 
-	if servicePrincipal.ID == nil || *servicePrincipal.ID == "" {
+	if servicePrincipal.ID() == nil || *servicePrincipal.ID() == "" {
 		return tf.ErrorDiagF(errors.New("Object ID returned for service principal is nil"), "Bad API response")
 	}
-	d.SetId(*servicePrincipal.ID)
+	d.SetId(*servicePrincipal.ID())
 
 	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	status, err := client.Update(ctx, msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: servicePrincipal.ID,
+			Id: servicePrincipal.ID(),
 		},
 		Description: utils.NullableString(d.Get("description").(string)),
 	})
@@ -519,7 +519,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(d.Id()),
+			Id: utils.String(d.Id()),
 		},
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*schema.Set).List()),
 		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
@@ -554,7 +554,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-					ID: &ownerId,
+					Id: &ownerId,
 				})
 			}
 
@@ -617,7 +617,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
 	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.OAuth2PermissionScopes))
 	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.OAuth2PermissionScopes))
-	tf.Set(d, "object_id", servicePrincipal.ID)
+	tf.Set(d, "object_id", servicePrincipal.ID())
 	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
 	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
@@ -627,7 +627,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *schema.ResourceData, m
 	tf.Set(d, "tags", servicePrincipal.Tags)
 	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
 
-	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID)
+	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for service principal with object ID %q", d.Id())
 	}
