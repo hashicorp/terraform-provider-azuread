@@ -1,14 +1,14 @@
-## 2.31.0 (December 01, 2022)
+## 2.31.0 (Unreleased)
 
 IMPROVEMENTS:
 
-* `azuread_application` - validation for `identifier_uris` to detect trailing slash with no path ([#928](https://github.com/hashicorp/terraform-provider-azuread/issues/928))
+* `azuread_application` - validation for `identifier_uris` to detect trailing slash with no path [GH-928]
 
 BUG FIXES:
 
-* `data.azuread_application_template` - work around an API bug in the US Government cloud, by using the beta API ([#936](https://github.com/hashicorp/terraform-provider-azuread/issues/936))
-* `azuread_application` - fix a bug where `owners` where not correctly removed ([#916](https://github.com/hashicorp/terraform-provider-azuread/issues/916))
-* `azuread_application` - work around an API bug in the US Government cloud, by using the beta API when `template_id` is specified ([#936](https://github.com/hashicorp/terraform-provider-azuread/issues/936))
+* `data.azuread_application_template` - work around an API bug in the US Government cloud, by using the beta API [GH-936]
+* `azuread_application` - fix a bug where `owners` where not correctly removed [GH-916]
+* `azuread_application` - work around an API bug in the US Government cloud, by using the beta API when `template_id` is specified [GH-936]
 
 ## 2.30.0 (October 28, 2022)
 
