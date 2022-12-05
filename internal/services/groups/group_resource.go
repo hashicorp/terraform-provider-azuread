@@ -267,6 +267,22 @@ func groupResource() *schema.Resource {
 				Computed:    true,
 			},
 
+			// TODO: if this is a security group, this parameter must be empty or "msgraph.UniversalSecurityGroup"
+			// Should that be part of the validation or do we just let the api throw out the error?
+			// TODO: this can only be set if writeback_enabled = true
+			// TODO: how do we make it clear that this is associated with writeback_enabled? Is the description enough?
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as. `writeback_enabled` must have be set to `true`",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					msgraph.UniversalDistributionGroup,
+					msgraph.UniversalSecurityGroup,
+					msgraph.UniversalMailEnabledSecurityGroup,
+				}, false),
+			},
+
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeString,
@@ -304,6 +320,13 @@ func groupResource() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+			},
+
+			"writeback_enabled": {
+				Description: "Whether this group should be synced from azure ad to on-premises ad",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
 			},
 
 			"writeback": {
