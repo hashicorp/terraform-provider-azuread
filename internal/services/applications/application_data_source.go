@@ -541,11 +541,11 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(fmt.Errorf("app was unexpectedly nil"), "Application not found")
 	}
 
-	if app.ID == nil {
+	if app.ID() == nil {
 		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
 	}
 
-	d.SetId(*app.ID)
+	d.SetId(*app.ID())
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
@@ -559,7 +559,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
-	tf.Set(d, "object_id", app.ID)
+	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
@@ -581,9 +581,9 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
 	}
 
-	owners, _, err := client.ListOwners(ctx, *app.ID)
+	owners, _, err := client.ListOwners(ctx, *app.ID())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID)
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID())
 	}
 	tf.Set(d, "owners", owners)
 

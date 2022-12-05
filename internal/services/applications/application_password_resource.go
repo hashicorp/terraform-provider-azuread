@@ -143,25 +143,25 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
 	}
 
-	newCredential, _, err := client.AddPassword(ctx, *app.ID, *credential)
+	newCredential, _, err := client.AddPassword(ctx, *app.ID(), *credential)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential.KeyId == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential.SecretText == nil || len(*newCredential.SecretText) == 0 {
-		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for application with object ID %q", *app.ID())
 	}
 
-	id := parse.NewCredentialID(*app.ID, "password", *newCredential.KeyId)
+	id := parse.NewCredentialID(*app.ID(), "password", *newCredential.KeyId)
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()

@@ -84,7 +84,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 
@@ -105,7 +105,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
@@ -138,7 +138,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -160,7 +160,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
@@ -190,7 +190,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *schema.Resourc
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -233,7 +233,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -250,7 +250,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,

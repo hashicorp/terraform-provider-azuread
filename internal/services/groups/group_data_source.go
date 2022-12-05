@@ -338,11 +338,11 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		group = *g
 	}
 
-	if group.ID == nil {
+	if group.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*group.ID)
+	d.SetId(*group.ID())
 
 	tf.Set(d, "assignable_to_role", group.IsAssignableToRole)
 	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(group.ResourceBehaviorOptions))
@@ -351,7 +351,7 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tf.Set(d, "mail", group.Mail)
 	tf.Set(d, "mail_enabled", group.MailEnabled)
 	tf.Set(d, "mail_nickname", group.MailNickname)
-	tf.Set(d, "object_id", group.ID)
+	tf.Set(d, "object_id", group.ID())
 	tf.Set(d, "onpremises_domain_name", group.OnPremisesDomainName)
 	tf.Set(d, "onpremises_netbios_name", group.OnPremisesNetBiosName)
 	tf.Set(d, "onpremises_sam_account_name", group.OnPremisesSamAccountName)

@@ -166,7 +166,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *schema.Resourc
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &id.ObjectId,
+			Id: &id.ObjectId,
 		},
 		KeyCredentials: &newCredentials,
 	}
@@ -285,7 +285,7 @@ func applicationCertificateResourceDelete(ctx context.Context, d *schema.Resourc
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &id.ObjectId,
+			Id: &id.ObjectId,
 		},
 		KeyCredentials: &newCredentials,
 	}

@@ -52,14 +52,14 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(d.Get("service_principal_id").(string)),
+			Id: utils.String(d.Get("service_principal_id").(string)),
 		},
 		ClaimsMappingPolicies: &[]msgraph.ClaimsMappingPolicy{
 			{
 				DirectoryObject: msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 						client.BaseClient.Endpoint, client.BaseClient.TenantId, policyId))),
-					ID: &policyId,
+					Id: &policyId,
 				},
 			},
 		},
@@ -70,14 +70,14 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 		return tf.ErrorDiagF(
 			err,
 			"Could not create ClaimsMappingPolicyAssignment, service_principal_id: %q, claims_mapping_policy_id: %q",
-			*properties.DirectoryObject.ID,
-			*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID,
+			*properties.DirectoryObject.ID(),
+			*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID(),
 		)
 	}
 
 	id := parse.NewClaimsMappingPolicyAssignmentID(
-		*properties.DirectoryObject.ID,
-		*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID,
+		*properties.DirectoryObject.ID(),
+		*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID(),
 	)
 
 	d.SetId(id.String())
@@ -111,7 +111,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Conte
 
 	// Check the assignment is found in the currently assigned policies
 	for _, policy := range *policyList {
-		if *policy.ID == policyID {
+		if *policy.ID() == policyID {
 			foundPolicy = &policy
 			break
 		}
@@ -142,7 +142,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Con
 
 	sp := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &spID,
+			Id: &spID,
 		},
 	}
 	_, err = client.RemoveClaimsMappingPolicy(ctx, &sp, &claimIDs)
