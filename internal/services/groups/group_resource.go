@@ -895,15 +895,6 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		group.Visibility = utils.String(d.Get("visibility").(string))
 	}
 
-	if writeback_enabled, ok := d.GetOk("writeback_enabled"); ok && writeback_enabled.(bool) {
-		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{
-			IsEnabled: utils.Bool(true),
-		}
-		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
-			group.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
-		}
-	}
-
 	if _, err := client.Update(ctx, group); err != nil {
 		return tf.ErrorDiagF(err, "Updating group with ID: %q", d.Id())
 	}
