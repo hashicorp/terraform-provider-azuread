@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
@@ -154,13 +153,7 @@ func groupDataSource() *schema.Resource {
 			"onpremises_group_type": {
 				Description: "Indicates the target on-premise group type the group will be written back as. `writeback_enabled` must have be set to `true`",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.UniversalDistributionGroup,
-					msgraph.UniversalSecurityGroup,
-					msgraph.UniversalMailEnabledSecurityGroup,
-				}, false),
 			},
 
 			"onpremises_netbios_name": {
@@ -244,7 +237,6 @@ func groupDataSource() *schema.Resource {
 			"writeback_enabled": {
 				Description: "Whether this group should be synced from azure ad to on-premises ad",
 				Type:        schema.TypeBool,
-				Optional:    true,
 				Computed:    true,
 			},
 		},
