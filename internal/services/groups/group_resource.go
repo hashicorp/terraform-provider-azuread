@@ -280,10 +280,6 @@ func groupResource() *schema.Resource {
 				Computed:    true,
 			},
 
-			// TODO: if this is a security group, this parameter must be empty or "msgraph.UniversalSecurityGroup"
-			// Should that be part of the validation or do we just let the api throw out the error?
-			// TODO: this can only be set if writeback_enabled = true
-			// TODO: how do we make it clear that this is associated with writeback_enabled? Is the description enough?
 			"onpremises_group_type": {
 				Description: "Indicates the target on-premise group type the group will be written back as. `writeback_enabled` must have be set to `true`",
 				Type:        schema.TypeString,
@@ -340,35 +336,6 @@ func groupResource() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
-			},
-
-			"writeback": {
-				Description: "An optional block to configure writing the group back to the on-premises directory",
-				Type:        schema.TypeList,
-				Optional:    true,
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-
-						// TODO: if this is a security group, this parameter must be empty msgraph.UniversalSecurityGroup
-						// Should that be part of the validation or do we just let the api throw out the error?
-						"on_premises_group_type": {
-							Description: "Indicates the target on-premise group type the cloud object will be written back as",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							ValidateFunc: validation.StringInSlice([]string{
-								msgraph.UniversalDistributionGroup,
-								msgraph.UniversalSecurityGroup,
-								msgraph.UniversalMailEnabledSecurityGroup,
-							}, false),
-						},
-					},
-				},
 			},
 		},
 	}
@@ -516,6 +483,14 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
+	writebackConfiguration := &msgraph.GroupWritebackConfiguration{
+		IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+	}
+
+	if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
+		writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+	}
+
 	description := d.Get("description").(string)
 
 	odataType := odata.TypeGroup
@@ -534,6 +509,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ResourceBehaviorOptions:     &behaviorOptions,
 		ResourceProvisioningOptions: &provisioningOptions,
 		SecurityEnabled:             utils.Bool(securityEnabled),
+		WritebackConfiguration:      writebackConfiguration,
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
@@ -552,19 +528,6 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if visibility := d.Get("visibility").(string); visibility != "" {
 		properties.Visibility = utils.String(visibility)
-	}
-
-	if _, ok := d.GetOk("writeback"); ok {
-		log.Printf("Writeback has been set\n") // TODO: 34r remove
-		properties.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{}
-		if d.Get("writeback.0.enabled").(bool) {
-			log.Printf("Writeback is enabled\n") // TODO: 34r remove
-			properties.WritebackConfiguration.IsEnabled = utils.Bool(true)
-		}
-		if onPremisesGroupType := d.Get("writeback.0.on_premises_group_type").(string); onPremisesGroupType != "" {
-			log.Printf("on prem group type: %s\n", onPremisesGroupType) // TODO: 34r remove
-			properties.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
-		}
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -1011,6 +974,16 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		SecurityEnabled: utils.Bool(d.Get("security_enabled").(bool)),
 	}
 
+	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
+		writebackConfiguration := &msgraph.GroupWritebackConfiguration{
+			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+		}
+		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
+			writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+		}
+		group.WritebackConfiguration = writebackConfiguration
+	}
+
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
 		if d.Get("dynamic_membership.0.enabled").(bool) {
 			group.MembershipRuleProcessingState = utils.String("On")
@@ -1029,15 +1002,11 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		group.Visibility = utils.String(d.Get("visibility").(string))
 	}
 
-	if _, ok := d.GetOk("writeback"); ok {
-		log.Printf("Writeback has been set\n") // TODO: 34r remove
-		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{}
-		if d.Get("writeback.0.enabled").(bool) {
-			log.Printf("Writeback is enabled\n") // TODO: 34r remove
-			group.WritebackConfiguration.IsEnabled = utils.Bool(true)
+	if writeback_enabled, ok := d.GetOk("writeback_enabled"); ok && writeback_enabled.(bool) {
+		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{
+			IsEnabled: utils.Bool(true),
 		}
-		if onPremisesGroupType := d.Get("writeback.0.on_premises_group_type").(string); onPremisesGroupType != "" {
-			log.Printf("on prem group type: %s\n", onPremisesGroupType) // TODO: 34r remove
+		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
 			group.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
 		}
 	}
@@ -1338,14 +1307,10 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
-	writeback := make([]interface{}, 0)
-	if group.WritebackConfiguration != nil { // TODO: 34r check if this mapping needs some checks
-		writeback = append(writeback, map[string]interface{}{
-			"enabled":                group.WritebackConfiguration.IsEnabled,
-			"on_premises_group_type": group.WritebackConfiguration.OnPremisesGroupType,
-		})
+	if group.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
 	}
-	tf.Set(d, "writeback", writeback)
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
