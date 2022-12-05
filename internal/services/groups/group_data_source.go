@@ -151,6 +151,18 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as. `writeback_enabled` must have be set to `true`",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					msgraph.UniversalDistributionGroup,
+					msgraph.UniversalSecurityGroup,
+					msgraph.UniversalMailEnabledSecurityGroup,
+				}, false),
+			},
+
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeString,
@@ -229,33 +241,11 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"writeback": {
-				Description: "An optional block to configure writing the group back to the on-premises directory",
-				Type:        schema.TypeList,
+			"writeback_enabled": {
+				Description: "Whether this group should be synced from azure ad to on-premises ad",
+				Type:        schema.TypeBool,
 				Optional:    true,
-				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-
-						// TODO: if this is a security group, this parameter must be empty msgraph.UniversalSecurityGroup
-						// Should that be part of the validation or do we just let the api throw out the error?
-						"on_premises_group_type": {
-							Description: "Indicates the target on-premise group type the cloud object will be written back as",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							ValidateFunc: validation.StringInSlice([]string{
-								msgraph.UniversalDistributionGroup,
-								msgraph.UniversalSecurityGroup,
-								msgraph.UniversalMailEnabledSecurityGroup,
-							}, false),
-						},
-					},
-				},
+				Computed:    true,
 			},
 		},
 	}
@@ -377,14 +367,10 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
-	writeback := make([]interface{}, 0)
-	if group.WritebackConfiguration != nil { // TODO: 34r check if this mapping needs some checks
-		writeback = append(writeback, map[string]interface{}{
-			"enabled":                group.WritebackConfiguration.IsEnabled,
-			"on_premises_group_type": group.WritebackConfiguration.OnPremisesGroupType,
-		})
+	if group.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
 	}
-	tf.Set(d, "writeback", writeback)
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
