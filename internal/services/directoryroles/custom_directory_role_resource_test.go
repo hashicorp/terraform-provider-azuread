@@ -139,7 +139,7 @@ func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("failed to retrieve Custom Directory Role with object ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(role.ID != nil && *role.ID == state.ID), nil
+	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (r CustomDirectoryRoleResource) basic(data acceptance.TestData) string {

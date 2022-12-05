@@ -84,7 +84,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
 	}
-	if servicePrincipal == nil || servicePrincipal.ID == nil {
+	if servicePrincipal == nil || servicePrincipal.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
 	}
 
@@ -92,11 +92,11 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 		Credentials: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	_, err = client.SetSecrets(ctx, synchronizationSecret, *servicePrincipal.ID)
+	_, err = client.SetSecrets(ctx, synchronizationSecret, *servicePrincipal.ID())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating synchronization secret for service principal ID %q", *servicePrincipal.ID)
+		return tf.ErrorDiagF(err, "Creating synchronization secret for service principal ID %q", *servicePrincipal.ID())
 	}
-	id := parse.NewSynchronizationSecretID(*servicePrincipal.ID)
+	id := parse.NewSynchronizationSecretID(*servicePrincipal.ID())
 
 	// Wait for the secret to appear
 	timeout, _ := ctx.Deadline()
@@ -180,7 +180,7 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *schema.Resource
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ServicePrincipalId)
 	}
-	if servicePrincipal == nil || servicePrincipal.ID == nil {
+	if servicePrincipal == nil || servicePrincipal.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", id.ServicePrincipalId)
 	}
 

@@ -137,11 +137,11 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 	if err != nil {
 		return tf.ErrorDiagF(err, "Assigning directory role %q to directory principal %q, received %d with error: %+v", roleId, principalId, status, err)
 	}
-	if assignment == nil || assignment.ID == nil {
+	if assignment == nil || assignment.ID() == nil {
 		return tf.ErrorDiagF(errors.New("returned role assignment ID was nil"), "API Error")
 	}
 
-	d.SetId(*assignment.ID)
+	d.SetId(*assignment.ID())
 
 	// Wait for role assignment to reflect
 	deadline, ok := ctx.Deadline()
@@ -156,7 +156,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 3,
 		Refresh: func() (interface{}, string, error) {
-			_, status, err := client.Get(ctx, *assignment.ID, odata.Query{})
+			_, status, err := client.Get(ctx, *assignment.ID(), odata.Query{})
 			if err != nil {
 				if status == http.StatusNotFound {
 					return "stub", "Waiting", nil

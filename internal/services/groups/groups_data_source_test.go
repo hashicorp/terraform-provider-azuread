@@ -193,23 +193,23 @@ func testCheckGroupsDataSource(hasMailGroupsOnly, hasSecurityGroupsOnly, hasNoMa
 			if group == nil {
 				return fmt.Errorf("retrieving group with object ID %q: group was nil", oid)
 			}
-			if group.ID == nil {
+			if group.ID() == nil {
 				return fmt.Errorf("retrieving group with object ID %q: ID was nil", oid)
 			}
 			if group.DisplayName == nil {
 				return fmt.Errorf("retrieving group with object ID %q: DisplayName was nil", oid)
 			}
 			if hasMailGroupsOnly && group.MailEnabled != nil && !*group.MailEnabled {
-				return fmt.Errorf("expected only mail-enabled groups, encountered group %q (object ID: %q) which is not mail-enabled", *group.DisplayName, *group.ID)
+				return fmt.Errorf("expected only mail-enabled groups, encountered group %q (object ID: %q) which is not mail-enabled", *group.DisplayName, *group.ID())
 			}
 			if hasSecurityGroupsOnly && group.SecurityEnabled != nil && !*group.SecurityEnabled {
-				return fmt.Errorf("expected only security-enabled groups, encountered group %q (object ID: %q) which is not security-enabled", *group.DisplayName, *group.ID)
+				return fmt.Errorf("expected only security-enabled groups, encountered group %q (object ID: %q) which is not security-enabled", *group.DisplayName, *group.ID())
 			}
 			if hasNoMailGroups && group.MailEnabled != nil && *group.MailEnabled {
-				return fmt.Errorf("expected no mail-enabled groups, encountered group %q (object ID: %q) which is mail-enabled", *group.DisplayName, *group.ID)
+				return fmt.Errorf("expected no mail-enabled groups, encountered group %q (object ID: %q) which is mail-enabled", *group.DisplayName, *group.ID())
 			}
 			if hasNoSecurityGroups && group.SecurityEnabled != nil && *group.SecurityEnabled {
-				return fmt.Errorf("expected no security-enabled groups, encountered group %q (object ID: %q) which is security-enabled", *group.DisplayName, *group.ID)
+				return fmt.Errorf("expected no security-enabled groups, encountered group %q (object ID: %q) which is security-enabled", *group.DisplayName, *group.ID())
 			}
 		}
 
