@@ -480,6 +480,52 @@ func TestAccGroup_administrativeUnit(t *testing.T) {
 	})
 }
 
+func TestAccGroup_writeback(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withWriteback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalDistributionGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalDistributionGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalMailEnabledSecurityGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalMailEnabledSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unified(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
@@ -616,6 +662,22 @@ resource "azuread_group" "test" {
   hide_from_outlook_clients  = true
 }
 `, data.RandomInteger)
+}
+
+func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onpremises_group_type string) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name          = "acctestGroup-%[1]d"
+  description           = "Please delete me as this is a.test.AD group!"
+  types                 = ["Unified"]
+  mail_enabled          = true
+  mail_nickname         = "acctestGroup-%[1]d"
+  security_enabled      = true
+  theme                 = "Pink"
+  writeback_enabled     = true
+  onpremises_group_type = %[2]q
+}
+`, data.RandomInteger, onpremises_group_type)
 }
 
 func (GroupResource) complete(data acceptance.TestData) string {
@@ -1017,4 +1079,14 @@ resource "azuread_group" "test" {
   security_enabled = true
 }
 `, data.RandomInteger, data.RandomInteger)
+}
+
+func (GroupResource) withWriteback(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name      = "acctestGroup-%[1]d"
+  security_enabled  = true
+  writeback_enabled = true
+}
+`, data.RandomInteger)
 }
