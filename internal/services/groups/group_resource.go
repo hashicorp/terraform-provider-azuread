@@ -268,7 +268,7 @@ func groupResource() *schema.Resource {
 			},
 
 			"onpremises_group_type": {
-				Description: "Indicates the target on-premise group type the group will be written back as. `writeback_enabled` must have be set to `true`",
+				Description: "Indicates the target on-premise group type the group will be written back as",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
