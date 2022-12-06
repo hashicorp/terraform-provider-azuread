@@ -406,6 +406,22 @@ func TestAccGroup_visibility(t *testing.T) {
 	})
 }
 
+func TestAccGroup_writeback(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withWriteback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
@@ -884,4 +900,15 @@ resource "azuread_group" "duplicate" {
   prevent_duplicate_names = true
 }
 `, r.basic(data))
+}
+
+func (GroupResource) withWriteback(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  
+  writeback_enabled = true
+}
+`, data.RandomInteger)
 }
