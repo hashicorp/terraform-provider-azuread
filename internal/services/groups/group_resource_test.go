@@ -419,6 +419,22 @@ func TestAccGroup_writeback(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalDistributionGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalDistributionGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalMailEnabledSecurityGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalMailEnabledSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
 	})
 }
 
@@ -558,6 +574,20 @@ resource "azuread_group" "test" {
   hide_from_outlook_clients  = true
 }
 `, data.RandomInteger)
+}
+
+func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onpremises_group_type string) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name  = "acctestGroup-%[1]d"
+  types         = ["Unified"]
+  mail_enabled  = true
+  mail_nickname = "acctestGroup-%[1]d"
+
+  writeback_enabled     = true
+  onpremises_group_type = %[2]q
+}
+`, data.RandomInteger, onpremises_group_type)
 }
 
 func (GroupResource) complete(data acceptance.TestData) string {
