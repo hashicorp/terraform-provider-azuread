@@ -5,6 +5,8 @@ type ApiAppId = string
 // PublishedApis is a map containing Application IDs for well known APIs published by Microsoft.
 // They can be used to acquire access tokens, but are primarily described here for easy inclusion in
 // application manifests and service principal assignments.
+// Additional IDs defined in the following document:
+// https://learn.microsoft.com/en-us/troubleshoot/azure/active-directory/verify-first-party-apps-sign-in#application-ids-for-commonly-used-microsoft-applications
 var PublishedApis = map[string]ApiAppId{
 	"ApplicationInsights":               "f5c26e74-f226-4ae8-85f0-b4af0080ac9e",
 	"AttestationService":                "c61423b7-1d1f-430d-b444-0eee53298103",
@@ -89,10 +91,17 @@ var PublishedApis = map[string]ApiAppId{
 	"Office365Management":               "c5393580-f805-4401-95e8-94b7a6ef2fc2",
 	"Office365Portal":                   "00000006-0000-0ff1-ce00-000000000000",
 	"Office365SharePointOnline":         "00000003-0000-0ff1-ce00-000000000000",
+	"Office365SuiteUX":                  "4345a7b9-9a63-4910-a426-35363201d503",
+	"OfficeDesktop":                     "0ec893e0-5785-4de6-99da-4ed124e5296c",
+	"OfficeMobile":                      "d3590ed6-52b3-4102-aeff-aad2292ab01c",
+	"OfficeWeb":                         "4765445b-32c6-49b0-83e6-1d93765276ca",
 	"Office365Zoom":                     "0d38933a-0bbd-41ca-9ebd-28c4b5ba7cb7",
 	"OneNote":                           "2d4d3d8e-2be3-4bef-9f87-7875a61c29de",
 	"OneProfileService":                 "b2cc270f-563e-4d8a-af47-f00963a71dcd",
 	"OssRdbms":                          "123cd850-d9df-40bd-94d5-c9f07b7fa203",
+	"OutlookDesktopAndMobile":           "d3590ed6-52b3-4102-aeff-aad2292ab01c",
+	"OutlookMobile":                     "27922004-5251-4030-b22d-91ecd9a37ea4",
+	"OutlookWeb":                        "bc59ab01-8403-45c6-8796-ac3ef710b3e3",
 	"PeopleCardsService":                "394866fc-eedb-4f01-8536-3ff84b16be2a",
 	"PolicyAdministrationService":       "0469d4cd-df37-4d93-8a61-f8c75b809164",
 	"PowerAppsRuntimeService":           "82f77645-8a66-4745-bcdf-9706824f9ad0",
@@ -105,6 +114,8 @@ var PublishedApis = map[string]ApiAppId{
 	"SpeechRecognition":                 "1a6fcee6-0816-469b-acac-fe7ef2e87b83",
 	"TargetedMessagingService":          "4c4f550b-42b2-4a16-93f9-fdb9e01bb6ed",
 	"TeamsServices":                     "cc15fd57-2c6c-4117-a88c-83b1d56b4bbe",
+	"TeamsDesktopAndMobile":             "1fec8e78-bce4-4aaf-ab1b-5451cc387264",
+	"TeamsWeb":                          "5e3ce6c0-2b1f-4285-8d4b-75ee78787346",
 	"ThreatProtection":                  "8ee8fdad-f234-4243-8f3b-15c294843740",
 	"UniversalPrint":                    "da9b70f6-5323-4ce6-ae5c-88dcc5082966",
 	"WindowsDefenderAtp":                "fc780465-2017-40d4-a0c5-307022471b92",
