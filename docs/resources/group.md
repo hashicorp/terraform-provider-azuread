@@ -157,6 +157,8 @@ The following arguments are supported:
 
 -> **Group Name Uniqueness** Group names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing groups if you want to avoid name collisions.
 
+
+* `writeback_enabled` - (Optional) If `true`, the group will be written back to the configured on-premises Active Directory.
 ---
 
 `dynamic_membership` block supports the following:
@@ -173,6 +175,7 @@ In addition to all arguments above, the following attributes are exported:
 * `mail` - The SMTP address for the group.
 * `object_id` - The object ID of the group.
 * `onpremises_domain_name` - The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.
+* `onpremises_group_type` - The type the group will be written back to on-premises as, when writeback is enabled. One of: UniversalDistributionGroup, UniversalMailEnabledSecurityGroup, UniversalSecurityGroup.
 * `onpremises_netbios_name` - The on-premises NetBIOS name, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_sam_account_name` - The on-premises SAM account name, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_security_identifier` - The on-premises security identifier (SID), synchronised from the on-premises directory when Azure AD Connect is used.
