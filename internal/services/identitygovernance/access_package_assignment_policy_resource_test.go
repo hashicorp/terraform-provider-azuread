@@ -201,17 +201,20 @@ resource "azuread_group" "second_approver" {
   security_enabled = true
 }
 
-resource "azuread_access_package_catalog" "test_catalog" {  display_name = "testacc-asscess-assignment-%[1]d"
+resource "azuread_access_package_catalog" "test_catalog" {  
+  display_name = "testacc-asscess-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
   display_name = "testacc-asscess-assignment-%[1]d"
-  description  = "Test Access Package %[1]d for assignment policy"  catalog_id   = azuread_access_package_catalog.test_catalog.id
+  description  = "Test Access Package %[1]d for assignment policy"  
+  catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 resource "azuread_access_package_assignment_policy" "test" {
   display_name      = "access-package-assignment-policy-%[1]d"
-  description       = "Test Access Package Assignnment Policy %[1]d"  can_extend        = true
+  description       = "Test Access Package Assignnment Policy %[1]d"  
+  can_extend        = true
   expiration_date   = "2096-09-23T01:02:03Z"
   access_package_id = azuread_access_package.test.id
   requestor_settings {
@@ -219,7 +222,8 @@ resource "azuread_access_package_assignment_policy" "test" {
     accept_requests = true
     requestor {
       object_id    = azuread_group.requestor.object_id
-      subject_type = "groupMembers"    }
+      subject_type = "groupMembers"    
+	}
   }
   approval_settings {
     is_approval_required                = true

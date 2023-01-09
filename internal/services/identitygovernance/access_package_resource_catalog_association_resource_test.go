@@ -3,7 +3,6 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type AccessPackageResourceCatalogAssociationResource struct{}
@@ -36,15 +36,6 @@ func (AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Contex
 	client := clients.IdentityGovernance.AccessPackageResourceClient
 	client.BaseClient.DisableRetries = true
 
-	var exists = false
-	defer func() {
-		if err := recover(); err != nil {
-			log.Printf("[DEBUG] This needs to be fixed in the upstream libaray: %v", err)
-			exists = false
-		}
-		exists = false
-	}()
-
 	ids := strings.Split(state.ID, idDelimitor)
 	catalogId := ids[0]
 	resourceOriginId := ids[1]
@@ -55,9 +46,8 @@ func (AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Contex
 		}
 		return nil, fmt.Errorf("failed to retrieve access package catalog association with object ID %q: %+v", state.ID, err)
 	}
-	exists = catalogResource.ID != nil && *catalogResource.OriginId == state.Attributes["resource_origin_id"]
 
-	return &exists, nil
+	return utils.Bool(catalogResource.ID != nil && *catalogResource.OriginId == state.Attributes["resource_origin_id"]), nil
 }
 
 func (AccessPackageResourceCatalogAssociationResource) complete(data acceptance.TestData) string {

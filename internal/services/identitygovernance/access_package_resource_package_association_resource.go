@@ -151,7 +151,7 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 }
 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Println("There is no destroy implemented because Microsoft doesn't provide a valid API doing so for resource roles in an access package, you have to delete it manually, remove this resource from state now.")
+	//log.Println("There is no destroy implemented because Microsoft doesn't provide a valid API doing so for resource roles in an access package, you have to delete it manually, remove this resource from state now.")
 	d.SetId("")
 	return nil
 }

@@ -22,7 +22,8 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.complete(data),
+			Config:  r.complete(data),
+			Destroy: false,
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
