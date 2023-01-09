@@ -51,13 +51,13 @@ func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.
 provider "azuread" {}
 
 resource "azuread_group" "test_group" {
-	display_name     = "test-access-package-resource-catalog-association-%[1]d"
-	security_enabled = true
+  display_name     = "test-access-package-resource-catalog-association-%[1]d"
+  security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-	display_name = "test-catalog-%[1]d"	
-  	description  = "Test catalog %[1]d"
+  display_name = "test-catalog-%[1]d"
+  description  = "Test catalog %[1]d"
 }
 
 resource "azuread_access_package_resource_catalog_association" "test" {
@@ -67,15 +67,14 @@ resource "azuread_access_package_resource_catalog_association" "test" {
 }
 
 resource "azuread_access_package" "test" {
-	display_name = "test-package-%[1]d"
-	description  = "Test Package %[1]d"
-	catalog_id   = azuread_access_package_catalog.test_catalog.id
+  display_name = "test-package-%[1]d"
+  description  = "Test Package %[1]d"
+  catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_resource_package_association" "test" {
-	access_package_id               = azuread_access_package.test.id
-	catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
+  access_package_id               = azuread_access_package.test.id
+  catalog_resource_association_id = azuread_access_package_resource_catalog_association.test.id
 }
-
 `, data.RandomInteger)
 }
