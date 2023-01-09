@@ -134,7 +134,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							Optional:    true,
 						},
 						"is_requestor_justification_required": {
-							Description: "Whether reuqirestor are required to provide a justification to request an access package. Justification is visible to other approvers and the requestor.",
+							Description: "Whether requestor are required to provide a justification to request an access package. Justification is visible to other approvers and the requestor.",
 							Type:        schema.TypeBool,
 							Optional:    true,
 						},
