@@ -42,16 +42,16 @@ func schemaOptionalClaims() *schema.Schema {
 						Type: schema.TypeString,
 						ValidateFunc: validation.StringInSlice(
 							[]string{
+								"cloud_displayname",
 								"dns_domain_and_sam_account_name",
 								"emit_as_roles",
-								"include_externally_authenticated_upn",
 								"include_externally_authenticated_upn_without_hash",
+								"include_externally_authenticated_upn",
 								"max_size_limit",
 								"netbios_domain_and_sam_account_name",
 								"on_premise_security_identifier",
 								"sam_account_name",
 								"use_guid",
-								"cloud_displayname",
 							},
 							false,
 						),
