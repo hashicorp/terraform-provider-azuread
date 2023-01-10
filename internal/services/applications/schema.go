@@ -51,6 +51,7 @@ func schemaOptionalClaims() *schema.Schema {
 								"on_premise_security_identifier",
 								"sam_account_name",
 								"use_guid",
+								"cloud_displayname",
 							},
 							false,
 						),
