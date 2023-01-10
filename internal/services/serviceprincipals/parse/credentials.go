@@ -23,6 +23,19 @@ func (id CredentialId) String() string {
 	return id.ObjectId + "/" + id.KeyType + "/" + id.KeyId
 }
 
+func SigningCertificateID(idString string) (*CredentialId, error) {
+	id, err := ObjectSubResourceID(idString, "tokenSigningCertificate")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse signing certificate ID: %v", err)
+	}
+
+	return &CredentialId{
+		ObjectId: id.objectId,
+		KeyType:  id.Type,
+		KeyId:    id.subId,
+	}, nil
+}
+
 func CertificateID(idString string) (*CredentialId, error) {
 	id, err := ObjectSubResourceID(idString, "certificate")
 	if err != nil {

@@ -1,6 +1,9 @@
 package helpers
 
 import (
+	"bytes"
+	"crypto/sha1"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
@@ -40,6 +43,18 @@ func GetKeyCredential(keyCredentials *[]msgraph.KeyCredential, id string) (crede
 	return
 }
 
+func GetVerifyKeyCredentialFromCustomKeyId(keyCredentials *[]msgraph.KeyCredential, id string) (credential *msgraph.KeyCredential) {
+	if keyCredentials != nil {
+		for _, cred := range *keyCredentials {
+			if cred.KeyId != nil && strings.EqualFold(*cred.CustomKeyIdentifier, id) && strings.EqualFold(cred.Usage, msgraph.KeyCredentialUsageVerify) {
+				credential = &cred
+				break
+			}
+		}
+	}
+	return
+}
+
 func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id string) (credential *msgraph.PasswordCredential) {
 	if passwordCredentials != nil {
 		for _, cred := range *passwordCredentials {
@@ -50,6 +65,24 @@ func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id
 		}
 	}
 	return
+}
+
+func GetTokenSigningCertificateThumbprint(certByte []byte) (string, error) {
+	block, _ := pem.Decode(certByte)
+	if block == nil {
+		return "", fmt.Errorf("Failed to decode certificate block")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse certificate block data: %+v", err)
+	}
+	thumbprint := sha1.Sum(cert.Raw)
+
+	var buf bytes.Buffer
+	for _, f := range thumbprint {
+		fmt.Fprintf(&buf, "%02X", f)
+	}
+	return buf.String(), nil
 }
 
 func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
