@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
 
-func directoryRoleDataSource() *schema.Resource {
+func directoryRolesDataSource() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: directoryRoleDataSourceRead,
+		ReadContext: directoryRolesDataSourceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(5 * time.Minute),
@@ -69,7 +69,7 @@ func directoryRoleDataSource() *schema.Resource {
 	}
 }
 
-func directoryRoleDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRolesDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	directoryRoles, _, err := client.List(ctx)

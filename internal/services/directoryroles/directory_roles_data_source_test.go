@@ -11,7 +11,7 @@ import (
 
 type DirectoryRolesDataSource struct{}
 
-func TestAccDomainsDataSource_basic(t *testing.T) {
+func TestAccDirectoryRolesDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_directory_roles", "test")
 	r := DirectoryRolesDataSource{}
 

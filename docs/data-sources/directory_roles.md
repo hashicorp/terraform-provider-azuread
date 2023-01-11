@@ -43,7 +43,3 @@ The following attributes are exported:
 * `template_id` - The template ID of the directory role.
 * `description` - The description of the directory role.
 * `object_id` - The object ID of the directory role.
-
-## Import
-
-This resource does not support importing.
