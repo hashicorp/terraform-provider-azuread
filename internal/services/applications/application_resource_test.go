@@ -214,6 +214,35 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	})
 }
 
+func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("1"),
+			),
+		},
+	})
+}
+
+func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config:      r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data),
+			ExpectError: regexp.MustCompile("validation failed: The following values must match for the"),
+		},
+	})
+}
+
 func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -1236,11 +1265,6 @@ resource "azuread_application" "test" {
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsIdsUnknown(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
-provider "random" {}
-
-resource "random_uuid" "test" {
-  count = 2
-}
 
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
@@ -1250,7 +1274,7 @@ resource "azuread_application" "test" {
       admin_consent_description  = "Administer the application"
       admin_consent_display_name = "Administer"
       enabled                    = true
-      id                         = random_uuid.test[0].id
+      id                         = "%[2]s"
       type                       = "Admin"
       value                      = "administer"
     }
@@ -1261,7 +1285,7 @@ resource "azuread_application" "test" {
     description          = "Admins can manage roles and perform all task actions"
     display_name         = "Admin"
     enabled              = true
-    id                   = random_uuid.test[1].id
+    id                   = "%[3]s"
     value                = "administrate"
   }
 }
@@ -1296,6 +1320,66 @@ resource "azuread_application" "test" {
   }
 }
 `, data.RandomInteger, data.UUID(), data.UUID())
+}
+
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Administer the application"
+    display_name         = "Administer"
+    enabled              = true
+    id                   = "%[2]s"
+    value                = "administer"
+  }
+}
+`, data.RandomInteger, data.UUID())
+}
+
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "This should (see app_role[0].description"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Not work"
+    display_name         = "Administer"
+    enabled              = true
+    id                   = "%[2]s"
+    value                = "administer"
+  }
+}
+`, data.RandomInteger, data.UUID())
 }
 
 func (ApplicationResource) templateThreeUsers(data acceptance.TestData) string {
