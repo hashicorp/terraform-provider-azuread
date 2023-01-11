@@ -1,3 +1,9 @@
+## 2.32.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_application` - support the `cloud_displayname` optional claim [GH-967]
+
 ## 2.31.0 (December 01, 2022)
 
 IMPROVEMENTS:
