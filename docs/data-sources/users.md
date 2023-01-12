@@ -10,7 +10,7 @@ Gets basic information for multiple Azure Active Directory users.
 
 The following API permissions are required in order to use this data source.
 
-When authenticated with a service principal, this data source requires one of the following application roles: `User.ReadBasic.All` or `Directory.Read.All`
+When authenticated with a service principal, this data source requires one of the following application roles: `User.ReadBasic.All`, `User.Read.All` or `Directory.Read.All`
 
 When authenticated with a user principal, this data source does not require any additional roles.
 
