@@ -161,7 +161,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 
 func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newScopes *[]msgraph.PermissionScope) error {
 	if application.ID() == nil {
-		return fmt.Errorf("Cannot use Application model with nil ID")
+		return fmt.Errorf("cannot use Application model with nil ID")
 	}
 
 	if newScopes == nil {
@@ -310,18 +310,29 @@ func applicationParseLogoImage(encodedImage string) (string, []byte, error) {
 }
 
 func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {
-	var ids, values []string
+	type appPermission struct {
+		id          string
+		displayName string
+		description string
+		enabled     bool
+		value       string
+	}
+	var appPermissions []appPermission
 
 	for _, roleRaw := range appRoles {
 		if roleRaw == nil {
 			continue
 		}
 		role := roleRaw.(map[string]interface{})
-		if id := role["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
-			ids = append(ids, id)
+		permission := appPermission{
+			id:          role["id"].(string),
+			displayName: role["display_name"].(string),
+			description: role["description"].(string),
+			enabled:     role["enabled"].(bool),
+			value:       role["value"].(string),
 		}
-		if val := role["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
-			values = append(values, val)
+		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+			appPermissions = append(appPermissions, permission)
 		}
 	}
 
@@ -330,32 +341,35 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			continue
 		}
 		scope := scopeRaw.(map[string]interface{})
-		if id := scope["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
-			ids = append(ids, id)
+		permission := appPermission{
+			id:          scope["id"].(string),
+			displayName: scope["admin_consent_display_name"].(string),
+			description: scope["admin_consent_description"].(string),
+			enabled:     scope["enabled"].(bool),
+			value:       scope["value"].(string),
 		}
-		if val := scope["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
-			values = append(values, val)
+		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+			appPermissions = append(appPermissions, permission)
 		}
 	}
 
-	encounteredIds := make([]string, 0)
-	for _, id := range ids {
-		for _, en := range encounteredIds {
-			if en == id {
-				return fmt.Errorf("validation failed: duplicate ID found: %q", id)
+	encounteredPermissions := make([]appPermission, 0)
+	for _, ap := range appPermissions {
+		for _, ep := range encounteredPermissions {
+			if ap.id == ep.id && ap.value != ep.value {
+				return fmt.Errorf("validation failed: duplicate ID found: %q", ap.id)
+			}
+			if ap.value == ep.value && ap.id != ep.id {
+				return fmt.Errorf("validation failed: duplicate value found: %q", ap.value)
+			}
+			if ap.value == ep.value && ap.id == ep.id && !reflect.DeepEqual(ap, ep) {
+				return fmt.Errorf(`validation failed: The following values must match for the
+				'oauth2Permissions' and 'appRoles' properties with identifier '%q': (description, adminConsentDescription),
+				(displayName, adminConsentDisplayName),(isEnabled,isEnabled),(origin, origin),(value, value).
+				Ensure that you are intending to have entries with the same identifier, and if so, are updating them together`, ap.id)
 			}
 		}
-		encounteredIds = append(encounteredIds, id)
-	}
-
-	encounteredValues := make([]string, 0)
-	for _, val := range values {
-		for _, en := range encounteredValues {
-			if en == val {
-				return fmt.Errorf("validation failed: duplicate value found: %q", val)
-			}
-		}
-		encounteredValues = append(encounteredValues, val)
+		encounteredPermissions = append(encounteredPermissions, ap)
 	}
 
 	return nil
