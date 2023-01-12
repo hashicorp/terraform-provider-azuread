@@ -1,16 +1,16 @@
-## 2.32.0 (Unreleased)
+## 2.32.0 (January 12, 2023)
 
 FEATURES:
 
-* **New Data Source:** `azuread_directory_roles` [GH-945]
+* **New Data Source:** `azuread_directory_roles` ([#945](https://github.com/hashicorp/terraform-provider-azuread/issues/945))
 
 IMPROVEMENTS:
 
-* `azuread_application` - support the `cloud_displayname` optional claim [GH-967]
+* `azuread_application` - support the `cloud_displayname` optional claim ([#967](https://github.com/hashicorp/terraform-provider-azuread/issues/967))
 
 BUG FIXES:
 
-* `azuread_application` - improve validation when checking for duplicate app roles and permission scopes [GH-971]
+* `azuread_application` - improve validation when checking for duplicate app roles and permission scopes ([#971](https://github.com/hashicorp/terraform-provider-azuread/issues/971))
 
 ## 2.31.0 (December 01, 2022)
 
