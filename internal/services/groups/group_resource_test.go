@@ -676,7 +676,8 @@ resource "azuread_group" "test" {
   theme                 = "Pink"
   writeback_enabled     = true
   onpremises_group_type = %[2]q
-}`, data.RandomInteger, onpremises_group_type)
+}
+`, data.RandomInteger, onpremises_group_type)
 }
 
 func (GroupResource) complete(data acceptance.TestData) string {
