@@ -12,7 +12,7 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
 
-It is possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted, however only the service principal itself can be set as the owner.
+It may be possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted, however you must ensure that both the underlying application and the service principal have the Terraform principal as an owner.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
