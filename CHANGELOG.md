@@ -8,6 +8,10 @@ IMPROVEMENTS:
 
 * `azuread_application` - support the `cloud_displayname` optional claim [GH-967]
 
+BUG FIXES:
+
+* `azuread_application` - improve validation when checking for duplicate app roles and permission scopes [GH-971]
+
 ## 2.31.0 (December 01, 2022)
 
 IMPROVEMENTS:
