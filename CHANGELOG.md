@@ -1,5 +1,9 @@
 ## 2.32.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `azuread_directory_roles` [GH-945]
+
 IMPROVEMENTS:
 
 * `azuread_application` - support the `cloud_displayname` optional claim [GH-967]
