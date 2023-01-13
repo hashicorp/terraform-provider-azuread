@@ -258,6 +258,13 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"description": {
+				Description:      "Description of the application as shown to end users",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(0, 1024)),
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        schema.TypeBool,
@@ -951,6 +958,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	properties := msgraph.Application{
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(tempDisplayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
@@ -1121,6 +1129,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		},
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
@@ -1217,6 +1226,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "description", app.Description)
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)

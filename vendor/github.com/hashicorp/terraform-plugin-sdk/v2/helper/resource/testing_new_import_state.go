@@ -137,18 +137,12 @@ func testStepNewImportState(ctx context.Context, t testing.T, helper *plugintest
 		logging.HelperResourceTrace(ctx, "Using TestStep ImportStateCheck")
 
 		var states []*terraform.InstanceState
-		for address, r := range importState.RootModule().Resources {
-			if strings.HasPrefix(address, "data.") {
-				continue
+		for _, r := range importState.RootModule().Resources {
+			if r.Primary != nil {
+				is := r.Primary.DeepCopy()
+				is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
+				states = append(states, is)
 			}
-
-			if r.Primary == nil {
-				continue
-			}
-
-			is := r.Primary.DeepCopy()
-			is.Ephemeral.Type = r.Type // otherwise the check function cannot see the type
-			states = append(states, is)
 		}
 
 		logging.HelperResourceDebug(ctx, "Calling TestStep ImportStateCheck")
