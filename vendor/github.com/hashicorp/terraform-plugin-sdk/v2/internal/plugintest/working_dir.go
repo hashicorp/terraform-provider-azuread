@@ -1,9 +1,11 @@
 package plugintest
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -85,7 +87,7 @@ func (wd *WorkingDir) SetConfig(ctx context.Context, cfg string) error {
 	if err := os.Remove(rmFilename); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to remove %q: %w", rmFilename, err)
 	}
-	err := os.WriteFile(outFilename, bCfg, 0700)
+	err := ioutil.WriteFile(outFilename, bCfg, 0700)
 	if err != nil {
 		return err
 	}
@@ -279,11 +281,11 @@ func (wd *WorkingDir) SavedPlan(ctx context.Context) (*tfjson.Plan, error) {
 		return nil, fmt.Errorf("there is no current saved plan")
 	}
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
 
 	plan, err := wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
 
 	return plan, err
 }
@@ -297,17 +299,22 @@ func (wd *WorkingDir) SavedPlanRawStdout(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("there is no current saved plan")
 	}
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for stdout plan")
+	var ret bytes.Buffer
 
-	stdout, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+	wd.tf.SetStdout(&ret)
+	defer wd.tf.SetStdout(ioutil.Discard)
 
-	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command for stdout plan")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
+
+	_, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
 
 	if err != nil {
 		return "", err
 	}
 
-	return stdout, nil
+	return ret.String(), nil
 }
 
 // State returns an object describing the current state.
@@ -315,11 +322,11 @@ func (wd *WorkingDir) SavedPlanRawStdout(ctx context.Context) (string, error) {
 
 // If the state cannot be read, State returns an error.
 func (wd *WorkingDir) State(ctx context.Context) (*tfjson.State, error) {
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON state")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
 
 	state, err := wd.tf.Show(context.Background(), tfexec.Reattach(wd.reattachInfo))
 
-	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command for JSON state")
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
 
 	return state, err
 }

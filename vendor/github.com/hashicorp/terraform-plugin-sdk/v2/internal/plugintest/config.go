@@ -3,6 +3,7 @@ package plugintest
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -34,7 +35,7 @@ func DiscoverConfig(ctx context.Context, sourceDir string) (*Config, error) {
 	tfPath := os.Getenv(EnvTfAccTerraformPath)
 
 	tempDir := os.Getenv(EnvTfAccTempDir)
-	tfDir, err := os.MkdirTemp(tempDir, "plugintest-terraform")
+	tfDir, err := ioutil.TempDir(tempDir, "plugintest-terraform")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
