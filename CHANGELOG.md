@@ -1,3 +1,9 @@
+## 2.33.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_application` - support the `description` property [GH-977]
+
 ## 2.32.0 (January 12, 2023)
 
 FEATURES:
