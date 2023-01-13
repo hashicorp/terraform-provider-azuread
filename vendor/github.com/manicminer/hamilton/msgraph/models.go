@@ -202,6 +202,7 @@ type Application struct {
 	CreatedDateTime               *time.Time                `json:"createdDateTime,omitempty"`
 	DefaultRedirectUri            *string                   `json:"defaultRedirectUri,omitempty"`
 	DeletedDateTime               *time.Time                `json:"deletedDateTime,omitempty"`
+	Description                   *StringNullWhenEmpty      `json:"description,omitempty"`
 	DisabledByMicrosoftStatus     interface{}               `json:"disabledByMicrosoftStatus,omitempty"`
 	DisplayName                   *string                   `json:"displayName,omitempty"`
 	GroupMembershipClaims         *[]GroupMembershipClaim   `json:"-"` // see Application.MarshalJSON / Application.UnmarshalJSON
