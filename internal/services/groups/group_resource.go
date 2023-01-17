@@ -56,6 +56,12 @@ func groupResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"administrative_unit_id": {
+				Description: "The AU ID where the group should be created. If not provided, the group will be created directory default",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. This property can only be `true` for security-enabled groups.",
 				Type:        schema.TypeBool,
@@ -451,7 +457,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	description := d.Get("description").(string)
 
+	odataType := odata.TypeGroup
+
 	properties := msgraph.Group{
+		DirectoryObject: msgraph.DirectoryObject{
+			ODataType: &odataType,
+		},
 		Description:                 utils.NullableString(description),
 		DisplayName:                 utils.String(displayName),
 		GroupTypes:                  &groupTypes,
@@ -566,9 +577,23 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Set the initial owners, which either be the calling principal, or up to 20 of the owners specified in configuration
 	properties.Owners = &ownersFirst20
 
-	group, _, err := client.Create(ctx, properties)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Creating group %q", displayName)
+	var group *msgraph.Group
+
+	if v, ok := d.GetOk("administrative_unit_id"); ok {
+		auClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+		var status int
+		group, status, err = auClient.CreateGroup(ctx, v.(string), &properties)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", v.(string), displayName)
+		}
+		if status != http.StatusCreated {
+			return tf.ErrorDiagF(err, "Invalid status code after creating group %q", displayName)
+		}
+	} else {
+		group, _, err = client.Create(ctx, properties)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Creating group %q", displayName)
+		}
 	}
 
 	if group.ID() == nil {
