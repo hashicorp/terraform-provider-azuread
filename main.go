@@ -1,11 +1,32 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 )
 
+//func main() {
+//plugin.Serve(&plugin.ServeOpts{
+//ProviderFunc: Provider,
+//})
+//}
+
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
+	var debugMode bool
+	flag.BoolVar(&debugMode, "debug", true, "set to true to run the provider with support for debuggers like delve")
+	flag.Parse()
+	opts := &plugin.ServeOpts{
 		ProviderFunc: Provider,
-	})
+	}
+	if debugMode {
+		err := plugin.Debug(context.Background(), "terraform.example.com/local/azuread", opts)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		return
+	}
+	plugin.Serve(opts)
 }
