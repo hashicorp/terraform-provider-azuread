@@ -123,7 +123,6 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 		return tf.ErrorDiagF(err, "Could not add token signing certificate to service principal with object ID: %q", objectId)
 	}
 
-
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
 	polledForCredential, err := (&resource.StateChangeConf{
