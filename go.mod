@@ -58,4 +58,4 @@ require (
 
 go 1.19
 
-replace github.com/manicminer/hamilton => github.com/SwissGipfel/hamilton v0.53.1
+replace github.com/manicminer/hamilton => github.com/SwissGipfel/hamilton v0.54.1
