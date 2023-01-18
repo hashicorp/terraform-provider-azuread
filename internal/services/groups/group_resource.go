@@ -581,6 +581,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("administrative_unit_id"); ok {
 		auClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+
 		var status int
 		group, status, err = auClient.CreateGroup(ctx, v.(string), &properties)
 		if err != nil {
@@ -818,6 +819,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if _, err := client.AddMembers(ctx, group); err != nil {
 			return tf.ErrorDiagF(err, "Could not add members to group with object ID: %q", d.Id())
 		}
+	}
+
+	if _, ok := d.GetOk("administrative_unit_id"); ok {
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.DisableRetries = false
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryWaitMax = 1 * time.Minute
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryWaitMin = 10 * time.Second
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryMax = 15
 	}
 
 	return groupResourceRead(ctx, d, meta)

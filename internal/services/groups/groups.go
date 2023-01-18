@@ -3,9 +3,7 @@ package groups
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/manicminer/hamilton/msgraph"
@@ -47,24 +45,7 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
 	query := odata.Query{Select: []string{"allowExternalSenders", "autoSubscribeNewMembers", "hideFromAddressLists", "hideFromOutlookClients"}}
 
-	// after group creation in an administrative unit, we encountered the problem, that the following select statement needed 11min until a 200 was returned.
-	maxWaitTimeInSeconds := 900
-	sleepTimeInSeconds := 30
-
-	var groupExtra *msgraph.Group
-	var status int
-	var err error
-
-	for i := 0; i < maxWaitTimeInSeconds; i += sleepTimeInSeconds {
-		groupExtra, status, err = client.Get(ctx, id, query)
-		if status == http.StatusNotFound && err != nil {
-			log.Printf("[DEBUG], Retrying group read for additional Attributes with resource %q in %d seconds", id, sleepTimeInSeconds)
-			time.Sleep(time.Duration(sleepTimeInSeconds) * time.Second)
-			continue
-		} else {
-			break
-		}
-	}
+	groupExtra, _, err := client.Get(ctx, id, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
