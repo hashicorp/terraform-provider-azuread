@@ -314,7 +314,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
-	if diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
+	if tf.ValueIsNotEmptyOrUnknown(diff.Id()) && diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := groupFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
