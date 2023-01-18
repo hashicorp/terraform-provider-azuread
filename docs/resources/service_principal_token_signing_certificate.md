@@ -73,7 +73,7 @@ In addition to all arguments above, the following attributes are exported:
   
 * `start_date` - The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).
   
-* `value` - The certificate data, which is pem encoded but does not include the
+* `value` - The certificate data, which is PEM encoded but does not include the
 header `-----BEGIN CERTIFICATE-----\n` or the footer `\n-----END CERTIFICATE-----`.
 
 ## Import
@@ -81,7 +81,7 @@ header `-----BEGIN CERTIFICATE-----\n` or the footer `\n-----END CERTIFICATE----
 Token signing certificates can be imported using the object ID of the associated service principal and the key ID of the verify certificate credential, e.g.
 
 ```shell
-terraform import azuread_service_principal_token_signing_certificate.test 00000000-0000-0000-0000-000000000000/tokenSigningCertificate/11111111-1111-1111-1111-111111111111
+terraform import azuread_service_principal_token_signing_certificate.example 00000000-0000-0000-0000-000000000000/tokenSigningCertificate/11111111-1111-1111-1111-111111111111
 ```
 
 -> This ID format is unique to Terraform and is composed of the service principal's object ID, the string "tokenSigningCertificate" and the verify certificate's key ID in the format `{ServicePrincipalObjectId}/tokenSigningCertificate/{CertificateKeyId}`.

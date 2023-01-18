@@ -83,13 +83,13 @@ func servicePrincipalTokenSigningCertificateResource() *schema.Resource {
 			},
 
 			"start_date": {
-				Description: "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used",
+				Description: "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 
 			"value": {
-				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER",
+				Description: "The certificate data, which is PEM encoded but does not include the header/footer",
 				Type:        schema.TypeString,
 				Computed:    true,
 				Sensitive:   true,
@@ -115,13 +115,14 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 		keyCreds.EndDateTime = &endDate
 	}
 
+	tf.LockByName(servicePrincipalResourceName, objectId)
+	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
+
 	key, _, err := client.AddTokenSigningCertificate(ctx, objectId, keyCreds)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not add token signing certificate to service principal with object ID: %q", objectId)
 	}
 
-	tf.LockByName(servicePrincipalResourceName, objectId)
-	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
@@ -163,6 +164,9 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 	}
 	credential := helpers.GetVerifyKeyCredentialFromCustomKeyId(servicePrincipal.KeyCredentials, *key.CustomKeyIdentifier)
 
+	if credential == nil {
+		return tf.ErrorDiagF(errors.New("returned credential was nil"), "Could not determine key ID for newly added token signing certificate on service principal %q", objectId)
+	}
 	id := parse.NewCredentialID(objectId, "tokenSigningCertificate", *credential.KeyId)
 
 	d.SetId(id.String())
@@ -261,7 +265,6 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 			}
 		}
 	}
-	log.Printf("[Info] App Password: %v", *app.PasswordCredentials)
 
 	newPasswordCredentials := make([]msgraph.PasswordCredential, 0)
 	if app.PasswordCredentials != nil {
