@@ -1,5 +1,9 @@
 ## 2.33.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `azuread_service_principal_token_signing_certificate` [GH-968]
+
 IMPROVEMENTS:
 
 * `azuread_application` - support the `description` property [GH-977]
