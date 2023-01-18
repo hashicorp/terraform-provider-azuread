@@ -147,7 +147,7 @@ func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d
 
 	delegatedPermissionGrant, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
-		if status == http.StatusNoContent {
+		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Delegated Permission Grant with ID %q was not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
