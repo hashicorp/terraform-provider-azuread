@@ -1,19 +1,19 @@
-## 2.33.0 (Unreleased)
+## 2.33.0 (January 19, 2023)
 
 FEATURES:
 
-* **New Resource:** `azuread_service_principal_token_signing_certificate` [GH-968]
+* **New Resource:** `azuread_service_principal_token_signing_certificate` ([#968](https://github.com/hashicorp/terraform-provider-azuread/issues/968))
 
 IMPROVEMENTS:
 
-* `azuread_application` - support the `description` property [GH-977]
+* `azuread_application` - support the `description` property ([#977](https://github.com/hashicorp/terraform-provider-azuread/issues/977))
 
 BUG FIXES:
 
-* `azuread_service_principal_delegated_permission_grant` - fix a bug that caused state refreshes to fail if the resource is edited outside Terraform [GH-981]
-* `azuread_group` - fix a validation bug to allow periods (.) in the `mail_nickname` property [GH-979]
-* `azuread_group` - fix a bug that prevents replacing a group when `prevent_duplicate_names = true` [GH-980]
-* `azuread_group` - set the `display_name` property correctly on creation so that triggered notification emails are correct [GH-982]
+* `azuread_service_principal_delegated_permission_grant` - fix a bug that caused state refreshes to fail if the resource is edited outside Terraform ([#981](https://github.com/hashicorp/terraform-provider-azuread/issues/981))
+* `azuread_group` - fix a validation bug to allow periods (.) in the `mail_nickname` property ([#979](https://github.com/hashicorp/terraform-provider-azuread/issues/979))
+* `azuread_group` - fix a bug that prevents replacing a group when `prevent_duplicate_names = true` ([#980](https://github.com/hashicorp/terraform-provider-azuread/issues/980))
+* `azuread_group` - set the `display_name` property correctly on creation so that triggered notification emails are correct ([#982](https://github.com/hashicorp/terraform-provider-azuread/issues/982))
 
 ## 2.32.0 (January 12, 2023)
 
