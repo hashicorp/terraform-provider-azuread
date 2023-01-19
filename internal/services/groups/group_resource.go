@@ -821,6 +821,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// We have observed that when creating a group with an administrative_unit_id and querying the group with the /groups endpoint and specifying $select=allowExternalSenders,autoSubscribeNewMembers,hideFromAddressLists,hideFromOutlookClients, it returns a 404 for ~11 minutes.
 	if _, ok := d.GetOk("administrative_unit_id"); ok {
 		meta.(*clients.Client).Groups.GroupsClient.BaseClient.DisableRetries = false
 		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryWaitMax = 1 * time.Minute
