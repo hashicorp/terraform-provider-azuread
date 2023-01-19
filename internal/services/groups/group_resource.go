@@ -1098,6 +1098,29 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if d.HasChange("administrative_unit_id") {
+		administrativeUnitClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+		o, n := d.GetChange("administrative_unit_id")
+		oldAdministrativeUnitId := o.(string)
+		newAdministrativeUnitId := n.(string)
+		if newAdministrativeUnitId != "" {
+			members := msgraph.Members{
+				group.DirectoryObject,
+			}
+			members[0].ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				client.BaseClient.Endpoint, client.BaseClient.TenantId, d.Id())))
+			if _, err := administrativeUnitClient.AddMembers(ctx, newAdministrativeUnitId, &members); err != nil {
+				return tf.ErrorDiagF(err, "Could not add group to administrative unit with object ID: %q", newAdministrativeUnitId)
+			}
+		}
+		if oldAdministrativeUnitId != "" {
+			memberIds := []string{d.Id()}
+			if _, err := administrativeUnitClient.RemoveMembers(ctx, oldAdministrativeUnitId, &memberIds); err != nil {
+				return tf.ErrorDiagF(err, "Could not remove group from administrative unit with object ID: %q", oldAdministrativeUnitId)
+			}
+		}
+	}
+
 	return groupResourceRead(ctx, d, meta)
 }
 
