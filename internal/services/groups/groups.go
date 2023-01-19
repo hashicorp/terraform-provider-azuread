@@ -44,9 +44,7 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 
 func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
 	query := odata.Query{Select: []string{"allowExternalSenders", "autoSubscribeNewMembers", "hideFromAddressLists", "hideFromOutlookClients"}}
-
 	groupExtra, _, err := client.Get(ctx, id, query)
-
 	if err != nil {
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
 	}
