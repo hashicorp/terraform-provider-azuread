@@ -53,7 +53,7 @@ func groupGetAdministrativeUnitOfGroup(ctx context.Context, client *msgraph.Grou
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: msgraph.Uri{
-			Entity:      fmt.Sprintf("/groups/%s/membersOf/microsoft.graph.administrativeUnit", id),
+			Entity:      fmt.Sprintf("/groups/%s/memberOf/microsoft.graph.administrativeUnit", id),
 			HasTenantId: true,
 		},
 	})
