@@ -1210,6 +1210,19 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "members", members)
 
+	auId := d.Get("administrative_unit_id")
+	if auId.(string) != "" {
+		isMemberOfAu, _, err := groupGetAdministrativeUnitOfGroup(ctx, client, auId.(string), *group.ID())
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "administrativeUnit", "Could not retrive administrative Unit where this group belongs to %q", d.Id())
+		}
+		if isMemberOfAu {
+			tf.Set(d, "administrative_unit_id", auId)
+		} else {
+			tf.Set(d, "administrative_unit_id", nil)
+		}
+	}
+
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
