@@ -13,6 +13,7 @@ BUG FIXES:
 * `azuread_service_principal_delegated_permission_grant` - fix a bug that caused state refreshes to fail if the resource is edited outside Terraform [GH-981]
 * `azuread_group` - fix a validation bug to allow periods (.) in the `mail_nickname` property [GH-979]
 * `azuread_group` - fix a bug that prevents replacing a group when `prevent_duplicate_names = true` [GH-980]
+* `azuread_group` - set the `display_name` property correctly on creation so that triggered notification emails are correct [GH-982]
 
 ## 2.32.0 (January 12, 2023)
 
