@@ -502,7 +502,7 @@ resource "azuread_group" "test" {
   description      = "Please delete me as this is a.test.AD group!"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = true
   theme            = "Pink"
 }
@@ -532,7 +532,7 @@ resource "azuread_group" "test" {
   description      = "Please delete me as this is a.test.AD group!"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = true
   theme            = "Pink"
 
@@ -563,7 +563,7 @@ resource "azuread_group" "test" {
   display_name     = "acctestGroup-complete-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = true
   members          = [azuread_user.test.object_id]
   owners           = [azuread_user.test.object_id]
@@ -607,7 +607,7 @@ resource "azuread_group" "test" {
   description      = "Please delete me as this is a.test.AD group!"
   types            = ["DynamicMembership", "Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = true
 
   dynamic_membership {
