@@ -58,4 +58,5 @@ require (
 
 go 1.19
 
+// can be removed once https://github.com/manicminer/hamilton/pull/206 is merged
 replace github.com/manicminer/hamilton => github.com/SwissGipfel/hamilton v0.54.1
