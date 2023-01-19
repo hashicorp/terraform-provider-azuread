@@ -11,6 +11,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * `azuread_group` - fix a validation bug to allow periods (.) in the `mail_nickname` property [GH-979]
+* `azuread_group` - fix a bug that prevents replacing a group when `prevent_duplicate_names = true` [GH-980]
 
 ## 2.32.0 (January 12, 2023)
 
