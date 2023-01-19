@@ -8,6 +8,10 @@ IMPROVEMENTS:
 
 * `azuread_application` - support the `description` property [GH-977]
 
+BUG FIXES:
+
+* `azuread_group` - fix a validation bug to allow periods (.) in the `mail_nickname` property [GH-979]
+
 ## 2.32.0 (January 12, 2023)
 
 FEATURES:
