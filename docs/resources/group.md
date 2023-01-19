@@ -106,6 +106,7 @@ resource "azuread_group" "example" {
 
 The following arguments are supported:
 
+* `administrative_unit_id` - (Optional) The administrative unit ID that the group is member of.
 * `assignable_to_role` - (Optional) Indicates whether this group can be assigned to an Azure Active Directory role. Can only be `true` for security-enabled groups. Changing this forces a new resource to be created.
 * `auto_subscribe_new_members` - (Optional) Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.
 
