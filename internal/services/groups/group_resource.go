@@ -449,18 +449,11 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
-	// Set a temporary display name as we'll attempt to patch the group with the correct name after creating it
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
-
 	description := d.Get("description").(string)
 
 	properties := msgraph.Group{
 		Description:                 utils.NullableString(description),
-		DisplayName:                 utils.String(tempDisplayName),
+		DisplayName:                 utils.String(displayName),
 		GroupTypes:                  &groupTypes,
 		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
 		MailEnabled:                 utils.Bool(mailEnabled),
@@ -584,20 +577,26 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(*group.ID())
 
-	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet.
+	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-	status, err := client.Update(ctx, msgraph.Group{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: group.ID(),
-		},
-		DisplayName: utils.String(displayName),
-		//AutoSubscribeNewMembers: utils.Bool(d.Get("auto_subscribe_new_members").(bool)),
-	})
+	uuid, err := uuid.GenerateUUID()
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
+		status, err := client.Update(ctx, msgraph.Group{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: group.ID(),
+			},
+			DisplayName: utils.String(displayNameToSet),
+		})
+		if err != nil {
+			if status == http.StatusNotFound {
+				return tf.ErrorDiagF(err, "Timed out whilst waiting for new group to be replicated in Azure AD")
+			}
+			return tf.ErrorDiagF(err, "Failed to patch group with object ID %q after creating", *group.ID())
 		}
-		return tf.ErrorDiagF(err, "Failed to patch group with object ID %q after creating", *group.ID())
 	}
 
 	// Wait for DisplayName to be updated
