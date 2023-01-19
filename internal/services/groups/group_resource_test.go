@@ -71,6 +71,13 @@ func TestAccGroup_update(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.unified(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -337,6 +344,27 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
+	})
+}
+
+func TestAccGroup_preventDuplicateNamesForceNew(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		{
+			Config: r.preventDuplicateNamesForceNew(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+		data.ImportStep("prevent_duplicate_names"),
 	})
 }
 
@@ -884,4 +912,16 @@ resource "azuread_group" "duplicate" {
   prevent_duplicate_names = true
 }
 `, r.basic(data))
+}
+
+func (GroupResource) preventDuplicateNamesForceNew(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name            = "acctestGroup-%[1]d"
+  security_enabled        = true
+  prevent_duplicate_names = true
+
+  assignable_to_role = true
+}
+`, data.RandomInteger)
 }
