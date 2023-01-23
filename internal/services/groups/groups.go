@@ -45,7 +45,7 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 	return &result, nil
 }
 
-func groupGetAdministrativeUnitOfGroup(ctx context.Context, client *msgraph.GroupsClient, auId string, id string) (bool, int, error) {
+func isGroupInAdministrativeUnit(ctx context.Context, client *msgraph.GroupsClient, auId string, id string) (bool, int, error) {
 	resp, status, _, err := client.BaseClient.Get(ctx, msgraph.GetHttpRequestInput{
 		ConsistencyFailureFunc: msgraph.RetryOn404ConsistencyFailureFunc,
 		OData: odata.Query{
