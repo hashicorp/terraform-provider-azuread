@@ -434,6 +434,40 @@ func TestAccGroup_visibility(t *testing.T) {
 	})
 }
 
+func TestAccGroup_administrativeUnit(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.administrativeUnit(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("administrative_unit_id").Exists(),
+			),
+		},
+		data.ImportStep("administrative_unit_id"),
+		// remove group from AU
+		{
+			Config: r.administrativeUnitWithoutAssociation(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("administrative_unit_id").IsEmpty(),
+			),
+		},
+		data.ImportStep("administrative_unit_id"),
+		// add group to AU
+		{
+			Config: r.administrativeUnit(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("administrative_unit_id").Exists(),
+			),
+		},
+		data.ImportStep("administrative_unit_id"),
+	})
+}
+
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
@@ -922,6 +956,33 @@ resource "azuread_group" "test" {
   prevent_duplicate_names = true
 
   assignable_to_role = true
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) administrativeUnit(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_administrative_unit" "test" {
+	display_name = "acctestGroup-administrative-unit-%[1]d"
+}
+
+resource "azuread_group" "test" {
+	display_name     = "acctestGroup-%[1]d"
+	security_enabled = true
+	administrative_unit_id = azuread_administrative_unit.test.id
+}
+`, data.RandomInteger)
+}
+
+func (r GroupResource) administrativeUnitWithoutAssociation(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_administrative_unit" "test" {
+	display_name = "acctestGroup-administrative-unit-%[1]d"
+}
+
+resource "azuread_group" "test" {
+	display_name     = "acctestGroup-%[1]d"
+	security_enabled = true
 }
 `, data.RandomInteger)
 }

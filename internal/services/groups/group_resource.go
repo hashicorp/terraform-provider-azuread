@@ -1221,6 +1221,8 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		} else {
 			tf.Set(d, "administrative_unit_id", nil)
 		}
+	} else {
+		tf.Set(d, "administrative_unit_id", nil)
 	}
 
 	preventDuplicates := false
