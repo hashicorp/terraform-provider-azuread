@@ -447,7 +447,6 @@ func TestAccGroup_administrativeUnit(t *testing.T) {
 			),
 		},
 		data.ImportStep("administrative_unit_id"),
-		// remove group from AU
 		{
 			Config: r.administrativeUnitWithoutAssociation(data),
 			Check: resource.ComposeTestCheckFunc(
@@ -456,7 +455,6 @@ func TestAccGroup_administrativeUnit(t *testing.T) {
 			),
 		},
 		data.ImportStep("administrative_unit_id"),
-		// add group to AU
 		{
 			Config: r.administrativeUnit(data),
 			Check: resource.ComposeTestCheckFunc(
