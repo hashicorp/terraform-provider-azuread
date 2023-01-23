@@ -57,7 +57,7 @@ func groupResource() *schema.Resource {
 			},
 
 			"administrative_unit_id": {
-				Description: "The AU ID where the group should be created. If not provided, the group will be created directory default",
+				Description: "The administrative unit ID in which the group should be created. If empty, the group will be created at the tenant level.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
