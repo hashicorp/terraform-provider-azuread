@@ -578,6 +578,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	properties.Owners = &ownersFirst20
 
 	var group *msgraph.Group
+	var err error
 
 	if v, ok := d.GetOk("administrative_unit_id"); ok {
 		auClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
