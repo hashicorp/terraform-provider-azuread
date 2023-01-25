@@ -40,7 +40,7 @@ One of the `object_id` or `display_name` must be specified.
 
 
 ## Attributes Reference
-In additional to the arugments, the following attributes are exported:
+In additional to the arguments, the following attributes are exported:
 
 * `id` - The ID of this resource.
 * `description` - The description of the access package catalog.

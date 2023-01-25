@@ -83,7 +83,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 ---
 
 <a id="nestedblock--approval_settings"></a>
-`approval_settings` block supports the follwoing:
+`approval_settings` block supports the following:
 
 - `approval_stage` (Optional) The process to obtain an approval (see [below for block details](#nestedblock--approval_settings--approval_stage))
 - `is_approval_required` (Optional) Whether an approval is required.
