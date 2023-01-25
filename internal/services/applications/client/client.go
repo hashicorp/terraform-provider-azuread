@@ -1,8 +1,8 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
