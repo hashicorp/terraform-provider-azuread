@@ -49,14 +49,14 @@ resource "azuread_access_package_resource_package_association" "example" {
 * `access_type` - (Optional) The role of access type to the specified resource, valid values are `Member` and `Owner`, default is `Member`.
 
 ## Attributes Reference
-* `id` - The ID of this resource.
+* `id` - The ID of this resource. The ID is combined by four fields with colon in bettween, the four fileds are `access_package_id`, this package association id, `resource_origin_id` and `access_type`
 
 ## Import
 
-The resource and catalog association can be imported using the `id`, e.g.
+The resource and package association can be imported using the `id`, e.g.
 
 ```
-terraform import azuread_access_package_resource_catalog_association.example_resource_catalog_association 00000000-0000-0000-0000-000000000000:11111111-1111-1111-1111-111111111111
+terraform import azuread_access_package_resource_catalog_association.example_resource_catalog_association 00000000-0000-0000-0000-000000000000:11111111-1111-1111-1111-111111111111_22222222-2222-2222-2222-22222222:33333333-3333-3333-3333-33333333:Member
 ```
 
 
