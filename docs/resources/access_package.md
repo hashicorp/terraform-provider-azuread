@@ -14,7 +14,7 @@ When authenticated with a user principal, this resource requires one of the foll
 
 
 ## Example Usage
-```
+```terraform
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "example" {
@@ -37,6 +37,8 @@ resource "azuread_access_package" "example" {
 * `is_hidden` - (Optional) Whether the access package is hidden from the requestor.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of this resource.
 

@@ -14,7 +14,7 @@ When authenticated with a user principal, this resource requires one of the foll
 
 
 ## Example Usage
-```
+```terraform
 resource "azuread_access_package_catalog" "example" {
   display_name = "example-access-package-catalog"
   description  = "Example access package catalog"
@@ -28,6 +28,9 @@ resource "azuread_access_package_catalog" "example" {
 * `state` - (Optional) Has the value published if the access packages are available for management. The possible values are: unpublished and published.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
 * `id` - The ID of this resource.
 
 ## Import

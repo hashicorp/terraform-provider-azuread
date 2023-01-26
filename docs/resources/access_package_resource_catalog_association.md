@@ -14,14 +14,14 @@ When authenticated with a user principal, this resource requires one of the foll
 
 
 ## Example Usage
-```
+```terraform
 resource "azuread_group" "example_group" {
   display_name     = "example_group"
   security_enabled = true
 }
 
 resource "azuread_access_package_catalog" "example_catalog" {
-  display_name = "example-catalog"	
+  display_name = "example-catalog"
   description  = "Example catalog"
 }
 
@@ -39,6 +39,8 @@ resource "azuread_access_package_resource_catalog_association" "example" {
 * `resource_origin_system` - (Required) The type of the resource in the origin system, such as SharePointOnline, AadApplication or AadGroup.
 
 ## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of this resource, the ID is the concatenation of `catalog_id` and `resource_origin_id` with colon in between.
 

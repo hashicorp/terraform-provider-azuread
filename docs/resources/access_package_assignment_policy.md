@@ -14,7 +14,7 @@ When authenticated with a user principal, this resource requires `Global Adminis
 
 ## Example Usage
 
-```
+```terraform
 provider "azuread" {}
 
 resource "azuread_group" "test" {
@@ -203,7 +203,9 @@ resource "azuread_access_package_assignment_policy" "test" {
 - `is_backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup fallback approver.
 - `object_id` (Optional) The ID of the subject.
 
-## Attribute Reference
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
 
 - `id` (String) The ID of this resource.
 
