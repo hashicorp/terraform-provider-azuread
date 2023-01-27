@@ -191,7 +191,7 @@ The following arguments are supported:
 
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
-* `tags` - (Optional) A set of tags to apply to the application. Cannot be used together with the `feature_tags` block.
+* `tags` - (Optional) A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners. Cannot be used together with the `feature_tags` block.
 
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
 
