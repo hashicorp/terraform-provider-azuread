@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
-
-	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ClientBuilder struct {
@@ -53,6 +53,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 	o := &common.ClientOptions{
 		Authorizer:  authorizer,
+		ApiVersion:  msgraph.Version10,
 		Environment: client.Environment,
 		TenantID:    client.TenantID,
 
