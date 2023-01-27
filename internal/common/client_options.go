@@ -11,11 +11,10 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
+	"github.com/hashicorp/terraform-provider-azuread/version"
 	"github.com/manicminer/hamilton/auth"
 	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/msgraph"
-
-	"github.com/hashicorp/terraform-provider-azuread/version"
 )
 
 type contextKey string
@@ -28,6 +27,7 @@ type ClientOptions struct {
 	TerraformVersion string
 
 	Authorizer auth.Authorizer
+	ApiVersion msgraph.ApiVersion
 }
 
 func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
@@ -46,6 +46,9 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 
 	// Default retry limit, can be overridden from within a resource
 	c.RetryableClient.RetryMax = 9
+
+	// Explicitly set API version
+	c.ApiVersion = o.ApiVersion
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

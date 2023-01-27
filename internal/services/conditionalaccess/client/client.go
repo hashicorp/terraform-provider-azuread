@@ -1,9 +1,8 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
@@ -17,7 +16,6 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	policiesClient := msgraph.NewConditionalAccessPoliciesClient(o.TenantID)
 	o.ConfigureClient(&policiesClient.BaseClient)
-	policiesClient.BaseClient.ApiVersion = msgraph.Version10
 
 	return &Client{
 		NamedLocationsClient: namedLocationsClient,
