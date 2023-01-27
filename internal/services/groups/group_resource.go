@@ -1215,7 +1215,7 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if auId.(string) != "" {
 		isMemberOfAu, _, err := isGroupInAdministrativeUnit(ctx, client, auId.(string), *group.ID())
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "administrativeUnit", "Could not retrive administrative Unit where this group belongs to %q", d.Id())
+			return tf.ErrorDiagPathF(err, "administrativeUnit", "Could not retrieve administrative Unit where this group belongs to %q", d.Id())
 		}
 		if isMemberOfAu {
 			tf.Set(d, "administrative_unit_id", auId)
