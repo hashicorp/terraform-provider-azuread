@@ -164,6 +164,7 @@ The following arguments are supported:
 
 * `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `description` - (Optional) A description of the application, as shown to end users.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
