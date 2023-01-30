@@ -583,13 +583,9 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("administrative_unit_id"); ok {
 		auClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
-		var status int
-		group, status, err = auClient.CreateGroup(ctx, v.(string), &properties)
+		group, _, err = auClient.CreateGroup(ctx, v.(string), &properties)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", v.(string), displayName)
-		}
-		if status != http.StatusCreated {
-			return tf.ErrorDiagF(err, "Invalid status code after creating group %q", displayName)
 		}
 	} else {
 		group, _, err = client.Create(ctx, properties)

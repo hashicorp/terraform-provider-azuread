@@ -38,7 +38,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `administrative_unit_id` - The optional administrative unit ID that the group is member of.
 * `assignable_to_role` - Indicates whether this group can be assigned to an Azure Active Directory role.
 * `auto_subscribe_new_members` - Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Only set for Unified groups.
 * `behaviors` - A list of behaviors for a Microsoft 365 group, such as `AllowOnlyMembersToPost`, `HideGroupInOutlook`, `SubscribeNewGroupMembers` and `WelcomeEmailDisabled`. See [official documentation](https://docs.microsoft.com/en-us/graph/group-set-options) for more details.
