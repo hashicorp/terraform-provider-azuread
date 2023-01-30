@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * **Provider:** All resources will now explicitly use the Microsoft Graph v1.0 API unless stated otherwise in the provider documentation [GH-990]
 
+BUG FIXES:
+
+* `data.azuread_application_template` - revert a workaround from v2.31.0 and no longer use the beta API for this data source [GH-987]
+
 ## 2.33.0 (January 19, 2023)
 
 FEATURES:
