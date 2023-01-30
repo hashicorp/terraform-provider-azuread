@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
