@@ -52,7 +52,7 @@ resource "azuread_access_package_resource_package_association" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of this resource. The ID is combined by four fields with colon in bettween, the four fileds are `access_package_id`, this package association id, `resource_origin_id` and `access_type`
+* `id` - The ID of this resource. The ID is combined by four fields with colon in between, the four fields are `access_package_id`, this package association id, `resource_origin_id` and `access_type`.
 
 ## Import
 

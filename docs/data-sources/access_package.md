@@ -3,12 +3,12 @@ subcategory: "Identity Governance"
 ---
 
 # Data Source: azuread_access_package
-Use this resource to retrieve information of existing access package.
+Use this resource to retrieve information of an existing access package.
 
 ## API Permissions
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this data source requires `Entitlement.Read.All` role.
+When authenticated with a service principal, this data source requires `EntitlementManagement.Read.All` role.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Catalog owner`, `Catalog reader`, `Access package manager` or `Global Administrator`.
 

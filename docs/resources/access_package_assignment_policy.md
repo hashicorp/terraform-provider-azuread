@@ -72,7 +72,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 - `access_package_id` (Required) The ID of the access package that will contain the policy.
 - `description` (Required) The description of the policy.
 - `display_name` (Required) The display name of the policy.
-- `approval_settings` (Optional) Settings of whether apporvals are required and how they are obtained. (see [below for block details](#nestedblock--approval_settings))
+- `approval_settings` (Optional) Settings of whether approvals are required and how they are obtained. (see [below for block details](#nestedblock--approval_settings))
 - `assignment_review_settings` (Optional) The settings of whether assignment review is needed and how it's conducted. (see [below for block details](#nestedblock--assignment_review_settings))
 - `can_extend` (Optional) When enabled, users will be able to request extension of their access to this package before their access expires.
 - `duration_in_days` (Optional) How many days this assignment is valid for.
@@ -88,7 +88,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 - `approval_stage` (Optional) The process to obtain an approval (see [below for block details](#nestedblock--approval_settings--approval_stage))
 - `is_approval_required` (Optional) Whether an approval is required.
 - `is_approval_required_for_extension` (Optional) Whether an approval is required to grant extension. Same approval settings used to approve initial access will apply.
-- `is_requestor_justification_required` (Optional) Whether requestor are required to provide a justification to request an access package. Justification is visible to other approvers and the requestor.
+- `is_requestor_justification_required` (Optional) Whether a requestor is required to provide a justification to request an access package. Justification is visible to approvers and the requestor.
 
 ---
 
@@ -118,12 +118,12 @@ resource "azuread_access_package_assignment_policy" "test" {
 
 - `access_review_timeout_behavior` (Optional) What actions the system takes if reviewers don't respond in time, valid values are `keepAccess`, `removeAcces`, `acceptAccessRecommendation`.
 - `duration_in_days` (Number) How many days each occurrence of the access review series will run.
-- `is_access_recommendation_enabled` (Optional) Whether to show Show reviewer decision helpers. If enabled, system recommendations based on users' access information will be shown to the reviewers. The reviewer will be recommended to approve the review if the user has signed-in at least once during the last 30 days. The reviewer will be recommended to deny the review if the user has not signed-in during the last 30 days
-- `is_approver_justification_required` (Optional) Whether a reviewer need provide a justification for their decision. Justification is visible to other reviewers and the requestor.
-- `is_enabled` (Optional) Whether to enable assignment reivew.
+- `is_access_recommendation_enabled` (Optional) Whether to show the reviewer decision helpers. If enabled, system recommendations based on users' access information will be shown to the reviewers. The reviewer will be recommended to approve the review if the user has signed-in at least once during the last 30 days. The reviewer will be recommended to deny the review if the user has not signed-in during the last 30 days.
+- `is_approver_justification_required` (Optional) Whether a reviewer needs to provide a justification for their decision. Justification is visible to other reviewers and the requestor.
+- `is_enabled` (Optional) Whether to enable assignment review.
 - `review_frequency` (Optional) This will determine how often the access review campaign runs, valid values are `weekly`,`monthly`,`quarterly`,`halfyearly`,`annual`.
 - `review_type` (Optional) Self reivew or specific reviewers, valid values are `Self`, `Reviewers`.
-- `reviewer` (Optional) If the reviewerType is Reviewers, this collection specifies the users who will be reviewers, either by ID or as members of a group, using a collection of singleUser and groupMembers. (see [below for block details](#nestedblock--assignment_review_settings--reviewer))
+- `reviewer` (Optional) If the `review_type` is Reviewers, this collection specifies the users who will be reviewers, either by ID or as members of a group, using a collection of singleUser and groupMembers. (see [below for block details](#nestedblock--assignment_review_settings--reviewer))
 - `starting_on` (Optional) This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC(e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date
 
 ---
@@ -132,7 +132,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 `assignment_review_settings.reviewer` block supports the following:
 
 - `subject_type` (Required) Type of users, valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, `externalSponsors`.
-- `is_backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup fallback approver.
+- `is_backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup approver.
 - `object_id` (Optional) The ID of the subject.
 
 ---
@@ -190,7 +190,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 <a id="nestedblock--requestor_settings"></a>
 `requestor_settings` block supports the following:
 
-- `accept_requests` (Optional) Whether to accept requets now, when disabled, no new requests can be made using this policy.
+- `accept_requests` (Optional) Whether to accept requests now, when disabled, no new requests can be made using this policy.
 - `requestor` (Optional) The users who are allowed to request on this policy, which can be singleUser, groupMembers, and connectedOrganizationMembers. (see [below for block details](#nestedblock--requestor_settings--requestor))
 - `scope_type` (Optional) Specify the scopes of the requestors. Valid values are `AllConfiguredConnectedOrganizationSubjects`, `AllExistingConnectedOrganizationSubjects`, `AllExistingDirectoryMemberUsers`, `AllExistingDirectorySubjects`, `AllExternalSubjects`, `NoSubjects`, `SpecificConnectedOrganizationSubjects`,`SpecificDirectorySubjects`.
 
@@ -200,7 +200,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 `requestor_settings.requestor` block supports the following:
 
 - `subject_type` (Required) Type of users, valid values are `singleUser`, `groupMembers`, `connectedOrganizationMembers`, `requestorManager`, `internalSponsors`, `externalSponsors`.
-- `is_backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup fallback approver.
+- `is_backup` (Optional) For a user in an approval stage, this property indicates whether the user is a backup approver.
 - `object_id` (Optional) The ID of the subject.
 
 ## Attributes Reference
