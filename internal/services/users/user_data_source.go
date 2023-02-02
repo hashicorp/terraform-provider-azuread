@@ -358,9 +358,9 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		count := len(*users)
 		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", upn)
+			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", mailNickname)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", upn)
+			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 		user = (*users)[0]
 	} else {
