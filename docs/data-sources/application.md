@@ -33,6 +33,7 @@ The following arguments are supported:
 * `application_id` - (Optional) Specifies the Application ID (also called Client ID).
 * `display_name` - (Optional) Specifies the display name of the application.
 * `object_id` - (Optional) Specifies the Object ID of the application.
+* `return_latest_only` - (Optional) Specifies whether (in the case of the API/Azure returning multiple applications) the latest CreatedDateTime application should be returned. If in doubt do not set this.
 
 ~> One of `object_id`, `application_id` or `display_name` must be specified.
 

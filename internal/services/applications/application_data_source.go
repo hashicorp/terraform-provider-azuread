@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -344,6 +345,12 @@ func applicationDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"return_latest_only": {
+				Description: "In the case that multiple applications with the same display_name are found, return the latest one - This can be caused by previously deleted applications still being returned by the API",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+
 			"required_resource_access": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -515,10 +522,17 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 		case result == nil || len(*result) == 0:
 			return tf.ErrorDiagF(fmt.Errorf("No applications found matching filter: %q", filter), "Application not found")
 		case len(*result) > 1:
-			return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
+			if returnLatestOnly, ok := d.Get("return_latest_app_only").(bool); ok && returnLatestOnly {
+				sort.Slice(*result, func(i, j int) bool {
+					return (*result)[i].CreatedDateTime.After(*(*result)[j].CreatedDateTime)
+				})
+			} else {
+				return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
+			}
+		default:
+			app = &(*result)[0]
 		}
 
-		app = &(*result)[0]
 		switch fieldName {
 		case "appId":
 			if app.AppId == nil {
