@@ -305,6 +305,13 @@ func groupResource() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+
+			"fetch_dynamic_members": {
+				Description: "Whether the terraform state/this resource includes a list of members of a group IF it is dynamic",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+			},
 		},
 	}
 }
@@ -1147,11 +1154,16 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "owners", owners)
 
-	members, _, err := client.ListMembers(ctx, *group.ID())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve members for group with object ID %q", d.Id())
+	if fdm := d.Get("fetch_dynamic_members").(bool); fdm {
+		members, _, err := client.ListMembers(ctx, *group.ID())
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "owners", "Could not retrieve members for group with object ID %q", d.Id())
+		}
+		tf.Set(d, "members", members)
+	} else {
+		var members *[]string
+		tf.Set(d, "members", members)
 	}
-	tf.Set(d, "members", members)
 
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {

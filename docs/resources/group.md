@@ -158,6 +158,8 @@ The following arguments are supported:
 
 ~> **Dynamic Group Memberships** Remember to include `DynamicMembership` in the set of `types` for the group when configuring a dynamic membership rule. Dynamic membership is a premium feature which requires an Azure Active Directory P1 or P2 license.
 
+When creating a new group that has `dynamic_membership` `enabled` by default terraform will attempt to take the members of that group into state. To prevent this set `fetch_dynamic_members = false` in the main terraform group body. This defaults to true. 
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
