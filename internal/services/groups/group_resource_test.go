@@ -440,29 +440,29 @@ func TestAccGroup_administrativeUnit(t *testing.T) {
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.administrativeUnit(data),
+			Config: r.administrativeUnits(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("administrative_unit_id").Exists(),
+				check.That(data.ResourceName).Key("administrative_unit_ids.#").HasValue("2"),
 			),
 		},
-		data.ImportStep("administrative_unit_id"),
+		data.ImportStep("administrative_unit_ids"),
 		{
-			Config: r.administrativeUnitWithoutAssociation(data),
+			Config: r.administrativeUnitsWithoutAssociation(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("administrative_unit_id").IsEmpty(),
+				check.That(data.ResourceName).Key("administrative_unit_ids.#").HasValue("0"),
 			),
 		},
-		data.ImportStep("administrative_unit_id"),
+		data.ImportStep("administrative_unit_ids"),
 		{
-			Config: r.administrativeUnit(data),
+			Config: r.administrativeUnits(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("administrative_unit_id").Exists(),
+				check.That(data.ResourceName).Key("administrative_unit_ids.#").HasValue("2"),
 			),
 		},
-		data.ImportStep("administrative_unit_id"),
+		data.ImportStep("administrative_unit_ids"),
 	})
 }
 
@@ -958,23 +958,31 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
-func (r GroupResource) administrativeUnit(data acceptance.TestData) string {
+func (r GroupResource) administrativeUnits(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
+	display_name = "acctestGroup-administrative-unit-%[1]d"
+}
+
+resource "azuread_administrative_unit" "test2" {
 	display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_group" "test" {
 	display_name     = "acctestGroup-%[1]d"
 	security_enabled = true
-	administrative_unit_id = azuread_administrative_unit.test.id
+	administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
 }
-`, data.RandomInteger)
+`, data.RandomInteger, data.RandomInteger)
 }
 
-func (r GroupResource) administrativeUnitWithoutAssociation(data acceptance.TestData) string {
+func (r GroupResource) administrativeUnitsWithoutAssociation(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
+	display_name = "acctestGroup-administrative-unit-%[1]d"
+}
+
+resource "azuread_administrative_unit" "test2" {
 	display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
@@ -982,5 +990,5 @@ resource "azuread_group" "test" {
 	display_name     = "acctestGroup-%[1]d"
 	security_enabled = true
 }
-`, data.RandomInteger)
+`, data.RandomInteger, data.RandomInteger)
 }
