@@ -1,6 +1,7 @@
 package validate
 
 import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"regexp"
 	"strings"
 
@@ -61,4 +62,28 @@ func StringIsEmailAddress(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 	}
 
 	return
+}
+
+func StringMatches(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+		v, ok := i.(string)
+		if !ok {
+			ret = append(ret, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Expected a string value",
+				AttributePath: path,
+			})
+			return
+		}
+
+		if !r.MatchString(v) {
+			ret = append(ret, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       message,
+				AttributePath: path,
+			})
+		}
+
+		return
+	}
 }
