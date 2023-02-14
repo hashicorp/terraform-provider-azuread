@@ -14,6 +14,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	userFlowClient := msgraph.NewB2CUserFlowClient(o.TenantID)
 	o.ConfigureClient(&userFlowClient.BaseClient)
 
+	// Use beta API as this resource doesn't exist in the v1.0 API
+	userFlowClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	return &Client{
 		UserFlowClient: userFlowClient,
 	}

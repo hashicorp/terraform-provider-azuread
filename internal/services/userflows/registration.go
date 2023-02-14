@@ -1,4 +1,4 @@
-package b2cuserflow
+package userflows
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -8,13 +8,13 @@ type Registration struct{}
 
 // Name is the name of this Service
 func (r Registration) Name() string {
-	return "B2CUserFlow"
+	return "User FLows"
 }
 
 // WebsiteCategories returns a list of categories which can be used for the sidebar
 func (r Registration) WebsiteCategories() []string {
 	return []string{
-		"B2CUserFlow",
+		"User Flows",
 	}
 }
 
@@ -26,6 +26,6 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_b2c_userflow": b2cUserflowResource(),
+		"azuread_b2c_user_flow": b2cUserflowResource(),
 	}
 }
