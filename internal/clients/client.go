@@ -10,6 +10,7 @@ import (
 	"github.com/manicminer/hamilton/environments"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	accessmanagement "github.com/hashicorp/terraform-provider-azuread/internal/services/accessmanagement/client"
 	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
@@ -34,6 +35,7 @@ type Client struct {
 
 	StopContext context.Context
 
+	AccessPackages      *accessmanagement.Client
 	AdministrativeUnits *administrativeunits.Client
 	Applications        *applications.Client
 	AppRoleAssignments  *approleassignments.Client
@@ -50,6 +52,7 @@ type Client struct {
 func (client *Client) build(ctx context.Context, o *common.ClientOptions) error {
 	client.StopContext = ctx
 
+	client.AccessPackages = accessmanagement.NewClient(o)
 	client.AdministrativeUnits = administrativeunits.NewClient(o)
 	client.Applications = applications.NewClient(o)
 	client.AppRoleAssignments = approleassignments.NewClient(o)
