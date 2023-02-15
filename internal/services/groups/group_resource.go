@@ -1224,24 +1224,16 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "members", members)
 
-	administrativeUnitIds := d.Get("administrative_unit_ids").(*schema.Set).List()
-	if len(administrativeUnitIds) > 0 {
-		var auIdMembers []string
-		for _, administrativeUnitId := range administrativeUnitIds {
-			au := administrativeUnitId.(string)
-			isMemberOfAu, _, err := isGroupInAdministrativeUnit(ctx, client, au, *group.ID())
-			if err != nil {
-				return tf.ErrorDiagPathF(err, "administrativeUnit", "Could not check whether group with object ID %q is in administrative Unit %q", d.Id(), au)
-			}
-			if isMemberOfAu {
-				auIdMembers = append(auIdMembers, au)
-			}
-		}
-		if len(auIdMembers) > 0 {
-			tf.Set(d, "administrative_unit_ids", auIdMembers)
-		} else {
-			tf.Set(d, "administrative_unit_ids", nil)
-		}
+	administrativeUnits, _, err := client.ListAdministrativeUnitMemberships(ctx, *group.ID())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "administrative_units", "Could not retrieve administrative units for group with object ID %q", d.Id())
+	}
+	var auIdMembers []string
+	for _, administrativeUnit := range *administrativeUnits {
+		auIdMembers = append(auIdMembers, *administrativeUnit.ID)
+	}
+	if len(auIdMembers) > 0 {
+		tf.Set(d, "administrative_unit_ids", &auIdMembers)
 	} else {
 		tf.Set(d, "administrative_unit_ids", nil)
 	}

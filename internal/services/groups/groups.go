@@ -2,11 +2,8 @@ package groups
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"math/rand"
-	"net/http"
 	"time"
 
 	"github.com/manicminer/hamilton/msgraph"
@@ -43,45 +40,6 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 	}
 
 	return &result, nil
-}
-
-func isGroupInAdministrativeUnit(ctx context.Context, client *msgraph.GroupsClient, auId string, id string) (bool, int, error) {
-	resp, status, _, err := client.BaseClient.Get(ctx, msgraph.GetHttpRequestInput{
-		ConsistencyFailureFunc: msgraph.RetryOn404ConsistencyFailureFunc,
-		OData: odata.Query{
-			Select: []string{"id"},
-		},
-		ValidStatusCodes: []int{http.StatusOK},
-		Uri: msgraph.Uri{
-			Entity:      fmt.Sprintf("/groups/%s/memberOf/microsoft.graph.administrativeUnit", id),
-			HasTenantId: true,
-		},
-	})
-	if err != nil {
-		return false, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
-	}
-	defer resp.Body.Close()
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, status, fmt.Errorf("io.ReadAll(): %v", err)
-	}
-
-	var data struct {
-		Members []struct {
-			Id string `json:"id"`
-		} `json:"value"`
-	}
-	if err := json.Unmarshal(respBody, &data); err != nil {
-		return false, status, fmt.Errorf("json.Unmarshal(): %v", err)
-	}
-
-	for _, v := range data.Members {
-		if v.Id == auId {
-			return true, status, nil
-		}
-	}
-
-	return false, status, nil
 }
 
 func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
