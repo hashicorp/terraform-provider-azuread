@@ -33,6 +33,7 @@ This data source does not have any arguments.
 The following attributes are exported:
 
 * `object_ids` - The object IDs of the roles.
+* `template_ids` - The template IDs of the roles.
 * `roles` - A list of users. Each `role` object provides the attributes documented below.
 
 ---
