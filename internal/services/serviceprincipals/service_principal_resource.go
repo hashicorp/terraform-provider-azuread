@@ -353,7 +353,7 @@ func servicePrincipalDiffSuppress(k, old, new string, d *schema.ResourceData) bo
 func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 
 	appId := d.Get("application_id").(string)
 	result, _, err := client.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})

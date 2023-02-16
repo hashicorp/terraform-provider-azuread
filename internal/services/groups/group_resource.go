@@ -406,7 +406,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 
 	displayName := d.Get("display_name").(string)
 
@@ -801,7 +801,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 
 	groupId := d.Id()
 	displayName := d.Get("display_name").(string)
