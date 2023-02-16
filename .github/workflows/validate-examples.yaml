@@ -1,5 +1,5 @@
 ---
-name: 32 Bit Build
+name: Validate Examples
 
 permissions:
   contents: read
@@ -9,21 +9,21 @@ on:
   pull_request:
     types: ['opened', 'synchronize']
     paths:
-      - '.github/workflows/thirty-two-bit.yaml'
-      - 'vendor/**'
-      - '**.go'
+      - '.github/workflows/validate-examples.yaml'
+      - 'examples/**'
 
 concurrency:
-  group: 'thirtytwo-${{ github.head_ref }}'
+  group: 'examples-${{ github.head_ref }}'
   cancel-in-progress: true
 
 jobs:
-  compatibility-32bit-test:
-    runs-on: ubuntu-latest
+  website-lint:
+    runs-on: [custom, linux, large]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: ./.go-version
       - run: bash scripts/gogetcookie.sh
-      - run: GOARCH=386 GOOS=linux go build -o 32bitbuild .
+      - run: make tools
+      - run: make validate-examples
