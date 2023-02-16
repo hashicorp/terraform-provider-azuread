@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * **Provider:** All resources will now explicitly use the Microsoft Graph v1.0 API unless stated otherwise in the provider documentation [GH-990]
+* `data.azuread_application` - support the `description` attribute [GH-991]
 
 BUG FIXES:
 
