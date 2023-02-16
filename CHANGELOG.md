@@ -4,6 +4,7 @@ IMPROVEMENTS:
 
 * **Provider:** All resources will now explicitly use the Microsoft Graph v1.0 API unless stated otherwise in the provider documentation [GH-990]
 * `data.azuread_application` - support the `description` attribute [GH-991]
+* `azuread_application` - support app role and scope values up to 249 characters [GH-1010]
 
 BUG FIXES:
 
