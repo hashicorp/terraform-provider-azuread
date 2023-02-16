@@ -311,5 +311,5 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 		errs = append(errs, fmt.Errorf("ObjectId was not populated in client.Claims"))
 	}
 
-	return
+	return //nolint:nakedret
 }
