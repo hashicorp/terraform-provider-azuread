@@ -44,6 +44,7 @@ The following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_id` - The Application ID (also called Client ID).
+* `description` - A description of the application, as shown to end users.
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.

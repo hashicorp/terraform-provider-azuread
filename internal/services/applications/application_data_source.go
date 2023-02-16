@@ -203,6 +203,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"description": {
+				Description: "Description of the application as shown to end users",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        schema.TypeBool,
