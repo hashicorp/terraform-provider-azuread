@@ -886,7 +886,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 

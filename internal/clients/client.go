@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/auth"
+	"github.com/manicminer/hamilton/environments"
+	"github.com/manicminer/hamilton/odata"
+
 	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
@@ -28,6 +30,7 @@ type Client struct {
 	Environment environments.Environment
 	TenantID    string
 	ClientID    string
+	ObjectID    string
 	Claims      auth.Claims
 
 	TerraformVersion string
@@ -83,7 +86,45 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	}
 
 	// Missing object ID of token holder will break many things
-	if client.Claims.ObjectId == "" {
+	client.ObjectID = client.Claims.ObjectId
+	if client.ObjectID == "" {
+		if strings.Contains(strings.ToLower(client.Claims.Scopes), "openid") {
+			log.Printf("[DEBUG] Querying Microsoft Graph to discover authenticated user principal object ID because the `oid` claim was missing from the access token")
+			result, _, err := client.Users.MeClient.Get(ctx, odata.Query{})
+			if err != nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated user principal: %+v", err)
+			}
+
+			id := result.ID
+			if id == nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated user principal: returned object ID was nil")
+			}
+
+			client.ObjectID = *id
+		} else {
+			log.Printf("[DEBUG] Querying Microsoft Graph to discover authenticated service principal object ID because the `oid` claim was missing from the access token")
+			query := odata.Query{
+				Filter: fmt.Sprintf("appId eq '%s'", client.ClientID),
+			}
+			result, _, err := client.ServicePrincipals.ServicePrincipalsClient.List(ctx, query)
+			if err != nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: %+v", err)
+			}
+
+			if len(*result) != 1 {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: unexpected number of results, expected 1, received %d", len(*result))
+			}
+
+			id := (*result)[0].ID()
+			if id == nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: returned object ID was nil")
+			}
+
+			client.ObjectID = *id
+		}
+	}
+
+	if client.ObjectID == "" {
 		return fmt.Errorf("parsing claims in access token: oid claim is empty")
 	}
 

@@ -299,6 +299,10 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 		errs = append(errs, fmt.Errorf("client.TenantID was empty"))
 	}
 
+	if client.ObjectID == "" {
+		errs = append(errs, fmt.Errorf("client.ObjectID was empty"))
+	}
+
 	if client.Claims.TenantId == "" {
 		errs = append(errs, fmt.Errorf("TenantId was not populated in client.Claims"))
 	}
@@ -307,5 +311,5 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 		errs = append(errs, fmt.Errorf("ObjectId was not populated in client.Claims"))
 	}
 
-	return
+	return //nolint:nakedret
 }
