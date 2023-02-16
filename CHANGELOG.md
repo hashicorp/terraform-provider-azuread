@@ -8,6 +8,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * `data.azuread_application_template` - revert a workaround from v2.31.0 and no longer use the beta API for this data source [GH-987]
+* `azuread_application` - work around an API bug where `mapped_claims_enabled` could be set on create when holding the `Application.ReadWrite.OwnedBy` role [GH-1008]
 
 ## 2.33.0 (January 19, 2023)
 
