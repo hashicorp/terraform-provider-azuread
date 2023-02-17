@@ -19,7 +19,6 @@ func NewClient(o *common.ClientOptions) *Client {
 	applicationsClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient(o.TenantID)
-
 	o.ConfigureClient(&applicationTemplatesClient.BaseClient)
 
 	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
