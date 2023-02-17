@@ -15,8 +15,10 @@ func NewClient(o *common.ClientOptions) *Client {
 	applicationsClient := msgraph.NewApplicationsClient(o.TenantID)
 	o.ConfigureClient(&applicationsClient.BaseClient)
 
-	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient(o.TenantID)
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+	applicationsClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
+	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient(o.TenantID)
 	o.ConfigureClient(&applicationTemplatesClient.BaseClient)
 
 	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)

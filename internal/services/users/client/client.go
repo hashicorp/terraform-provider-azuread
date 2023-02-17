@@ -21,6 +21,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	usersClient := msgraph.NewUsersClient(o.TenantID)
 	o.ConfigureClient(&usersClient.BaseClient)
 
+	// See https://learn.microsoft.com/en-us/graph/known-issues#showinaddresslist-property-is-out-of-sync-with-microsoft-exchange (it works in the beta API)
+	usersClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	return &Client{
 		DirectoryObjectsClient: directoryObjectsClient,
 		MeClient:               meClient,
