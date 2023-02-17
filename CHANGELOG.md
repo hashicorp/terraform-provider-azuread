@@ -1,14 +1,14 @@
-## 2.34.1 (Unreleased)
+## 2.34.1 (February 17, 2023)
 
 BUG FIXES:
 
-* `azuread_administrative_unit` - revert to the Microsoft Graph beta API version to resolve an API error when using this resource [GH-1023]
-* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing creation of new applications [GH-1023]
-* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing setting the `oauth2_post_response_required` property [GH-1023]
-* `azuread_application_pre_authorized` - revert to the Microsoft Graph beta API version to resolve an issue creating this resource [GH-1023]
-* `azuread_group` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members [GH-1023]
-* `azuread_group_member` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members [GH-1023]
-* `azuread_user` - revert to the Microsoft Graph beta API version to resolve a persistent diff for the `account_enabled` and `show_in_address_list` properties [GH-1023]
+* `azuread_administrative_unit` - revert to the Microsoft Graph beta API version to resolve an API error when using this resource ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing creation of new applications ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing setting the `oauth2_post_response_required` property ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application_pre_authorized` - revert to the Microsoft Graph beta API version to resolve an issue creating this resource ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_group` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_group_member` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_user` - revert to the Microsoft Graph beta API version to resolve a persistent diff for the `account_enabled` and `show_in_address_list` properties ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
 
 ## 2.34.0 (February 16, 2023)
 
