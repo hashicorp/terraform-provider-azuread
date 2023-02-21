@@ -1,5 +1,9 @@
 ## 2.35.0 (Unreleased)
 
+BUG FIXES:
+
+* `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` [GH-1025]
+
 IMPROVEMENTS:
 
 * `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
