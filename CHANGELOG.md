@@ -2,11 +2,14 @@
 
 BUG FIXES:
 
+* `azuread_application_federated_identity_credential` - the `audiences` property now only supports a single value due to a breaking API change [GH-1027]
 * `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` [GH-1025]
 
 IMPROVEMENTS:
 
+* `data.azuread_application` - support for the `notes` attribute [GH-1027]
 * `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
+* `azuread_application` - support for the `notes` property [GH-1027]
 * `azuread_group` - support for the `administrative_unit_ids` property [GH-984]
 
 ## 2.34.1 (February 17, 2023)
