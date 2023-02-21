@@ -53,6 +53,7 @@ The following attributes are exported:
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_url` - CDN URL to the application's logo.
+* `notes` - User-specified notes relevant for the management of the application.
 * `marketing_url` - URL of the application's marketing page.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_post_response_required` - Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.
