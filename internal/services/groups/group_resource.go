@@ -1238,7 +1238,7 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return tf.ErrorDiagPathF(err, "administrative_units", "Could not retrieve administrative units for group with object ID %q", d.Id())
 	}
 
-	var auIdMembers []string
+	auIdMembers := make([]string, 0)
 	for _, administrativeUnit := range *administrativeUnits {
 		auIdMembers = append(auIdMembers, *administrativeUnit.ID)
 	}

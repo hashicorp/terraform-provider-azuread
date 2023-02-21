@@ -4,7 +4,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
-	github.com/manicminer/hamilton v0.55.0
+	github.com/manicminer/hamilton v0.57.0
 	golang.org/x/text v0.3.7
 )
 
@@ -54,6 +54,7 @@ require (
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac // indirect
 	google.golang.org/grpc v1.50.1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
 )
 
 go 1.19
