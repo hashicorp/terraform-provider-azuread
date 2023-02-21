@@ -9,7 +9,7 @@ import (
 
 	"github.com/manicminer/hamilton/internal/utils"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type AccessPackageResourceRequestClient struct {

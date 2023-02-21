@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // UserFlowAttributesClient performs operations on UserFlowAttributes.

@@ -7,12 +7,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
@@ -219,10 +218,20 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			}
 		}
 
-		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
-		if err != nil {
-			return nil, diag.Errorf("Parsing environment %q: %v", envName, err)
+		var (
+			env *environments.Environment
+			err error
+
+			envName      = d.Get("environment").(string)
+			metadataHost = d.Get("metadata_host").(string)
+		)
+
+		if metadataHost != "" {
+			if env, err = environments.FromEndpoint(ctx, fmt.Sprintf("https://%s", metadataHost), envName); err != nil {
+				return nil, diag.FromErr(err)
+			}
+		} else if env, err = environments.FromName(envName); err != nil {
+			return nil, diag.FromErr(err)
 		}
 
 		idToken, err := oidcToken(d)
@@ -230,24 +239,24 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			return nil, diag.FromErr(err)
 		}
 
-		authConfig := &auth.Config{
-			Environment:               env,
-			TenantID:                  d.Get("tenant_id").(string),
-			ClientID:                  d.Get("client_id").(string),
-			ClientCertData:            certData,
-			ClientCertPassword:        d.Get("client_certificate_password").(string),
-			ClientCertPath:            d.Get("client_certificate_path").(string),
-			ClientSecret:              d.Get("client_secret").(string),
-			FederatedAssertion:        idToken,
-			IDTokenRequestURL:         d.Get("oidc_request_url").(string),
-			IDTokenRequestToken:       d.Get("oidc_request_token").(string),
-			EnableClientCertAuth:      true,
-			EnableClientSecretAuth:    true,
-			EnableClientFederatedAuth: d.Get("use_oidc").(bool),
-			EnableGitHubOIDCAuth:      d.Get("use_oidc").(bool),
-			EnableAzureCliToken:       d.Get("use_cli").(bool),
-			EnableMsiAuth:             d.Get("use_msi").(bool),
-			MsiEndpoint:               d.Get("msi_endpoint").(string),
+		authConfig := &auth.Credentials{
+			Environment:                 *env,
+			TenantID:                    d.Get("tenant_id").(string),
+			ClientID:                    d.Get("client_id").(string),
+			ClientCertificateData:       certData,
+			ClientCertificatePassword:   d.Get("client_certificate_password").(string),
+			ClientCertificatePath:       d.Get("client_certificate_path").(string),
+			ClientSecret:                d.Get("client_secret").(string),
+			OIDCAssertionToken:          idToken,
+			GitHubOIDCTokenRequestURL:   d.Get("oidc_request_url").(string),
+			GitHubOIDCTokenRequestToken: d.Get("oidc_request_token").(string),
+			EnableAuthenticatingUsingClientCertificate: true,
+			EnableAuthenticatingUsingClientSecret:      true,
+			EnableAuthenticationUsingOIDC:              d.Get("use_oidc").(bool),
+			EnableAuthenticationUsingGitHubOIDC:        d.Get("use_oidc").(bool),
+			EnableAuthenticatingUsingAzureCLI:          d.Get("use_cli").(bool),
+			EnableAuthenticatingUsingManagedIdentity:   d.Get("use_msi").(bool),
+			CustomManagedIdentityEndpoint:              d.Get("msi_endpoint").(string),
 		}
 
 		// only one pid can be interpreted currently
@@ -262,7 +271,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 	}
 }
 
-func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Config, partnerId string) (*clients.Client, diag.Diagnostics) {
+func buildClient(ctx context.Context, p *schema.Provider, authConfig *auth.Credentials, partnerId string) (*clients.Client, diag.Diagnostics) {
 	clientBuilder := clients.ClientBuilder{
 		AuthConfig:       authConfig,
 		PartnerID:        partnerId,

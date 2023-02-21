@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 // DirectoryObjectsClient performs operations on Directory Objects (the base type for other objects such as users and groups)

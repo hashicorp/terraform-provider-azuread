@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/claims"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-	"github.com/manicminer/hamilton/odata"
 
 	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
@@ -31,7 +32,7 @@ type Client struct {
 	TenantID    string
 	ClientID    string
 	ObjectID    string
-	Claims      auth.Claims
+	Claims      *claims.Claims
 
 	TerraformVersion string
 
@@ -66,11 +67,12 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.Users = users.NewClient(o)
 
 	// Acquire an access token upfront, so we can decode the JWT and populate the claims
-	token, err := o.Authorizer.Token()
+	token, err := o.Authorizer.Token(ctx, &http.Request{})
 	if err != nil {
 		return fmt.Errorf("unable to obtain access token: %v", err)
 	}
-	client.Claims, err = auth.ParseClaims(token)
+
+	client.Claims, err = claims.ParseClaims(token)
 	if err != nil {
 		return fmt.Errorf("unable to parse claims in access token: %v", err)
 	}

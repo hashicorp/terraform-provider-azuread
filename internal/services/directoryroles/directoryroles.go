@@ -2,9 +2,8 @@ package directoryroles
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func expandCustomRolePermissions(in []interface{}) *[]msgraph.UnifiedRolePermission {

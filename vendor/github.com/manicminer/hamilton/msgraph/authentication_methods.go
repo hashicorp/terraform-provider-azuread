@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // AuthenticationMethodsClient performs operations on the Authentications methods endpoint under Identity and Sign-in

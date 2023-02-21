@@ -13,9 +13,8 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type CredentialError struct {
