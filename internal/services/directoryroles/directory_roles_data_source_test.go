@@ -29,6 +29,8 @@ func (DirectoryRolesDataSource) testCheckFunc(data acceptance.TestData, addition
 		check.That(data.ResourceName).Key("roles.0.display_name").Exists(),
 		check.That(data.ResourceName).Key("roles.0.object_id").Exists(),
 		check.That(data.ResourceName).Key("roles.0.template_id").Exists(),
+		check.That(data.ResourceName).Key("object_ids.#").Exists(),
+		check.That(data.ResourceName).Key("template_ids.#").Exists(),
 	}
 	checks = append(checks, additionalChecks...)
 	return resource.ComposeTestCheckFunc(checks...)
