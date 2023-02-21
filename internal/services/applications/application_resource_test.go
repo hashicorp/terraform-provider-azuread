@@ -612,8 +612,11 @@ func (ApplicationResource) basicFromTemplate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
+  owners       = [data.azuread_client_config.test.object_id]
   template_id  = "%[2]s"
 }
 `, data.RandomInteger, testApplicationTemplateId)
