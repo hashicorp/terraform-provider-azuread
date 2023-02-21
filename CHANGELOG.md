@@ -2,6 +2,7 @@
 
 IMPROVEMENTS:
 
+* `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
 * `azuread_group` - support for the `administrative_unit_ids` property [GH-984]
 
 ## 2.34.1 (February 17, 2023)
