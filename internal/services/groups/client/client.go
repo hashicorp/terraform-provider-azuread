@@ -7,11 +7,18 @@ import (
 )
 
 type Client struct {
-	DirectoryObjectsClient *msgraph.DirectoryObjectsClient
-	GroupsClient           *msgraph.GroupsClient
+	AdministrativeUnitsClient *msgraph.AdministrativeUnitsClient
+	DirectoryObjectsClient    *msgraph.DirectoryObjectsClient
+	GroupsClient              *msgraph.GroupsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
+	administrativeUnitsClient := msgraph.NewAdministrativeUnitsClient(o.TenantID)
+	o.ConfigureClient(&administrativeUnitsClient.BaseClient)
+
+	// SDK uses wrong endpoint for v1.0 API, see https://github.com/manicminer/hamilton/issues/222
+	administrativeUnitsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
@@ -22,7 +29,8 @@ func NewClient(o *common.ClientOptions) *Client {
 	groupsClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	return &Client{
-		DirectoryObjectsClient: directoryObjectsClient,
-		GroupsClient:           groupsClient,
+		AdministrativeUnitsClient: administrativeUnitsClient,
+		DirectoryObjectsClient:    directoryObjectsClient,
+		GroupsClient:              groupsClient,
 	}
 }

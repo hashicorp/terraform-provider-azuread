@@ -18,6 +18,8 @@ If specifying owners for a group, which are user principals, this resource addit
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Groups Administrator`, `User Administrator` or `Global Administrator`
 
+When creating this resource in administrative units exclusively, the role `Groups Administrator` is required to be scoped on any administrative unit used.
+
 The `external_senders_allowed`, `auto_subscribe_new_members`, `hide_from_address_lists` and `hide_from_outlook_clients` properties can only be configured when authenticating as a user and cannot be configured when authenticating as a service principal. Additionally, the user being used for authentication must be a Member of the tenant where the group is being managed and _not_ a Guest. This is a known API issue; please see the [Microsoft Graph Known Issues](https://docs.microsoft.com/en-us/graph/known-issues#groups) official documentation.
 
 ## Example Usage
@@ -105,6 +107,10 @@ resource "azuread_group" "example" {
 ## Argument Reference
 
 The following arguments are supported:
+
+* `administrative_unit_ids` - (Optional) The object IDs of administrative units in which the group is a member. If specified, new groups will be created in the scope of the first administrative unit and added to the others. If empty, new groups will be created at the tenant level.
+
+!> **Warning** Do not use the `administrative_unit_ids` property at the same time as the [azuread_administrative_unit_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit_member) resource, or the `members` property of the [azuread_administrative_unit](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit#members) resource, _for the same group_. Doing so will cause a conflict and administrative unit members will be removed.
 
 * `assignable_to_role` - (Optional) Indicates whether this group can be assigned to an Azure Active Directory role. Can only be `true` for security-enabled groups. Changing this forces a new resource to be created.
 * `auto_subscribe_new_members` - (Optional) Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.

@@ -56,6 +56,16 @@ func groupResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
+			"administrative_unit_ids": {
+				Description: "The administrative unit IDs in which the group should be. If empty, the group will be created at the tenant level.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsUUID,
+				},
+			},
+
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. This property can only be `true` for security-enabled groups.",
 				Type:        schema.TypeBool,
@@ -406,6 +416,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
+	administrativeUnitsClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
 	callerId := meta.(*clients.Client).ObjectID
 
 	displayName := d.Get("display_name").(string)
@@ -451,7 +462,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	description := d.Get("description").(string)
 
+	odataType := odata.TypeGroup
+
 	properties := msgraph.Group{
+		DirectoryObject: msgraph.DirectoryObject{
+			ODataType: &odataType,
+		},
 		Description:                 utils.NullableString(description),
 		DisplayName:                 utils.String(displayName),
 		GroupTypes:                  &groupTypes,
@@ -566,9 +582,30 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Set the initial owners, which either be the calling principal, or up to 20 of the owners specified in configuration
 	properties.Owners = &ownersFirst20
 
-	group, _, err := client.Create(ctx, properties)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Creating group %q", displayName)
+	var group *msgraph.Group
+	var err error
+
+	if v, ok := d.GetOk("administrative_unit_ids"); ok {
+		administrativeUnitIds := tf.ExpandStringSlice(v.(*schema.Set).List())
+		for i, administrativeUnitId := range administrativeUnitIds {
+			// Create the group in the first administrative unit, as this requires fewer permissions than creating it at tenant level
+			if i == 0 {
+				group, _, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
+				}
+			} else {
+				err := addGroupToAdministrativeUnit(ctx, administrativeUnitsClient, administrativeUnitId, group)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not add group %q to administrative unit with object ID: %q", *group.ID(), administrativeUnitId)
+				}
+			}
+		}
+	} else {
+		group, _, err = client.Create(ctx, properties)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Creating group %q", displayName)
+		}
 	}
 
 	if group.ID() == nil {
@@ -795,12 +832,21 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	// We have observed that when creating a group with an administrative_unit_id and querying the group with the /groups endpoint and specifying $select=allowExternalSenders,autoSubscribeNewMembers,hideFromAddressLists,hideFromOutlookClients, it returns a 404 for ~11 minutes.
+	if _, ok := d.GetOk("administrative_unit_ids"); ok {
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.DisableRetries = false
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryWaitMax = 1 * time.Minute
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryWaitMin = 10 * time.Second
+		meta.(*clients.Client).Groups.GroupsClient.BaseClient.RetryableClient.RetryMax = 15
+	}
+
 	return groupResourceRead(ctx, d, meta)
 }
 
 func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
+	administrativeUnitClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
 	callerId := meta.(*clients.Client).ObjectID
 
 	groupId := d.Id()
@@ -1065,6 +1111,40 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if v := d.Get("administrative_unit_ids"); d.HasChange("administrative_unit_ids") {
+		administrativeUnits, _, err := client.ListAdministrativeUnitMemberships(ctx, *group.ID())
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "administrative_units", "Could not retrieve administrative units for group with object ID %q", d.Id())
+		}
+
+		var existingAdministrativeUnits []string
+		for _, administrativeUnit := range *administrativeUnits {
+			existingAdministrativeUnits = append(existingAdministrativeUnits, *administrativeUnit.ID)
+		}
+
+		desiredAdministrativeUnits := tf.ExpandStringSlice(v.(*schema.Set).List())
+		administrativeUnitsToLeave := utils.Difference(existingAdministrativeUnits, desiredAdministrativeUnits)
+		administrativeUnitsToJoin := utils.Difference(desiredAdministrativeUnits, existingAdministrativeUnits)
+
+		if len(administrativeUnitsToJoin) > 0 {
+			for _, newAdministrativeUnitId := range administrativeUnitsToJoin {
+				err := addGroupToAdministrativeUnit(ctx, administrativeUnitClient, newAdministrativeUnitId, &group)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Could not add group %q to administrative unit with object ID: %q", *group.ID(), newAdministrativeUnitId)
+				}
+			}
+		}
+
+		if len(administrativeUnitsToLeave) > 0 {
+			for _, oldAdministrativeUnitId := range administrativeUnitsToLeave {
+				memberIds := []string{d.Id()}
+				if _, err := administrativeUnitClient.RemoveMembers(ctx, oldAdministrativeUnitId, &memberIds); err != nil {
+					return tf.ErrorDiagF(err, "Could not remove group from administrative unit with object ID: %q", oldAdministrativeUnitId)
+				}
+			}
+		}
+	}
+
 	return groupResourceRead(ctx, d, meta)
 }
 
@@ -1153,6 +1233,22 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "members", members)
 
+	administrativeUnits, _, err := client.ListAdministrativeUnitMemberships(ctx, *group.ID())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "administrative_units", "Could not retrieve administrative units for group with object ID %q", d.Id())
+	}
+
+	auIdMembers := make([]string, 0)
+	for _, administrativeUnit := range *administrativeUnits {
+		auIdMembers = append(auIdMembers, *administrativeUnit.ID)
+	}
+
+	if len(auIdMembers) > 0 {
+		tf.Set(d, "administrative_unit_ids", &auIdMembers)
+	} else {
+		tf.Set(d, "administrative_unit_ids", nil)
+	}
+
 	preventDuplicates := false
 	if v := d.Get("prevent_duplicate_names").(bool); v {
 		preventDuplicates = v
@@ -1193,4 +1289,14 @@ func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func addGroupToAdministrativeUnit(ctx context.Context, auClient *msgraph.AdministrativeUnitsClient, administrativeUnitId string, group *msgraph.Group) error {
+	members := msgraph.Members{
+		group.DirectoryObject,
+	}
+	members[0].ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		auClient.BaseClient.Endpoint, auClient.BaseClient.TenantId, *group.DirectoryObject.ID())))
+	_, err := auClient.AddMembers(ctx, administrativeUnitId, &members)
+	return err
 }

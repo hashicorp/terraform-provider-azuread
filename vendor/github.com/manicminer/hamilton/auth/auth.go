@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/crypto/pkcs12"
 	"golang.org/x/oauth2"
+	pkcs12 "software.sslmate.com/src/go-pkcs12"
 
 	"github.com/manicminer/hamilton/environments"
 )
@@ -132,7 +132,7 @@ func NewClientCertificateAuthorizer(ctx context.Context, environment environment
 		}
 	}
 
-	key, cert, err := pkcs12.Decode(pfxData, pfxPass)
+	key, cert, _, err := pkcs12.DecodeChain(pfxData, pfxPass)
 	if err != nil {
 		return nil, fmt.Errorf("could not decode pkcs12 credential store: %s", err)
 	}

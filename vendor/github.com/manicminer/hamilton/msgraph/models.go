@@ -13,18 +13,53 @@ import (
 )
 
 type AccessPackage struct {
-	ID               *string               `json:"id,omitempty"`
-	Catalog          *AccessPackageCatalog `json:"catalog,omitempty"`
-	CreatedDateTime  *time.Time            `json:"createdDateTime,omitempty"`
-	Description      *string               `json:"description,omitempty"`
-	DisplayName      *string               `json:"displayName,omitempty"`
-	IsHidden         *bool                 `json:"isHidden,omitempty"`
-	ModifiedDateTime *time.Time            `json:"modifiedDateTime,omitempty"`
-	//Beta
-	IsRoleScopesVisible *bool   `json:"isRoleScopesVisible,omitempty"`
-	ModifiedBy          *string `json:"modifiedBy,omitempty"`
-	CatalogId           *string `json:"catalogId,omitempty"`
-	CreatedBy           *string `json:"createdBy,omitempty"`
+	ID                            *string                          `json:"id,omitempty"`
+	Catalog                       *AccessPackageCatalog            `json:"catalog,omitempty"`
+	CreatedDateTime               *time.Time                       `json:"createdDateTime,omitempty"`
+	Description                   *string                          `json:"description,omitempty"`
+	DisplayName                   *string                          `json:"displayName,omitempty"`
+	IsHidden                      *bool                            `json:"isHidden,omitempty"`
+	ModifiedDateTime              *time.Time                       `json:"modifiedDateTime,omitempty"`
+	AccessPackageIncompatibleWith *[]AccessPackage                 `json:"accessPackagesIncompatibleWith,omitempty"` // Relationship
+	AssignmentPolicies            *[]AccessPackageAssignmentPolicy `json:"assignmentPolicies,omitempty"`             // Relationship
+	IncompatibleAccessPackages    *[]AccessPackage                 `json:"incompatibleAccessPackages,omitempty"`     // Relationship
+	IncompatibleGroups            *[]Group                         `json:"incompatibleGroups,omitempty"`             // Relationship
+	IsRoleScopesVisible           *bool                            `json:"isRoleScopesVisible,omitempty"`            // beta property
+	ModifiedBy                    *string                          `json:"modifiedBy,omitempty"`                     // beta property
+	CatalogId                     *string                          `json:"catalogId,omitempty"`                      // beta property
+	CreatedBy                     *string                          `json:"createdBy,omitempty"`                      // beta property
+}
+
+type AccessPackageAnswer struct {
+	DisplayValue     *string                `json:"displayValue,omitempty"`
+	AnsweredQuestion *AccessPackageQuestion `json:"answeredQuestion,omitempty"`
+}
+
+type AccessPackageAssignment struct {
+	ID                  *string               `json:"id,omitempty"`
+	Target              *AccessPackageSubject `json:"target,omitempty"`
+	TargetID            *string               `json:"targetId,omitempty"`
+	AssignementPolicyID *string               `json:"assignmentPolicyId,omitempty"`
+	AccessPackageID     *string               `json:"accessPackageId,omitempty"`
+}
+
+type AccessPackageAssignmentRequest struct {
+	ID                             *string                           `json:"id,omitempty"`
+	RequestType                    *AccessPackageRequestType         `json:"requestType,omitempty"`
+	Status                         *string                           `json:"status,omitempty"`
+	CompletedDateTime              *time.Time                        `json:"completedDateTime,omitempty"`
+	CreatedDateTime                *time.Time                        `json:"createdDateTime,omitempty"`
+	State                          *AccessPackageRequestState        `json:"state,omitempty"`
+	Schedule                       *EntitlementManagementSchedule    `json:"schedule,omitempty"`
+	Assignment                     *AccessPackageAssignment          `json:"assignment,omitempty"`
+	AccessPackageAssignment        *AccessPackageAssignment          `json:"accessPackageAssignment,omitempty"`         // beta Relationship
+	CompletedDate                  *time.Time                        `json:"completedDate,omitempty"`                   // beta property
+	IsValidationOnly               *bool                             `json:"isValidationOnly,omitempty"`                // beta property
+	Justification                  *string                           `json:"justification,omitempty"`                   // beta property
+	RequestState                   *AccessPackageRequestState        `json:"requestState,omitempty"`                    // beta property
+	RequestStatus                  *string                           `json:"requestStatus,omitempty"`                   // beta property
+	CustomExtensionHandlerInstance *[]CustomExtensionHandlerInstance `json:"customExtensionHandlerInstances,omitempty"` // beta property
+	Answers                        *[]AccessPackageAnswer            `json:"answers,omitempty"`                         // beta property
 }
 
 type AccessPackageAssignmentPolicy struct {
@@ -159,6 +194,16 @@ type AccessPackageResourceScope struct {
 	Url          *string                           `json:"url"`
 }
 
+type AccessPackageSubject struct {
+	DisplayName                 *string `json:"displayName,omitempty"`
+	Email                       *string `json:"email,omitempty"`
+	ID                          *string `json:"id,omitempty"`
+	ObjectID                    *string `json:"objectId,omitempty"`
+	OnPremiseSecurityIdentifier *string `json:"onPremisesSecurityIdentifier,omitempty"`
+	PrincipalName               *string `json:"principalName,omitempty"`
+	SubjectType                 *string `json:"subjectType,omitempty"`
+}
+
 type AddIn struct {
 	ID         *string          `json:"id,omitempty"`
 	Properties *[]AddInKeyValue `json:"properties,omitempty"`
@@ -213,9 +258,11 @@ type Application struct {
 	IsFallbackPublicClient        *bool                     `json:"isFallbackPublicClient,omitempty"`
 	IsManagementRestricted        *bool                     `json:"isManagementRestricted,omitempty"`
 	KeyCredentials                *[]KeyCredential          `json:"keyCredentials,omitempty"`
-	Oauth2RequirePostResponse     *bool                     `json:"oauth2RequirePostResponse,omitempty"`
+	Oauth2RequirePostResponse     *bool                     `json:"oauth2RequirePostResponse,omitempty"` // field name has typo in beta API
+	Oauth2RequiredPostResponse    *bool                     `json:"oauth2RequiredPostResponse,omitempty"`
 	OnPremisesPublishing          *OnPremisesPublishing     `json:"onPremisePublishing,omitempty"`
 	OptionalClaims                *OptionalClaims           `json:"optionalClaims,omitempty"`
+	Notes                         *string                   `json:"notes,omitempty"`
 	ParentalControlSettings       *ParentalControlSettings  `json:"parentalControlSettings,omitempty"`
 	PasswordCredentials           *[]PasswordCredential     `json:"passwordCredentials,omitempty"`
 	PublicClient                  *PublicClient             `json:"publicClient,omitempty"`
@@ -498,10 +545,12 @@ type AppRoleAssignment struct {
 }
 
 type ApprovalSettings struct {
-	IsApprovalRequired               *bool            `json:"isApprovalRequired,omitempty"`
-	IsApprovalRequiredForExtension   *bool            `json:"isApprovalRequiredForExtension,omitempty"`
-	IsRequestorJustificationRequired *bool            `json:"isRequestorJustificationRequired,omitempty"`
-	ApprovalMode                     ApprovalMode     `json:"approvalMode,omitempty"`
+	IsApprovalRequiredForAdd         *bool            `json:"isApprovalRequiredForAdd,omitempty"`
+	IsApprovalRequiredForUpdate      *bool            `json:"isApprovalRequiredForUpdate,omitempty"`
+	IsApprovalRequired               *bool            `json:"isApprovalRequired,omitempty"`               //beta property
+	IsApprovalRequiredForExtension   *bool            `json:"isApprovalRequiredForExtension,omitempty"`   //beta property
+	IsRequestorJustificationRequired *bool            `json:"isRequestorJustificationRequired,omitempty"` //beta property
+	ApprovalMode                     ApprovalMode     `json:"approvalMode,omitempty"`                     //beta property
 	ApprovalStages                   *[]ApprovalStage `json:"approvalStages,omitempty"`
 }
 
@@ -620,6 +669,7 @@ type ConditionalAccessPolicy struct {
 type ConditionalAccessSessionControls struct {
 	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions,omitempty"`
 	CloudAppSecurity                *CloudAppSecurityControl                       `json:"cloudAppSecurity,omitempty"`
+	DisableResilienceDefaults       *bool                                          `json:"disableResilienceDefaults,omitempty"`
 	PersistentBrowser               *PersistentBrowserSessionControl               `json:"persistentBrowser,omitempty"`
 	SignInFrequency                 *SignInFrequencySessionControl                 `json:"signInFrequency,omitempty"`
 }
@@ -678,6 +728,13 @@ type ConnectedOrganization struct {
 	State            *ConnectedOrganizationState `json:"state,omitempty"`
 	CreatedDateTime  *time.Time                  `json:"createdDateTime,omitempty"`
 	ModifiedDateTime *time.Time                  `json:"modifiedDateTime,omitempty"`
+}
+
+type CustomExtensionHandlerInstance struct {
+	CustomExensionId      *string                                    `json:"customExtensionId,omitempty"`
+	ExternalCorrelationId *string                                    `json:"externalCorrelationId,omitempty"`
+	Stage                 *AccessPackageCustomExtensionStage         `json:"stage,omitempty"`
+	Status                *AccessPackageCustomExtensionHandlerStatus `json:"status,omitempty"`
 }
 
 type DelegatedPermissionGrant struct {
@@ -855,9 +912,21 @@ type EmailAuthenticationMethod struct {
 	EmailAddress *string `json:"emailAddress,omitempty"`
 }
 
+type EntitlementManagementSchedule struct {
+	StartDateTime *time.Time         `json:"startDateTime,omitempty"`
+	Expiration    *ExpirationPattern `json:"expiration,omitempty"`
+	Recurrence    *RecurrencePattern `json:"recurrence,omitempty"`
+}
+
 type ExtensionSchemaProperty struct {
 	Name *string                         `json:"name,omitempty"`
 	Type ExtensionSchemaPropertyDataType `json:"type,omitempty"`
+}
+
+type ExpirationPattern struct {
+	Duration    *time.Duration         `json:"duration,omitempty"`
+	EndDateTime *time.Time             `json:"endDateTime,omitempty"`
+	Type        *ExpirationPatternType `json:"type,omitempty"`
 }
 
 type FederatedIdentityCredential struct {
@@ -1260,6 +1329,16 @@ type Recipient struct {
 	EmailAddress *EmailAddress `json:"emailAddress,omitempty"`
 }
 
+type RecurrencePattern struct {
+	DayOfMonth     *int                   `json:"dayOfMonth,omitempty"`
+	Interval       *int                   `json:"interval,omitempty"`
+	Month          *int                   `json:"month,omitempty"`
+	Type           *RecurrencePatternType `json:"type,omitempty"`
+	DaysOfWeek     *[]DaysOfWeekType      `json:"daysOfWeek,omitempty"`
+	FirstDayOfWeek *FirstDayOfWeek        `json:"firstDayOfWeek,omitempty"`
+	Index          *IndexType             `json:"index,omitempty"`
+}
+
 type Ref struct {
 	ObjectUri *string `json:"@odata.id,omitempty"`
 }
@@ -1340,7 +1419,7 @@ type ServicePrincipal struct {
 	PasswordCredentials                 *[]PasswordCredential         `json:"passwordCredentials,omitempty"`
 	PasswordSingleSignOnSettings        *PasswordSingleSignOnSettings `json:"passwordSingleSignOnSettings,omitempty"`
 	PreferredSingleSignOnMode           *PreferredSingleSignOnMode    `json:"preferredSingleSignOnMode,omitempty"`
-	PreferredTokenSigningKeyThumbprint  *string                       `json:"preferredTokenSigningKeyThumbprint,omitempty"`
+	PreferredTokenSigningKeyThumbprint  *StringNullWhenEmpty          `json:"preferredTokenSigningKeyThumbprint,omitempty"`
 	PreferredTokenSigningKeyEndDateTime *time.Time                    `json:"preferredTokenSigningKeyEndDateTime,omitempty"`
 	PublishedPermissionScopes           *[]PermissionScope            `json:"publishedPermissionScopes,omitempty"`
 	ReplyUrls                           *[]string                     `json:"replyUrls,omitempty"`
@@ -1512,6 +1591,37 @@ type TargetResource struct {
 	UserPrincipalName  *string             `json:"userPrincipalName,omitempty"`
 	GroupType          *string             `json:"groupType,omitempty"`
 	ModifiedProperties *[]ModifiedProperty `json:"modifiedProperties,omitempty"`
+}
+
+type TermsOfUseAgreement struct {
+	ID                                *string                        `json:"id,omitempty"`
+	DisplayName                       *string                        `json:"displayName,omitempty"`
+	UserReacceptRequiredFrequency     *string                        `json:"userReacceptRequiredFrequency,omitempty"`
+	IsViewingBeforeAcceptanceRequired *bool                          `json:"isViewingBeforeAcceptanceRequired,omitempty"`
+	IsPerDeviceAcceptanceRequired     *bool                          `json:"isPerDeviceAcceptanceRequired,omitempty"`
+	TermsExpiration                   *TermsOfUseAgreementExpiration `json:"termsExpiration,omitempty"` //For some reason this exports the Frequency both here and above AcceptanceExpirationFrequency Request separates them but response groups them. Anticipate this in Tests
+	Files                             *[]TermsOfUseAgreementFile     `json:"files,omitempty"`
+	File                              *TermsOfUseAgreementFile       `json:"file,omitempty"`
+}
+
+type TermsOfUseAgreementExpiration struct {
+	StartDateTime *time.Time `json:"startDateTime,omitempty"`
+	Frequency     *string    `json:"frequency,omitempty"`
+}
+
+type TermsOfUseAgreementFileData struct {
+	//Data is within its own object for some reason
+	Data *[]byte `json:"data,omitempty"`
+}
+
+type TermsOfUseAgreementFile struct {
+	ID             *string                      `json:"id,omitempty"`
+	DisplayName    *string                      `json:"displayName,omitempty"`
+	FileName       *string                      `json:"fileName,omitempty"`
+	Language       *string                      `json:"language,omitempty"`
+	IsDefault      *bool                        `json:"isDefault,omitempty"`
+	IsMajorVersion *bool                        `json:"isMajorVersion,omitempty"`
+	FileData       *TermsOfUseAgreementFileData `json:"fileData,omitempty"`
 }
 
 type TemporaryAccessPassAuthenticationMethod struct {

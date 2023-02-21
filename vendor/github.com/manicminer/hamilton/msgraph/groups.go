@@ -700,3 +700,34 @@ func (c *GroupsClient) RemoveOwners(ctx context.Context, id string, ownerIds *[]
 
 	return status, nil
 }
+
+func (c *GroupsClient) ListAdministrativeUnitMemberships(ctx context.Context, id string) (*[]AdministrativeUnit, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData: odata.Query{
+			Select: []string{"id"},
+		},
+		ValidStatusCodes: []int{http.StatusOK},
+		Uri: Uri{
+			Entity:      fmt.Sprintf("/groups/%s/memberOf/microsoft.graph.administrativeUnit", id),
+			HasTenantId: true,
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var data struct {
+		Members []AdministrativeUnit `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &data.Members, status, nil
+}
