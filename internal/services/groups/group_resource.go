@@ -417,7 +417,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitsClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 
 	displayName := d.Get("display_name").(string)
 
@@ -847,7 +847,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 
 	groupId := d.Id()
 	displayName := d.Get("display_name").(string)

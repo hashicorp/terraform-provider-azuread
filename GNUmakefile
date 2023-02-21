@@ -106,4 +106,7 @@ teamcity-test:
 	@$(MAKE) -C .teamcity tools
 	@$(MAKE) -C .teamcity test
 
+validate-examples:
+	./scripts/validate-examples.sh
+
 .PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile

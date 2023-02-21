@@ -1,5 +1,9 @@
 ---
 name: TeamCity Config Test
+
+permissions:
+  contents: read
+
 on:
   pull_request:
     types: ['opened', 'synchronize']
@@ -8,6 +12,10 @@ on:
       - '!.teamcity/components/generated/**'
       - '!.teamcity/target/**'
       - '.teamcity/**'
+
+concurrency:
+  group: 'tctest-${{ github.head_ref }}'
+  cancel-in-progress: true
 
 jobs:
   teamcity-test:
@@ -19,7 +27,7 @@ jobs:
           distribution: zulu
           java-version: 11
           java-package: jdk
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}

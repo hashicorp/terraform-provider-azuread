@@ -886,7 +886,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 
@@ -954,9 +954,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
+	api := expandApplicationApi(d.Get("api").([]interface{}))
+
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	var acceptMappedClaims *bool
+	if api.AcceptMappedClaims != nil && *api.AcceptMappedClaims {
+		acceptMappedClaims = api.AcceptMappedClaims
+		api.AcceptMappedClaims = nil
+	}
+
 	// Create a new application
 	properties := msgraph.Application{
-		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
+		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(tempDisplayName),
@@ -1054,6 +1064,20 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
 		}
 		return tf.ErrorDiagF(err, "Failed to patch application after creating")
+	}
+
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	if acceptMappedClaims != nil {
+		api.AcceptMappedClaims = acceptMappedClaims
+		if _, err := client.Update(ctx, msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.Id,
+			},
+			Api: api,
+		}); err != nil {
+			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
+		}
 	}
 
 	if len(ownersExtra) > 0 {

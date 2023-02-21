@@ -164,6 +164,7 @@ The following arguments are supported:
 
 * `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `description` - (Optional) A description of the application, as shown to end users.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
@@ -191,7 +192,7 @@ The following arguments are supported:
 
 * `single_page_application` - (Optional) A `single_page_application` block as documented below, which configures single-page application (SPA) related settings for this application.
 * `support_url` - (Optional) URL of the application's support page.
-* `tags` - (Optional) A set of tags to apply to the application. Cannot be used together with the `feature_tags` block.
+* `tags` - (Optional) A set of tags to apply to the application for configuring specific behaviours of the application and linked service principals. Note that these are not provided for use by practitioners. Cannot be used together with the `feature_tags` block.
 
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
 

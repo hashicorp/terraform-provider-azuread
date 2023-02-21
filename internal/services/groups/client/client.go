@@ -22,6 +22,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	groupsClient := msgraph.NewGroupsClient(o.TenantID)
 	o.ConfigureClient(&groupsClient.BaseClient)
 
+	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
+	groupsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	return &Client{
 		AdministrativeUnitsClient: administrativeUnitsClient,
 		DirectoryObjectsClient:    directoryObjectsClient,
