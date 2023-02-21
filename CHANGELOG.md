@@ -1,3 +1,9 @@
+# 2.35.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_group` - support for the `administrative_unit_ids` property [GH-984]
+
 ## 2.34.1 (February 17, 2023)
 
 BUG FIXES:
