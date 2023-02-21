@@ -118,7 +118,7 @@ func (r ApplicationFederatedIdentityCredentialResource) basic(data acceptance.Te
 resource "azuread_application_federated_identity_credential" "test" {
   application_object_id = azuread_application.test.object_id
   display_name          = "hashitown-%[2]s"
-  audiences             = ["api://AzureADTokenExchange"]
+  audiences             = ["api://HashiTownLikesAzureAD"]
   issuer                = "https://tokens.hashitown.net"
   subject               = "%[3]s"
 }
@@ -133,7 +133,7 @@ resource "azuread_application_federated_identity_credential" "test" {
   application_object_id = azuread_application.test.object_id
   display_name          = "hashitown-%[2]s"
   description           = "Funtime tokens for HashiTown"
-  audiences             = ["api://AzureADTokenExchange", "api://HashiTownLikesAzureAD"]
+  audiences             = ["api://HashiTownLikesAzureAD"]
   issuer                = "https://vending.hashitown.net"
   subject               = "%[3]s"
 }
