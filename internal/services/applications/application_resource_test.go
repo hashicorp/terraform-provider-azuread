@@ -612,8 +612,11 @@ func (ApplicationResource) basicFromTemplate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
+  owners       = [data.azuread_client_config.test.object_id]
   template_id  = "%[2]s"
 }
 `, data.RandomInteger, testApplicationTemplateId)
@@ -666,7 +669,9 @@ resource "azuread_application" "test" {
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
 
-  description           = "Acceptance testing application"
+  description = "Acceptance testing application"
+  notes       = "Testing application"
+
   marketing_url         = "https://hashitown-%[1]d.com/"
   privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
   support_url           = "https://support.hashitown-%[1]d.com/"

@@ -279,6 +279,12 @@ func applicationDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"notes": {
+				Description: "User-specified notes relevant for the management of the application",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"marketing_url": {
 				Description: "URL of the application's marketing page",
 				Type:        schema.TypeString,
@@ -564,6 +570,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))

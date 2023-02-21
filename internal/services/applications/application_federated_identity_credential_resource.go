@@ -55,8 +55,11 @@ func applicationFederatedIdentityCredentialResource() *schema.Resource {
 				Description: "List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
 				Type:        schema.TypeList,
 				Required:    true,
+				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
+					MinItems:         1,
+					MaxItems:         1,
 					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},

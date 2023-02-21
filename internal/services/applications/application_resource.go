@@ -351,6 +351,13 @@ func applicationResource() *schema.Resource {
 				Optional:    true,
 			},
 
+			"notes": {
+				Description:      "User-specified notes relevant for the management of the application",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
 			// This is a top level attribute because d.SetNewComputed() doesn't work inside a block
 			"oauth2_permission_scope_ids": {
 				Description: "Mapping of OAuth2.0 permission scope names to UUIDs",
@@ -980,6 +987,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
@@ -1165,6 +1173,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
@@ -1258,6 +1267,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
