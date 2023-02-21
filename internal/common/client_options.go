@@ -31,6 +31,7 @@ type ClientOptions struct {
 }
 
 func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
+	// this should have already been checked during provider configuration
 	endpoint, _ := o.Environment.MicrosoftGraph.Endpoint()
 	c.Endpoint = *endpoint
 

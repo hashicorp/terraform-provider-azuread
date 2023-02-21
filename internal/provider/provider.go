@@ -234,6 +234,12 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			return nil, diag.FromErr(err)
 		}
 
+		if env.MicrosoftGraph == nil {
+			return nil, diag.Errorf("Microsoft Graph was not configured for the specified environment")
+		} else if endpoint, ok := env.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
+			return nil, diag.Errorf("Microsoft Graph endpoint could not be determined for the specified environment")
+		}
+
 		idToken, err := oidcToken(d)
 		if err != nil {
 			return nil, diag.FromErr(err)
