@@ -13,14 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
+	"github.com/manicminer/hamilton/odata"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -356,18 +355,19 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	callerId := meta.(*clients.Client).ObjectID
 
 	appId := d.Get("application_id").(string)
-	result, _, err := client.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})
+
+	var servicePrincipal *msgraph.ServicePrincipal
+	var err error
+
+	if d.Get("use_existing").(bool) {
+		// Assume that a service principal already exists and try to look for it, whilst retrying to defeat eventual consistency
+		servicePrincipal, err = findByAppIdWithTimeout(ctx, 5*time.Minute, client, appId)
+	} else {
+		// Otherwise perform a single List operation to check for an existing service principal
+		servicePrincipal, err = findByAppId(ctx, client, appId)
+	}
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not list existing service principals")
-	}
-	var servicePrincipal *msgraph.ServicePrincipal
-	if result != nil {
-		for _, r := range *result {
-			if r.AppId != nil && strings.EqualFold(*r.AppId, appId) {
-				servicePrincipal = &r
-				break
-			}
-		}
 	}
 
 	if servicePrincipal != nil {
