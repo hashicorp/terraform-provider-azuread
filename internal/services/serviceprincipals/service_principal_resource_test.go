@@ -644,13 +644,17 @@ func (ServicePrincipalResource) fromApplicationTemplate(data acceptance.TestData
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
   template_id  = "%[2]s"
+  owners       = [data.azuread_client_config.test.object_id]
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
+  owners         = [data.azuread_client_config.test.object_id]
   use_existing   = true
 }
 `, data.RandomInteger, testApplicationTemplateId)
