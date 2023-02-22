@@ -961,17 +961,17 @@ resource "azuread_group" "test" {
 func (r GroupResource) administrativeUnits(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_administrative_unit" "test2" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_group" "test" {
-	display_name     = "acctestGroup-%[1]d"
-	security_enabled = true
-	administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
+  display_name            = "acctestGroup-%[1]d"
+  security_enabled        = true
+  administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
 }
 `, data.RandomInteger, data.RandomInteger)
 }
@@ -979,16 +979,16 @@ resource "azuread_group" "test" {
 func (r GroupResource) administrativeUnitsWithoutAssociation(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_administrative_unit" "test2" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_group" "test" {
-	display_name     = "acctestGroup-%[1]d"
-	security_enabled = true
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
 }
 `, data.RandomInteger, data.RandomInteger)
 }
