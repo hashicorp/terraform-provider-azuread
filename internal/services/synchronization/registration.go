@@ -35,8 +35,9 @@ func (r Registration) SupportedDataSources() map[string]*pluginsdk.Resource {
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
-		"azuread_synchronization_job":    synchronizationJobResource(),
-		"azuread_synchronization_secret": synchronizationSecretResource(),
+		"azuread_synchronization_job":                     synchronizationJobResource(),
+		"azuread_synchronization_job_provision_on_demand": synchronizationJobProvisionOnDemandResource(),
+		"azuread_synchronization_secret":                  synchronizationSecretResource(),
 	}
 }
 
