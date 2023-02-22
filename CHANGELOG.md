@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * `azuread_application_federated_identity_credential` - the `audiences` property now only supports a single value due to a breaking API change [GH-1027]
+* `azuread_group` - only try to set additional fields when explicitly configured, to work around an API bug when application-only permissions are used [GH-1028]
 * `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` [GH-1025]
 
 IMPROVEMENTS:
