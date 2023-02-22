@@ -25,6 +25,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	synchronizationJobClient := msgraph.NewSynchronizationJobClient(o.TenantID)
 	o.ConfigureClient(&synchronizationJobClient.BaseClient)
 
+	// Synchronization doesn't yet exist in v1.0
+	synchronizationJobClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	return &Client{
 		DelegatedPermissionGrantsClient: delegatedPermissionGrantsClient,
 		DirectoryObjectsClient:          directoryObjectsClient,
