@@ -12,6 +12,8 @@ IMPROVEMENTS:
 * `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
 * `azuread_application` - support for the `notes` property [GH-1027]
 * `azuread_group` - support for the `administrative_unit_ids` property [GH-984]
+* `azuread_synchronization_job` - fix a bug where the incorrect API version was used, preventing this resource from working properly [GH-1030]
+* `azuread_synchronization_secret` - fix a bug where the incorrect API version was used, preventing this resource from working properly [GH-1030]
 
 ## 2.34.1 (February 17, 2023)
 
