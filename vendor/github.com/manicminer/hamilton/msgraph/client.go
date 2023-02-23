@@ -10,11 +10,10 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type ApiVersion string
@@ -67,7 +66,7 @@ func RetryableErrorHandler(resp *http.Response, err error, numTries int) (*http.
 // It can send GET, POST, PUT, PATCH and DELETE requests to Microsoft Graph and is API version and tenant aware.
 type Client struct {
 	// Endpoint is the base endpoint for Microsoft Graph, usually "https://graph.microsoft.com".
-	Endpoint environments.ApiEndpoint
+	Endpoint string
 
 	// ApiVersion is the Microsoft Graph API version to use.
 	ApiVersion ApiVersion
@@ -102,8 +101,13 @@ func NewClient(apiVersion ApiVersion, tenantId string) Client {
 	r.ErrorHandler = RetryableErrorHandler
 	r.Logger = nil
 
+	var endpoint string
+	if defaultEndpoint, _ := environments.AzurePublic().MicrosoftGraph.Endpoint(); defaultEndpoint != nil {
+		endpoint = *defaultEndpoint
+	}
+
 	return Client{
-		Endpoint:        environments.MsGraphGlobal.Endpoint,
+		Endpoint:        endpoint,
 		ApiVersion:      apiVersion,
 		TenantId:        tenantId,
 		UserAgent:       "Hamilton (Go-http-client/1.1)",
@@ -138,7 +142,7 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 	req.Header.Add("Content-Type", input.GetContentType())
 
 	if c.Authorizer != nil {
-		token, err := c.Authorizer.Token()
+		token, err := c.Authorizer.Token(req.Context(), req)
 		if err != nil {
 			return nil, status, nil, err
 		}
@@ -396,7 +400,7 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 
 		// Get the next page, recursively
 		nextInput := input
-		nextInput.rawUri = *firstOdata.NextLink
+		nextInput.rawUri = string(*firstOdata.NextLink)
 		nextResp, status, o, err := c.Get(ctx, nextInput)
 		if err != nil {
 			return resp, status, o, err

@@ -6,7 +6,7 @@ on:
     paths:
       - '.github/workflows/acctest-oidc.yaml'
       - 'internal/provider/**'
-      - 'vendor/github.com/manicminer/hamilton/auth/**'
+      - 'vendor/github.com/hashicorp/go-azure-sdk/sdk/auth/**'
 
 permissions:
   contents: read

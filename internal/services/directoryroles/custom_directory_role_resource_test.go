@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/manicminer/hamilton/odata"
-
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"

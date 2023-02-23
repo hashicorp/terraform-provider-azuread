@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type AccessPackageResourceRoleScopeClient struct {

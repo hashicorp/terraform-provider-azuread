@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryObjectsClient *msgraph.DirectoryObjectsClient, userId, managerId string) error {

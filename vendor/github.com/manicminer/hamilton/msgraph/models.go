@@ -7,9 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/manicminer/hamilton/environments"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/errors"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type AccessPackage struct {
@@ -846,7 +845,7 @@ func (o *DirectoryObject) UnmarshalJSONWithAdditionalData(data []byte) error {
 	return nil
 }
 
-func (o *DirectoryObject) Uri(endpoint environments.ApiEndpoint, apiVersion ApiVersion) string {
+func (o *DirectoryObject) Uri(endpoint string, apiVersion ApiVersion) string {
 	if o.Id == nil {
 		return ""
 	}

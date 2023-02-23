@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 // NamedLocationsClient performs operations on Named Locations.
