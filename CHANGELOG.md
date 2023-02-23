@@ -8,6 +8,9 @@ BUG FIXES:
 
 IMPROVEMENTS:
 
+* **Provider:** support for the `metadata_host` property [GH-1026]
+* **Provider:** authentication now uses the `github.com/hashicorp/go-azure-sdk/sdk/auth` package [GH-1026]
+* **Provider:** cloud configuration now uses the `github.com/hashicorp/go-azure-sdk/sdk/environments` package [GH-1026]
 * `data.azuread_application` - support for the `notes` attribute [GH-1027]
 * `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
 * `azuread_application` - support for the `notes` property [GH-1027]
