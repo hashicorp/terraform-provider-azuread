@@ -1,22 +1,22 @@
-## 2.35.0 (Unreleased)
+## 2.35.0 (February 24, 2023)
 
 BUG FIXES:
 
-* `azuread_application_federated_identity_credential` - the `audiences` property now only supports a single value due to a breaking API change [GH-1027]
-* `azuread_group` - only try to set additional fields when explicitly configured, to work around an API bug when application-only permissions are used [GH-1028]
-* `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` [GH-1025]
+* `azuread_application_federated_identity_credential` - the `audiences` property now only supports a single value due to a breaking API change ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `azuread_group` - only try to set additional fields when explicitly configured, to work around an API bug when application-only permissions are used ([#1028](https://github.com/hashicorp/terraform-provider-azuread/issues/1028))
+* `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` ([#1025](https://github.com/hashicorp/terraform-provider-azuread/issues/1025))
 
 IMPROVEMENTS:
 
-* **Provider:** support for the `metadata_host` property [GH-1026]
-* **Provider:** authentication now uses the `github.com/hashicorp/go-azure-sdk/sdk/auth` package [GH-1026]
-* **Provider:** cloud configuration now uses the `github.com/hashicorp/go-azure-sdk/sdk/environments` package [GH-1026]
-* `data.azuread_application` - support for the `notes` attribute [GH-1027]
-* `data.azuread_directory_roles` - support for the `template_ids` attribute [GH-1011]
-* `azuread_application` - support for the `notes` property [GH-1027]
-* `azuread_group` - support for the `administrative_unit_ids` property [GH-984]
-* `azuread_synchronization_job` - fix a bug where the incorrect API version was used, preventing this resource from working properly [GH-1030]
-* `azuread_synchronization_secret` - fix a bug where the incorrect API version was used, preventing this resource from working properly [GH-1030]
+* **Provider:** support for the `metadata_host` property ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* **Provider:** authentication now uses the `github.com/hashicorp/go-azure-sdk/sdk/auth` package ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* **Provider:** cloud configuration now uses the `github.com/hashicorp/go-azure-sdk/sdk/environments` package ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* `data.azuread_application` - support for the `notes` attribute ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `data.azuread_directory_roles` - support for the `template_ids` attribute ([#1011](https://github.com/hashicorp/terraform-provider-azuread/issues/1011))
+* `azuread_application` - support for the `notes` property ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `azuread_group` - support for the `administrative_unit_ids` property ([#984](https://github.com/hashicorp/terraform-provider-azuread/issues/984))
+* `azuread_synchronization_job` - fix a bug where the incorrect API version was used, preventing this resource from working properly ([#1030](https://github.com/hashicorp/terraform-provider-azuread/issues/1030))
+* `azuread_synchronization_secret` - fix a bug where the incorrect API version was used, preventing this resource from working properly ([#1030](https://github.com/hashicorp/terraform-provider-azuread/issues/1030))
 
 ## 2.34.1 (February 17, 2023)
 
