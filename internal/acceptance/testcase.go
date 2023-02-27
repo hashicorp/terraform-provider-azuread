@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
@@ -77,5 +79,10 @@ func PreCheck(t *testing.T) {
 }
 
 func buildClient() *clients.Client {
-	return AzureADProvider.Meta().(*clients.Client)
+	client, err := testclient.Build()
+	if err != nil {
+		log.Fatalf("building client: %+v", err)
+	}
+
+	return client
 }
