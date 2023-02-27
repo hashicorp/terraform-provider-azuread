@@ -615,7 +615,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 						// and subsequent GETs for the group will include the calling principal as owner, as if it were specified when creating.
 						log.Printf("[DEBUG] Retrying group creation for %q within AU %q without calling principal as owner", displayName, administrativeUnitId)
 						properties.Owners = &newOwners
-						group, status, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
+						group, _, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
 						if err != nil {
 							return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
 						}
@@ -657,7 +657,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 					properties.Owners = &newOwners
 				}
 
-				group, status, err = client.Create(ctx, properties)
+				group, _, err = client.Create(ctx, properties)
 				if err != nil {
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
