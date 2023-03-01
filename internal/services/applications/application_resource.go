@@ -893,6 +893,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 
@@ -1009,7 +1010,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
@@ -1031,7 +1032,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					client.BaseClient.Endpoint, tenantId, ownerId))),
 				Id: &ownerId,
 			}
 
@@ -1115,6 +1116,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -1211,7 +1213,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+						client.BaseClient.Endpoint, tenantId, ownerId))),
 					Id: &ownerId,
 				})
 			}

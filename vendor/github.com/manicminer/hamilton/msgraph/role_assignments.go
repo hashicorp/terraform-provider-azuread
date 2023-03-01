@@ -16,9 +16,9 @@ type RoleAssignmentsClient struct {
 }
 
 // NewRoleAssignmentsClient returns a new RoleAssignmentsClient
-func NewRoleAssignmentsClient(tenantId string) *RoleAssignmentsClient {
+func NewRoleAssignmentsClient() *RoleAssignmentsClient {
 	return &RoleAssignmentsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *RoleAssignmentsClient) List(ctx context.Context, query odata.Query) (*[
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/roleManagement/directory/roleAssignments",
-			HasTenantId: true,
+			Entity: "/roleManagement/directory/roleAssignments",
 		},
 	})
 	if err != nil {
@@ -58,8 +57,7 @@ func (c *RoleAssignmentsClient) Get(ctx context.Context, id string, query odata.
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/directory/roleAssignments/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/directory/roleAssignments/%s", id),
 		},
 	})
 	if err != nil {
@@ -93,8 +91,7 @@ func (c *RoleAssignmentsClient) Create(ctx context.Context, roleAssignment Unifi
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/roleManagement/directory/roleAssignments",
-			HasTenantId: true,
+			Entity: "/roleManagement/directory/roleAssignments",
 		},
 	})
 	if err != nil {
@@ -121,8 +118,7 @@ func (c *RoleAssignmentsClient) Delete(ctx context.Context, id string) (int, err
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/directory/roleAssignments/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/directory/roleAssignments/%s", id),
 		},
 	})
 	if err != nil {

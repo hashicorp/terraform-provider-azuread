@@ -16,9 +16,9 @@ type EntitlementRoleDefinitionsClient struct {
 }
 
 // NewEntitlementRoleDefinitionsClient returns a new EntitlementRoleDefinitionsClient
-func NewEntitlementRoleDefinitionsClient(tenantId string) *EntitlementRoleDefinitionsClient {
+func NewEntitlementRoleDefinitionsClient() *EntitlementRoleDefinitionsClient {
 	return &EntitlementRoleDefinitionsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *EntitlementRoleDefinitionsClient) List(ctx context.Context, query odata
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/roleManagement/entitlementManagement/roleDefinitions",
-			HasTenantId: true,
+			Entity: "/roleManagement/entitlementManagement/roleDefinitions",
 		},
 	})
 	if err != nil {
@@ -58,8 +57,7 @@ func (c *EntitlementRoleDefinitionsClient) Get(ctx context.Context, id string, q
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/entitlementManagement/roleDefinitions/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/entitlementManagement/roleDefinitions/%s", id),
 		},
 	})
 	if err != nil {

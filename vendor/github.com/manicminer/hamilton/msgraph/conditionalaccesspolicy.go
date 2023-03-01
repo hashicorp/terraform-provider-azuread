@@ -17,9 +17,9 @@ type ConditionalAccessPoliciesClient struct {
 }
 
 // NewConditionalAccessPoliciesClient returns a new ConditionalAccessPoliciesClient
-func NewConditionalAccessPoliciesClient(tenantId string) *ConditionalAccessPoliciesClient {
+func NewConditionalAccessPoliciesClient() *ConditionalAccessPoliciesClient {
 	return &ConditionalAccessPoliciesClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *ConditionalAccessPoliciesClient) List(ctx context.Context, query odata.
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/conditionalAccess/policies",
-			HasTenantId: true,
+			Entity: "/identity/conditionalAccess/policies",
 		},
 	})
 	if err != nil {
@@ -66,8 +65,7 @@ func (c *ConditionalAccessPoliciesClient) Create(ctx context.Context, conditiona
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/conditionalAccess/policies",
-			HasTenantId: true,
+			Entity: "/identity/conditionalAccess/policies",
 		},
 	})
 	if err != nil {
@@ -95,8 +93,7 @@ func (c *ConditionalAccessPoliciesClient) Get(ctx context.Context, id string, qu
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
 		},
 	})
 	if err != nil {
@@ -135,8 +132,7 @@ func (c *ConditionalAccessPoliciesClient) Update(ctx context.Context, conditiona
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", *conditionalAccessPolicy.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/policies/%s", *conditionalAccessPolicy.ID),
 		},
 	})
 	if err != nil {
@@ -152,8 +148,7 @@ func (c *ConditionalAccessPoliciesClient) Delete(ctx context.Context, id string)
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/policies/%s", id),
 		},
 	})
 	if err != nil {

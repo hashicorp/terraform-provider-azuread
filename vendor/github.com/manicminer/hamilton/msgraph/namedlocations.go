@@ -17,9 +17,9 @@ type NamedLocationsClient struct {
 }
 
 // NewNamedLocationsClient returns a new NamedLocationsClient.
-func NewNamedLocationsClient(tenantId string) *NamedLocationsClient {
+func NewNamedLocationsClient() *NamedLocationsClient {
 	return &NamedLocationsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *NamedLocationsClient) List(ctx context.Context, query odata.Query) (*[]
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/conditionalAccess/namedLocations",
-			HasTenantId: true,
+			Entity: "/identity/conditionalAccess/namedLocations",
 		},
 	})
 
@@ -96,8 +95,7 @@ func (c *NamedLocationsClient) Delete(ctx context.Context, id string) (int, erro
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
 		},
 	})
 	if err != nil {
@@ -121,8 +119,7 @@ func (c *NamedLocationsClient) CreateIP(ctx context.Context, ipNamedLocation IPN
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/conditionalAccess/namedLocations",
-			HasTenantId: true,
+			Entity: "/identity/conditionalAccess/namedLocations",
 		},
 	})
 	if err != nil {
@@ -157,8 +154,7 @@ func (c *NamedLocationsClient) CreateCountry(ctx context.Context, countryNamedLo
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/conditionalAccess/namedLocations",
-			HasTenantId: true,
+			Entity: "/identity/conditionalAccess/namedLocations",
 		},
 	})
 	if err != nil {
@@ -186,8 +182,7 @@ func (c *NamedLocationsClient) GetIP(ctx context.Context, id string, query odata
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
 		},
 	})
 	if err != nil {
@@ -215,8 +210,7 @@ func (c *NamedLocationsClient) Get(ctx context.Context, id string, query odata.Q
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
 		},
 	})
 	if err != nil {
@@ -268,8 +262,7 @@ func (c *NamedLocationsClient) GetCountry(ctx context.Context, id string, query 
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", id),
 		},
 	})
 	if err != nil {
@@ -305,8 +298,7 @@ func (c *NamedLocationsClient) UpdateIP(ctx context.Context, ipNamedLocation IPN
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", *ipNamedLocation.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", *ipNamedLocation.ID),
 		},
 	})
 	if err != nil {
@@ -331,8 +323,7 @@ func (c *NamedLocationsClient) UpdateCountry(ctx context.Context, countryNamedLo
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", *countryNamedLocation.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/conditionalAccess/namedLocations/%s", *countryNamedLocation.ID),
 		},
 	})
 	if err != nil {

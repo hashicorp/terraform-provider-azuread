@@ -17,9 +17,9 @@ type AccessPackageResourceRoleScopeClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageResourceRoleScopeClient(tenantId string) *AccessPackageResourceRoleScopeClient {
+func NewAccessPackageResourceRoleScopeClient() *AccessPackageResourceRoleScopeClient {
 	return &AccessPackageResourceRoleScopeClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -34,8 +34,7 @@ func (c *AccessPackageResourceRoleScopeClient) List(ctx context.Context, query o
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
 		},
 	})
 	if err != nil {
@@ -75,8 +74,7 @@ func (c *AccessPackageResourceRoleScopeClient) Create(ctx context.Context, acces
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s/accessPackageResourceRoleScopes", *accessPackageResourceRoleScope.AccessPackageId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s/accessPackageResourceRoleScopes", *accessPackageResourceRoleScope.AccessPackageId),
 		},
 	})
 	if err != nil {
@@ -119,8 +117,7 @@ func (c *AccessPackageResourceRoleScopeClient) Get(ctx context.Context, accessPa
 		}, //The Resource we made a request to add
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackages/%s", accessPackageId),
 		},
 	})
 	if err != nil {

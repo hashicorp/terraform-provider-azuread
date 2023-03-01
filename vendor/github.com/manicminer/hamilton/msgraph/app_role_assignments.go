@@ -26,25 +26,25 @@ type AppRoleAssignmentsClient struct {
 }
 
 // NewUsersAppRoleAssignmentsClient returns a new AppRoleAssignmentsClient for users assignments
-func NewUsersAppRoleAssignmentsClient(tenantId string) *AppRoleAssignmentsClient {
+func NewUsersAppRoleAssignmentsClient() *AppRoleAssignmentsClient {
 	return &AppRoleAssignmentsClient{
-		BaseClient:   NewClient(Version10, tenantId),
+		BaseClient:   NewClient(Version10),
 		resourceType: usersAppRoleAssignmentsResource,
 	}
 }
 
 // NewGroupsAppRoleAssignmentsClient returns a new AppRoleAssignmentsClient for groups assignments
-func NewGroupsAppRoleAssignmentsClient(tenantId string) *AppRoleAssignmentsClient {
+func NewGroupsAppRoleAssignmentsClient() *AppRoleAssignmentsClient {
 	return &AppRoleAssignmentsClient{
-		BaseClient:   NewClient(Version10, tenantId),
+		BaseClient:   NewClient(Version10),
 		resourceType: groupsAppRoleAssignmentsResource,
 	}
 }
 
 // NewServicePrincipalsAppRoleAssignmentsClient returns a new AppRoleAssignmentsClient for service principal assignments
-func NewServicePrincipalsAppRoleAssignmentsClient(tenantId string) *AppRoleAssignmentsClient {
+func NewServicePrincipalsAppRoleAssignmentsClient() *AppRoleAssignmentsClient {
 	return &AppRoleAssignmentsClient{
-		BaseClient:   NewClient(Version10, tenantId),
+		BaseClient:   NewClient(Version10),
 		resourceType: servicePrincipalsAppRoleAssignmentsResource,
 	}
 }
@@ -55,8 +55,7 @@ func (c *AppRoleAssignmentsClient) List(ctx context.Context, id string, query od
 		ValidStatusCodes: []int{http.StatusOK},
 		OData:            query,
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/%s/%s/appRoleAssignments", c.resourceType, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/%s/%s/appRoleAssignments", c.resourceType, id),
 		},
 	})
 	if err != nil {
@@ -85,8 +84,7 @@ func (c *AppRoleAssignmentsClient) Remove(ctx context.Context, id, appRoleAssign
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/%s/%s/appRoleAssignments/%s", c.resourceType, id, appRoleAssignmentId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/%s/%s/appRoleAssignments/%s", c.resourceType, id, appRoleAssignmentId),
 		},
 	})
 	if err != nil {
@@ -120,8 +118,7 @@ func (c *AppRoleAssignmentsClient) Assign(ctx context.Context, clientServicePrin
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/%s/%s/appRoleAssignments", c.resourceType, clientServicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/%s/%s/appRoleAssignments", c.resourceType, clientServicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -148,9 +145,9 @@ type AppRoleAssignedToClient struct {
 }
 
 // NewAppRoleAssignedToClient returns a new AppRoleAssignedToClient
-func NewAppRoleAssignedToClient(tenantId string) *AppRoleAssignedToClient {
+func NewAppRoleAssignedToClient() *AppRoleAssignedToClient {
 	return &AppRoleAssignedToClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -160,8 +157,7 @@ func (c *AppRoleAssignedToClient) List(ctx context.Context, id string, query oda
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", id),
 		},
 	})
 	if err != nil {
@@ -190,8 +186,7 @@ func (c *AppRoleAssignedToClient) Remove(ctx context.Context, resourceId, appRol
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
 		},
 	})
 	if err != nil {
@@ -236,8 +231,7 @@ func (c *AppRoleAssignedToClient) Assign(ctx context.Context, appRoleAssignment 
 		ConsistencyFailureFunc: consistencyFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", *appRoleAssignment.ResourceId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", *appRoleAssignment.ResourceId),
 		},
 	})
 	if err != nil {

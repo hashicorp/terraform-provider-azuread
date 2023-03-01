@@ -17,9 +17,9 @@ type DirectoryRolesClient struct {
 }
 
 // NewDirectoryRolesClient returns a new DirectoryRolesClient
-func NewDirectoryRolesClient(tenantId string) *DirectoryRolesClient {
+func NewDirectoryRolesClient() *DirectoryRolesClient {
 	return &DirectoryRolesClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *DirectoryRolesClient) List(ctx context.Context) (*[]DirectoryRole, int,
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/directoryRoles",
-			HasTenantId: true,
+			Entity: "/directoryRoles",
 		},
 	})
 	if err != nil {
@@ -57,8 +56,7 @@ func (c *DirectoryRolesClient) Get(ctx context.Context, id string) (*DirectoryRo
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryRoles/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryRoles/%s", id),
 		},
 	})
 	if err != nil {
@@ -84,8 +82,7 @@ func (c *DirectoryRolesClient) GetByTemplateId(ctx context.Context, templateId s
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryRoles/roleTemplateId=%s", templateId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryRoles/roleTemplateId=%s", templateId),
 		},
 	})
 	if err != nil {
@@ -115,8 +112,7 @@ func (c *DirectoryRolesClient) ListMembers(ctx context.Context, id string) (*[]s
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryRoles/%s/members", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryRoles/%s/members", id),
 		},
 	})
 	if err != nil {
@@ -178,8 +174,7 @@ func (c *DirectoryRolesClient) AddMembers(ctx context.Context, directoryRole *Di
 			ValidStatusCodes: []int{http.StatusNoContent},
 			ValidStatusFunc:  checkMemberAlreadyExists,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/directoryRoles/%s/members/$ref", *directoryRole.ID()),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/directoryRoles/%s/members/$ref", *directoryRole.ID()),
 			},
 		})
 		if err != nil {
@@ -213,8 +208,7 @@ func (c *DirectoryRolesClient) RemoveMembers(ctx context.Context, directoryRoleI
 		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 			ValidStatusCodes: []int{http.StatusNoContent},
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/directoryRoles/%s/members/%s/$ref", directoryRoleId, memberId),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/directoryRoles/%s/members/%s/$ref", directoryRoleId, memberId),
 			},
 		})
 		if err != nil {
@@ -235,8 +229,7 @@ func (c *DirectoryRolesClient) GetMember(ctx context.Context, directoryRoleId, m
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryRoles/%s/members/%s/$ref", directoryRoleId, memberId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryRoles/%s/members/%s/$ref", directoryRoleId, memberId),
 		},
 	})
 	if err != nil {
@@ -290,8 +283,7 @@ func (c *DirectoryRolesClient) Activate(ctx context.Context, roleTemplateID stri
 		ValidStatusCodes: []int{http.StatusCreated},
 		ValidStatusFunc:  checkRoleAlreadyActivated,
 		Uri: Uri{
-			Entity:      "/directoryRoles",
-			HasTenantId: true,
+			Entity: "/directoryRoles",
 		},
 	})
 	if err != nil {

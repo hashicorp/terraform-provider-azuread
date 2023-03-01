@@ -421,6 +421,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitsClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
 	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 
 	displayName := d.Get("display_name").(string)
 
@@ -521,7 +522,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		//	return nil, errors.New("ODataId was nil")
 		//}
 		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-			client.BaseClient.Endpoint, client.BaseClient.TenantId, id)))
+			client.BaseClient.Endpoint, tenantId, id)))
 
 		if ownerObject.ODataType == nil {
 			return nil, errors.New("ownerObject ODataType was nil")
@@ -624,7 +625,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 					}
 				}
 			} else {
-				err = addGroupToAdministrativeUnit(ctx, administrativeUnitsClient, administrativeUnitId, group)
+				err = addGroupToAdministrativeUnit(ctx, administrativeUnitsClient, tenantId, administrativeUnitId, group)
 				if err != nil {
 					return tf.ErrorDiagF(err, "Adding group %q to administrative unit with object ID: %q", *group.ID(), administrativeUnitId)
 				}
@@ -879,7 +880,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
 			//}
 			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-				client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+				client.BaseClient.Endpoint, tenantId, memberId)))
 
 			members = append(members, *memberObject)
 		}
@@ -907,6 +908,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
 	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 
 	groupId := d.Id()
 	displayName := d.Get("display_name").(string)
@@ -1111,7 +1113,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", memberId)
 				//}
 				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+					client.BaseClient.Endpoint, tenantId, memberId)))
 
 				newMembers = append(newMembers, *memberObject)
 			}
@@ -1156,7 +1158,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
 				//}
 				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId)))
+					client.BaseClient.Endpoint, tenantId, ownerId)))
 
 				newOwners = append(newOwners, *ownerObject)
 			}
@@ -1191,7 +1193,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if len(administrativeUnitsToJoin) > 0 {
 			for _, newAdministrativeUnitId := range administrativeUnitsToJoin {
-				err := addGroupToAdministrativeUnit(ctx, administrativeUnitClient, newAdministrativeUnitId, &group)
+				err := addGroupToAdministrativeUnit(ctx, administrativeUnitClient, tenantId, newAdministrativeUnitId, &group)
 				if err != nil {
 					return tf.ErrorDiagF(err, "Could not add group %q to administrative unit with object ID: %q", *group.ID(), newAdministrativeUnitId)
 				}
@@ -1354,12 +1356,12 @@ func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func addGroupToAdministrativeUnit(ctx context.Context, auClient *msgraph.AdministrativeUnitsClient, administrativeUnitId string, group *msgraph.Group) error {
+func addGroupToAdministrativeUnit(ctx context.Context, auClient *msgraph.AdministrativeUnitsClient, tenantId, administrativeUnitId string, group *msgraph.Group) error {
 	members := msgraph.Members{
 		group.DirectoryObject,
 	}
 	members[0].ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		auClient.BaseClient.Endpoint, auClient.BaseClient.TenantId, *group.DirectoryObject.ID())))
+		auClient.BaseClient.Endpoint, tenantId, *group.DirectoryObject.ID())))
 	_, err := auClient.AddMembers(ctx, administrativeUnitId, &members)
 	return err
 }

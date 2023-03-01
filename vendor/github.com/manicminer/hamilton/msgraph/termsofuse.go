@@ -16,9 +16,9 @@ type TermsOfUseAgreementClient struct {
 }
 
 // NewTermsOfUseAgreementClient returns a new TermsOfUseAgreementClient
-func NewTermsOfUseAgreementClient(tenantId string) *TermsOfUseAgreementClient {
+func NewTermsOfUseAgreementClient() *TermsOfUseAgreementClient {
 	return &TermsOfUseAgreementClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -31,9 +31,8 @@ func (c *TermsOfUseAgreementClient) List(ctx context.Context, filter string) (*[
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identityGovernance/termsOfUse/agreements",
-			Params:      params,
-			HasTenantId: true,
+			Entity: "/identityGovernance/termsOfUse/agreements",
+			Params: params,
 		},
 	})
 	if err != nil {
@@ -66,8 +65,7 @@ func (c *TermsOfUseAgreementClient) Create(ctx context.Context, termsOfUseAgreem
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/termsOfUse/agreements",
-			HasTenantId: true,
+			Entity: "/identityGovernance/termsOfUse/agreements",
 		},
 	})
 	if err != nil {
@@ -90,8 +88,7 @@ func (c *TermsOfUseAgreementClient) Get(ctx context.Context, id string) (*TermsO
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", id),
 		},
 	})
 	if err != nil {
@@ -124,8 +121,7 @@ func (c *TermsOfUseAgreementClient) Update(ctx context.Context, termsOfUseAgreem
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", *termsOfUseAgreement.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", *termsOfUseAgreement.ID),
 		},
 	})
 	if err != nil {
@@ -139,8 +135,7 @@ func (c *TermsOfUseAgreementClient) Delete(ctx context.Context, id string) (int,
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/termsOfUse/agreements/%s", id),
 		},
 	})
 	if err != nil {

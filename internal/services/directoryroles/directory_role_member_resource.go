@@ -66,6 +66,7 @@ func directoryRoleMemberResource() *schema.Resource {
 func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 	directoryObjectsClient := meta.(*clients.Client).DirectoryRoles.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	id := parse.NewDirectoryRoleMemberID(d.Get("role_object_id").(string), d.Get("member_object_id").(string))
 
@@ -98,7 +99,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceDa
 	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id.MemberId)
 	//}
 	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, id.MemberId)))
+		client.BaseClient.Endpoint, tenantId, id.MemberId)))
 
 	role.Members = &msgraph.Members{*memberObject}
 

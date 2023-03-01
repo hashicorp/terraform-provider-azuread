@@ -10,7 +10,7 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient(o.TenantID)
+	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient()
 	o.ConfigureClient(&claimsMappingPolicyClient.BaseClient)
 
 	return &Client{

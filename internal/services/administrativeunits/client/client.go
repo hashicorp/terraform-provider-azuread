@@ -11,13 +11,13 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	administrativeUnitsClient := msgraph.NewAdministrativeUnitsClient(o.TenantID)
+	administrativeUnitsClient := msgraph.NewAdministrativeUnitsClient()
 	o.ConfigureClient(&administrativeUnitsClient.BaseClient)
 
 	// SDK uses wrong endpoint for v1.0 API, see https://github.com/manicminer/hamilton/issues/222
 	administrativeUnitsClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
 	return &Client{

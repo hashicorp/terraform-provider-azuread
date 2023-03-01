@@ -16,9 +16,9 @@ type AdministrativeUnitsClient struct {
 }
 
 // NewAdministrativeUnitsClient returns a new AdministrativeUnitsClient.
-func NewAdministrativeUnitsClient(tenantId string) *AdministrativeUnitsClient {
+func NewAdministrativeUnitsClient() *AdministrativeUnitsClient {
 	return &AdministrativeUnitsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -29,8 +29,7 @@ func (c *AdministrativeUnitsClient) List(ctx context.Context, query odata.Query)
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/administrativeUnits",
-			HasTenantId: true,
+			Entity: "/administrativeUnits",
 		},
 	})
 	if err != nil {
@@ -69,8 +68,7 @@ func (c *AdministrativeUnitsClient) Create(ctx context.Context, administrativeUn
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/administrativeUnits",
-			HasTenantId: true,
+			Entity: "/administrativeUnits",
 		},
 	})
 	if err != nil {
@@ -100,8 +98,7 @@ func (c *AdministrativeUnitsClient) Get(ctx context.Context, id string, query od
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s", id),
 		},
 	})
 	if err != nil {
@@ -136,8 +133,7 @@ func (c *AdministrativeUnitsClient) Update(ctx context.Context, administrativeUn
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s", *administrativeUnit.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s", *administrativeUnit.ID),
 		},
 	})
 	if err != nil {
@@ -153,8 +149,7 @@ func (c *AdministrativeUnitsClient) Delete(ctx context.Context, id string) (int,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s", id),
 		},
 	})
 	if err != nil {
@@ -173,8 +168,7 @@ func (c *AdministrativeUnitsClient) ListMembers(ctx context.Context, administrat
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/members", administrativeUnitId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/members", administrativeUnitId),
 		},
 	})
 	if err != nil {
@@ -214,8 +208,7 @@ func (c *AdministrativeUnitsClient) GetMember(ctx context.Context, administrativ
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/members/%s/$ref", administrativeUnitId, memberId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/members/%s/$ref", administrativeUnitId, memberId),
 		},
 	})
 	if err != nil {
@@ -254,8 +247,7 @@ func (c *AdministrativeUnitsClient) CreateGroup(ctx context.Context, administrat
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/members", administrativeUnitId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/members", administrativeUnitId),
 		},
 	})
 	if err != nil {
@@ -304,8 +296,7 @@ func (c *AdministrativeUnitsClient) AddMembers(ctx context.Context, administrati
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkMemberAlreadyExists,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/administrativeUnits/%s/members/$ref", administrativeUnitId),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/administrativeUnits/%s/members/$ref", administrativeUnitId),
 			},
 		})
 		if err != nil {
@@ -347,8 +338,7 @@ func (c *AdministrativeUnitsClient) RemoveMembers(ctx context.Context, administr
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkMemberGone,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/administrativeUnits/%s/members/%s/$ref", administrativeUnitId, memberId),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/administrativeUnits/%s/members/%s/$ref", administrativeUnitId, memberId),
 			},
 		})
 		if err != nil {
@@ -366,8 +356,7 @@ func (c *AdministrativeUnitsClient) ListScopedRoleMembers(ctx context.Context, a
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers", administrativeUnitId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers", administrativeUnitId),
 		},
 	})
 	if err != nil {
@@ -397,8 +386,7 @@ func (c *AdministrativeUnitsClient) GetScopedRoleMember(ctx context.Context, adm
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers/%s", administrativeUnitId, scopedRoleMembershipId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers/%s", administrativeUnitId, scopedRoleMembershipId),
 		},
 	})
 	if err != nil {
@@ -433,8 +421,7 @@ func (c *AdministrativeUnitsClient) AddScopedRoleMember(ctx context.Context, adm
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers", administrativeUnitId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers", administrativeUnitId),
 		},
 	})
 	if err != nil {
@@ -464,8 +451,7 @@ func (c *AdministrativeUnitsClient) RemoveScopedRoleMembers(ctx context.Context,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers/%s", administrativeUnitId, scopedRoleMembershipId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/administrativeUnits/%s/scopedRoleMembers/%s", administrativeUnitId, scopedRoleMembershipId),
 		},
 	})
 	if err != nil {

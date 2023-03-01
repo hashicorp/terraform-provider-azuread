@@ -122,6 +122,7 @@ func administrativeUnitResourceCustomizeDiff(ctx context.Context, diff *schema.R
 func administrativeUnitResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	displayName := d.Get("display_name").(string)
 
@@ -197,7 +198,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *schema.ResourceDat
 			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
 			//}
 			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-				client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+				client.BaseClient.Endpoint, tenantId, memberId)))
 
 			members = append(members, *memberObject)
 		}
@@ -214,6 +215,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *schema.ResourceDat
 func administrativeUnitResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	administrativeUnitId := d.Id()
 	displayName := d.Get("display_name").(string)
@@ -287,7 +289,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *schema.ResourceDat
 				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
 				//}
 				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+					client.BaseClient.Endpoint, tenantId, memberId)))
 
 				newMembers = append(newMembers, *memberObject)
 			}

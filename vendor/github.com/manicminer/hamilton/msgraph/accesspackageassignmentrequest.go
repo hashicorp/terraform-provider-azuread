@@ -14,9 +14,9 @@ type AccessPackageAssignmentRequestClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageAssignmentRequestClient(tenantId string) *AccessPackageAssignmentRequestClient {
+func NewAccessPackageAssignmentRequestClient() *AccessPackageAssignmentRequestClient {
 	return &AccessPackageAssignmentRequestClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,9 +28,8 @@ func (c *AccessPackageAssignmentRequestClient) List(ctx context.Context, query o
 		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      entity,
-			Params:      query.Values(),
-			HasTenantId: true,
+			Entity: entity,
+			Params: query.Values(),
 		},
 	})
 	if err != nil {
@@ -60,8 +59,7 @@ func (c *AccessPackageAssignmentRequestClient) Get(ctx context.Context, id strin
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("%s/%s", entity, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("%s/%s", entity, id),
 		},
 	})
 	if err != nil {
@@ -95,8 +93,7 @@ func (c *AccessPackageAssignmentRequestClient) Create(ctx context.Context, acces
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      entity,
-			HasTenantId: true,
+			Entity: entity,
 		},
 	})
 	if err != nil {
@@ -124,8 +121,7 @@ func (c *AccessPackageAssignmentRequestClient) Delete(ctx context.Context, id st
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("%s/%s", entity, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("%s/%s", entity, id),
 		},
 	})
 	if err != nil {
@@ -143,8 +139,7 @@ func (c *AccessPackageAssignmentRequestClient) Cancel(ctx context.Context, id st
 	_, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("%s/%s/cancel", entity, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("%s/%s/cancel", entity, id),
 		},
 	})
 	if err != nil {
@@ -161,8 +156,7 @@ func (c *AccessPackageAssignmentRequestClient) Reprocess(ctx context.Context, id
 	_, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusAccepted},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/%s/%s/reprocess", entity, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/%s/%s/reprocess", entity, id),
 		},
 	})
 	if err != nil {

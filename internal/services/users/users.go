@@ -10,7 +10,7 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryObjectsClient *msgraph.DirectoryObjectsClient, userId, managerId string) error {
+func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryObjectsClient *msgraph.DirectoryObjectsClient, tenantId, userId, managerId string) error {
 	if managerId != "" {
 		managerObject, _, err := directoryObjectsClient.Get(ctx, managerId, odata.Query{})
 		if err != nil {
@@ -24,7 +24,7 @@ func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryOb
 		//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve manager principal object %q", managerId)
 		//}
 		managerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-			client.BaseClient.Endpoint, client.BaseClient.TenantId, managerId)))
+			client.BaseClient.Endpoint, tenantId, managerId)))
 
 		manager := msgraph.User{
 			DirectoryObject: *managerObject,
