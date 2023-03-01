@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,7 +23,10 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-const groupResourceName = "azuread_group"
+const (
+	groupResourceName        = "azuread_group"
+	groupDuplicateValueError = "Request contains a property with duplicate values"
+)
 
 func groupResource() *schema.Resource {
 	return &schema.Resource{
@@ -583,6 +587,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	properties.Owners = &ownersFirst20
 
 	var group *msgraph.Group
+	var status int
 	var err error
 
 	if v, ok := d.GetOk("administrative_unit_ids"); ok {
@@ -590,21 +595,76 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		for i, administrativeUnitId := range administrativeUnitIds {
 			// Create the group in the first administrative unit, as this requires fewer permissions than creating it at tenant level
 			if i == 0 {
-				group, _, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
+				group, status, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
 				if err != nil {
-					return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
+					if status == http.StatusBadRequest && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
+						// Retry the request, without the calling principal as owner
+						newOwners := make(msgraph.Owners, 0)
+						for _, o := range *properties.Owners {
+							if id := o.ID(); id != nil && *id != callerId {
+								newOwners = append(newOwners, o)
+							}
+						}
+
+						// No point in retrying if the caller wasn't specified
+						if len(newOwners) == len(*properties.Owners) {
+							log.Printf("[DEBUG] Not retrying group creation for %q within AU %q as owner was not specified", displayName, administrativeUnitId)
+							return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
+						}
+
+						// If the API is refusing the calling principal as owner, it will typically automatically append the caller in the background,
+						// and subsequent GETs for the group will include the calling principal as owner, as if it were specified when creating.
+						log.Printf("[DEBUG] Retrying group creation for %q within AU %q without calling principal as owner", displayName, administrativeUnitId)
+						properties.Owners = &newOwners
+						group, _, err = administrativeUnitsClient.CreateGroup(ctx, administrativeUnitId, &properties)
+						if err != nil {
+							return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
+						}
+					} else {
+						return tf.ErrorDiagF(err, "Creating group in administrative unit with ID %q, %q", administrativeUnitId, displayName)
+					}
 				}
 			} else {
-				err := addGroupToAdministrativeUnit(ctx, administrativeUnitsClient, tenantId, administrativeUnitId, group)
+				err = addGroupToAdministrativeUnit(ctx, administrativeUnitsClient, tenantId, administrativeUnitId, group)
 				if err != nil {
-					return tf.ErrorDiagF(err, "Could not add group %q to administrative unit with object ID: %q", *group.ID(), administrativeUnitId)
+					return tf.ErrorDiagF(err, "Adding group %q to administrative unit with object ID: %q", *group.ID(), administrativeUnitId)
 				}
 			}
 		}
 	} else {
-		group, _, err = client.Create(ctx, properties)
+		group, status, err = client.Create(ctx, properties)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Creating group %q", displayName)
+			if status == http.StatusBadRequest && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
+				// Retry the request, without the calling principal as owner
+				newOwners := make(msgraph.Owners, 0)
+				for _, o := range *properties.Owners {
+					if id := o.ID(); id != nil && *id != callerId {
+						newOwners = append(newOwners, o)
+					}
+				}
+
+				// No point in retrying if the caller wasn't specified
+				if len(newOwners) == len(*properties.Owners) {
+					log.Printf("[DEBUG] Not retrying group creation for %q as owner was not specified", displayName)
+					return tf.ErrorDiagF(err, "Creating group %q", displayName)
+				}
+
+				// If the API is refusing the calling principal as owner, it will typically automatically append the caller in the background,
+				// and subsequent GETs for the group will include the calling principal as owner, as if it were specified when creating.
+				log.Printf("[DEBUG] Retrying group creation for %q without calling principal as owner", displayName)
+				if len(newOwners) == 0 {
+					properties.Owners = nil
+				} else {
+					properties.Owners = &newOwners
+				}
+
+				group, _, err = client.Create(ctx, properties)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Creating group %q", displayName)
+				}
+			} else {
+				return tf.ErrorDiagF(err, "Creating group %q", displayName)
+			}
 		}
 	}
 

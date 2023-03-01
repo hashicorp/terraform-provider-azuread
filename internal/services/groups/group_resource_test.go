@@ -159,6 +159,21 @@ func TestAccGroup_dynamicMembership(t *testing.T) {
 	})
 }
 
+func TestAccGroup_callerOwner(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withCallerAsOwner(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestAccGroup_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
@@ -712,6 +727,18 @@ resource "azuread_group" "test" {
   owners           = [azuread_user.testA.object_id]
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (GroupResource) withCallerAsOwner(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  owners           = [data.azuread_client_config.test.object_id]
+}
+`, data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
