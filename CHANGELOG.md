@@ -1,3 +1,9 @@
+## 2.36.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - work around an API issue that prevented group creation for some configurations where the calling principal is specified as an owner [GH-1037]
+
 ## 2.35.0 (February 24, 2023)
 
 BUG FIXES:
