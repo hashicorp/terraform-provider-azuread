@@ -16,9 +16,9 @@ type ReportsClient struct {
 }
 
 // NewReportsClient returns a new ReportsClient.
-func NewReportsClient(tenantId string) *ReportsClient {
+func NewReportsClient() *ReportsClient {
 	return &ReportsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *ReportsClient) GetCredentialUserRegistrationCount(ctx context.Context, 
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/reports/getCredentialUserRegistrationCount",
-			HasTenantId: true,
+			Entity: "/reports/getCredentialUserRegistrationCount",
 		},
 	})
 	if err != nil {
@@ -58,8 +57,7 @@ func (c *ReportsClient) GetCredentialUserRegistrationDetails(ctx context.Context
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/reports/credentialUserRegistrationDetails",
-			HasTenantId: true,
+			Entity: "/reports/credentialUserRegistrationDetails",
 		},
 	})
 	if err != nil {
@@ -88,8 +86,7 @@ func (c *ReportsClient) GetUserCredentialUsageDetails(ctx context.Context, query
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/reports/userCredentialUsageDetails",
-			HasTenantId: true,
+			Entity: "/reports/userCredentialUsageDetails",
 		},
 	})
 	if err != nil {
@@ -118,8 +115,7 @@ func (c *ReportsClient) GetCredentialUsageSummary(ctx context.Context, period Cr
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/reports/getCredentialUsageSummary(period='%s')", period),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/reports/getCredentialUsageSummary(period='%s')", period),
 		},
 	})
 	if err != nil {
@@ -148,8 +144,7 @@ func (c *ReportsClient) GetAuthenticationMethodsUsersRegisteredByFeature(ctx con
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/reports/authenticationMethods/usersRegisteredByFeature",
-			HasTenantId: true,
+			Entity: "/reports/authenticationMethods/usersRegisteredByFeature",
 		},
 	})
 	if err != nil {
@@ -176,8 +171,7 @@ func (c *ReportsClient) GetAuthenticationMethodsUsersRegisteredByMethod(ctx cont
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/reports/authenticationMethods/usersRegisteredByMethod",
-			HasTenantId: true,
+			Entity: "/reports/authenticationMethods/usersRegisteredByMethod",
 		},
 	})
 	if err != nil {

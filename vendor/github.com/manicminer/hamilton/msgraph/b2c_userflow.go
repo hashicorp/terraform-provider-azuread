@@ -16,9 +16,9 @@ type B2CUserFlowClient struct {
 }
 
 // NewB2CUserFlowClient returns a new B2CUserFlowClient.
-func NewB2CUserFlowClient(tenantId string) *B2CUserFlowClient {
+func NewB2CUserFlowClient() *B2CUserFlowClient {
 	return &B2CUserFlowClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *B2CUserFlowClient) List(ctx context.Context, query odata.Query) (*[]B2C
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/b2cUserFlows",
-			HasTenantId: true,
+			Entity: "/identity/b2cUserFlows",
 		},
 	})
 	if err != nil {
@@ -68,8 +67,7 @@ func (c *B2CUserFlowClient) Create(ctx context.Context, userflow B2CUserFlow) (*
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/b2cUserFlows",
-			HasTenantId: true,
+			Entity: "/identity/b2cUserFlows",
 		},
 	})
 	if err != nil {
@@ -97,8 +95,7 @@ func (c *B2CUserFlowClient) Get(ctx context.Context, id string, query odata.Quer
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/b2cUserFlows/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/b2cUserFlows/%s", id),
 		},
 	})
 	if err != nil {
@@ -142,8 +139,7 @@ func (c *B2CUserFlowClient) Update(ctx context.Context, userflow B2CUserFlow) (i
 			http.StatusNoContent,
 		},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/b2cUserFlows//%s", userflowID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/b2cUserFlows//%s", userflowID),
 		},
 	})
 	if err != nil {
@@ -159,8 +155,7 @@ func (c *B2CUserFlowClient) Delete(ctx context.Context, id string) (int, error) 
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/b2cUserFlows/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/b2cUserFlows/%s", id),
 		},
 	})
 	if err != nil {

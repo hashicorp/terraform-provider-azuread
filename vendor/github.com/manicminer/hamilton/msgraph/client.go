@@ -51,9 +51,8 @@ type HttpRequestInput interface {
 
 // Uri represents a Microsoft Graph endpoint.
 type Uri struct {
-	Entity      string
-	Params      url.Values
-	HasTenantId bool
+	Entity string
+	Params url.Values
 }
 
 // RetryableErrorHandler ensures that the response is returned after exhausting retries for a request
@@ -70,9 +69,6 @@ type Client struct {
 
 	// ApiVersion is the Microsoft Graph API version to use.
 	ApiVersion ApiVersion
-
-	// TenantId is the tenant ID to use in requests.
-	TenantId string
 
 	// UserAgent is the HTTP user agent string to send in requests.
 	UserAgent string
@@ -96,7 +92,7 @@ type Client struct {
 }
 
 // NewClient returns a new Client configured with the specified API version and tenant ID.
-func NewClient(apiVersion ApiVersion, tenantId string) Client {
+func NewClient(apiVersion ApiVersion) Client {
 	r := retryablehttp.NewClient()
 	r.ErrorHandler = RetryableErrorHandler
 	r.Logger = nil
@@ -109,7 +105,6 @@ func NewClient(apiVersion ApiVersion, tenantId string) Client {
 	return Client{
 		Endpoint:        endpoint,
 		ApiVersion:      apiVersion,
-		TenantId:        tenantId,
 		UserAgent:       "Hamilton (Go-http-client/1.1)",
 		HttpClient:      r.StandardClient(),
 		RetryableClient: r,
@@ -123,9 +118,6 @@ func (c Client) buildUri(uri Uri) (string, error) {
 		return "", err
 	}
 	newUrl.Path = "/" + string(c.ApiVersion)
-	if uri.HasTenantId {
-		newUrl.Path = fmt.Sprintf("%s/%s", newUrl.Path, c.TenantId)
-	}
 	newUrl.Path = fmt.Sprintf("%s/%s", newUrl.Path, strings.TrimLeft(uri.Entity, "/"))
 	if uri.Params != nil {
 		newUrl.RawQuery = uri.Params.Encode()

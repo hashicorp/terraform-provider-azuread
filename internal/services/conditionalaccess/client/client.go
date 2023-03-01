@@ -11,10 +11,10 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	namedLocationsClient := msgraph.NewNamedLocationsClient(o.TenantID)
+	namedLocationsClient := msgraph.NewNamedLocationsClient()
 	o.ConfigureClient(&namedLocationsClient.BaseClient)
 
-	policiesClient := msgraph.NewConditionalAccessPoliciesClient(o.TenantID)
+	policiesClient := msgraph.NewConditionalAccessPoliciesClient()
 	o.ConfigureClient(&policiesClient.BaseClient)
 
 	return &Client{

@@ -133,6 +133,7 @@ func domainsDataSource() *schema.Resource {
 func domainsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Domains.DomainsClient
 	client.BaseClient.DisableRetries = true
+	tenantId := meta.(*clients.Client).TenantID
 
 	adminManaged := d.Get("admin_managed").(bool)
 	onlyDefault := d.Get("only_default").(bool)
@@ -208,7 +209,7 @@ func domainsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return tf.ErrorDiagF(err, "Unable to compute hash for domain names")
 	}
 
-	d.SetId(fmt.Sprintf("domains#%s#%s", client.BaseClient.TenantId, base64.URLEncoding.EncodeToString(h.Sum(nil))))
+	d.SetId(fmt.Sprintf("domains#%s#%s", tenantId, base64.URLEncoding.EncodeToString(h.Sum(nil))))
 	tf.Set(d, "domains", domains)
 
 	return nil

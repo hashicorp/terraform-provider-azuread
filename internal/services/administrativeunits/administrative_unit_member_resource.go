@@ -62,6 +62,7 @@ func administrativeUnitMemberResource() *schema.Resource {
 func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	id := parse.NewAdministrativeUnitMemberID(d.Get("administrative_unit_object_id").(string), d.Get("member_object_id").(string))
 
@@ -96,7 +97,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.Resou
 	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id.MemberId)
 	//}
 	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, id.MemberId)))
+		client.BaseClient.Endpoint, tenantId, id.MemberId)))
 
 	members := &msgraph.Members{*memberObject}
 

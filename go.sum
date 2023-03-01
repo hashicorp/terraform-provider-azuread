@@ -264,8 +264,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/manicminer/hamilton v0.43.0/go.mod h1:lbVyngC+/nCWuDp8UhC6Bw+bh7jcP/E+YwqzHTmzemk=
 github.com/manicminer/hamilton v0.55.0/go.mod h1:lbVyngC+/nCWuDp8UhC6Bw+bh7jcP/E+YwqzHTmzemk=
-github.com/manicminer/hamilton v0.58.0 h1:aMB8AN2t1sDm1RlC/qDziN3MVhLTY3j+b8rSkqV5U1M=
-github.com/manicminer/hamilton v0.58.0/go.mod h1:kvNZuh/KneyjgSvx/DU/117zjgPDWV7b18LLJivHMa8=
+github.com/manicminer/hamilton v0.59.0 h1:RLGwWamCtTUa53sdAbv04XzRu3e9RwJoPcAN/VReydY=
+github.com/manicminer/hamilton v0.59.0/go.mod h1:kvNZuh/KneyjgSvx/DU/117zjgPDWV7b18LLJivHMa8=
 github.com/manicminer/hamilton-autorest v0.3.0/go.mod h1:NselDpNTImEmOc/fa41kPg6YhDt/6S95ejWbTGZ6tlg=
 github.com/matryer/is v1.2.0/go.mod h1:2fLPjFQM9rhQ15aVEtbuwhJinnOqrmgXPNdZsdwlWXA=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=

@@ -10,7 +10,7 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewDomainsClient(o.TenantID)
+	msClient := msgraph.NewDomainsClient()
 	o.ConfigureClient(&msClient.BaseClient)
 
 	return &Client{

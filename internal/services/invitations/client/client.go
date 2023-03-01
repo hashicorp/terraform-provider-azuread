@@ -11,10 +11,10 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	invitationsClient := msgraph.NewInvitationsClient(o.TenantID)
+	invitationsClient := msgraph.NewInvitationsClient()
 	o.ConfigureClient(&invitationsClient.BaseClient)
 
-	usersClient := msgraph.NewUsersClient(o.TenantID)
+	usersClient := msgraph.NewUsersClient()
 	o.ConfigureClient(&usersClient.BaseClient)
 
 	return &Client{

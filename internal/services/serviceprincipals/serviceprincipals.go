@@ -111,8 +111,7 @@ func findByAppIdWithTimeout(ctx context.Context, timeout time.Duration, client *
 		OData:                  odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)},
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: msgraph.Uri{
-			Entity:      "/servicePrincipals",
-			HasTenantId: true,
+			Entity: "/servicePrincipals",
 		},
 	})
 	if err != nil {
