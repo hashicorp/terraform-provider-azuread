@@ -1,5 +1,9 @@
 ## 2.36.0 (Unreleased)
 
+IMPROVEMENTS:
+
+* **Provider:** requests to Microsoft Graph no longer include the tenant ID as part of the URI path [GH-1039]
+
 BUG FIXES:
 
 * `azuread_group` - work around an API issue that prevented group creation for some configurations where the calling principal is specified as an owner [GH-1037]
