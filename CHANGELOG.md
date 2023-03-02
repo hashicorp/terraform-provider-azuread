@@ -1,12 +1,12 @@
-## 2.36.0 (Unreleased)
+## 2.36.0 (March 03, 2023)
 
 IMPROVEMENTS:
 
-* **Provider:** requests to Microsoft Graph no longer include the tenant ID as part of the URI path [GH-1039]
+* **Provider:** requests to Microsoft Graph no longer include the tenant ID as part of the URI path ([#1039](https://github.com/hashicorp/terraform-provider-azuread/issues/1039))
 
 BUG FIXES:
 
-* `azuread_group` - work around an API issue that prevented group creation for some configurations where the calling principal is specified as an owner [GH-1037]
+* `azuread_group` - work around an API issue that prevented group creation for some configurations where the calling principal is specified as an owner ([#1037](https://github.com/hashicorp/terraform-provider-azuread/issues/1037))
 
 ## 2.35.0 (February 24, 2023)
 
