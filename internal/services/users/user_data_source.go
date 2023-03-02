@@ -26,11 +26,20 @@ func userDataSource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"employee_id": {
+				Description:      "The employee identifier assigned to the user by the organisation",
+				Type:             schema.TypeList,
+				Optional:         true,
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
 			"mail": {
 				Description:      "The SMTP address for the user",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
@@ -39,7 +48,7 @@ func userDataSource() *schema.Resource {
 				Description:      "The email alias of the user",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
@@ -49,7 +58,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.UUID,
 			},
 
@@ -58,7 +67,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
@@ -133,12 +142,6 @@ func userDataSource() *schema.Resource {
 
 			"division": {
 				Description: "The name of the division in which the user works.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"employee_id": {
-				Description: "The employee identifier assigned to the user by the organisation",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -384,8 +387,26 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 		user = (*users)[0]
+	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
+		query := odata.Query{
+			Filter: fmt.Sprintf("employeeId eq '%s'", utils.EscapeSingleQuote(employeeId)),
+		}
+		users, _, err := client.List(ctx, query)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Finding user with employee ID: %q", employeeId)
+		}
+		if users == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		count := len(*users)
+		if count > 1 {
+			return tf.ErrorDiagPathF(nil, "employee_id", "More than one user found with employee ID: %q", employeeId)
+		} else if count == 0 {
+			return tf.ErrorDiagPathF(err, "employee_id", "User not found with employee ID: %q", employeeId)
+		}
+		user = (*users)[0]
 	} else {
-		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` or `mail_nickname` must be supplied")
+		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}
 
 	if user.ID() == nil {

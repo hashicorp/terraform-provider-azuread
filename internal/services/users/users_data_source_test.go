@@ -19,6 +19,8 @@ func TestAccUsersDataSource_byUserPrincipalNames(t *testing.T) {
 		Check: resource.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
 		),
 	}})
@@ -32,6 +34,8 @@ func TestAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(t *testing.T) {
 		Check: resource.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("3"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("3"),
 		),
 	}})
@@ -45,6 +49,8 @@ func TestAccUsersDataSource_byObjectIds(t *testing.T) {
 		Check: resource.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
 		),
 	}})
@@ -58,6 +64,8 @@ func TestAccUsersDataSource_byObjectIdsIgnoreMissing(t *testing.T) {
 		Check: resource.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
 		),
 	}})
@@ -72,6 +80,7 @@ func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
 		),
 	}})
@@ -86,6 +95,37 @@ func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
+}
+
+func TestAccUsersDataSource_byEmployeeIds(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byEmployeeIds(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
+}
+
+func TestAccUsersDataSource_byEmployeeIdsIgnoreMissing(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: UsersDataSource{}.byEmployeeIdsIgnoreMissing(data),
+		Check: resource.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("users.#").HasValue("2"),
 		),
 	}})
@@ -100,6 +140,7 @@ func TestAccUsersDataSource_noNames(t *testing.T) {
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("0"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("0"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("users.#").HasValue("0"),
 		),
 	}})
@@ -114,6 +155,7 @@ func TestAccUsersDataSource_returnAll(t *testing.T) {
 			check.That(data.ResourceName).Key("user_principal_names.#").Exists(),
 			check.That(data.ResourceName).Key("object_ids.#").Exists(),
 			check.That(data.ResourceName).Key("mail_nicknames.#").Exists(),
+			check.That(data.ResourceName).Key("employee_ids.#").Exists(),
 			check.That(data.ResourceName).Key("users.#").Exists(),
 		),
 	}})
@@ -196,6 +238,32 @@ data "azuread_users" "test" {
   ]
 }
 `, UserResource{}.threeUsersABC(data), data.RandomInteger)
+}
+
+func (UsersDataSource) byEmployeeIds(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  employee_ids = [azuread_user.testA.employee_id, azuread_user.testB.employee_id]
+}
+`, UserResource{}.threeUsersABC(data))
+}
+
+func (UsersDataSource) byEmployeeIdsIgnoreMissing(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  ignore_missing = true
+
+  employee_ids = [
+    azuread_user.testA.employee_id,
+    "not-a-real-employee-id",
+    azuread_user.testB.employee_id,
+  ]
+}
+`, UserResource{}.threeUsersABC(data))
 }
 
 func (UsersDataSource) noNames() string {

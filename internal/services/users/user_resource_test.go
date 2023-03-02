@@ -225,6 +225,7 @@ data "azuread_domains" "test" {
 resource "azuread_user" "testA" {
   user_principal_name = "acctestUser'%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-A"
+  employee_id         = "A%[3]s%[3]s"
   password            = "%[2]s"
 }
 
@@ -232,6 +233,7 @@ resource "azuread_user" "testB" {
   user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-B"
   mail_nickname       = "acctestUser-%[1]d-B"
+  employee_id         = "B%[3]s%[3]s"
   password            = "%[2]s"
 }
 
@@ -240,7 +242,7 @@ resource "azuread_user" "testC" {
   display_name        = "acctestUser-%[1]d-C"
   password            = "%[2]s"
 }
-`, data.RandomInteger, data.RandomPassword)
+`, data.RandomInteger, data.RandomPassword, data.RandomString)
 }
 
 func (UserResource) withRandomProvider(data acceptance.TestData) string {
