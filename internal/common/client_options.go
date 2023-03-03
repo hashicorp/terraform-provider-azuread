@@ -66,7 +66,7 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 			}
 		}
 		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
-		log.Printf("[DEBUG] AzureAD retry %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
+		log.Printf("[DEBUG] AzureAD attempt %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
 	}
 
 	// Explicitly set API version
