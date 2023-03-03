@@ -58,12 +58,12 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 			return
 		}
 
-		requestId := "UNKNOWN"
-		ctx := req.Context()
-
-		if v := req.Context().Value(contextKey("requestId")); v != nil {
-			requestId = v.(string)
+		requestId, err := uuid.GenerateUUID()
+		if err != nil {
+			return
 		}
+
+		ctx := req.Context()
 
 		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
 
@@ -87,6 +87,32 @@ Request ID: %s
 
 		if authHeaderValue != "" {
 			newReq.Header.Add(authHeaderName, authHeaderValue)
+		}
+	}
+
+	c.RetryableClient.ResponseLogHook = func(_ retryablehttp.Logger, resp *http.Response) {
+		requestId := "UNKNOWN"
+
+		if resp.Request != nil {
+			if v := resp.Request.Context().Value(contextKey("requestId")); v != nil {
+				requestId = v.(string)
+			}
+		}
+
+		if resp != nil {
+			if dump, err2 := httputil.DumpResponse(resp, true); err2 == nil {
+				log.Printf(`[DEBUG] ============================ Begin AzureAD Response Retry Attempt ===========================
+	%s %s
+	Request ID: %s
+	
+	%s
+	============================= End AzureAD Response Retry Attempt ============================
+	`, resp.Request.Method, resp.Request.URL, requestId, dump)
+			} else {
+				log.Printf("[DEBUG] AzureAD Response retry attempt: %s for %s (%s %s)\n", resp.Status, requestId, resp.Request.Method, resp.Request.URL)
+			}
+		} else {
+			log.Printf("[DEBUG] AzureAD Request retry attempt for %s (%s %s) completed with no response", requestId, resp.Request.Method, resp.Request.URL)
 		}
 	}
 
