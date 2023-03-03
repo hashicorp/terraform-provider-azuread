@@ -74,11 +74,11 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 		}
 
 		if dump, err := httputil.DumpRequestOut(newReq, true); err == nil {
-			log.Printf(`[DEBUG] ============================ Begin AzureAD Request retry attempt %d ============================
+			log.Printf(`[DEBUG] ============================ Begin AzureAD Request Retry Attempt %d ============================
 Request ID: %s
 
 %s
-============================= End AzureAD Request =============================
+============================= End AzureAD Request Retry Attempt =============================
 `, attempt, requestId, dump)
 		} else {
 			// fallback to basic message
