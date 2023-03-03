@@ -60,11 +60,11 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 
 		requestId := "UNKNOWN"
 		ctx := req.Context()
-		if req != nil {
-			if v := req.Context().Value(contextKey("requestId")); v != nil {
-				requestId = v.(string)
-			}
+
+		if v := req.Context().Value(contextKey("requestId")); v != nil {
+			requestId = v.(string)
 		}
+
 		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
 
 		authHeaderName := "Authorization"
