@@ -3,7 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -52,7 +52,7 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 	// Default retry limit, can be overridden from within a resource
 	c.RetryableClient.RetryMax = 9
 
-	c.RetryableClient.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	c.RetryableClient.Logger = log.New(io.Discard, "", log.LstdFlags)
 	c.RetryableClient.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
 		if req == nil {
 			return
