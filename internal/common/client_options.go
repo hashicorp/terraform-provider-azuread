@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-provider-azuread/version"
@@ -49,6 +51,23 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 
 	// Default retry limit, can be overridden from within a resource
 	c.RetryableClient.RetryMax = 9
+
+	c.RetryableClient.Logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	c.RetryableClient.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
+		if req == nil {
+			return
+		}
+
+		requestId := "UNKNOWN"
+		ctx := req.Context()
+		if req != nil {
+			if v := req.Context().Value(contextKey("requestId")); v != nil {
+				requestId = v.(string)
+			}
+		}
+		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
+		log.Printf("[DEBUG] AzureAD retry %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
+	}
 
 	// Explicitly set API version
 	c.ApiVersion = o.ApiVersion
