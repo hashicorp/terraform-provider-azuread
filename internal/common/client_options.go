@@ -66,7 +66,28 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 			}
 		}
 		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
-		log.Printf("[DEBUG] AzureAD attempt %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
+
+		authHeaderName := "Authorization"
+		authHeaderValue := newReq.Header.Get(authHeaderName)
+		if authHeaderValue != "" {
+			newReq.Header.Del(authHeaderName)
+		}
+
+		if dump, err := httputil.DumpRequestOut(newReq, true); err == nil {
+			log.Printf(`[DEBUG] ============================ Begin AzureAD Request retry attempt %d ============================
+Request ID: %s
+
+%s
+============================= End AzureAD Request =============================
+`, attempt, requestId, dump)
+		} else {
+			// fallback to basic message
+			log.Printf("[DEBUG] AzureAD request retry attempt %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
+		}
+
+		if authHeaderValue != "" {
+			newReq.Header.Add(authHeaderName, authHeaderValue)
+		}
 	}
 
 	// Explicitly set API version
