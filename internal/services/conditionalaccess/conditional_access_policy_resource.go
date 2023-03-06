@@ -109,6 +109,33 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							},
 						},
 
+						"client_applications": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"included_service_principals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: validate.NoEmptyStrings,
+										},
+									},
+
+									"excluded_service_principals": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: validate.NoEmptyStrings,
+										},
+									},
+								},
+							},
+						},
+
 						"users": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -116,9 +143,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"included_users": {
-										Type:         schema.TypeList,
-										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
+										Type:             schema.TypeList,
+										Optional:         true,
+										AtLeastOneOf:     []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
+										DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
