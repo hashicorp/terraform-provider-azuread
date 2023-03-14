@@ -64,6 +64,7 @@ The following attributes are exported:
 * `public_client` - A `public_client` block as documented below.
 * `publisher_domain` - The verified publisher domain for the application.
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
+* `service_management_reference` - References application context information from a Service or Asset Management database..
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `single_page_application` - A `single_page_application` block as documented below.
 * `support_url` - URL of the application's support page.
