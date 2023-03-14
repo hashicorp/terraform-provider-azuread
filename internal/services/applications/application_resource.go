@@ -469,12 +469,6 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
-			"service_management_reference": {
-				Description: "References application or service contact information from a Service or Asset Management database.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
-
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the current application",
 				Type:        schema.TypeString,
@@ -991,18 +985,17 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                      utils.NullableString(d.Get("notes").(string)),
-		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
-		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                       &tags,
-		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
+		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -1179,18 +1172,17 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                      utils.NullableString(d.Get("notes").(string)),
-		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
-		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                       &tags,
-		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                      &tags,
+		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
@@ -1283,7 +1275,6 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
-	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)
