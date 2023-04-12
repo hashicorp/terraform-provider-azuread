@@ -88,8 +88,9 @@ func (c *RoleAssignmentsClient) Create(ctx context.Context, roleAssignment Unifi
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity: "/roleManagement/directory/roleAssignments",
 		},
