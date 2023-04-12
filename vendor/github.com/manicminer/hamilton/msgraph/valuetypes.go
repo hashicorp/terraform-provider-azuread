@@ -404,6 +404,51 @@ const (
 	ExpirationPatternTypeAfterDuration ExpirationPatternType = "afterDuration"
 )
 
+type DeploymentProfileAssignmentStatus = string
+
+const (
+	DeploymentProfileAssignmentStatusUnknown                  DeploymentProfileAssignmentStatus = "unknown"
+	DeploymentProfileAssignmentStatusAssignedInSync           DeploymentProfileAssignmentStatus = "assignedInSync"
+	DeploymentProfileAssignmentStatusAssignedOutOfSync        DeploymentProfileAssignmentStatus = "assignedOutOfSync"
+	DeploymentProfileAssignmentStatusAssignedUnknownSyncState DeploymentProfileAssignmentStatus = "assignedUnknownSyncState"
+	DeploymentProfileAssignmentStatusNotAssigned              DeploymentProfileAssignmentStatus = "notAssigned"
+	DeploymentProfileAssignmentStatusPending                  DeploymentProfileAssignmentStatus = "pending"
+	DeploymentProfileAssignmentStatusFailed                   DeploymentProfileAssignmentStatus = "failed"
+)
+
+type DeviceUsageType = string
+
+const (
+	DeviceUsageTypeSingleUser DeviceUsageType = "singleUser"
+	DeviceUsageTypeShared     DeviceUsageType = "shared"
+)
+
+type DeviceAndAppManagementAssignmentFilterType = string
+
+const (
+	DeviceAndAppManagementAssignmentFilterTypeNone    DeviceAndAppManagementAssignmentFilterType = "none"
+	DeviceAndAppManagementAssignmentFilterTypeInclude DeviceAndAppManagementAssignmentFilterType = "include"
+	DeviceAndAppManagementAssignmentFilterTypeExclude DeviceAndAppManagementAssignmentFilterType = "exclude"
+)
+
+type DeviceAndAppManagementAssignmentSource = string
+
+const (
+	DeviceAndAppManagementAssignmentSourceDirect     DeviceAndAppManagementAssignmentSource = "direct"
+	DeviceAndAppManagementAssignmentSourcePolicySets DeviceAndAppManagementAssignmentSource = "policySets"
+)
+
+type EnrollmentState = string
+
+const (
+	EnrollmentStateUnknown      EnrollmentState = "unknown"
+	EnrollmentStateEnrolled     EnrollmentState = "enrolled"
+	EnrollmentStatePendingReset EnrollmentState = "pendingReset"
+	EnrollmentStateFailed       EnrollmentState = "failed"
+	EnrollmentStateNotContacted EnrollmentState = "notContacted"
+	EnrollmentStateBlocked      EnrollmentState = "blocked"
+)
+
 type ExtensionSchemaTargetType = string
 
 const (
@@ -753,4 +798,44 @@ const (
 	IndexTypeThird  IndexType = "third"
 	IndexTypeFourth IndexType = "fourth"
 	IndexTypeLast   IndexType = "last"
+)
+
+type WindowsAutopilotDeviceType = string
+
+const (
+	WindowsAutopilotDeviceTypeWindowsPc          WindowsAutopilotDeviceType = "windowsPc"
+	WindowsAutopilotDeviceTypeSurfaceHub2        WindowsAutopilotDeviceType = "surfaceHub2"
+	WindowsAutopilotDeviceTypeHoloLens           WindowsAutopilotDeviceType = "holoLens"
+	WindowsAutopilotDeviceTypeSurfaceHub2S       WindowsAutopilotDeviceType = "surfaceHub2S"
+	WindowsAutopilotDeviceTypeVirtualMachine     WindowsAutopilotDeviceType = "virtualMachine"
+	WindowsAutopilotDeviceTypeUnknownFutureValue WindowsAutopilotDeviceType = "unknownFutureValue"
+)
+
+type WindowsAutopilotDeviceRemediationState = string
+
+const (
+	WindowsAutopilotDeviceRemediationStateUnknown                      WindowsAutopilotDeviceRemediationState = "unknown"
+	WindowsAutopilotDeviceRemediationStateNoRemediationRequired        WindowsAutopilotDeviceRemediationState = "noRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateAutomaticRemediationRequired WindowsAutopilotDeviceRemediationState = "automaticRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateManualRemediationRequired    WindowsAutopilotDeviceRemediationState = "manualRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateUnknownFutureValue           WindowsAutopilotDeviceRemediationState = "unknownFutureValue"
+)
+
+type WindowsAutopilotProfileAssignmentDetailedStatus = string
+
+const (
+	WindowsAutopilotProfileAssignmentDetailedStatusNone                            WindowsAutopilotProfileAssignmentDetailedStatus = "none"
+	WindowsAutopilotProfileAssignmentDetailedStatusHardwareRequirementsNotMet      WindowsAutopilotProfileAssignmentDetailedStatus = "hardwareRequirementsNotMet"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHubProfileNotSupported   WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHubProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusHoloLensProfileNotSupported     WindowsAutopilotProfileAssignmentDetailedStatus = "holoLensProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusWindowsPcProfileNotSupported    WindowsAutopilotProfileAssignmentDetailedStatus = "windowsPcProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHub2SProfileNotSupported WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHub2SProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusUnknownFutureValue              WindowsAutopilotProfileAssignmentDetailedStatus = "unknownFutureValue"
+)
+
+type WindowsUserType = string
+
+const (
+	WindowsUserTypeAdministrator WindowsUserType = "administrator"
+	WindowsUserTypeStandard      WindowsUserType = "standard"
 )

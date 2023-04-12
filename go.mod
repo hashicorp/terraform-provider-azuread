@@ -1,11 +1,11 @@
 module github.com/hashicorp/terraform-provider-azuread
 
 require (
-	github.com/hashicorp/go-azure-sdk v0.20230223.1132808
+	github.com/hashicorp/go-azure-sdk v0.20230331.1143618
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
-	github.com/manicminer/hamilton v0.59.0
+	github.com/manicminer/hamilton v0.60.0
 	golang.org/x/text v0.7.0
 )
 
@@ -18,7 +18,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-azure-helpers v0.52.0 // indirect
+	github.com/hashicorp/go-azure-helpers v0.55.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
