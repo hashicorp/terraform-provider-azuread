@@ -1,3 +1,9 @@
+# 2.37.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
+
 ## 2.36.0 (March 03, 2023)
 
 IMPROVEMENTS:
