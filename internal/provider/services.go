@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/domains"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/invitations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
@@ -25,6 +26,7 @@ func SupportedServices() []ServiceRegistration {
 		directoryroles.Registration{},
 		domains.Registration{},
 		groups.Registration{},
+		identitygovernance.Registration{},
 		invitations.Registration{},
 		policies.Registration{},
 		serviceprincipals.Registration{},
