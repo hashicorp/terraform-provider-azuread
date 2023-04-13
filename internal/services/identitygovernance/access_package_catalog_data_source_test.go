@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type AccessPackageCatalogDataSource struct{}
@@ -40,8 +39,8 @@ func (AccessPackageCatalogDataSource) testCheckFunc(data acceptance.TestData) re
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Test access package catalog %[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("test-access-package-catalog-%[1]d", data.RandomInteger)),
-		check.That(data.ResourceName).Key("state").HasValue(msgraph.AccessPackageCatalogStateUnpublished),
 		check.That(data.ResourceName).Key("externally_visible").HasValue("false"),
+		check.That(data.ResourceName).Key("published").HasValue("false"),
 	)
 }
 

@@ -109,8 +109,8 @@ provider "azuread" {}
 resource "azuread_access_package_catalog" "test" {
   display_name       = "test-access-package-catalog-%[1]d"
   description        = "Test access package catalog %[1]d"
-  state              = "unpublished"
   externally_visible = false
+  published          = false
 }
 `, data.RandomInteger)
 }

@@ -17,7 +17,7 @@ func schemaLocalizedContent() *schema.Resource {
 			},
 
 			"localized_text": {
-				Description: "The localized text of the this question",
+				Description: "The localized text of this question",
 				Type:        schema.TypeList,
 				Optional:    true,
 				Elem: &schema.Resource{

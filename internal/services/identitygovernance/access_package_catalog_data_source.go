@@ -3,6 +3,7 @@ package identitygovernance
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -46,14 +47,14 @@ func accessPackageCatalogDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"state": {
-				Description: "Has the value published if the access packages are available for management. The possible values are: unpublished and published",
-				Type:        schema.TypeString,
+			"externally_visible": {
+				Description: "Whether the access packages in this catalog can be requested by users outside the tenant",
+				Type:        schema.TypeBool,
 				Computed:    true,
 			},
 
-			"externally_visible": {
-				Description: "Whether the access packages in this catalog can be requested by users outside of the tenant",
+			"published": {
+				Description: "Whether the access packages in this catalog are available for management",
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},
@@ -107,13 +108,18 @@ func accessPackageCatalogDataRead(ctx context.Context, d *schema.ResourceData, m
 		return tf.ErrorDiagF(fmt.Errorf("no access package catalog matched with specified parameters"), "Access access package catalog not found!")
 	}
 
+	published := false
+	if strings.EqualFold(catalog.State, msgraph.AccessPackageCatalogStatusPublished) {
+		published = true
+	}
+
 	d.SetId(*catalog.ID)
 
 	tf.Set(d, "object_id", catalog.ID)
 	tf.Set(d, "display_name", catalog.DisplayName)
 	tf.Set(d, "description", catalog.Description)
-	tf.Set(d, "state", catalog.State)
 	tf.Set(d, "externally_visible", catalog.IsExternallyVisible)
+	tf.Set(d, "published", published)
 
 	return nil
 }

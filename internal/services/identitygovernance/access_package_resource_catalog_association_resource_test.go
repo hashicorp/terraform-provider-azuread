@@ -32,7 +32,22 @@ func TestAccAccessPackageResourceCatalogAssociation_complete(t *testing.T) {
 	})
 }
 
-func (AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+func TestAccAccessPackageResourceCatalogAssociation_requiresImport(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_resource_catalog_association", "test")
+	r := AccessPackageResourceCatalogAssociationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.complete(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.RequiresImportErrorStep(r.requiresImport(data)),
+	})
+}
+
+func (r AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageResourceClient
 	client.BaseClient.DisableRetries = true
 
@@ -53,7 +68,7 @@ func (AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Contex
 	return utils.Bool(true), nil
 }
 
-func (AccessPackageResourceCatalogAssociationResource) complete(data acceptance.TestData) string {
+func (r AccessPackageResourceCatalogAssociationResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -73,4 +88,16 @@ resource "azuread_access_package_resource_catalog_association" "test" {
   resource_origin_system = "AadGroup"
 }
 `, data.RandomInteger)
+}
+
+func (r AccessPackageResourceCatalogAssociationResource) requiresImport(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_access_package_resource_catalog_association" "import" {
+  catalog_id             = azuread_access_package_resource_catalog_association.test.catalog_id
+  resource_origin_id     = azuread_access_package_resource_catalog_association.test.resource_origin_id
+  resource_origin_system = azuread_access_package_resource_catalog_association.test.resource_origin_system
+}
+`, r.complete(data), data.RandomInteger)
 }

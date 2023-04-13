@@ -9,7 +9,7 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func buildAssignmentPolicyRequestorSettings(input []interface{}) *msgraph.RequestorSettings {
+func expandRequestorSettings(input []interface{}) *msgraph.RequestorSettings {
 	if len(input) == 0 {
 		return nil
 	}
@@ -18,7 +18,7 @@ func buildAssignmentPolicyRequestorSettings(input []interface{}) *msgraph.Reques
 		ScopeType:      in["scope_type"].(string),
 		AcceptRequests: utils.Bool(in["requests_accepted"].(bool)),
 	}
-	result.AllowedRequestors = buildUserSet(in["requestor"].([]interface{}))
+	result.AllowedRequestors = expandUserSets(in["requestor"].([]interface{}))
 
 	return &result
 }
@@ -31,11 +31,11 @@ func flattenRequestorSettings(input *msgraph.RequestorSettings) []map[string]int
 	return []map[string]interface{}{{
 		"requests_accepted": input.AcceptRequests,
 		"scope_type":        input.ScopeType,
-		"requestor":         flattenUserSet(input.AllowedRequestors),
+		"requestor":         flattenUserSets(input.AllowedRequestors),
 	}}
 }
 
-func buildAssignmentPolicyApprovalSettings(input []interface{}) *msgraph.ApprovalSettings {
+func expandApprovalSettings(input []interface{}) *msgraph.ApprovalSettings {
 	if len(input) == 0 {
 		return nil
 	}
@@ -59,8 +59,8 @@ func buildAssignmentPolicyApprovalSettings(input []interface{}) *msgraph.Approva
 			IsEscalationEnabled:             utils.Bool(v_map["alternative_approval_enabled"].(bool)),
 		}
 
-		stage.PrimaryApprovers = buildUserSet(v_map["primary_approver"].([]interface{}))
-		stage.EscalationApprovers = buildUserSet(v_map["alternative_approver"].([]interface{}))
+		stage.PrimaryApprovers = expandUserSets(v_map["primary_approver"].([]interface{}))
+		stage.EscalationApprovers = expandUserSets(v_map["alternative_approver"].([]interface{}))
 
 		approvalStages = append(approvalStages, stage)
 	}
@@ -88,8 +88,8 @@ func flattenApprovalSettings(input *msgraph.ApprovalSettings) []map[string]inter
 			"approver_justification_required":     v.IsApproverJustificationRequired,
 			"alternative_approval_enabled":        v.IsEscalationEnabled,
 			"enable_alternative_approval_in_days": *v.EscalationTimeInMinutes / 60 / 24,
-			"primary_approver":                    flattenUserSet(v.PrimaryApprovers),
-			"alternative_approver":                flattenUserSet(v.EscalationApprovers),
+			"primary_approver":                    flattenUserSets(v.PrimaryApprovers),
+			"alternative_approver":                flattenUserSets(v.EscalationApprovers),
 		}
 
 		approvalStages = append(approvalStages, approvalStage)
@@ -99,7 +99,7 @@ func flattenApprovalSettings(input *msgraph.ApprovalSettings) []map[string]inter
 	return result
 }
 
-func buildAssignmentPolicyReviewSettings(input []interface{}) (*msgraph.AssignmentReviewSettings, error) {
+func expandAssignmentReviewSettings(input []interface{}) (*msgraph.AssignmentReviewSettings, error) {
 	if len(input) == 0 {
 		return nil, nil
 	}
@@ -126,12 +126,12 @@ func buildAssignmentPolicyReviewSettings(input []interface{}) (*msgraph.Assignme
 		result.StartDateTime = &startOn
 	}
 
-	result.Reviewers = buildUserSet(in["reviewer"].([]interface{}))
+	result.Reviewers = expandUserSets(in["reviewer"].([]interface{}))
 
 	return &result, nil
 }
 
-func flattenReviewSettings(input *msgraph.AssignmentReviewSettings) []map[string]interface{} {
+func flattenAssignmentReviewSettings(input *msgraph.AssignmentReviewSettings) []map[string]interface{} {
 	if input == nil {
 		return nil
 	}
@@ -144,12 +144,12 @@ func flattenReviewSettings(input *msgraph.AssignmentReviewSettings) []map[string
 		"enabled":                         input.IsEnabled,
 		"review_frequency":                input.RecurrenceType,
 		"review_type":                     input.ReviewerType,
-		"reviewer":                        flattenUserSet(input.Reviewers),
+		"reviewer":                        flattenUserSets(input.Reviewers),
 		"starting_on":                     input.StartDateTime.Format(time.RFC3339),
 	}}
 }
 
-func buildUserSet(input []interface{}) *[]msgraph.UserSet {
+func expandUserSets(input []interface{}) *[]msgraph.UserSet {
 	userSets := make([]msgraph.UserSet, 0)
 	for _, v := range input {
 		v_map := v.(map[string]interface{})
@@ -168,7 +168,7 @@ func buildUserSet(input []interface{}) *[]msgraph.UserSet {
 	return &userSets
 }
 
-func flattenUserSet(input *[]msgraph.UserSet) []interface{} {
+func flattenUserSets(input *[]msgraph.UserSet) []interface{} {
 	if input == nil || len(*input) == 0 {
 		return nil
 	}
@@ -227,7 +227,7 @@ func userSetShortType(in string) *string {
 	return &shortType
 }
 
-func expandAccessPackageAssignmentPolicyQuestions(questions []interface{}) *[]msgraph.AccessPackageQuestion {
+func expandAccessPackageQuestions(questions []interface{}) *[]msgraph.AccessPackageQuestion {
 	result := make([]msgraph.AccessPackageQuestion, 0)
 
 	for _, v := range questions {
@@ -238,7 +238,7 @@ func expandAccessPackageAssignmentPolicyQuestions(questions []interface{}) *[]ms
 		q := msgraph.AccessPackageQuestion{
 			IsRequired: utils.Bool(v_map["required"].(bool)),
 			Sequence:   utils.Int32(int32(v_map["sequence"].(int))),
-			Text:       expandAccessPackageAssignmentPolicyQuestionContent(v_text),
+			Text:       expandAccessPackageLocalizedContent(v_text),
 		}
 
 		v_map_choices := v_map["choice"].([]interface{})
@@ -252,7 +252,7 @@ func expandAccessPackageAssignmentPolicyQuestions(questions []interface{}) *[]ms
 				c_map_display_value := c_map["display_value"].([]interface{})
 				choices = append(choices, msgraph.AccessPackageMultipleChoiceQuestions{
 					ActualValue:  utils.String(c_map["actual_value"].(string)),
-					DisplayValue: expandAccessPackageAssignmentPolicyQuestionContent(c_map_display_value[0].(map[string]interface{})),
+					DisplayValue: expandAccessPackageLocalizedContent(c_map_display_value[0].(map[string]interface{})),
 				})
 			}
 
@@ -265,7 +265,7 @@ func expandAccessPackageAssignmentPolicyQuestions(questions []interface{}) *[]ms
 	return &result
 }
 
-func flattenAssignmentPolicyQuestions(input *[]msgraph.AccessPackageQuestion) []map[string]interface{} {
+func flattenAccessPackageQuestions(input *[]msgraph.AccessPackageQuestion) []map[string]interface{} {
 	if input == nil || len(*input) == 0 {
 		return nil
 	}
@@ -276,7 +276,7 @@ func flattenAssignmentPolicyQuestions(input *[]msgraph.AccessPackageQuestion) []
 		question := map[string]interface{}{
 			"required": v.IsRequired,
 			"sequence": v.Sequence,
-			"text":     flattenAssignmentPolicyQuestionContent(v.Text),
+			"text":     flattenAccessPackageLocalizedContent(v.Text),
 		}
 
 		if c_array := v.Choices; c_array != nil && len(*c_array) > 0 {
@@ -285,7 +285,7 @@ func flattenAssignmentPolicyQuestions(input *[]msgraph.AccessPackageQuestion) []
 			for _, c := range *c_array {
 				choice := map[string]interface{}{
 					"actual_value":  c.ActualValue,
-					"display_value": flattenAssignmentPolicyQuestionContent(c.DisplayValue),
+					"display_value": flattenAccessPackageLocalizedContent(c.DisplayValue),
 				}
 
 				choices = append(choices, choice)
@@ -300,7 +300,7 @@ func flattenAssignmentPolicyQuestions(input *[]msgraph.AccessPackageQuestion) []
 	return questions
 }
 
-func expandAccessPackageAssignmentPolicyQuestionContent(input map[string]interface{}) *msgraph.AccessPackageLocalizedContent {
+func expandAccessPackageLocalizedContent(input map[string]interface{}) *msgraph.AccessPackageLocalizedContent {
 	result := msgraph.AccessPackageLocalizedContent{
 		DefaultText: utils.String(input["default_text"].(string)),
 	}
@@ -320,7 +320,7 @@ func expandAccessPackageAssignmentPolicyQuestionContent(input map[string]interfa
 	return &result
 }
 
-func flattenAssignmentPolicyQuestionContent(input *msgraph.AccessPackageLocalizedContent) []map[string]interface{} {
+func flattenAccessPackageLocalizedContent(input *msgraph.AccessPackageLocalizedContent) []map[string]interface{} {
 	result := []map[string]interface{}{{
 		"default_text": input.DefaultText,
 	}}

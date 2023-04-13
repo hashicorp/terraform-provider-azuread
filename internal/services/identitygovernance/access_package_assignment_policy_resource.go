@@ -351,7 +351,7 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.
 	var properties msgraph.AccessPackageAssignmentPolicy
 	var err error
 	if properties, err = buildAssignmentPolicyResourceData(ctx, d, meta); err != nil {
-		return tf.ErrorDiagF(err, "Error building resource data from supplied parameters!")
+		return tf.ErrorDiagF(err, "Building resource data from supplied parameters")
 	}
 
 	accessPackageAssignmentPolicy, _, err := client.Create(ctx, properties)
@@ -370,7 +370,7 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *schema.
 	var properties msgraph.AccessPackageAssignmentPolicy
 	var err error
 	if properties, err = buildAssignmentPolicyResourceData(ctx, d, meta); err != nil {
-		return tf.ErrorDiagF(err, "Error building resource data from supplied parameters!")
+		return tf.ErrorDiagF(err, "Building resource data from supplied parameters")
 	}
 
 	objectId := d.Id()
@@ -411,8 +411,8 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *schema.Re
 
 	tf.Set(d, "requestor_settings", flattenRequestorSettings(accessPackageAssignmentPolicy.RequestorSettings))
 	tf.Set(d, "approval_settings", flattenApprovalSettings(accessPackageAssignmentPolicy.RequestApprovalSettings))
-	tf.Set(d, "assignment_review_settings", flattenReviewSettings(accessPackageAssignmentPolicy.AccessReviewSettings))
-	tf.Set(d, "question", flattenAssignmentPolicyQuestions(accessPackageAssignmentPolicy.Questions))
+	tf.Set(d, "assignment_review_settings", flattenAssignmentReviewSettings(accessPackageAssignmentPolicy.AccessReviewSettings))
+	tf.Set(d, "question", flattenAccessPackageQuestions(accessPackageAssignmentPolicy.Questions))
 
 	return nil
 }
@@ -462,7 +462,7 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceDa
 			log.Printf("[DEBUG] Access package with Object ID %q was not found - removing from state!", accessPackageId)
 		}
 
-		return msgraph.AccessPackageAssignmentPolicy{}, fmt.Errorf("Error retrieving access package with ID %v: %v", accessPackageId, err)
+		return msgraph.AccessPackageAssignmentPolicy{}, fmt.Errorf("retrieving access package with ID %v: %v", accessPackageId, err)
 	}
 
 	properties := msgraph.AccessPackageAssignmentPolicy{
@@ -471,7 +471,7 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceDa
 		Description:     utils.String(d.Get("description").(string)),
 		CanExtend:       utils.Bool(d.Get("extension_enabled").(bool)),
 		DurationInDays:  utils.Int32(int32(d.Get("duration_in_days").(int))),
-		Questions:       expandAccessPackageAssignmentPolicyQuestions(d.Get("question").([]interface{})),
+		Questions:       expandAccessPackageQuestions(d.Get("question").([]interface{})),
 		AccessPackageId: utils.String(d.Get("access_package_id").(string)),
 	}
 
@@ -479,18 +479,18 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceDa
 	if expirationDateValue != "" {
 		expirationDate, err := time.Parse(time.RFC3339, expirationDateValue)
 		if err != nil {
-			return properties, fmt.Errorf("Error converting expiration date %v to a valide date", expirationDate)
+			return properties, fmt.Errorf("converting expiration date %v to a valid date", expirationDate)
 		}
 
 		properties.ExpirationDateTime = &expirationDate
 	}
 
-	properties.RequestorSettings = buildAssignmentPolicyRequestorSettings(d.Get("requestor_settings").([]interface{}))
-	properties.RequestApprovalSettings = buildAssignmentPolicyApprovalSettings(d.Get("approval_settings").([]interface{}))
+	properties.RequestorSettings = expandRequestorSettings(d.Get("requestor_settings").([]interface{}))
+	properties.RequestApprovalSettings = expandApprovalSettings(d.Get("approval_settings").([]interface{}))
 
-	reviewSettingsStruct, err := buildAssignmentPolicyReviewSettings(d.Get("assignment_review_settings").([]interface{}))
+	reviewSettingsStruct, err := expandAssignmentReviewSettings(d.Get("assignment_review_settings").([]interface{}))
 	if err != nil {
-		return properties, fmt.Errorf("Error building assignment_review_settings configuration: %v", err)
+		return properties, fmt.Errorf("building assignment_review_settings configuration: %v", err)
 	}
 
 	properties.AccessReviewSettings = reviewSettingsStruct

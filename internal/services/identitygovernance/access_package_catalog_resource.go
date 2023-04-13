@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -58,19 +58,15 @@ func accessPackageCatalogResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			"state": {
-				Description: "Has the value published if the access packages are available for management",
-				Type:        schema.TypeString,
+			"externally_visible": {
+				Description: "Whether the access packages in this catalog can be requested by users outside the tenant",
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     msgraph.AccessPackageCatalogStatePublished,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.AccessPackageCatalogStatePublished,
-					msgraph.AccessPackageCatalogStateUnpublished,
-				}, true),
+				Default:     true,
 			},
 
-			"externally_visible": {
-				Description: "Whether the access packages in this catalog can be requested by users outside of the tenant",
+			"published": {
+				Description: "Whether the access packages in this catalog are available for management",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -82,18 +78,23 @@ func accessPackageCatalogResource() *schema.Resource {
 func accessPackageCatalogResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
-	display_name := d.Get("display_name").(string)
+	displayName := d.Get("display_name").(string)
+
+	state := msgraph.AccessPackageCatalogStateUnpublished
+	if d.Get("published").(bool) {
+		state = msgraph.AccessPackageCatalogStatePublished
+	}
 
 	properties := msgraph.AccessPackageCatalog{
-		DisplayName:         utils.String(display_name),
+		DisplayName:         utils.String(displayName),
 		Description:         utils.String(d.Get("description").(string)),
-		State:               d.Get("state").(string),
+		State:               state,
 		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
 	}
 
 	accessPackageCatalog, _, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating access package catalog %q", display_name)
+		return tf.ErrorDiagF(err, "Creating access package catalog %q", displayName)
 	}
 
 	d.SetId(*accessPackageCatalog.ID)
@@ -108,11 +109,16 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *schema.ResourceD
 	tf.LockByName(accessPackageCatalogResourceName, objectId)
 	defer tf.UnlockByName(accessPackageCatalogResourceName, objectId)
 
+	state := msgraph.AccessPackageCatalogStateUnpublished
+	if d.Get("published").(bool) {
+		state = msgraph.AccessPackageCatalogStatePublished
+	}
+
 	properties := msgraph.AccessPackageCatalog{
 		ID:                  utils.String(d.Id()),
 		DisplayName:         utils.String(d.Get("display_name").(string)),
 		Description:         utils.String(d.Get("description").(string)),
-		State:               d.Get("state").(string),
+		State:               state,
 		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
 	}
 
@@ -138,9 +144,14 @@ func accessPackageCatalogResourceRead(ctx context.Context, d *schema.ResourceDat
 		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", objectId)
 	}
 
+	published := false
+	if strings.EqualFold(accessPackageCatalog.State, msgraph.AccessPackageCatalogStatusPublished) {
+		published = true
+	}
+
 	tf.Set(d, "display_name", accessPackageCatalog.DisplayName)
 	tf.Set(d, "description", accessPackageCatalog.Description)
-	tf.Set(d, "state", accessPackageCatalog.State)
+	tf.Set(d, "published", published)
 	tf.Set(d, "externally_visible", accessPackageCatalog.IsExternallyVisible)
 
 	return nil
