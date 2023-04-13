@@ -353,16 +353,16 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Finding user with email alias: %q", mail)
+			return tf.ErrorDiagF(err, "Finding user with mail: %q", mail)
 		}
 		if users == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
 		count := len(*users)
 		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with email: %q", upn)
+			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail", "User not found with email: %q", upn)
+			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
 		}
 		user = (*users)[0]
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
