@@ -15,14 +15,14 @@ type AdministrativeUnitRoleMemberId struct {
 
 func NewAdministrativeUnitRoleMemberID(adminUnitID, roleMemberId string) AdministrativeUnitRoleMemberId {
 	return AdministrativeUnitRoleMemberId{
-		ObjectSubResourceId:    NewObjectSubResourceID(adminUnitID, "member", roleMemberId),
+		ObjectSubResourceId:    NewObjectSubResourceID(adminUnitID, "roleMember", roleMemberId),
 		AdministrativeUnitId:   adminUnitID,
 		ScopedRoleMembershipId: roleMemberId,
 	}
 }
 
 func AdministrativeUnitRoleMemberID(idString string) (*AdministrativeUnitRoleMemberId, error) {
-	id, err := AdministrativeUnitRoleMemberObjectSubResourceID(idString, "member")
+	id, err := AdministrativeUnitRoleMemberObjectSubResourceID(idString, "roleMember")
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse Member ID: %v", err)
 	}

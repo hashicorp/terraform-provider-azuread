@@ -10,7 +10,7 @@ Manages a single directory role assignment scoped to an administrative unit with
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `AdministrativeUnit.ReadWrite.All` and `RoleManagement.ReadWrite.Directory` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires one of the following application roles: `AdministrativeUnit.ReadWrite.All` and `RoleManagement.ReadWrite.Directory`, or `Directory.ReadWrite.All`
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Privileged Role Administrator` or `Global Administrator`
 
@@ -56,8 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 Administrative unit role members can be imported using the object ID of the administrative unit and the unique ID of the role assignment, e.g.
 
 ```shell
-terraform import azuread_administrative_unit_role_member.test 00000000-0000-0000-0000-000000000000/member/ePROZI_iKE653D_d6aoLH4IFHUtHrxtBvJjGx9C96Vln6KeGcIToSI0VIiz_1qpS-2
-terraform import azuread_administrative_unit_role_member.test 00000000-0000-0000-0000-000000000000/member/zX37MRLyF0uvE-xf2WH4B7x-6CPLfudNnxFGj800htpBXqkxW7bITqGb6Rj4kuTuS
+terraform import azuread_administrative_unit_role_member.test 00000000-0000-0000-0000-000000000000/roleMember/zX37MRLyF0uvE-xf2WH4B7x-6CPLfudNnxFGj800htpBXqkxW7bITqGb6Rj4kuTuS
 ```
 
--> This ID format is unique to Terraform and is composed of the Administrative Unit Object ID and the role assignment ID in the format `{AdministrativeUnitObjectID}/member/{RoleAssignmentID}`.
+-> This ID format is unique to Terraform and is composed of the Administrative Unit Object ID and the role assignment ID in the format `{AdministrativeUnitObjectID}/roleMember/{RoleAssignmentID}`.
