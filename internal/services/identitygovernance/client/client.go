@@ -6,12 +6,14 @@ import (
 )
 
 type Client struct {
-	AccessPackageAssignmentPolicyClient  *msgraph.AccessPackageAssignmentPolicyClient
-	AccessPackageCatalogClient           *msgraph.AccessPackageCatalogClient
-	AccessPackageClient                  *msgraph.AccessPackageClient
-	AccessPackageResourceClient          *msgraph.AccessPackageResourceClient
-	AccessPackageResourceRequestClient   *msgraph.AccessPackageResourceRequestClient
-	AccessPackageResourceRoleScopeClient *msgraph.AccessPackageResourceRoleScopeClient
+	AccessPackageAssignmentPolicyClient       *msgraph.AccessPackageAssignmentPolicyClient
+	AccessPackageCatalogClient                *msgraph.AccessPackageCatalogClient
+	AccessPackageCatalogRoleAssignmentsClient *msgraph.EntitlementRoleAssignmentsClient
+	AccessPackageCatalogRoleClient            *msgraph.EntitlementRoleDefinitionsClient
+	AccessPackageClient                       *msgraph.AccessPackageClient
+	AccessPackageResourceClient               *msgraph.AccessPackageResourceClient
+	AccessPackageResourceRequestClient        *msgraph.AccessPackageResourceRequestClient
+	AccessPackageResourceRoleScopeClient      *msgraph.AccessPackageResourceRoleScopeClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -22,6 +24,12 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	accessPackageCatalogClient := msgraph.NewAccessPackageCatalogClient()
 	o.ConfigureClient(&accessPackageCatalogClient.BaseClient)
+
+	accessPackageCatalogRoleAssignmentsClient := msgraph.NewEntitlementRoleAssignmentsClient()
+	o.ConfigureClient(&accessPackageCatalogRoleAssignmentsClient.BaseClient)
+
+	accessPackageCatalogRoleClient := msgraph.NewEntitlementRoleDefinitionsClient()
+	o.ConfigureClient(&accessPackageCatalogRoleClient.BaseClient)
 
 	// Use beta version because it replies more info than v1.0
 	accessPackageClient := msgraph.NewAccessPackageClient()
@@ -44,11 +52,13 @@ func NewClient(o *common.ClientOptions) *Client {
 	accessPackageResourceRoleScopeClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	return &Client{
-		AccessPackageAssignmentPolicyClient:  accessPackageAssignmentPolicyClient,
-		AccessPackageCatalogClient:           accessPackageCatalogClient,
-		AccessPackageClient:                  accessPackageClient,
-		AccessPackageResourceClient:          accessPackageResourceClient,
-		AccessPackageResourceRequestClient:   accessPackageResourceRequestClient,
-		AccessPackageResourceRoleScopeClient: accessPackageResourceRoleScopeClient,
+		AccessPackageAssignmentPolicyClient:       accessPackageAssignmentPolicyClient,
+		AccessPackageCatalogClient:                accessPackageCatalogClient,
+		AccessPackageCatalogRoleAssignmentsClient: accessPackageCatalogRoleAssignmentsClient,
+		AccessPackageCatalogRoleClient:            accessPackageCatalogRoleClient,
+		AccessPackageClient:                       accessPackageClient,
+		AccessPackageResourceClient:               accessPackageResourceClient,
+		AccessPackageResourceRequestClient:        accessPackageResourceRequestClient,
+		AccessPackageResourceRoleScopeClient:      accessPackageResourceRoleScopeClient,
 	}
 }
