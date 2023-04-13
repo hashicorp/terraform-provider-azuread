@@ -785,9 +785,11 @@ const (
 type UserflowAttributeDataType = string
 
 const (
-	UserflowAttributeDataTypeString  UserflowAttributeDataType = "string"
-	UserflowAttributeDataTypeBoolean UserflowAttributeDataType = "boolean"
-	UserflowAttributeDataTypeInt64   UserflowAttributeDataType = "int64"
+	UserflowAttributeDataTypeString           UserflowAttributeDataType = "string"
+	UserflowAttributeDataTypeBoolean          UserflowAttributeDataType = "boolean"
+	UserflowAttributeDataTypeInt64            UserflowAttributeDataType = "int64"
+	UserflowAttributeDataTypeStringCollection UserflowAttributeDataType = "stringCollection"
+	UserflowAttributeDataTypeDateTime         UserflowAttributeDataType = "dateTime"
 )
 
 type IndexType = string
