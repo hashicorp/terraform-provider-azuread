@@ -141,7 +141,7 @@ The following arguments are supported:
 
 !> **Warning** Do not use the `members` property at the same time as the [azuread_group_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/group_member) resource for the same group. Doing so will cause a conflict and group members will be removed.
 
-* `onpremises_group_type` - (Optional) The on-premise group type that the AAD group will be written as, when writeback is enabled. Possible values are `UniversalDistributionGroup`, `UniversalMailEnabledSecurityGroup`, or `UniversalSecurityGroup`.
+* `onpremises_group_type` - (Optional) The on-premises group type that the AAD group will be written as, when writeback is enabled. Possible values are `UniversalDistributionGroup`, `UniversalMailEnabledSecurityGroup`, or `UniversalSecurityGroup`.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the group. Supported object types are users or service principals. By default, the principal being used to execute Terraform is assigned as the sole owner. Groups cannot be created with no owners or have all their owners removed.
 
 -> **Group Ownership**  It's recommended to always specify one or more group owners, including the principal being used to execute Terraform, such as in the example above. When removing group owners, if a user principal has been assigned ownership, the last user cannot be removed as an owner. Microsoft 365 groups are required to always have at least one owner which _must be a user_ (i.e. not a service principal).
@@ -158,7 +158,8 @@ The following arguments are supported:
 
 -> **Group Name Uniqueness** Group names are not unique within Azure Active Directory. Use the `prevent_duplicate_names` argument to check for existing groups if you want to avoid name collisions.
 
-* `writeback_enabled` - (Optional) Whether the group will be written back to the configured on-premises Active Directory.
+* `writeback_enabled` - (Optional) Whether the group will be written back to the configured on-premises Active Directory when Azure AD Connect is used.
+
 ---
 
 `dynamic_membership` block supports the following:
@@ -175,7 +176,6 @@ In addition to all arguments above, the following attributes are exported:
 * `mail` - The SMTP address for the group.
 * `object_id` - The object ID of the group.
 * `onpremises_domain_name` - The on-premises FQDN, also called dnsDomainName, synchronised from the on-premises directory when Azure AD Connect is used.
-* `onpremises_group_type` - The type the group will be written back to on-premises as, when writeback is enabled. One of: UniversalDistributionGroup, UniversalMailEnabledSecurityGroup, UniversalSecurityGroup.
 * `onpremises_netbios_name` - The on-premises NetBIOS name, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_sam_account_name` - The on-premises SAM account name, synchronised from the on-premises directory when Azure AD Connect is used.
 * `onpremises_security_identifier` - The on-premises security identifier (SID), synchronised from the on-premises directory when Azure AD Connect is used.
