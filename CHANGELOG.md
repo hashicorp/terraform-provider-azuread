@@ -9,6 +9,7 @@ FEATURES:
 * **New Resource:** `azuread_access_package_catalog` [GH-903]
 * **New Resource:** `azuread_access_package_resource_catalog_association` [GH-903]
 * **New Resource:** `azuread_access_package_resource_package_association` [GH-903]
+* **New Resource:** `azuread_administrative_unit_role_member` [GH-983]
 
 IMPROVEMENTS:
 
