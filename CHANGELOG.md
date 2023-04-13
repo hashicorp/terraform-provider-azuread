@@ -1,5 +1,15 @@
 # 2.37.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `azuread_access_package` [GH-903]
+* **New Data Source:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package` [GH-903]
+* **New Resource:** `azuread_access_package_assignment_policy` [GH-903]
+* **New Resource:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package_resource_catalog_association` [GH-903]
+* **New Resource:** `azuread_access_package_resource_package_association` [GH-903]
+
 IMPROVEMENTS:
 
 * dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
