@@ -668,8 +668,9 @@ resource "azuread_application" "test" {
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
 
-  description = "Acceptance testing application"
-  notes       = "Testing application"
+  description                  = "Acceptance testing application"
+  notes                        = "Testing application"
+  service_management_reference = "app-for-testing"
 
   marketing_url         = "https://hashitown-%[1]d.com/"
   privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
