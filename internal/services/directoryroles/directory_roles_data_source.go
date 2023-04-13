@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
@@ -26,6 +25,15 @@ func directoryRolesDataSource() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"object_ids": {
 				Description: "The object IDs of the roles",
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+
+			"template_ids": {
+				Description: "The template IDs of the roles",
 				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Schema{
@@ -81,10 +89,12 @@ func directoryRolesDataSourceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	objectIds := make([]string, 0)
+	templateIds := make([]string, 0)
 	roleList := make([]map[string]interface{}, 0)
 
 	for _, r := range *directoryRoles {
 		objectIds = append(objectIds, *r.ID())
+		templateIds = append(templateIds, *r.RoleTemplateId)
 
 		role := make(map[string]interface{})
 		role["description"] = r.Description
@@ -104,6 +114,7 @@ func directoryRolesDataSourceRead(ctx context.Context, d *schema.ResourceData, m
 
 	tf.Set(d, "roles", roleList)
 	tf.Set(d, "object_ids", objectIds)
+	tf.Set(d, "template_ids", templateIds)
 
 	return nil
 }

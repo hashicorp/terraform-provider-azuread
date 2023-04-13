@@ -9,18 +9,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func userResource() *schema.Resource {
@@ -392,6 +391,7 @@ func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, m
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	password := d.Get("password").(string)
 	if password == "" {
@@ -487,7 +487,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if managerId := d.Get("manager_id").(string); managerId != "" {
-		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), managerId); err != nil {
+		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), managerId); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
 		}
 	}
@@ -498,6 +498,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	var passwordPolicies string
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
@@ -576,7 +577,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("manager_id") {
-		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), d.Get("manager_id").(string)); err != nil {
+		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), d.Get("manager_id").(string)); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
 		}
 	}

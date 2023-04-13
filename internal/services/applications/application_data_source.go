@@ -7,15 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationDataSource() *schema.Resource {
@@ -203,6 +202,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"description": {
+				Description: "Description of the application as shown to end users",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        schema.TypeBool,
@@ -269,6 +274,12 @@ func applicationDataSource() *schema.Resource {
 
 			"logo_url": {
 				Description: "CDN URL to the application's logo",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"notes": {
+				Description: "User-specified notes relevant for the management of the application",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -558,6 +569,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))

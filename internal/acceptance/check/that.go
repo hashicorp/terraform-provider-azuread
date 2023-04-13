@@ -8,9 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
@@ -30,7 +29,10 @@ func That(resourceName string) thatType {
 // ExistsInAzure validates that the specified resource exists within Azure
 func (t thatType) ExistsInAzure(testResource types.TestResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client := acceptance.AzureADProvider.Meta().(*clients.Client)
+		client, err := testclient.Build()
+		if err != nil {
+			return fmt.Errorf("building client: %+v", err)
+		}
 		return helpers.ExistsInAzure(client, testResource, t.resourceName)(s)
 	}
 }
@@ -110,8 +112,12 @@ func (t thatWithKeyType) ValidatesWith(validationFunc KeyValidationFunc) resourc
 			}
 		}
 
-		clients := acceptance.AzureADProvider.Meta().(*clients.Client)
-		return validationFunc(clients.StopContext, clients, values)
+		client, err := testclient.Build()
+		if err != nil {
+			return fmt.Errorf("building client: %+v", err)
+		}
+
+		return validationFunc(client.StopContext, client, values)
 	}
 }
 

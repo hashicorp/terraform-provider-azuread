@@ -9,16 +9,16 @@ import (
 
 	"github.com/manicminer/hamilton/internal/utils"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type AccessPackageResourceRequestClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageResourceRequestClient(tenantId string) *AccessPackageResourceRequestClient {
+func NewAccessPackageResourceRequestClient() *AccessPackageResourceRequestClient {
 	return &AccessPackageResourceRequestClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -28,9 +28,8 @@ func (c *AccessPackageResourceRequestClient) List(ctx context.Context, query oda
 		DisablePaging:    query.Top > 0,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
-			Params:      query.Values(),
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
+			Params: query.Values(),
 		},
 	})
 	if err != nil {
@@ -73,8 +72,7 @@ func (c *AccessPackageResourceRequestClient) Create(ctx context.Context, accessP
 		ConsistencyFailureFunc: resourceDoesNotExist,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
 		},
 	})
 
@@ -117,7 +115,6 @@ func (c *AccessPackageResourceRequestClient) Create(ctx context.Context, accessP
 				Params: odata.Query{
 					Filter: fmt.Sprintf("startswith(originId,'%s')", *newAccessPackageResourceRequest.AccessPackageResource.OriginId),
 				}.Values(), // The Resource we made a request to add
-				HasTenantId: true,
 			},
 		})
 		if err != nil {
@@ -160,7 +157,6 @@ func (c *AccessPackageResourceRequestClient) Get(ctx context.Context, id string)
 			Params: odata.Query{
 				Filter: fmt.Sprintf("startswith(id,'%s')", id),
 			}.Values(),
-			HasTenantId: true,
 		},
 	})
 	if err != nil {
@@ -207,8 +203,7 @@ func (c *AccessPackageResourceRequestClient) Delete(ctx context.Context, accessP
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/accessPackageResourceRequests",
 		},
 	})
 	if err != nil {

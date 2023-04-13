@@ -1,12 +1,76 @@
-## 2.34.0 (Unreleased)
+# 2.37.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `azuread_access_package` [GH-903]
+* **New Data Source:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package` [GH-903]
+* **New Resource:** `azuread_access_package_assignment_policy` [GH-903]
+* **New Resource:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package_resource_catalog_association` [GH-903]
+* **New Resource:** `azuread_access_package_resource_package_association` [GH-903]
 
 IMPROVEMENTS:
 
-* **Provider:** All resources will now explicitly use the Microsoft Graph v1.0 API unless stated otherwise in the provider documentation [GH-990]
+* dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
+* `data.azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` attributes [GH-964]
+* `azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` properties [GH-964]
+
+## 2.36.0 (March 03, 2023)
+
+IMPROVEMENTS:
+
+* **Provider:** requests to Microsoft Graph no longer include the tenant ID as part of the URI path ([#1039](https://github.com/hashicorp/terraform-provider-azuread/issues/1039))
 
 BUG FIXES:
 
-* `data.azuread_application_template` - revert a workaround from v2.31.0 and no longer use the beta API for this data source [GH-987]
+* `azuread_group` - work around an API issue that prevented group creation for some configurations where the calling principal is specified as an owner ([#1037](https://github.com/hashicorp/terraform-provider-azuread/issues/1037))
+
+## 2.35.0 (February 24, 2023)
+
+BUG FIXES:
+
+* `azuread_application_federated_identity_credential` - the `audiences` property now only supports a single value due to a breaking API change ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `azuread_group` - only try to set additional fields when explicitly configured, to work around an API bug when application-only permissions are used ([#1028](https://github.com/hashicorp/terraform-provider-azuread/issues/1028))
+* `azuread_service_principal` - resolve an issue where newly created service principals might not be found when specifying `use_existing = true` ([#1025](https://github.com/hashicorp/terraform-provider-azuread/issues/1025))
+
+IMPROVEMENTS:
+
+* **Provider:** support for the `metadata_host` property ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* **Provider:** authentication now uses the `github.com/hashicorp/go-azure-sdk/sdk/auth` package ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* **Provider:** cloud configuration now uses the `github.com/hashicorp/go-azure-sdk/sdk/environments` package ([#1026](https://github.com/hashicorp/terraform-provider-azuread/issues/1026))
+* `data.azuread_application` - support for the `notes` attribute ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `data.azuread_directory_roles` - support for the `template_ids` attribute ([#1011](https://github.com/hashicorp/terraform-provider-azuread/issues/1011))
+* `azuread_application` - support for the `notes` property ([#1027](https://github.com/hashicorp/terraform-provider-azuread/issues/1027))
+* `azuread_group` - support for the `administrative_unit_ids` property ([#984](https://github.com/hashicorp/terraform-provider-azuread/issues/984))
+* `azuread_synchronization_job` - fix a bug where the incorrect API version was used, preventing this resource from working properly ([#1030](https://github.com/hashicorp/terraform-provider-azuread/issues/1030))
+* `azuread_synchronization_secret` - fix a bug where the incorrect API version was used, preventing this resource from working properly ([#1030](https://github.com/hashicorp/terraform-provider-azuread/issues/1030))
+
+## 2.34.1 (February 17, 2023)
+
+BUG FIXES:
+
+* `azuread_administrative_unit` - revert to the Microsoft Graph beta API version to resolve an API error when using this resource ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing creation of new applications ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application` - revert to the Microsoft Graph beta API version to resolve an issue preventing setting the `oauth2_post_response_required` property ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_application_pre_authorized` - revert to the Microsoft Graph beta API version to resolve an issue creating this resource ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_group` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_group_member` - revert to the Microsoft Graph beta API version to resolve an issue when managing group members ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+* `azuread_user` - revert to the Microsoft Graph beta API version to resolve a persistent diff for the `account_enabled` and `show_in_address_list` properties ([#1023](https://github.com/hashicorp/terraform-provider-azuread/issues/1023))
+
+## 2.34.0 (February 16, 2023)
+
+IMPROVEMENTS:
+
+* **Provider:** All resources will now explicitly use the Microsoft Graph v1.0 API unless stated otherwise in the provider documentation ([#990](https://github.com/hashicorp/terraform-provider-azuread/issues/990))
+* `data.azuread_application` - support the `description` attribute ([#991](https://github.com/hashicorp/terraform-provider-azuread/issues/991))
+* `azuread_application` - support app role and scope values up to 249 characters ([#1010](https://github.com/hashicorp/terraform-provider-azuread/issues/1010))
+
+BUG FIXES:
+
+* **Provider:** Support authentication scenarios where the `oid` claim is missing from the access token ([#1014](https://github.com/hashicorp/terraform-provider-azuread/issues/1014))
+* `data.azuread_application_template` - revert a workaround from v2.31.0 and no longer use the beta API for this data source ([#987](https://github.com/hashicorp/terraform-provider-azuread/issues/987))
+* `azuread_application` - work around an API bug where `mapped_claims_enabled` could be set on create when holding the `Application.ReadWrite.OwnedBy` role ([#1008](https://github.com/hashicorp/terraform-provider-azuread/issues/1008))
 
 ## 2.33.0 (January 19, 2023)
 

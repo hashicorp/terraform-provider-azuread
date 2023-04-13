@@ -8,17 +8,17 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type ConnectedOrganizationClient struct {
 	BaseClient Client
 }
 
-func NewConnectedOrganizationClient(tenantId string) *ConnectedOrganizationClient {
+func NewConnectedOrganizationClient() *ConnectedOrganizationClient {
 	return &ConnectedOrganizationClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *ConnectedOrganizationClient) List(ctx context.Context, query odata.Quer
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/connectedOrganizations",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/connectedOrganizations",
 		},
 	})
 	if err != nil {
@@ -67,8 +66,7 @@ func (c *ConnectedOrganizationClient) Create(ctx context.Context, connectedOrgan
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/connectedOrganizations",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/connectedOrganizations",
 		},
 	})
 	if err != nil {
@@ -97,8 +95,7 @@ func (c *ConnectedOrganizationClient) Get(ctx context.Context, id string, query 
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", id),
 		},
 	})
 	if err != nil {
@@ -145,8 +142,7 @@ func (c *ConnectedOrganizationClient) Update(ctx context.Context, connectedOrgan
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", *connectedOrganization.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", *connectedOrganization.ID),
 		},
 	})
 	if err != nil {
@@ -163,8 +159,7 @@ func (c *ConnectedOrganizationClient) Delete(ctx context.Context, id string) (in
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s", id),
 		},
 	})
 	if err != nil {
@@ -255,8 +250,7 @@ func addSponsor(client *Client, ctx context.Context, orgId string, userOrGroupId
 
 	_, status, _, err := client.Post(ctx, PostHttpRequestInput{
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s/$ref", orgId, internalOrExternal),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s/$ref", orgId, internalOrExternal),
 		},
 		ValidStatusCodes: []int{http.StatusNoContent},
 		Body:             body,
@@ -287,8 +281,7 @@ func listSponsors(c *Client, ctx context.Context, query odata.Query, id string, 
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s", id, internalOrExternal),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s", id, internalOrExternal),
 		},
 	})
 	if err != nil {
@@ -327,8 +320,7 @@ func deleteSponsor(c *Client, ctx context.Context, orgId string, id string, exte
 
 	_, status, _, err := c.Delete(ctx, DeleteHttpRequestInput{
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s/%s/$ref", orgId, internalOrExternal, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/connectedOrganizations/%s/%s/%s/$ref", orgId, internalOrExternal, id),
 		},
 		ValidStatusCodes: []int{http.StatusNoContent},
 	})

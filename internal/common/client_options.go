@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-provider-azuread/version"
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -31,8 +31,11 @@ type ClientOptions struct {
 }
 
 func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
+	// this should have already been checked during provider configuration
+	endpoint, _ := o.Environment.MicrosoftGraph.Endpoint()
+	c.Endpoint = *endpoint
+
 	c.Authorizer = o.Authorizer
-	c.Endpoint = o.Environment.MsGraph.Endpoint
 	c.UserAgent = o.userAgent(c.UserAgent)
 
 	if c.RequestMiddlewares == nil {

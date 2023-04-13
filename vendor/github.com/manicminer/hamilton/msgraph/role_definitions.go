@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // RoleDefinitionsClient performs operations on RoleDefinitions.
@@ -16,9 +16,9 @@ type RoleDefinitionsClient struct {
 }
 
 // NewRoleDefinitionsClient returns a new RoleDefinitionsClient
-func NewRoleDefinitionsClient(tenantId string) *RoleDefinitionsClient {
+func NewRoleDefinitionsClient() *RoleDefinitionsClient {
 	return &RoleDefinitionsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *RoleDefinitionsClient) List(ctx context.Context, query odata.Query) (*[
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/roleManagement/directory/roleDefinitions",
-			HasTenantId: true,
+			Entity: "/roleManagement/directory/roleDefinitions",
 		},
 	})
 	if err != nil {
@@ -58,8 +57,7 @@ func (c *RoleDefinitionsClient) Get(ctx context.Context, id string, query odata.
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", id),
 		},
 	})
 	if err != nil {
@@ -93,8 +91,7 @@ func (c *RoleDefinitionsClient) Create(ctx context.Context, roleDefinition Unifi
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/roleManagement/directory/roleDefinitions",
-			HasTenantId: true,
+			Entity: "/roleManagement/directory/roleDefinitions",
 		},
 	})
 	if err != nil {
@@ -129,8 +126,7 @@ func (c *RoleDefinitionsClient) Update(ctx context.Context, roleDefinition Unifi
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", *roleDefinition.ID()),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", *roleDefinition.ID()),
 		},
 	})
 	if err != nil {
@@ -146,8 +142,7 @@ func (c *RoleDefinitionsClient) Delete(ctx context.Context, id string) (int, err
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/directory/roleDefinitions/%s", id),
 		},
 	})
 	if err != nil {

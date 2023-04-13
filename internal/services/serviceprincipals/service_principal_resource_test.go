@@ -7,10 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -236,7 +235,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.noOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
@@ -535,19 +534,19 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
-func (ServicePrincipalResource) noOwners(data acceptance.TestData) string {
+func (r ServicePrincipalResource) noOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-provider "azuread" {}
+%[1]s
 
 resource "azuread_application" "test" {
-  display_name = "acctestServicePrincipal-%[1]d"
+  display_name = "acctestServicePrincipal-%[2]d"
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
   owners         = []
 }
-`, data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
 func (r ServicePrincipalResource) singleOwner(data acceptance.TestData) string {
@@ -644,13 +643,17 @@ func (ServicePrincipalResource) fromApplicationTemplate(data acceptance.TestData
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
   template_id  = "%[2]s"
+  owners       = [data.azuread_client_config.test.object_id]
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
+  owners         = [data.azuread_client_config.test.object_id]
   use_existing   = true
 }
 `, data.RandomInteger, testApplicationTemplateId)

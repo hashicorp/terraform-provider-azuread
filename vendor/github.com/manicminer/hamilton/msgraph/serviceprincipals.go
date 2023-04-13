@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // ServicePrincipalsClient performs operations on Service Principals.
@@ -17,9 +17,9 @@ type ServicePrincipalsClient struct {
 }
 
 // NewServicePrincipalsClient returns a new ServicePrincipalsClient.
-func NewServicePrincipalsClient(tenantId string) *ServicePrincipalsClient {
+func NewServicePrincipalsClient() *ServicePrincipalsClient {
 	return &ServicePrincipalsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *ServicePrincipalsClient) List(ctx context.Context, query odata.Query) (
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/servicePrincipals",
-			HasTenantId: true,
+			Entity: "/servicePrincipals",
 		},
 	})
 	if err != nil {
@@ -83,8 +82,7 @@ func (c *ServicePrincipalsClient) Create(ctx context.Context, servicePrincipal S
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/servicePrincipals",
-			HasTenantId: true,
+			Entity: "/servicePrincipals",
 		},
 	})
 	if err != nil {
@@ -112,8 +110,7 @@ func (c *ServicePrincipalsClient) Get(ctx context.Context, id string, query odat
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s", id),
 		},
 	})
 	if err != nil {
@@ -152,8 +149,7 @@ func (c *ServicePrincipalsClient) Update(ctx context.Context, servicePrincipal S
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s", *servicePrincipal.ID()),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s", *servicePrincipal.ID()),
 		},
 	})
 	if err != nil {
@@ -169,8 +165,7 @@ func (c *ServicePrincipalsClient) Delete(ctx context.Context, id string) (int, e
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s", id),
 		},
 	})
 	if err != nil {
@@ -190,8 +185,7 @@ func (c *ServicePrincipalsClient) ListOwners(ctx context.Context, id string) (*[
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/owners", id),
 		},
 	})
 	if err != nil {
@@ -233,8 +227,7 @@ func (c *ServicePrincipalsClient) GetOwner(ctx context.Context, servicePrincipal
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
 		},
 	})
 	if err != nil {
@@ -292,8 +285,7 @@ func (c *ServicePrincipalsClient) AddOwners(ctx context.Context, servicePrincipa
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkOwnerAlreadyExists,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/$ref", *servicePrincipal.ID()),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/servicePrincipals/%s/owners/$ref", *servicePrincipal.ID()),
 			},
 		})
 		if err != nil {
@@ -336,8 +328,7 @@ func (c *ServicePrincipalsClient) RemoveOwners(ctx context.Context, servicePrinc
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkOwnerGone,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/servicePrincipals/%s/owners/%s/$ref", servicePrincipalId, ownerId),
 			},
 		})
 		if err != nil {
@@ -379,8 +370,7 @@ func (c *ServicePrincipalsClient) AssignClaimsMappingPolicy(ctx context.Context,
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkPolicyAlreadyExists,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies/$ref", *servicePrincipal.ID()),
-				HasTenantId: false,
+				Entity: fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies/$ref", *servicePrincipal.ID()),
 			},
 		})
 		if err != nil {
@@ -398,8 +388,7 @@ func (c *ServicePrincipalsClient) ListClaimsMappingPolicy(ctx context.Context, i
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies", id),
 		},
 	})
 	if err != nil {
@@ -465,8 +454,7 @@ func (c *ServicePrincipalsClient) RemoveClaimsMappingPolicy(ctx context.Context,
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkPolicyStatus,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies/%s/$ref", *servicePrincipal.ID(), policyId),
-				HasTenantId: false,
+				Entity: fmt.Sprintf("/servicePrincipals/%s/claimsMappingPolicies/%s/$ref", *servicePrincipal.ID(), policyId),
 			},
 		})
 		if err != nil {
@@ -485,8 +473,7 @@ func (c *ServicePrincipalsClient) ListGroupMemberships(ctx context.Context, id s
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/transitiveMemberOf", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/transitiveMemberOf", id),
 		},
 	})
 	if err != nil {
@@ -527,8 +514,7 @@ func (c *ServicePrincipalsClient) AddPassword(ctx context.Context, servicePrinci
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK, http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/addPassword", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/addPassword", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -567,8 +553,7 @@ func (c *ServicePrincipalsClient) RemovePassword(ctx context.Context, servicePri
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK, http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/removePassword", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/removePassword", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -592,8 +577,7 @@ func (c *ServicePrincipalsClient) AddTokenSigningCertificate(ctx context.Context
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK, http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/addTokenSigningCertificate", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/addTokenSigningCertificate", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -632,8 +616,7 @@ func (c *ServicePrincipalsClient) SetPreferredTokenSigningKeyThumbprint(ctx cont
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -653,8 +636,7 @@ func (c *ServicePrincipalsClient) ListOwnedObjects(ctx context.Context, id strin
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/ownedObjects", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/ownedObjects", id),
 		},
 	})
 	if err != nil {
@@ -688,8 +670,7 @@ func (c *ServicePrincipalsClient) ListAppRoleAssignments(ctx context.Context, re
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
 		},
 	})
 	if err != nil {
@@ -718,8 +699,7 @@ func (c *ServicePrincipalsClient) RemoveAppRoleAssignment(ctx context.Context, r
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo/%s", resourceId, appRoleAssignmentId),
 		},
 	})
 	if err != nil {
@@ -757,8 +737,7 @@ func (c *ServicePrincipalsClient) AssignAppRoleForResource(ctx context.Context, 
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/appRoleAssignedTo", resourceId),
 		},
 	})
 	if err != nil {
@@ -777,4 +756,126 @@ func (c *ServicePrincipalsClient) AssignAppRoleForResource(ctx context.Context, 
 	}
 
 	return &appRoleAssignment, status, nil
+}
+
+// AssignTokenIssuancePolicy assigns tokenIssuancePolicies to a service principal
+func (c *ServicePrincipalsClient) AssignTokenIssuancePolicy(ctx context.Context, servicePrincipalId string, policies *[]TokenIssuancePolicy) (int, error) {
+	var status int
+
+	if policies == nil {
+		return status, errors.New("cannot update service principal with nil TokenIssuancePolicies")
+	}
+
+	for _, policy := range *policies {
+		// don't fail if an owner already exists
+		checkPolicyAlreadyExists := func(resp *http.Response, o *odata.OData) bool {
+			if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+				return o.Error.Match(odata.ErrorAddedObjectReferencesAlreadyExist)
+			}
+			return false
+		}
+
+		body, err := json.Marshal(DirectoryObject{ODataId: policy.ODataId})
+		if err != nil {
+			return status, fmt.Errorf("json.Marshal(): %v", err)
+		}
+
+		_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+			Body:                   body,
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkPolicyAlreadyExists,
+			Uri: Uri{
+				Entity: fmt.Sprintf("/servicePrincipals/%s/tokenIssuancePolicies/$ref", servicePrincipalId),
+			},
+		})
+		if err != nil {
+			return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Post(): %v", err)
+		}
+	}
+
+	return status, nil
+}
+
+// ListTokenIssuancePolicy retrieves the tokenIssuancePolicies assigned to the specified ServicePrincipal.
+func (c *ServicePrincipalsClient) ListTokenIssuancePolicy(ctx context.Context, servicePrincipalId string) (*[]TokenIssuancePolicy, int, error) {
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/servicePrincipals/%s/tokenIssuancePolicies", servicePrincipalId),
+		},
+	})
+	if err != nil {
+		return nil, status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Get(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var data struct {
+		Policies []TokenIssuancePolicy `json:"value"`
+	}
+
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &data.Policies, status, nil
+}
+
+// RemoveTokenIssuancePolicy removes a tokenIssuancePolicy from a service principal
+func (c *ServicePrincipalsClient) RemoveTokenIssuancePolicy(ctx context.Context, servicePrincipalId string, policyIds *[]string) (int, error) {
+	var status int
+
+	if policyIds == nil {
+		return status, errors.New("cannot remove, nil TokenIssuancePolicyIds")
+	}
+
+	assignedPolicies, _, err := c.ListTokenIssuancePolicy(ctx, servicePrincipalId)
+	if err != nil {
+		return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.ListTokenIssuancePolicy(): %v", err)
+	}
+
+	if len(*assignedPolicies) == 0 {
+		return http.StatusNoContent, nil
+	}
+
+	mapTokenIssuancePolicy := map[string]TokenIssuancePolicy{}
+	for _, v := range *assignedPolicies {
+		mapTokenIssuancePolicy[*v.ID()] = v
+	}
+
+	for _, policyId := range *policyIds {
+
+		// Check if policy is currently assigned
+		_, ok := mapTokenIssuancePolicy[policyId]
+		if !ok {
+			continue
+		}
+
+		checkPolicyStatus := func(resp *http.Response, o *odata.OData) bool {
+			if resp != nil && resp.StatusCode == http.StatusNotFound && o != nil && o.Error != nil {
+				return o.Error.Match(odata.ErrorResourceDoesNotExist)
+			}
+			return false
+		}
+
+		_, status, _, err = c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
+			ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+			ValidStatusCodes:       []int{http.StatusNoContent},
+			ValidStatusFunc:        checkPolicyStatus,
+			Uri: Uri{
+				Entity: fmt.Sprintf("/servicePrincipals/%s/tokenIssuancePolicies/%s/$ref", servicePrincipalId, policyId),
+			},
+		})
+		if err != nil {
+			return status, fmt.Errorf("ServicePrincipalsClient.BaseClient.Delete(): %v", err)
+		}
+	}
+
+	return status, nil
 }

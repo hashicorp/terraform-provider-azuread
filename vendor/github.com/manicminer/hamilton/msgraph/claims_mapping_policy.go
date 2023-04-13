@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type ClaimsMappingPolicyClient struct {
@@ -15,9 +15,9 @@ type ClaimsMappingPolicyClient struct {
 }
 
 // NewClaimsMappingPolicyClient returns a new ClaimsMappingPolicyClient
-func NewClaimsMappingPolicyClient(tenantId string) *ClaimsMappingPolicyClient {
+func NewClaimsMappingPolicyClient() *ClaimsMappingPolicyClient {
 	return &ClaimsMappingPolicyClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -35,8 +35,7 @@ func (c *ClaimsMappingPolicyClient) Create(ctx context.Context, policy ClaimsMap
 		OData:            odata.Query{Metadata: odata.MetadataFull},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/policies/claimsMappingPolicies",
-			HasTenantId: false,
+			Entity: "/policies/claimsMappingPolicies",
 		},
 	})
 	if err != nil {
@@ -66,8 +65,7 @@ func (c *ClaimsMappingPolicyClient) List(ctx context.Context, query odata.Query)
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/policies/claimsMappingPolicies",
-			HasTenantId: false,
+			Entity: "/policies/claimsMappingPolicies",
 		},
 	})
 	if err != nil {
@@ -99,8 +97,7 @@ func (c *ClaimsMappingPolicyClient) Get(ctx context.Context, id string, query od
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/policies/claimsMappingPolicies/%s", id),
-			HasTenantId: false,
+			Entity: fmt.Sprintf("/policies/claimsMappingPolicies/%s", id),
 		},
 	})
 	if err != nil {
@@ -146,8 +143,7 @@ func (c *ClaimsMappingPolicyClient) Update(ctx context.Context, claimsMappingPol
 			http.StatusNoContent,
 		},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/policies/claimsMappingPolicies/%s", claimsMappingPolicyId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/policies/claimsMappingPolicies/%s", claimsMappingPolicyId),
 		},
 	})
 	if err != nil {
@@ -163,8 +159,7 @@ func (c *ClaimsMappingPolicyClient) Delete(ctx context.Context, id string) (int,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/policies/claimsMappingPolicies/%s", id),
-			HasTenantId: false,
+			Entity: fmt.Sprintf("/policies/claimsMappingPolicies/%s", id),
 		},
 	})
 	if err != nil {

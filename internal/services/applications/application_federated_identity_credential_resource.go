@@ -8,19 +8,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationFederatedIdentityCredentialResource() *schema.Resource {
@@ -55,8 +54,11 @@ func applicationFederatedIdentityCredentialResource() *schema.Resource {
 				Description: "List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
 				Type:        schema.TypeList,
 				Required:    true,
+				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
+					MinItems:         1,
+					MaxItems:         1,
 					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},

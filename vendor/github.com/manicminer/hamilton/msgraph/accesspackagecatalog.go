@@ -8,16 +8,16 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type AccessPackageCatalogClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageCatalogClient(tenantId string) *AccessPackageCatalogClient {
+func NewAccessPackageCatalogClient() *AccessPackageCatalogClient {
 	return &AccessPackageCatalogClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *AccessPackageCatalogClient) List(ctx context.Context, query odata.Query
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/catalogs",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/catalogs",
 		},
 	})
 	if err != nil {
@@ -64,8 +63,7 @@ func (c *AccessPackageCatalogClient) Create(ctx context.Context, accessPackageCa
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/catalogs",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/catalogs",
 		},
 	})
 	if err != nil {
@@ -93,8 +91,7 @@ func (c *AccessPackageCatalogClient) Get(ctx context.Context, id string, query o
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", id),
 		},
 	})
 	if err != nil {
@@ -133,8 +130,7 @@ func (c *AccessPackageCatalogClient) Update(ctx context.Context, accessPackageCa
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", *accessPackageCatalog.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", *accessPackageCatalog.ID),
 		},
 	})
 	if err != nil {
@@ -150,8 +146,7 @@ func (c *AccessPackageCatalogClient) Delete(ctx context.Context, id string) (int
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/catalogs/%s", id),
 		},
 	})
 	if err != nil {

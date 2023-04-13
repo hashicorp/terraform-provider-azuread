@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	goerrors "errors"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // NullableString returns a pointer to a StringNullWhenEmpty for use in model structs
@@ -41,6 +41,55 @@ type AccessPackageCatalogType = string
 const (
 	AccessPackageCatalogTypeServiceDefault AccessPackageCatalogType = "ServiceDefault"
 	AccessPackageCatalogTypeUserManaged    AccessPackageCatalogType = "UserManaged"
+)
+
+type AccessPackageCustomExtensionStage = string
+
+const (
+	AccessPackageCustomExtensionStageAssignmentRequestCreated               AccessPackageCustomExtensionStage = "assignmentRequestCreated"
+	AccessPackageCustomExtensionStageAssignmentRequestApproved              AccessPackageCustomExtensionStage = "assignmentRequestApproved"
+	AccessPackageCustomExtensionStageAssignmentRequestGranted               AccessPackageCustomExtensionStage = "assignmentRequestGranted"
+	AccessPackageCustomExtensionStageAssignmentRequestRemoved               AccessPackageCustomExtensionStage = "assignmentRequestRemoved"
+	AccessPackageCustomExtensionStageAssignmentFourteenDaysBeforeExpiration AccessPackageCustomExtensionStage = "assignmentFourteenDaysBeforeExpiration"
+	AccessPackageCustomExtensionStageAssignmentOneDayBeforeExpiration       AccessPackageCustomExtensionStage = "assignmentOneDayBeforeExpiration"
+)
+
+type AccessPackageCustomExtensionHandlerStatus = string
+
+const (
+	AccessPackageCustomExtensionHandlerStatusRequestSent     AccessPackageCustomExtensionHandlerStatus = "requestSent"
+	AccessPackageCustomExtensionHandlerStatusRequestReceived AccessPackageCustomExtensionHandlerStatus = "requestReceived"
+)
+
+type AccessPackageRequestState = string
+
+const (
+	AccessPackageRequestStateSubmitted           AccessPackageRequestState = "submitted"
+	AccessPackageRequestStatePendingApproval     AccessPackageRequestState = "pendingApproval"
+	AccessPackageRequestStateDelivering          AccessPackageRequestState = "delivering"
+	AccessPackageRequestStateDelivered           AccessPackageRequestState = "delievered"
+	AccessPackageRequestStateDeliveryFailed      AccessPackageRequestState = "deliveryFailed"
+	AccessPackageRequestStateDenied              AccessPackageRequestState = "denied"
+	AccessPackageRequestStateScheduled           AccessPackageRequestState = "scheduled"
+	AccessPackageRequestStateCanceled            AccessPackageRequestState = "canceled"
+	AccessPackageRequestStatePartiallyDelievered AccessPackageRequestState = "partiallyDelivered"
+)
+
+type AccessPackageRequestType = string
+
+const (
+	AccessPackageRequestTypeNotSpecified AccessPackageRequestType = "notSpecified"
+	AccessPackageRequestTypeuserAdd      AccessPackageRequestType = "userAdd"
+	AccessPackageRequestTypeUserExtend   AccessPackageRequestType = "UserExtend"
+	AccessPackageRequestTypeUserUpdate   AccessPackageRequestType = "userUpdate"
+	AccessPackageRequestTypeUserRemove   AccessPackageRequestType = "userRemove"
+	AccessPackageRequestTypeAdminAdd     AccessPackageRequestType = "adminAdd"
+	AccessPackageRequestTypeAdminUpdate  AccessPackageRequestType = "adminUpdate"
+	AccessPackageRequestTypeAdminRemove  AccessPackageRequestType = "adminRemove"
+	AccessPackageRequestTypeSystemAdd    AccessPackageRequestType = "systemAdd"
+	AccessPackageRequestTypeSystemUpdate AccessPackageRequestType = "systemUpdate"
+	AccessPackageRequestTypeSystemRemove AccessPackageRequestType = "systemRemove"
+	AccessPackageRequestTypeOnBehalfAdd  AccessPackageRequestType = "onBehalfAdd"
 )
 
 type AccessPackageResourceOriginSystem = string
@@ -327,11 +376,77 @@ const (
 	ConnectedOrganizationStateUnknownFutureValue ConnectedOrganizationState = "unknownFutureValue"
 )
 
+type DaysOfWeekType = string
+
+const (
+	DaysOfWeekTypeSunday    DaysOfWeekType = "sunday"
+	DaysOfWeekTypeMonday    DaysOfWeekType = "monday"
+	DaysOfWeekTypeTuesday   DaysOfWeekType = "tuesday"
+	DaysOfWeekTypeWednesday DaysOfWeekType = "wednesday"
+	DaysOfWeekTypeThursday  DaysOfWeekType = "thursday"
+	DaysOfWeekTypeFriday    DaysOfWeekType = "friday"
+	DaysOfWeekTypeSaturday  DaysOfWeekType = "saturday"
+)
+
 type DelegatedPermissionGrantConsentType = string
 
 const (
 	DelegatedPermissionGrantConsentTypeAllPrincipals DelegatedPermissionGrantConsentType = "AllPrincipals"
 	DelegatedPermissionGrantConsentTypePrincipal     DelegatedPermissionGrantConsentType = "Principal"
+)
+
+type ExpirationPatternType = string
+
+const (
+	ExpirationPatternTypeNotSpecified  ExpirationPatternType = "notSpecified"
+	ExpirationPatternTypeNoExpiration  ExpirationPatternType = "noExpiration"
+	ExpirationPatternTypeAfterDateTime ExpirationPatternType = "afterDateTime"
+	ExpirationPatternTypeAfterDuration ExpirationPatternType = "afterDuration"
+)
+
+type DeploymentProfileAssignmentStatus = string
+
+const (
+	DeploymentProfileAssignmentStatusUnknown                  DeploymentProfileAssignmentStatus = "unknown"
+	DeploymentProfileAssignmentStatusAssignedInSync           DeploymentProfileAssignmentStatus = "assignedInSync"
+	DeploymentProfileAssignmentStatusAssignedOutOfSync        DeploymentProfileAssignmentStatus = "assignedOutOfSync"
+	DeploymentProfileAssignmentStatusAssignedUnknownSyncState DeploymentProfileAssignmentStatus = "assignedUnknownSyncState"
+	DeploymentProfileAssignmentStatusNotAssigned              DeploymentProfileAssignmentStatus = "notAssigned"
+	DeploymentProfileAssignmentStatusPending                  DeploymentProfileAssignmentStatus = "pending"
+	DeploymentProfileAssignmentStatusFailed                   DeploymentProfileAssignmentStatus = "failed"
+)
+
+type DeviceUsageType = string
+
+const (
+	DeviceUsageTypeSingleUser DeviceUsageType = "singleUser"
+	DeviceUsageTypeShared     DeviceUsageType = "shared"
+)
+
+type DeviceAndAppManagementAssignmentFilterType = string
+
+const (
+	DeviceAndAppManagementAssignmentFilterTypeNone    DeviceAndAppManagementAssignmentFilterType = "none"
+	DeviceAndAppManagementAssignmentFilterTypeInclude DeviceAndAppManagementAssignmentFilterType = "include"
+	DeviceAndAppManagementAssignmentFilterTypeExclude DeviceAndAppManagementAssignmentFilterType = "exclude"
+)
+
+type DeviceAndAppManagementAssignmentSource = string
+
+const (
+	DeviceAndAppManagementAssignmentSourceDirect     DeviceAndAppManagementAssignmentSource = "direct"
+	DeviceAndAppManagementAssignmentSourcePolicySets DeviceAndAppManagementAssignmentSource = "policySets"
+)
+
+type EnrollmentState = string
+
+const (
+	EnrollmentStateUnknown      EnrollmentState = "unknown"
+	EnrollmentStateEnrolled     EnrollmentState = "enrolled"
+	EnrollmentStatePendingReset EnrollmentState = "pendingReset"
+	EnrollmentStateFailed       EnrollmentState = "failed"
+	EnrollmentStateNotContacted EnrollmentState = "notContacted"
+	EnrollmentStateBlocked      EnrollmentState = "blocked"
 )
 
 type ExtensionSchemaTargetType = string
@@ -364,6 +479,18 @@ const (
 	FeatureTypeRegistration       FeatureType = "registration"
 	FeatureTypeReset              FeatureType = "reset"
 	FeatureTypeUnknownFutureValue FeatureType = "unknownFutureValue"
+)
+
+type FirstDayOfWeek = string
+
+const (
+	FirstDayOfWeekSunday    FirstDayOfWeek = "sunday"
+	FirstDayOfWeekMonday    FirstDayOfWeek = "monday"
+	FirstDayOfWeekTuesday   FirstDayOfWeek = "tuesday"
+	FirstDayOfWeekWednesday FirstDayOfWeek = "wednesday"
+	FirstDayOfWeekThursday  FirstDayOfWeek = "thursday"
+	FirstDayOfWeekFriday    FirstDayOfWeek = "friday"
+	FirstDayOfWeekSaturday  FirstDayOfWeek = "staturday"
 )
 
 type GroupMembershipRuleProcessingState = string
@@ -538,6 +665,17 @@ const (
 	PreferredSingleSignOnModeSaml         PreferredSingleSignOnMode = "saml"
 )
 
+type RecurrencePatternType = string
+
+const (
+	RecurrencePatternTypeDaily           RecurrencePatternType = "daily"
+	RecurrencePatternTypeWeekly          RecurrencePatternType = "weekly"
+	RecurrencePatternTypeAbsoluteMonthly RecurrencePatternType = "absoluteMonthly"
+	RecurrencePatternTypeRelativeMonthly RecurrencePatternType = "relativeMonthly"
+	RecurrencePatternTypeAbsoluteYearly  RecurrencePatternType = "absoluteYearly"
+	RecurrencePatternTypeRelativeYearly  RecurrencePatternType = "relativeYearly"
+)
+
 type RegistrationAuthMethod = string
 
 const (
@@ -650,4 +788,54 @@ const (
 	UserflowAttributeDataTypeString  UserflowAttributeDataType = "string"
 	UserflowAttributeDataTypeBoolean UserflowAttributeDataType = "boolean"
 	UserflowAttributeDataTypeInt64   UserflowAttributeDataType = "int64"
+)
+
+type IndexType = string
+
+const (
+	IndexTypeFirst  IndexType = "first"
+	IndexTypeSecond IndexType = "second"
+	IndexTypeThird  IndexType = "third"
+	IndexTypeFourth IndexType = "fourth"
+	IndexTypeLast   IndexType = "last"
+)
+
+type WindowsAutopilotDeviceType = string
+
+const (
+	WindowsAutopilotDeviceTypeWindowsPc          WindowsAutopilotDeviceType = "windowsPc"
+	WindowsAutopilotDeviceTypeSurfaceHub2        WindowsAutopilotDeviceType = "surfaceHub2"
+	WindowsAutopilotDeviceTypeHoloLens           WindowsAutopilotDeviceType = "holoLens"
+	WindowsAutopilotDeviceTypeSurfaceHub2S       WindowsAutopilotDeviceType = "surfaceHub2S"
+	WindowsAutopilotDeviceTypeVirtualMachine     WindowsAutopilotDeviceType = "virtualMachine"
+	WindowsAutopilotDeviceTypeUnknownFutureValue WindowsAutopilotDeviceType = "unknownFutureValue"
+)
+
+type WindowsAutopilotDeviceRemediationState = string
+
+const (
+	WindowsAutopilotDeviceRemediationStateUnknown                      WindowsAutopilotDeviceRemediationState = "unknown"
+	WindowsAutopilotDeviceRemediationStateNoRemediationRequired        WindowsAutopilotDeviceRemediationState = "noRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateAutomaticRemediationRequired WindowsAutopilotDeviceRemediationState = "automaticRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateManualRemediationRequired    WindowsAutopilotDeviceRemediationState = "manualRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateUnknownFutureValue           WindowsAutopilotDeviceRemediationState = "unknownFutureValue"
+)
+
+type WindowsAutopilotProfileAssignmentDetailedStatus = string
+
+const (
+	WindowsAutopilotProfileAssignmentDetailedStatusNone                            WindowsAutopilotProfileAssignmentDetailedStatus = "none"
+	WindowsAutopilotProfileAssignmentDetailedStatusHardwareRequirementsNotMet      WindowsAutopilotProfileAssignmentDetailedStatus = "hardwareRequirementsNotMet"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHubProfileNotSupported   WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHubProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusHoloLensProfileNotSupported     WindowsAutopilotProfileAssignmentDetailedStatus = "holoLensProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusWindowsPcProfileNotSupported    WindowsAutopilotProfileAssignmentDetailedStatus = "windowsPcProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHub2SProfileNotSupported WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHub2SProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusUnknownFutureValue              WindowsAutopilotProfileAssignmentDetailedStatus = "unknownFutureValue"
+)
+
+type WindowsUserType = string
+
+const (
+	WindowsUserTypeAdministrator WindowsUserType = "administrator"
+	WindowsUserTypeStandard      WindowsUserType = "standard"
 )

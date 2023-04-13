@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // SignInReports Client performs operations on Sign in reports.
@@ -16,9 +16,9 @@ type SignInReportsClient struct {
 }
 
 // NewSignInReportsClient returns a new SignInReportsClient.
-func NewSignInReportsClient(tenantId string) *SignInReportsClient {
+func NewSignInReportsClient() *SignInReportsClient {
 	return &SignInReportsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -37,8 +37,7 @@ func (c *SignInReportsClient) List(ctx context.Context, query odata.Query) (*[]S
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/auditLogs/signIns",
-			HasTenantId: true,
+			Entity: "/auditLogs/signIns",
 		},
 	})
 	if err != nil {
@@ -68,8 +67,7 @@ func (c *SignInReportsClient) Get(ctx context.Context, id string, query odata.Qu
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/auditLogs/signIns/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/auditLogs/signIns/%s", id),
 		},
 	})
 	if err != nil {

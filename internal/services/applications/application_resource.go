@@ -10,14 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -25,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 const applicationResourceName = "azuread_application"
@@ -349,6 +348,13 @@ func applicationResource() *schema.Resource {
 				Description: "URL of the application's marketing page",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+
+			"notes": {
+				Description:      "User-specified notes relevant for the management of the application",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			// This is a top level attribute because d.SetNewComputed() doesn't work inside a block
@@ -886,7 +892,8 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 
@@ -954,9 +961,19 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
+	api := expandApplicationApi(d.Get("api").([]interface{}))
+
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	var acceptMappedClaims *bool
+	if api.AcceptMappedClaims != nil && *api.AcceptMappedClaims {
+		acceptMappedClaims = api.AcceptMappedClaims
+		api.AcceptMappedClaims = nil
+	}
+
 	// Create a new application
 	properties := msgraph.Application{
-		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
+		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(tempDisplayName),
@@ -970,6 +987,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
@@ -992,7 +1010,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
@@ -1014,7 +1032,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					client.BaseClient.Endpoint, tenantId, ownerId))),
 				Id: &ownerId,
 			}
 
@@ -1056,6 +1074,20 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(err, "Failed to patch application after creating")
 	}
 
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	if acceptMappedClaims != nil {
+		api.AcceptMappedClaims = acceptMappedClaims
+		if _, err := client.Update(ctx, msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.Id,
+			},
+			Api: api,
+		}); err != nil {
+			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
+		}
+	}
+
 	if len(ownersExtra) > 0 {
 		// Add any remaining owners after the application is created
 		app.Owners = &ownersExtra
@@ -1084,6 +1116,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -1141,6 +1174,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		},
 		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                     utils.NullableString(d.Get("notes").(string)),
 		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
@@ -1179,7 +1213,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+						client.BaseClient.Endpoint, tenantId, ownerId))),
 					Id: &ownerId,
 				})
 			}
@@ -1234,6 +1268,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
 	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))

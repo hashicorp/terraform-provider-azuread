@@ -10,11 +10,10 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-retryablehttp"
-
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type ApiVersion string
@@ -52,9 +51,8 @@ type HttpRequestInput interface {
 
 // Uri represents a Microsoft Graph endpoint.
 type Uri struct {
-	Entity      string
-	Params      url.Values
-	HasTenantId bool
+	Entity string
+	Params url.Values
 }
 
 // RetryableErrorHandler ensures that the response is returned after exhausting retries for a request
@@ -67,13 +65,10 @@ func RetryableErrorHandler(resp *http.Response, err error, numTries int) (*http.
 // It can send GET, POST, PUT, PATCH and DELETE requests to Microsoft Graph and is API version and tenant aware.
 type Client struct {
 	// Endpoint is the base endpoint for Microsoft Graph, usually "https://graph.microsoft.com".
-	Endpoint environments.ApiEndpoint
+	Endpoint string
 
 	// ApiVersion is the Microsoft Graph API version to use.
 	ApiVersion ApiVersion
-
-	// TenantId is the tenant ID to use in requests.
-	TenantId string
 
 	// UserAgent is the HTTP user agent string to send in requests.
 	UserAgent string
@@ -97,15 +92,19 @@ type Client struct {
 }
 
 // NewClient returns a new Client configured with the specified API version and tenant ID.
-func NewClient(apiVersion ApiVersion, tenantId string) Client {
+func NewClient(apiVersion ApiVersion) Client {
 	r := retryablehttp.NewClient()
 	r.ErrorHandler = RetryableErrorHandler
 	r.Logger = nil
 
+	var endpoint string
+	if defaultEndpoint, _ := environments.AzurePublic().MicrosoftGraph.Endpoint(); defaultEndpoint != nil {
+		endpoint = *defaultEndpoint
+	}
+
 	return Client{
-		Endpoint:        environments.MsGraphGlobal.Endpoint,
+		Endpoint:        endpoint,
 		ApiVersion:      apiVersion,
-		TenantId:        tenantId,
 		UserAgent:       "Hamilton (Go-http-client/1.1)",
 		HttpClient:      r.StandardClient(),
 		RetryableClient: r,
@@ -119,9 +118,6 @@ func (c Client) buildUri(uri Uri) (string, error) {
 		return "", err
 	}
 	newUrl.Path = "/" + string(c.ApiVersion)
-	if uri.HasTenantId {
-		newUrl.Path = fmt.Sprintf("%s/%s", newUrl.Path, c.TenantId)
-	}
 	newUrl.Path = fmt.Sprintf("%s/%s", newUrl.Path, strings.TrimLeft(uri.Entity, "/"))
 	if uri.Params != nil {
 		newUrl.RawQuery = uri.Params.Encode()
@@ -138,7 +134,7 @@ func (c Client) performRequest(req *http.Request, input HttpRequestInput) (*http
 	req.Header.Add("Content-Type", input.GetContentType())
 
 	if c.Authorizer != nil {
-		token, err := c.Authorizer.Token()
+		token, err := c.Authorizer.Token(req.Context(), req)
 		if err != nil {
 			return nil, status, nil, err
 		}
@@ -396,7 +392,7 @@ func (c Client) Get(ctx context.Context, input GetHttpRequestInput) (*http.Respo
 
 		// Get the next page, recursively
 		nextInput := input
-		nextInput.rawUri = *firstOdata.NextLink
+		nextInput.rawUri = string(*firstOdata.NextLink)
 		nextResp, status, o, err := c.Get(ctx, nextInput)
 		if err != nil {
 			return resp, status, o, err

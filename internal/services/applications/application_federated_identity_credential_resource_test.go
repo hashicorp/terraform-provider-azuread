@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -118,7 +117,7 @@ func (r ApplicationFederatedIdentityCredentialResource) basic(data acceptance.Te
 resource "azuread_application_federated_identity_credential" "test" {
   application_object_id = azuread_application.test.object_id
   display_name          = "hashitown-%[2]s"
-  audiences             = ["api://AzureADTokenExchange"]
+  audiences             = ["api://HashiTownLikesAzureAD"]
   issuer                = "https://tokens.hashitown.net"
   subject               = "%[3]s"
 }
@@ -133,7 +132,7 @@ resource "azuread_application_federated_identity_credential" "test" {
   application_object_id = azuread_application.test.object_id
   display_name          = "hashitown-%[2]s"
   description           = "Funtime tokens for HashiTown"
-  audiences             = ["api://AzureADTokenExchange", "api://HashiTownLikesAzureAD"]
+  audiences             = ["api://HashiTownLikesAzureAD"]
   issuer                = "https://vending.hashitown.net"
   subject               = "%[3]s"
 }

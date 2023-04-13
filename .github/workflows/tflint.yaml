@@ -1,5 +1,9 @@
 ---
 name: Terraform Schema Linting
+
+permissions:
+  contents: read
+
 on:
   pull_request:
     types: ['opened', 'synchronize']
@@ -7,6 +11,10 @@ on:
       - '.github/workflows/tflint.yaml'
       - 'vendor/**'
       - '**.go'
+
+concurrency:
+  group: 'tflint-${{ github.head_ref }}'
+  cancel-in-progress: true
 
 jobs:
   tflint:
@@ -16,7 +24,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version-file: .go-version
+          go-version-file: ./.go-version
       - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make tflint

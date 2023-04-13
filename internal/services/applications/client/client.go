@@ -12,14 +12,16 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	applicationsClient := msgraph.NewApplicationsClient(o.TenantID)
+	applicationsClient := msgraph.NewApplicationsClient()
 	o.ConfigureClient(&applicationsClient.BaseClient)
 
-	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient(o.TenantID)
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+	applicationsClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
+	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient()
 	o.ConfigureClient(&applicationTemplatesClient.BaseClient)
 
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
 	return &Client{

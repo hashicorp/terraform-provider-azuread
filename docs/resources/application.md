@@ -10,7 +10,7 @@ Manages an application registration within Azure Active Directory.
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires the following application role: `Application.ReadWrite.All`
 
 -> It is usually possible to create applications using this resource with just the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property. However, this is not officially supported by the API so if you receive a `403` you need to investigate what API call is failing and add additional permissions as necessary. One commonly needed additional permission is `User.Read.All`, in case you specify additional `owners`.
 
@@ -164,6 +164,7 @@ The following arguments are supported:
 
 * `api` - (Optional) An `api` block as documented below, which configures API related settings for this application.
 * `app_role` - (Optional) A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
+* `description` - (Optional) A description of the application, as shown to end users.
 * `device_only_auth_enabled` - (Optional) Specifies whether this application supports device authentication without a user. Defaults to `false`.
 * `display_name` - (Required) The display name for the application.
 * `fallback_public_client_enabled` - (Optional) Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI. Defaults to `false`.
@@ -175,6 +176,7 @@ The following arguments are supported:
 * `identifier_uris` - (Optional) A set of user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_image` - (Optional) A logo image to upload for the application, as a raw base64-encoded string. The image should be in gif, jpeg or png format. Note that once an image has been uploaded, it is not possible to remove it without replacing it with another image.
 * `marketing_url` - (Optional) URL of the application's marketing page.
+* `notes` - (Optional) User-specified notes relevant for the management of the application.
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.

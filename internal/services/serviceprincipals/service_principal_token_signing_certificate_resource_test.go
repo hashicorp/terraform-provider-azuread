@@ -7,10 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -117,7 +116,7 @@ func (r servicePrincipalTokenSigningCertificateResource) complete(data acceptanc
 
 resource "azuread_service_principal_token_signing_certificate" "test" {
   service_principal_id = azuread_service_principal.test.id
-	display_name         = "CN=acctestTokenSigningCert-%[2]s"
+  display_name         = "CN=acctestTokenSigningCert-%[2]s"
   end_date             = "%[3]s"
 }
 `, r.template(data), data.RandomID, endDate)

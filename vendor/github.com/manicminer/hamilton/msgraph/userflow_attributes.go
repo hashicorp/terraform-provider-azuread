@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // UserFlowAttributesClient performs operations on UserFlowAttributes.
@@ -16,9 +16,9 @@ type UserFlowAttributesClient struct {
 }
 
 // NewUserFlowAttributesClient returns a new UserFlowAttributesClient.
-func NewUserFlowAttributesClient(tenantId string) *UserFlowAttributesClient {
+func NewUserFlowAttributesClient() *UserFlowAttributesClient {
 	return &UserFlowAttributesClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *UserFlowAttributesClient) List(ctx context.Context, query odata.Query) 
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/userFlowAttributes",
-			HasTenantId: true,
+			Entity: "/identity/userFlowAttributes",
 		},
 	})
 	if err != nil {
@@ -68,8 +67,7 @@ func (c *UserFlowAttributesClient) Create(ctx context.Context, userFlowAttribute
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/userFlowAttributes",
-			HasTenantId: true,
+			Entity: "/identity/userFlowAttributes",
 		},
 	})
 	if err != nil {
@@ -97,8 +95,7 @@ func (c *UserFlowAttributesClient) Get(ctx context.Context, id string, query oda
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/userFlowAttributes/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/userFlowAttributes/%s", id),
 		},
 	})
 	if err != nil {
@@ -142,8 +139,7 @@ func (c *UserFlowAttributesClient) Update(ctx context.Context, userflowAttribute
 			http.StatusNoContent,
 		},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/userFlowAttributes//%s", userflowID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/userFlowAttributes//%s", userflowID),
 		},
 	})
 	if err != nil {
@@ -159,8 +155,7 @@ func (c *UserFlowAttributesClient) Delete(ctx context.Context, id string) (int, 
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/userFlowAttributes/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/userFlowAttributes/%s", id),
 		},
 	})
 	if err != nil {

@@ -6,12 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
@@ -36,16 +35,16 @@ func TestAccProvider_cliAuth(t *testing.T) {
 	// Support only Azure CLI authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 
-			EnableAzureCliToken: true,
+			EnableAuthenticatingUsingAzureCLI: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -74,19 +73,19 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 	// Support only client certificate authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
-			EnableClientCertAuth: true,
-			ClientCertPath:       d.Get("client_certificate_path").(string),
-			ClientCertPassword:   d.Get("client_certificate_password").(string),
+			EnableAuthenticatingUsingClientCertificate: true,
+			ClientCertificatePath:                      d.Get("client_certificate_path").(string),
+			ClientCertificatePassword:                  d.Get("client_certificate_password").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -124,19 +123,19 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 		}
 
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
-			EnableClientCertAuth: true,
-			ClientCertData:       certData,
-			ClientCertPassword:   d.Get("client_certificate_password").(string),
+			EnableAuthenticatingUsingClientCertificate: true,
+			ClientCertificateData:                      certData,
+			ClientCertificatePassword:                  d.Get("client_certificate_password").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -165,18 +164,18 @@ func TestAccProvider_clientSecretAuth(t *testing.T) {
 	// Support only client secret authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
-			EnableClientSecretAuth: true,
-			ClientSecret:           d.Get("client_secret").(string),
+			EnableAuthenticatingUsingClientSecret: true,
+			ClientSecret:                          d.Get("client_secret").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -198,6 +197,9 @@ func TestAccProvider_genericOidcAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("TF_ACC not set")
 	}
+	if os.Getenv("ARM_OIDC_TOKEN") == "" {
+		t.Skip("ARM_OIDC_TOKEN not set")
+	}
 
 	provider := AzureADProvider()
 	ctx := context.Background()
@@ -205,7 +207,7 @@ func TestAccProvider_genericOidcAuth(t *testing.T) {
 	// Support only oidc authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
@@ -215,13 +217,13 @@ func TestAccProvider_genericOidcAuth(t *testing.T) {
 			return nil, diag.FromErr(err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
-			EnableClientFederatedAuth: true,
-			FederatedAssertion:        idToken,
+			EnableAuthenticationUsingOIDC: true,
+			OIDCAssertionToken:            idToken,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -243,6 +245,12 @@ func TestAccProvider_githubOidcAuth(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("TF_ACC not set")
 	}
+	if os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL") == "" {
+		t.Skip("ACTIONS_ID_TOKEN_REQUEST_URL not set")
+	}
+	if os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN") == "" {
+		t.Skip("ACTIONS_ID_TOKEN_REQUEST_TOKEN not set")
+	}
 
 	provider := AzureADProvider()
 	ctx := context.Background()
@@ -250,19 +258,19 @@ func TestAccProvider_githubOidcAuth(t *testing.T) {
 	// Support only oidc authentication
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		envName := d.Get("environment").(string)
-		env, err := environments.EnvironmentFromString(envName)
+		env, err := environments.FromName(envName)
 		if err != nil {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Config{
-			Environment: env,
+		authConfig := &auth.Credentials{
+			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
 			ClientID:    d.Get("client_id").(string),
 
-			EnableGitHubOIDCAuth: true,
-			IDTokenRequestToken:  d.Get("oidc_request_token").(string),
-			IDTokenRequestURL:    d.Get("oidc_request_url").(string),
+			EnableAuthenticationUsingGitHubOIDC: true,
+			GitHubOIDCTokenRequestToken:         d.Get("oidc_request_token").(string),
+			GitHubOIDCTokenRequestURL:           d.Get("oidc_request_url").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -283,11 +291,7 @@ func TestAccProvider_githubOidcAuth(t *testing.T) {
 func testCheckProvider(provider *schema.Provider) (errs []error) {
 	client := provider.Meta().(*clients.Client)
 
-	if client.Environment.AzureADEndpoint == "" {
-		errs = append(errs, fmt.Errorf("AzureADEndpoint was empty in client.Environment"))
-	}
-
-	if client.Environment.MsGraph.Endpoint == "" {
+	if endpoint, ok := client.Environment.MicrosoftGraph.Endpoint(); !ok || *endpoint == "" {
 		errs = append(errs, fmt.Errorf("MsGraphEndpoint was empty in client.Environment"))
 	}
 
@@ -299,6 +303,10 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 		errs = append(errs, fmt.Errorf("client.TenantID was empty"))
 	}
 
+	if client.ObjectID == "" {
+		errs = append(errs, fmt.Errorf("client.ObjectID was empty"))
+	}
+
 	if client.Claims.TenantId == "" {
 		errs = append(errs, fmt.Errorf("TenantId was not populated in client.Claims"))
 	}
@@ -307,5 +315,5 @@ func testCheckProvider(provider *schema.Provider) (errs []error) {
 		errs = append(errs, fmt.Errorf("ObjectId was not populated in client.Claims"))
 	}
 
-	return
+	return //nolint:nakedret
 }

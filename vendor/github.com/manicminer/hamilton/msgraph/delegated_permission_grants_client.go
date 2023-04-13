@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // DelegatedPermissionGrantsClient performs operations on DelegatedPermissionGrants.
@@ -17,9 +17,9 @@ type DelegatedPermissionGrantsClient struct {
 }
 
 // NewDelegatedPermissionGrantsClient returns a new DelegatedPermissionGrantsClient
-func NewDelegatedPermissionGrantsClient(tenantId string) *DelegatedPermissionGrantsClient {
+func NewDelegatedPermissionGrantsClient() *DelegatedPermissionGrantsClient {
 	return &DelegatedPermissionGrantsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -29,8 +29,7 @@ func (c *DelegatedPermissionGrantsClient) List(ctx context.Context, query odata.
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/oauth2PermissionGrants",
-			HasTenantId: true,
+			Entity: "/oauth2PermissionGrants",
 		},
 	})
 	if err != nil {
@@ -82,8 +81,7 @@ func (c *DelegatedPermissionGrantsClient) Create(ctx context.Context, delegatedP
 		ConsistencyFailureFunc: consistencyFunc,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/oauth2PermissionGrants",
-			HasTenantId: true,
+			Entity: "/oauth2PermissionGrants",
 		},
 	})
 	if err != nil {
@@ -110,8 +108,7 @@ func (c *DelegatedPermissionGrantsClient) Get(ctx context.Context, id string, qu
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/oauth2PermissionGrants/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/oauth2PermissionGrants/%s", id),
 		},
 	})
 	if err != nil {
@@ -150,8 +147,7 @@ func (c *DelegatedPermissionGrantsClient) Update(ctx context.Context, delegatedP
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/oauth2PermissionGrants/%s", *delegatedPermissionGrant.Id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/oauth2PermissionGrants/%s", *delegatedPermissionGrant.Id),
 		},
 	})
 	if err != nil {
@@ -167,8 +163,7 @@ func (c *DelegatedPermissionGrantsClient) Delete(ctx context.Context, id string)
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/oauth2PermissionGrants/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/oauth2PermissionGrants/%s", id),
 		},
 	})
 	if err != nil {

@@ -15,9 +15,9 @@ type IdentityProvidersClient struct {
 }
 
 // NewIdentityProvidersClient returns a new IdentityProvidersClient
-func NewIdentityProvidersClient(tenantId string) *IdentityProvidersClient {
+func NewIdentityProvidersClient() *IdentityProvidersClient {
 	return &IdentityProvidersClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -26,8 +26,7 @@ func (c *IdentityProvidersClient) List(ctx context.Context) (*[]IdentityProvider
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/identityProviders",
-			HasTenantId: true,
+			Entity: "/identity/identityProviders",
 		},
 	})
 	if err != nil {
@@ -63,8 +62,7 @@ func (c *IdentityProvidersClient) Create(ctx context.Context, provider IdentityP
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identity/identityProviders",
-			HasTenantId: true,
+			Entity: "/identity/identityProviders",
 		},
 	})
 	if err != nil {
@@ -91,8 +89,7 @@ func (c *IdentityProvidersClient) Get(ctx context.Context, id string) (*Identity
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/identityProviders/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/identityProviders/%s", id),
 		},
 	})
 	if err != nil {
@@ -131,8 +128,7 @@ func (c *IdentityProvidersClient) Update(ctx context.Context, provider IdentityP
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/identityProviders/%s", *provider.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/identityProviders/%s", *provider.ID),
 		},
 	})
 	if err != nil {
@@ -148,8 +144,7 @@ func (c *IdentityProvidersClient) Delete(ctx context.Context, id string) (int, e
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identity/identityProviders/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identity/identityProviders/%s", id),
 		},
 	})
 	if err != nil {
@@ -164,8 +159,7 @@ func (c *IdentityProvidersClient) ListAvailableProviderTypes(ctx context.Context
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identity/identityProviders/availableProviderTypes",
-			HasTenantId: true,
+			Entity: "/identity/identityProviders/availableProviderTypes",
 		},
 	})
 	if err != nil {
