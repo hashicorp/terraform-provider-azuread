@@ -6,10 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -152,6 +151,21 @@ func TestAccGroup_dynamicMembership(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.dynamicMembership(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_callerOwner(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withCallerAsOwner(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -466,6 +480,68 @@ func TestAccGroup_administrativeUnit(t *testing.T) {
 	})
 }
 
+func TestAccGroup_writeback(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.withWriteback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.basic(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.withWriteback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_writebackUnified(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalDistributionGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalDistributionGroup"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unified(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.unifiedWithWriteback(data, "UniversalMailEnabledSecurityGroup"),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalMailEnabledSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
@@ -604,6 +680,23 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
+func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onPremisesGroupType string) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  description      = "Please delete me as this is a.test.AD group!"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctest.Group-%[1]d"
+  security_enabled = true
+  theme            = "Pink"
+
+  writeback_enabled     = true
+  onpremises_group_type = %[2]q
+}
+`, data.RandomInteger, onPremisesGroupType)
+}
+
 func (GroupResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "test" {
@@ -713,6 +806,18 @@ resource "azuread_group" "test" {
   owners           = [azuread_user.testA.object_id]
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
+}
+
+func (GroupResource) withCallerAsOwner(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_client_config" "test" {}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  owners           = [data.azuread_client_config.test.object_id]
+}
+`, data.RandomInteger)
 }
 
 func (GroupResource) withServicePrincipalOwner(data acceptance.TestData) string {
@@ -961,17 +1066,17 @@ resource "azuread_group" "test" {
 func (r GroupResource) administrativeUnits(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_administrative_unit" "test2" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_group" "test" {
-	display_name     = "acctestGroup-%[1]d"
-	security_enabled = true
-	administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
+  display_name            = "acctestGroup-%[1]d"
+  security_enabled        = true
+  administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
 }
 `, data.RandomInteger, data.RandomInteger)
 }
@@ -979,16 +1084,26 @@ resource "azuread_group" "test" {
 func (r GroupResource) administrativeUnitsWithoutAssociation(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_administrative_unit" "test" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_administrative_unit" "test2" {
-	display_name = "acctestGroup-administrative-unit-%[1]d"
+  display_name = "acctestGroup-administrative-unit-%[1]d"
 }
 
 resource "azuread_group" "test" {
-	display_name     = "acctestGroup-%[1]d"
-	security_enabled = true
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
 }
 `, data.RandomInteger, data.RandomInteger)
+}
+
+func (GroupResource) withWriteback(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name      = "acctestGroup-%[1]d"
+  security_enabled  = true
+  writeback_enabled = true
+}
+`, data.RandomInteger)
 }

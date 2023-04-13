@@ -10,14 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -25,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 const applicationResourceName = "azuread_application"
@@ -894,6 +893,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 
@@ -1010,7 +1010,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
@@ -1032,7 +1032,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					client.BaseClient.Endpoint, tenantId, ownerId))),
 				Id: &ownerId,
 			}
 
@@ -1116,6 +1116,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -1212,7 +1213,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+						client.BaseClient.Endpoint, tenantId, ownerId))),
 					Id: &ownerId,
 				})
 			}

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func servicePrincipalClaimsMappingPolicyAssignmentResource() *schema.Resource {
@@ -47,6 +47,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *schema.Resource {
 
 func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	policyId := d.Get("claims_mapping_policy_id").(string)
 
@@ -58,7 +59,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 			{
 				DirectoryObject: msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, policyId))),
+						client.BaseClient.Endpoint, tenantId, policyId))),
 					Id: &policyId,
 				},
 			},

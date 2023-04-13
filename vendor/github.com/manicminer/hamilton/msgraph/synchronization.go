@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // SynchronizationJobClient performs operations on SynchronizationJobs.
@@ -16,9 +16,9 @@ type SynchronizationJobClient struct {
 }
 
 // NewSynchronizationJobClient returns a new SynchronizationJobClient
-func NewSynchronizationJobClient(tenantId string) *SynchronizationJobClient {
+func NewSynchronizationJobClient() *SynchronizationJobClient {
 	return &SynchronizationJobClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -37,8 +37,7 @@ func (c *SynchronizationJobClient) List(ctx context.Context, servicePrincipalId 
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -67,8 +66,7 @@ func (c *SynchronizationJobClient) Get(ctx context.Context, id string, servicePr
 		ValidStatusCodes:       []int{http.StatusOK},
 		ConsistencyFailureFunc: ServicePrincipalDoesNotExistConsistency,
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -95,8 +93,7 @@ func (c *SynchronizationJobClient) GetSecrets(ctx context.Context, servicePrinci
 		ValidStatusCodes:       []int{http.StatusOK},
 		ConsistencyFailureFunc: ServicePrincipalDoesNotExistConsistency,
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/secrets", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/secrets", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -130,8 +127,7 @@ func (c *SynchronizationJobClient) SetSecrets(ctx context.Context, synchronizati
 		ConsistencyFailureFunc: ServicePrincipalDoesNotExistConsistency,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/secrets", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/secrets", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -161,8 +157,7 @@ func (c *SynchronizationJobClient) Create(ctx context.Context, synchronizationJo
 		ConsistencyFailureFunc: ServicePrincipalDoesNotExistConsistency,
 		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs", servicePrincipalId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs", servicePrincipalId),
 		},
 	})
 	if err != nil {
@@ -190,8 +185,7 @@ func (c *SynchronizationJobClient) Start(ctx context.Context, id string, service
 		ConsistencyFailureFunc: ConflictConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/start", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/start", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -212,8 +206,7 @@ func (c *SynchronizationJobClient) Delete(ctx context.Context, id string, servic
 		ConsistencyFailureFunc: ConflictConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -230,8 +223,7 @@ func (c *SynchronizationJobClient) Pause(ctx context.Context, id string, service
 		ConsistencyFailureFunc: ConflictConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/pause", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/pause", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -260,8 +252,7 @@ func (c *SynchronizationJobClient) Restart(ctx context.Context, id string, synch
 		Body:                   body,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/restart", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/restart", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -288,10 +279,9 @@ func (c *SynchronizationJobClient) ProvisionOnDemand(ctx context.Context, id str
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
 		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		ValidStatusCodes: []int{http.StatusCreated, http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/provisionOnDemand", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/provisionOnDemand", servicePrincipalId, id),
 		},
 	})
 	if err != nil {
@@ -319,8 +309,7 @@ func (c *SynchronizationJobClient) ValidateCredentials(ctx context.Context, id s
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/validateCredentials", servicePrincipalId, id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/servicePrincipals/%s/synchronization/jobs/%s/validateCredentials", servicePrincipalId, id),
 		},
 	})
 	if err != nil {

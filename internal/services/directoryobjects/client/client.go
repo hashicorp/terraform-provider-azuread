@@ -1,9 +1,8 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
@@ -11,7 +10,7 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
 	return &Client{

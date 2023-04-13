@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // ApplicationTemplatesClient performs operations on ApplicationTemplates.
@@ -17,9 +17,9 @@ type ApplicationTemplatesClient struct {
 }
 
 // NewApplicationTemplatesClient returns a new ApplicationTemplatesClient
-func NewApplicationTemplatesClient(tenantId string) *ApplicationTemplatesClient {
+func NewApplicationTemplatesClient() *ApplicationTemplatesClient {
 	return &ApplicationTemplatesClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *ApplicationTemplatesClient) List(ctx context.Context, query odata.Query
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/applicationTemplates",
-			HasTenantId: true,
+			Entity: "/applicationTemplates",
 		},
 	})
 	if err != nil {
@@ -60,8 +59,7 @@ func (c *ApplicationTemplatesClient) Get(ctx context.Context, id string, query o
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applicationTemplates/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applicationTemplates/%s", id),
 		},
 	})
 	if err != nil {
@@ -100,8 +98,7 @@ func (c *ApplicationTemplatesClient) Instantiate(ctx context.Context, applicatio
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applicationTemplates/%s/instantiate", *applicationTemplate.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applicationTemplates/%s/instantiate", *applicationTemplate.ID),
 		},
 	})
 	if err != nil {

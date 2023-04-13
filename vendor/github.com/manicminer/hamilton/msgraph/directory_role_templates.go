@@ -14,9 +14,9 @@ type DirectoryRoleTemplatesClient struct {
 }
 
 // NewDirectoryRoleTemplatesClient returns a new DirectoryRoleTemplatesClient
-func NewDirectoryRoleTemplatesClient(tenantId string) *DirectoryRoleTemplatesClient {
+func NewDirectoryRoleTemplatesClient() *DirectoryRoleTemplatesClient {
 	return &DirectoryRoleTemplatesClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -25,8 +25,7 @@ func (c *DirectoryRoleTemplatesClient) List(ctx context.Context) (*[]DirectoryRo
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/directoryRoleTemplates",
-			HasTenantId: true,
+			Entity: "/directoryRoleTemplates",
 		},
 	})
 	if err != nil {
@@ -55,8 +54,7 @@ func (c *DirectoryRoleTemplatesClient) Get(ctx context.Context, id string) (*Dir
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryRoleTemplates/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryRoleTemplates/%s", id),
 		},
 	})
 	if err != nil {

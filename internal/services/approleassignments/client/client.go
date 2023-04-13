@@ -1,9 +1,8 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
@@ -12,10 +11,10 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	appRoleAssignedToClient := msgraph.NewAppRoleAssignedToClient(o.TenantID)
+	appRoleAssignedToClient := msgraph.NewAppRoleAssignedToClient()
 	o.ConfigureClient(&appRoleAssignedToClient.BaseClient)
 
-	servicePrincipalsClient := msgraph.NewServicePrincipalsClient(o.TenantID)
+	servicePrincipalsClient := msgraph.NewServicePrincipalsClient()
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
 	return &Client{

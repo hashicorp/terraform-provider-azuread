@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // DomainsClient performs operations on Domains.
@@ -16,9 +16,9 @@ type DomainsClient struct {
 }
 
 // NewDomainsClient returns a new DomainsClient.
-func NewDomainsClient(tenantId string) *DomainsClient {
+func NewDomainsClient() *DomainsClient {
 	return &DomainsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -29,8 +29,7 @@ func (c *DomainsClient) List(ctx context.Context, query odata.Query) (*[]Domain,
 		ValidStatusCodes: []int{http.StatusOK},
 		OData:            query,
 		Uri: Uri{
-			Entity:      "/domains",
-			HasTenantId: true,
+			Entity: "/domains",
 		},
 	})
 	if err != nil {
@@ -62,8 +61,7 @@ func (c *DomainsClient) Get(ctx context.Context, id string, query odata.Query) (
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/domains/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/domains/%s", id),
 		},
 	})
 	if err != nil {

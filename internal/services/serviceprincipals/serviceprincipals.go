@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func expandSamlSingleSignOn(in []interface{}) *msgraph.SamlSingleSignOnSettings {
@@ -111,8 +111,7 @@ func findByAppIdWithTimeout(ctx context.Context, timeout time.Duration, client *
 		OData:                  odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)},
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: msgraph.Uri{
-			Entity:      "/servicePrincipals",
-			HasTenantId: true,
+			Entity: "/servicePrincipals",
 		},
 	})
 	if err != nil {

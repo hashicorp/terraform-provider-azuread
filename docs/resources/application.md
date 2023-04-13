@@ -10,7 +10,7 @@ Manages an application registration within Azure Active Directory.
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires the following application role: `Application.ReadWrite.All`
 
 -> It is usually possible to create applications using this resource with just the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property. However, this is not officially supported by the API so if you receive a `403` you need to investigate what API call is failing and add additional permissions as necessary. One commonly needed additional permission is `User.Read.All`, in case you specify additional `owners`.
 

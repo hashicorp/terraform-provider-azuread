@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -353,6 +353,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 
 	appId := d.Get("application_id").(string)
 
@@ -424,7 +425,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
@@ -446,7 +447,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+					client.BaseClient.Endpoint, tenantId, ownerId))),
 				Id: &ownerId,
 			}
 
@@ -507,6 +508,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *schema.ResourceData,
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	var tags []string
 	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
@@ -537,13 +539,13 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+	if d.HasChange("owners") {
 		owners, _, err := client.ListOwners(ctx, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
@@ -553,7 +555,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
+						client.BaseClient.Endpoint, tenantId, ownerId))),
 					Id: &ownerId,
 				})
 			}

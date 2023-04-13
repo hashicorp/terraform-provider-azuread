@@ -14,19 +14,19 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
-	directoryRolesClient := msgraph.NewDirectoryRolesClient(o.TenantID)
+	directoryRolesClient := msgraph.NewDirectoryRolesClient()
 	o.ConfigureClient(&directoryRolesClient.BaseClient)
 
-	directoryRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient(o.TenantID)
+	directoryRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient()
 	o.ConfigureClient(&directoryRoleTemplatesClient.BaseClient)
 
-	roleAssignmentsClient := msgraph.NewRoleAssignmentsClient(o.TenantID)
+	roleAssignmentsClient := msgraph.NewRoleAssignmentsClient()
 	o.ConfigureClient(&roleAssignmentsClient.BaseClient)
 
-	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient(o.TenantID)
+	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient()
 	o.ConfigureClient(&roleDefinitionsClient.BaseClient)
 
 	return &Client{

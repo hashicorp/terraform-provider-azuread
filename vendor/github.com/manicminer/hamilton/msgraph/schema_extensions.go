@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // SchemaExtensionsClient performs operations on Schema Extensions.
@@ -16,9 +16,9 @@ type SchemaExtensionsClient struct {
 }
 
 // NewSchemaExtensionsClient returns a new SchemaExtensionsClient.
-func NewSchemaExtensionsClient(tenantId string) *SchemaExtensionsClient {
+func NewSchemaExtensionsClient() *SchemaExtensionsClient {
 	return &SchemaExtensionsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -29,8 +29,7 @@ func (c *SchemaExtensionsClient) List(ctx context.Context, query odata.Query) (*
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/schemaExtensions",
-			HasTenantId: true,
+			Entity: "/schemaExtensions",
 		},
 	})
 	if err != nil {
@@ -60,8 +59,7 @@ func (c *SchemaExtensionsClient) Get(ctx context.Context, id string, query odata
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/schemaExtensions/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/schemaExtensions/%s", id),
 		},
 	})
 	if err != nil {
@@ -96,8 +94,7 @@ func (c *SchemaExtensionsClient) Update(ctx context.Context, schemaExtension Sch
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/schemaExtensions/%s", *schemaExtension.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/schemaExtensions/%s", *schemaExtension.ID),
 		},
 	})
 	if err != nil {
@@ -120,8 +117,7 @@ func (c *SchemaExtensionsClient) Create(ctx context.Context, schemaExtension Sch
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/schemaExtensions",
-			HasTenantId: true,
+			Entity: "/schemaExtensions",
 		},
 	})
 	if err != nil {
@@ -148,8 +144,7 @@ func (c *SchemaExtensionsClient) Delete(ctx context.Context, id string) (int, er
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/schemaExtensions/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/schemaExtensions/%s", id),
 		},
 	})
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // EntitlementRoleAssignmentsClient performs operations on RoleAssignments.
@@ -16,9 +16,9 @@ type EntitlementRoleAssignmentsClient struct {
 }
 
 // NewEntitlementRoleAssignmentsClient returns a new EntitlementRoleAssignmentsClient
-func NewEntitlementRoleAssignmentsClient(tenantId string) *EntitlementRoleAssignmentsClient {
+func NewEntitlementRoleAssignmentsClient() *EntitlementRoleAssignmentsClient {
 	return &EntitlementRoleAssignmentsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *EntitlementRoleAssignmentsClient) List(ctx context.Context, query odata
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/roleManagement/entitlementManagement/roleAssignments",
-			HasTenantId: true,
+			Entity: "/roleManagement/entitlementManagement/roleAssignments",
 		},
 	})
 	if err != nil {
@@ -59,8 +58,7 @@ func (c *EntitlementRoleAssignmentsClient) Get(ctx context.Context, id string, q
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/entitlementManagement/roleAssignments/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/entitlementManagement/roleAssignments/%s", id),
 		},
 	})
 	if err != nil {
@@ -94,8 +92,7 @@ func (c *EntitlementRoleAssignmentsClient) Create(ctx context.Context, roleAssig
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/roleManagement/entitlementManagement/roleAssignments",
-			HasTenantId: true,
+			Entity: "/roleManagement/entitlementManagement/roleAssignments",
 		},
 	})
 	if err != nil {
@@ -122,8 +119,7 @@ func (c *EntitlementRoleAssignmentsClient) Delete(ctx context.Context, id string
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/roleManagement/entitlementManagement/roleAssignments/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/roleManagement/entitlementManagement/roleAssignments/%s", id),
 		},
 	})
 	if err != nil {

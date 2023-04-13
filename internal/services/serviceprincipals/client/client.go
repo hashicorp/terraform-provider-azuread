@@ -13,17 +13,20 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	delegatedPermissionGrantsClient := msgraph.NewDelegatedPermissionGrantsClient(o.TenantID)
+	delegatedPermissionGrantsClient := msgraph.NewDelegatedPermissionGrantsClient()
 	o.ConfigureClient(&delegatedPermissionGrantsClient.BaseClient)
 
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
-	servicePrincipalsClient := msgraph.NewServicePrincipalsClient(o.TenantID)
+	servicePrincipalsClient := msgraph.NewServicePrincipalsClient()
 	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
 
-	synchronizationJobClient := msgraph.NewSynchronizationJobClient(o.TenantID)
+	synchronizationJobClient := msgraph.NewSynchronizationJobClient()
 	o.ConfigureClient(&synchronizationJobClient.BaseClient)
+
+	// Synchronization doesn't yet exist in v1.0
+	synchronizationJobClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	return &Client{
 		DelegatedPermissionGrantsClient: delegatedPermissionGrantsClient,
