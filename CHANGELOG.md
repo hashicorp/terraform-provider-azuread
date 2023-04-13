@@ -1,3 +1,23 @@
+# 2.37.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `azuread_access_package` [GH-903]
+* **New Data Source:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package` [GH-903]
+* **New Resource:** `azuread_access_package_assignment_policy` [GH-903]
+* **New Resource:** `azuread_access_package_catalog` [GH-903]
+* **New Resource:** `azuread_access_package_resource_catalog_association` [GH-903]
+* **New Resource:** `azuread_access_package_resource_package_association` [GH-903]
+* **New Resource:** `azuread_administrative_unit_role_member` [GH-983]
+
+IMPROVEMENTS:
+
+* dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
+* `data.azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` attributes [GH-964]
+* `data.azuread_user` - support for the `mail` property [GH-996]
+* `azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` properties [GH-964]
+
 ## 2.36.0 (March 03, 2023)
 
 IMPROVEMENTS:

@@ -46,7 +46,7 @@ func ObjectSubResourceID(idString, expectedType string) (*ObjectSubResourceId, e
 	}
 
 	if id.Type != expectedType {
-		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} was expected to be %s, got %s", expectedType, parts[2])
+		return nil, fmt.Errorf("Type in {objectID}/{type}/{subID} was expected to be %s, got %s", expectedType, id.Type)
 	}
 
 	if _, err := uuid.ParseUUID(id.subId); err != nil {

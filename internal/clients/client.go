@@ -20,6 +20,7 @@ import (
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
 	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
+	identitygovernance "github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/client"
 	invitations "github.com/hashicorp/terraform-provider-azuread/internal/services/invitations/client"
 	policies "github.com/hashicorp/terraform-provider-azuread/internal/services/policies/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
@@ -45,6 +46,7 @@ type Client struct {
 	DirectoryRoles      *directoryroles.Client
 	Domains             *domains.Client
 	Groups              *groups.Client
+	IdentityGovernance  *identitygovernance.Client
 	Invitations         *invitations.Client
 	Policies            *policies.Client
 	ServicePrincipals   *serviceprincipals.Client
@@ -61,6 +63,7 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.ConditionalAccess = conditionalaccess.NewClient(o)
 	client.DirectoryRoles = directoryroles.NewClient(o)
 	client.Groups = groups.NewClient(o)
+	client.IdentityGovernance = identitygovernance.NewClient(o)
 	client.Invitations = invitations.NewClient(o)
 	client.Policies = policies.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
