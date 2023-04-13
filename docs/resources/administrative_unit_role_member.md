@@ -42,7 +42,7 @@ resource "azuread_administrative_unit_role_member" "example" {
 The following arguments are supported:
 
 * `administrative_unit_object_id` - (Required) The object ID of the administrative unit you want to add the member to. Changing this forces a new resource to be created.
-* `member_object_id` - (Required) The object ID of the user or group you want to add as a member of the administrative unit. Changing this forces a new resource to be created.
+* `member_object_id` - (Required) The object ID of the user, group or service principal you want to add as a member of the administrative unit. Changing this forces a new resource to be created.
 * `role_object_id` - (Required) The object ID of the directory role you want to assign. Changing this forces a new resource to be created.
 
 ## Attributes Reference

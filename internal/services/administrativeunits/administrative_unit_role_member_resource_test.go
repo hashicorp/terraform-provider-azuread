@@ -62,6 +62,40 @@ func TestAccAdministrativeUnitRoleMember_multipleUser(t *testing.T) {
 	})
 }
 
+func TestAccAdministrativeUnitRoleMember_group(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "test")
+	r := AdministrativeUnitRoleMemberResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.group(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("role_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccAdministrativeUnitRoleMember_servicePrincipal(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "test")
+	r := AdministrativeUnitRoleMemberResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.servicePrincipal(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("role_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r AdministrativeUnitRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AdministrativeUnits.AdministrativeUnitsClient
 	client.BaseClient.DisableRetries = false
@@ -108,6 +142,27 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
+func (AdministrativeUnitRoleMemberResource) templateGroup(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+}
+`, data.RandomInteger)
+}
+
+func (AdministrativeUnitRoleMemberResource) templateServicePrincipal(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
+}
+`, data.RandomInteger)
+}
+
 func (AdministrativeUnitRoleMemberResource) roleByTemplateId(_ acceptance.TestData) string {
 	return `
 resource "azuread_directory_role" "test" {
@@ -127,10 +182,6 @@ resource "azuread_administrative_unit_role_member" "test" {
   member_object_id              = azuread_user.testA.object_id
   administrative_unit_object_id = azuread_administrative_unit.test.id
 }
-
-
-	
-
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateThreeUsers(data), AdministrativeUnitResource{}.basic(data))
 }
 
@@ -157,7 +208,33 @@ resource "azuread_administrative_unit_role_member" "testC" {
   member_object_id              = azuread_user.testC.object_id
   administrative_unit_object_id = azuread_administrative_unit.test.id
 }
-  	
-
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateThreeUsers(data), AdministrativeUnitResource{}.basic(data))
+}
+
+func (r AdministrativeUnitRoleMemberResource) group(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+%[3]s
+
+resource "azuread_administrative_unit_role_member" "test" {
+  role_object_id                = azuread_directory_role.test.object_id
+  member_object_id              = azuread_group.test.object_id
+  administrative_unit_object_id = azuread_administrative_unit.test.id
+}
+`, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateGroup(data), AdministrativeUnitResource{}.basic(data))
+}
+
+func (r AdministrativeUnitRoleMemberResource) servicePrincipal(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+%[3]s
+
+resource "azuread_administrative_unit_role_member" "test" {
+  role_object_id                = azuread_directory_role.test.object_id
+  member_object_id              = azuread_service_principal.test.object_id
+  administrative_unit_object_id = azuread_administrative_unit.test.id
+}
+`, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateServicePrincipal(data), AdministrativeUnitResource{}.basic(data))
 }
