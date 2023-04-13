@@ -1,25 +1,25 @@
-## 2.37.0 (Unreleased)
+## 2.37.0 (April 13, 2023)
 
 FEATURES:
 
-* **New Data Source:** `azuread_access_package` [GH-903]
-* **New Data Source:** `azuread_access_package_catalog` [GH-903]
-* **New Resource:** `azuread_access_package` [GH-903]
-* **New Resource:** `azuread_access_package_assignment_policy` [GH-903]
-* **New Resource:** `azuread_access_package_catalog` [GH-903]
-* **New Resource:** `azuread_access_package_resource_catalog_association` [GH-903]
-* **New Resource:** `azuread_access_package_resource_package_association` [GH-903]
-* **New Resource:** `azuread_administrative_unit_role_member` [GH-983]
-* **New Resource:** `azuread_user_flow_attribute` [GH-1063]
+* **New Data Source:** `azuread_access_package` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Data Source:** `azuread_access_package_catalog` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_access_package` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_access_package_assignment_policy` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_access_package_catalog` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_access_package_resource_catalog_association` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_access_package_resource_package_association` ([#903](https://github.com/hashicorp/terraform-provider-azuread/issues/903))
+* **New Resource:** `azuread_administrative_unit_role_member` ([#983](https://github.com/hashicorp/terraform-provider-azuread/issues/983))
+* **New Resource:** `azuread_user_flow_attribute` ([#1063](https://github.com/hashicorp/terraform-provider-azuread/issues/1063))
 
 IMPROVEMENTS:
 
-* dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
-* `data.azuread_application` - support for the `service_management_reference` attribute [GH-1046]
-* `data.azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` attributes [GH-964]
-* `data.azuread_user` - support for the `mail` property [GH-996]
-* `azuread_application` - support for the `service_management_reference` property [GH-1046]
-* `azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` properties [GH-964]
+* dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` ([#1062](https://github.com/hashicorp/terraform-provider-azuread/issues/1062))
+* `data.azuread_application` - support for the `service_management_reference` attribute ([#1046](https://github.com/hashicorp/terraform-provider-azuread/issues/1046))
+* `data.azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` attributes ([#964](https://github.com/hashicorp/terraform-provider-azuread/issues/964))
+* `data.azuread_user` - support for the `mail` property ([#996](https://github.com/hashicorp/terraform-provider-azuread/issues/996))
+* `azuread_application` - support for the `service_management_reference` property ([#1046](https://github.com/hashicorp/terraform-provider-azuread/issues/1046))
+* `azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` properties ([#964](https://github.com/hashicorp/terraform-provider-azuread/issues/964))
 
 ## 2.36.0 (March 03, 2023)
 
