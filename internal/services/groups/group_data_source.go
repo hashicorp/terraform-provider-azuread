@@ -235,7 +235,7 @@ func groupDataSource() *schema.Resource {
 			},
 
 			"writeback_enabled": {
-				Description: "Whether this group should be synced from azure ad to on-premises ad",
+				Description: "Whether this group is synced from Azure AD to the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeBool,
 				Computed:    true,
 			},

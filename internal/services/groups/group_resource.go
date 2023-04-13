@@ -179,6 +179,18 @@ func groupResource() *schema.Resource {
 				},
 			},
 
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     msgraph.UniversalSecurityGroup,
+				ValidateFunc: validation.StringInSlice([]string{
+					msgraph.UniversalDistributionGroup,
+					msgraph.UniversalSecurityGroup,
+					msgraph.UniversalMailEnabledSecurityGroup,
+				}, false),
+			},
+
 			"owners": {
 				Description: "A set of owners who own this group. Supported object types are Users or Service Principals",
 				Type:        schema.TypeSet,
@@ -262,6 +274,12 @@ func groupResource() *schema.Resource {
 				}, false),
 			},
 
+			"writeback_enabled": {
+				Description: "Whether this group should be synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+
 			"mail": {
 				Description: "The SMTP address for the group",
 				Type:        schema.TypeString,
@@ -278,18 +296,6 @@ func groupResource() *schema.Resource {
 				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeString,
 				Computed:    true,
-			},
-
-			"onpremises_group_type": {
-				Description: "Indicates the target on-premise group type the group will be written back as",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.UniversalDistributionGroup,
-					msgraph.UniversalSecurityGroup,
-					msgraph.UniversalMailEnabledSecurityGroup,
-				}, false),
 			},
 
 			"onpremises_netbios_name": {
@@ -329,13 +335,6 @@ func groupResource() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},
-
-			"writeback_enabled": {
-				Description: "Whether this group should be synced from azure ad to on-premises ad",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
 			},
 		},
 	}

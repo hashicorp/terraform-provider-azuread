@@ -501,6 +501,22 @@ func TestAccGroup_writeback(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.withWriteback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_writebackUnified(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
 			Config: r.unifiedWithWriteback(data, "UniversalDistributionGroup"),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -509,17 +525,17 @@ func TestAccGroup_writeback(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.unifiedWithWriteback(data, "UniversalMailEnabledSecurityGroup"),
+			Config: r.unified(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalMailEnabledSecurityGroup"),
 			),
 		},
 		data.ImportStep(),
 		{
-			Config: r.unified(data),
+			Config: r.unifiedWithWriteback(data, "UniversalMailEnabledSecurityGroup"),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalMailEnabledSecurityGroup"),
 			),
 		},
 		data.ImportStep(),
@@ -664,20 +680,21 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
-func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onpremises_group_type string) string {
+func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onPremisesGroupType string) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
-  display_name          = "acctestGroup-%[1]d"
-  description           = "Please delete me as this is a.test.AD group!"
-  types                 = ["Unified"]
-  mail_enabled          = true
-  mail_nickname         = "acctestGroup-%[1]d"
-  security_enabled      = true
-  theme                 = "Pink"
+  display_name     = "acctestGroup-%[1]d"
+  description      = "Please delete me as this is a.test.AD group!"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctest.Group-%[1]d"
+  security_enabled = true
+  theme            = "Pink"
+
   writeback_enabled     = true
   onpremises_group_type = %[2]q
 }
-`, data.RandomInteger, onpremises_group_type)
+`, data.RandomInteger, onPremisesGroupType)
 }
 
 func (GroupResource) complete(data acceptance.TestData) string {
