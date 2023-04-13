@@ -391,9 +391,9 @@ func applicationDataSource() *schema.Resource {
 			},
 
 			"service_management_reference": {
-				Description: "References application or service contact information from a Service or Asset Management database.",
+				Description: "References application or service contact information from a Service or Asset Management database",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 			},
 
 			"sign_in_audience": {
