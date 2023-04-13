@@ -145,8 +145,9 @@ resource "azuread_user" "testC" {
 func (AdministrativeUnitRoleMemberResource) templateGroup(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
-  display_name     = "acctestGroup-%[1]d"
-  security_enabled = true
+  display_name       = "acctestGroup-%[1]d"
+  assignable_to_role = true
+  security_enabled   = true
 }
 `, data.RandomInteger)
 }
