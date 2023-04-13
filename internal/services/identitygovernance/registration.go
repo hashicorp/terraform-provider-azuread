@@ -21,17 +21,17 @@ func (r Registration) WebsiteCategories() []string {
 // SupportedDataSources returns the supported Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_access_package_catalog": accessPackageCatalogDataSource(),
 		"azuread_access_package":         accessPackageDataSource(),
+		"azuread_access_package_catalog": accessPackageCatalogDataSource(),
 	}
 }
 
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_access_package_catalog":                      accessPackageCatalogResource(),
 		"azuread_access_package":                              accessPackageResource(),
 		"azuread_access_package_assignment_policy":            accessPackageAssignmentPolicyResource(),
+		"azuread_access_package_catalog":                      accessPackageCatalogResource(),
 		"azuread_access_package_resource_catalog_association": accessPackageResourceCatalogAssociationResource(),
 		"azuread_access_package_resource_package_association": accessPackageResourcePackageAssociationResource(),
 	}

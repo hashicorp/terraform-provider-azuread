@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func accessPackageResourcePackageAssociationResource() *schema.Resource {
@@ -31,34 +31,24 @@ func accessPackageResourcePackageAssociationResource() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
-			ids := strings.Split(id, idDelimitor)
-			if len(ids) != 4 {
-				return fmt.Errorf("The ID must be in the format of catalog_id%sthis_association_id%sresource_origin_id%saccess_type", idDelimitor, idDelimitor, idDelimitor)
-			}
-			if _, err := uuid.ParseUUID(ids[0]); err != nil {
-				return fmt.Errorf("Specified catalog id part (%q) is not valid: %s", ids[0], err)
-			}
-			if _, err := uuid.ParseUUID(ids[2]); err != nil {
-				return fmt.Errorf("Specified resource origin id part (%q) is not valid: %s", ids[2], err)
-			}
-			return nil
-		}),
+		Importer: tf.ValidateResourceIDPriorToImport(validate.AccessPackageResourcePackageAssociationID),
 
 		Schema: map[string]*schema.Schema{
 			"access_package_id": {
-				Description:  "The ID of access package this resource association is configured to.",
+				Description:  "The ID of access package this resource association is configured to",
 				Type:         schema.TypeString,
 				ValidateFunc: validation.IsUUID,
-				ForceNew:     true,
 				Required:     true,
+				ForceNew:     true,
 			},
+
 			"catalog_resource_association_id": {
-				Description: "The ID of the association from `azuread_access_package_resource_catalog_association`",
+				Description: "The ID of the access package catalog association",
 				Type:        schema.TypeString,
-				ForceNew:    true,
 				Required:    true,
+				ForceNew:    true,
 			},
+
 			"access_type": {
 				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
 				Type:        schema.TypeString,
@@ -78,23 +68,24 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 
+	catalogResourceAssociationId, err := parse.AccessPackageResourceCatalogAssociationID(d.Get("catalog_resource_association_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "catalog_resource_association_id", "Invalid catalog_resource_association_id: %q", d.Get("catalog_resource_association_id").(string))
+	}
+
 	accessType := d.Get("access_type").(string)
-	resourceCatalogIds := strings.Split(d.Get("catalog_resource_association_id").(string), idDelimitor)
-	catalogId := resourceCatalogIds[0]
-	resourceOriginId := resourceCatalogIds[1]
 	accessPackageId := d.Get("access_package_id").(string)
 
-	resource, _, err := resourceClient.Get(ctx, catalogId, resourceOriginId)
+	resource, _, err := resourceClient.Get(ctx, catalogResourceAssociationId.CatalogId, catalogResourceAssociationId.OriginId)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource id %q and catalog id %q.",
-			resourceOriginId, catalogId)
+		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource ID %q and catalog ID %q.", catalogResourceAssociationId.CatalogId, catalogResourceAssociationId.OriginId)
 	}
 
 	properties := msgraph.AccessPackageResourceRoleScope{
 		AccessPackageId: &accessPackageId,
 		AccessPackageResourceRole: &msgraph.AccessPackageResourceRole{
 			DisplayName:  utils.String(accessType),
-			OriginId:     utils.String(fmt.Sprintf("%s_%s", accessType, resourceOriginId)),
+			OriginId:     utils.String(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
 			OriginSystem: resource.OriginSystem,
 			AccessPackageResource: &msgraph.AccessPackageResource{
 				ID:           resource.ID,
@@ -104,17 +95,18 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 		},
 		AccessPackageResourceScope: &msgraph.AccessPackageResourceScope{
 			OriginSystem: resource.OriginSystem,
-			OriginId:     &resourceOriginId,
+			OriginId:     &catalogResourceAssociationId.OriginId,
 		},
 	}
 
 	resourcePackageAssociation, _, err := client.Create(ctx, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Error creating access package resource association from resource %q@%q to access package %q.", resourceOriginId, resource.OriginSystem, accessPackageId)
+		return tf.ErrorDiagF(err, "Error creating access package resource association from resource %q@%q to access package %q.", catalogResourceAssociationId.OriginId, resource.OriginSystem, accessPackageId)
 	}
 
-	id := strings.Join([]string{accessPackageId, *resourcePackageAssociation.ID, *resource.OriginId, accessType}, idDelimitor)
-	d.SetId(id)
+	id := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId, *resourcePackageAssociation.ID, *resource.OriginId, accessType)
+	d.SetId(id.ID())
+
 	return accessPackageResourcePackageAssociationResourceRead(ctx, d, meta)
 }
 
@@ -122,36 +114,37 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
-	ids := strings.Split(d.Id(), idDelimitor)
-	accessPackageId := ids[0]
-	resourcePackageId := ids[1]
-	resourceOriginId := ids[2]
-	accessType := ids[3]
-	resourcePackage, status, err := client.Get(ctx, accessPackageId, resourcePackageId)
+	id, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
+	}
+
+	resourcePackage, status, err := client.Get(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Access package resource association with ID %q was not found - removing from state!", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Error retrieving resource id %v in access package %v", resourcePackageId, accessPackageId)
+		return tf.ErrorDiagF(err, "Error retrieving resource id %v in access package %v", id.ResourcePackageAssociationId, id.AccessPackageId)
 	}
 
-	accessPackage, _, err := accessPackageClient.Get(ctx, accessPackageId, odata.Query{})
+	accessPackage, _, err := accessPackageClient.Get(ctx, id.AccessPackageId, odata.Query{})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Err retrieving access package with id %v", accessPackageId)
+		return tf.ErrorDiagF(err, "Err retrieving access package with id %v", id.AccessPackageId)
 	}
+
+	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(*accessPackage.CatalogId, id.OriginId)
 
 	tf.Set(d, "access_package_id", resourcePackage.AccessPackageId)
-	// No mature API and library available to provide such information
-	tf.Set(d, "access_type", accessType)
-	tf.Set(d, "catalog_resource_association_id", strings.Join([]string{*accessPackage.CatalogId, resourceOriginId}, idDelimitor))
+	tf.Set(d, "access_type", id.AccessType)
+	tf.Set(d, "catalog_resource_association_id", catalogResourceAssociationId.ID())
 
 	return nil
 }
 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//log.Println("There is no destroy implemented because Microsoft doesn't provide a valid API doing so for resource roles in an access package, you have to delete it manually, remove this resource from state now.")
-	d.SetId("")
+	log.Printf("[WARN] azuread_access_package_resource_package_association with ID %q must be manually deleted as there is no valid API provided for this operation", d.Id())
+
 	return nil
 }

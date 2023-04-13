@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func accessPackageDataSource() *schema.Resource {
@@ -24,37 +24,43 @@ func accessPackageDataSource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"object_id": {
-				Description:  "The ID of this access package.",
+				Description:  "The ID of this access package",
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsUUID,
+				AtLeastOneOf: []string{"object_id", "display_name", "catalog_id"},
 			},
+
 			"display_name": {
-				Description:   "The display name of the access package.",
+				Description:   "The display name of the access package",
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
 				ConflictsWith: []string{"object_id"},
 				RequiredWith:  []string{"catalog_id"},
 			},
-			"description": {
-				Description: "The description of the access package.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-			},
-			"is_hidden": {
-				Description: "Whether the access package is hidden from the requestor.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
-			},
+
 			"catalog_id": {
-				Description:  "The ID of the Catalog this access package is in.",
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"display_name"},
+				Description:   "The ID of the Catalog this access package is in",
+				Type:          schema.TypeString,
+				Optional:      true,
+				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
+				ConflictsWith: []string{"object_id"},
+				RequiredWith:  []string{"display_name"},
+			},
+
+			"description": {
+				Description: "The description of the access package",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"hidden": {
+				Description: "Whether the access package is hidden from the requestor",
+				Type:        schema.TypeBool,
+				Computed:    true,
 			},
 		},
 	}
@@ -63,18 +69,18 @@ func accessPackageDataSource() *schema.Resource {
 func accessPackageDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
-	var accessPackage *msgraph.AccessPackage
-	if id, ok := d.GetOk("object_id"); ok {
-		c, _, err := client.Get(ctx, id.(string), odata.Query{})
-		if err != nil {
-			return tf.ErrorDiagF(err, "Error retrieving access package with id %q", id)
-		}
-		accessPackage = c
-	}
+	var err error
+	objectId := d.Get("object_id").(string)
+	displayName := d.Get("display_name").(string)
+	catalogId := d.Get("catalog_id").(string)
 
-	displayName, ok := d.GetOk("display_name")
-	catalogId, okCatalog := d.GetOk("catalog_id")
-	if ok && okCatalog {
+	var accessPackage *msgraph.AccessPackage
+	if objectId != "" {
+		accessPackage, _, err = client.Get(ctx, objectId, odata.Query{})
+		if err != nil {
+			return tf.ErrorDiagF(err, "Error retrieving access package with id %q", objectId)
+		}
+	} else if displayName != "" && catalogId != "" {
 		query := odata.Query{
 			// Filter: fmt.Sprintf("displayName eq '%s' and catalogId eq '%s'", displayName, catalogId),
 			// Filter: fmt.Sprintf("catalogId eq '%s'", catalogId),
@@ -85,7 +91,7 @@ func accessPackageDataRead(ctx context.Context, d *schema.ResourceData, meta int
 			return tf.ErrorDiagF(err, "Error listing access package with filter %s", query.Filter)
 		}
 		if result == nil || len(*result) == 0 {
-			return tf.ErrorDiagF(fmt.Errorf("No access package matched with filter %s", query.Filter), "Access access package not found!")
+			return tf.ErrorDiagF(fmt.Errorf("no access package matched with filter %s", query.Filter), "Access access package not found!")
 		}
 		// if len(*result) > 1 {
 		// return tf.ErrorDiagF(fmt.Errorf("Multiple access package matched with filter %s", query.Filter), "Multitple access package found!")
@@ -98,7 +104,7 @@ func accessPackageDataRead(ctx context.Context, d *schema.ResourceData, meta int
 				continue
 			}
 
-			if *name == displayName.(string) && *c.CatalogId == catalogId.(string) {
+			if *name == displayName && *c.CatalogId == catalogId {
 				accessPackage = &c
 				break
 			}
@@ -106,14 +112,15 @@ func accessPackageDataRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if accessPackage == nil {
-		return tf.ErrorDiagF(fmt.Errorf("No access package matched with specified parameter"), "Access access package not found!")
+		return tf.ErrorDiagF(fmt.Errorf("no access package matched with specified parameters"), "Access access package not found!")
 	}
 
 	d.SetId(*accessPackage.ID)
+
 	tf.Set(d, "object_id", accessPackage.ID)
 	tf.Set(d, "display_name", accessPackage.DisplayName)
 	tf.Set(d, "description", accessPackage.Description)
-	tf.Set(d, "is_hidden", accessPackage.IsHidden)
+	tf.Set(d, "hidden", accessPackage.IsHidden)
 	tf.Set(d, "catalog_id", accessPackage.CatalogId)
 
 	return nil

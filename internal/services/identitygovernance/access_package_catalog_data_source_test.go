@@ -41,7 +41,7 @@ func (AccessPackageCatalogDataSource) testCheckFunc(data acceptance.TestData) re
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Test access package catalog %[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("test-access-package-catalog-%[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("state").HasValue(msgraph.AccessPackageCatalogStateUnpublished),
-		check.That(data.ResourceName).Key("is_externally_visible").HasValue("false"),
+		check.That(data.ResourceName).Key("externally_visible").HasValue("false"),
 	)
 }
 

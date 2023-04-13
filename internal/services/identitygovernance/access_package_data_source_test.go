@@ -39,9 +39,8 @@ func (AccessPackageDataSource) testCheckFunc(data acceptance.TestData) resource.
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Access Package %[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("access-package-%[1]d", data.RandomInteger)),
-		check.That(data.ResourceName).Key("is_hidden").HasValue("true"),
+		check.That(data.ResourceName).Key("hidden").HasValue("true"),
 		check.That(data.ResourceName).Key("catalog_id").Exists(),
-		// check.That(data.ResourceName).Key("object_id").Exists(),
 	)
 }
 

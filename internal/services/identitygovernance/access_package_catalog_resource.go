@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 const accessPackageCatalogResourceName = "azuread_access_package_catalog"
@@ -45,29 +45,32 @@ func accessPackageCatalogResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {
-				Description:      "The display name of the access package catalog.",
+				Description:      "The display name of the access package catalog",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
+
 			"description": {
-				Description:      "The description of the access package catalog.",
+				Description:      "The description of the access package catalog",
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
+
 			"state": {
-				Description: "Has the value published if the access packages are available for management. The possible values are: unpublished and published.",
+				Description: "Has the value published if the access packages are available for management",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "published",
+				Default:     msgraph.AccessPackageCatalogStatePublished,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.AccessPackageCatalogStatePublished,
 					msgraph.AccessPackageCatalogStateUnpublished,
 				}, true),
 			},
-			"is_externally_visible": {
-				Description: "Whether the access packages in this catalog can be requested by users outside of the tenant.",
+
+			"externally_visible": {
+				Description: "Whether the access packages in this catalog can be requested by users outside of the tenant",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
@@ -80,18 +83,21 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *schema.ResourceD
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
 	display_name := d.Get("display_name").(string)
+
 	properties := msgraph.AccessPackageCatalog{
 		DisplayName:         utils.String(display_name),
 		Description:         utils.String(d.Get("description").(string)),
 		State:               d.Get("state").(string),
-		IsExternallyVisible: utils.Bool(d.Get("is_externally_visible").(bool)),
+		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
 	}
+
 	accessPackageCatalog, _, err := client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package catalog %q", display_name)
 	}
 
 	d.SetId(*accessPackageCatalog.ID)
+
 	return accessPackageCatalogResourceRead(ctx, d, meta)
 }
 
@@ -107,7 +113,7 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *schema.ResourceD
 		DisplayName:         utils.String(d.Get("display_name").(string)),
 		Description:         utils.String(d.Get("description").(string)),
 		State:               d.Get("state").(string),
-		IsExternallyVisible: utils.Bool(d.Get("is_externally_visible").(bool)),
+		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -128,13 +134,14 @@ func accessPackageCatalogResourceRead(ctx context.Context, d *schema.ResourceDat
 			d.SetId("")
 			return nil
 		}
+
 		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", objectId)
 	}
 
 	tf.Set(d, "display_name", accessPackageCatalog.DisplayName)
 	tf.Set(d, "description", accessPackageCatalog.Description)
 	tf.Set(d, "state", accessPackageCatalog.State)
-	tf.Set(d, "is_externally_visible", accessPackageCatalog.IsExternallyVisible)
+	tf.Set(d, "externally_visible", accessPackageCatalog.IsExternallyVisible)
 
 	return nil
 }
@@ -157,7 +164,7 @@ func accessPackageCatalogResourceDelete(ctx context.Context, d *schema.ResourceD
 		return tf.ErrorDiagPathF(err, "id", "Deleting access package catalog with object ID %q, got status %d", accessPackageCatalogId, status)
 	}
 
-	// Wait for user object to be deleted
+	// Wait for object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageCatalogId, odata.Query{}); err != nil {

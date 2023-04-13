@@ -1,44 +1,54 @@
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
+	AccessPackageAssignmentPolicyClient  *msgraph.AccessPackageAssignmentPolicyClient
 	AccessPackageCatalogClient           *msgraph.AccessPackageCatalogClient
 	AccessPackageClient                  *msgraph.AccessPackageClient
-	AccessPackageAssignmentPolicyClient  *msgraph.AccessPackageAssignmentPolicyClient
-	AccessPackageResourceRoleScopeClient *msgraph.AccessPackageResourceRoleScopeClient
-	AccessPackageResourceRequestClient   *msgraph.AccessPackageResourceRequestClient
 	AccessPackageResourceClient          *msgraph.AccessPackageResourceClient
+	AccessPackageResourceRequestClient   *msgraph.AccessPackageResourceRequestClient
+	AccessPackageResourceRoleScopeClient *msgraph.AccessPackageResourceRoleScopeClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	accessPackageCatalogClient := msgraph.NewAccessPackageCatalogClient(o.TenantID)
-	// Use beta version because it replies more info than v1.0
-	accessPackageClient := &msgraph.AccessPackageClient{
-		BaseClient: msgraph.NewClient(msgraph.VersionBeta, o.TenantID),
-	}
-	accessPackageAssignmentPolicyClient := msgraph.NewAccessPackageAssignmentPolicyClient(o.TenantID)
-	accessPackageResourceRoleScopeClient := msgraph.NewAccessPackageResourceRoleScopeClient(o.TenantID)
-	accessPackageResourceRequestClient := msgraph.NewAccessPackageResourceRequestClient(o.TenantID)
-	accessPackageResourceClient := msgraph.NewAccessPackageResourceClient(o.TenantID)
-
-	o.ConfigureClient(&accessPackageCatalogClient.BaseClient)
-	o.ConfigureClient(&accessPackageClient.BaseClient)
+	// Resource only available in beta API
+	accessPackageAssignmentPolicyClient := msgraph.NewAccessPackageAssignmentPolicyClient()
 	o.ConfigureClient(&accessPackageAssignmentPolicyClient.BaseClient)
-	o.ConfigureClient(&accessPackageResourceRoleScopeClient.BaseClient)
-	o.ConfigureClient(&accessPackageResourceRequestClient.BaseClient)
+	accessPackageAssignmentPolicyClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
+	accessPackageCatalogClient := msgraph.NewAccessPackageCatalogClient()
+	o.ConfigureClient(&accessPackageCatalogClient.BaseClient)
+
+	// Use beta version because it replies more info than v1.0
+	accessPackageClient := msgraph.NewAccessPackageClient()
+	o.ConfigureClient(&accessPackageClient.BaseClient)
+	accessPackageClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
+	// Use beta version because it replies more info than v1.0 and the URL is different
+	accessPackageResourceClient := msgraph.NewAccessPackageResourceClient()
 	o.ConfigureClient(&accessPackageResourceClient.BaseClient)
+	accessPackageResourceClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
+	// Resource only available in beta API
+	accessPackageResourceRequestClient := msgraph.NewAccessPackageResourceRequestClient()
+	o.ConfigureClient(&accessPackageResourceRequestClient.BaseClient)
+	accessPackageResourceRequestClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
+	// Resource only available in beta API
+	accessPackageResourceRoleScopeClient := msgraph.NewAccessPackageResourceRoleScopeClient()
+	o.ConfigureClient(&accessPackageResourceRoleScopeClient.BaseClient)
+	accessPackageResourceRoleScopeClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	return &Client{
+		AccessPackageAssignmentPolicyClient:  accessPackageAssignmentPolicyClient,
 		AccessPackageCatalogClient:           accessPackageCatalogClient,
 		AccessPackageClient:                  accessPackageClient,
-		AccessPackageAssignmentPolicyClient:  accessPackageAssignmentPolicyClient,
-		AccessPackageResourceRoleScopeClient: accessPackageResourceRoleScopeClient,
-		AccessPackageResourceRequestClient:   accessPackageResourceRequestClient,
 		AccessPackageResourceClient:          accessPackageResourceClient,
+		AccessPackageResourceRequestClient:   accessPackageResourceRequestClient,
+		AccessPackageResourceRoleScopeClient: accessPackageResourceRoleScopeClient,
 	}
 }

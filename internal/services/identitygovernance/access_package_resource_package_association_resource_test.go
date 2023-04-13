@@ -3,7 +3,7 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
@@ -36,15 +37,21 @@ func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Contex
 	client := clients.IdentityGovernance.AccessPackageResourceRoleScopeClient
 	client.BaseClient.DisableRetries = true
 
-	ids := strings.Split(state.ID, idDelimitor)
-	packageId := ids[0]
-	resourceId := ids[1]
-	resource, _, err := client.Get(ctx, packageId, resourceId)
+	id, err := parse.AccessPackageResourcePackageAssociationID(state.ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve access package resource association with object ID %q: %+v", resourceId, err)
+		return nil, err
 	}
 
-	return utils.Bool(*resource.ID == resourceId), nil
+	_, status, err := client.Get(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
+	if err != nil {
+		if status == http.StatusNotFound {
+			return utils.Bool(false), nil
+		}
+
+		return nil, fmt.Errorf("failed to retrieve access package resource association with ID %q: %+v", id.ID(), err)
+	}
+
+	return utils.Bool(true), nil
 }
 
 func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.TestData) string {

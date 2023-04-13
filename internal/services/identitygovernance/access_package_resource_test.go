@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type AccessPackageResource struct{}
@@ -80,14 +80,14 @@ func (AccessPackageResource) Exists(ctx context.Context, clients *clients.Client
 	client := clients.IdentityGovernance.AccessPackageClient
 	client.BaseClient.DisableRetries = true
 
-	accessPackage, status, err := client.Get(ctx, state.ID, odata.Query{})
+	_, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Access package with object ID %q does not exist", state.ID)
+			return utils.Bool(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve access package with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve access package with ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(accessPackage.ID != nil && *accessPackage.ID == state.ID), nil
+	return utils.Bool(true), nil
 }
 
 func (AccessPackageResource) basic(data acceptance.TestData) string {
@@ -95,7 +95,7 @@ func (AccessPackageResource) basic(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"	
+  display_name = "test-catalog-%[1]d"
   description  = "Test catalog %[1]d"
 }
 
@@ -112,14 +112,14 @@ func (AccessPackageResource) complete(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "test-catalog-%[1]d"	
+  display_name = "test-catalog-%[1]d"
   description  = "Test catalog %[1]d"
 }
 
 resource "azuread_access_package" "test" {
   display_name = "access-package-%[1]d"
   description  = "Access Package %[1]d"
-  is_hidden    = true
+  hidden       = true
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 `, data.RandomInteger)

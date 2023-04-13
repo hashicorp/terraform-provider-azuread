@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 type AccessPackageCatalogResource struct{}
@@ -80,14 +80,15 @@ func (AccessPackageCatalogResource) Exists(ctx context.Context, clients *clients
 	client := clients.IdentityGovernance.AccessPackageCatalogClient
 	client.BaseClient.DisableRetries = true
 
-	accessPackageCatalog, status, err := client.Get(ctx, state.ID, odata.Query{})
+	_, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Access package catalog with object ID %q does not exist", state.ID)
+			return utils.Bool(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve access package catalog with object ID %q: %+v", state.ID, err)
+
+		return nil, fmt.Errorf("failed to retrieve access package catalog with ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(accessPackageCatalog.ID != nil && *accessPackageCatalog.ID == state.ID), nil
+	return utils.Bool(true), nil
 }
 
 func (AccessPackageCatalogResource) basic(data acceptance.TestData) string {
@@ -106,10 +107,10 @@ func (AccessPackageCatalogResource) complete(data acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_access_package_catalog" "test" {
-  display_name 			= "test-access-package-catalog-%[1]d"
-  description  			= "Test access package catalog %[1]d"
-  state		   			= "unpublished"
-  is_externally_visible = false
+  display_name       = "test-access-package-catalog-%[1]d"
+  description        = "Test access package catalog %[1]d"
+  state              = "unpublished"
+  externally_visible = false
 }
 `, data.RandomInteger)
 }

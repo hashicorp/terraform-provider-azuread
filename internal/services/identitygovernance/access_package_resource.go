@@ -7,17 +7,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 const accessPackageResourceName = "azuread_access_package"
@@ -44,30 +43,33 @@ func accessPackageResource() *schema.Resource {
 		}),
 
 		Schema: map[string]*schema.Schema{
-			"display_name": {
-				Description:      "The display name of the access package.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
-			},
-			"description": {
-				Description:      "The description of the access package.",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
-			},
-			"is_hidden": {
-				Description: "Whether the access package is hidden from the requestor.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
-			},
 			"catalog_id": {
-				Description:      "The ID of the Catalog this access package will be created in.",
+				Description:      "The ID of the Catalog this access package will be created in",
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: validate.UUID,
+			},
+
+			"display_name": {
+				Description:      "The display name of the access package",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"description": {
+				Description:      "The description of the access package",
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"hidden": {
+				Description: "Whether the access package is hidden from the requestor",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 		},
 	}
@@ -79,6 +81,7 @@ func accessPackageResourceCreate(ctx context.Context, d *schema.ResourceData, me
 
 	displayName := d.Get("display_name").(string)
 	catalogId := d.Get("catalog_id").(string)
+
 	accessPackageCatalog, _, err := accessPackageCatalogClient.Get(ctx, catalogId, odata.Query{})
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", catalogId)
@@ -87,16 +90,18 @@ func accessPackageResourceCreate(ctx context.Context, d *schema.ResourceData, me
 	properties := msgraph.AccessPackage{
 		DisplayName: utils.String(displayName),
 		Description: utils.String(d.Get("description").(string)),
-		IsHidden:    utils.Bool(d.Get("is_hidden").(bool)),
+		IsHidden:    utils.Bool(d.Get("hidden").(bool)),
 		Catalog:     accessPackageCatalog,
 		CatalogId:   accessPackageCatalog.ID,
 	}
+
 	accessPackage, _, err := client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package %q", displayName)
 	}
 
 	d.SetId(*accessPackage.ID)
+
 	return accessPackageResourceRead(ctx, d, meta)
 }
 
@@ -106,9 +111,10 @@ func accessPackageResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	objectId := d.Id()
 	catalogId := d.Get("catalog_id").(string)
+
 	accessPackageCatalog, _, err := accessPackageCatalogClient.Get(ctx, catalogId, odata.Query{})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Retrieving access package with object ID: %q", catalogId)
+		return tf.ErrorDiagF(err, "Retrieving access package catalog with ID: %q", catalogId)
 	}
 
 	tf.LockByName(accessPackageResourceName, objectId)
@@ -118,7 +124,7 @@ func accessPackageResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 		ID:          utils.String(objectId),
 		DisplayName: utils.String(d.Get("display_name").(string)),
 		Description: utils.String(d.Get("description").(string)),
-		IsHidden:    utils.Bool(d.Get("is_hidden").(bool)),
+		IsHidden:    utils.Bool(d.Get("hidden").(bool)),
 		Catalog:     accessPackageCatalog,
 		CatalogId:   accessPackageCatalog.ID,
 	}
@@ -141,12 +147,13 @@ func accessPackageResourceRead(ctx context.Context, d *schema.ResourceData, meta
 			d.SetId("")
 			return nil
 		}
+
 		return tf.ErrorDiagF(err, "Retrieving access package with object ID: %q", objectId)
 	}
 
 	tf.Set(d, "display_name", accessPackage.DisplayName)
 	tf.Set(d, "description", accessPackage.Description)
-	tf.Set(d, "is_hidden", accessPackage.IsHidden)
+	tf.Set(d, "hidden", accessPackage.IsHidden)
 	//v1.0 graph API doesn't contain this info however beta contains
 	tf.Set(d, "catalog_id", accessPackage.CatalogId)
 
@@ -171,7 +178,7 @@ func accessPackageResourceDelete(ctx context.Context, d *schema.ResourceData, me
 		return tf.ErrorDiagPathF(err, "id", "Deleting access package with object ID %q, got status %d", accessPackageId, status)
 	}
 
-	// Wait for user object to be deleted
+	// Wait for object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageId, odata.Query{}); err != nil {
