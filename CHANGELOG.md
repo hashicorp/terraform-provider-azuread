@@ -13,6 +13,8 @@ FEATURES:
 IMPROVEMENTS:
 
 * dependencies: updating to `v0.60.0` of `github.com/manicminer/hamilton` [GH-1062]
+* `data.azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` attributes [GH-964]
+* `azuread_group` - support for the `onpremises_group_type` and `writeback_enabled` properties [GH-964]
 
 ## 2.36.0 (March 03, 2023)
 
