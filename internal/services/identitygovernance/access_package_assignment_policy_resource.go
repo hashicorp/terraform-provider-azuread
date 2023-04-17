@@ -67,12 +67,6 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
-			"extension_enabled": {
-				Description: "When enabled, users will be able to request extension of their access to this package before their access expires",
-				Type:        schema.TypeBool,
-				Optional:    true,
-			},
-
 			"duration_in_days": {
 				Description:   "How many days this assignment is valid for",
 				Type:          schema.TypeInt,
@@ -88,6 +82,12 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 				ConflictsWith: []string{"duration_in_days"},
 				ValidateFunc:  validation.IsRFC3339Time,
 				//DiffSuppressFunc: assignmentPolicyDiffSuppress,
+			},
+
+			"extension_enabled": {
+				Description: "When enabled, users will be able to request extension of their access to this package before their access expires",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
 
 			"requestor_settings": {
