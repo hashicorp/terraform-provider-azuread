@@ -493,6 +493,14 @@ func TestAccGroup_writeback(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
+	})
+}
+
+func TestAccGroup_writebackUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
+	r := GroupResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
 		{
 			Config: r.basic(data),
 			Check: resource.ComposeTestCheckFunc(
@@ -521,13 +529,6 @@ func TestAccGroup_writebackUnified(t *testing.T) {
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalDistributionGroup"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.unified(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
@@ -1101,9 +1102,11 @@ resource "azuread_group" "test" {
 func (GroupResource) withWriteback(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
-  display_name      = "acctestGroup-%[1]d"
-  security_enabled  = true
-  writeback_enabled = true
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+
+  writeback_enabled     = true
+  onpremises_group_type = "UniversalSecurityGroup"
 }
 `, data.RandomInteger)
 }

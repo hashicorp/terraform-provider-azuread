@@ -183,7 +183,6 @@ func groupResource() *schema.Resource {
 				Description: "Indicates the target on-premise group type the group will be written back as",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     msgraph.UniversalSecurityGroup,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.UniversalDistributionGroup,
 					msgraph.UniversalSecurityGroup,
@@ -278,6 +277,7 @@ func groupResource() *schema.Resource {
 				Description: "Whether this group should be synced from Azure AD to the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Default:     false,
 			},
 
 			"mail": {
@@ -361,6 +361,12 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 				}
 			}
 		}
+	}
+
+	// onPremisesGroupType can't be unset
+	oldOnPremisesGroupType, newOnPremisesGroupType := diff.GetChange("onpremises_group_type")
+	if oldOnPremisesGroupType.(string) != "" && newOnPremisesGroupType == "" {
+		diff.ForceNew("onpremises_group_type")
 	}
 
 	mailEnabled := diff.Get("mail_enabled").(bool)
@@ -482,16 +488,17 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
-	writebackConfiguration := &msgraph.GroupWritebackConfiguration{
-		IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
-	}
-
-	if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
-		writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+	var writebackConfiguration *msgraph.GroupWritebackConfiguration
+	if v := d.Get("writeback_enabled").(bool); v {
+		writebackConfiguration = &msgraph.GroupWritebackConfiguration{
+			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+		}
+		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
+			writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+		}
 	}
 
 	description := d.Get("description").(string)
-
 	odataType := odata.TypeGroup
 
 	properties := msgraph.Group{
@@ -974,13 +981,12 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
-		writebackConfiguration := &msgraph.GroupWritebackConfiguration{
+		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{
 			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
 		}
 		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
-			writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+			group.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
 		}
-		group.WritebackConfiguration = writebackConfiguration
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
