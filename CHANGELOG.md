@@ -1,3 +1,9 @@
+## 2.37.1 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - fix a regression that caused `onpremises_group_type` to be set when not configured, and unsetting this property now forces replacement of the resource [GH-1070]
+
 ## 2.37.0 (April 13, 2023)
 
 FEATURES:
