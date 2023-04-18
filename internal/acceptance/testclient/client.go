@@ -16,7 +16,7 @@ var (
 	clientLock = &sync.Mutex{}
 )
 
-func Build() (*clients.Client, error) {
+func Build(tenantId string) (*clients.Client, error) {
 	clientLock.Lock()
 	defer clientLock.Unlock()
 
@@ -42,10 +42,14 @@ func Build() (*clients.Client, error) {
 			return nil, fmt.Errorf("building test client: %+v", err)
 		}
 
+		if tenantId == "" {
+			tenantId = os.Getenv("ARM_TENANT_ID")
+		}
+
 		authConfig := auth.Credentials{
 			Environment: *env,
 			ClientID:    os.Getenv("ARM_CLIENT_ID"),
-			TenantID:    os.Getenv("ARM_TENANT_ID"),
+			TenantID:    tenantId,
 
 			ClientCertificatePath:     os.Getenv("ARM_CLIENT_CERTIFICATE_PATH"),
 			ClientCertificatePassword: os.Getenv("ARM_CLIENT_CERTIFICATE_PASSWORD"),
