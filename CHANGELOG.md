@@ -1,5 +1,9 @@
 ## 2.37.1 (April 17, 2023)
 
+NOTES:
+
+* This release contains a breaking change with the `azuread_group` resource, in order to fix a regression. Please see [#1072](https://github.com/hashicorp/terraform-provider-azuread/issues/1072) for workaround information.
+
 BUG FIXES:
 
 * `azuread_group` - fix a regression that caused `onpremises_group_type` to be set when not configured, and unsetting this property now forces replacement of the resource ([#1070](https://github.com/hashicorp/terraform-provider-azuread/issues/1070))
