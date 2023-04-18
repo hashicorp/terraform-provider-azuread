@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func b2cUserflowResource() *schema.Resource {
@@ -65,10 +65,10 @@ func b2cUserflowResource() *schema.Resource {
 			},
 
 			"version": {
-				Description:      "The version of the user flow",
-				Type:             schema.TypeFloat,
-				Required:         true,
-				ForceNew:         true,
+				Description: "The version of the user flow",
+				Type:        schema.TypeFloat,
+				Required:    true,
+				//ForceNew:         true,
 				ValidateDiagFunc: validate.ValidateDiag(validation.FloatAtMost(math.MaxFloat32)),
 			},
 
@@ -89,7 +89,7 @@ func b2cUserflowResource() *schema.Resource {
 }
 
 func b2cUserFlowResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowClient
+	client := meta.(*clients.Client).UserFlows.B2CUserFlowClient
 
 	name := d.Get("name").(string)
 	version := float32(d.Get("version").(float64))
@@ -117,11 +117,14 @@ func b2cUserFlowResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func b2cUserFlowResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowClient
+	client := meta.(*clients.Client).UserFlows.B2CUserFlowClient
+
 	id := d.Id()
+	version := float32(d.Get("version").(float64))
 
 	userFlow := msgraph.B2CUserFlow{
 		ID:                             &id,
+		UserFlowTypeVersion:            &version,
 		DefaultLanguageTag:             utils.String(d.Get("default_language_tag").(string)),
 		IsLanguageCustomizationEnabled: utils.Bool(d.Get("language_customization_enabled").(bool)),
 	}
@@ -135,7 +138,7 @@ func b2cUserFlowResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func b2cUserFlowResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowClient
+	client := meta.(*clients.Client).UserFlows.B2CUserFlowClient
 	id := d.Id()
 
 	userFlow, status, err := client.Get(ctx, id, odata.Query{})
@@ -160,7 +163,7 @@ func b2cUserFlowResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func b2cUserFlowResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowClient
+	client := meta.(*clients.Client).UserFlows.B2CUserFlowClient
 	id := d.Id()
 
 	status, err := client.Delete(ctx, id)
