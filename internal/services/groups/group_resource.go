@@ -183,6 +183,7 @@ func groupResource() *schema.Resource {
 				Description: "Indicates the target on-premise group type the group will be written back as",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.UniversalDistributionGroup,
 					msgraph.UniversalSecurityGroup,
@@ -361,12 +362,6 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 				}
 			}
 		}
-	}
-
-	// onPremisesGroupType can't be unset
-	oldOnPremisesGroupType, newOnPremisesGroupType := diff.GetChange("onpremises_group_type")
-	if oldOnPremisesGroupType.(string) != "" && newOnPremisesGroupType == "" {
-		diff.ForceNew("onpremises_group_type")
 	}
 
 	mailEnabled := diff.Get("mail_enabled").(bool)
