@@ -748,7 +748,8 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
 		// Newly created Unified groups now get a description added out-of-band, so we'll wait a couple of minutes to see if this appears and then clear it
 		if description == "" {
-			updated, err := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+			// Ignoring the error result here because the description might not be updated out of band, in which case we skip over this
+			updated, _ := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
 				client.BaseClient.DisableRetries = true
 				group, _, err := client.Get(ctx, *group.ID(), odata.Query{})
 				if err != nil {
@@ -756,9 +757,6 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 				return utils.Bool(group.Description != nil && *group.Description != ""), nil
 			})
-			if err != nil {
-				return tf.ErrorDiagF(err, "Waiting for update of `description` for group with object ID %q", *group.ID())
-			}
 
 			if updated {
 				status, err := client.Update(ctx, msgraph.Group{
