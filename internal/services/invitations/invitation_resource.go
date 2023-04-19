@@ -174,7 +174,9 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
 		}
-		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		if status != http.StatusForbidden {
+			return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		}
 	}
 	status, err = usersClient.Update(ctx, msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
@@ -186,7 +188,9 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
 		}
-		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		if status != http.StatusForbidden {
+			return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		}
 	}
 
 	return invitationResourceRead(ctx, d, meta)
@@ -228,6 +232,12 @@ func invitationResourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	status, err = client.Delete(ctx, userID)
+
+	// Only people with User.ReadWrite.All or Directory.ReadWrite.All can delete users
+	if status == http.StatusForbidden {
+		return nil
+	}
+
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting invited user with object ID %q, got status %d with error: %+v", userID, status, err)
 	}
