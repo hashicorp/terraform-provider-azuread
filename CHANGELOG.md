@@ -1,10 +1,10 @@
-## 2.37.2 (Unreleased)
+## 2.37.2 (April 20, 2023)
 
 BUG FIXES:
 
-* `azuread_group` - remove conditional ForceNew for the `onpremises_group_type` property, resolve breaking change in v2.37.1 [GH-1076]
-* `azuread_group` - improve a workaround for reading Microsoft 365-only properties for groups in a non-M365 tenant [GH-1076]
-* `azuread_group` - improve a workaround for detecting unwanted changes to the `description` property [GH-1074]
+* `azuread_group` - remove conditional ForceNew for the `onpremises_group_type` property, resolve breaking change in v2.37.1 ([#1076](https://github.com/hashicorp/terraform-provider-azuread/issues/1076))
+* `azuread_group` - improve a workaround for reading Microsoft 365-only properties for groups in a non-M365 tenant ([#1076](https://github.com/hashicorp/terraform-provider-azuread/issues/1076))
+* `azuread_group` - improve a workaround for detecting unwanted changes to the `description` property ([#1074](https://github.com/hashicorp/terraform-provider-azuread/issues/1074))
 
 ## 2.37.1 (April 17, 2023)
 
