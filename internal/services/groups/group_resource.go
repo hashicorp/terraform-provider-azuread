@@ -742,6 +742,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
 		// Newly created Unified groups now get a description added out-of-band, so we'll wait a couple of minutes to see if this appears and then clear it
+		// See https://github.com/microsoftgraph/msgraph-metadata/issues/331
 		if description == "" {
 			// Ignoring the error result here because the description might not be updated out of band, in which case we skip over this
 			if updated, _ := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
