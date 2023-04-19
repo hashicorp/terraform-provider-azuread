@@ -1,3 +1,9 @@
+## 2.37.2 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group` - improve a workaround for detecting unwanted changes to the `description` property [GH-1074]
+
 ## 2.37.1 (April 17, 2023)
 
 NOTES:
