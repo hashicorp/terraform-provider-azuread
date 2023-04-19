@@ -370,18 +370,19 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
 		}
-
-		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
-			allowExternalSenders = *groupExtra.AllowExternalSenders
-		}
-		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
-			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
-		}
-		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
-			hideFromAddressLists = *groupExtra.HideFromAddressLists
-		}
-		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
-			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		if groupExtra != nil {
+			if groupExtra.AllowExternalSenders != nil {
+				allowExternalSenders = *groupExtra.AllowExternalSenders
+			}
+			if groupExtra.AutoSubscribeNewMembers != nil {
+				autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+			}
+			if groupExtra.HideFromAddressLists != nil {
+				hideFromAddressLists = *groupExtra.HideFromAddressLists
+			}
+			if groupExtra.HideFromOutlookClients != nil {
+				hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+			}
 		}
 	}
 

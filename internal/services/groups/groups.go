@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -44,8 +45,14 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 
 func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
 	query := odata.Query{Select: []string{"allowExternalSenders", "autoSubscribeNewMembers", "hideFromAddressLists", "hideFromOutlookClients"}}
-	groupExtra, _, err := client.Get(ctx, id, query)
+	groupExtra, status, err := client.Get(ctx, id, query)
 	if err != nil {
+		if status == http.StatusNotFound {
+			// API returns 404 when these M365-only fields are requested for a group in a non-M365 tenant, so we
+			// don't raise an error in this case and proceed as if they are not set.
+			// See https://github.com/microsoftgraph/msgraph-metadata/issues/333
+			return nil, nil
+		}
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
 	}
 	return groupExtra, nil
