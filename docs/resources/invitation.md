@@ -14,6 +14,8 @@ When authenticated with a service principal, this resource requires one of the f
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Guest Inviter`, `User Administrator` or `Global Administrator`
 
+**Remark**: A destroy of the `azuread_invitation` resource will delete the user if executed with a high privileged user or service principal, otherwise nothing happens as the invite itself can't be deleted once sent out.
+
 ## Example Usage
 
 *Basic example*
