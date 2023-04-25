@@ -217,10 +217,13 @@ func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d 
 	tf.Set(d, "end_date", endDate)
 
 	// thumbprint not available when querying service principal, so we generate it from the pem value in the Key field.
-	thumbprint, err := helpers.GetTokenSigningCertificateThumbprint(
-		[]byte("-----BEGIN CERTIFICATE-----\n" + *credential.Key + "\n-----END CERTIFICATE-----"))
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "parsing tokenSigningCertificate key value with ID %q", id.KeyId)
+	var thumbprint string
+	if credential.Key != nil {
+		thumbprint, err = helpers.GetTokenSigningCertificateThumbprint(
+			[]byte("-----BEGIN CERTIFICATE-----\n" + *credential.Key + "\n-----END CERTIFICATE-----"))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "id", "parsing tokenSigningCertificate key value with ID %q", id.KeyId)
+		}
 	}
 
 	tf.Set(d, "thumbprint", thumbprint)
