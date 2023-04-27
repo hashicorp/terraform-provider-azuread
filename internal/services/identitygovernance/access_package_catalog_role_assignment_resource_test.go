@@ -31,6 +31,7 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("role_id").Exists(),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 

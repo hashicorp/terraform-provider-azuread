@@ -24,7 +24,7 @@ func accessPackageCatalogRoleAssignmentResource() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: accessPackageCatalogRoleAssignmentResourceCreate,
 		ReadContext:   accessPackageCatalogRoleAssignmentResourceRead,
-		DeleteContext: accessPackageCatalogRoleRoleAssignmentResourceDelete,
+		DeleteContext: accessPackageCatalogRoleAssignmentResourceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -117,7 +117,7 @@ func accessPackageCatalogRoleAssignmentResourceRead(ctx context.Context, d *sche
 	return nil
 }
 
-func accessPackageCatalogRoleRoleAssignmentResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageCatalogRoleAssignmentResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogRoleAssignmentsClient
 
 	if _, err := client.Delete(ctx, d.Id()); err != nil {

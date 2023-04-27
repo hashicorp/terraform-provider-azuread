@@ -26,7 +26,7 @@ data "azuread_access_package_catalog_role" "example" {
 *Look up by object ID*
 ```terraform
 data "azuread_access_package_catalog_role" "example" {
-  object_id = "ae79f266-94d4-4dab-b730-feca7e132178"
+  object_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
