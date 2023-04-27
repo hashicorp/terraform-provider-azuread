@@ -63,6 +63,7 @@ func TestAccServicePrincipalTokenSigningCertificate_complete(t *testing.T) {
 func (r servicePrincipalTokenSigningCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.SigningCertificateID(state.ID)
 	if err != nil {

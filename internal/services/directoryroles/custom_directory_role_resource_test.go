@@ -129,6 +129,7 @@ func TestAccCustomDirectoryRole_templateId(t *testing.T) {
 func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.RoleDefinitionsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	role, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {

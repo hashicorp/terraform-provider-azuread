@@ -271,6 +271,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *schema.ResourceDa
 
 	// Wait for application password to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

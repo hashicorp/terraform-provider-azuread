@@ -58,6 +58,7 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "test" {
 func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(state.ID)
 	if err != nil {

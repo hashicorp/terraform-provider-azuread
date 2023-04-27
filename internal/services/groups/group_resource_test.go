@@ -553,6 +553,7 @@ func TestAccGroup_writebackUnified(t *testing.T) {
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	group, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {

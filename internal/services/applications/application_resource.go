@@ -1343,6 +1343,7 @@ func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for application object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, appId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

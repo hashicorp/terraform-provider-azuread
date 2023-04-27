@@ -94,6 +94,7 @@ func applicationTemplateDataSource() *schema.Resource {
 func applicationTemplateDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var template *msgraph.ApplicationTemplate
 

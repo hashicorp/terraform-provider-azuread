@@ -601,6 +601,7 @@ func conditionalAccessPolicyResourceDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, policyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

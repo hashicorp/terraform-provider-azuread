@@ -109,6 +109,7 @@ func TestAccDirectoryRoleMember_requiresImport(t *testing.T) {
 func (r DirectoryRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRolesClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.DirectoryRoleMemberID(state.ID)
 	if err != nil {

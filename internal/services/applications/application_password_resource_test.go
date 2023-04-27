@@ -79,6 +79,7 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.PasswordID(state.ID)
 	if err != nil {

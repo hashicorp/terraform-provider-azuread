@@ -226,6 +226,7 @@ func synchronizationJobResourceDelete(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for synchronization job to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		job, _, _ := client.Get(ctx, id.JobId, id.ServicePrincipalId)

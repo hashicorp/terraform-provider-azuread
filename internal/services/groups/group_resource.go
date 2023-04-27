@@ -727,6 +727,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Wait for DisplayName to be updated
 	if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		group, status, err := client.Get(ctx, *group.ID(), odata.Query{})
 		if err != nil {
@@ -746,6 +747,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if description == "" {
 			// Ignoring the error result here because the description might not be updated out of band, in which case we skip over this
 			if updated, _ := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				group, _, err := client.Get(ctx, *group.ID(), odata.Query{})
 				if err != nil {
@@ -768,6 +770,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 				// Wait for Description to be removed
 				if err = helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+					defer func() { client.BaseClient.DisableRetries = false }()
 					client.BaseClient.DisableRetries = true
 					group, _, err = client.Get(ctx, *group.ID(), odata.Query{})
 					if err != nil {
@@ -798,6 +801,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AllowExternalSenders to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -822,6 +826,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AutoSubscribeNewMembers to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -846,6 +851,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromAddressLists to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -870,6 +876,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromOutlookClients to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -1032,6 +1039,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AllowExternalSenders to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -1056,6 +1064,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AutoSubscribeNewMembers to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -1080,6 +1089,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromAddressLists to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -1104,6 +1114,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromOutlookClients to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
@@ -1383,6 +1394,7 @@ func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Wait for group object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, groupId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

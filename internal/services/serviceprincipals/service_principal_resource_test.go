@@ -314,6 +314,7 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	servicePrincipal, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {

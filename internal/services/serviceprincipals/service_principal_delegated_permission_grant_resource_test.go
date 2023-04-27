@@ -50,6 +50,7 @@ func TestAccServicePrincipalDelegatedPermissionGrant_singleUser(t *testing.T) {
 func (r ServicePrincipalDelegatedPermissionGrantResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.DelegatedPermissionGrantsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	if _, status, err := client.Get(ctx, state.ID, odata.Query{}); err != nil {
 		if status == http.StatusNotFound {

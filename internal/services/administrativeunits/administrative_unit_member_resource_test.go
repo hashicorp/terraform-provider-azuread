@@ -109,6 +109,7 @@ func TestAccAdministrativeUnitMember_requiresImport(t *testing.T) {
 func (r AdministrativeUnitMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AdministrativeUnits.AdministrativeUnitsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.AdministrativeUnitMemberID(state.ID)
 	if err != nil {

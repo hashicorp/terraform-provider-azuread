@@ -177,6 +177,7 @@ func administrativeUnitMemberResourceDelete(ctx context.Context, d *schema.Resou
 
 	// Wait for membership link to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {
