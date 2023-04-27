@@ -150,6 +150,12 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeString,
@@ -225,6 +231,12 @@ func groupDataSource() *schema.Resource {
 			"visibility": {
 				Description: "Specifies the group join policy and group content visibility",
 				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"writeback_enabled": {
+				Description: "Whether this group is synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Type:        schema.TypeBool,
 				Computed:    true,
 			},
 		},
@@ -347,24 +359,30 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
+	if group.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
+	}
+
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
 		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
 		}
-
-		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
-			allowExternalSenders = *groupExtra.AllowExternalSenders
-		}
-		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
-			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
-		}
-		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
-			hideFromAddressLists = *groupExtra.HideFromAddressLists
-		}
-		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
-			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		if groupExtra != nil {
+			if groupExtra.AllowExternalSenders != nil {
+				allowExternalSenders = *groupExtra.AllowExternalSenders
+			}
+			if groupExtra.AutoSubscribeNewMembers != nil {
+				autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+			}
+			if groupExtra.HideFromAddressLists != nil {
+				hideFromAddressLists = *groupExtra.HideFromAddressLists
+			}
+			if groupExtra.HideFromOutlookClients != nil {
+				hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+			}
 		}
 	}
 

@@ -149,6 +149,21 @@ func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_writeback(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.writeback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("writeback_enabled").HasValue("true"),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+	})
+}
+
 func (GroupDataSource) displayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -252,4 +267,14 @@ data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
 }
 `, GroupResource{}.unifiedWithExtraSettings(data))
+}
+
+func (GroupDataSource) writeback(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  display_name = azuread_group.test.display_name
+}
+`, GroupResource{}.withWriteback(data))
 }

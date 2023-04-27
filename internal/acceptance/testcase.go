@@ -27,7 +27,7 @@ func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, s
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
-			client := buildClient()
+			client := buildClient(td.TenantID)
 			return helpers.CheckDestroyedFunc(client, testResource, td.ResourceType, td.ResourceName)(s)
 		},
 		Steps: steps,
@@ -78,8 +78,8 @@ func PreCheck(t *testing.T) {
 	}
 }
 
-func buildClient() *clients.Client {
-	client, err := testclient.Build()
+func buildClient(tenantId string) *clients.Client {
+	client, err := testclient.Build(tenantId)
 	if err != nil {
 		log.Fatalf("building client: %+v", err)
 	}
