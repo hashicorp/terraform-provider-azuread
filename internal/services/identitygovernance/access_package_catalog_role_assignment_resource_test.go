@@ -17,13 +17,49 @@ import (
 
 type AccessPackageCatalogRoleAssignmentResource struct{}
 
-func TestAccAccessPackageCatalogRoleAssignmentResource_basic(t *testing.T) {
+func TestAccAccessPackageCatalogRoleAssignmentResource_group(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
 	data.DataSourceTest(t, []resource.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.group(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
+				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("role_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccAccessPackageCatalogRoleAssignmentResource_servicePrincipal(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
+	r := AccessPackageCatalogRoleAssignmentResource{}
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.servicePrincipal(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
+				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
+				check.That(data.ResourceName).Key("role_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccAccessPackageCatalogRoleAssignmentResource_user(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
+	r := AccessPackageCatalogRoleAssignmentResource{}
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: r.user(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
@@ -49,28 +85,67 @@ func (r AccessPackageCatalogRoleAssignmentResource) Exists(ctx context.Context, 
 	return utils.Bool(true), nil
 }
 
-func (AccessPackageCatalogRoleAssignmentResource) basic(data acceptance.TestData) string {
+func (AccessPackageCatalogRoleAssignmentResource) group(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_access_package_catalog_role" "test" {
-	display_name = "Catalog owner"
+  display_name = "Catalog owner"
 }
 
-data "azuread_domains" "test" {
-	only_initial = true
-}
-  
-resource "azuread_user" "test" {
-	user_principal_name = "acctestUser'%[2]d@${data.azuread_domains.test.domains.0.domain_name}"
-	display_name        = "acctestUser-%[2]d"
-	password            = "%[3]s"
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
 }
 
 resource "azuread_access_package_catalog_role_assignment" "test" {
-	role_id 	        = data.azuread_access_package_catalog_role.test.object_id
-	catalog_id          = azuread_access_package_catalog.test.id
-	principal_object_id = azuread_user.test.object_id
+  role_id             = data.azuread_access_package_catalog_role.test.object_id
+  catalog_id          = azuread_access_package_catalog.test.id
+  principal_object_id = azuread_group.test.object_id
+}
+`, AccessPackageCatalogResource{}.basic(data), data.RandomInteger)
+}
+
+func (AccessPackageCatalogRoleAssignmentResource) servicePrincipal(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_access_package_catalog_role" "test" {
+  display_name = "Catalog owner"
+}
+
+data "azuread_client_config" "test" {}
+
+resource "azuread_access_package_catalog_role_assignment" "test" {
+  role_id             = data.azuread_access_package_catalog_role.test.object_id
+  catalog_id          = azuread_access_package_catalog.test.id
+  principal_object_id = data.azuread_client_config.test.object_id
+}
+`, AccessPackageCatalogResource{}.basic(data), data.RandomInteger, data.RandomPassword)
+}
+
+func (AccessPackageCatalogRoleAssignmentResource) user(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_access_package_catalog_role" "test" {
+  display_name = "Catalog owner"
+}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser'%[2]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[2]d"
+  password            = "%[3]s"
+}
+
+resource "azuread_access_package_catalog_role_assignment" "test" {
+  role_id             = data.azuread_access_package_catalog_role.test.object_id
+  catalog_id          = azuread_access_package_catalog.test.id
+  principal_object_id = azuread_user.test.object_id
 }
 `, AccessPackageCatalogResource{}.basic(data), data.RandomInteger, data.RandomPassword)
 }

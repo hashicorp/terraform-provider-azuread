@@ -32,10 +32,12 @@ func accessPackageCatalogRoleDataSource() *schema.Resource {
 				ExactlyOneOf: []string{"display_name", "object_id"},
 			},
 
-			"template_id": {
-				Description: "The object ID of the template associated with the catalog role",
-				Type:        schema.TypeString,
-				Computed:    true,
+			"object_id": {
+				Description:  "The object ID of the catalog role",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_name", "object_id"},
 			},
 
 			"description": {
@@ -44,12 +46,10 @@ func accessPackageCatalogRoleDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"object_id": {
-				Description:  "The object ID of the catalog role",
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"display_name", "object_id"},
+			"template_id": {
+				Description: "The object ID of the template associated with the catalog role",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}

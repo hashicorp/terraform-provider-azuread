@@ -26,9 +26,9 @@ func TestAccAccessPackageCatalogRoleDataSource_basic(t *testing.T) {
 	})
 }
 
-func (AccessPackageCatalogRoleDataSource) basic(data acceptance.TestData) string {
+func (AccessPackageCatalogRoleDataSource) basic(_ acceptance.TestData) string {
 	return `provider azuread {}
 data "azuread_access_package_catalog_role" "test" {
-	display_name = "Catalog owner"
+  display_name = "Catalog owner"
 }`
 }
