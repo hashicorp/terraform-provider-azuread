@@ -114,7 +114,7 @@ The following arguments are supported:
 
 !> **Warning** Do not use the `administrative_unit_ids` property at the same time as the [azuread_administrative_unit_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit_member) resource, or the `members` property of the [azuread_administrative_unit](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit#members) resource, _for the same group_. Doing so will cause a conflict and administrative unit members will be removed.
 
-* `assignable_to_role` - (Optional) Indicates whether this group can be assigned to an Azure Active Directory role. Can only be `true` for security-enabled groups. Changing this forces a new resource to be created.
+* `assignable_to_role` - (Optional) Indicates whether this group can be assigned to an Azure Active Directory role. Defaults to `false`. Can only be set to `true` for security-enabled groups. Changing this forces a new resource to be created.
 * `auto_subscribe_new_members` - (Optional) Indicates whether new members added to the group will be auto-subscribed to receive email notifications. Can only be set for Unified groups.
 
 ~> **Known Permissions Issue** The `auto_subscribe_new_members` property can only be set when authenticating as a Member user of the tenant and _not_ when authenticating as a Guest user or as a service principal. Please see the [Microsoft Graph Known Issues](https://docs.microsoft.com/en-us/graph/known-issues#groups) documentation.
