@@ -54,6 +54,7 @@ func TestAccSynchronizationJob_disabled(t *testing.T) {
 func (r SynchronizationJobResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.SynchronizationJobClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.SynchronizationJobID(state.ID)
 	if err != nil {

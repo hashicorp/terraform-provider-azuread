@@ -195,6 +195,7 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *schema.Resource
 
 	// Wait for synchronization secret to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		synchronizationSecrets, _, _ := client.GetSecrets(ctx, id.ServicePrincipalId)

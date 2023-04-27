@@ -67,6 +67,7 @@ resource "azuread_claims_mapping_policy" "test" {
 func (r ClaimsMappingPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Policies.ClaimsMappingPolicyClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	exists := false
 	_, status, err := client.Get(ctx, state.ID, odata.Query{})

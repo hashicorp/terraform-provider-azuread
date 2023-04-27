@@ -247,6 +247,7 @@ func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d
 
 	// Wait for credential to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		credentials, _, err := client.ListFederatedIdentityCredentials(ctx, id.ObjectId, odata.Query{})

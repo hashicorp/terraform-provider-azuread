@@ -289,6 +289,7 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 
 	// Wait for service principal token signing certificate to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

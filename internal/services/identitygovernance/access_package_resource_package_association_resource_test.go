@@ -36,6 +36,7 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageResourceRoleScopeClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.AccessPackageResourcePackageAssociationID(state.ID)
 	if err != nil {

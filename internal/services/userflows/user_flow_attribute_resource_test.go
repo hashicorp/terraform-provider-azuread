@@ -69,6 +69,7 @@ func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 func (r UserflowAttributeResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.UserFlows.UserFlowAttributesClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	userFlowAttr, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {

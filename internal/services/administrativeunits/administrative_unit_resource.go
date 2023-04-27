@@ -356,6 +356,7 @@ func administrativeUnitResourceDelete(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for administrative unit object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, administrativeUnitId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

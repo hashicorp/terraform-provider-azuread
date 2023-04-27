@@ -50,6 +50,7 @@ func TestAccAccessPackageResourceCatalogAssociation_requiresImport(t *testing.T)
 func (r AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageResourceClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(state.ID)
 	if err != nil {
