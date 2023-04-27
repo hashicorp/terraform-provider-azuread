@@ -1,3 +1,9 @@
+## 2.38.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_service_principal_token_signing_certificate` - fix a crash when importing legacy certificates [GH-1082]
+
 ## 2.37.2 (April 20, 2023)
 
 BUG FIXES:
