@@ -1,14 +1,14 @@
-## 2.38.0 (Unreleased)
+## 2.38.0 (April 27, 2023)
 
 FEATURES:
 
-* **New Data Source:** `azuread_access_package_catalog_role` [GH-1033]
-* **New Resource:** `azuread_access_package_catalog_role_assignment` [GH-1033]
+* **New Data Source:** `azuread_access_package_catalog_role` ([#1033](https://github.com/hashicorp/terraform-provider-azuread/issues/1033))
+* **New Resource:** `azuread_access_package_catalog_role_assignment` ([#1033](https://github.com/hashicorp/terraform-provider-azuread/issues/1033))
 
 BUG FIXES:
 
-* **Provider:** fix an issue where API requests might not be retried correctly [GH-1090]
-* `azuread_service_principal_token_signing_certificate` - fix a crash when importing legacy certificates [GH-1082]
+* **Provider:** fix an issue where API requests might not be retried correctly ([#1090](https://github.com/hashicorp/terraform-provider-azuread/issues/1090))
+* `azuread_service_principal_token_signing_certificate` - fix a crash when importing legacy certificates ([#1082](https://github.com/hashicorp/terraform-provider-azuread/issues/1082))
 
 ## 2.37.2 (April 20, 2023)
 
