@@ -1,5 +1,10 @@
 ## 2.38.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `azuread_access_package_catalog_role` [GH-1033]
+* **New Resource:** `azuread_access_package_catalog_role_assignment` [GH-1033]
+
 BUG FIXES:
 
 * `azuread_service_principal_token_signing_certificate` - fix a crash when importing legacy certificates [GH-1082]
