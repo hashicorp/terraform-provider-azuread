@@ -128,7 +128,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for the job to appear, this can take several moments
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

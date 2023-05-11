@@ -138,7 +138,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),

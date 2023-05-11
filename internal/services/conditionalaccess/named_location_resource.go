@@ -156,7 +156,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 		base.DisplayName = &displayName
 	}
 
-	var updateRefreshFunc resource.StateRefreshFunc
+	var updateRefreshFunc resource.StateRefreshFunc //nolint:staticcheck
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
@@ -218,7 +218,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Waiting for named location %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &resource.StateChangeConf{
+	stateConf := &resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Updated"},
 		Timeout:                   time.Until(timeout),

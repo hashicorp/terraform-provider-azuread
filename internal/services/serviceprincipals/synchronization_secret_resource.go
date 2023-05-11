@@ -99,7 +99,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 
 	// Wait for the secret to appear
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
