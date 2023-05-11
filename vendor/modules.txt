@@ -1,13 +1,9 @@
 # github.com/agext/levenshtein v1.2.3
 ## explicit
 github.com/agext/levenshtein
-# github.com/apparentlymart/go-cidr v1.1.0
-## explicit
 # github.com/apparentlymart/go-textseg/v13 v13.0.0
 ## explicit; go 1.16
 github.com/apparentlymart/go-textseg/v13/textseg
-# github.com/davecgh/go-spew v1.1.1
-## explicit
 # github.com/fatih/color v1.13.0
 ## explicit; go 1.13
 github.com/fatih/color
