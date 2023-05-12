@@ -1,12 +1,12 @@
-## 2.39.0 (Unreleased)
+## 2.39.0 (May 12, 2023)
 
 IMPROVEMENTS:
 
-* dependencies: updating to `v0.20230511.1094507` of `github.com/hashicorp/go-azure-sdk` [GH-1100]
+* dependencies: updating to `v0.20230511.1094507` of `github.com/hashicorp/go-azure-sdk` ([#1100](https://github.com/hashicorp/terraform-provider-azuread/issues/1100))
 
 BUG FIXES:
 
-* **provider:** fix a token refresh bug that could cause authentication errors after initial token expiry [GH-1100]
+* **provider:** fix a token refresh bug that could cause authentication errors after initial token expiry ([#1100](https://github.com/hashicorp/terraform-provider-azuread/issues/1100))
 
 ## 2.38.0 (April 27, 2023)
 
