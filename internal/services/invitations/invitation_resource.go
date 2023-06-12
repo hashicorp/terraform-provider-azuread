@@ -162,35 +162,15 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("redeem_url", invitation.InviteRedeemURL)
 
-	// Attempt to patch the newly created guest user, which will tell us whether it exists yet
+	// Attempt to read the newly created guest user, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	status, err := usersClient.Update(ctx, msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: invitation.InvitedUser.ID(),
-		},
-		CompanyName: utils.NullableString("TERRAFORM_UPDATE"),
-	})
+	_, status, err := usersClient.Get(ctx, *invitation.InvitedUser.ID(), odata.Query{})
+
 	if err != nil {
 		if status == http.StatusNotFound {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
 		}
-		if status != http.StatusForbidden {
-			return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
-		}
-	}
-	status, err = usersClient.Update(ctx, msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: invitation.InvitedUser.ID(),
-		},
-		CompanyName: utils.NullableString(""),
-	})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
-		}
-		if status != http.StatusForbidden {
-			return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
-		}
+		return tf.ErrorDiagF(err, "Failed to get guest user after creating invitation")
 	}
 
 	return invitationResourceRead(ctx, d, meta)
