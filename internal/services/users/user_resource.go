@@ -230,7 +230,7 @@ func userResource() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 256), // Currently the max length for AAD passwords is 256
+				ValidateFunc: validation.StringLenBetween(0, 256), // Currently the max length for AAD passwords is 256
 			},
 
 			"disable_strong_password": {
