@@ -125,6 +125,21 @@ func TestAccUser_passwordOmitted(t *testing.T) {
 	})
 }
 
+func TestAccUser_passwordEmpty(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_user", "test")
+	r := UserResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.passwordEmpty(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("force_password_change", "password"),
+	})
+}
+
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Users.UsersClient
 	client.BaseClient.DisableRetries = true
@@ -275,6 +290,22 @@ data "azuread_domains" "test" {
 resource "azuread_user" "test" {
   user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d"
+}
+`, data.RandomInteger)
+}
+
+func (UserResource) passwordEmpty(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread"  {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = ""
 }
 `, data.RandomInteger)
 }
