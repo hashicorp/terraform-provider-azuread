@@ -36,7 +36,7 @@ The following arguments are supported:
 * `company_name` - (Optional) The company name which the user is associated. This property can be useful for describing the company that an external user comes from.
 * `consent_provided_for_minor` - (Optional) Whether consent has been obtained for minors. Supported values are `Granted`, `Denied` and `NotRequired`. Omit this property or specify a blank string to unset.
 * `cost_center` - (Optional) The cost center associated with the user.
-* `country` - (Optional) The country/region in which the user is located, e.g. `US` or `UK`.
+* `country` - (Optional) The country/region in which the user is located. Examples include: `NO`, `JP`, and `GB`.
 * `department` - (Optional) The name for the department in which the user works.
 * `disable_password_expiration` - (Optional) Whether the user's password is exempt from expiring. Defaults to `false`.
 * `disable_strong_password` - (Optional) Whether the user is allowed weaker passwords than the default policy to be specified. Defaults to `false`.
