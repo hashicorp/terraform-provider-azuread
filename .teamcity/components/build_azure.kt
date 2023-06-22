@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-import jetbrains.buildServer.configs.kotlin.v2019_2.ParametrizedWithType
+import jetbrains.buildServer.configs.kotlin.ParametrizedWithType
 
 class ClientConfiguration(var clientId: String,
                           var clientSecret: String,
