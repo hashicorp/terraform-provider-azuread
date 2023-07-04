@@ -510,6 +510,7 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = true
     cloud_app_security_policy                 = "monitorOnly"
     persistent_browser_mode                   = "never"
     sign_in_frequency                         = 10
@@ -553,6 +554,7 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = false
     cloud_app_security_policy                 = "blockDownloads"
     persistent_browser_mode                   = "always"
     sign_in_frequency                         = 2
