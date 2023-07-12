@@ -1,3 +1,9 @@
+## 2.40.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* `azuread_conditional_access_policy` - support for the `disable_resilience_defaults` property in the `session_controls` block [GH-1135]
+
 ## 2.39.0 (May 12, 2023)
 
 IMPROVEMENTS:
