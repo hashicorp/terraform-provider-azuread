@@ -1,25 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	DirectoryObjectsClient *msgraph.DirectoryObjectsClient
-	GroupsClient           *msgraph.GroupsClient
+	AdministrativeUnitsClient *msgraph.AdministrativeUnitsClient
+	DirectoryObjectsClient    *msgraph.DirectoryObjectsClient
+	GroupsClient              *msgraph.GroupsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	administrativeUnitsClient := msgraph.NewAdministrativeUnitsClient()
+	o.ConfigureClient(&administrativeUnitsClient.BaseClient)
+
+	// SDK uses wrong endpoint for v1.0 API, see https://github.com/manicminer/hamilton/issues/222
+	administrativeUnitsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
-	groupsClient := msgraph.NewGroupsClient(o.TenantID)
+	groupsClient := msgraph.NewGroupsClient()
 	o.ConfigureClient(&groupsClient.BaseClient)
 
+	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
+	groupsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+
 	return &Client{
-		DirectoryObjectsClient: directoryObjectsClient,
-		GroupsClient:           groupsClient,
+		AdministrativeUnitsClient: administrativeUnitsClient,
+		DirectoryObjectsClient:    directoryObjectsClient,
+		GroupsClient:              groupsClient,
 	}
 }

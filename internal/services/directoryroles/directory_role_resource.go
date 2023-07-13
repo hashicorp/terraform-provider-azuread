@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles
 
 import (
@@ -10,12 +13,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func directoryRoleResource() *schema.Resource {
@@ -138,11 +140,11 @@ func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, me
 	if directoryRole == nil {
 		return tf.ErrorDiagF(errors.New("unexpected: directoryRole was nil"), "Retrieving directory role for template ID %q", templateId)
 	}
-	if directoryRole.ID == nil {
+	if directoryRole.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API error: directoryRole returned with nil ID"), "Retrieving directory role for template ID %q", templateId)
 	}
 
-	d.SetId(*directoryRole.ID)
+	d.SetId(*directoryRole.ID())
 
 	return directoryRoleResourceRead(ctx, d, meta)
 }
@@ -165,7 +167,7 @@ func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta
 
 	tf.Set(d, "description", directoryRole.Description)
 	tf.Set(d, "display_name", directoryRole.DisplayName)
-	tf.Set(d, "object_id", directoryRole.ID)
+	tf.Set(d, "object_id", directoryRole.ID())
 	tf.Set(d, "template_id", directoryRole.RoleTemplateId)
 
 	return nil

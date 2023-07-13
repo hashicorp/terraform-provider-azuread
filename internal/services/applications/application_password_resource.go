@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -9,12 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -143,29 +145,29 @@ func applicationPasswordResourceCreate(ctx context.Context, d *schema.ResourceDa
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
 	}
 
-	newCredential, _, err := client.AddPassword(ctx, *app.ID, *credential)
+	newCredential, _, err := client.AddPassword(ctx, *app.ID(), *credential)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(err, "Adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential.KeyId == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for application with object ID %q", *app.ID())
 	}
 	if newCredential.SecretText == nil || len(*newCredential.SecretText) == 0 {
-		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for application with object ID %q", *app.ID())
 	}
 
-	id := parse.NewCredentialID(*app.ID, "password", *newCredential.KeyId)
+	id := parse.NewCredentialID(*app.ID(), "password", *newCredential.KeyId)
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -272,6 +274,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *schema.ResourceDa
 
 	// Wait for application password to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

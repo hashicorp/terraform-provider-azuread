@@ -1,9 +1,15 @@
-import jetbrains.buildServer.configs.kotlin.v2019_2.*
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
-class serviceDetails(name: String, displayName: String, environment: String) {
+import jetbrains.buildServer.configs.kotlin.*
+
+class serviceDetails(name: String, displayName: String, environment: String, vcsRootId : String) {
     val packageName = name
     val displayName = displayName
     val environment = environment
+    val vcsRootId = vcsRootId
 
     fun buildConfiguration(providerName : String, nightlyTestsEnabled: Boolean, startHour: Int, parallelism: Int) : BuildType {
         return BuildType {
@@ -13,7 +19,7 @@ class serviceDetails(name: String, displayName: String, environment: String) {
             name = "%s - Acceptance Tests".format(displayName)
 
             vcs {
-                root(providerRepository)
+                root(rootId = AbsoluteId(vcsRootId))
                 cleanCheckout = true
             }
 

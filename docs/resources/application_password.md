@@ -54,7 +54,7 @@ resource "azuread_application_password" "example" {
 The following arguments are supported:
 
 * `application_object_id` - (Required) The object ID of the application for which this password should be created. Changing this field forces a new resource to be created.
-* `display_name` - (Optional) A display name for the password.
+* `display_name` - (Optional) A display name for the password. Changing this field forces a new resource to be created.
 * `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
 * `end_date_relative` - (Optional) A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created.
 * `rotate_when_changed` - (Optional) A map of arbitrary key/value pairs that will force recreation of the password when they change, enabling password rotation based on external conditions such as a rotating timestamp. Changing this forces a new resource to be created.

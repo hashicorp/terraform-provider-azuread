@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -9,16 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationPreAuthorizedResource() *schema.Resource {
@@ -84,7 +86,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 
@@ -105,7 +107,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
@@ -138,7 +140,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -160,7 +162,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,
@@ -190,7 +192,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *schema.Resourc
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -233,7 +235,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
@@ -250,7 +252,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.Resou
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.ID(),
 		},
 		Api: &msgraph.ApplicationApi{
 			PreAuthorizedApplications: &newPreAuthorizedApps,

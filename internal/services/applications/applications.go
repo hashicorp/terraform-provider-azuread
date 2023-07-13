@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -9,14 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bool {
@@ -45,7 +47,7 @@ func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bo
 }
 
 func applicationDisableAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
-	if application.ID == nil {
+	if application.ID() == nil {
 		return fmt.Errorf("cannot use Application model with nil ID")
 	}
 
@@ -53,13 +55,13 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		newRoles = &[]msgraph.AppRole{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
+	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID)
+			return fmt.Errorf("application with ID %q was not found", *application.ID())
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 	}
 
 	var existingRoles []msgraph.AppRole
@@ -108,12 +110,12 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 		// Disable any changed or removed roles
 		properties := msgraph.Application{
 			DirectoryObject: msgraph.DirectoryObject{
-				ID: application.ID,
+				Id: application.ID(),
 			},
 			AppRoles: &existingRoles,
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling App Roles for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("disabling App Roles for Application with object ID %q: %+v", *application.ID(), err)
 		}
 
 		// Wait for application manifest to reflect the disabled roles
@@ -122,18 +124,18 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{
+		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
+				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 				}
 				if app == nil || app.AppRoles == nil {
-					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *application.ID(), err)
 				}
 				actualRoles := *app.AppRoles
 				for _, expectedRole := range existingRoles {
@@ -152,7 +154,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for App Roles to be disabled for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("waiting for App Roles to be disabled for Application with object ID %q: %+v", *application.ID(), err)
 		}
 	}
 
@@ -160,21 +162,21 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 }
 
 func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newScopes *[]msgraph.PermissionScope) error {
-	if application.ID == nil {
-		return fmt.Errorf("Cannot use Application model with nil ID")
+	if application.ID() == nil {
+		return fmt.Errorf("cannot use Application model with nil ID")
 	}
 
 	if newScopes == nil {
 		newScopes = &[]msgraph.PermissionScope{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID, odata.Query{})
+	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID)
+			return fmt.Errorf("application with ID %q was not found", *application.ID())
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 	}
 
 	var existingScopes []msgraph.PermissionScope
@@ -223,14 +225,14 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 		// Disable any changed or removed scopes
 		properties := msgraph.Application{
 			DirectoryObject: msgraph.DirectoryObject{
-				ID: application.ID,
+				Id: application.ID(),
 			},
 			Api: &msgraph.ApplicationApi{
 				OAuth2PermissionScopes: &existingScopes,
 			},
 		}
 		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling OAuth2 Permission Scopes for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("disabling OAuth2 Permission Scopes for Application with object ID %q: %+v", *application.ID(), err)
 		}
 
 		// Wait for application manifest to reflect the disabled scopes
@@ -239,18 +241,18 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{
+		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID, odata.Query{})
+				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
 				}
 				if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-					return nil, "Error", fmt.Errorf("reading scopes for Application with object ID %q: %+v", *application.ID, err)
+					return nil, "Error", fmt.Errorf("reading scopes for Application with object ID %q: %+v", *application.ID(), err)
 				}
 				actualScopes := *app.Api.OAuth2PermissionScopes
 				for _, expectedScope := range existingScopes {
@@ -269,7 +271,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for Application with object ID %q: %+v", *application.ID, err)
+			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for Application with object ID %q: %+v", *application.ID(), err)
 		}
 	}
 
@@ -310,18 +312,29 @@ func applicationParseLogoImage(encodedImage string) (string, []byte, error) {
 }
 
 func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) error {
-	var ids, values []string
+	type appPermission struct {
+		id          string
+		displayName string
+		description string
+		enabled     bool
+		value       string
+	}
+	var appPermissions []appPermission
 
 	for _, roleRaw := range appRoles {
 		if roleRaw == nil {
 			continue
 		}
 		role := roleRaw.(map[string]interface{})
-		if id := role["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
-			ids = append(ids, id)
+		permission := appPermission{
+			id:          role["id"].(string),
+			displayName: role["display_name"].(string),
+			description: role["description"].(string),
+			enabled:     role["enabled"].(bool),
+			value:       role["value"].(string),
 		}
-		if val := role["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
-			values = append(values, val)
+		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+			appPermissions = append(appPermissions, permission)
 		}
 	}
 
@@ -330,32 +343,35 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			continue
 		}
 		scope := scopeRaw.(map[string]interface{})
-		if id := scope["id"].(string); tf.ValueIsNotEmptyOrUnknown(id) {
-			ids = append(ids, id)
+		permission := appPermission{
+			id:          scope["id"].(string),
+			displayName: scope["admin_consent_display_name"].(string),
+			description: scope["admin_consent_description"].(string),
+			enabled:     scope["enabled"].(bool),
+			value:       scope["value"].(string),
 		}
-		if val := scope["value"].(string); tf.ValueIsNotEmptyOrUnknown(val) {
-			values = append(values, val)
+		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+			appPermissions = append(appPermissions, permission)
 		}
 	}
 
-	encounteredIds := make([]string, 0)
-	for _, id := range ids {
-		for _, en := range encounteredIds {
-			if en == id {
-				return fmt.Errorf("validation failed: duplicate ID found: %q", id)
+	encounteredPermissions := make([]appPermission, 0)
+	for _, ap := range appPermissions {
+		for _, ep := range encounteredPermissions {
+			if ap.id == ep.id && ap.value != ep.value {
+				return fmt.Errorf("validation failed: duplicate ID found: %q", ap.id)
+			}
+			if ap.value == ep.value && ap.id != ep.id {
+				return fmt.Errorf("validation failed: duplicate value found: %q", ap.value)
+			}
+			if ap.value == ep.value && ap.id == ep.id && !reflect.DeepEqual(ap, ep) {
+				return fmt.Errorf(`validation failed: The following values must match for the
+				'oauth2Permissions' and 'appRoles' properties with identifier '%q': (description, adminConsentDescription),
+				(displayName, adminConsentDisplayName),(isEnabled,isEnabled),(origin, origin),(value, value).
+				Ensure that you are intending to have entries with the same identifier, and if so, are updating them together`, ap.id)
 			}
 		}
-		encounteredIds = append(encounteredIds, id)
-	}
-
-	encounteredValues := make([]string, 0)
-	for _, val := range values {
-		for _, en := range encounteredValues {
-			if en == val {
-				return fmt.Errorf("validation failed: duplicate value found: %q", val)
-			}
-		}
-		encounteredValues = append(encounteredValues, val)
+		encounteredPermissions = append(encounteredPermissions, ap)
 	}
 
 	return nil

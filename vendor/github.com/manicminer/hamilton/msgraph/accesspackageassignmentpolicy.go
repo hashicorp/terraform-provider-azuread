@@ -8,16 +8,16 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type AccessPackageAssignmentPolicyClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageAssignmentPolicyClient(tenantId string) *AccessPackageAssignmentPolicyClient {
+func NewAccessPackageAssignmentPolicyClient() *AccessPackageAssignmentPolicyClient {
 	return &AccessPackageAssignmentPolicyClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -28,8 +28,7 @@ func (c *AccessPackageAssignmentPolicyClient) List(ctx context.Context, query od
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies",
 		},
 	})
 	if err != nil {
@@ -64,8 +63,7 @@ func (c *AccessPackageAssignmentPolicyClient) Create(ctx context.Context, access
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies",
-			HasTenantId: true,
+			Entity: "/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies",
 		},
 	})
 	if err != nil {
@@ -93,8 +91,7 @@ func (c *AccessPackageAssignmentPolicyClient) Get(ctx context.Context, id string
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", id),
 		},
 	})
 	if err != nil {
@@ -133,8 +130,7 @@ func (c *AccessPackageAssignmentPolicyClient) Update(ctx context.Context, access
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", *accessPackageAssignmentPolicy.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", *accessPackageAssignmentPolicy.ID),
 		},
 	})
 	if err != nil {
@@ -150,8 +146,7 @@ func (c *AccessPackageAssignmentPolicyClient) Delete(ctx context.Context, id str
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageAssignmentPolicies/%s", id),
 		},
 	})
 	if err != nil {

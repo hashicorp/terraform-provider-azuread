@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals_test
 
 import (
@@ -58,6 +61,7 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "test" {
 func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(state.ID)
 	if err != nil {
@@ -74,7 +78,7 @@ func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx contex
 
 	// Check the assignment is found in the currently assigned policies
 	for _, policy := range *policyList {
-		if policy.ID != nil && *policy.ID == id.ClaimsMappingPolicyId {
+		if policy.ID() != nil && *policy.ID() == id.ClaimsMappingPolicyId {
 			return utils.Bool(true), nil
 		}
 	}

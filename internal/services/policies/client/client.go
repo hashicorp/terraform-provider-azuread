@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package client
 
 import (
@@ -10,7 +13,7 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient(o.TenantID)
+	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient()
 	o.ConfigureClient(&claimsMappingPolicyClient.BaseClient)
 
 	return &Client{

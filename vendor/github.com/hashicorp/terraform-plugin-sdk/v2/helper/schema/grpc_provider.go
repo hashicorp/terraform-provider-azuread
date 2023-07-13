@@ -75,11 +75,11 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 	}
 
 	resp.Provider = &tfprotov5.Schema{
-		Block: convert.ConfigSchemaToProto(s.getProviderSchemaBlock()),
+		Block: convert.ConfigSchemaToProto(ctx, s.getProviderSchemaBlock()),
 	}
 
 	resp.ProviderMeta = &tfprotov5.Schema{
-		Block: convert.ConfigSchemaToProto(s.getProviderMetaSchemaBlock()),
+		Block: convert.ConfigSchemaToProto(ctx, s.getProviderMetaSchemaBlock()),
 	}
 
 	for typ, res := range s.provider.ResourcesMap {
@@ -87,7 +87,7 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 
 		resp.ResourceSchemas[typ] = &tfprotov5.Schema{
 			Version: int64(res.SchemaVersion),
-			Block:   convert.ConfigSchemaToProto(res.CoreConfigSchema()),
+			Block:   convert.ConfigSchemaToProto(ctx, res.CoreConfigSchema()),
 		}
 	}
 
@@ -96,7 +96,7 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 
 		resp.DataSourceSchemas[typ] = &tfprotov5.Schema{
 			Version: int64(dat.SchemaVersion),
-			Block:   convert.ConfigSchemaToProto(dat.CoreConfigSchema()),
+			Block:   convert.ConfigSchemaToProto(ctx, dat.CoreConfigSchema()),
 		}
 	}
 
@@ -1109,6 +1109,22 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 
 		// Normalize the value and fill in any missing blocks.
 		newStateVal = objchange.NormalizeObjectFromLegacySDK(newStateVal, schemaBlock)
+
+		// Ensure any timeouts block is null in the imported state. There is no
+		// configuration to read from during import, so it is never valid to
+		// return a known value for the block.
+		//
+		// This is done without modifying HCL2ValueFromFlatmap or
+		// NormalizeObjectFromLegacySDK to prevent other unexpected changes.
+		//
+		// Reference: https://github.com/hashicorp/terraform-plugin-sdk/issues/1145
+		newStateType := newStateVal.Type()
+
+		if newStateVal != cty.NilVal && !newStateVal.IsNull() && newStateType.IsObjectType() && newStateType.HasAttribute(TimeoutsConfigKey) {
+			newStateValueMap := newStateVal.AsValueMap()
+			newStateValueMap[TimeoutsConfigKey] = cty.NullVal(newStateType.AttributeType(TimeoutsConfigKey))
+			newStateVal = cty.ObjectVal(newStateValueMap)
+		}
 
 		newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 		if err != nil {

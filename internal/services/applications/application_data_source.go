@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -7,15 +10,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationDataSource() *schema.Resource {
@@ -203,6 +205,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"description": {
+				Description: "Description of the application as shown to end users",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        schema.TypeBool,
@@ -269,6 +277,12 @@ func applicationDataSource() *schema.Resource {
 
 			"logo_url": {
 				Description: "CDN URL to the application's logo",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
+			"notes": {
+				Description: "User-specified notes relevant for the management of the application",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -379,6 +393,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"service_management_reference": {
+				Description: "References application or service contact information from a Service or Asset Management database",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the current application",
 				Type:        schema.TypeString,
@@ -478,6 +498,7 @@ func applicationDataSource() *schema.Resource {
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var app *msgraph.Application
 
@@ -541,11 +562,11 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(fmt.Errorf("app was unexpectedly nil"), "Application not found")
 	}
 
-	if app.ID == nil {
+	if app.ID() == nil {
 		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
 	}
 
-	d.SetId(*app.ID)
+	d.SetId(*app.ID())
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
@@ -558,12 +579,14 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
-	tf.Set(d, "object_id", app.ID)
+	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)
@@ -581,9 +604,9 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
 	}
 
-	owners, _, err := client.ListOwners(ctx, *app.ID)
+	owners, _, err := client.ListOwners(ctx, *app.ID())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID)
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID())
 	}
 	tf.Set(d, "owners", owners)
 

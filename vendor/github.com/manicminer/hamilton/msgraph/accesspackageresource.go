@@ -7,16 +7,16 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type AccessPackageResourceClient struct {
 	BaseClient Client
 }
 
-func NewAccessPackageResourceClient(tenantId string) *AccessPackageResourceClient {
+func NewAccessPackageResourceClient() *AccessPackageResourceClient {
 	return &AccessPackageResourceClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -27,8 +27,7 @@ func (c *AccessPackageResourceClient) List(ctx context.Context, catalogId string
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
 		},
 	})
 	if err != nil {
@@ -57,12 +56,11 @@ func (c *AccessPackageResourceClient) Get(ctx context.Context, catalogId string,
 	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		OData: odata.Query{
-			Filter: fmt.Sprintf("startswith(originId,'%s')", originId),
+			Filter: fmt.Sprintf("originId eq '%s'", originId),
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/identityGovernance/entitlementManagement/accessPackageCatalogs/%s/accessPackageResources", catalogId),
 		},
 	})
 	if err != nil {
@@ -82,7 +80,11 @@ func (c *AccessPackageResourceClient) Get(ctx context.Context, catalogId string,
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 
-	accessPackageResource := data.AccessPackageResources[0]
+	accessPackageResources := data.AccessPackageResources
 
-	return &accessPackageResource, status, nil
+	if len(accessPackageResources) == 0 {
+		return nil, status, fmt.Errorf("No accessPackageResource found with catalogId %v and originId %v", catalogId, originId)
+	}
+
+	return &accessPackageResources[0], status, nil
 }

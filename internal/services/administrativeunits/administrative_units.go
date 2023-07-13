@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package administrativeunits
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func administrativeUnitFindByName(ctx context.Context, client *msgraph.AdministrativeUnitsClient, displayName string) (*[]msgraph.AdministrativeUnit, error) {

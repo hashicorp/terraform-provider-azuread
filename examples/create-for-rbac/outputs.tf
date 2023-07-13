@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 output "display_name" {
   value = azuread_service_principal.example.display_name
 }
@@ -12,6 +15,7 @@ output "client_certificate" {
 
 output "client_key" {
   value = tls_private_key.example.private_key_pem
+  sensitive = true
 }
 
 output "client_secret" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications_test
 
 import (
@@ -7,10 +10,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -214,6 +216,35 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	})
 }
 
+func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
+				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
+				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("1"),
+			),
+		},
+	})
+}
+
+func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config:      r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data),
+			ExpectError: regexp.MustCompile("validation failed: The following values must match for the"),
+		},
+	})
+}
+
 func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
@@ -347,7 +378,7 @@ func TestAccApplication_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.noOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
@@ -559,6 +590,7 @@ func TestAccApplication_logo(t *testing.T) {
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 	app, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -566,7 +598,7 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 		}
 		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(app.ID != nil && *app.ID == state.ID), nil
+	return utils.Bool(app.ID() != nil && *app.ID() == state.ID), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {
@@ -583,8 +615,11 @@ func (ApplicationResource) basicFromTemplate(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
+data "azuread_client_config" "test" {}
+
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
+  owners       = [data.azuread_client_config.test.object_id]
   template_id  = "%[2]s"
 }
 `, data.RandomInteger, testApplicationTemplateId)
@@ -636,6 +671,10 @@ resource "azuread_application" "test" {
   device_only_auth_enabled       = true
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
+
+  description                  = "Acceptance testing application"
+  notes                        = "Testing application"
+  service_management_reference = "app-for-testing"
 
   marketing_url         = "https://hashitown-%[1]d.com/"
   privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
@@ -821,6 +860,7 @@ resource "azuread_application" "test" {
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
 
+  description           = "Acceptance testing application"
   marketing_url         = "https://templatetown-%[1]d.com/"
   privacy_statement_url = "https://templatetown-%[1]d.com/privacy"
   support_url           = "https://support.templatetown-%[1]d.com/"
@@ -1236,11 +1276,6 @@ resource "azuread_application" "test" {
 func (ApplicationResource) duplicateAppRolesOauth2PermissionsIdsUnknown(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
-provider "random" {}
-
-resource "random_uuid" "test" {
-  count = 2
-}
 
 resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
@@ -1250,7 +1285,7 @@ resource "azuread_application" "test" {
       admin_consent_description  = "Administer the application"
       admin_consent_display_name = "Administer"
       enabled                    = true
-      id                         = random_uuid.test[0].id
+      id                         = "%[2]s"
       type                       = "Admin"
       value                      = "administer"
     }
@@ -1261,7 +1296,7 @@ resource "azuread_application" "test" {
     description          = "Admins can manage roles and perform all task actions"
     display_name         = "Admin"
     enabled              = true
-    id                   = random_uuid.test[1].id
+    id                   = "%[3]s"
     value                = "administrate"
   }
 }
@@ -1298,6 +1333,66 @@ resource "azuread_application" "test" {
 `, data.RandomInteger, data.UUID(), data.UUID())
 }
 
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Administer the application"
+    display_name         = "Administer"
+    enabled              = true
+    id                   = "%[2]s"
+    value                = "administer"
+  }
+}
+`, data.RandomInteger, data.UUID())
+}
+
+func (ApplicationResource) duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "This should (see app_role[0].description"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "%[2]s"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+
+  app_role {
+    allowed_member_types = ["User"]
+    description          = "Not work"
+    display_name         = "Administer"
+    enabled              = true
+    id                   = "%[2]s"
+    value                = "administer"
+  }
+}
+`, data.RandomInteger, data.UUID())
+}
+
 func (ApplicationResource) templateThreeUsers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -1327,15 +1422,15 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
-func (ApplicationResource) noOwners(data acceptance.TestData) string {
+func (r ApplicationResource) noOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-provider "azuread" {}
+%[1]s
 
 resource "azuread_application" "test" {
-  display_name = "acctest-APP-%[1]d"
+  display_name = "acctest-APP-%[2]d"
   owners       = []
 }
-`, data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger, data.RandomInteger)
 }
 
 func (r ApplicationResource) singleOwner(data acceptance.TestData) string {

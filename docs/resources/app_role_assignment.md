@@ -147,11 +147,34 @@ resource "azuread_app_role_assignment" "example" {
 }
 ```
 
+*Assign a group to the default app role for an internal application*
+
+```terraform
+resource "azuread_application" "internal" {
+  display_name = "internal"
+}
+
+resource "azuread_service_principal" "internal" {
+  application_id = azuread_application.internal.application_id
+}
+
+resource "azuread_group" "example" {
+  display_name     = "example"
+  security_enabled = true
+}
+
+resource "azuread_app_role_assignment" "example" {
+  app_role_id         = "00000000-0000-0000-0000-000000000000"
+  principal_object_id = azuread_group.example.object_id
+  resource_object_id  = azuread_service_principal.internal.object_id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `app_role_id` - (Required) The ID of the app role to be assigned. Changing this forces a new resource to be created.
+* `app_role_id` - (Required) The ID of the app role to be assigned, or the default role ID `00000000-0000-0000-0000-000000000000`. Changing this forces a new resource to be created.
 * `principal_object_id` - (Required) The object ID of the user, group or service principal to be assigned this app role. Supported object types are Users, Groups or Service Principals. Changing this forces a new resource to be created.
 * `resource_object_id` - (Required) The object ID of the service principal representing the resource. Changing this forces a new resource to be created.
 

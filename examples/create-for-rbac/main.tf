@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Create Application
 resource "azuread_application" "example" {
   display_name = "example"
@@ -27,7 +30,7 @@ resource "tls_self_signed_cert" "example" {
   private_key_pem = tls_private_key.example.private_key_pem
 
   subject {
-    common_name  = azuread_application.example.name
+    common_name  = azuread_application.example.display_name
     organization = "Example Corp"
   }
 

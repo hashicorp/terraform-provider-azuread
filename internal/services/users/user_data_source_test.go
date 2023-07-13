@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users_test
 
 import (
@@ -6,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -67,6 +69,25 @@ func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{{
 		Config:      UserDataSource{}.byMailNicknameNonexistent(data),
 		ExpectError: regexp.MustCompile("User not found with email alias:"),
+	}})
+}
+
+func TestAccUserDataSource_byMail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byMail(data),
+		Check:  r.testCheckFunc(data),
+	}})
+}
+
+func TestAccUserDataSource_byMailNonexistent(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byMailNonexistent(data),
+		ExpectError: regexp.MustCompile("User not found with mail:"),
 	}})
 }
 
@@ -155,6 +176,28 @@ data "azuread_domains" "test" {
 
 data "azuread_user" "test" {
   mail_nickname = "not-a-real-user-%[1]d${data.azuread_domains.test.domains.0.domain_name}"
+}
+`, data.RandomInteger)
+}
+
+func (UserDataSource) byMail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_user" "test" {
+  mail = azuread_user.test.mail
+}
+`, UserResource{}.complete(data))
+}
+
+func (UserDataSource) byMailNonexistent(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+data "azuread_user" "test" {
+  mail = "not-a-real-user-%[1]d${data.azuread_domains.test.domains.0.domain_name}"
 }
 `, data.RandomInteger)
 }

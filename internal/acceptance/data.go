@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acceptance
 
 import (
@@ -8,7 +11,6 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
 
@@ -36,6 +38,9 @@ type TestData struct {
 
 	// resourceLabel is the local used for the resource - generally "test""
 	resourceLabel string
+
+	// TenantID is the tenant to use when building the test client. When blank, the env var ARM_TENANT_ID is used.
+	TenantID string
 }
 
 func (t *TestData) UUID() string {

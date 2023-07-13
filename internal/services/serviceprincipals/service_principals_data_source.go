@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -10,14 +13,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func servicePrincipalsDataSource() *schema.Resource {
@@ -175,6 +177,7 @@ func servicePrincipalsDataSource() *schema.Resource {
 func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var servicePrincipals []msgraph.ServicePrincipal
 	var expectedCount int
@@ -276,11 +279,11 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData
 	objectIds := make([]string, 0)
 	spList := make([]map[string]interface{}, 0)
 	for _, s := range servicePrincipals {
-		if s.ID == nil || s.DisplayName == nil {
+		if s.ID() == nil || s.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned service principal with nil object ID or displayName"), "Bad API Response")
 		}
 
-		objectIds = append(objectIds, *s.ID)
+		objectIds = append(objectIds, *s.ID())
 		displayNames = append(displayNames, *s.DisplayName)
 		if s.AppId != nil {
 			applicationIds = append(applicationIds, *s.AppId)
@@ -302,7 +305,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData
 		sp["app_role_assignment_required"] = s.AppRoleAssignmentRequired
 		sp["application_id"] = s.AppId
 		sp["application_tenant_id"] = s.AppOwnerOrganizationId
-		sp["object_id"] = s.ID
+		sp["object_id"] = s.ID()
 		sp["preferred_single_sign_on_mode"] = s.PreferredSingleSignOnMode
 		sp["saml_metadata_url"] = s.SamlMetadataUrl
 		sp["service_principal_names"] = servicePrincipalNames

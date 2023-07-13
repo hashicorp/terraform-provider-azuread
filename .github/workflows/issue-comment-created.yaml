@@ -1,18 +1,37 @@
+---
 name: Issue Comment Created Triage
 
 on:
   issue_comment:
     types: [created]
 
+permissions:
+  pull-requests: write
+  issues: write
+
 jobs:
   issue_comment_triage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions-ecosystem/action-remove-labels@v1
+      - uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0 # v1.3.0
         with:
           github_token: "${{ secrets.GITHUB_TOKEN }}"
           labels: stale
-      - uses: actions-ecosystem/action-remove-labels@v1
+      - uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0 # v1.3.0
+        if: ${{ !github.event.issue.pull_request }}
         with:
           github_token: "${{ secrets.GITHUB_TOKEN }}"
           labels: waiting-response
+      - uses: actions-ecosystem/action-remove-labels@2ce5d41b4b6aa8503e285553f75ed56e0a40bae0 # v1.3.0
+        if: (github.event.issue.pull_request && github.actor == github.event.issue.user.login)
+        with:
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+          labels: waiting-response
+
+  pull_request_comment:
+    runs-on: ubuntu-latest
+    if: github.event.issue.pull_request && endsWith(github.event.comment.body, '/wr')
+    steps:
+      - shell: bash
+        run: |
+          curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos${{ github.owner }}/${{ github.repository }}/issues/${{ github.event.issue.number }}/labels" -d '{"labels":["waiting-response"]}'

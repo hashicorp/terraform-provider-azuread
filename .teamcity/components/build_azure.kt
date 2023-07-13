@@ -1,8 +1,14 @@
-import jetbrains.buildServer.configs.kotlin.v2019_2.ParametrizedWithType
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+import jetbrains.buildServer.configs.kotlin.ParametrizedWithType
 
 class ClientConfiguration(var clientId: String,
                           var clientSecret: String,
-                          val tenantId : String) {
+                          val tenantId : String,
+                          val vcsRootId : String) {
 }
 
 class LocationConfiguration(var primary : String, var secondary : String, var ternary : String, var rotate : Boolean) {

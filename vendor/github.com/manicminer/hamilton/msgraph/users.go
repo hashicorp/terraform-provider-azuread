@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // UsersClient performs operations on Users.
@@ -16,9 +16,9 @@ type UsersClient struct {
 }
 
 // NewUsersClient returns a new UsersClient.
-func NewUsersClient(tenantId string) *UsersClient {
+func NewUsersClient() *UsersClient {
 	return &UsersClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -29,8 +29,7 @@ func (c *UsersClient) List(ctx context.Context, query odata.Query) (*[]User, int
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/users",
-			HasTenantId: true,
+			Entity: "/users",
 		},
 	})
 	if err != nil {
@@ -62,15 +61,22 @@ func (c *UsersClient) Create(ctx context.Context, user User) (*User, int, error)
 		return nil, status, fmt.Errorf("json.Marshal(): %v", err)
 	}
 
+	consistencyFunc := func(resp *http.Response, o *odata.OData) bool {
+		if resp != nil && resp.StatusCode == http.StatusBadRequest && o != nil && o.Error != nil {
+			return o.Error.Match(odata.ErrorPropertyValuesAreInvalid)
+		}
+		return false
+	}
+
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body: body,
+		Body:                   body,
+		ConsistencyFailureFunc: consistencyFunc,
 		OData: odata.Query{
 			Metadata: odata.MetadataFull,
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/users",
-			HasTenantId: true,
+			Entity: "/users",
 		},
 	})
 	if err != nil {
@@ -98,8 +104,7 @@ func (c *UsersClient) Get(ctx context.Context, id string, query odata.Query) (*U
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s", id),
 		},
 	})
 	if err != nil {
@@ -143,8 +148,7 @@ func (c *UsersClient) GetWithSchemaExtensions(ctx context.Context, id string, qu
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s", id),
 		},
 	})
 	if err != nil {
@@ -172,8 +176,7 @@ func (c *UsersClient) GetDeleted(ctx context.Context, id string, query odata.Que
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s", id),
 		},
 	})
 	if err != nil {
@@ -208,8 +211,7 @@ func (c *UsersClient) Update(ctx context.Context, user User) (int, error) {
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s", *user.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s", *user.ID()),
 		},
 	})
 	if err != nil {
@@ -225,8 +227,7 @@ func (c *UsersClient) Delete(ctx context.Context, id string) (int, error) {
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s", id),
 		},
 	})
 	if err != nil {
@@ -242,8 +243,7 @@ func (c *UsersClient) DeletePermanently(ctx context.Context, id string) (int, er
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s", id),
 		},
 	})
 	if err != nil {
@@ -260,8 +260,7 @@ func (c *UsersClient) ListDeleted(ctx context.Context, query odata.Query) (*[]Us
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/directory/deleteditems/microsoft.graph.user",
-			HasTenantId: true,
+			Entity: "/directory/deleteditems/microsoft.graph.user",
 		},
 	})
 	if err != nil {
@@ -286,8 +285,7 @@ func (c *UsersClient) RestoreDeleted(ctx context.Context, id string) (*User, int
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s/restore", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s/restore", id),
 		},
 	})
 	if err != nil {
@@ -316,8 +314,7 @@ func (c *UsersClient) ListGroupMemberships(ctx context.Context, id string, query
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s/transitiveMemberOf", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s/transitiveMemberOf", id),
 		},
 	})
 	if err != nil {
@@ -354,8 +351,7 @@ func (c *UsersClient) Sendmail(ctx context.Context, id string, message MailMessa
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusOK, http.StatusAccepted},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s/sendMail", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s/sendMail", id),
 		},
 	})
 	if err != nil {
@@ -404,8 +400,7 @@ func (c *UsersClient) AssignManager(ctx context.Context, id string, manager User
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/users/%s/manager/$ref", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/users/%s/manager/$ref", id),
 		},
 	})
 	if err != nil {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package validate
 
 import (
@@ -20,10 +23,10 @@ func RoleScopeClaimValue(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		return
 	}
 
-	if len(v) > 120 {
+	if len(v) > 249 {
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Value must be between 0-120 characters in length",
+			Summary:       "Value must be between 0-249 characters in length",
 			AttributePath: path,
 		})
 	}

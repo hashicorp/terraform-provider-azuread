@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package groups
 
 import (
@@ -7,15 +10,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func groupDataSource() *schema.Resource {
@@ -151,6 +153,12 @@ func groupDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        schema.TypeString,
@@ -228,6 +236,12 @@ func groupDataSource() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+
+			"writeback_enabled": {
+				Description: "Whether this group is synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Type:        schema.TypeBool,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -235,6 +249,7 @@ func groupDataSource() *schema.Resource {
 func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var group msgraph.Group
 	var displayName string
@@ -244,10 +259,10 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var mailEnabled, securityEnabled *bool
-	if v, exists := d.GetOk("mail_enabled"); exists {
+	if v, exists := d.GetOkExists("mail_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
 		mailEnabled = utils.Bool(v.(bool))
 	}
-	if v, exists := d.GetOk("security_enabled"); exists {
+	if v, exists := d.GetOkExists("security_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
 		securityEnabled = utils.Bool(v.(bool))
 	}
 
@@ -308,27 +323,27 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		group = *g
 	}
 
-	if group.ID == nil {
+	if group.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*group.ID)
+	d.SetId(*group.ID())
 
 	tf.Set(d, "assignable_to_role", group.IsAssignableToRole)
-	tf.Set(d, "behaviors", tf.FlattenStringSlice(group.ResourceBehaviorOptions))
+	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(group.ResourceBehaviorOptions))
 	tf.Set(d, "description", group.Description)
 	tf.Set(d, "display_name", group.DisplayName)
 	tf.Set(d, "mail", group.Mail)
 	tf.Set(d, "mail_enabled", group.MailEnabled)
 	tf.Set(d, "mail_nickname", group.MailNickname)
-	tf.Set(d, "object_id", group.ID)
+	tf.Set(d, "object_id", group.ID())
 	tf.Set(d, "onpremises_domain_name", group.OnPremisesDomainName)
 	tf.Set(d, "onpremises_netbios_name", group.OnPremisesNetBiosName)
 	tf.Set(d, "onpremises_sam_account_name", group.OnPremisesSamAccountName)
 	tf.Set(d, "onpremises_security_identifier", group.OnPremisesSecurityIdentifier)
 	tf.Set(d, "onpremises_sync_enabled", group.OnPremisesSyncEnabled)
 	tf.Set(d, "preferred_language", group.PreferredLanguage)
-	tf.Set(d, "provisioning_options", tf.FlattenStringSlice(group.ResourceProvisioningOptions))
+	tf.Set(d, "provisioning_options", tf.FlattenStringSlicePtr(group.ResourceProvisioningOptions))
 	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(group.ProxyAddresses))
 	tf.Set(d, "security_enabled", group.SecurityEnabled)
 	tf.Set(d, "theme", group.Theme)
@@ -348,24 +363,30 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
+	if group.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
+	}
+
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
-	if hasGroupType(group.GroupTypes, msgraph.GroupTypeUnified) {
+	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
 		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
 		}
-
-		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
-			allowExternalSenders = *groupExtra.AllowExternalSenders
-		}
-		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
-			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
-		}
-		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
-			hideFromAddressLists = *groupExtra.HideFromAddressLists
-		}
-		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
-			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		if groupExtra != nil {
+			if groupExtra.AllowExternalSenders != nil {
+				allowExternalSenders = *groupExtra.AllowExternalSenders
+			}
+			if groupExtra.AutoSubscribeNewMembers != nil {
+				autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+			}
+			if groupExtra.HideFromAddressLists != nil {
+				hideFromAddressLists = *groupExtra.HideFromAddressLists
+			}
+			if groupExtra.HideFromOutlookClients != nil {
+				hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+			}
 		}
 	}
 

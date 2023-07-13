@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package common
 
 import (
@@ -9,13 +12,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/version"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type contextKey string
@@ -28,11 +30,15 @@ type ClientOptions struct {
 	TerraformVersion string
 
 	Authorizer auth.Authorizer
+	ApiVersion msgraph.ApiVersion
 }
 
 func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
+	// this should have already been checked during provider configuration
+	endpoint, _ := o.Environment.MicrosoftGraph.Endpoint()
+	c.Endpoint = *endpoint
+
 	c.Authorizer = o.Authorizer
-	c.Endpoint = o.Environment.MsGraph.Endpoint
 	c.UserAgent = o.userAgent(c.UserAgent)
 
 	if c.RequestMiddlewares == nil {
@@ -46,6 +52,9 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 
 	// Default retry limit, can be overridden from within a resource
 	c.RetryableClient.RetryMax = 9
+
+	// Explicitly set API version
+	c.ApiVersion = o.ApiVersion
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

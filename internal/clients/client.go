@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package clients
 
 import (
@@ -5,11 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"strings"
 
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-
+	"github.com/hashicorp/go-azure-sdk/sdk/claims"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+
 	administrativeunits "github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/client"
 	applications "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/client"
 	approleassignments "github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/client"
@@ -17,9 +23,11 @@ import (
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
 	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
+	identitygovernance "github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/client"
 	invitations "github.com/hashicorp/terraform-provider-azuread/internal/services/invitations/client"
 	policies "github.com/hashicorp/terraform-provider-azuread/internal/services/policies/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
+	userflows "github.com/hashicorp/terraform-provider-azuread/internal/services/userflows/client"
 	users "github.com/hashicorp/terraform-provider-azuread/internal/services/users/client"
 )
 
@@ -28,7 +36,8 @@ type Client struct {
 	Environment environments.Environment
 	TenantID    string
 	ClientID    string
-	Claims      auth.Claims
+	ObjectID    string
+	Claims      *claims.Claims
 
 	TerraformVersion string
 
@@ -41,9 +50,11 @@ type Client struct {
 	DirectoryRoles      *directoryroles.Client
 	Domains             *domains.Client
 	Groups              *groups.Client
+	IdentityGovernance  *identitygovernance.Client
 	Invitations         *invitations.Client
 	Policies            *policies.Client
 	ServicePrincipals   *serviceprincipals.Client
+	UserFlows           *userflows.Client
 	Users               *users.Client
 }
 
@@ -57,17 +68,20 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.ConditionalAccess = conditionalaccess.NewClient(o)
 	client.DirectoryRoles = directoryroles.NewClient(o)
 	client.Groups = groups.NewClient(o)
+	client.IdentityGovernance = identitygovernance.NewClient(o)
 	client.Invitations = invitations.NewClient(o)
 	client.Policies = policies.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
+	client.UserFlows = userflows.NewClient(o)
 	client.Users = users.NewClient(o)
 
 	// Acquire an access token upfront, so we can decode the JWT and populate the claims
-	token, err := o.Authorizer.Token()
+	token, err := o.Authorizer.Token(ctx, &http.Request{})
 	if err != nil {
 		return fmt.Errorf("unable to obtain access token: %v", err)
 	}
-	client.Claims, err = auth.ParseClaims(token)
+
+	client.Claims, err = claims.ParseClaims(token)
 	if err != nil {
 		return fmt.Errorf("unable to parse claims in access token: %v", err)
 	}
@@ -83,7 +97,45 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	}
 
 	// Missing object ID of token holder will break many things
-	if client.Claims.ObjectId == "" {
+	client.ObjectID = client.Claims.ObjectId
+	if client.ObjectID == "" {
+		if strings.Contains(strings.ToLower(client.Claims.Scopes), "openid") {
+			log.Printf("[DEBUG] Querying Microsoft Graph to discover authenticated user principal object ID because the `oid` claim was missing from the access token")
+			result, _, err := client.Users.MeClient.Get(ctx, odata.Query{})
+			if err != nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated user principal: %+v", err)
+			}
+
+			id := result.ID
+			if id == nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated user principal: returned object ID was nil")
+			}
+
+			client.ObjectID = *id
+		} else {
+			log.Printf("[DEBUG] Querying Microsoft Graph to discover authenticated service principal object ID because the `oid` claim was missing from the access token")
+			query := odata.Query{
+				Filter: fmt.Sprintf("appId eq '%s'", client.ClientID),
+			}
+			result, _, err := client.ServicePrincipals.ServicePrincipalsClient.List(ctx, query)
+			if err != nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: %+v", err)
+			}
+
+			if len(*result) != 1 {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: unexpected number of results, expected 1, received %d", len(*result))
+			}
+
+			id := (*result)[0].ID()
+			if id == nil {
+				return fmt.Errorf("attempting to discover object ID for authenticated service principal: returned object ID was nil")
+			}
+
+			client.ObjectID = *id
+		}
+	}
+
+	if client.ObjectID == "" {
 		return fmt.Errorf("parsing claims in access token: oid claim is empty")
 	}
 

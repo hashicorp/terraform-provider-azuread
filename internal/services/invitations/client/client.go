@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
@@ -12,10 +14,10 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	invitationsClient := msgraph.NewInvitationsClient(o.TenantID)
+	invitationsClient := msgraph.NewInvitationsClient()
 	o.ConfigureClient(&invitationsClient.BaseClient)
 
-	usersClient := msgraph.NewUsersClient(o.TenantID)
+	usersClient := msgraph.NewUsersClient()
 	o.ConfigureClient(&usersClient.BaseClient)
 
 	return &Client{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -9,13 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/odata"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
@@ -144,29 +145,29 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
 	}
-	if sp == nil || sp.ID == nil {
+	if sp == nil || sp.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
 	}
 
-	newCredential, _, err := client.AddPassword(ctx, *sp.ID, *credential)
+	newCredential, _, err := client.AddPassword(ctx, *sp.ID(), *credential)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding password for service principal with object ID %q", *sp.ID)
+		return tf.ErrorDiagF(err, "Adding password for service principal with object ID %q", *sp.ID())
 	}
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for service principal with object ID %q", *sp.ID)
+		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for service principal with object ID %q", *sp.ID())
 	}
 	if newCredential.KeyId == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for service principal with object ID %q", *sp.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for service principal with object ID %q", *sp.ID())
 	}
 	if newCredential.SecretText == nil || len(*newCredential.SecretText) == 0 {
-		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for service principal with object ID %q", *sp.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for service principal with object ID %q", *sp.ID())
 	}
 
-	id := parse.NewCredentialID(*sp.ID, "password", *newCredential.KeyId)
+	id := parse.NewCredentialID(*sp.ID(), "password", *newCredential.KeyId)
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -272,6 +273,7 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.Resou
 
 	// Wait for service principal password to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

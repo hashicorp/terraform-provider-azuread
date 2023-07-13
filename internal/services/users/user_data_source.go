@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users
 
 import (
@@ -7,15 +10,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func userDataSource() *schema.Resource {
@@ -27,11 +29,20 @@ func userDataSource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"mail": {
+				Description:      "The SMTP address for the user",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
 			"mail_nickname": {
 				Description:      "The email alias of the user",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
@@ -41,7 +52,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.UUID,
 			},
 
@@ -50,7 +61,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
@@ -170,12 +181,6 @@ func userDataSource() *schema.Resource {
 
 			"job_title": {
 				Description: "The user’s job title",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"mail": {
-				Description: "The SMTP address for the user",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -312,6 +317,7 @@ func userDataSource() *schema.Resource {
 func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var user msgraph.User
 
@@ -345,6 +351,24 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 		}
 		user = *u
+	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
+		query := odata.Query{
+			Filter: fmt.Sprintf("mail eq '%s'", utils.EscapeSingleQuote(mail)),
+		}
+		users, _, err := client.List(ctx, query)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Finding user with mail: %q", mail)
+		}
+		if users == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		count := len(*users)
+		if count > 1 {
+			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
+		} else if count == 0 {
+			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
+		}
+		user = (*users)[0]
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		query := odata.Query{
 			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
@@ -358,20 +382,20 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		count := len(*users)
 		if count > 1 {
-			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", upn)
+			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", mailNickname)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", upn)
+			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 		user = (*users)[0]
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` or `mail_nickname` must be supplied")
 	}
 
-	if user.ID == nil {
+	if user.ID() == nil {
 		return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID)
+	d.SetId(*user.ID())
 
 	tf.Set(d, "account_enabled", user.AccountEnabled)
 	tf.Set(d, "age_group", user.AgeGroup)
@@ -393,7 +417,7 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tf.Set(d, "mail", user.Mail)
 	tf.Set(d, "mail_nickname", user.MailNickname)
 	tf.Set(d, "mobile_phone", user.MobilePhone)
-	tf.Set(d, "object_id", user.ID)
+	tf.Set(d, "object_id", user.ID())
 	tf.Set(d, "office_location", user.OfficeLocation)
 	tf.Set(d, "onpremises_distinguished_name", user.OnPremisesDistinguishedName)
 	tf.Set(d, "onpremises_domain_name", user.OnPremisesDomainName)
@@ -420,13 +444,13 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	managerId := ""
-	manager, status, err := client.GetManager(ctx, *user.ID)
+	manager, status, err := client.GetManager(ctx, *user.ID())
 	if status != http.StatusNotFound {
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID)
+			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID())
 		}
-		if manager != nil && manager.ID != nil {
-			managerId = *manager.ID
+		if manager != nil && manager.ID() != nil {
+			managerId = *manager.ID()
 		}
 	}
 	tf.Set(d, "manager_id", managerId)

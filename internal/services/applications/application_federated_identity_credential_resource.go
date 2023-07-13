@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -8,19 +11,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationFederatedIdentityCredentialResource() *schema.Resource {
@@ -55,9 +57,11 @@ func applicationFederatedIdentityCredentialResource() *schema.Resource {
 				Description: "List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
 				Type:        schema.TypeList,
 				Required:    true,
+				MaxItems:    1,
+				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppUri,
+					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
@@ -110,7 +114,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		}
 		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
 	}
-	if app == nil || app.ID == nil {
+	if app == nil || app.ID() == nil {
 		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
 	}
 
@@ -122,22 +126,22 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		Subject:     utils.String(d.Get("subject").(string)),
 	}
 
-	newCredential, _, err := client.CreateFederatedIdentityCredential(ctx, *app.ID, credential)
+	newCredential, _, err := client.CreateFederatedIdentityCredential(ctx, *app.ID(), credential)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(err, "Adding federated identity credential for application with object ID %q", *app.ID())
 	}
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for application with object ID %q", *app.ID())
 	}
 	if newCredential.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for application with object ID %q", *app.ID)
+		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for application with object ID %q", *app.ID())
 	}
 
-	id := parse.NewCredentialID(*app.ID, "federatedIdentityCredential", *newCredential.ID)
+	id := parse.NewCredentialID(*app.ID(), "federatedIdentityCredential", *newCredential.ID)
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -246,6 +250,7 @@ func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d
 
 	// Wait for credential to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		credentials, _, err := client.ListFederatedIdentityCredentials(ctx, id.ObjectId, odata.Query{})

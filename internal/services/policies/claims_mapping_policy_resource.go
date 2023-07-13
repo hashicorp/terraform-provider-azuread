@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package policies
 
 import (
@@ -6,6 +9,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
 )
 
 func claimsMappingPolicyResource() *schema.Resource {
@@ -61,11 +64,11 @@ func claimsMappingPolicyResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagF(err, "Could not create Claims Mapping Policy")
 	}
 
-	if policy.ID == nil || *policy.ID == "" {
+	if policy.ID() == nil || *policy.ID() == "" {
 		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for Claims Mapping Policy is nil"), "Bad API response")
 	}
 
-	d.SetId(*policy.ID)
+	d.SetId(*policy.ID())
 
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
 }
@@ -97,7 +100,7 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *schema.ResourceDa
 
 	claimsMappingPolicy := msgraph.ClaimsMappingPolicy{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &objectId,
+			Id: &objectId,
 		},
 		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
 		DisplayName: utils.String(d.Get("display_name").(string)),

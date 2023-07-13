@@ -1,35 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
 	DirectoryObjectsClient       *msgraph.DirectoryObjectsClient
 	DirectoryRolesClient         *msgraph.DirectoryRolesClient
 	DirectoryRoleTemplatesClient *msgraph.DirectoryRoleTemplatesClient
+	RoleAssignmentsClient        *msgraph.RoleAssignmentsClient
 	RoleDefinitionsClient        *msgraph.RoleDefinitionsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient(o.TenantID)
+	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
-	directoryRolesClient := msgraph.NewDirectoryRolesClient(o.TenantID)
+	directoryRolesClient := msgraph.NewDirectoryRolesClient()
 	o.ConfigureClient(&directoryRolesClient.BaseClient)
 
-	directoryRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient(o.TenantID)
+	directoryRoleTemplatesClient := msgraph.NewDirectoryRoleTemplatesClient()
 	o.ConfigureClient(&directoryRoleTemplatesClient.BaseClient)
 
-	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient(o.TenantID)
+	roleAssignmentsClient := msgraph.NewRoleAssignmentsClient()
+	o.ConfigureClient(&roleAssignmentsClient.BaseClient)
+
+	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient()
 	o.ConfigureClient(&roleDefinitionsClient.BaseClient)
 
 	return &Client{
 		DirectoryObjectsClient:       directoryObjectsClient,
 		DirectoryRolesClient:         directoryRolesClient,
 		DirectoryRoleTemplatesClient: directoryRoleTemplatesClient,
+		RoleAssignmentsClient:        roleAssignmentsClient,
 		RoleDefinitionsClient:        roleDefinitionsClient,
 	}
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users
 
 import (
@@ -9,18 +12,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func userResource() *schema.Resource {
@@ -51,7 +53,6 @@ func userResource() *schema.Resource {
 				Description:      "The user principal name (UPN) of the user",
 				Type:             schema.TypeString,
 				Required:         true,
-				ForceNew:         true,
 				ValidateDiagFunc: validate.StringIsEmailAddress,
 			},
 
@@ -393,6 +394,7 @@ func userResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, m
 func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	password := d.Get("password").(string)
 	if password == "" {
@@ -471,16 +473,16 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
-	if user.ID == nil || *user.ID == "" {
+	if user.ID() == nil || *user.ID() == "" {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID)
+	d.SetId(*user.ID())
 
 	// Wait until the user is updatable (the SDK handles retries for us)
 	_, err = client.Update(ctx, msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: user.ID,
+			Id: user.ID(),
 		},
 	})
 	if err != nil {
@@ -488,7 +490,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if managerId := d.Get("manager_id").(string); managerId != "" {
-		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), managerId); err != nil {
+		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), managerId); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
 		}
 	}
@@ -499,6 +501,7 @@ func userResourceCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	var passwordPolicies string
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
@@ -514,7 +517,7 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	properties := msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(d.Id()),
+			Id: utils.String(d.Id()),
 		},
 		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
 		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
@@ -540,11 +543,11 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		PasswordPolicies:  utils.NullableString(passwordPolicies),
 		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
 		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList: utils.Bool(d.Get("show_in_address_list").(bool)),
 		State:             utils.NullableString(d.Get("state").(string)),
 		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
 		Surname:           utils.NullableString(d.Get("surname").(string)),
 		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
+		UserPrincipalName: utils.String(d.Get("user_principal_name").(string)),
 	}
 
 	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
@@ -568,12 +571,16 @@ func userResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
 	}
 
+	if d.HasChange("show_in_address_list") {
+		properties.ShowInAddressList = utils.Bool(d.Get("show_in_address_list").(bool))
+	}
+
 	if _, err := client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user with ID: %q", d.Id())
 	}
 
 	if d.HasChange("manager_id") {
-		if err := assignManager(ctx, client, directoryObjectsClient, d.Id(), d.Get("manager_id").(string)); err != nil {
+		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), d.Get("manager_id").(string)); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
 		}
 	}
@@ -617,7 +624,7 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tf.Set(d, "mail", user.Mail)
 	tf.Set(d, "mail_nickname", user.MailNickname)
 	tf.Set(d, "mobile_phone", user.MobilePhone)
-	tf.Set(d, "object_id", user.ID)
+	tf.Set(d, "object_id", user.ID())
 	tf.Set(d, "office_location", user.OfficeLocation)
 	tf.Set(d, "onpremises_distinguished_name", user.OnPremisesDistinguishedName)
 	tf.Set(d, "onpremises_domain_name", user.OnPremisesDomainName)
@@ -666,8 +673,8 @@ func userResourceRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", objectId)
 		}
-		if manager != nil && manager.ID != nil {
-			managerId = *manager.ID
+		if manager != nil && manager.ID() != nil {
+			managerId = *manager.ID()
 		}
 	}
 	tf.Set(d, "manager_id", managerId)
@@ -695,6 +702,7 @@ func userResourceDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Wait for user object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, userId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

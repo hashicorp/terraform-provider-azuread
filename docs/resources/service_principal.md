@@ -12,7 +12,7 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
 
-It is not currently possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted.
+It may be possible to manage service principals whilst having only the `Application.ReadWrite.OwnedBy` role granted, however you must ensure that both the underlying application and the service principal have the Terraform principal as an owner.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
@@ -108,7 +108,7 @@ The following arguments are supported:
 
 * `preferred_single_sign_on_mode` - (Optional) The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are `oidc`, `password`, `saml` or `notSupported`. Omit this property or specify a blank string to unset.
 * `saml_single_sign_on` - (Optional) A `saml_single_sign_on` block as documented below.
-* `tags` - (Optional) A set of tags to apply to the service principal. Cannot be used together with the `feature_tags` block.
+* `tags` - (Optional) A set of tags to apply to the service principal for configuring specific behaviours of the service principal. Note that these are not provided for use by practitioners. Cannot be used together with the `feature_tags` block.
 
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of service principals. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values set for the linked application will also propagate to this service principal.
 

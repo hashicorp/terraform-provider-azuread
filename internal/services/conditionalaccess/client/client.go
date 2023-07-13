@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package client
 
 import (
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
@@ -12,12 +14,11 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) *Client {
-	namedLocationsClient := msgraph.NewNamedLocationsClient(o.TenantID)
+	namedLocationsClient := msgraph.NewNamedLocationsClient()
 	o.ConfigureClient(&namedLocationsClient.BaseClient)
 
-	policiesClient := msgraph.NewConditionalAccessPoliciesClient(o.TenantID)
+	policiesClient := msgraph.NewConditionalAccessPoliciesClient()
 	o.ConfigureClient(&policiesClient.BaseClient)
-	policiesClient.BaseClient.ApiVersion = msgraph.Version10
 
 	return &Client{
 		NamedLocationsClient: namedLocationsClient,

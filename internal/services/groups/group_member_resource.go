@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package groups
 
 import (
@@ -9,17 +12,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func groupMemberResource() *schema.Resource {
@@ -63,6 +65,7 @@ func groupMemberResource() *schema.Resource {
 func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 	groupId := d.Get("group_object_id").(string)
 	memberId := d.Get("member_object_id").(string)
 
@@ -103,7 +106,7 @@ func groupMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
 	//}
 	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, memberId)))
+		client.BaseClient.Endpoint, tenantId, memberId)))
 
 	group.Members = &msgraph.Members{*memberObject}
 
@@ -167,6 +170,7 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for membership link to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.GroupId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {

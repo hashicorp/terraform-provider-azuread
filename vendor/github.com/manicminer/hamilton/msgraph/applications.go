@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/manicminer/hamilton/odata"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 // ApplicationsClient performs operations on Applications.
@@ -17,9 +17,9 @@ type ApplicationsClient struct {
 }
 
 // NewApplicationsClient returns a new ApplicationsClient
-func NewApplicationsClient(tenantId string) *ApplicationsClient {
+func NewApplicationsClient() *ApplicationsClient {
 	return &ApplicationsClient{
-		BaseClient: NewClient(VersionBeta, tenantId),
+		BaseClient: NewClient(VersionBeta),
 	}
 }
 
@@ -30,8 +30,7 @@ func (c *ApplicationsClient) List(ctx context.Context, query odata.Query) (*[]Ap
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/applications",
-			HasTenantId: true,
+			Entity: "/applications",
 		},
 	})
 	if err != nil {
@@ -70,8 +69,7 @@ func (c *ApplicationsClient) Create(ctx context.Context, application Application
 		},
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      "/applications",
-			HasTenantId: true,
+			Entity: "/applications",
 		},
 	})
 	if err != nil {
@@ -99,8 +97,7 @@ func (c *ApplicationsClient) Get(ctx context.Context, id string, query odata.Que
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s", id),
 		},
 	})
 	if err != nil {
@@ -129,8 +126,7 @@ func (c *ApplicationsClient) GetDeleted(ctx context.Context, id string, query od
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s", id),
 		},
 	})
 	if err != nil {
@@ -155,7 +151,7 @@ func (c *ApplicationsClient) GetDeleted(ctx context.Context, id string, query od
 func (c *ApplicationsClient) Update(ctx context.Context, application Application) (int, error) {
 	var status int
 
-	if application.ID == nil {
+	if application.ID() == nil {
 		return status, errors.New("ApplicationsClient.Update(): cannot update application with nil ID")
 	}
 
@@ -182,8 +178,7 @@ func (c *ApplicationsClient) Update(ctx context.Context, application Application
 		ConsistencyFailureFunc: checkApplicationConsistency,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s", *application.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s", *application.ID()),
 		},
 	})
 	if err != nil {
@@ -199,8 +194,7 @@ func (c *ApplicationsClient) Delete(ctx context.Context, id string) (int, error)
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s", id),
 		},
 	})
 	if err != nil {
@@ -217,8 +211,7 @@ func (c *ApplicationsClient) DeletePermanently(ctx context.Context, id string) (
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s", id),
 		},
 	})
 	if err != nil {
@@ -235,8 +228,7 @@ func (c *ApplicationsClient) ListDeleted(ctx context.Context, query odata.Query)
 		OData:            query,
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/directory/deleteditems/microsoft.graph.application",
-			HasTenantId: true,
+			Entity: "/directory/deleteditems/microsoft.graph.application",
 		},
 	})
 	if err != nil {
@@ -262,8 +254,7 @@ func (c *ApplicationsClient) RestoreDeleted(ctx context.Context, id string) (*Ap
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directory/deletedItems/%s/restore", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directory/deletedItems/%s/restore", id),
 		},
 	})
 	if err != nil {
@@ -302,8 +293,7 @@ func (c *ApplicationsClient) AddPassword(ctx context.Context, applicationId stri
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK, http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/addPassword", applicationId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/addPassword", applicationId),
 		},
 	})
 	if err != nil {
@@ -342,8 +332,7 @@ func (c *ApplicationsClient) RemovePassword(ctx context.Context, applicationId s
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK, http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/removePassword", applicationId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/removePassword", applicationId),
 		},
 	})
 	if err != nil {
@@ -363,8 +352,7 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/owners", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/owners", id),
 		},
 	})
 	if err != nil {
@@ -378,10 +366,7 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 	}
 
 	var data struct {
-		Owners []struct {
-			Type string `json:"@odata.type"`
-			Id   string `json:"id"`
-		} `json:"value"`
+		Owners []DirectoryObject `json:"value"`
 	}
 	if err := json.Unmarshal(respBody, &data); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
@@ -389,7 +374,9 @@ func (c *ApplicationsClient) ListOwners(ctx context.Context, id string) (*[]stri
 
 	ret := make([]string, len(data.Owners))
 	for i, v := range data.Owners {
-		ret[i] = v.Id
+		if d := v.ID(); d != nil {
+			ret[i] = *d
+		}
 	}
 
 	return &ret, status, nil
@@ -406,8 +393,7 @@ func (c *ApplicationsClient) GetOwner(ctx context.Context, applicationId, ownerI
 		},
 		ValidStatusCodes: []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/owners/%s/$ref", applicationId, ownerId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/owners/%s/$ref", applicationId, ownerId),
 		},
 	})
 	if err != nil {
@@ -438,7 +424,7 @@ func (c *ApplicationsClient) GetOwner(ctx context.Context, applicationId, ownerI
 func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Application) (int, error) {
 	var status int
 
-	if application.ID == nil {
+	if application.ID() == nil {
 		return status, errors.New("cannot update application with nil ID")
 	}
 	if application.Owners == nil {
@@ -465,8 +451,7 @@ func (c *ApplicationsClient) AddOwners(ctx context.Context, application *Applica
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkOwnerAlreadyExists,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/applications/%s/owners/$ref", *application.ID),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/applications/%s/owners/$ref", *application.ID()),
 			},
 		})
 		if err != nil {
@@ -510,8 +495,7 @@ func (c *ApplicationsClient) RemoveOwners(ctx context.Context, applicationId str
 			ValidStatusCodes:       []int{http.StatusNoContent},
 			ValidStatusFunc:        checkOwnerGone,
 			Uri: Uri{
-				Entity:      fmt.Sprintf("/applications/%s/owners/%s/$ref", applicationId, ownerId),
-				HasTenantId: true,
+				Entity: fmt.Sprintf("/applications/%s/owners/%s/$ref", applicationId, ownerId),
 			},
 		})
 		if err != nil {
@@ -528,8 +512,7 @@ func (c *ApplicationsClient) ListExtensions(ctx context.Context, id string, quer
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/extensionProperties", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/extensionProperties", id),
 		},
 	})
 	if err != nil {
@@ -565,8 +548,7 @@ func (c *ApplicationsClient) CreateExtension(ctx context.Context, applicationExt
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/extensionProperties", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/extensionProperties", id),
 		},
 	})
 	if err != nil {
@@ -593,8 +575,7 @@ func (c *ApplicationsClient) DeleteExtension(ctx context.Context, applicationId,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/extensionProperties/%s", applicationId, extensionId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/extensionProperties/%s", applicationId, extensionId),
 		},
 	})
 	if err != nil {
@@ -614,8 +595,7 @@ func (c *ApplicationsClient) UploadLogo(ctx context.Context, applicationId, cont
 		ContentType:            contentType,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/logo", applicationId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/logo", applicationId),
 		},
 	})
 	if err != nil {
@@ -632,8 +612,7 @@ func (c *ApplicationsClient) ListFederatedIdentityCredentials(ctx context.Contex
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/federatedIdentityCredentials", applicationId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/federatedIdentityCredentials", applicationId),
 		},
 	})
 	if err != nil {
@@ -663,8 +642,7 @@ func (c *ApplicationsClient) GetFederatedIdentityCredential(ctx context.Context,
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, credentialId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, credentialId),
 		},
 	})
 	if err != nil {
@@ -698,8 +676,7 @@ func (c *ApplicationsClient) CreateFederatedIdentityCredential(ctx context.Conte
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusCreated},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/federatedIdentityCredentials", applicationId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/federatedIdentityCredentials", applicationId),
 		},
 	})
 	if err != nil {
@@ -737,8 +714,7 @@ func (c *ApplicationsClient) UpdateFederatedIdentityCredential(ctx context.Conte
 		Body:             body,
 		ValidStatusCodes: []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, *credential.ID),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, *credential.ID),
 		},
 	})
 	if err != nil {
@@ -754,8 +730,7 @@ func (c *ApplicationsClient) DeleteFederatedIdentityCredential(ctx context.Conte
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, credentialId),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/applications/%s/federatedIdentityCredentials/%s", applicationId, credentialId),
 		},
 	})
 	if err != nil {

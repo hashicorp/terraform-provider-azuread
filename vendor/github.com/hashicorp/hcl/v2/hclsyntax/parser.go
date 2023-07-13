@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package hclsyntax
 
 import (
@@ -167,8 +170,6 @@ func (p *parser) ParseBodyItem() (Node, hcl.Diagnostics) {
 			},
 		}
 	}
-
-	return nil, nil
 }
 
 // parseSingleAttrBody is a weird variant of ParseBody that deals with the
@@ -1176,7 +1177,12 @@ Token:
 			// if there was a parse error in the argument then we've
 			// probably been left in a weird place in the token stream,
 			// so we'll bail out with a partial argument list.
-			p.recover(TokenCParen)
+			recoveredTok := p.recover(TokenCParen)
+
+			// record the recovered token, if one was found
+			if recoveredTok.Type == TokenCParen {
+				closeTok = recoveredTok
+			}
 			break Token
 		}
 

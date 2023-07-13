@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users_test
 
 import (
@@ -7,10 +10,9 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -129,6 +131,7 @@ func TestAccUser_passwordOmitted(t *testing.T) {
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Users.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	user, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
@@ -137,7 +140,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 		}
 		return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(user.ID != nil && *user.ID == state.ID), nil
+	return utils.Bool(user.ID() != nil && *user.ID() == state.ID), nil
 }
 
 func (UserResource) basic(data acceptance.TestData) string {
@@ -171,7 +174,7 @@ resource "azuread_user" "manager" {
 }
 
 resource "azuread_user" "test" {
-  user_principal_name = "acctestUser'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "acctestUser'%[1]d-complete@${data.azuread_domains.test.domains.0.domain_name}"
   mail                = "acctestUser.%[1]d@hashicorp.biz"
   mail_nickname       = "acctestUser-%[1]d-MailNickname"
   other_mails         = ["acctestUser.%[1]d@hashicorp.net", "acctestUser.%[1]d@hashicorp.org"]

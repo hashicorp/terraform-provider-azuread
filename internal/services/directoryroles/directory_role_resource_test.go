@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles_test
 
 import (
@@ -8,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -54,6 +56,7 @@ func TestAccDirectoryRole_byTemplateId(t *testing.T) {
 func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRolesClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	role, status, err := client.Get(ctx, state.ID)
 	if err != nil {
@@ -62,7 +65,7 @@ func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Clie
 		}
 		return nil, fmt.Errorf("failed to retrieve Directory Role with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(role.ID != nil && *role.ID == state.ID), nil
+	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (DirectoryRoleResource) byDisplayName(_ acceptance.TestData) string {

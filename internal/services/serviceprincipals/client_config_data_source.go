@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -7,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 )
@@ -44,9 +46,9 @@ func clientConfigDataSource() *schema.Resource {
 
 func clientConfigDataSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client)
-	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ClientID, client.Claims.ObjectId))
+	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ClientID, client.ObjectID))
 	tf.Set(d, "tenant_id", client.TenantID)
 	tf.Set(d, "client_id", client.ClientID)
-	tf.Set(d, "object_id", client.Claims.ObjectId)
+	tf.Set(d, "object_id", client.ObjectID)
 	return nil
 }

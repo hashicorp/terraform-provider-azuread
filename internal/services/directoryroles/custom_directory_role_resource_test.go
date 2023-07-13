@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles_test
 
 import (
@@ -6,8 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/manicminer/hamilton/odata"
-
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
@@ -130,6 +132,7 @@ func TestAccCustomDirectoryRole_templateId(t *testing.T) {
 func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.RoleDefinitionsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	role, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
@@ -139,7 +142,7 @@ func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("failed to retrieve Custom Directory Role with object ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(role.ID != nil && *role.ID == state.ID), nil
+	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (r CustomDirectoryRoleResource) basic(data acceptance.TestData) string {

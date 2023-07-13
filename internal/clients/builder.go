@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package clients
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/manicminer/hamilton/auth"
-	"github.com/manicminer/hamilton/environments"
-
+	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ClientBuilder struct {
-	AuthConfig       *auth.Config
+	AuthConfig       *auth.Credentials
 	PartnerID        string
 	TerraformVersion string
 }
@@ -29,21 +32,12 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		return nil, fmt.Errorf("building client: AuthConfig is nil")
 	}
 
-	authorizer, err := b.AuthConfig.NewAuthorizer(ctx, b.AuthConfig.Environment.MsGraph)
+	authorizer, err := auth.NewAuthorizerFromCredentials(ctx, *b.AuthConfig, b.AuthConfig.Environment.MicrosoftGraph)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to build authorizer for Resource Manager API: %+v", err)
 	}
 
 	client.Environment = b.AuthConfig.Environment
-
-	o := &common.ClientOptions{
-		Authorizer:  authorizer,
-		Environment: client.Environment,
-		TenantID:    client.TenantID,
-
-		PartnerID:        b.PartnerID,
-		TerraformVersion: client.TerraformVersion,
-	}
 
 	// Obtain the tenant ID from Azure CLI
 	realAuthorizer := authorizer
@@ -58,6 +52,16 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 		if clientId, ok := environments.PublishedApis["MicrosoftAzureCli"]; ok && clientId != "" {
 			client.ClientID = clientId
 		}
+	}
+
+	o := &common.ClientOptions{
+		Authorizer:  authorizer,
+		ApiVersion:  msgraph.Version10,
+		Environment: client.Environment,
+		TenantID:    client.TenantID,
+
+		PartnerID:        b.PartnerID,
+		TerraformVersion: client.TerraformVersion,
 	}
 
 	if err := client.build(ctx, o); err != nil {

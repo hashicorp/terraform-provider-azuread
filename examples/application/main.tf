@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "random_uuid" "widgets_scope_id" {}
 
 resource "azuread_application" "widgets_service" {

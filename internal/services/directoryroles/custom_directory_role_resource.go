@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles
 
 import (
@@ -8,17 +11,16 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func customDirectoryRoleResource() *schema.Resource {
@@ -128,11 +130,11 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagF(err, "Creating custom directory role %q", displayName)
 	}
 
-	if role.ID == nil || *role.ID == "" {
+	if role.ID() == nil || *role.ID() == "" {
 		return tf.ErrorDiagF(errors.New("API returned custom directory role with nil ID"), "Bad API Response")
 	}
 
-	d.SetId(*role.ID)
+	d.SetId(*role.ID())
 
 	return customDirectoryRoleResourceRead(ctx, d, meta)
 }
@@ -145,7 +147,7 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *schema.ResourceDa
 
 	properties := msgraph.UnifiedRoleDefinition{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: &roleId,
+			Id: &roleId,
 		},
 		Description:     utils.NullableString(d.Get("description").(string)),
 		DisplayName:     utils.String(displayName),
@@ -183,7 +185,7 @@ func customDirectoryRoleResourceRead(ctx context.Context, d *schema.ResourceData
 	tf.Set(d, "description", role.Description)
 	tf.Set(d, "display_name", role.DisplayName)
 	tf.Set(d, "enabled", role.IsEnabled)
-	tf.Set(d, "object_id", role.ID)
+	tf.Set(d, "object_id", role.ID())
 	tf.Set(d, "permissions", flattenCustomRolePermissions(role.RolePermissions))
 	tf.Set(d, "template_id", role.TemplateId)
 	tf.Set(d, "version", role.Version)

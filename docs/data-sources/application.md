@@ -44,6 +44,7 @@ The following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_id` - The Application ID (also called Client ID).
+* `description` - A description of the application, as shown to end users.
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `display_name` - The display name for the application.
@@ -52,6 +53,7 @@ The following attributes are exported:
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_url` - CDN URL to the application's logo.
+* `notes` - User-specified notes relevant for the management of the application.
 * `marketing_url` - URL of the application's marketing page.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `oauth2_post_response_required` - Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. When `false`, only GET requests are allowed.
@@ -62,6 +64,7 @@ The following attributes are exported:
 * `public_client` - A `public_client` block as documented below.
 * `publisher_domain` - The verified publisher domain for the application.
 * `required_resource_access` - A collection of `required_resource_access` blocks as documented below.
+* `service_management_reference` - References application context information from a Service or Asset Management database.
 * `sign_in_audience` - The Microsoft account types that are supported for the current application. One of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`.
 * `single_page_application` - A `single_page_application` block as documented below.
 * `support_url` - URL of the application's support page.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package groups_test
 
 import (
@@ -5,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -30,6 +32,19 @@ func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 	data.DataSourceTest(t, []resource.TestStep{
 		{
 			Config: GroupDataSource{}.displayNameSecurity(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
+func TestAccGroupDataSource_byDisplayNameWithSecurityNotMail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.displayNameSecurityNotMail(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
@@ -137,6 +152,21 @@ func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_writeback(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.writeback(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("writeback_enabled").HasValue("true"),
+				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),
+			),
+		},
+	})
+}
+
 func (GroupDataSource) displayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -153,10 +183,22 @@ func (GroupDataSource) displayNameSecurity(data acceptance.TestData) string {
 
 data "azuread_group" "test" {
   display_name     = azuread_group.test.display_name
-  mail_enabled     = false
   security_enabled = true
 }
 `, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) displayNameSecurityNotMail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+
+data "azuread_group" "test" {
+  display_name     = azuread_group.test.display_name
+  mail_enabled     = false
+  security_enabled = true
+}
+`, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
 }
 
 func (GroupDataSource) caseInsensitiveDisplayName(data acceptance.TestData) string {
@@ -228,4 +270,14 @@ data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
 }
 `, GroupResource{}.unifiedWithExtraSettings(data))
+}
+
+func (GroupDataSource) writeback(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  display_name = azuread_group.test.display_name
+}
+`, GroupResource{}.withWriteback(data))
 }

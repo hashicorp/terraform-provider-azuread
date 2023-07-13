@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users
 
 import (
@@ -10,15 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 func usersData() *schema.Resource {
@@ -158,6 +160,7 @@ func usersData() *schema.Resource {
 func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var users []msgraph.User
 	var expectedCount int
@@ -257,11 +260,11 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	mailNicknames := make([]string, 0)
 	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
-		if u.ID == nil || u.UserPrincipalName == nil {
+		if u.ID() == nil || u.UserPrincipalName == nil {
 			return tf.ErrorDiagF(errors.New("API returned user with nil object ID or userPrincipalName"), "Bad API Response")
 		}
 
-		objectIds = append(objectIds, *u.ID)
+		objectIds = append(objectIds, *u.ID())
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
@@ -272,7 +275,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		user["display_name"] = u.DisplayName
 		user["mail"] = u.Mail
 		user["mail_nickname"] = u.MailNickname
-		user["object_id"] = u.ID
+		user["object_id"] = u.ID()
 		user["onpremises_immutable_id"] = u.OnPremisesImmutableId
 		user["onpremises_sam_account_name"] = u.OnPremisesSamAccountName
 		user["onpremises_user_principal_name"] = u.OnPremisesUserPrincipalName

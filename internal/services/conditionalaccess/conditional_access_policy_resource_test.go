@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conditionalaccess_test
 
 import (
@@ -6,10 +9,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -273,6 +275,52 @@ func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_clientApplications(t *testing.T) {
+	// This is a separate test for two reasons:
+	// - conditional access policies applies either to users/groups or to client applications (workload identities)
+	// - conditional access policies using client applications requires special licensing (Microsoft Entra Workload Identities)
+
+	// Due to eventual consistency issues making it difficult to create a service principal on demand for inclusion in this
+	// test policy, the config for this test requires a pre-existing service principal named "Terraform Acceptance Tests (Single Tenant)"
+	// which should be linked to a single tenant application in the same tenant.
+
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.clientApplicationsIncluded(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.clientApplicationsExcluded(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.clientApplicationsIncluded(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
@@ -298,7 +346,7 @@ resource "azuread_conditional_access_policy" "test" {
     client_app_types = ["browser"]
 
     applications {
-      included_applications = ["All"]
+      included_applications = ["None"]
     }
 
     users {
@@ -508,6 +556,7 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = true
     cloud_app_security_policy                 = "monitorOnly"
     persistent_browser_mode                   = "never"
     sign_in_frequency                         = 10
@@ -551,6 +600,7 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = false
     cloud_app_security_policy                 = "blockDownloads"
     persistent_browser_mode                   = "always"
     sign_in_frequency                         = 2
@@ -594,6 +644,75 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = false
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) clientApplicationsIncluded(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    client_applications {
+      included_service_principals = [data.azuread_service_principal.test.object_id]
+    }
+
+    users {
+      included_users = ["None"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) clientApplicationsExcluded(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    client_applications {
+      included_service_principals = ["ServicePrincipalsInMyTenant"]
+      excluded_service_principals = [data.azuread_service_principal.test.object_id]
+    }
+
+    users {
+      included_users = ["None"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
   }
 }
 `, data.RandomInteger)

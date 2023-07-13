@@ -1,6 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package helpers
 
 import (
+	"bytes"
+	"crypto/sha1"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
@@ -10,9 +16,8 @@ import (
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type CredentialError struct {
@@ -40,6 +45,18 @@ func GetKeyCredential(keyCredentials *[]msgraph.KeyCredential, id string) (crede
 	return
 }
 
+func GetVerifyKeyCredentialFromCustomKeyId(keyCredentials *[]msgraph.KeyCredential, id string) (credential *msgraph.KeyCredential) {
+	if keyCredentials != nil {
+		for _, cred := range *keyCredentials {
+			if cred.KeyId != nil && strings.EqualFold(*cred.CustomKeyIdentifier, id) && strings.EqualFold(cred.Usage, msgraph.KeyCredentialUsageVerify) {
+				credential = &cred
+				break
+			}
+		}
+	}
+	return
+}
+
 func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id string) (credential *msgraph.PasswordCredential) {
 	if passwordCredentials != nil {
 		for _, cred := range *passwordCredentials {
@@ -50,6 +67,24 @@ func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id
 		}
 	}
 	return
+}
+
+func GetTokenSigningCertificateThumbprint(certByte []byte) (string, error) {
+	block, _ := pem.Decode(certByte)
+	if block == nil {
+		return "", fmt.Errorf("decoding certificate block")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return "", fmt.Errorf("parsing certificate block data: %+v", err)
+	}
+	thumbprint := sha1.Sum(cert.Raw)
+
+	var buf bytes.Buffer
+	for _, f := range thumbprint {
+		fmt.Fprintf(&buf, "%02X", f)
+	}
+	return buf.String(), nil
 }
 
 func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
@@ -105,29 +140,11 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 		keyId = kid
 	}
 
-	var endDate time.Time
-	if v := d.Get("end_date").(string); v != "" {
-		var err error
-		endDate, err = time.Parse(time.RFC3339, v)
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
-		}
-	} else if v := d.Get("end_date_relative").(string); v != "" {
-		d, err := time.ParseDuration(v)
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
-		}
-		endDate = time.Now().Add(d)
-	} else {
-		return nil, CredentialError{str: "One of `end_date` or `end_date_relative` must be specified", attr: "end_date"}
-	}
-
 	credential := msgraph.KeyCredential{
-		KeyId:       utils.String(keyId),
-		Type:        keyType,
-		Usage:       msgraph.KeyCredentialUsageVerify,
-		Key:         utils.String(encodedValue),
-		EndDateTime: &endDate,
+		KeyId: utils.String(keyId),
+		Type:  keyType,
+		Usage: msgraph.KeyCredentialUsageVerify,
+		Key:   utils.String(encodedValue),
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -136,6 +153,33 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		credential.StartDateTime = &startDate
+	}
+
+	var endDate *time.Time
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
+		var err error
+		expiry, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+		}
+		endDate = &expiry
+	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
+		d, err := time.ParseDuration(v.(string))
+		if err != nil {
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+		}
+
+		if credential.StartDateTime == nil {
+			expiry := time.Now().Add(d)
+			endDate = &expiry
+		} else {
+			expiry := credential.StartDateTime.Add(d)
+			endDate = &expiry
+		}
+	}
+
+	if endDate != nil {
+		credential.EndDateTime = endDate
 	}
 
 	return &credential, nil
@@ -170,8 +214,14 @@ func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCre
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
-		expiry := time.Now().Add(d)
-		endDate = &expiry
+
+		if credential.StartDateTime == nil {
+			expiry := time.Now().Add(d)
+			endDate = &expiry
+		} else {
+			expiry := credential.StartDateTime.Add(d)
+			endDate = &expiry
+		}
 	}
 	if endDate != nil {
 		credential.EndDateTime = endDate

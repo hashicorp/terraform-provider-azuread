@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles
 
 import (
@@ -8,18 +11,17 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 const directoryRoleMemberResourceName = "azuread_directory_role_member"
@@ -41,6 +43,8 @@ func directoryRoleMemberResource() *schema.Resource {
 			_, err := parse.DirectoryRoleMemberID(id)
 			return err
 		}),
+
+		DeprecationMessage: "This resource is deprecated and will be removed in version 3.0 of the AzureAD provider. Please use the `azuread_directory_role_assignment` resource instead.",
 
 		Schema: map[string]*schema.Schema{
 			"role_object_id": {
@@ -65,6 +69,7 @@ func directoryRoleMemberResource() *schema.Resource {
 func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 	directoryObjectsClient := meta.(*clients.Client).DirectoryRoles.DirectoryObjectsClient
+	tenantId := meta.(*clients.Client).TenantID
 
 	id := parse.NewDirectoryRoleMemberID(d.Get("role_object_id").(string), d.Get("member_object_id").(string))
 
@@ -97,7 +102,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceDa
 	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id.MemberId)
 	//}
 	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, id.MemberId)))
+		client.BaseClient.Endpoint, tenantId, id.MemberId)))
 
 	role.Members = &msgraph.Members{*memberObject}
 
@@ -111,7 +116,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for role member %q to reflect for directory role %q", id.MemberId, id.DirectoryRoleId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -177,6 +182,7 @@ func directoryRoleMemberResourceDelete(ctx context.Context, d *schema.ResourceDa
 
 	// Wait for membership link to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {

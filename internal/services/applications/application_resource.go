@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -10,14 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/manicminer/hamilton/msgraph"
-	"github.com/manicminer/hamilton/odata"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 const applicationResourceName = "azuread_application"
@@ -258,6 +260,13 @@ func applicationResource() *schema.Resource {
 				},
 			},
 
+			"description": {
+				Description:      "Description of the application as shown to end users",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(0, 1024)),
+			},
+
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
 				Type:        schema.TypeBool,
@@ -342,6 +351,13 @@ func applicationResource() *schema.Resource {
 				Description: "URL of the application's marketing page",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+
+			"notes": {
+				Description:      "User-specified notes relevant for the management of the application",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
 			// This is a top level attribute because d.SetNewComputed() doesn't work inside a block
@@ -454,6 +470,12 @@ func applicationResource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"service_management_reference": {
+				Description: "References application or service contact information from a Service or Asset Management database",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 
 			"sign_in_audience": {
@@ -632,11 +654,11 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 		if result != nil && len(*result) > 0 {
 			for _, existingApp := range *result {
-				if existingApp.ID == nil {
+				if existingApp.ID() == nil {
 					return fmt.Errorf("API error: application returned with nil object ID during duplicate name check")
 				}
-				if diff.Id() == "" || diff.Id() == *existingApp.ID {
-					return tf.ImportAsDuplicateError("azuread_application", *existingApp.ID, newDisplayName.(string))
+				if diff.Id() == "" || diff.Id() == *existingApp.ID() {
+					return tf.ImportAsDuplicateError("azuread_application", *existingApp.ID(), newDisplayName.(string))
 				}
 			}
 		}
@@ -712,7 +734,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
-			if diags := validate.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false)(v, cty.Path{}); diags.HasError() {
+			if diags := validate.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
 			}
@@ -879,7 +901,8 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
-	callerId := meta.(*clients.Client).Claims.ObjectId
+	callerId := meta.(*clients.Client).ObjectID
+	tenantId := meta.(*clients.Client).TenantID
 	displayName := d.Get("display_name").(string)
 	templateId := d.Get("template_id").(string)
 
@@ -891,10 +914,10 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 		if result != nil && len(*result) > 0 {
 			existingApp := (*result)[0]
-			if existingApp.ID == nil {
+			if existingApp.ID() == nil {
 				return tf.ErrorDiagF(errors.New("API returned application with nil object ID during duplicate name check"), "Bad API response")
 			}
-			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID, displayName)
+			return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID(), displayName)
 		}
 	}
 
@@ -930,11 +953,11 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		if result.Application == nil {
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Nil application object returned for instantiated application")
 		}
-		if result.Application.ID == nil || *result.Application.ID == "" {
+
+		if result.Application.ID() == nil || *result.Application.ID() == "" {
 			return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for instantiated application is nil/empty")
 		}
-
-		d.SetId(*result.Application.ID)
+		d.SetId(*result.Application.ID())
 
 		// The application was created out of band, so we'll update it just as if it was imported
 		return applicationResourceUpdate(ctx, d, meta)
@@ -947,10 +970,21 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
+	api := expandApplicationApi(d.Get("api").([]interface{}))
+
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	var acceptMappedClaims *bool
+	if api.AcceptMappedClaims != nil && *api.AcceptMappedClaims {
+		acceptMappedClaims = api.AcceptMappedClaims
+		api.AcceptMappedClaims = nil
+	}
+
 	// Create a new application
 	properties := msgraph.Application{
-		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
+		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(tempDisplayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
@@ -960,16 +994,18 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                      &tags,
-		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
+		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                       &tags,
+		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -984,7 +1020,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
 	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, client.BaseClient.TenantId, callerId)))
+		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
 	var ownersExtra msgraph.Owners
@@ -1006,8 +1042,8 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 			ownerObject := msgraph.DirectoryObject{
 				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-				ID: &ownerId,
+					client.BaseClient.Endpoint, tenantId, ownerId))),
+				Id: &ownerId,
 			}
 
 			if ownerCount < 19 {
@@ -1027,17 +1063,17 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(err, "Could not create application")
 	}
 
-	if app.ID == nil || *app.ID == "" {
+	if app.ID() == nil || *app.ID() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for application is nil/empty")
 	}
 
-	d.SetId(*app.ID)
+	d.SetId(*app.ID())
 
 	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	status, err := client.Update(ctx, msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: app.ID,
+			Id: app.Id,
 		},
 		DisplayName: utils.String(displayName),
 	})
@@ -1046,6 +1082,20 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
 		}
 		return tf.ErrorDiagF(err, "Failed to patch application after creating")
+	}
+
+	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
+	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
+	if acceptMappedClaims != nil {
+		api.AcceptMappedClaims = acceptMappedClaims
+		if _, err := client.Update(ctx, msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.Id,
+			},
+			Api: api,
+		}); err != nil {
+			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
+		}
 	}
 
 	if len(ownersExtra) > 0 {
@@ -1076,6 +1126,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
+	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
 
@@ -1087,12 +1138,12 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 		if result != nil && len(*result) > 0 {
 			for _, existingApp := range *result {
-				if existingApp.ID == nil {
+				if existingApp.ID() == nil {
 					return tf.ErrorDiagF(errors.New("API returned application with nil object ID during duplicate name check"), "Bad API response")
 				}
 
-				if *existingApp.ID != applicationId {
-					return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID, displayName)
+				if *existingApp.ID() != applicationId {
+					return tf.ImportAsDuplicateDiag("azuread_application", *existingApp.ID(), displayName)
 				}
 			}
 		}
@@ -1117,10 +1168,11 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	properties := msgraph.Application{
 		DirectoryObject: msgraph.DirectoryObject{
-			ID: utils.String(applicationId),
+			Id: utils.String(applicationId),
 		},
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
@@ -1130,16 +1182,18 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                      &tags,
-		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
+		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                       &tags,
+		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
@@ -1154,13 +1208,13 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+	if d.HasChange("owners") {
 		owners, _, err := client.ListOwners(ctx, applicationId)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
@@ -1170,8 +1224,8 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
 					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, client.BaseClient.TenantId, ownerId))),
-					ID: &ownerId,
+						client.BaseClient.Endpoint, tenantId, ownerId))),
+					Id: &ownerId,
 				})
 			}
 
@@ -1217,6 +1271,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "description", app.Description)
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)
@@ -1224,12 +1279,14 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
 	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
+	tf.Set(d, "notes", app.Notes)
 	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
-	tf.Set(d, "object_id", app.ID)
+	tf.Set(d, "object_id", app.ID())
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)
@@ -1260,9 +1317,9 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	tf.Set(d, "prevent_duplicate_names", preventDuplicates)
 
-	owners, _, err := client.ListOwners(ctx, *app.ID)
+	owners, _, err := client.ListOwners(ctx, *app.ID())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID)
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID())
 	}
 	tf.Set(d, "owners", owners)
 
@@ -1289,6 +1346,7 @@ func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for application object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, appId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

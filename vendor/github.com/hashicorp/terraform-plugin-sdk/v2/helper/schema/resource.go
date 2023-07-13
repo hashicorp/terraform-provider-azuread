@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/go-cty/cty"
@@ -34,16 +33,16 @@ var ReservedResourceFields = []string{
 
 // Resource is an abstraction for multiple Terraform concepts:
 //
-// - Managed Resource: An infrastructure component with a schema, lifecycle
-//                     operations such as create, read, update, and delete
-//                     (CRUD), and optional implementation details such as
-//                     import support, upgrade state support, and difference
-//                     customization.
-// - Data Resource: Also known as a data source. An infrastructure component
-//                  with a schema and only the read lifecycle operation.
-// - Block: When implemented within a Schema type Elem field, a configuration
-//          block that contains nested schema information such as attributes
-//          and blocks.
+//   - Managed Resource: An infrastructure component with a schema, lifecycle
+//     operations such as create, read, update, and delete
+//     (CRUD), and optional implementation details such as
+//     import support, upgrade state support, and difference
+//     customization.
+//   - Data Resource: Also known as a data source. An infrastructure component
+//     with a schema and only the read lifecycle operation.
+//   - Block: When implemented within a Schema type Elem field, a configuration
+//     block that contains nested schema information such as attributes
+//     and blocks.
 //
 // To fully implement managed resources, the Provider type ResourcesMap field
 // should include a reference to an implementation of this type. To fully
@@ -667,13 +666,13 @@ type StateUpgrader struct {
 // or block names mapped to values that can be type asserted similar to
 // fetching values using the ResourceData Get* methods:
 //
-//     - TypeBool: bool
-//     - TypeFloat: float
-//     - TypeInt: int
-//     - TypeList: []interface{}
-//     - TypeMap: map[string]interface{}
-//     - TypeSet: *Set
-//     - TypeString: string
+//   - TypeBool: bool
+//   - TypeFloat: float
+//   - TypeInt: int
+//   - TypeList: []interface{}
+//   - TypeMap: map[string]interface{}
+//   - TypeSet: *Set
+//   - TypeString: string
 //
 // In certain scenarios, the map may be nil, so checking for that condition
 // upfront is recommended to prevent potential panics.
@@ -779,16 +778,16 @@ func (r *Resource) Apply(
 	rt := ResourceTimeout{}
 	if _, ok := d.Meta[TimeoutKey]; ok {
 		if err := rt.DiffDecode(d); err != nil {
-			log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+			logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 		}
 	} else if s != nil {
 		if _, ok := s.Meta[TimeoutKey]; ok {
 			if err := rt.StateDecode(s); err != nil {
-				log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+				logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 			}
 		}
 	} else {
-		log.Printf("[DEBUG] No meta timeoutkey found in Apply()")
+		logging.HelperSchemaDebug(ctx, "No meta timeoutkey found in Apply()")
 	}
 	data.timeouts = &rt
 
@@ -873,10 +872,10 @@ func (r *Resource) Diff(
 
 	if instanceDiff != nil {
 		if err := t.DiffEncode(instanceDiff); err != nil {
-			log.Printf("[ERR] Error encoding timeout to instance diff: %s", err)
+			logging.HelperSchemaError(ctx, "Error encoding timeout to instance diff", map[string]interface{}{logging.KeyError: err})
 		}
 	} else {
-		log.Printf("[DEBUG] Instance Diff is nil in Diff()")
+		logging.HelperSchemaDebug(ctx, "Instance Diff is nil in Diff()")
 	}
 
 	return instanceDiff, err
@@ -972,7 +971,7 @@ func (r *Resource) RefreshWithoutUpgrade(
 	rt := ResourceTimeout{}
 	if _, ok := s.Meta[TimeoutKey]; ok {
 		if err := rt.StateDecode(s); err != nil {
-			log.Printf("[ERR] Error decoding ResourceTimeout: %s", err)
+			logging.HelperSchemaError(ctx, "Error decoding ResourceTimeout", map[string]interface{}{logging.KeyError: err})
 		}
 	}
 

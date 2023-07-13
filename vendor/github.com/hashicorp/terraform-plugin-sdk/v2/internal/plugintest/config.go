@@ -3,7 +3,6 @@ package plugintest
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -35,7 +34,7 @@ func DiscoverConfig(ctx context.Context, sourceDir string) (*Config, error) {
 	tfPath := os.Getenv(EnvTfAccTerraformPath)
 
 	tempDir := os.Getenv(EnvTfAccTempDir)
-	tfDir, err := ioutil.TempDir(tempDir, "plugintest-terraform")
+	tfDir, err := os.MkdirTemp(tempDir, "plugintest-terraform")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp dir: %w", err)
 	}
@@ -78,7 +77,7 @@ func DiscoverConfig(ctx context.Context, sourceDir string) (*Config, error) {
 	installer := install.NewInstaller()
 	tfExec, err := installer.Ensure(context.Background(), sources)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find or install Terraform CLI from %+v: %w", sources, err)
 	}
 
 	ctx = logging.TestTerraformPathContext(ctx, tfExec)

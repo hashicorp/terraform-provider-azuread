@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/internal/utils"
-	"github.com/manicminer/hamilton/odata"
 )
 
 // DirectoryObjectsClient performs operations on Directory Objects (the base type for other objects such as users and groups)
@@ -17,9 +17,9 @@ type DirectoryObjectsClient struct {
 }
 
 // NewDirectoryObjectsClient returns a new DirectoryObjectsClient.
-func NewDirectoryObjectsClient(tenantId string) *DirectoryObjectsClient {
+func NewDirectoryObjectsClient() *DirectoryObjectsClient {
 	return &DirectoryObjectsClient{
-		BaseClient: NewClient(Version10, tenantId),
+		BaseClient: NewClient(Version10),
 	}
 }
 
@@ -32,8 +32,7 @@ func (c *DirectoryObjectsClient) Get(ctx context.Context, id string, query odata
 		OData:                  query,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryObjects/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryObjects/%s", id),
 		},
 	})
 	if err != nil {
@@ -46,8 +45,8 @@ func (c *DirectoryObjectsClient) Get(ctx context.Context, id string, query odata
 		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
 
-	var directoryObject DirectoryObject
-	if err := json.Unmarshal(respBody, &directoryObject); err != nil {
+	directoryObject := DirectoryObject{}
+	if err = directoryObject.UnmarshalJSONWithAdditionalData(respBody); err != nil {
 		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
 	}
 
@@ -74,8 +73,7 @@ func (c *DirectoryObjectsClient) GetByIds(ctx context.Context, ids []string, typ
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      "/directoryObjects/getByIds",
-			HasTenantId: true,
+			Entity: "/directoryObjects/getByIds",
 		},
 	})
 	if err != nil {
@@ -88,11 +86,23 @@ func (c *DirectoryObjectsClient) GetByIds(ctx context.Context, ids []string, typ
 		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
 	}
 
+	var rawData struct {
+		Objects []json.RawMessage `json:"value"`
+	}
+	if err := json.Unmarshal(respBody, &rawData); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
 	var data struct {
 		Objects []DirectoryObject `json:"value"`
 	}
-	if err := json.Unmarshal(respBody, &data); err != nil {
-		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+
+	for _, rawObj := range rawData.Objects {
+		directoryObject := DirectoryObject{}
+		if err = directoryObject.UnmarshalJSONWithAdditionalData(rawObj); err != nil {
+			return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+		}
+		data.Objects = append(data.Objects, directoryObject)
 	}
 
 	return &data.Objects, status, nil
@@ -104,8 +114,7 @@ func (c *DirectoryObjectsClient) Delete(ctx context.Context, id string) (int, er
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusNoContent},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryObjects/%s", id),
-			HasTenantId: true,
+			Entity: fmt.Sprintf("/directoryObjects/%s", id),
 		},
 	})
 	if err != nil {
@@ -134,8 +143,7 @@ func (c *DirectoryObjectsClient) GetMemberGroups(ctx context.Context, id string,
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryObjects/%s/getMemberGroups", id),
-			HasTenantId: false,
+			Entity: fmt.Sprintf("/directoryObjects/%s/getMemberGroups", id),
 		},
 	})
 	if err != nil {
@@ -157,7 +165,7 @@ func (c *DirectoryObjectsClient) GetMemberGroups(ctx context.Context, id string,
 
 	result := make([]DirectoryObject, len(data.IDs))
 	for i, id := range data.IDs {
-		result[i].ID = utils.StringPtr(id)
+		result[i].Id = utils.StringPtr(id)
 	}
 
 	return &result, status, nil
@@ -182,8 +190,7 @@ func (c *DirectoryObjectsClient) GetMemberObjects(ctx context.Context, id string
 		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
 		ValidStatusCodes:       []int{http.StatusOK},
 		Uri: Uri{
-			Entity:      fmt.Sprintf("/directoryObjects/%s/getMemberObjects", id),
-			HasTenantId: false,
+			Entity: fmt.Sprintf("/directoryObjects/%s/getMemberObjects", id),
 		},
 	})
 	if err != nil {
@@ -205,7 +212,7 @@ func (c *DirectoryObjectsClient) GetMemberObjects(ctx context.Context, id string
 
 	result := make([]DirectoryObject, len(data.IDs))
 	for i, id := range data.IDs {
-		result[i].ID = utils.StringPtr(id)
+		result[i].Id = utils.StringPtr(id)
 	}
 
 	return &result, status, nil

@@ -1,14 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acceptance
 
 import (
+	"log"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
@@ -26,7 +30,7 @@ func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, s
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
-			client := buildClient()
+			client := buildClient(td.TenantID)
 			return helpers.CheckDestroyedFunc(client, testResource, td.ResourceType, td.ResourceName)(s)
 		},
 		Steps: steps,
@@ -77,6 +81,11 @@ func PreCheck(t *testing.T) {
 	}
 }
 
-func buildClient() *clients.Client {
-	return AzureADProvider.Meta().(*clients.Client)
+func buildClient(tenantId string) *clients.Client {
+	client, err := testclient.Build(tenantId)
+	if err != nil {
+		log.Fatalf("building client: %+v", err)
+	}
+
+	return client
 }
