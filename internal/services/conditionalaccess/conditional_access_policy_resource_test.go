@@ -647,9 +647,9 @@ resource "azuread_conditional_access_policy" "test" {
 
 func (ConditionalAccessPolicyResource) clientApplicationsIncluded(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
-data "azuread_client_config" "test" {}
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
 
 resource "azuread_conditional_access_policy" "test" {
   display_name = "acctest-CONPOLICY-%[1]d"
@@ -663,7 +663,7 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     client_applications {
-      included_service_principals = [data.azuread_client_config.test.object_id]
+      included_service_principals = [data.azuread_service_principal.test.object_id]
     }
 
     users {
@@ -681,9 +681,9 @@ resource "azuread_conditional_access_policy" "test" {
 
 func (ConditionalAccessPolicyResource) clientApplicationsExcluded(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-
-
-data "azuread_client_config" "test" {}
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
 
 resource "azuread_conditional_access_policy" "test" {
   display_name = "acctest-CONPOLICY-%[1]d"
@@ -698,7 +698,7 @@ resource "azuread_conditional_access_policy" "test" {
 
     client_applications {
       included_service_principals = ["ServicePrincipalsInMyTenant"]
-      excluded_service_principals = [data.azuread_client_config.test.object_id]
+      excluded_service_principals = [data.azuread_service_principal.test.object_id]
     }
 
     users {
