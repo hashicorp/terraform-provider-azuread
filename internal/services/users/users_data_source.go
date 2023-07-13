@@ -32,12 +32,24 @@ func usersData() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"employee_ids": {
+				Description:  "The employee identifier assigned to the user by the organisation",
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				Elem: &schema.Schema{
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validate.NoEmptyStrings,
+				},
+			},
+
 			"mail_nicknames": {
 				Description:  "The email aliases of the users",
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -49,7 +61,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.UUID,
@@ -61,7 +73,7 @@ func usersData() *schema.Resource {
 				Type:         schema.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
 					ValidateDiagFunc: validate.NoEmptyStrings,
@@ -82,7 +94,7 @@ func usersData() *schema.Resource {
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
-				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "return_all"},
+				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
 			},
 
 			"users": {
@@ -99,6 +111,12 @@ func usersData() *schema.Resource {
 
 						"display_name": {
 							Description: "The display name of the user",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+
+						"employee_id": {
+							Description: "The employee identifier assigned to the user by the organisation",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -247,6 +265,31 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 				users = append(users, (*result)[0])
 			}
+		} else if employeeIds, ok := d.Get("employee_ids").([]interface{}); ok && len(employeeIds) > 0 {
+			expectedCount = len(employeeIds)
+			for _, v := range employeeIds {
+				query := odata.Query{
+					Filter: fmt.Sprintf("employeeId eq '%s'", utils.EscapeSingleQuote(v.(string))),
+				}
+				result, _, err := client.List(ctx, query)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Finding user with employee ID: %q", v)
+				}
+				if result == nil {
+					return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+				}
+
+				count := len(*result)
+				if count > 1 {
+					return tf.ErrorDiagPathF(nil, "employee_ids", "More than one user found with employee ID: %q", v)
+				} else if count == 0 {
+					if ignoreMissing {
+						continue
+					}
+					return tf.ErrorDiagPathF(err, "employee_ids", "User not found with employee ID: %q", v)
+				}
+				users = append(users, (*result)[0])
+			}
 		}
 	}
 
@@ -258,6 +301,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	upns := make([]string, 0)
 	objectIds := make([]string, 0)
 	mailNicknames := make([]string, 0)
+	employeeIds := make([]msgraph.StringNullWhenEmpty, 0)
 	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
 		if u.ID() == nil || u.UserPrincipalName == nil {
@@ -269,10 +313,14 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
 		}
+		if u.EmployeeId != nil {
+			employeeIds = append(employeeIds, *u.EmployeeId)
+		}
 
 		user := make(map[string]interface{})
 		user["account_enabled"] = u.AccountEnabled
 		user["display_name"] = u.DisplayName
+		user["employee_id"] = u.EmployeeId
 		user["mail"] = u.Mail
 		user["mail_nickname"] = u.MailNickname
 		user["object_id"] = u.ID()
@@ -291,6 +339,7 @@ func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
+	tf.Set(d, "employee_ids", employeeIds)
 	tf.Set(d, "mail_nicknames", mailNicknames)
 	tf.Set(d, "object_ids", objectIds)
 	tf.Set(d, "user_principal_names", upns)

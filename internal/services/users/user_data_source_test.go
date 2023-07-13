@@ -91,6 +91,25 @@ func TestAccUserDataSource_byMailNonexistent(t *testing.T) {
 	}})
 }
 
+func TestAccUserDataSource_byEmployeeId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+	r := UserDataSource{}
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config: r.byEmployeeId(data),
+		Check:  r.testCheckFunc(data),
+	}})
+}
+
+func TestAccUserDataSource_byEmployeeIdNonexistent(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{{
+		Config:      UserDataSource{}.byEmployeeIdNonexistent(data),
+		ExpectError: regexp.MustCompile("User not found with employee ID:"),
+	}})
+}
+
 func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("account_enabled").Exists(),
@@ -200,4 +219,26 @@ data "azuread_user" "test" {
   mail = "not-a-real-user-%[1]d${data.azuread_domains.test.domains.0.domain_name}"
 }
 `, data.RandomInteger)
+}
+
+func (UserDataSource) byEmployeeId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_user" "test" {
+  employee_id = azuread_user.test.employee_id
+}
+`, UserResource{}.complete(data))
+}
+
+func (UserDataSource) byEmployeeIdNonexistent(data acceptance.TestData) string {
+	return `
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+data "azuread_user" "test" {
+  employee_id = "not-a-real-employeeid"
+}
+`
 }
