@@ -28,7 +28,7 @@ func userDataSource() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"employee_id": {
 				Description:      "The employee identifier assigned to the user by the organisation",
-				Type:             schema.TypeList,
+				Type:             schema.TypeString,
 				Optional:         true,
 				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:         true,

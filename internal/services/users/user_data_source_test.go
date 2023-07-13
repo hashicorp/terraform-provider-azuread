@@ -223,7 +223,7 @@ func (UserDataSource) byEmployeeId(data acceptance.TestData) string {
 %[1]s
 
 data "azuread_user" "test" {
-	employee_id = azuread_user.test.employee_id
+  employee_id = azuread_user.test.employee_id
 }
 `, UserResource{}.complete(data))
 }
@@ -235,7 +235,7 @@ data "azuread_domains" "test" {
 }
 
 data "azuread_user" "test" {
-	employee_id = "not-a-real-employeeid"
+  employee_id = "not-a-real-employeeid"
 }
 `
 }

@@ -149,7 +149,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q assignment to principal %q to take effect", roleId, principalId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
