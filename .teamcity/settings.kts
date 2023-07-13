@@ -13,7 +13,8 @@ var clientId = DslContext.getParameter("clientId", "")
 var clientSecret = DslContext.getParameter("clientSecret", "")
 var tenantId = DslContext.getParameter("tenantId", "")
 var environment = DslContext.getParameter("environment", "public")
+var vcsRootId = DslContext.getParameter("vcsRootId", "")
 
-var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId)
+var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId, vcsRootId)
 
 project(AzureAD(environment, clientConfig))
