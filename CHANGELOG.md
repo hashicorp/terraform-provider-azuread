@@ -2,6 +2,8 @@
 
 IMPROVEMENTS:
 
+* `data.azuread_user` - supporting looking up a user using the `employee_id` property [GH-1040]
+* `data.azuread_users` - supporting looking up users using the `employee_ids` property [GH-1040]
 * `azuread_conditional_access_policy` - support for the `client_applications` block in the `conditions` block [GH-1047]
 * `azuread_conditional_access_policy` - support for the `disable_resilience_defaults` property in the `session_controls` block [GH-1135]
 
