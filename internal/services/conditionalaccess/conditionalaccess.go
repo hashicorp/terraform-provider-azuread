@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conditionalaccess
 
 import (
@@ -14,6 +17,7 @@ func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessCondition
 	return []interface{}{
 		map[string]interface{}{
 			"applications":        flattenConditionalAccessApplications(in.Applications),
+			"client_applications": flattenConditionalAccessClientApplications(in.ClientApplications),
 			"users":               flattenConditionalAccessUsers(in.Users),
 			"client_app_types":    tf.FlattenStringSlicePtr(in.ClientAppTypes),
 			"devices":             flattenConditionalAccessDevices(in.Devices),
@@ -35,6 +39,19 @@ func flattenConditionalAccessApplications(in *msgraph.ConditionalAccessApplicati
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
 			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
 			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+		},
+	}
+}
+
+func flattenConditionalAccessClientApplications(in *msgraph.ConditionalAccessClientApplications) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"included_service_principals": tf.FlattenStringSlicePtr(in.IncludeServicePrincipals),
+			"excluded_service_principals": tf.FlattenStringSlicePtr(in.ExcludeServicePrincipals),
 		},
 	}
 }
@@ -124,6 +141,11 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		cloudAppSecurity = *in.CloudAppSecurity.CloudAppSecurityType
 	}
 
+	disableResilienceDefaults := false
+	if in.DisableResilienceDefaults != nil {
+		disableResilienceDefaults = *in.DisableResilienceDefaults
+	}
+
 	signInFrequency := 0
 	signInFrequencyPeriod := ""
 	if in.SignInFrequency != nil && in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
@@ -140,6 +162,7 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 		map[string]interface{}{
 			"application_enforced_restrictions_enabled": applicationEnforceRestrictions,
 			"cloud_app_security_policy":                 cloudAppSecurity,
+			"disable_resilience_defaults":               disableResilienceDefaults,
 			"persistent_browser_mode":                   persistentBrowserMode,
 			"sign_in_frequency":                         signInFrequency,
 			"sign_in_frequency_period":                  signInFrequencyPeriod,
@@ -227,6 +250,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	platforms := config["platforms"].([]interface{})
 	signInRiskLevels := config["sign_in_risk_levels"].([]interface{})
 	userRiskLevels := config["user_risk_levels"].([]interface{})
+	clientApplications := config["client_applications"].([]interface{})
 
 	result.Applications = expandConditionalAccessApplications(applications)
 	result.Users = expandConditionalAccessUsers(users)
@@ -236,6 +260,24 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	result.Platforms = expandConditionalAccessPlatforms(platforms)
 	result.SignInRiskLevels = tf.ExpandStringSlicePtr(signInRiskLevels)
 	result.UserRiskLevels = tf.ExpandStringSlicePtr(userRiskLevels)
+	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
+
+	return &result
+}
+
+func expandConditionalAccessClientApplications(in []interface{}) *msgraph.ConditionalAccessClientApplications {
+	if len(in) == 0 || in[0] == nil {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessClientApplications{}
+	config := in[0].(map[string]interface{})
+
+	includeServicePrincipals := config["included_service_principals"].([]interface{})
+	excludeServicePrincipals := config["excluded_service_principals"].([]interface{})
+
+	result.IncludeServicePrincipals = tf.ExpandStringSlicePtr(includeServicePrincipals)
+	result.ExcludeServicePrincipals = tf.ExpandStringSlicePtr(excludeServicePrincipals)
 
 	return &result
 }
@@ -378,6 +420,9 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 			CloudAppSecurityType: utils.String(cloudAppSecurity),
 		}
 	}
+
+	DisableResilienceDefaults := config["disable_resilience_defaults"]
+	result.DisableResilienceDefaults = utils.Bool(DisableResilienceDefaults.(bool))
 
 	if persistentBrowserMode := config["persistent_browser_mode"].(string); persistentBrowserMode != "" {
 		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
