@@ -33,13 +33,13 @@ The following arguments are supported:
 * `return_all` - (Optional) When `true`, the data source will return all users. Cannot be used with `ignore_missing`. Defaults to `false`.
 * `user_principal_names` - (Optional) The user principal names (UPNs) of the users.
 
-~> Either `return_all`, or one of `user_principal_names`, `object_ids`, `mail_nicknames` or `employee_id` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+~> Either `return_all`, or one of `user_principal_names`, `object_ids`, `mail_nicknames` or `employee_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `employee_ids` - The employee identifier assigned to the users by the organisation.
+* `employee_ids` - The employee identifiers assigned to the users by the organisation.
 * `mail_nicknames` - The email aliases of the users.
 * `object_ids` - The object IDs of the users.
 * `user_principal_names` - The user principal names (UPNs) of the users.
