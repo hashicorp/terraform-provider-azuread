@@ -280,6 +280,10 @@ func TestAccConditionalAccessPolicy_clientApplications(t *testing.T) {
 	// - conditional access policies applies either to users/groups or to client applications (workload identities)
 	// - conditional access policies using client applications requires special licensing (Microsoft Entra Workload Identities)
 
+	// Due to eventual consistency issues making it difficult to create a service principal on demand for inclusion in this
+	// test policy, the config for this test requires a pre-existing service principal named "Terraform Acceptance Tests (Single Tenant)"
+	// which should be linked to a single tenant application in the same tenant.
+
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
