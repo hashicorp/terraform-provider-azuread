@@ -2,10 +2,12 @@
 
 IMPROVEMENTS:
 
+* dependencies: updating to `v0.62.0` of `github.com/manicminer/hamilton`
 * `data.azuread_user` - supporting looking up a user using the `employee_id` property [GH-1040]
 * `data.azuread_users` - supporting looking up users using the `employee_ids` property [GH-1040]
 * `azuread_conditional_access_policy` - support for the `client_applications` block in the `conditions` block [GH-1047]
 * `azuread_conditional_access_policy` - support for the `disable_resilience_defaults` property in the `session_controls` block [GH-1135]
+* `azuread_group` - the `behaviors` property now supports the `CalendarMemberReadOnly` and `ConnectorsDisabled` values [GH-1144]
 
 ## 2.39.0 (May 12, 2023)
 
