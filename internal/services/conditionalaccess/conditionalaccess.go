@@ -16,15 +16,16 @@ func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessCondition
 
 	return []interface{}{
 		map[string]interface{}{
-			"applications":        flattenConditionalAccessApplications(in.Applications),
-			"client_applications": flattenConditionalAccessClientApplications(in.ClientApplications),
-			"users":               flattenConditionalAccessUsers(in.Users),
-			"client_app_types":    tf.FlattenStringSlicePtr(in.ClientAppTypes),
-			"devices":             flattenConditionalAccessDevices(in.Devices),
-			"locations":           flattenConditionalAccessLocations(in.Locations),
-			"platforms":           flattenConditionalAccessPlatforms(in.Platforms),
-			"sign_in_risk_levels": tf.FlattenStringSlicePtr(in.SignInRiskLevels),
-			"user_risk_levels":    tf.FlattenStringSlicePtr(in.UserRiskLevels),
+			"applications":                  flattenConditionalAccessApplications(in.Applications),
+			"client_applications":           flattenConditionalAccessClientApplications(in.ClientApplications),
+			"users":                         flattenConditionalAccessUsers(in.Users),
+			"client_app_types":              tf.FlattenStringSlicePtr(in.ClientAppTypes),
+			"devices":                       flattenConditionalAccessDevices(in.Devices),
+			"locations":                     flattenConditionalAccessLocations(in.Locations),
+			"platforms":                     flattenConditionalAccessPlatforms(in.Platforms),
+			"service_principal_risk_levels": tf.FlattenStringSlicePtr(in.ServicePrincipalRiskLevels),
+			"sign_in_risk_levels":           tf.FlattenStringSlicePtr(in.SignInRiskLevels),
+			"user_risk_levels":              tf.FlattenStringSlicePtr(in.UserRiskLevels),
 		},
 	}
 }
@@ -248,6 +249,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	devices := config["devices"].([]interface{})
 	locations := config["locations"].([]interface{})
 	platforms := config["platforms"].([]interface{})
+	servicePrincipalRiskLevels := config["service_principal_risk_levels"].([]interface{})
 	signInRiskLevels := config["sign_in_risk_levels"].([]interface{})
 	userRiskLevels := config["user_risk_levels"].([]interface{})
 	clientApplications := config["client_applications"].([]interface{})
@@ -258,6 +260,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalA
 	result.Devices = expandConditionalAccessDevices(devices)
 	result.Locations = expandConditionalAccessLocations(locations)
 	result.Platforms = expandConditionalAccessPlatforms(platforms)
+	result.ServicePrincipalRiskLevels = tf.ExpandStringSlicePtr(servicePrincipalRiskLevels)
 	result.SignInRiskLevels = tf.ExpandStringSlicePtr(signInRiskLevels)
 	result.UserRiskLevels = tf.ExpandStringSlicePtr(userRiskLevels)
 	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
