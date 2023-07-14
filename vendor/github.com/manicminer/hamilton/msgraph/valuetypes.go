@@ -521,6 +521,8 @@ type GroupResourceBehaviorOption = string
 
 const (
 	GroupResourceBehaviorOptionAllowOnlyMembersToPost                   GroupResourceBehaviorOption = "AllowOnlyMembersToPost"
+	GroupResourceBehaviorOptionCalendarMemberReadOnly                   GroupResourceBehaviorOption = "CalendarMemberReadOnly"
+	GroupResourceBehaviorOptionConnectorsDisabled                       GroupResourceBehaviorOption = "ConnectorsDisabled"
 	GroupResourceBehaviorOptionHideGroupInOutlook                       GroupResourceBehaviorOption = "HideGroupInOutlook"
 	GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled GroupResourceBehaviorOption = "SubscribeMembersToCalendarEventsDisabled"
 	GroupResourceBehaviorOptionSubscribeNewGroupMembers                 GroupResourceBehaviorOption = "SubscribeNewGroupMembers"
@@ -747,6 +749,21 @@ const (
 	SignInAudienceAzureADMultipleOrgs                SignInAudience = "AzureADMultipleOrgs"
 	SignInAudienceAzureADandPersonalMicrosoftAccount SignInAudience = "AzureADandPersonalMicrosoftAccount"
 	SignInAudiencePersonalMicrosoftAccount           SignInAudience = "PersonalMicrosoftAccount"
+)
+
+type UnifiedRoleScheduleRequestAction = string
+
+const (
+	UnifiedRoleScheduleRequestActionAdminAssign        UnifiedRoleScheduleRequestAction = "adminAssign"
+	UnifiedRoleScheduleRequestActionAdminExtend        UnifiedRoleScheduleRequestAction = "adminExtend"
+	UnifiedRoleScheduleRequestActionAdminRemove        UnifiedRoleScheduleRequestAction = "adminRemove"
+	UnifiedRoleScheduleRequestActionAdminRenew         UnifiedRoleScheduleRequestAction = "adminRenew"
+	UnifiedRoleScheduleRequestActionAdminUpdate        UnifiedRoleScheduleRequestAction = "adminUpdate"
+	UnifiedRoleScheduleRequestActionSelfActivate       UnifiedRoleScheduleRequestAction = "selfActivate"
+	UnifiedRoleScheduleRequestActionSelfDeactivate     UnifiedRoleScheduleRequestAction = "selfDeactivate"
+	UnifiedRoleScheduleRequestActionSelfExtend         UnifiedRoleScheduleRequestAction = "selfExtend"
+	UnifiedRoleScheduleRequestActionSelfRenew          UnifiedRoleScheduleRequestAction = "selfRenew"
+	UnifiedRoleScheduleRequestActionUnknownFutureValue UnifiedRoleScheduleRequestAction = "unknownFutureValue"
 )
 
 type UsageAuthMethod = string
