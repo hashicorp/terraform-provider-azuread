@@ -83,7 +83,7 @@ func (c *AccessPackageResourceClient) Get(ctx context.Context, catalogId string,
 	accessPackageResources := data.AccessPackageResources
 
 	if len(accessPackageResources) == 0 {
-		return nil, status, fmt.Errorf("No accessPackageResource found with catalogId %v and originId %v", catalogId, originId)
+		return nil, http.StatusNotFound, fmt.Errorf("No accessPackageResource found with catalogId %v and originId %v", catalogId, originId)
 	}
 
 	return &accessPackageResources[0], status, nil
