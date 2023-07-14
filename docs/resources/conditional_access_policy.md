@@ -160,7 +160,8 @@ The following arguments are supported:
 * `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
 * `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
 * `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
-* `sign_in_risk_levels` - (Optional) A list of sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
+* `service_principal_risk_levels` - (Optional) A list of service principal sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `none`, `unknownFutureValue`.
+* `sign_in_risk_levels` - (Optional) A list of user sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `users` - (Required) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
 
