@@ -670,7 +670,7 @@ resource "azuread_conditional_access_policy" "test" {
       included_service_principals = [data.azuread_service_principal.test.object_id]
     }
 
-	service_principal_risk_levels = ["medium"]
+    service_principal_risk_levels = ["medium"]
 
     users {
       included_users = ["None"]
@@ -707,7 +707,7 @@ resource "azuread_conditional_access_policy" "test" {
       excluded_service_principals = [data.azuread_service_principal.test.object_id]
     }
 
-	service_principal_risk_levels = ["medium"]
+    service_principal_risk_levels = ["medium"]
 
     users {
       included_users = ["None"]
