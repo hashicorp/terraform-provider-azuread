@@ -95,6 +95,8 @@ func groupResource() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupResourceBehaviorOptionAllowOnlyMembersToPost,
+						msgraph.GroupResourceBehaviorOptionCalendarMemberReadOnly,
+						msgraph.GroupResourceBehaviorOptionConnectorsDisabled,
 						msgraph.GroupResourceBehaviorOptionHideGroupInOutlook,
 						msgraph.GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled,
 						msgraph.GroupResourceBehaviorOptionSubscribeNewGroupMembers,
