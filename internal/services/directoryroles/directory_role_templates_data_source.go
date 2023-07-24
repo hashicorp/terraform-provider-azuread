@@ -81,7 +81,7 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *schema.Resourc
 
 	for _, r := range *directoryRoleTemplates {
 		// Skip the implicit "Users" role as it's non-assignable
-		if r.DisplayName != "User" {
+		if r.DisplayName == nil || *r.DisplayName == "User" {
 			continue
 		}
 
