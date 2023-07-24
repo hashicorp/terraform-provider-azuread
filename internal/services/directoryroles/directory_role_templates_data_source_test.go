@@ -27,9 +27,9 @@ func TestAccDirectoryRoleTemplatesDataSource_basic(t *testing.T) {
 
 func (DirectoryRoleTemplatesDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...resource.TestCheckFunc) resource.TestCheckFunc {
 	checks := []resource.TestCheckFunc{
-		check.That(data.ResourceName).Key("roles.0.description").Exists(),
-		check.That(data.ResourceName).Key("roles.0.display_name").Exists(),
-		check.That(data.ResourceName).Key("roles.0.object_id").Exists(),
+		check.That(data.ResourceName).Key("role_templates.0.description").Exists(),
+		check.That(data.ResourceName).Key("role_templates.0.display_name").Exists(),
+		check.That(data.ResourceName).Key("role_templates.0.object_id").Exists(),
 		check.That(data.ResourceName).Key("object_ids.#").Exists(),
 	}
 	checks = append(checks, additionalChecks...)

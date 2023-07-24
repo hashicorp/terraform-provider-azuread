@@ -33,12 +33,12 @@ This data source does not have any arguments.
 The following attributes are exported:
 
 * `object_ids` - The object IDs of the role templates.
-* `roles` - A list of role templates. Each `template` object provides the attributes documented below.
+* `role_templates` - A list of role templates. Each `role_template` object provides the attributes documented below.
 
 ---
 
-`role` object exports the following:
+`role_template` object exports the following:
 
-* `display_name` - The display name of the directory role template.
 * `description` - The description of the directory role template.
+* `display_name` - The display name of the directory role template.
 * `object_id` - The object ID of the directory role template.

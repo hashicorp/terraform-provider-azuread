@@ -102,7 +102,7 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *schema.Resourc
 
 	d.SetId("templates#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 
-	tf.Set(d, "templates", templateList)
+	tf.Set(d, "role_templates", templateList)
 	tf.Set(d, "object_ids", objectIds)
 
 	return nil
