@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package directoryroletemplates_test
+package directoryroles_test
 
 import (
 	"testing"
