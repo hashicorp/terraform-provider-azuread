@@ -81,16 +81,16 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *schema.Resourc
 
 	for _, r := range *directoryRoleTemplates {
 		// Skip the implicit "Users" role as it's non-assignable
-		if r.DisplayName == nil || *r.DisplayName == "User" {
+		if r.ID == nil || r.DisplayName == nil || *r.DisplayName == "User" {
 			continue
 		}
 
-		objectIds = append(objectIds, *r.ID())
+		objectIds = append(objectIds, *r.ID)
 
 		template := make(map[string]interface{})
 		template["description"] = r.Description
 		template["display_name"] = r.DisplayName
-		template["object_id"] = r.ID()
+		template["object_id"] = r.ID
 		templateList = append(templateList, template)
 	}
 
