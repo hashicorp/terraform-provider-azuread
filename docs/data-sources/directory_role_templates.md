@@ -4,7 +4,7 @@ subcategory: "Directory Role Templates"
 
 # Resource: azuread_directory_role_templates
 
-Use this data source to access information about activated directory role templates within Azure Active Directory.
+Use this data source to access information about directory role templates within Azure Active Directory.
 
 ## API Permissions
 
