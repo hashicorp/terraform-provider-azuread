@@ -66,7 +66,7 @@ func directoryRoleTemplatesDataSource() *schema.Resource {
 }
 
 func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).DirectoryRoleTemplates.DirectoryRoleTemplatesClient
+	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplatesClient
 
 	directoryRoleTemplates, _, err := client.List(ctx)
 	if err != nil {
