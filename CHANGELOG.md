@@ -1,3 +1,9 @@
+## 2.41.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `azuread_directory_role_templates` [GH-1152]
+
 ## 2.40.0 (July 14, 2023)
 
 IMPROVEMENTS:
