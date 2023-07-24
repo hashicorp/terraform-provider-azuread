@@ -80,13 +80,15 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *schema.Resourc
 	templateList := make([]map[string]interface{}, 0)
 
 	for _, r := range *directoryRoleTemplates {
-		objectIds = append(objectIds, *r.ID())
+		if r.DisplayName != "User" {
+			objectIds = append(objectIds, *r.ID())
 
-		template := make(map[string]interface{})
-		template["description"] = r.Description
-		template["display_name"] = r.DisplayName
-		template["object_id"] = r.ID()
-		templateList = append(templateList, template)
+			template := make(map[string]interface{})
+			template["description"] = r.Description
+			template["display_name"] = r.DisplayName
+			template["object_id"] = r.ID()
+			templateList = append(templateList, template)
+		}
 	}
 
 	// Generate a unique ID based on result
