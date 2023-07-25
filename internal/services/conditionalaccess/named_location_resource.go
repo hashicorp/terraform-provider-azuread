@@ -279,13 +279,25 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 	namedLocationId := d.Id()
 
 	if _, ok := d.GetOk("ip"); ok {
-		if _, status, err := client.GetIP(ctx, namedLocationId, odata.Query{}); err != nil {
+		resp, status, err := client.GetIP(ctx, namedLocationId, odata.Query{})
+		if err != nil {
 			if status == http.StatusNotFound {
 				log.Printf("[DEBUG] Named Location with ID %q already deleted", namedLocationId)
 				return nil
 			}
 
 			return tf.ErrorDiagPathF(err, "id", "Retrieving named location with ID %q", namedLocationId)
+		}
+		if resp != nil && resp.IsTrusted != nil && *resp.IsTrusted {
+			properties := msgraph.IPNamedLocation{
+				BaseNamedLocation: &msgraph.BaseNamedLocation{
+					ID: &namedLocationId,
+				},
+				IsTrusted: utils.Bool(false),
+			}
+			if _, err := client.UpdateIP(ctx, properties); err != nil {
+				return tf.ErrorDiagF(err, "Updating named location with ID %q", namedLocationId)
+			}
 		}
 	}
 
