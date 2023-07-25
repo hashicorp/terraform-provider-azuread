@@ -67,7 +67,7 @@ const (
 	AccessPackageRequestStateSubmitted           AccessPackageRequestState = "submitted"
 	AccessPackageRequestStatePendingApproval     AccessPackageRequestState = "pendingApproval"
 	AccessPackageRequestStateDelivering          AccessPackageRequestState = "delivering"
-	AccessPackageRequestStateDelivered           AccessPackageRequestState = "delievered"
+	AccessPackageRequestStateDelivered           AccessPackageRequestState = "delivered"
 	AccessPackageRequestStateDeliveryFailed      AccessPackageRequestState = "deliveryFailed"
 	AccessPackageRequestStateDenied              AccessPackageRequestState = "denied"
 	AccessPackageRequestStateScheduled           AccessPackageRequestState = "scheduled"
@@ -79,7 +79,7 @@ type AccessPackageRequestType = string
 
 const (
 	AccessPackageRequestTypeNotSpecified AccessPackageRequestType = "notSpecified"
-	AccessPackageRequestTypeuserAdd      AccessPackageRequestType = "userAdd"
+	AccessPackageRequestTypeUserAdd      AccessPackageRequestType = "userAdd"
 	AccessPackageRequestTypeUserExtend   AccessPackageRequestType = "UserExtend"
 	AccessPackageRequestTypeUserUpdate   AccessPackageRequestType = "userUpdate"
 	AccessPackageRequestTypeUserRemove   AccessPackageRequestType = "userRemove"
@@ -131,18 +131,19 @@ const (
 type AccessReviewReviewerType = string
 
 const (
-	AccessReviewReviewerTypeSelf      AccessReviewReviewerType = "Self"
+	AccessReviewReviewerTypeManager   AccessReviewReviewerType = "Manager"
 	AccessReviewReviewerTypeReviewers AccessReviewReviewerType = "Reviewers"
+	AccessReviewReviewerTypeSelf      AccessReviewReviewerType = "Self"
 )
 
-type AccessReviewRecurranceType = string
+type AccessReviewRecurrenceType = string
 
 const (
-	AccessReviewRecurranceTypeWeekly     AccessReviewRecurranceType = "weekly"
-	AccessReviewRecurranceTypeMonthly    AccessReviewRecurranceType = "monthly"
-	AccessReviewRecurranceTypeQuarterly  AccessReviewRecurranceType = "quarterly"
-	AccessReviewRecurranceTypeHalfYearly AccessReviewRecurranceType = "halfyearly"
-	AccessReviewRecurranceTypeAnnual     AccessReviewRecurranceType = "annual"
+	AccessReviewRecurrenceTypeWeekly     AccessReviewRecurrenceType = "weekly"
+	AccessReviewRecurrenceTypeMonthly    AccessReviewRecurrenceType = "monthly"
+	AccessReviewRecurrenceTypeQuarterly  AccessReviewRecurrenceType = "quarterly"
+	AccessReviewRecurrenceTypeHalfYearly AccessReviewRecurrenceType = "halfyearly"
+	AccessReviewRecurrenceTypeAnnual     AccessReviewRecurrenceType = "annual"
 )
 
 type AdministrativeUnitVisibility = string
@@ -251,12 +252,42 @@ const (
 	AuthenticationMethodKeyStrengthUnknown AuthenticationMethodKeyStrength = "unknown"
 )
 
+type AuthenticationMethodModes = string
+
+const (
+	AuthenticationMethodModesEmail                       AuthenticationMethodModes = "email"
+	AuthenticationMethodModesFederatedMultiFactor        AuthenticationMethodModes = "federatedMultiFactor"
+	AuthenticationMethodModesFederatedSingleFactor       AuthenticationMethodModes = "federatedSingleFactor"
+	AuthenticationMethodModesFido2                       AuthenticationMethodModes = "fido2"
+	AuthenticationMethodModesHardwareOath                AuthenticationMethodModes = "hardwareOath"
+	AuthenticationMethodModesMicrosoftAuthenticatorPush  AuthenticationMethodModes = "microsoftAuthenticatorPush"
+	AuthenticationMethodModesMicrosoftDeviceBasedPush    AuthenticationMethodModes = "deviceBasedPush"
+	AuthenticationMethodModesPassword                    AuthenticationMethodModes = "password"
+	AuthenticationMethodModesSms                         AuthenticationMethodModes = "sms"
+	AuthenticationMethodModesSoftwareOath                AuthenticationMethodModes = "softwareOath"
+	AuthenticationMethodModesTemporaryAccessPassMultiUse AuthenticationMethodModes = "temporaryAccessPassMultiUse"
+	AuthenticationMethodModesTemporaryAccessPassOneTime  AuthenticationMethodModes = "temporaryAccessPassOneTime"
+	AuthenticationMethodModesUnknownFutureValue          AuthenticationMethodModes = "unknownFutureValue"
+	AuthenticationMethodModesVoice                       AuthenticationMethodModes = "voice"
+	AuthenticationMethodModesWindowsHelloForBusiness     AuthenticationMethodModes = "windowsHelloForBusiness"
+	AuthenticationMethodModesX509CertificateMultiFactor  AuthenticationMethodModes = "x509CertificateMultiFactor"
+	AuthenticationMethodModesX509CertificateSingleFactor AuthenticationMethodModes = "x509CertificateSingleFactor"
+)
+
 type AuthenticationPhoneType = string
 
 const (
 	AuthenticationPhoneTypeMobile          AuthenticationPhoneType = "mobile"
 	AuthenticationPhoneTypeAlternateMobile AuthenticationPhoneType = "alternateMobile"
 	AuthenticationPhoneTypeOffice          AuthenticationPhoneType = "office"
+)
+
+type AuthenticationStrengthPolicyType = string
+
+const (
+	AuthenticationStrengthPolicyTypeBuiltIn            AuthenticationStrengthPolicyType = "builtIn"
+	AuthenticationStrengthPolicyTypeCustom             AuthenticationStrengthPolicyType = "custom"
+	AuthenticationStrengthPolicyTypeUnknownFutureValue AuthenticationStrengthPolicyType = "unknownFutureValue"
 )
 
 type BodyType = string
