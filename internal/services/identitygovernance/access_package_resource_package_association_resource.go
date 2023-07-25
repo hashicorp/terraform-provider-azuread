@@ -147,7 +147,17 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 }
 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[WARN] azuread_access_package_resource_package_association with ID %q must be manually deleted as there is no valid API provided for this operation", d.Id())
+	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
+
+	id, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
+	}
+
+	status, err := client.Delete(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting access package resource association with object ID %q, got status %d", id.ResourcePackageAssociationId, status)
+	}
 
 	return nil
 }
