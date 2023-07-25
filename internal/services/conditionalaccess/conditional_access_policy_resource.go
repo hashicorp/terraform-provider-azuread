@@ -143,10 +143,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"included_users": {
-										Type:             schema.TypeList,
-										Optional:         true,
-										AtLeastOneOf:     []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
-										DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
+										Type:         schema.TypeList,
+										Optional:     true,
+										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: validate.NoEmptyStrings,
@@ -375,9 +374,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"grant_controls": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				AtLeastOneOf: []string{"grant_controls", "session_controls"},
+				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"operator": {
@@ -426,10 +426,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"session_controls": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
+				Type:         schema.TypeList,
+				Optional:     true,
+				AtLeastOneOf: []string{"grant_controls", "session_controls"},
+				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_enforced_restrictions_enabled": {
@@ -501,48 +501,21 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 	return nil
 }
 
-func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
-	suppress := false
-
-	switch {
-	case k == "session_controls.#" && old == "0" && new == "1":
-		sessionControlsRaw := d.Get("session_controls").([]interface{})
-		if len(sessionControlsRaw) == 1 && sessionControlsRaw[0] != nil {
-			sessionControls := sessionControlsRaw[0].(map[string]interface{})
-			suppress = true
-			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && v.(bool) {
-				suppress = false
-			}
-			if v, ok := sessionControls["cloud_app_security_policy"]; ok && v.(string) != "" {
-				suppress = false
-			}
-			if v, ok := sessionControls["disable_resilience_defaults"]; ok && v.(bool) {
-				suppress = false
-			}
-			if v, ok := sessionControls["persistent_browser_mode"]; ok && v.(string) != "" {
-				suppress = false
-			}
-			if v, ok := sessionControls["sign_in_frequency"]; ok && v.(int) > 0 {
-				suppress = false
-			}
-			if v, ok := sessionControls["sign_in_frequency_period"]; ok && v.(string) != "" {
-				suppress = false
-			}
-		}
-	}
-
-	return suppress
-}
-
 func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		DisplayName:     utils.String(d.Get("display_name").(string)),
-		State:           utils.String(d.Get("state").(string)),
-		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
-		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		DisplayName: utils.String(d.Get("display_name").(string)),
+		State:       utils.String(d.Get("state").(string)),
+		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("grant_controls"); ok {
+		properties.GrantControls = expandConditionalAccessGrantControls(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("session_controls"); ok {
+		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
 	}
 
 	policy, _, err := client.Create(ctx, properties)
@@ -563,12 +536,18 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		ID:              utils.String(d.Id()),
-		DisplayName:     utils.String(d.Get("display_name").(string)),
-		State:           utils.String(d.Get("state").(string)),
-		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
-		GrantControls:   expandConditionalAccessGrantControls(d.Get("grant_controls").([]interface{})),
-		SessionControls: expandConditionalAccessSessionControls(d.Get("session_controls").([]interface{})),
+		ID:          utils.String(d.Id()),
+		DisplayName: utils.String(d.Get("display_name").(string)),
+		State:       utils.String(d.Get("state").(string)),
+		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("grant_controls"); ok {
+		properties.GrantControls = expandConditionalAccessGrantControls(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("session_controls"); ok {
+		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {

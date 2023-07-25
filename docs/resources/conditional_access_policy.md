@@ -146,8 +146,11 @@ The following arguments are supported:
 
 * `conditions` - (Required) A `conditions` block as documented below, which specifies the rules that must be met for the policy to apply.
 * `display_name` - (Required) The friendly name for this Conditional Access Policy.
-* `grant_controls` - (Required) A `grant_controls` block as documented below, which specifies the grant controls that must be fulfilled to pass the policy.
+* `grant_controls` - (Optional) A `grant_controls` block as documented below, which specifies the grant controls that must be fulfilled to pass the policy.
 * `session_controls` - (Optional) A `session_controls` block as documented below, which specifies the session controls that are enforced after sign-in.
+
+~> Note: At least one of `grant_controls` and/or `session_controls` blocks must be specified.
+
 * `state` - (Required) Specifies the state of the policy object. Possible values are: `enabled`, `disabled` and `enabledForReportingButNotEnforced`
 
 ---
