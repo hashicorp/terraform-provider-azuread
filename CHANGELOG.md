@@ -8,6 +8,10 @@ IMPROVEMENTS:
 
 * `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
 
+BUG FIXES:
+
+* `azuread_access_package_resource_package_association` - support destruction of this resource [GH-1124]
+
 ## 2.40.0 (July 14, 2023)
 
 IMPROVEMENTS:
