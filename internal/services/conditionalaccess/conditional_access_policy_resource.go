@@ -324,6 +324,21 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							},
 						},
 
+						"service_principal_risk_levels": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									msgraph.ConditionalAccessRiskLevelHigh,
+									msgraph.ConditionalAccessRiskLevelLow,
+									msgraph.ConditionalAccessRiskLevelMedium,
+									msgraph.ConditionalAccessRiskLevelNone,
+									msgraph.ConditionalAccessRiskLevelUnknownFutureValue,
+								}, false),
+							},
+						},
+
 						"sign_in_risk_levels": {
 							Type:     schema.TypeList,
 							Optional: true,
