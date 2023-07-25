@@ -13,8 +13,7 @@ var defaultParallelism = 20
 var defaultTerraformCoreVersion = "1.0.0"
 
 var locations = mapOf(
-        "public" to LocationConfiguration("westeurope", "eastus2", "francecentral", false),
-        "germany" to LocationConfiguration("germanynortheast", "germanycentral", "", false)
+        "public" to LocationConfiguration("westeurope", "eastus2", "francecentral", false)
 )
 
 // specifies the list of Azure Environments where tests should be run nightly

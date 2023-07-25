@@ -17,6 +17,7 @@ var services = mapOf(
         "directoryroles" to "Directory Roles",
         "domains" to "Domains",
         "groups" to "Groups",
+        "identitygovernance" to "Identity Governance",
         "invitations" to "Invitations",
         "policies" to "Policies",
         "serviceprincipals" to "Service Principals",
