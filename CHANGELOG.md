@@ -6,7 +6,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
-* `azuread_conditional_access` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
+* `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
 
 ## 2.40.0 (July 14, 2023)
 
