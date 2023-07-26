@@ -13,7 +13,7 @@ var clientId = DslContext.getParameter("clientId", "")
 var clientSecret = DslContext.getParameter("clientSecret", "")
 var tenantId = DslContext.getParameter("tenantId", "")
 var environment = DslContext.getParameter("environment", "public")
-var vcsRootId = DslContext.getParameter("vcsRootId", "")
+var vcsRootId = DslContext.getParameter("vcsRootId", "TF_HashiCorp_AzureAD_Repository")
 
 var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId, vcsRootId)
 
