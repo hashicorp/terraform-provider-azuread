@@ -12,6 +12,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * `azuread_access_package_resource_package_association` - support destruction of this resource [GH-1124]
+* `azuread_application` - set the `display_name` property correctly on creation to improve UX in the event of failure [GH-1160]
 
 ## 2.40.0 (July 14, 2023)
 
