@@ -8,6 +8,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
+* `azuread_conditional_access_policy` - the `grant_controls` block is now optional [GH-1155]
 
 BUG FIXES:
 
