@@ -7,6 +7,7 @@ FEATURES:
 
 IMPROVEMENTS:
 
+* `azuread_access_package_assignment_policy` - support the `Manager` value for the `review_type` property in the `assignment_review_settings` block [GH-1159]
 * `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
 * `azuread_conditional_access_policy` - the `grant_controls` block is now optional [GH-1155]
 
