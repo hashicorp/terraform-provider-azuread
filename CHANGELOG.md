@@ -1,20 +1,20 @@
-## 2.41.0 (Unreleased)
+## 2.41.0 (July 27, 2023)
 
 FEATURES:
 
-* **New Data Source:** `azuread_directory_role_templates` [GH-1152]
-* **New Data Source:** `azuread_named_location` [GH-1156]
+* **New Data Source:** `azuread_directory_role_templates` ([#1152](https://github.com/hashicorp/terraform-provider-azuread/issues/1152))
+* **New Data Source:** `azuread_named_location` ([#1156](https://github.com/hashicorp/terraform-provider-azuread/issues/1156))
 
 IMPROVEMENTS:
 
-* `azuread_access_package_assignment_policy` - support the `Manager` value for the `review_type` property in the `assignment_review_settings` block [GH-1159]
-* `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block [GH-1145]
-* `azuread_conditional_access_policy` - the `grant_controls` block is now optional [GH-1155]
+* `azuread_access_package_assignment_policy` - support the `Manager` value for the `review_type` property in the `assignment_review_settings` block ([#1159](https://github.com/hashicorp/terraform-provider-azuread/issues/1159))
+* `azuread_conditional_access_policy` - support for the `service_principal_risk_levels` property in the `conditions` block ([#1145](https://github.com/hashicorp/terraform-provider-azuread/issues/1145))
+* `azuread_conditional_access_policy` - the `grant_controls` block is now optional ([#1155](https://github.com/hashicorp/terraform-provider-azuread/issues/1155))
 
 BUG FIXES:
 
-* `azuread_access_package_resource_package_association` - support destruction of this resource [GH-1124]
-* `azuread_application` - set the `display_name` property correctly on creation to improve UX in the event of failure [GH-1160]
+* `azuread_access_package_resource_package_association` - support destruction of this resource ([#1124](https://github.com/hashicorp/terraform-provider-azuread/issues/1124))
+* `azuread_application` - set the `display_name` property correctly on creation to improve UX in the event of failure ([#1160](https://github.com/hashicorp/terraform-provider-azuread/issues/1160))
 
 ## 2.40.0 (July 14, 2023)
 
