@@ -426,10 +426,11 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"session_controls": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				AtLeastOneOf: []string{"grant_controls", "session_controls"},
-				MaxItems:     1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
+				MaxItems:         1,
+				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"application_enforced_restrictions_enabled": {
@@ -499,6 +500,41 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 	}
 
 	return nil
+}
+
+func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+	suppress := false
+
+	switch {
+	case k == "session_controls.#" && old == "0" && new == "1":
+		// When an ineffectual `session_controls` block is configured, the API just ignores it and returns
+		// sessionControls: null
+		sessionControlsRaw := d.Get("session_controls").([]interface{})
+		if len(sessionControlsRaw) == 1 && sessionControlsRaw[0] != nil {
+			sessionControls := sessionControlsRaw[0].(map[string]interface{})
+			suppress = true
+			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && v.(bool) {
+				suppress = false
+			}
+			if v, ok := sessionControls["cloud_app_security_policy"]; ok && v.(string) != "" {
+				suppress = false
+			}
+			if v, ok := sessionControls["disable_resilience_defaults"]; ok && v.(bool) {
+				suppress = false
+			}
+			if v, ok := sessionControls["persistent_browser_mode"]; ok && v.(string) != "" {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency"]; ok && v.(int) > 0 {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency_period"]; ok && v.(string) != "" {
+				suppress = false
+			}
+		}
+	}
+
+	return suppress
 }
 
 func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

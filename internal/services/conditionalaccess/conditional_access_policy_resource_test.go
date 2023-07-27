@@ -216,7 +216,7 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
-	// Remove this test when https://github.com/microsoftgraph/msgraph-metadata/issues/93 is resolved
+	// This is testing the DiffSuppressFunc for the `session_controls` block
 
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
