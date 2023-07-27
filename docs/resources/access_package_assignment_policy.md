@@ -124,7 +124,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 - `duration_in_days` (Number) How many days each occurrence of the access review series will run.
 - `enabled` (Optional) Whether to enable assignment review.
 - `review_frequency` (Optional) This will determine how often the access review campaign runs, valid values are `weekly`, `monthly`, `quarterly`, `halfyearly`, or `annual`.
-- `review_type` (Optional) Self review or specific reviewers. Valid values are `Self`, or `Reviewers`.
+- `review_type` (Optional) Self-review or specific reviewers. Valid values are `Manager`, `Reviewers`, or `Self`.
 - `reviewer` (Optional) One or more `reviewer` blocks to specify the users who will be reviewers (when `review_type` is `Reviewers`), as documented below.
 - `starting_on` (Optional) This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC(e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date
 

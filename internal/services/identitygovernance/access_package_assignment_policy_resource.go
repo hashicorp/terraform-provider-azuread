@@ -241,8 +241,9 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
-								msgraph.AccessReviewReviewerTypeSelf,
+								msgraph.AccessReviewReviewerTypeManager,
 								msgraph.AccessReviewReviewerTypeReviewers,
+								msgraph.AccessReviewReviewerTypeSelf,
 							}, false),
 						},
 
