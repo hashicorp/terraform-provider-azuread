@@ -963,13 +963,6 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return applicationResourceUpdate(ctx, d, meta)
 	}
 
-	// Set a temporary display name as we'll attempt to patch the application with the correct name after creating it
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
-
 	api := expandApplicationApi(d.Get("api").([]interface{}))
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
@@ -985,7 +978,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
-		DisplayName:           utils.String(tempDisplayName),
+		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
@@ -1069,19 +1062,26 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*app.ID())
 
-	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
-	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	status, err := client.Update(ctx, msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: app.Id,
-		},
-		DisplayName: utils.String(displayName),
-	})
+	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
+	uuid, err := uuid.GenerateUUID()
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
+		status, err := client.Update(ctx, msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.ID(),
+			},
+			DisplayName: utils.String(displayNameToSet),
+		})
+		if err != nil {
+			if status == http.StatusNotFound {
+				return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+			}
+			return tf.ErrorDiagF(err, "Failed to patch application with object ID %q after creating", *app.ID())
 		}
-		return tf.ErrorDiagF(err, "Failed to patch application after creating")
 	}
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
