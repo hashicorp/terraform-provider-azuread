@@ -228,11 +228,11 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
-								msgraph.AccessReviewRecurranceTypeAnnual,
-								msgraph.AccessReviewRecurranceTypeHalfYearly,
-								msgraph.AccessReviewRecurranceTypeQuarterly,
-								msgraph.AccessReviewRecurranceTypeMonthly,
-								msgraph.AccessReviewRecurranceTypeWeekly,
+								msgraph.AccessReviewRecurrenceTypeAnnual,
+								msgraph.AccessReviewRecurrenceTypeHalfYearly,
+								msgraph.AccessReviewRecurrenceTypeQuarterly,
+								msgraph.AccessReviewRecurrenceTypeMonthly,
+								msgraph.AccessReviewRecurrenceTypeWeekly,
 							}, false),
 						},
 

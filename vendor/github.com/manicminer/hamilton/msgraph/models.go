@@ -565,7 +565,7 @@ type ApprovalStage struct {
 
 type AssignmentReviewSettings struct {
 	IsEnabled                       *bool                           `json:"isEnabled,omitempty"`
-	RecurrenceType                  AccessReviewRecurranceType      `json:"recurrenceType,omitempty"`
+	RecurrenceType                  AccessReviewRecurrenceType      `json:"recurrenceType,omitempty"`
 	ReviewerType                    AccessReviewReviewerType        `json:"reviewerType,omitempty"`
 	StartDateTime                   *time.Time                      `json:"startDateTime,omitempty"`
 	DurationInDays                  *int32                          `json:"durationInDays,omitempty"`
@@ -581,6 +581,16 @@ type AuditActivityInitiator struct {
 }
 
 type AuthenticationMethod interface{}
+
+type AuthenticationStrengthPolicy struct {
+	AllowedCombinations *[]AuthenticationMethodModes      `json:"allowedCombinations,omitempty"`
+	CreatedDateTime     *time.Time                        `json:"createdDateTime,omitempty"`
+	ID                  *string                           `json:"id,omitempty"`
+	ModifiedDateTime    *time.Time                        `json:"modifiedDateTime,omitempty"`
+	PolicyType          *AuthenticationStrengthPolicyType `json:"policyType,omitempty"`
+	Description         *string                           `json:"description,omitempty"`
+	DisplayName         *string                           `json:"displayName,omitempty"`
+}
 
 type BaseNamedLocation struct {
 	ODataType        *odata.Type `json:"@odata.type,omitempty"`
@@ -646,6 +656,7 @@ type ConditionalAccessFilter struct {
 
 type ConditionalAccessGrantControls struct {
 	Operator                    *string                          `json:"operator,omitempty"`
+	AuthenticationStrength      *AuthenticationStrengthPolicy    `json:"authenticationStrength,omitempty"`
 	BuiltInControls             *[]ConditionalAccessGrantControl `json:"builtInControls,omitempty"`
 	CustomAuthenticationFactors *[]string                        `json:"customAuthenticationFactors,omitempty"`
 	TermsOfUse                  *[]string                        `json:"termsOfUse,omitempty"`
@@ -666,10 +677,10 @@ type ConditionalAccessPolicy struct {
 	Conditions       *ConditionalAccessConditionSet    `json:"conditions,omitempty"`
 	CreatedDateTime  *time.Time                        `json:"createdDateTime,omitempty"`
 	DisplayName      *string                           `json:"displayName,omitempty"`
-	GrantControls    *ConditionalAccessGrantControls   `json:"grantControls,omitempty"`
+	GrantControls    *ConditionalAccessGrantControls   `json:"grantControls"`
 	ID               *string                           `json:"id,omitempty"`
 	ModifiedDateTime *time.Time                        `json:"modifiedDateTime,omitempty"`
-	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls,omitempty"`
+	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls"`
 	State            *ConditionalAccessPolicyState     `json:"state,omitempty"`
 }
 
