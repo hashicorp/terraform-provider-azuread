@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `azuread_directory_role_templates` [GH-1152]
+* **New Data Source:** `azuread_named_location` [GH-1156]
 
 IMPROVEMENTS:
 
