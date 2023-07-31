@@ -3,16 +3,15 @@ package directoryroles
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
@@ -108,30 +107,20 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 
 	d.SetId(*roleEligibilityScheduleRequest.ID)
 
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q eligibility schedule request to principal %q to take effect", roleDefinitionId, principalId)
-	}
-	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   timeout,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 3,
-		Refresh: func() (interface{}, string, error) {
-			_, status, err := client.Get(ctx, *roleEligibilityScheduleRequest.ID, odata.Query{})
-			if err != nil {
-				if status == http.StatusNotFound {
-					return "stub", "Waiting", nil
-				}
-				return nil, "Error", fmt.Errorf("retrieving role eligibility schedule request")
+	if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
+		client.BaseClient.DisableRetries = true
+
+		resr, status, err := client.Get(ctx, *roleEligibilityScheduleRequest.ID, odata.Query{})
+		if err != nil {
+			if status == http.StatusNotFound {
+				return utils.Bool(false), nil
 			}
-			return "stub", "Done", nil
-		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for role eligibility schedule request for %q to reflect in directory role %q", principalId, roleDefinitionId)
+			return nil, err
+		}
+		return utils.Bool(resr != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for role eligibility schedule request for %q to be created for directory role %q", principalId, roleDefinitionId)
 	}
 
 	return directoryRoleEligibilityScheduleRequestResourceRead(ctx, d, meta)
