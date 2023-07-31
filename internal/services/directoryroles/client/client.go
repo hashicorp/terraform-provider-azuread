@@ -9,11 +9,12 @@ import (
 )
 
 type Client struct {
-	DirectoryObjectsClient       *msgraph.DirectoryObjectsClient
-	DirectoryRolesClient         *msgraph.DirectoryRolesClient
-	DirectoryRoleTemplatesClient *msgraph.DirectoryRoleTemplatesClient
-	RoleAssignmentsClient        *msgraph.RoleAssignmentsClient
-	RoleDefinitionsClient        *msgraph.RoleDefinitionsClient
+	DirectoryObjectsClient               *msgraph.DirectoryObjectsClient
+	DirectoryRolesClient                 *msgraph.DirectoryRolesClient
+	DirectoryRoleTemplatesClient         *msgraph.DirectoryRoleTemplatesClient
+	RoleAssignmentsClient                *msgraph.RoleAssignmentsClient
+	RoleDefinitionsClient                *msgraph.RoleDefinitionsClient
+	RoleEligibilityScheduleRequestClient *msgraph.RoleEligibilityScheduleRequestClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -32,11 +33,15 @@ func NewClient(o *common.ClientOptions) *Client {
 	roleDefinitionsClient := msgraph.NewRoleDefinitionsClient()
 	o.ConfigureClient(&roleDefinitionsClient.BaseClient)
 
+	roleEligibilityScheduleRequestClient := msgraph.NewRoleEligibilityScheduleRequestClient()
+	o.ConfigureClient(&roleEligibilityScheduleRequestClient.BaseClient)
+
 	return &Client{
-		DirectoryObjectsClient:       directoryObjectsClient,
-		DirectoryRolesClient:         directoryRolesClient,
-		DirectoryRoleTemplatesClient: directoryRoleTemplatesClient,
-		RoleAssignmentsClient:        roleAssignmentsClient,
-		RoleDefinitionsClient:        roleDefinitionsClient,
+		DirectoryObjectsClient:               directoryObjectsClient,
+		DirectoryRolesClient:                 directoryRolesClient,
+		DirectoryRoleTemplatesClient:         directoryRoleTemplatesClient,
+		RoleAssignmentsClient:                roleAssignmentsClient,
+		RoleDefinitionsClient:                roleDefinitionsClient,
+		RoleEligibilityScheduleRequestClient: roleEligibilityScheduleRequestClient,
 	}
 }
