@@ -387,8 +387,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"built_in_controls": {
-							Type:     schema.TypeList,
-							Required: true,
+							Type:         schema.TypeList,
+							Optional:     true,
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -414,8 +415,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"terms_of_use": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:         schema.TypeList,
+							Optional:     true,
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: validate.NoEmptyStrings,
