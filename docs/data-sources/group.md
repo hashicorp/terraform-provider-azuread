@@ -28,11 +28,12 @@ data "azuread_group" "example" {
 The following arguments are supported:
 
 * `display_name` - (Optional) The display name for the group.
+* `mail_nickname` - (Optional) The mail alias for the group, unique in the organisation.
 * `mail_enabled` - (Optional) Whether the group is mail-enabled.
 * `object_id` - (Optional) Specifies the object ID of the group.
 * `security_enabled` - (Optional) Whether the group is a security group.
 
-~> One of `display_name` or `object_id` must be specified.
+~> One of `display_name`, `object_id` or `mail_nickname` must be specified.
 
 ## Attributes Reference
 
