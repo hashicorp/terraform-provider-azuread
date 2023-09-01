@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -174,6 +177,7 @@ func servicePrincipalsDataSource() *schema.Resource {
 func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var servicePrincipals []msgraph.ServicePrincipal
 	var expectedCount int

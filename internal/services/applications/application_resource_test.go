@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications_test
 
 import (
@@ -587,6 +590,7 @@ func TestAccApplication_logo(t *testing.T) {
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 	app, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -668,8 +672,9 @@ resource "azuread_application" "test" {
   fallback_public_client_enabled = true
   oauth2_post_response_required  = true
 
-  description = "Acceptance testing application"
-  notes       = "Testing application"
+  description                  = "Acceptance testing application"
+  notes                        = "Testing application"
+  service_management_reference = "app-for-testing"
 
   marketing_url         = "https://hashitown-%[1]d.com/"
   privacy_statement_url = "https://hashitown-%[1]d.com/privacy"

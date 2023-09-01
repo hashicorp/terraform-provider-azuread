@@ -259,7 +259,7 @@ type Application struct {
 	KeyCredentials                *[]KeyCredential          `json:"keyCredentials,omitempty"`
 	Oauth2RequirePostResponse     *bool                     `json:"oauth2RequirePostResponse,omitempty"` // field name has typo in beta API
 	Oauth2RequiredPostResponse    *bool                     `json:"oauth2RequiredPostResponse,omitempty"`
-	OnPremisesPublishing          *OnPremisesPublishing     `json:"onPremisePublishing,omitempty"`
+	OnPremisesPublishing          *OnPremisesPublishing     `json:"onPremisesPublishing,omitempty"`
 	OptionalClaims                *OptionalClaims           `json:"optionalClaims,omitempty"`
 	Notes                         *StringNullWhenEmpty      `json:"notes,omitempty"`
 	ParentalControlSettings       *ParentalControlSettings  `json:"parentalControlSettings,omitempty"`
@@ -267,6 +267,7 @@ type Application struct {
 	PublicClient                  *PublicClient             `json:"publicClient,omitempty"`
 	PublisherDomain               *string                   `json:"publisherDomain,omitempty"`
 	RequiredResourceAccess        *[]RequiredResourceAccess `json:"requiredResourceAccess,omitempty"`
+	ServiceManagementReference    *StringNullWhenEmpty      `json:"serviceManagementReference,omitempty"`
 	SignInAudience                *SignInAudience           `json:"signInAudience,omitempty"`
 	Spa                           *ApplicationSpa           `json:"spa,omitempty"`
 	Tags                          *[]string                 `json:"tags,omitempty"`
@@ -564,7 +565,7 @@ type ApprovalStage struct {
 
 type AssignmentReviewSettings struct {
 	IsEnabled                       *bool                           `json:"isEnabled,omitempty"`
-	RecurrenceType                  AccessReviewRecurranceType      `json:"recurrenceType,omitempty"`
+	RecurrenceType                  AccessReviewRecurrenceType      `json:"recurrenceType,omitempty"`
 	ReviewerType                    AccessReviewReviewerType        `json:"reviewerType,omitempty"`
 	StartDateTime                   *time.Time                      `json:"startDateTime,omitempty"`
 	DurationInDays                  *int32                          `json:"durationInDays,omitempty"`
@@ -580,6 +581,16 @@ type AuditActivityInitiator struct {
 }
 
 type AuthenticationMethod interface{}
+
+type AuthenticationStrengthPolicy struct {
+	AllowedCombinations *[]AuthenticationMethodModes      `json:"allowedCombinations,omitempty"`
+	CreatedDateTime     *time.Time                        `json:"createdDateTime,omitempty"`
+	ID                  *string                           `json:"id,omitempty"`
+	ModifiedDateTime    *time.Time                        `json:"modifiedDateTime,omitempty"`
+	PolicyType          *AuthenticationStrengthPolicyType `json:"policyType,omitempty"`
+	Description         *string                           `json:"description,omitempty"`
+	DisplayName         *string                           `json:"displayName,omitempty"`
+}
 
 type BaseNamedLocation struct {
 	ODataType        *odata.Type `json:"@odata.type,omitempty"`
@@ -608,16 +619,23 @@ type ConditionalAccessApplications struct {
 	IncludeUserActions  *[]string `json:"includeUserActions,omitempty"`
 }
 
+type ConditionalAccessClientApplications struct {
+	ExcludeServicePrincipals *[]string `json:"excludeServicePrincipals,omitempty"`
+	IncludeServicePrincipals *[]string `json:"includeServicePrincipals,omitempty"`
+}
+
 type ConditionalAccessConditionSet struct {
-	Applications     *ConditionalAccessApplications    `json:"applications,omitempty"`
-	ClientAppTypes   *[]ConditionalAccessClientAppType `json:"clientAppTypes,omitempty"`
-	Devices          *ConditionalAccessDevices         `json:"devices,omitempty"`
-	DeviceStates     *ConditionalAccessDeviceStates    `json:"deviceStates,omitempty"`
-	Locations        *ConditionalAccessLocations       `json:"locations"`
-	Platforms        *ConditionalAccessPlatforms       `json:"platforms"`
-	SignInRiskLevels *[]ConditionalAccessRiskLevel     `json:"signInRiskLevels,omitempty"`
-	UserRiskLevels   *[]ConditionalAccessRiskLevel     `json:"userRiskLevels,omitempty"`
-	Users            *ConditionalAccessUsers           `json:"users,omitempty"`
+	Applications               *ConditionalAccessApplications       `json:"applications,omitempty"`
+	ClientApplications         *ConditionalAccessClientApplications `json:"clientApplications,omitempty"`
+	ClientAppTypes             *[]ConditionalAccessClientAppType    `json:"clientAppTypes,omitempty"`
+	Devices                    *ConditionalAccessDevices            `json:"devices,omitempty"`
+	DeviceStates               *ConditionalAccessDeviceStates       `json:"deviceStates,omitempty"`
+	Locations                  *ConditionalAccessLocations          `json:"locations"`
+	Platforms                  *ConditionalAccessPlatforms          `json:"platforms"`
+	ServicePrincipalRiskLevels *[]ConditionalAccessRiskLevel        `json:"servicePrincipalRiskLevels,omitempty"`
+	SignInRiskLevels           *[]ConditionalAccessRiskLevel        `json:"signInRiskLevels,omitempty"`
+	UserRiskLevels             *[]ConditionalAccessRiskLevel        `json:"userRiskLevels,omitempty"`
+	Users                      *ConditionalAccessUsers              `json:"users,omitempty"`
 }
 
 type ConditionalAccessDevices struct {
@@ -638,6 +656,7 @@ type ConditionalAccessFilter struct {
 
 type ConditionalAccessGrantControls struct {
 	Operator                    *string                          `json:"operator,omitempty"`
+	AuthenticationStrength      *AuthenticationStrengthPolicy    `json:"authenticationStrength,omitempty"`
 	BuiltInControls             *[]ConditionalAccessGrantControl `json:"builtInControls,omitempty"`
 	CustomAuthenticationFactors *[]string                        `json:"customAuthenticationFactors,omitempty"`
 	TermsOfUse                  *[]string                        `json:"termsOfUse,omitempty"`
@@ -658,10 +677,10 @@ type ConditionalAccessPolicy struct {
 	Conditions       *ConditionalAccessConditionSet    `json:"conditions,omitempty"`
 	CreatedDateTime  *time.Time                        `json:"createdDateTime,omitempty"`
 	DisplayName      *string                           `json:"displayName,omitempty"`
-	GrantControls    *ConditionalAccessGrantControls   `json:"grantControls,omitempty"`
+	GrantControls    *ConditionalAccessGrantControls   `json:"grantControls"`
 	ID               *string                           `json:"id,omitempty"`
 	ModifiedDateTime *time.Time                        `json:"modifiedDateTime,omitempty"`
-	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls,omitempty"`
+	SessionControls  *ConditionalAccessSessionControls `json:"sessionControls"`
 	State            *ConditionalAccessPolicyState     `json:"state,omitempty"`
 }
 
@@ -789,6 +808,11 @@ func (d *DelegatedPermissionGrant) UnmarshalJSON(data []byte) error {
 		d.Scopes = &scopes
 	}
 	return nil
+}
+
+type DeviceAndAppManagementAssignmentTarget struct {
+	DeviceAndAppManagementAssignmentFilterId   *string                                     `json:"deviceAndAppManagementAssignmentFilterId,omitempty"`
+	DeviceAndAppManagementAssignmentFilterType *DeviceAndAppManagementAssignmentFilterType `json:"deviceAndAppManagementAssignmentFilterType,omitempty"`
 }
 
 type DeviceDetail struct {
@@ -1273,6 +1297,15 @@ type OptionalClaims struct {
 	Saml2Token  *[]OptionalClaim `json:"saml2Token,omitempty"`
 }
 
+type OutOfBoxExperienceSettings struct {
+	HidePrivacySettings       *bool            `json:"hidePrivacySettings,omitempty"`
+	HideEULA                  *bool            `json:"hideEULA,omitempty"`
+	UserType                  *WindowsUserType `json:"userType,omitempty"`
+	DeviceUsageType           *DeviceUsageType `json:"deviceUsageType,omitempty"`
+	SkipKeyboardSelectionPage *bool            `json:"skipKeyboardSelectionPage,omitempty"`
+	HideEscapeLink            *bool            `json:"hideEscapeLink,omitempty"`
+}
+
 type ParentalControlSettings struct {
 	CountriesBlockedForMinors *[]string `json:"countriesBlockedForMinors,omitempty"`
 	LegalAgeGroupRule         *string   `json:"legalAgeGroupRule,omitempty"`
@@ -1362,6 +1395,11 @@ type SamlSingleSignOnSettings struct {
 	RelayState *string `json:"relayState,omitempty"`
 }
 
+type RequestSchedule struct {
+	StartDateTime *time.Time         `json:"startDateTime,omitempty"`
+	Expiration    *ExpirationPattern `json:"expiration,omitempty"`
+}
+
 type SchemaExtension struct {
 	ID          *string                      `json:"id,omitempty"`
 	Description *string                      `json:"description,omitempty"`
@@ -1429,6 +1467,7 @@ type ServicePrincipal struct {
 	SignInAudience                      *SignInAudience               `json:"signInAudience,omitempty"`
 	Tags                                *[]string                     `json:"tags,omitempty"`
 	TokenEncryptionKeyId                *string                       `json:"tokenEncryptionKeyId,omitempty"`
+	TokenIssuancePolicies               *[]TokenIssuancePolicy        `json:"tokenIssuancePolicies@odata.bind,omitempty"`
 	VerifiedPublisher                   *VerifiedPublisher            `json:"verifiedPublisher,omitempty"`
 }
 
@@ -1534,8 +1573,10 @@ type SynchronizationJob struct {
 }
 
 type SignInActivity struct {
-	LastSignInDateTime  *time.Time `json:"lastSignInDateTime,omitempty"`
-	LastSignInRequestId *string    `json:"lastSignInRequestId,omitempty"`
+	LastSignInDateTime                *time.Time `json:"lastSignInDateTime,omitempty"`
+	LastSignInRequestId               *string    `json:"lastSignInRequestId,omitempty"`
+	LastNonInteractiveSignInDateTime  *time.Time `json:"lastNonInteractiveSignInDateTime,omitempty"`
+	LastNonInteractiveSignInRequestId *string    `json:"lastNonInteractiveSignInRequestId,omitempty"`
 }
 
 type SignInFrequencySessionControl struct {
@@ -1634,6 +1675,19 @@ type TemporaryAccessPassAuthenticationMethod struct {
 	MethodUsabilityReason *MethodUsabilityReason `json:"methodUsabilityReason,omitempty"`
 }
 
+type TicketInfo struct {
+	TicketNumber *string `json:"ticketNumber,omitempty"`
+	TicketSystem *string `json:"ticketSystem,omitempty"`
+}
+
+type TokenIssuancePolicy struct {
+	DirectoryObject
+	Definition            *[]string `json:"definition,omitempty"`
+	Description           *string   `json:"description,omitempty"`
+	DisplayName           *string   `json:"displayName,omitempty"`
+	IsOrganizationDefault *bool     `json:"isOrganizationDefault,omitempty"`
+}
+
 type UnifiedRoleAssignment struct {
 	DirectoryObject
 
@@ -1654,6 +1708,24 @@ type UnifiedRoleDefinition struct {
 	RolePermissions *[]UnifiedRolePermission `json:"rolePermissions,omitempty"`
 	TemplateId      *string                  `json:"templateId,omitempty"`
 	Version         *string                  `json:"version,omitempty"`
+}
+
+type UnifiedRoleEligibilityScheduleRequest struct {
+	ID                *string                           `json:"id,omitempty"`
+	Action            *UnifiedRoleScheduleRequestAction `json:"action,omitempty"`
+	AppScopeID        *string                           `json:"appScopeId,omitempty"`
+	ApprovalID        *string                           `json:"approvalId,omitempty"`
+	CompletedDateTime *time.Time                        `json:"completedDateTime,omitempty"`
+	CreatedDateTime   *time.Time                        `json:"createdDateTime,omitempty"`
+	DirectoryScopeId  *string                           `json:"directoryScopeId,omitempty"`
+	IsValidationOnly  *bool                             `json:"isValidationOnly,omitempty"`
+	Justification     *string                           `json:"justification,omitempty"`
+	PrincipalId       *string                           `json:"principalId,omitempty"`
+	RoleDefinitionId  *string                           `json:"roleDefinitionId,omitempty"`
+	ScheduleInfo      *RequestSchedule                  `json:"scheduleInfo,omitempty"`
+	Status            *string                           `json:"status,omitempty"`
+	TargetScheduleID  *string                           `json:"targetScheduleId,omitempty"`
+	TicketInfo        *TicketInfo                       `json:"ticketInfo,omitempty"`
 }
 
 type UnifiedRolePermission struct {
@@ -1838,6 +1910,71 @@ type VerifiedPublisher struct {
 	AddedDateTime       *time.Time `json:"addedDateTime,omitempty"`
 	DisplayName         *string    `json:"displayName,omitempty"`
 	VerifiedPublisherId *string    `json:"verifiedPublisherId,omitempty"`
+}
+
+type WindowsAutopilotDeploymentProfile struct {
+	ID                                     *string                                `json:"id,omitempty"`
+	ODataType                              *odata.Type                            `json:"@odata.type,omitempty"`
+	DisplayName                            *string                                `json:"displayName,omitempty"`
+	Description                            *string                                `json:"description,omitempty"`
+	Language                               *string                                `json:"language,omitempty"`
+	CreatedDateTime                        *time.Time                             `json:"createdDateTime,omitempty"`
+	LastModifiedDateTime                   *time.Time                             `json:"lastModifiedDateTime,omitempty"`
+	OutOfBoxExperienceSettings             *OutOfBoxExperienceSettings            `json:"outOfBoxExperienceSettings,omitempty"`
+	EnrollmentStatusScreenSettings         *WindowsEnrollmentStatusScreenSettings `json:"enrollmentStatusScreenSettings,omitempty"`
+	ExtractHardwareHash                    *bool                                  `json:"extractHardwareHash,omitempty"`
+	DeviceNameTemplate                     *string                                `json:"deviceNameTemplate,omitempty"`
+	DeviceType                             *WindowsAutopilotDeviceType            `json:"deviceType,omitempty"`
+	EnableWhiteGlove                       *bool                                  `json:"enableWhiteGlove,omitempty"`
+	RoleScopeTagIds                        *[]string                              `json:"roleScopeTagIds,omitempty"`
+	ManagementServiceAppId                 *string                                `json:"managementServiceAppId,omitempty"`
+	HybridAzureADJoinSkipConnectivityCheck *bool                                  `json:"hybridAzureADJoinSkipConnectivityCheck,omitempty"`
+}
+
+type WindowsAutopilotDeploymentProfileAssignment struct {
+	ID       *string                                 `json:"id,omitempty"`
+	Target   *DeviceAndAppManagementAssignmentTarget `json:"target,omitempty"`
+	Source   *DeviceAndAppManagementAssignmentSource `json:"source,omitempty"`
+	SourceId *string                                 `json:"sourceId,omitempty"`
+}
+
+type WindowsAutopilotDeviceIdentity struct {
+	ID                                        *string                                          `json:"id,omitempty"`
+	DeploymentProfileAssignmentStatus         *DeploymentProfileAssignmentStatus               `json:"deploymentProfileAssignmentStatus,omitempty"`
+	DeploymentProfileAssignmentDetailedStatus *WindowsAutopilotProfileAssignmentDetailedStatus `json:"deploymentProfileAssignmentDetailedStatus,omitempty"`
+	DeploymentProfileAssignedDateTime         *time.Time                                       `json:"deploymentProfileAssignedDateTime,omitempty"`
+	GroupTag                                  *string                                          `json:"groupTag,omitempty"`
+	PurchaseOrderIdentifier                   *string                                          `json:"purchaseOrderIdentifier,omitempty"`
+	SerialNumber                              *string                                          `json:"serialNumber,omitempty"`
+	ProductKey                                *string                                          `json:"productKey,omitempty"`
+	Manufacturer                              *string                                          `json:"manufacturer,omitempty"`
+	Model                                     *string                                          `json:"model,omitempty"`
+	EnrollmentState                           *EnrollmentState                                 `json:"enrollmentState,omitempty"`
+	LastContactedDateTime                     *time.Time                                       `json:"lastContactedDateTime,omitempty"`
+	AddressableUserName                       *string                                          `json:"addressableUserName,omitempty"`
+	UserPrincipalName                         *string                                          `json:"userPrincipalName,omitempty"`
+	ResourceName                              *string                                          `json:"resourceName,omitempty"`
+	SkuNumber                                 *string                                          `json:"skuNumber,omitempty"`
+	SystemFamily                              *string                                          `json:"systemFamily,omitempty"`
+	AzureActiveDirectoryDeviceId              *string                                          `json:"azureActiveDirectoryDeviceId,omitempty"`
+	AzureAdDeviceId                           *string                                          `json:"azureAdDeviceId,omitempty"`
+	ManagedDeviceId                           *string                                          `json:"managedDeviceId,omitempty"`
+	DisplayName                               *string                                          `json:"displayName,omitempty"`
+	DeviceAccountUpn                          *string                                          `json:"deviceAccountUpn,omitempty"`
+	DeviceAccountPassword                     *string                                          `json:"deviceAccountPassword,omitempty"`
+	DeviceFriendlyName                        *string                                          `json:"deviceFriendlyName,omitempty"`
+	RemediationState                          *WindowsAutopilotDeviceRemediationState          `json:"remediationState,omitempty"`
+	RemediationStateLastModifiedDateTime      *time.Time                                       `json:"remediationStateLastModifiedDateTime,omitempty"`
+}
+
+type WindowsEnrollmentStatusScreenSettings struct {
+	HideInstallationProgress                         *bool   `json:"hideInstallationProgress,omitempty"`
+	AllowDeviceUseBeforeProfileAndAppInstallComplete *bool   `json:"allowDeviceUseBeforeProfileAndAppInstallComplete,omitempty"`
+	BlockDeviceSetupRetryByUser                      *bool   `json:"blockDeviceSetupRetryByUser,omitempty"`
+	AllowLogCollectionOnInstallFailure               *bool   `json:"allowLogCollectionOnInstallFailure,omitempty"`
+	CustomErrorMessage                               *string `json:"customErrorMessage,omitempty"`
+	InstallProgressTimeoutInMinutes                  *int32  `json:"installProgressTimeoutInMinutes,omitempty"`
+	AllowDeviceUseOnInstallFailure                   *bool   `json:"allowDeviceUseOnInstallFailure,omitempty"`
 }
 
 type WindowsHelloForBusinessAuthenticationMethod struct {

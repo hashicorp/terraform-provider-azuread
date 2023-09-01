@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package check
 
 import (
@@ -14,12 +17,30 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
+type withTenantType struct {
+	tenantId string
+}
+
+func (w withTenantType) That(resourceName string) thatType {
+	that := That(resourceName)
+	that.tenantId = w.tenantId
+	return that
+}
+
+func WithTenant(tenantId string) withTenantType {
+	return withTenantType{
+		tenantId: tenantId,
+	}
+}
+
 type thatType struct {
 	// resourceName being the full resource name e.g. azurerm_foo.bar
 	resourceName string
+
+	// tenantId is the tenant to use when building the test client
+	tenantId string
 }
 
-// Key returns a type which can be used for more fluent assertions for a given Resource
 func That(resourceName string) thatType {
 	return thatType{
 		resourceName: resourceName,
@@ -29,7 +50,7 @@ func That(resourceName string) thatType {
 // ExistsInAzure validates that the specified resource exists within Azure
 func (t thatType) ExistsInAzure(testResource types.TestResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		client, err := testclient.Build()
+		client, err := testclient.Build(t.tenantId)
 		if err != nil {
 			return fmt.Errorf("building client: %+v", err)
 		}
@@ -42,6 +63,7 @@ func (t thatType) Key(key string) thatWithKeyType {
 	return thatWithKeyType{
 		resourceName: t.resourceName,
 		key:          key,
+		tenantId:     t.tenantId,
 	}
 }
 
@@ -51,6 +73,9 @@ type thatWithKeyType struct {
 
 	// key being the specific field we're querying e.g. bar or a nested object ala foo.0.bar
 	key string
+
+	// tenantId is the tenant to use when building the test client. When blank, the env var ARM_TENANT_ID is used.
+	tenantId string
 }
 
 // DoesNotExist returns a TestCheckFunc which validates that the specific key
@@ -112,7 +137,7 @@ func (t thatWithKeyType) ValidatesWith(validationFunc KeyValidationFunc) resourc
 			}
 		}
 
-		client, err := testclient.Build()
+		client, err := testclient.Build(t.tenantId)
 		if err != nil {
 			return fmt.Errorf("building client: %+v", err)
 		}

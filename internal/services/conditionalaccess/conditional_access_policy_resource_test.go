@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conditionalaccess_test
 
 import (
@@ -46,7 +49,7 @@ func TestAccConditionalAccessPolicy_complete(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+				check.That(data.ResourceName).Key("state").HasValue("enabledForReportingButNotEnforced"),
 			),
 		},
 		data.ImportStep(),
@@ -161,9 +164,6 @@ func TestAccConditionalAccessPolicy_includedUserActions(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
-	// This is in a separate test to avoid ForceNew in the update test due to https://github.com/microsoftgraph/msgraph-metadata/issues/93
-	// session_controls can be added to the complete config, and this rest removed, when this issue is resolved
-
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
@@ -182,26 +182,6 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 			Config: r.complete(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.sessionControls(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.sessionControlsUpdate(data),
-			Check: resource.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("id").Exists(),
-				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
-				check.That(data.ResourceName).Key("state").HasValue("disabled"),
 			),
 		},
 		data.ImportStep(),
@@ -236,7 +216,7 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 }
 
 func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
-	// Remove this test when https://github.com/microsoftgraph/msgraph-metadata/issues/93 is resolved
+	// This is testing the DiffSuppressFunc for the `session_controls` block
 
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
@@ -261,6 +241,52 @@ func TestAccConditionalAccessPolicy_sessionControlsDisabled(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.sessionControlsDisabled(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccConditionalAccessPolicy_clientApplications(t *testing.T) {
+	// This is a separate test for two reasons:
+	// - conditional access policies applies either to users/groups or to client applications (workload identities)
+	// - conditional access policies using client applications requires special licensing (Microsoft Entra Workload Identities)
+
+	// Due to eventual consistency issues making it difficult to create a service principal on demand for inclusion in this
+	// test policy, the config for this test requires a pre-existing service principal named "Terraform Acceptance Tests (Single Tenant)"
+	// which should be linked to a single tenant application in the same tenant.
+
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.clientApplicationsIncluded(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.clientApplicationsExcluded(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.clientApplicationsIncluded(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("id").Exists(),
@@ -318,7 +344,7 @@ func (ConditionalAccessPolicyResource) complete(data acceptance.TestData) string
 	return fmt.Sprintf(`
 resource "azuread_conditional_access_policy" "test" {
   display_name = "acctest-CONPOLICY-%[1]d"
-  state        = "disabled"
+  state        = "enabledForReportingButNotEnforced"
 
   conditions {
     client_app_types    = ["all"]
@@ -327,7 +353,7 @@ resource "azuread_conditional_access_policy" "test" {
 
     applications {
       included_applications = ["All"]
-      excluded_applications = ["00000004-0000-0ff1-ce00-000000000000"]
+      excluded_applications = []
     }
 
     locations {
@@ -336,8 +362,8 @@ resource "azuread_conditional_access_policy" "test" {
     }
 
     platforms {
-      included_platforms = ["android"]
-      excluded_platforms = ["iOS"]
+      included_platforms = ["all"]
+      excluded_platforms = ["android", "iOS"]
     }
 
     users {
@@ -349,6 +375,15 @@ resource "azuread_conditional_access_policy" "test" {
   grant_controls {
     operator          = "OR"
     built_in_controls = ["mfa"]
+  }
+
+  session_controls {
+    application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = false
+    cloud_app_security_policy                 = "blockDownloads"
+    persistent_browser_mode                   = "always"
+    sign_in_frequency                         = 2
+    sign_in_frequency_period                  = "days"
   }
 }
 `, data.RandomInteger)
@@ -500,60 +535,13 @@ resource "azuread_conditional_access_policy" "test" {
     }
   }
 
-  grant_controls {
-    operator          = "OR"
-    built_in_controls = ["block"]
-  }
-
   session_controls {
     application_enforced_restrictions_enabled = true
+    disable_resilience_defaults               = true
     cloud_app_security_policy                 = "monitorOnly"
     persistent_browser_mode                   = "never"
     sign_in_frequency                         = 10
     sign_in_frequency_period                  = "hours"
-  }
-}
-`, data.RandomInteger)
-}
-
-func (ConditionalAccessPolicyResource) sessionControlsUpdate(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-CONPOLICY-%[1]d"
-  state        = "disabled"
-
-  conditions {
-    client_app_types = ["browser"]
-
-    applications {
-      included_applications = ["All"]
-    }
-
-    locations {
-      included_locations = ["All"]
-    }
-
-    platforms {
-      included_platforms = ["all"]
-    }
-
-    users {
-      included_users = ["All"]
-      excluded_users = ["GuestsOrExternalUsers"]
-    }
-  }
-
-  grant_controls {
-    operator          = "OR"
-    built_in_controls = ["block"]
-  }
-
-  session_controls {
-    application_enforced_restrictions_enabled = true
-    cloud_app_security_policy                 = "blockDownloads"
-    persistent_browser_mode                   = "always"
-    sign_in_frequency                         = 2
-    sign_in_frequency_period                  = "days"
   }
 }
 `, data.RandomInteger)
@@ -593,6 +581,79 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     application_enforced_restrictions_enabled = false
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) clientApplicationsIncluded(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    client_applications {
+      included_service_principals = [data.azuread_service_principal.test.object_id]
+    }
+
+    service_principal_risk_levels = ["medium"]
+
+    users {
+      included_users = ["None"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) clientApplicationsExcluded(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+data "azuread_service_principal" "test" {
+  display_name = "Terraform Acceptance Tests (Single Tenant)"
+}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["all"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    client_applications {
+      included_service_principals = ["ServicePrincipalsInMyTenant"]
+      excluded_service_principals = [data.azuread_service_principal.test.object_id]
+    }
+
+    service_principal_risk_levels = ["medium"]
+
+    users {
+      included_users = ["None"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
   }
 }
 `, data.RandomInteger)

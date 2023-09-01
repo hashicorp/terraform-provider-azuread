@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -390,6 +393,12 @@ func applicationDataSource() *schema.Resource {
 				},
 			},
 
+			"service_management_reference": {
+				Description: "References application or service contact information from a Service or Asset Management database",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the current application",
 				Type:        schema.TypeString,
@@ -489,6 +498,7 @@ func applicationDataSource() *schema.Resource {
 func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var app *msgraph.Application
 
@@ -576,6 +586,7 @@ func applicationDataSourceRead(ctx context.Context, d *schema.ResourceData, meta
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)

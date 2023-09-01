@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package invitations_test
 
 import (
@@ -140,6 +143,7 @@ func TestAccInvitation_withGroupMembership(t *testing.T) {
 func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Invitations.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	userID := state.Attributes["user_id"]
 

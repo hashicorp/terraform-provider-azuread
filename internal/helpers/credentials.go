@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package helpers
 
 import (
@@ -69,11 +72,11 @@ func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id
 func GetTokenSigningCertificateThumbprint(certByte []byte) (string, error) {
 	block, _ := pem.Decode(certByte)
 	if block == nil {
-		return "", fmt.Errorf("Failed to decode certificate block")
+		return "", fmt.Errorf("decoding certificate block")
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse certificate block data: %+v", err)
+		return "", fmt.Errorf("parsing certificate block data: %+v", err)
 	}
 	thumbprint := sha1.Sum(cert.Raw)
 

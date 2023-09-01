@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals_test
 
 import (
@@ -235,7 +238,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.noOwners(data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
@@ -314,6 +317,7 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	servicePrincipal, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
@@ -534,19 +538,19 @@ resource "azuread_user" "testC" {
 `, data.RandomInteger, data.RandomPassword)
 }
 
-func (ServicePrincipalResource) noOwners(data acceptance.TestData) string {
+func (r ServicePrincipalResource) noOwners(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-provider "azuread" {}
+%[1]s
 
 resource "azuread_application" "test" {
-  display_name = "acctestServicePrincipal-%[1]d"
+  display_name = "acctestServicePrincipal-%[2]d"
 }
 
 resource "azuread_service_principal" "test" {
   application_id = azuread_application.test.application_id
   owners         = []
 }
-`, data.RandomInteger)
+`, r.templateThreeUsers(data), data.RandomInteger)
 }
 
 func (r ServicePrincipalResource) singleOwner(data acceptance.TestData) string {

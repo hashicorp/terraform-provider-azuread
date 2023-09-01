@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -99,7 +102,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 
 	// Wait for the secret to appear
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -195,6 +198,7 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *schema.Resource
 
 	// Wait for synchronization secret to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		synchronizationSecrets, _, _ := client.GetSecrets(ctx, id.ServicePrincipalId)

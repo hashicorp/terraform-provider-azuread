@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package groups
 
 import (
@@ -92,6 +95,8 @@ func groupResource() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupResourceBehaviorOptionAllowOnlyMembersToPost,
+						msgraph.GroupResourceBehaviorOptionCalendarMemberReadOnly,
+						msgraph.GroupResourceBehaviorOptionConnectorsDisabled,
 						msgraph.GroupResourceBehaviorOptionHideGroupInOutlook,
 						msgraph.GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled,
 						msgraph.GroupResourceBehaviorOptionSubscribeNewGroupMembers,
@@ -179,6 +184,18 @@ func groupResource() *schema.Resource {
 				},
 			},
 
+			"onpremises_group_type": {
+				Description: "Indicates the target on-premise group type the group will be written back as",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					msgraph.UniversalDistributionGroup,
+					msgraph.UniversalSecurityGroup,
+					msgraph.UniversalMailEnabledSecurityGroup,
+				}, false),
+			},
+
 			"owners": {
 				Description: "A set of owners who own this group. Supported object types are Users or Service Principals",
 				Type:        schema.TypeSet,
@@ -260,6 +277,13 @@ func groupResource() *schema.Resource {
 					msgraph.GroupVisibilityPrivate,
 					msgraph.GroupVisibilityPublic,
 				}, false),
+			},
+
+			"writeback_enabled": {
+				Description: "Whether this group should be synced from Azure AD to the on-premises directory when Azure AD Connect is used",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
 			},
 
 			"mail": {
@@ -464,8 +488,17 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
-	description := d.Get("description").(string)
+	var writebackConfiguration *msgraph.GroupWritebackConfiguration
+	if v := d.Get("writeback_enabled").(bool); v {
+		writebackConfiguration = &msgraph.GroupWritebackConfiguration{
+			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+		}
+		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
+			writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+		}
+	}
 
+	description := d.Get("description").(string)
 	odataType := odata.TypeGroup
 
 	properties := msgraph.Group{
@@ -482,6 +515,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ResourceBehaviorOptions:     &behaviorOptions,
 		ResourceProvisioningOptions: &provisioningOptions,
 		SecurityEnabled:             utils.Bool(securityEnabled),
+		WritebackConfiguration:      writebackConfiguration,
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
@@ -698,6 +732,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Wait for DisplayName to be updated
 	if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		group, status, err := client.Get(ctx, *group.ID(), odata.Query{})
 		if err != nil {
@@ -713,21 +748,19 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if hasGroupType(groupTypes, msgraph.GroupTypeUnified) {
 		// Newly created Unified groups now get a description added out-of-band, so we'll wait a couple of minutes to see if this appears and then clear it
+		// See https://github.com/microsoftgraph/msgraph-metadata/issues/331
 		if description == "" {
-			updated, err := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+			// Ignoring the error result here because the description might not be updated out of band, in which case we skip over this
+			if updated, _ := helpers.WaitForUpdateWithTimeout(ctx, 2*time.Minute, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
 				group, _, err := client.Get(ctx, *group.ID(), odata.Query{})
 				if err != nil {
 					return nil, err
 				}
 				return utils.Bool(group.Description != nil && *group.Description != ""), nil
-			})
-			if err != nil {
-				return tf.ErrorDiagF(err, "Waiting for update of `description` for group with object ID %q", *group.ID())
-			}
-
-			if updated {
-				status, err := client.Update(ctx, msgraph.Group{
+			}); updated {
+				status, err = client.Update(ctx, msgraph.Group{
 					DirectoryObject: msgraph.DirectoryObject{
 						Id: group.ID(),
 					},
@@ -741,9 +774,10 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				}
 
 				// Wait for Description to be removed
-				if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				if err = helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+					defer func() { client.BaseClient.DisableRetries = false }()
 					client.BaseClient.DisableRetries = true
-					group, _, err := client.Get(ctx, *group.ID(), odata.Query{})
+					group, _, err = client.Get(ctx, *group.ID(), odata.Query{})
 					if err != nil {
 						return nil, err
 					}
@@ -772,12 +806,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AllowExternalSenders to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.AllowExternalSenders != nil && *group.AllowExternalSenders == allowExternalSenders), nil
+				return utils.Bool(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == allowExternalSenders), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
@@ -796,12 +831,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AutoSubscribeNewMembers to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.AutoSubscribeNewMembers != nil && *group.AutoSubscribeNewMembers == autoSubscribeNewMembers), nil
+				return utils.Bool(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == autoSubscribeNewMembers), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
@@ -820,12 +856,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromAddressLists to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.HideFromAddressLists != nil && *group.HideFromAddressLists == hideFromAddressList), nil
+				return utils.Bool(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == hideFromAddressList), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
@@ -844,12 +881,13 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromOutlookClients to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.HideFromOutlookClients != nil && *group.HideFromOutlookClients == hideFromOutlookClients), nil
+				return utils.Bool(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == hideFromOutlookClients), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -946,6 +984,15 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		SecurityEnabled: utils.Bool(d.Get("security_enabled").(bool)),
 	}
 
+	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
+		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{
+			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+		}
+		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
+			group.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+		}
+	}
+
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
 		if d.Get("dynamic_membership.0.enabled").(bool) {
 			group.MembershipRuleProcessingState = utils.String("On")
@@ -985,7 +1032,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOkExists("external_senders_allowed"); ok && (extra.AllowExternalSenders == nil || *extra.AllowExternalSenders != v.(bool)) { //nolint:staticcheck
+		if v, ok := d.GetOkExists("external_senders_allowed"); ok && (extra == nil || extra.AllowExternalSenders == nil || *extra.AllowExternalSenders != v.(bool)) { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
@@ -997,19 +1044,20 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AllowExternalSenders to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.AllowExternalSenders != nil && *group.AllowExternalSenders == v.(bool)), nil
+				return utils.Bool(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
 		}
 
 		// AutoSubscribeNewMembers can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOkExists("auto_subscribe_new_members"); ok && (extra.AutoSubscribeNewMembers == nil || *extra.AutoSubscribeNewMembers != v.(bool)) { //nolint:staticcheck
+		if v, ok := d.GetOkExists("auto_subscribe_new_members"); ok && (extra == nil || extra.AutoSubscribeNewMembers == nil || *extra.AutoSubscribeNewMembers != v.(bool)) { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
@@ -1021,19 +1069,20 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for AutoSubscribeNewMembers to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.AutoSubscribeNewMembers != nil && *group.AutoSubscribeNewMembers == v.(bool)), nil
+				return utils.Bool(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
 		}
 
 		// HideFromAddressLists can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOkExists("hide_from_address_lists"); ok && (extra.HideFromAddressLists == nil || *extra.HideFromAddressLists != v.(bool)) { //nolint:staticcheck
+		if v, ok := d.GetOkExists("hide_from_address_lists"); ok && (extra == nil || extra.HideFromAddressLists == nil || *extra.HideFromAddressLists != v.(bool)) { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
@@ -1045,19 +1094,20 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromAddressLists to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.HideFromAddressLists != nil && *group.HideFromAddressLists == v.(bool)), nil
+				return utils.Bool(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
 		}
 
 		// HideFromOutlookClients can only be set in its own PATCH request; including other properties returns a 400
-		if v, ok := d.GetOkExists("hide_from_outlook_clients"); ok && (extra.HideFromOutlookClients == nil || *extra.HideFromOutlookClients != v.(bool)) { //nolint:staticcheck
+		if v, ok := d.GetOkExists("hide_from_outlook_clients"); ok && (extra == nil || extra.HideFromOutlookClients == nil || *extra.HideFromOutlookClients != v.(bool)) { //nolint:staticcheck
 			if _, err := client.Update(ctx, msgraph.Group{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
@@ -1069,12 +1119,13 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			// Wait for HideFromOutlookClients to be updated
 			if err := helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				defer func() { client.BaseClient.DisableRetries = false }()
 				client.BaseClient.DisableRetries = true
-				group, err := groupGetAdditional(ctx, client, *group.ID())
+				groupExtra, err := groupGetAdditional(ctx, client, *group.ID())
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.HideFromOutlookClients != nil && *group.HideFromOutlookClients == v.(bool)), nil
+				return utils.Bool(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -1260,6 +1311,11 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
+	if group.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
+	}
+
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
 		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
@@ -1267,17 +1323,19 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return tf.ErrorDiagF(err, "Could not retrieve group with object UID %q", d.Id())
 		}
 
-		if groupExtra != nil && groupExtra.AllowExternalSenders != nil {
-			allowExternalSenders = *groupExtra.AllowExternalSenders
-		}
-		if groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil {
-			autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
-		}
-		if groupExtra != nil && groupExtra.HideFromAddressLists != nil {
-			hideFromAddressLists = *groupExtra.HideFromAddressLists
-		}
-		if groupExtra != nil && groupExtra.HideFromOutlookClients != nil {
-			hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+		if groupExtra != nil {
+			if groupExtra.AllowExternalSenders != nil {
+				allowExternalSenders = *groupExtra.AllowExternalSenders
+			}
+			if groupExtra.AutoSubscribeNewMembers != nil {
+				autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+			}
+			if groupExtra.HideFromAddressLists != nil {
+				hideFromAddressLists = *groupExtra.HideFromAddressLists
+			}
+			if groupExtra.HideFromOutlookClients != nil {
+				hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+			}
 		}
 	}
 
@@ -1341,6 +1399,7 @@ func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Wait for group object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, groupId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

@@ -436,6 +436,42 @@ func (c *GroupsClient) GetMember(ctx context.Context, groupId, memberId string) 
 	return &data.Id, status, nil
 }
 
+// GetMembers retrieves all member of the specified Group, configurable by an OData Query.
+// groupId is the object ID of the group.
+func (c *GroupsClient) GetMembers(ctx context.Context, groupId string, query odata.Query) (*[]User, int, error) {
+
+	query.Expand = odata.Expand{Relationship: "*"}
+
+	resp, status, _, err := c.BaseClient.Get(ctx, GetHttpRequestInput{
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		OData:                  query,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/groups/%s/members", groupId),
+		},
+	})
+
+	if err != nil {
+		return nil, status, fmt.Errorf("GroupsClient.BaseClient.Get(): %v", err)
+	}
+
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, status, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	var data struct {
+		Users []User `json:"value"`
+	}
+
+	if err := json.Unmarshal(respBody, &data); err != nil {
+		return nil, status, fmt.Errorf("json.Unmarshal(): %v", err)
+	}
+
+	return &data.Users, status, nil
+}
+
 // AddMembers adds new members to a Group.
 // First populate the `members` field, then call this method
 func (c *GroupsClient) AddMembers(ctx context.Context, group *Group) (int, error) {

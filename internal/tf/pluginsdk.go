@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tf
 
 // PluginSdkUnknownValue is a dummy value used/sent by the plugin SDK when a real value is not known at plan time,

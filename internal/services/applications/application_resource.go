@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -467,6 +470,12 @@ func applicationResource() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			"service_management_reference": {
+				Description: "References application or service contact information from a Service or Asset Management database",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 
 			"sign_in_audience": {
@@ -954,13 +963,6 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		return applicationResourceUpdate(ctx, d, meta)
 	}
 
-	// Set a temporary display name as we'll attempt to patch the application with the correct name after creating it
-	uuid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
-
 	api := expandApplicationApi(d.Get("api").([]interface{}))
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
@@ -976,7 +978,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
-		DisplayName:           utils.String(tempDisplayName),
+		DisplayName:           utils.String(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
 		Info: &msgraph.InformationalUrl{
@@ -985,17 +987,18 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                     utils.NullableString(d.Get("notes").(string)),
-		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                      &tags,
-		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
+		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                       &tags,
+		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -1059,19 +1062,26 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(*app.ID())
 
-	// Attempt to patch the newly created group with the correct name, which will tell us whether it exists yet
-	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	status, err := client.Update(ctx, msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: app.Id,
-		},
-		DisplayName: utils.String(displayName),
-	})
+	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
+	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
+	uuid, err := uuid.GenerateUUID()
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
+	}
+	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
+		status, err := client.Update(ctx, msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.ID(),
+			},
+			DisplayName: utils.String(displayNameToSet),
+		})
+		if err != nil {
+			if status == http.StatusNotFound {
+				return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
+			}
+			return tf.ErrorDiagF(err, "Failed to patch application with object ID %q after creating", *app.ID())
 		}
-		return tf.ErrorDiagF(err, "Failed to patch application after creating")
 	}
 
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
@@ -1172,17 +1182,18 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			SupportUrl:          utils.String(d.Get("support_url").(string)),
 			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
 		},
-		IsDeviceOnlyAuthSupported: utils.Bool(d.Get("device_only_auth_enabled").(bool)),
-		IsFallbackPublicClient:    utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
-		Notes:                     utils.NullableString(d.Get("notes").(string)),
-		Oauth2RequirePostResponse: utils.Bool(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:            expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
-		PublicClient:              expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:    expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
-		SignInAudience:            utils.String(d.Get("sign_in_audience").(string)),
-		Spa:                       expandApplicationSpa(d.Get("single_page_application").([]interface{})),
-		Tags:                      &tags,
-		Web:                       expandApplicationWeb(d.Get("web").([]interface{})),
+		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
+		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
+		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
+		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
+		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
+		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
+		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
+		Tags:                       &tags,
+		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
 	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
@@ -1275,6 +1286,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
 	tf.Set(d, "publisher_domain", app.PublisherDomain)
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
+	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
 	tf.Set(d, "sign_in_audience", app.SignInAudience)
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
 	tf.Set(d, "tags", app.Tags)
@@ -1334,6 +1346,7 @@ func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for application object to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, appId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

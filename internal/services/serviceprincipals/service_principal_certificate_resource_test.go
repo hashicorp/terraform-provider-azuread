@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals_test
 
 import (
@@ -171,6 +174,7 @@ func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.CertificateID(state.ID)
 	if err != nil {

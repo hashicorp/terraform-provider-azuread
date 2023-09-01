@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles_test
 
 import (
@@ -53,6 +56,7 @@ func TestAccDirectoryRole_byTemplateId(t *testing.T) {
 func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRolesClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	role, status, err := client.Get(ctx, state.ID)
 	if err != nil {

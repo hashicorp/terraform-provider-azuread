@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package domains
 
 import (
@@ -133,6 +136,8 @@ func domainsDataSource() *schema.Resource {
 func domainsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Domains.DomainsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
+
 	tenantId := meta.(*clients.Client).TenantID
 
 	adminManaged := d.Get("admin_managed").(bool)

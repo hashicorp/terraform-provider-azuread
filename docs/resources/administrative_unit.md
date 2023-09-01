@@ -18,9 +18,9 @@ When authenticated with a user principal, this resource requires one of the foll
 
 ```terraform
 resource "azuread_administrative_unit" "example" {
-  display_name = "Example-AU"
-  description  = "Just an example"
-  visibility   = "Public"
+  display_name              = "Example-AU"
+  description               = "Just an example"
+  hidden_membership_enabled = false
 }
 ```
 
@@ -34,7 +34,7 @@ The following arguments are supported:
 
 !> **Warning** Do not use the `members` property at the same time as the [azuread_administrative_unit_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit_member) resource for the same administrative unit. Doing so will cause a conflict and administrative unit members will be removed.
 
-* `visibility` - (Optional) Whether the administrative unit _and_ its members are hidden or publicly viewable in the directory. Must be one of: `Hiddenmembership` or `Public`. Defaults to `Public`.
+* `hidden_membership_enabled` - (Optional) Whether the administrative unit and its members are hidden or publicly viewable in the directory.
 
 ## Attributes Reference
 

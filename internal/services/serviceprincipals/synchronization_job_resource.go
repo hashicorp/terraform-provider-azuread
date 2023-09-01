@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -128,7 +131,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for the job to appear, this can take several moments
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -226,6 +229,7 @@ func synchronizationJobResourceDelete(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for synchronization job to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		job, _, _ := client.Get(ctx, id.JobId, id.ServicePrincipalId)

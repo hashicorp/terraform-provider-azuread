@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals_test
 
 import (
@@ -79,6 +82,7 @@ func TestAccServicePrincipalPassword_relativeEndDate(t *testing.T) {
 func (r ServicePrincipalPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.PasswordID(state.ID)
 	if err != nil {

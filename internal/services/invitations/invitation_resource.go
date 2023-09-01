@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package invitations
 
 import (
@@ -234,6 +237,7 @@ func invitationResourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Wait for user object to be deleted, this seems much slower for invited users
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, userID, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {

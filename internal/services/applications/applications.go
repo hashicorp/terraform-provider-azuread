@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -121,7 +124,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{
+		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -238,7 +241,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{
+		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,

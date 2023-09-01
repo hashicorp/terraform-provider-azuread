@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package groups
 
 import (
@@ -167,6 +170,7 @@ func groupMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait for membership link to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.GroupId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {

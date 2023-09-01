@@ -67,7 +67,7 @@ const (
 	AccessPackageRequestStateSubmitted           AccessPackageRequestState = "submitted"
 	AccessPackageRequestStatePendingApproval     AccessPackageRequestState = "pendingApproval"
 	AccessPackageRequestStateDelivering          AccessPackageRequestState = "delivering"
-	AccessPackageRequestStateDelivered           AccessPackageRequestState = "delievered"
+	AccessPackageRequestStateDelivered           AccessPackageRequestState = "delivered"
 	AccessPackageRequestStateDeliveryFailed      AccessPackageRequestState = "deliveryFailed"
 	AccessPackageRequestStateDenied              AccessPackageRequestState = "denied"
 	AccessPackageRequestStateScheduled           AccessPackageRequestState = "scheduled"
@@ -79,7 +79,7 @@ type AccessPackageRequestType = string
 
 const (
 	AccessPackageRequestTypeNotSpecified AccessPackageRequestType = "notSpecified"
-	AccessPackageRequestTypeuserAdd      AccessPackageRequestType = "userAdd"
+	AccessPackageRequestTypeUserAdd      AccessPackageRequestType = "userAdd"
 	AccessPackageRequestTypeUserExtend   AccessPackageRequestType = "UserExtend"
 	AccessPackageRequestTypeUserUpdate   AccessPackageRequestType = "userUpdate"
 	AccessPackageRequestTypeUserRemove   AccessPackageRequestType = "userRemove"
@@ -131,18 +131,19 @@ const (
 type AccessReviewReviewerType = string
 
 const (
-	AccessReviewReviewerTypeSelf      AccessReviewReviewerType = "Self"
+	AccessReviewReviewerTypeManager   AccessReviewReviewerType = "Manager"
 	AccessReviewReviewerTypeReviewers AccessReviewReviewerType = "Reviewers"
+	AccessReviewReviewerTypeSelf      AccessReviewReviewerType = "Self"
 )
 
-type AccessReviewRecurranceType = string
+type AccessReviewRecurrenceType = string
 
 const (
-	AccessReviewRecurranceTypeWeekly     AccessReviewRecurranceType = "weekly"
-	AccessReviewRecurranceTypeMonthly    AccessReviewRecurranceType = "monthly"
-	AccessReviewRecurranceTypeQuarterly  AccessReviewRecurranceType = "quarterly"
-	AccessReviewRecurranceTypeHalfYearly AccessReviewRecurranceType = "halfyearly"
-	AccessReviewRecurranceTypeAnnual     AccessReviewRecurranceType = "annual"
+	AccessReviewRecurrenceTypeWeekly     AccessReviewRecurrenceType = "weekly"
+	AccessReviewRecurrenceTypeMonthly    AccessReviewRecurrenceType = "monthly"
+	AccessReviewRecurrenceTypeQuarterly  AccessReviewRecurrenceType = "quarterly"
+	AccessReviewRecurrenceTypeHalfYearly AccessReviewRecurrenceType = "halfyearly"
+	AccessReviewRecurrenceTypeAnnual     AccessReviewRecurrenceType = "annual"
 )
 
 type AdministrativeUnitVisibility = string
@@ -251,12 +252,42 @@ const (
 	AuthenticationMethodKeyStrengthUnknown AuthenticationMethodKeyStrength = "unknown"
 )
 
+type AuthenticationMethodModes = string
+
+const (
+	AuthenticationMethodModesEmail                       AuthenticationMethodModes = "email"
+	AuthenticationMethodModesFederatedMultiFactor        AuthenticationMethodModes = "federatedMultiFactor"
+	AuthenticationMethodModesFederatedSingleFactor       AuthenticationMethodModes = "federatedSingleFactor"
+	AuthenticationMethodModesFido2                       AuthenticationMethodModes = "fido2"
+	AuthenticationMethodModesHardwareOath                AuthenticationMethodModes = "hardwareOath"
+	AuthenticationMethodModesMicrosoftAuthenticatorPush  AuthenticationMethodModes = "microsoftAuthenticatorPush"
+	AuthenticationMethodModesMicrosoftDeviceBasedPush    AuthenticationMethodModes = "deviceBasedPush"
+	AuthenticationMethodModesPassword                    AuthenticationMethodModes = "password"
+	AuthenticationMethodModesSms                         AuthenticationMethodModes = "sms"
+	AuthenticationMethodModesSoftwareOath                AuthenticationMethodModes = "softwareOath"
+	AuthenticationMethodModesTemporaryAccessPassMultiUse AuthenticationMethodModes = "temporaryAccessPassMultiUse"
+	AuthenticationMethodModesTemporaryAccessPassOneTime  AuthenticationMethodModes = "temporaryAccessPassOneTime"
+	AuthenticationMethodModesUnknownFutureValue          AuthenticationMethodModes = "unknownFutureValue"
+	AuthenticationMethodModesVoice                       AuthenticationMethodModes = "voice"
+	AuthenticationMethodModesWindowsHelloForBusiness     AuthenticationMethodModes = "windowsHelloForBusiness"
+	AuthenticationMethodModesX509CertificateMultiFactor  AuthenticationMethodModes = "x509CertificateMultiFactor"
+	AuthenticationMethodModesX509CertificateSingleFactor AuthenticationMethodModes = "x509CertificateSingleFactor"
+)
+
 type AuthenticationPhoneType = string
 
 const (
 	AuthenticationPhoneTypeMobile          AuthenticationPhoneType = "mobile"
 	AuthenticationPhoneTypeAlternateMobile AuthenticationPhoneType = "alternateMobile"
 	AuthenticationPhoneTypeOffice          AuthenticationPhoneType = "office"
+)
+
+type AuthenticationStrengthPolicyType = string
+
+const (
+	AuthenticationStrengthPolicyTypeBuiltIn            AuthenticationStrengthPolicyType = "builtIn"
+	AuthenticationStrengthPolicyTypeCustom             AuthenticationStrengthPolicyType = "custom"
+	AuthenticationStrengthPolicyTypeUnknownFutureValue AuthenticationStrengthPolicyType = "unknownFutureValue"
 )
 
 type BodyType = string
@@ -404,6 +435,51 @@ const (
 	ExpirationPatternTypeAfterDuration ExpirationPatternType = "afterDuration"
 )
 
+type DeploymentProfileAssignmentStatus = string
+
+const (
+	DeploymentProfileAssignmentStatusUnknown                  DeploymentProfileAssignmentStatus = "unknown"
+	DeploymentProfileAssignmentStatusAssignedInSync           DeploymentProfileAssignmentStatus = "assignedInSync"
+	DeploymentProfileAssignmentStatusAssignedOutOfSync        DeploymentProfileAssignmentStatus = "assignedOutOfSync"
+	DeploymentProfileAssignmentStatusAssignedUnknownSyncState DeploymentProfileAssignmentStatus = "assignedUnknownSyncState"
+	DeploymentProfileAssignmentStatusNotAssigned              DeploymentProfileAssignmentStatus = "notAssigned"
+	DeploymentProfileAssignmentStatusPending                  DeploymentProfileAssignmentStatus = "pending"
+	DeploymentProfileAssignmentStatusFailed                   DeploymentProfileAssignmentStatus = "failed"
+)
+
+type DeviceUsageType = string
+
+const (
+	DeviceUsageTypeSingleUser DeviceUsageType = "singleUser"
+	DeviceUsageTypeShared     DeviceUsageType = "shared"
+)
+
+type DeviceAndAppManagementAssignmentFilterType = string
+
+const (
+	DeviceAndAppManagementAssignmentFilterTypeNone    DeviceAndAppManagementAssignmentFilterType = "none"
+	DeviceAndAppManagementAssignmentFilterTypeInclude DeviceAndAppManagementAssignmentFilterType = "include"
+	DeviceAndAppManagementAssignmentFilterTypeExclude DeviceAndAppManagementAssignmentFilterType = "exclude"
+)
+
+type DeviceAndAppManagementAssignmentSource = string
+
+const (
+	DeviceAndAppManagementAssignmentSourceDirect     DeviceAndAppManagementAssignmentSource = "direct"
+	DeviceAndAppManagementAssignmentSourcePolicySets DeviceAndAppManagementAssignmentSource = "policySets"
+)
+
+type EnrollmentState = string
+
+const (
+	EnrollmentStateUnknown      EnrollmentState = "unknown"
+	EnrollmentStateEnrolled     EnrollmentState = "enrolled"
+	EnrollmentStatePendingReset EnrollmentState = "pendingReset"
+	EnrollmentStateFailed       EnrollmentState = "failed"
+	EnrollmentStateNotContacted EnrollmentState = "notContacted"
+	EnrollmentStateBlocked      EnrollmentState = "blocked"
+)
+
 type ExtensionSchemaTargetType = string
 
 const (
@@ -476,6 +552,8 @@ type GroupResourceBehaviorOption = string
 
 const (
 	GroupResourceBehaviorOptionAllowOnlyMembersToPost                   GroupResourceBehaviorOption = "AllowOnlyMembersToPost"
+	GroupResourceBehaviorOptionCalendarMemberReadOnly                   GroupResourceBehaviorOption = "CalendarMemberReadOnly"
+	GroupResourceBehaviorOptionConnectorsDisabled                       GroupResourceBehaviorOption = "ConnectorsDisabled"
 	GroupResourceBehaviorOptionHideGroupInOutlook                       GroupResourceBehaviorOption = "HideGroupInOutlook"
 	GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled GroupResourceBehaviorOption = "SubscribeMembersToCalendarEventsDisabled"
 	GroupResourceBehaviorOptionSubscribeNewGroupMembers                 GroupResourceBehaviorOption = "SubscribeNewGroupMembers"
@@ -704,6 +782,21 @@ const (
 	SignInAudiencePersonalMicrosoftAccount           SignInAudience = "PersonalMicrosoftAccount"
 )
 
+type UnifiedRoleScheduleRequestAction = string
+
+const (
+	UnifiedRoleScheduleRequestActionAdminAssign        UnifiedRoleScheduleRequestAction = "adminAssign"
+	UnifiedRoleScheduleRequestActionAdminExtend        UnifiedRoleScheduleRequestAction = "adminExtend"
+	UnifiedRoleScheduleRequestActionAdminRemove        UnifiedRoleScheduleRequestAction = "adminRemove"
+	UnifiedRoleScheduleRequestActionAdminRenew         UnifiedRoleScheduleRequestAction = "adminRenew"
+	UnifiedRoleScheduleRequestActionAdminUpdate        UnifiedRoleScheduleRequestAction = "adminUpdate"
+	UnifiedRoleScheduleRequestActionSelfActivate       UnifiedRoleScheduleRequestAction = "selfActivate"
+	UnifiedRoleScheduleRequestActionSelfDeactivate     UnifiedRoleScheduleRequestAction = "selfDeactivate"
+	UnifiedRoleScheduleRequestActionSelfExtend         UnifiedRoleScheduleRequestAction = "selfExtend"
+	UnifiedRoleScheduleRequestActionSelfRenew          UnifiedRoleScheduleRequestAction = "selfRenew"
+	UnifiedRoleScheduleRequestActionUnknownFutureValue UnifiedRoleScheduleRequestAction = "unknownFutureValue"
+)
+
 type UsageAuthMethod = string
 
 const (
@@ -740,9 +833,11 @@ const (
 type UserflowAttributeDataType = string
 
 const (
-	UserflowAttributeDataTypeString  UserflowAttributeDataType = "string"
-	UserflowAttributeDataTypeBoolean UserflowAttributeDataType = "boolean"
-	UserflowAttributeDataTypeInt64   UserflowAttributeDataType = "int64"
+	UserflowAttributeDataTypeString           UserflowAttributeDataType = "string"
+	UserflowAttributeDataTypeBoolean          UserflowAttributeDataType = "boolean"
+	UserflowAttributeDataTypeInt64            UserflowAttributeDataType = "int64"
+	UserflowAttributeDataTypeStringCollection UserflowAttributeDataType = "stringCollection"
+	UserflowAttributeDataTypeDateTime         UserflowAttributeDataType = "dateTime"
 )
 
 type IndexType = string
@@ -753,4 +848,44 @@ const (
 	IndexTypeThird  IndexType = "third"
 	IndexTypeFourth IndexType = "fourth"
 	IndexTypeLast   IndexType = "last"
+)
+
+type WindowsAutopilotDeviceType = string
+
+const (
+	WindowsAutopilotDeviceTypeWindowsPc          WindowsAutopilotDeviceType = "windowsPc"
+	WindowsAutopilotDeviceTypeSurfaceHub2        WindowsAutopilotDeviceType = "surfaceHub2"
+	WindowsAutopilotDeviceTypeHoloLens           WindowsAutopilotDeviceType = "holoLens"
+	WindowsAutopilotDeviceTypeSurfaceHub2S       WindowsAutopilotDeviceType = "surfaceHub2S"
+	WindowsAutopilotDeviceTypeVirtualMachine     WindowsAutopilotDeviceType = "virtualMachine"
+	WindowsAutopilotDeviceTypeUnknownFutureValue WindowsAutopilotDeviceType = "unknownFutureValue"
+)
+
+type WindowsAutopilotDeviceRemediationState = string
+
+const (
+	WindowsAutopilotDeviceRemediationStateUnknown                      WindowsAutopilotDeviceRemediationState = "unknown"
+	WindowsAutopilotDeviceRemediationStateNoRemediationRequired        WindowsAutopilotDeviceRemediationState = "noRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateAutomaticRemediationRequired WindowsAutopilotDeviceRemediationState = "automaticRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateManualRemediationRequired    WindowsAutopilotDeviceRemediationState = "manualRemediationRequired"
+	WindowsAutopilotDeviceRemediationStateUnknownFutureValue           WindowsAutopilotDeviceRemediationState = "unknownFutureValue"
+)
+
+type WindowsAutopilotProfileAssignmentDetailedStatus = string
+
+const (
+	WindowsAutopilotProfileAssignmentDetailedStatusNone                            WindowsAutopilotProfileAssignmentDetailedStatus = "none"
+	WindowsAutopilotProfileAssignmentDetailedStatusHardwareRequirementsNotMet      WindowsAutopilotProfileAssignmentDetailedStatus = "hardwareRequirementsNotMet"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHubProfileNotSupported   WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHubProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusHoloLensProfileNotSupported     WindowsAutopilotProfileAssignmentDetailedStatus = "holoLensProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusWindowsPcProfileNotSupported    WindowsAutopilotProfileAssignmentDetailedStatus = "windowsPcProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusSurfaceHub2SProfileNotSupported WindowsAutopilotProfileAssignmentDetailedStatus = "surfaceHub2SProfileNotSupported"
+	WindowsAutopilotProfileAssignmentDetailedStatusUnknownFutureValue              WindowsAutopilotProfileAssignmentDetailedStatus = "unknownFutureValue"
+)
+
+type WindowsUserType = string
+
+const (
+	WindowsUserTypeAdministrator WindowsUserType = "administrator"
+	WindowsUserTypeStandard      WindowsUserType = "standard"
 )

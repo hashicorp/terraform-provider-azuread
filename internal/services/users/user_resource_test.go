@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users_test
 
 import (
@@ -128,6 +131,7 @@ func TestAccUser_passwordOmitted(t *testing.T) {
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Users.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	user, status, err := client.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
@@ -224,6 +228,7 @@ data "azuread_domains" "test" {
 resource "azuread_user" "testA" {
   user_principal_name = "acctestUser'%[1]d.A@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-A"
+  employee_id         = "A%[3]s%[3]s"
   password            = "%[2]s"
 }
 
@@ -231,6 +236,7 @@ resource "azuread_user" "testB" {
   user_principal_name = "acctestUser.%[1]d.B@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "acctestUser-%[1]d-B"
   mail_nickname       = "acctestUser-%[1]d-B"
+  employee_id         = "B%[3]s%[3]s"
   password            = "%[2]s"
 }
 
@@ -239,7 +245,7 @@ resource "azuread_user" "testC" {
   display_name        = "acctestUser-%[1]d-C"
   password            = "%[2]s"
 }
-`, data.RandomInteger, data.RandomPassword)
+`, data.RandomInteger, data.RandomPassword, data.RandomString)
 }
 
 func (UserResource) withRandomProvider(data acceptance.TestData) string {

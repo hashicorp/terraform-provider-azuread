@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -539,13 +542,13 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *schema.ResourceData,
 		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
 	}
 
-	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
+	if d.HasChange("owners") {
 		owners, _, err := client.ListOwners(ctx, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
@@ -660,6 +663,7 @@ func servicePrincipalResourceDelete(ctx context.Context, d *schema.ResourceData,
 
 		// Wait for service principal object to be deleted
 		if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+			defer func() { client.BaseClient.DisableRetries = false }()
 			client.BaseClient.DisableRetries = true
 			if _, status, err := client.Get(ctx, servicePrincipalId, odata.Query{}); err != nil {
 				if status == http.StatusNotFound {

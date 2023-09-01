@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryobjects
 
 import (
@@ -41,6 +44,7 @@ func directoryObjectDataSource() *schema.Resource {
 func directoryObjectDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.DirectoryObjectsClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var directoryObject *msgraph.DirectoryObject
 

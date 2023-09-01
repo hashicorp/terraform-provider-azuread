@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 // specifies the default hour (UTC) at which tests should be triggered, if enabled
 var defaultStartHour = 0
 
@@ -8,8 +13,7 @@ var defaultParallelism = 20
 var defaultTerraformCoreVersion = "1.0.0"
 
 var locations = mapOf(
-        "public" to LocationConfiguration("westeurope", "eastus2", "francecentral", false),
-        "germany" to LocationConfiguration("germanynortheast", "germanycentral", "", false)
+        "public" to LocationConfiguration("westeurope", "eastus2", "francecentral", false)
 )
 
 // specifies the list of Azure Environments where tests should be run nightly

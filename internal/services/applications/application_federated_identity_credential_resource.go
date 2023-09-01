@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applications
 
 import (
@@ -54,11 +57,10 @@ func applicationFederatedIdentityCredentialResource() *schema.Resource {
 				Description: "List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
 				Type:        schema.TypeList,
 				Required:    true,
+				MaxItems:    1,
 				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					MinItems:         1,
-					MaxItems:         1,
 					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
@@ -139,7 +141,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -248,6 +250,7 @@ func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d
 
 	// Wait for credential to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		credentials, _, err := client.ListFederatedIdentityCredentials(ctx, id.ObjectId, odata.Query{})

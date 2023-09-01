@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -164,7 +167,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *schema.Resou
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -270,6 +273,7 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *schema.Resou
 
 	// Wait for service principal password to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package approleassignments_test
 
 import (
@@ -97,6 +100,7 @@ func TestAccAppRoleAssignment_userForTenantApp(t *testing.T) {
 func (r AppRoleAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AppRoleAssignments.AppRoleAssignedToClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	id, err := parse.AppRoleAssignmentID(state.ID)
 	if err != nil {

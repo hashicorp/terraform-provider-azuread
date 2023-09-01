@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directoryroles
 
 import (
@@ -113,7 +116,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *schema.ResourceDa
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for role member %q to reflect for directory role %q", id.MemberId, id.DirectoryRoleId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{
+	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -179,6 +182,7 @@ func directoryRoleMemberResourceDelete(ctx context.Context, d *schema.ResourceDa
 
 	// Wait for membership link to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {

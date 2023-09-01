@@ -1,8 +1,14 @@
-import jetbrains.buildServer.configs.kotlin.v2019_2.*
+/*
+ * Copyright (c) HashiCorp, Inc.
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
-class pullRequest(displayName: String, environment: String) {
+import jetbrains.buildServer.configs.kotlin.*
+
+class pullRequest(displayName: String, environment: String, vcsRootId : String) {
     val displayName = displayName
     val environment = environment
+    val vcsRootId = vcsRootId
 
     fun buildConfiguration(providerName : String) : BuildType {
         return BuildType {
@@ -12,7 +18,7 @@ class pullRequest(displayName: String, environment: String) {
             name = displayName
 
             vcs {
-                root(providerRepository)
+                root(rootId = AbsoluteId(vcsRootId))
                 cleanCheckout = true
             }
 

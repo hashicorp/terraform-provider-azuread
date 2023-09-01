@@ -26,11 +26,13 @@ data "azuread_user" "example" {
 
 The following arguments are supported:
 
+* `employee_id` - (Optional) The employee identifier assigned to the user by the organisation.
+* `mail` - (Optional) The SMTP address for the user.
 * `mail_nickname` - (Optional) The email alias of the user.
 * `object_id` - (Optional) The object ID of the user.
 * `user_principal_name` - (Optional) The user principal name (UPN) of the user.
 
-~> One of `user_principal_name`, `object_id` or `mail_nickname` must be specified.
+~> One of `user_principal_name`, `object_id`, `mail`, `mail_nickname` or `employee_id` must be specified.
 
 ## Attributes Reference
 

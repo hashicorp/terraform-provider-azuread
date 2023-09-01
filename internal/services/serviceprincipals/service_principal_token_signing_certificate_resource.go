@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package serviceprincipals
 
 import (
@@ -124,7 +127,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{
+	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -217,10 +220,13 @@ func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d 
 	tf.Set(d, "end_date", endDate)
 
 	// thumbprint not available when querying service principal, so we generate it from the pem value in the Key field.
-	thumbprint, err := helpers.GetTokenSigningCertificateThumbprint(
-		[]byte("-----BEGIN CERTIFICATE-----\n" + *credential.Key + "\n-----END CERTIFICATE-----"))
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "parsing tokenSigningCertificate key value with ID %q", id.KeyId)
+	var thumbprint string
+	if credential.Key != nil {
+		thumbprint, err = helpers.GetTokenSigningCertificateThumbprint(
+			[]byte("-----BEGIN CERTIFICATE-----\n" + *credential.Key + "\n-----END CERTIFICATE-----"))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "id", "parsing tokenSigningCertificate key value with ID %q", id.KeyId)
+		}
 	}
 
 	tf.Set(d, "thumbprint", thumbprint)
@@ -286,6 +292,7 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 
 	// Wait for service principal token signing certificate to be deleted
 	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		defer func() { client.BaseClient.DisableRetries = false }()
 		client.BaseClient.DisableRetries = true
 
 		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})

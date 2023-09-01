@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package clients
 
 import (
@@ -20,9 +23,11 @@ import (
 	directoryroles "github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/client"
 	domains "github.com/hashicorp/terraform-provider-azuread/internal/services/domains/client"
 	groups "github.com/hashicorp/terraform-provider-azuread/internal/services/groups/client"
+	identitygovernance "github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/client"
 	invitations "github.com/hashicorp/terraform-provider-azuread/internal/services/invitations/client"
 	policies "github.com/hashicorp/terraform-provider-azuread/internal/services/policies/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
+	userflows "github.com/hashicorp/terraform-provider-azuread/internal/services/userflows/client"
 	users "github.com/hashicorp/terraform-provider-azuread/internal/services/users/client"
 )
 
@@ -45,9 +50,11 @@ type Client struct {
 	DirectoryRoles      *directoryroles.Client
 	Domains             *domains.Client
 	Groups              *groups.Client
+	IdentityGovernance  *identitygovernance.Client
 	Invitations         *invitations.Client
 	Policies            *policies.Client
 	ServicePrincipals   *serviceprincipals.Client
+	UserFlows           *userflows.Client
 	Users               *users.Client
 }
 
@@ -61,9 +68,11 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.ConditionalAccess = conditionalaccess.NewClient(o)
 	client.DirectoryRoles = directoryroles.NewClient(o)
 	client.Groups = groups.NewClient(o)
+	client.IdentityGovernance = identitygovernance.NewClient(o)
 	client.Invitations = invitations.NewClient(o)
 	client.Policies = policies.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
+	client.UserFlows = userflows.NewClient(o)
 	client.Users = users.NewClient(o)
 
 	// Acquire an access token upfront, so we can decode the JWT and populate the claims

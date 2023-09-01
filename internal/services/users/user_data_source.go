@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package users
 
 import (
@@ -26,11 +29,29 @@ func userDataSource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"employee_id": {
+				Description:      "The employee identifier assigned to the user by the organisation",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"mail": {
+				Description:      "The SMTP address for the user",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:         true,
+				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
 			"mail_nickname": {
 				Description:      "The email alias of the user",
 				Type:             schema.TypeString,
 				Optional:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				Computed:         true,
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
@@ -40,7 +61,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.UUID,
 			},
 
@@ -49,7 +70,7 @@ func userDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"mail_nickname", "object_id", "user_principal_name"},
+				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
 			},
 
@@ -128,12 +149,6 @@ func userDataSource() *schema.Resource {
 				Computed:    true,
 			},
 
-			"employee_id": {
-				Description: "The employee identifier assigned to the user by the organisation",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
 			"employee_type": {
 				Description: "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
 				Type:        schema.TypeString,
@@ -169,12 +184,6 @@ func userDataSource() *schema.Resource {
 
 			"job_title": {
 				Description: "The user’s job title",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"mail": {
-				Description: "The SMTP address for the user",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -311,6 +320,7 @@ func userDataSource() *schema.Resource {
 func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	client.BaseClient.DisableRetries = true
+	defer func() { client.BaseClient.DisableRetries = false }()
 
 	var user msgraph.User
 
@@ -344,6 +354,24 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 		}
 		user = *u
+	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
+		query := odata.Query{
+			Filter: fmt.Sprintf("mail eq '%s'", utils.EscapeSingleQuote(mail)),
+		}
+		users, _, err := client.List(ctx, query)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Finding user with mail: %q", mail)
+		}
+		if users == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		count := len(*users)
+		if count > 1 {
+			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
+		} else if count == 0 {
+			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
+		}
+		user = (*users)[0]
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		query := odata.Query{
 			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
@@ -362,8 +390,26 @@ func userDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 		user = (*users)[0]
+	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
+		query := odata.Query{
+			Filter: fmt.Sprintf("employeeId eq '%s'", utils.EscapeSingleQuote(employeeId)),
+		}
+		users, _, err := client.List(ctx, query)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Finding user with employee ID: %q", employeeId)
+		}
+		if users == nil {
+			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+		}
+		count := len(*users)
+		if count > 1 {
+			return tf.ErrorDiagPathF(nil, "employee_id", "More than one user found with employee ID: %q", employeeId)
+		} else if count == 0 {
+			return tf.ErrorDiagPathF(err, "employee_id", "User not found with employee ID: %q", employeeId)
+		}
+		user = (*users)[0]
 	} else {
-		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name` or `mail_nickname` must be supplied")
+		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}
 
 	if user.ID() == nil {
