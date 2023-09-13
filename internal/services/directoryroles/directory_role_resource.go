@@ -6,71 +6,71 @@ package directoryroles
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/suppress"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func directoryRoleResource() *schema.Resource {
-	return &schema.Resource{
+func directoryRoleResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: directoryRoleResourceCreate,
 		ReadContext:   directoryRoleResourceRead,
 		DeleteContext: directoryRoleResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:      "The display name of the directory role",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ExactlyOneOf:     []string{"display_name", "template_id"},
 				DiffSuppressFunc: suppress.CaseDifference,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"template_id": {
 				Description:      "The object ID of the template associated with the directory role",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ExactlyOneOf:     []string{"display_name", "template_id"},
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"description": {
 				Description: "The description of the directory role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"object_id": {
 				Description: "The object ID of the directory role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 	directoryRoleTemplatesClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplatesClient
 	displayName := d.Get("display_name").(string)
@@ -149,7 +149,7 @@ func directoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, me
 	return directoryRoleResourceRead(ctx, d, meta)
 }
 
-func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	directoryRole, status, err := client.Get(ctx, d.Id())
@@ -173,7 +173,7 @@ func directoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func directoryRoleResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	// Directory roles cannot be deactivated or deleted, so this is a no-op
 	return nil
 }

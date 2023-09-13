@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -18,7 +17,7 @@ func TestAccApplicationDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.objectId(data),
 			Check:  r.testCheck(data),
@@ -30,7 +29,7 @@ func TestAccApplicationDataSource_byApplicationId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.applicationId(data),
 			Check:  r.testCheck(data),
@@ -42,7 +41,7 @@ func TestAccApplicationDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.displayName(data),
 			Check:  r.testCheck(data),
@@ -50,8 +49,8 @@ func TestAccApplicationDataSource_byDisplayName(t *testing.T) {
 	})
 }
 
-func (ApplicationDataSource) testCheck(data acceptance.TestData) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
+func (ApplicationDataSource) testCheck(data acceptance.TestData) acceptance.TestCheckFunc {
+	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("application_id").IsUuid(),
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
 		check.That(data.ResourceName).Key("api.0.oauth2_permission_scopes.#").HasValue("2"),

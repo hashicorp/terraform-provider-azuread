@@ -15,58 +15,58 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func groupsDataSource() *schema.Resource {
-	return &schema.Resource{
+func groupsDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: groupsDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"object_ids": {
 				Description:  "The object IDs of the groups",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"display_names": {
 				Description:  "The display names of the groups",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"display_name_prefix": {
 				Description:      "Common display name prefix of the groups",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ExactlyOneOf:     []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"ignore_missing": {
 				Description:   "Ignore missing groups and return groups that were found. The data source will still fail if no groups are found",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"return_all"},
@@ -74,7 +74,7 @@ func groupsDataSource() *schema.Resource {
 
 			"return_all": {
 				Description:   "Retrieve all groups with no filter",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				ConflictsWith: []string{"ignore_missing"},
 				ExactlyOneOf:  []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
@@ -82,7 +82,7 @@ func groupsDataSource() *schema.Resource {
 
 			"mail_enabled": {
 				Description:   "Whether the groups are mail-enabled",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"object_ids"},
@@ -90,7 +90,7 @@ func groupsDataSource() *schema.Resource {
 
 			"security_enabled": {
 				Description:   "Whether the groups are security-enabled",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"object_ids"},
@@ -99,7 +99,7 @@ func groupsDataSource() *schema.Resource {
 	}
 }
 
-func groupsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()

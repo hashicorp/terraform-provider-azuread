@@ -9,29 +9,29 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
-func applicationPublishedAppIdsDataSource() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: func(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+func applicationPublishedAppIdsDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
+		ReadContext: func(_ context.Context, d *pluginsdk.ResourceData, _ interface{}) diag.Diagnostics {
 			tf.Set(d, "result", environments.PublishedApis)
 			d.SetId("appIds")
 			return nil
 		},
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"result": {
 				Description: "A mapping of application names and application IDs",
-				Type:        schema.TypeMap,
+				Type:        pluginsdk.TypeMap,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 		},

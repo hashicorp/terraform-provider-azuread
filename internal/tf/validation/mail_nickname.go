@@ -1,17 +1,16 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package validate
+package validation
 
 import (
-	"strings"
+	"regexp"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"golang.org/x/text/language"
 )
 
-func ISO639Language(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func MailNickname(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 	v, ok := i.(string)
 	if !ok {
 		ret = append(ret, diag.Diagnostic{
@@ -22,13 +21,12 @@ func ISO639Language(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		return
 	}
 
-	if _, err := language.Parse(v); err != nil && strings.Contains(err.Error(), "not well-formed") {
+	if regexp.MustCompile(`[@()\\\[\]";:<>, ]`).MatchString(v) {
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Language value is not well-formed",
+			Summary:       "Value cannot contain these characters: @()\\[]\";:<>,SPACE",
 			AttributePath: path,
 		})
-		return
 	}
 
 	return

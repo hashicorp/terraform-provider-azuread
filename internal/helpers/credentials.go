@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
@@ -87,7 +87,7 @@ func GetTokenSigningCertificateThumbprint(certByte []byte) (string, error) {
 	return buf.String(), nil
 }
 
-func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, error) {
+func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential, error) {
 	keyType := d.Get("type").(string)
 	value := d.Get("value").(string)
 
@@ -185,7 +185,7 @@ func KeyCredentialForResource(d *schema.ResourceData) (*msgraph.KeyCredential, e
 	return &credential, nil
 }
 
-func PasswordCredentialForResource(d *schema.ResourceData) (*msgraph.PasswordCredential, error) {
+func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.PasswordCredential, error) {
 	credential := msgraph.PasswordCredential{}
 
 	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these

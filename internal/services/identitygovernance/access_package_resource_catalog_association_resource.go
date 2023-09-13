@@ -11,47 +11,47 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func accessPackageResourceCatalogAssociationResource() *schema.Resource {
-	return &schema.Resource{
+func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: accessPackageResourceCatalogAssociationResourceCreate,
 		ReadContext:   accessPackageResourceCatalogAssociationResourceRead,
 		DeleteContext: accessPackageResourceCatalogAssociationResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(validate.AccessPackageResourceCatalogAssociationID),
+		Importer: pluginsdk.ImporterValidatingResourceId(validate.AccessPackageResourceCatalogAssociationID),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"resource_origin_id": {
 				Description: "The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 
 			"resource_origin_system": {
 				Description: "The type of the resource in the origin system, such as SharePointOnline, AadApplication or AadGroup",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 
 			"catalog_id": {
 				Description: "The unique ID of the access package catalog",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
@@ -59,7 +59,7 @@ func accessPackageResourceCatalogAssociationResource() *schema.Resource {
 	}
 }
 
-func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
@@ -103,7 +103,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 	return accessPackageResourceCatalogAssociationResourceRead(ctx, d, meta)
 }
 
-func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(d.Id())
@@ -129,7 +129,7 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 	return nil
 }
 
-func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 

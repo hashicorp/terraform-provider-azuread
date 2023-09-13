@@ -5,71 +5,71 @@ package migrations
 
 import (
 	"context"
+	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func ResourceApplicationInstanceResourceV0() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
+func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ExactlyOneOf:     []string{"display_name", "name"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"name": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				Deprecated:       "This property has been renamed to `display_name` and will be removed in version 2.0 of the AzureAD provider",
 				ExactlyOneOf:     []string{"display_name", "name"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"api": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"oauth2_permission_scope": {
-							Type:     schema.TypeSet,
+							Type:     pluginsdk.TypeSet,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Required: true,
 									},
 
 									"admin_consent_description": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"admin_consent_display_name": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"enabled": {
-										Type:     schema.TypeBool,
+										Type:     pluginsdk.TypeBool,
 										Optional: true,
 									},
 
 									"type": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Optional: true,
 										Default:  msgraph.PermissionScopeTypeUser,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -79,19 +79,19 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 									},
 
 									"user_consent_description": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"user_consent_display_name": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"value": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 									},
@@ -103,23 +103,23 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"app_role": {
-				Type:       schema.TypeSet,
+				Type:       pluginsdk.TypeSet,
 				Optional:   true,
 				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				ConfigMode: pluginsdk.SchemaConfigModeAttr,
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Computed: true,
 						},
 
 						"allowed_member_types": {
-							Type:     schema.TypeSet,
+							Type:     pluginsdk.TypeSet,
 							Required: true,
 							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(
 									[]string{
 										msgraph.AppRoleAllowedMemberTypeApplication,
@@ -130,32 +130,32 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 						},
 
 						"description": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"display_name": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"enabled": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
 
 						"is_enabled": {
-							Type:       schema.TypeBool,
+							Type:       pluginsdk.TypeBool,
 							Optional:   true,
 							Default:    true,
 							Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
 						},
 
 						"value": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							Computed:         true,
 							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
@@ -165,7 +165,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"available_to_other_tenants": {
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"sign_in_audience"},
@@ -173,14 +173,14 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"fallback_public_client_enabled": {
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"public_client"},
 			},
 
 			"group_membership_claims": {
-				Type:       schema.TypeString,
+				Type:       pluginsdk.TypeString,
 				Optional:   true,
 				Deprecated: "[NOTE] This attribute will become a list in version 2.0 of the AzureAD provider",
 				ValidateFunc: validation.StringInSlice([]string{
@@ -193,35 +193,35 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"homepage": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
 				ConflictsWith:    []string{"web.0.homepage_url"},
 				Deprecated:       "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"identifier_uris": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppUri,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation2.IsAppUri,
 				},
 			},
 
 			"logout_url": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
 				Computed:         true,
 				ConflictsWith:    []string{"web.0.logout_url"},
 				Deprecated:       "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"oauth2_allow_implicit_flow": {
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.implicit_grant.0.access_token_issuance_enabled"},
@@ -229,85 +229,85 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"oauth2_permissions": {
-				Type:       schema.TypeSet,
+				Type:       pluginsdk.TypeSet,
 				Optional:   true,
 				Computed:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
+				ConfigMode: pluginsdk.SchemaConfigModeAttr,
 				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scope` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Computed: true,
 						},
 
 						"admin_consent_description": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"admin_consent_display_name": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"is_enabled": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
 
 						"type": {
-							Type:         schema.TypeString,
+							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"Admin", "User"}, false),
 						},
 
 						"user_consent_description": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
 						"user_consent_display_name": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Optional: true,
 							Computed: true,
 						},
 
 						"value": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							Computed:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 					},
 				},
 			},
 
 			"optional_claims": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"access_token": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"name": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Required: true,
 									},
 
 									"source": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Optional: true,
 										ValidateFunc: validation.StringInSlice(
 											[]string{"user"},
@@ -315,15 +315,15 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 										),
 									},
 									"essential": {
-										Type:     schema.TypeBool,
+										Type:     pluginsdk.TypeBool,
 										Optional: true,
 										Default:  false,
 									},
 									"additional_properties": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &pluginsdk.Schema{
+											Type: pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice(
 												[]string{
 													"dns_domain_and_sam_account_name",
@@ -343,17 +343,17 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 						},
 
 						"id_token": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"name": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Required: true,
 									},
 
 									"source": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Optional: true,
 										ValidateFunc: validation.StringInSlice(
 											[]string{"user"},
@@ -361,15 +361,15 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 										),
 									},
 									"essential": {
-										Type:     schema.TypeBool,
+										Type:     pluginsdk.TypeBool,
 										Optional: true,
 										Default:  false,
 									},
 									"additional_properties": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &pluginsdk.Schema{
+											Type: pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice(
 												[]string{
 													"dns_domain_and_sam_account_name",
@@ -392,17 +392,17 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"owners": {
-				Type:     schema.TypeSet,
+				Type:     pluginsdk.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"public_client": {
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"fallback_public_client_enabled"},
@@ -410,40 +410,40 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"reply_urls": {
-				Type:          schema.TypeSet,
+				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.redirect_uris"},
 				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"required_resource_access": {
-				Type:     schema.TypeSet,
+				Type:     pluginsdk.TypeSet,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Required: true,
 						},
 
 						"resource_access": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Required:         true,
-										ValidateDiagFunc: validate.UUID,
+										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 									},
 
 									"type": {
-										Type:     schema.TypeString,
+										Type:     pluginsdk.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice(
 											[]string{
@@ -461,7 +461,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"sign_in_audience": {
-				Type:          schema.TypeString,
+				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"available_to_other_tenants"},
@@ -472,7 +472,7 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"type": {
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Deprecated:   "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
 				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
@@ -480,44 +480,44 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"web": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"homepage"},
-							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+							ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"logout_url"},
-							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+							ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
 						},
 
 						"redirect_uris": {
-							Type:          schema.TypeSet,
+							Type:          pluginsdk.TypeSet,
 							Optional:      true,
 							ConflictsWith: []string{"reply_urls"},
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 							},
 						},
 
 						"implicit_grant": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"access_token_issuance_enabled": {
-										Type:          schema.TypeBool,
+										Type:          pluginsdk.TypeBool,
 										Optional:      true,
 										ConflictsWith: []string{"oauth2_allow_implicit_flow"},
 									},
@@ -529,17 +529,17 @@ func ResourceApplicationInstanceResourceV0() *schema.Resource {
 			},
 
 			"application_id": {
-				Type:     schema.TypeString,
+				Type:     pluginsdk.TypeString,
 				Computed: true,
 			},
 
 			"object_id": {
-				Type:     schema.TypeString,
+				Type:     pluginsdk.TypeString,
 				Computed: true,
 			},
 
 			"prevent_duplicate_names": {
-				Type:     schema.TypeBool,
+				Type:     pluginsdk.TypeBool,
 				Optional: true,
 				Default:  false,
 			},

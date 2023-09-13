@@ -12,24 +12,24 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func accessPackageCatalogRoleDataSource() *schema.Resource {
-	return &schema.Resource{
+func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: accessPackageCatalogRoleDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:  "The display name of the catalog role",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
@@ -37,7 +37,7 @@ func accessPackageCatalogRoleDataSource() *schema.Resource {
 
 			"object_id": {
 				Description:  "The object ID of the catalog role",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
@@ -45,20 +45,20 @@ func accessPackageCatalogRoleDataSource() *schema.Resource {
 
 			"description": {
 				Description: "The description of the catalog role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"template_id": {
 				Description: "The object ID of the template associated with the catalog role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogRoleClient
 
 	var role msgraph.UnifiedRoleDefinition

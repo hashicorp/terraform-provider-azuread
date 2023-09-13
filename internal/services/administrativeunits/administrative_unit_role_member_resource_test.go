@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -25,10 +24,10 @@ func TestAccAdministrativeUnitRoleMember_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "test")
 	r := AdministrativeUnitRoleMemberResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.oneUser(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_object_id").IsUuid(),
 				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
@@ -44,10 +43,10 @@ func TestAccAdministrativeUnitRoleMember_multipleUser(t *testing.T) {
 	dataC := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "testC")
 	r := AdministrativeUnitRoleMemberResource{}
 
-	dataA.ResourceTest(t, r, []resource.TestStep{
+	dataA.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.threeUsers(dataA),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
 				check.That(dataA.ResourceName).Key("role_object_id").IsUuid(),
 				check.That(dataA.ResourceName).Key("member_object_id").IsUuid(),
@@ -69,10 +68,10 @@ func TestAccAdministrativeUnitRoleMember_group(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "test")
 	r := AdministrativeUnitRoleMemberResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.group(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_object_id").IsUuid(),
 				check.That(data.ResourceName).Key("member_object_id").IsUuid(),
@@ -86,10 +85,10 @@ func TestAccAdministrativeUnitRoleMember_servicePrincipal(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit_role_member", "test")
 	r := AdministrativeUnitRoleMemberResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipal(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_object_id").IsUuid(),
 				check.That(data.ResourceName).Key("member_object_id").IsUuid(),

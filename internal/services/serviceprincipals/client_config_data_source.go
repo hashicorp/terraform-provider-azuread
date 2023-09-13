@@ -8,47 +8,85 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
-func clientConfigDataSource() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: clientConfigDataSourceRead,
+type ClientConfigId struct {
+	TenantId string
+	ClientId string
+	ObjectId string
+}
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+func (id ClientConfigId) ID() string {
+	return fmt.Sprintf("%s-%s-%s", id.TenantId, id.ClientId, id.ObjectId)
+}
+
+func (ClientConfigId) String() string {
+	return "Client Config"
+}
+
+type ClientConfigDataSourceModel struct {
+	ClientId string `tfschema:"client_id"`
+	TenantId string `tfschema:"tenant_id"`
+	ObjectId string `tfschema:"object_id"`
+}
+
+type ClientConfigDataSource struct{}
+
+var _ sdk.DataSource = ClientConfigDataSource{}
+
+func (r ClientConfigDataSource) ResourceType() string {
+	return "azurerm_aadb2c_directory"
+}
+
+func (r ClientConfigDataSource) ModelObject() interface{} {
+	return &ClientConfigDataSourceModel{}
+}
+
+func (r ClientConfigDataSource) Arguments() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{}
+}
+
+func (r ClientConfigDataSource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"client_id": {
+			Description: "The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"client_id": {
-				Description: "The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
+		"tenant_id": {
+			Description: "The tenant ID of the authenticated principal",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
+		},
 
-			"tenant_id": {
-				Description: "The tenant ID of the authenticated principal",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"object_id": {
-				Description: "The object ID of the authenticated principal",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
+		"object_id": {
+			Description: "The object ID of the authenticated principal",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
 		},
 	}
 }
 
-func clientConfigDataSourceRead(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client)
-	d.SetId(fmt.Sprintf("%s-%s-%s", client.TenantID, client.ClientID, client.ObjectID))
-	tf.Set(d, "tenant_id", client.TenantID)
-	tf.Set(d, "client_id", client.ClientID)
-	tf.Set(d, "object_id", client.ObjectID)
-	return nil
+func (r ClientConfigDataSource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			state := ClientConfigDataSourceModel{
+				TenantId: metadata.Client.TenantID,
+				ClientId: metadata.Client.ClientID,
+				ObjectId: metadata.Client.ObjectID,
+			}
+
+			metadata.SetID(ClientConfigId{
+				TenantId: metadata.Client.TenantID,
+				ClientId: metadata.Client.ClientID,
+				ObjectId: metadata.Client.ObjectID,
+			})
+
+			return metadata.Encode(&state)
+		},
+	}
 }

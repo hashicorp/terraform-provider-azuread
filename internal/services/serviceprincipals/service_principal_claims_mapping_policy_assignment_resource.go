@@ -11,36 +11,36 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func servicePrincipalClaimsMappingPolicyAssignmentResource() *schema.Resource {
-	return &schema.Resource{
+func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: servicePrincipalClaimsMappingPolicyAssignmentResourceCreate,
 		ReadContext:   servicePrincipalClaimsMappingPolicyAssignmentResourceRead,
 		DeleteContext: servicePrincipalClaimsMappingPolicyAssignmentResourceDelete,
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.ObjectSubResourceID(id, "claimsMappingPolicy")
 			return err
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"claims_mapping_policy_id": {
 				Description: "ID of the claims mapping policy to assign",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				ForceNew:    true,
 				Required:    true,
 			},
 
 			"service_principal_id": {
 				Description: "Object ID of the service principal for which to assign the policy",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				ForceNew:    true,
 				Required:    true,
 			},
@@ -48,7 +48,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	tenantId := meta.(*clients.Client).TenantID
 
@@ -89,7 +89,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())
@@ -132,7 +132,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Conte
 	return nil
 }
 
-func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())

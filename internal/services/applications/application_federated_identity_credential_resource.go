@@ -6,6 +6,7 @@ package applications
 import (
 	"context"
 	"errors"
+	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"strings"
@@ -13,94 +14,92 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func applicationFederatedIdentityCredentialResource() *schema.Resource {
-	return &schema.Resource{
+func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: applicationFederatedIdentityCredentialResourceCreate,
 		UpdateContext: applicationFederatedIdentityCredentialResourceUpdate,
 		ReadContext:   applicationFederatedIdentityCredentialResourceRead,
 		DeleteContext: applicationFederatedIdentityCredentialResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(15 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.FederatedIdentityCredentialID(id)
 			return err
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"application_object_id": {
 				Description:      "The object ID of the application for which this federated identity credential should be created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"audiences": {
 				Description: "List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Required:    true,
 				MaxItems:    1,
 				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.ValidateDiag(validation.StringIsNotEmpty),
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation2.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"display_name": {
 				Description:      "A unique display name for the federated identity credential",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(1, 120)),
+				ValidateDiagFunc: validation2.ValidateDiag(validation.StringLenBetween(1, 120)),
 			},
 
 			"issuer": {
 				Description: "The URL of the external identity provider, which must match the issuer claim of the external token being exchanged. The combination of the values of issuer and subject must be unique on the app.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 
 			"subject": {
 				Description: "The identifier of the external software workload within the external identity provider. The combination of issuer and subject must be unique on the app.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 
 			"description": {
 				Description: "A description for the federated identity credential",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"credential_id": {
 				Description: "A UUID used to uniquely identify this federated identity credential",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	objectId := d.Get("application_object_id").(string)
 
@@ -141,7 +140,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -176,7 +175,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -203,7 +202,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -233,7 +232,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	return nil
 }
 
-func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())

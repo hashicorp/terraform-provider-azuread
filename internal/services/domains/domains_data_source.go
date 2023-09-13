@@ -8,13 +8,12 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 type DomainsId string
@@ -64,44 +63,44 @@ func (r DomainsDataSource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"admin_managed": {
 			Description: "Set to `true` to only return domains whose DNS is managed by Microsoft 365",
-			Type:        schema.TypeBool,
+			Type:        pluginsdk.TypeBool,
 			Optional:    true,
 		},
 
 		"include_unverified": {
 			Description:   "Set to `true` if unverified Azure AD domains should be included",
-			Type:          schema.TypeBool,
+			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_initial"}, // default or initial domains have to be verified
 		},
 
 		"only_default": {
 			Description:   "Set to `true` to only return the default domain",
-			Type:          schema.TypeBool,
+			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_initial", "only_root"},
 		},
 
 		"only_initial": {
 			Description:   "Set to `true` to only return the initial domain, which is your primary Azure Active Directory tenant domain",
-			Type:          schema.TypeBool,
+			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_root"},
 		},
 
 		"only_root": {
 			Description:   "Set to `true` to only return verified root domains. Excludes subdomains and unverified domains",
-			Type:          schema.TypeBool,
+			Type:          pluginsdk.TypeBool,
 			Optional:      true,
 			ConflictsWith: []string{"only_default", "only_initial"},
 		},
 
 		"supports_services": {
 			Description: "A list of supported services that must be supported by a domain",
-			Type:        schema.TypeList,
+			Type:        pluginsdk.TypeList,
 			Optional:    true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+			Elem: &pluginsdk.Schema{
+				Type: pluginsdk.TypeString,
 			},
 		},
 	}
@@ -111,58 +110,58 @@ func (r DomainsDataSource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"domains": {
 			Description: "A list of tenant domains",
-			Type:        schema.TypeList,
+			Type:        pluginsdk.TypeList,
 			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
 					"admin_managed": {
 						Description: "Whether the DNS for the domain is managed by Microsoft 365",
-						Type:        schema.TypeBool,
+						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"authentication_type": {
 						Description: "The authentication type of the domain. Possible values include `Managed` or `Federated`",
-						Type:        schema.TypeString,
+						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"default": {
 						Description: "Whether this is the default domain that is used for user creation",
-						Type:        schema.TypeBool,
+						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"domain_name": {
 						Description: "The name of the domain",
-						Type:        schema.TypeString,
+						Type:        pluginsdk.TypeString,
 						Computed:    true,
 					},
 
 					"initial": {
 						Description: "Whether this is the initial domain created by Azure Active Directory",
-						Type:        schema.TypeBool,
+						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"root": {
 						Description: "Whether the domain is a verified root domain (not a subdomain)",
-						Type:        schema.TypeBool,
+						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 
 					"supported_services": {
 						Description: "A list of capabilities / services supported by the domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`",
-						Type:        schema.TypeList,
+						Type:        pluginsdk.TypeList,
 						Computed:    true,
-						Elem: &schema.Schema{
-							Type: schema.TypeString,
+						Elem: &pluginsdk.Schema{
+							Type: pluginsdk.TypeString,
 						},
 					},
 
 					"verified": {
 						Description: "Whether the domain has completed domain ownership verification",
-						Type:        schema.TypeBool,
+						Type:        pluginsdk.TypeBool,
 						Computed:    true,
 					},
 				},
@@ -196,7 +195,6 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving domains: result was nil")
 			}
 
-			var domains []Domain
 			var domainNames []string
 
 			for _, v := range *result {
@@ -243,7 +241,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 						supportedServices = *v.SupportedServices
 					}
 
-					domains = append(domains, Domain{
+					state.Domains = append(state.Domains, Domain{
 						AdminManaged:       v.IsAdminManaged != nil && *v.IsAdminManaged,
 						AuthenticationType: authenticationType,
 						Default:            v.IsDefault != nil && *v.IsDefault,
@@ -256,7 +254,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 				}
 			}
 
-			if len(domains) == 0 {
+			if len(state.Domains) == 0 {
 				return fmt.Errorf("no domains found for the provided filters")
 			}
 
@@ -268,7 +266,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 
 			metadata.SetID(DomainsId(fmt.Sprintf("domains#%s#%s", tenantId, base64.URLEncoding.EncodeToString(h.Sum(nil)))))
 
-			return nil
+			return metadata.Encode(&state)
 		},
 	}
 }

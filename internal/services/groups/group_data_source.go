@@ -12,96 +12,96 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func groupDataSource() *schema.Resource {
-	return &schema.Resource{
+func groupDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: groupDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:      "The display name for the group",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ExactlyOneOf:     []string{"display_name", "object_id"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"object_id": {
 				Description:      "The object ID of the group",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ExactlyOneOf:     []string{"display_name", "object_id"},
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"mail_enabled": {
 				Description: "Whether the group is mail-enabled",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 				Optional:    true,
 			},
 
 			"security_enabled": {
 				Description: "Whether the group is a security group",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"auto_subscribe_new_members": {
 				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"behaviors": {
 				Description: "The group behaviors for a Microsoft 365 group",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"description": {
 				Description: "The optional description of the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"dynamic_membership": {
 				Description: "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Computed: true,
 						},
 
 						"rule": {
 							Description: "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 					},
@@ -110,143 +110,143 @@ func groupDataSource() *schema.Resource {
 
 			"external_senders_allowed": {
 				Description: "Indicates whether people external to the organization can send messages to the group.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
 				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
 				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"mail": {
 				Description: "The SMTP address for the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"mail_nickname": {
 				Description: "The mail alias for the group, unique in the organisation",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"members": {
 				Description: "The object IDs of the group members",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"onpremises_domain_name": {
 				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_group_type": {
 				Description: "Indicates the target on-premise group type the group will be written back as",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sam_account_name": {
 				Description: "The on-premises SAM account name, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_security_identifier": {
 				Description: "The on-premises security identifier (SID), synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sync_enabled": {
 				Description: "Whether this group is synchronized from an on-premises directory (true), no longer synchronized (false), or has never been synchronized (null)",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"owners": {
 				Description: "The object IDs of the group owners",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"preferred_language": {
 				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"provisioning_options": {
 				Description: "The group provisioning options for a Microsoft 365 group",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"proxy_addresses": {
 				Description: "Email addresses for the group that direct to the same group mailbox",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"theme": {
 				Description: "The colour theme for a Microsoft 365 group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"types": {
 				Description: "A list of group types configured for the group. The only supported type is `Unified`, which specifies a Microsoft 365 group",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"visibility": {
 				Description: "Specifies the group join policy and group content visibility",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"writeback_enabled": {
 				Description: "Whether this group is synced from Azure AD to the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()

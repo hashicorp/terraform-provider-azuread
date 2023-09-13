@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -26,10 +25,10 @@ func TestAccApplicationPreAuthorized_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_pre_authorized", "test")
 	r := ApplicationPreAuthorizedResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("authorized_app_id").Exists(),
 				check.That(data.ResourceName).Key("permission_ids.#").HasValue("2"),
@@ -43,10 +42,10 @@ func TestAccApplicationPreAuthorized_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_pre_authorized", "test")
 	r := ApplicationPreAuthorizedResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},

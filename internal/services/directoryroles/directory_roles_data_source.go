@@ -12,65 +12,65 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
-func directoryRolesDataSource() *schema.Resource {
-	return &schema.Resource{
+func directoryRolesDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: directoryRolesDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"object_ids": {
 				Description: "The object IDs of the roles",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"template_ids": {
 				Description: "The template IDs of the roles",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"roles": {
 				Description: "A list of roles",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"display_name": {
 							Description: "The display name of the directory role",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"template_id": {
 							Description: "The object ID of the template associated with the directory role",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"description": {
 							Description: "The description of the directory role",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
 							Description: "The object ID of the directory role",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 					},
@@ -80,7 +80,7 @@ func directoryRolesDataSource() *schema.Resource {
 	}
 }
 
-func directoryRolesDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRolesDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	directoryRoles, _, err := client.List(ctx)

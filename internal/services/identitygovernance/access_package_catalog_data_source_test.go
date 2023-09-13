@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -18,7 +17,7 @@ func TestAccAccessPackageCatalogDataSource_byId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_access_package_catalog", "test")
 	r := AccessPackageCatalogDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byId(data),
 			Check:  r.testCheckFunc(data),
@@ -30,7 +29,7 @@ func TestAccAccessPackageCatalogDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_access_package_catalog", "test")
 	r := AccessPackageCatalogDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byDisplayName(data),
 			Check:  r.testCheckFunc(data),
@@ -38,8 +37,8 @@ func TestAccAccessPackageCatalogDataSource_byDisplayName(t *testing.T) {
 	})
 }
 
-func (AccessPackageCatalogDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
+func (AccessPackageCatalogDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
+	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("description").HasValue(fmt.Sprintf("Test access package catalog %[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("test-access-package-catalog-%[1]d", data.RandomInteger)),
 		check.That(data.ResourceName).Key("externally_visible").HasValue("false"),

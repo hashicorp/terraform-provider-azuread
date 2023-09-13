@@ -13,10 +13,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
@@ -124,7 +123,7 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -241,7 +240,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			return fmt.Errorf("context has no deadline")
 		}
 		timeout := time.Until(deadline)
-		_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+		_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 			Pending:    []string{"Waiting"},
 			Target:     []string{"Disabled"},
 			Timeout:    timeout,
@@ -333,7 +332,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			enabled:     role["enabled"].(bool),
 			value:       role["value"].(string),
 		}
-		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+		if pluginsdk.ValueIsNotEmptyOrUnknown(permission.id) && pluginsdk.ValueIsNotEmptyOrUnknown(permission.value) {
 			appPermissions = append(appPermissions, permission)
 		}
 	}
@@ -350,7 +349,7 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 			enabled:     scope["enabled"].(bool),
 			value:       scope["value"].(string),
 		}
-		if tf.ValueIsNotEmptyOrUnknown(permission.id) && tf.ValueIsNotEmptyOrUnknown(permission.value) {
+		if pluginsdk.ValueIsNotEmptyOrUnknown(permission.id) && pluginsdk.ValueIsNotEmptyOrUnknown(permission.value) {
 			appPermissions = append(appPermissions, permission)
 		}
 	}
@@ -394,9 +393,9 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 		result.AcceptMappedClaims = utils.Bool(v.(bool))
 	}
 	if v, ok := in["known_client_applications"]; ok {
-		result.KnownClientApplications = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+		result.KnownClientApplications = tf.ExpandStringSlicePtr(v.(*pluginsdk.Set).List())
 	}
-	result.OAuth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*schema.Set).List())
+	result.OAuth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*pluginsdk.Set).List())
 	if v, ok := in["requested_access_token_version"]; ok {
 		result.RequestedAccessTokenVersion = utils.Int32(int32(v.(int)))
 	}
@@ -418,7 +417,7 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 		appRole := appRoleRaw.(map[string]interface{})
 
 		var allowedMemberTypes []msgraph.AppRoleAllowedMemberType
-		for _, allowedMemberType := range appRole["allowed_member_types"].(*schema.Set).List() {
+		for _, allowedMemberType := range appRole["allowed_member_types"].(*pluginsdk.Set).List() {
 			allowedMemberTypes = append(allowedMemberTypes, allowedMemberType.(string))
 		}
 
@@ -550,7 +549,7 @@ func expandApplicationPublicClient(input []interface{}) (result *msgraph.PublicC
 	}
 
 	in := input[0].(map[string]interface{})
-	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 
 	return
 }
@@ -603,7 +602,7 @@ func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) 
 	}
 
 	in := input[0].(map[string]interface{})
-	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 
 	return
 }
@@ -624,7 +623,7 @@ func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) 
 	result.HomePageUrl = utils.NullableString(in["homepage_url"].(string))
 	result.LogoutUrl = utils.NullableString(in["logout_url"].(string))
 	result.ImplicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
-	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*schema.Set).List())
+	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 
 	return
 }

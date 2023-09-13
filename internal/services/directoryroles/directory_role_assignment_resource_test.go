@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -24,10 +23,10 @@ func TestAccDirectoryRoleAssignment_servicePrincipal(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "test")
 	r := DirectoryRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipal(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -41,10 +40,10 @@ func TestAccDirectoryRoleAssignment_servicePrincipalWithCustomRole(t *testing.T)
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "test")
 	r := DirectoryRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipalCustomRole(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -58,10 +57,10 @@ func TestAccDirectoryRoleAssignment_servicePrincipalScopedApplication(t *testing
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "test")
 	r := DirectoryRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipalScopedApplication(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -75,10 +74,10 @@ func TestAccDirectoryRoleAssignment_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "testA")
 	r := DirectoryRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.oneUser(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -92,10 +91,10 @@ func TestAccDirectoryRoleAssignment_userWithCustomRole(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "testA")
 	r := DirectoryRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.oneUserCustomRole(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("role_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -110,10 +109,10 @@ func TestAccDirectoryRoleAssignment_multipleUser(t *testing.T) {
 	dataB := acceptance.BuildTestData(t, "azuread_directory_role_assignment", "testB")
 	r := DirectoryRoleAssignmentResource{}
 
-	dataA.ResourceTest(t, r, []resource.TestStep{
+	dataA.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.oneUser(dataA),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
 				check.That(dataA.ResourceName).Key("role_id").IsUuid(),
 				check.That(dataA.ResourceName).Key("principal_object_id").IsUuid(),
@@ -122,7 +121,7 @@ func TestAccDirectoryRoleAssignment_multipleUser(t *testing.T) {
 		dataA.ImportStep(),
 		{
 			Config: r.twoUsers(dataA),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
 				check.That(dataA.ResourceName).Key("role_id").IsUuid(),
 				check.That(dataA.ResourceName).Key("principal_object_id").IsUuid(),
@@ -135,7 +134,7 @@ func TestAccDirectoryRoleAssignment_multipleUser(t *testing.T) {
 		dataB.ImportStep(),
 		{
 			Config: r.oneUser(dataA),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
 				check.That(dataA.ResourceName).Key("role_id").IsUuid(),
 				check.That(dataA.ResourceName).Key("principal_object_id").IsUuid(),

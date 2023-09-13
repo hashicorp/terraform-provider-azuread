@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package tf
+package acceptance
 
 import (
 	"strconv"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func AccRandTimeInt() int {
+func RandTimeInt() int {
 	// acctest.RantInt() returns a value of size:
 	// 000000000000000000
 	// YYMMddHHmmsshhRRRR
@@ -27,4 +27,13 @@ func AccRandTimeInt() int {
 	}
 
 	return i
+}
+
+// RandString generates a random alphanumeric string of the length specified
+func RandString(strlen int) string {
+	return acctest.RandString(strlen)
+}
+
+func RandStringFromCharSet(strlen int, charSet string) string {
+	return acctest.RandStringFromCharSet(strlen, charSet)
 }

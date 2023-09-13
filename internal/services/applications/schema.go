@@ -4,25 +4,25 @@
 package applications
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
-func schemaOptionalClaims() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
+func schemaOptionalClaims() *pluginsdk.Schema {
+	return &pluginsdk.Schema{
+		Type:     pluginsdk.TypeList,
 		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
+		Elem: &pluginsdk.Resource{
+			Schema: map[string]*pluginsdk.Schema{
 				"name": {
 					Description: "The name of the optional claim",
-					Type:        schema.TypeString,
+					Type:        pluginsdk.TypeString,
 					Required:    true,
 				},
 
 				"source": {
 					Description: "The source of the claim. If `source` is absent, the claim is a predefined optional claim. If `source` is `user`, the value of `name` is the extension property from the user object",
-					Type:        schema.TypeString,
+					Type:        pluginsdk.TypeString,
 					Optional:    true,
 					ValidateFunc: validation.StringInSlice(
 						[]string{"user"},
@@ -32,17 +32,17 @@ func schemaOptionalClaims() *schema.Schema {
 
 				"essential": {
 					Description: "Whether the claim specified by the client is necessary to ensure a smooth authorization experience",
-					Type:        schema.TypeBool,
+					Type:        pluginsdk.TypeBool,
 					Optional:    true,
 					Default:     false,
 				},
 
 				"additional_properties": {
 					Description: "List of additional properties of the claim. If a property exists in this list, it modifies the behaviour of the optional claim",
-					Type:        schema.TypeList,
+					Type:        pluginsdk.TypeList,
 					Optional:    true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
+					Elem: &pluginsdk.Schema{
+						Type: pluginsdk.TypeString,
 						ValidateFunc: validation.StringInSlice(
 							[]string{
 								"cloud_displayname",

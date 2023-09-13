@@ -7,93 +7,93 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func invitationResource() *schema.Resource {
-	return &schema.Resource{
+func invitationResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: invitationResourceCreate,
 		ReadContext:   invitationResourceRead,
 		DeleteContext: invitationResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"redirect_url": {
 				Description:      "The URL that the user should be redirected to once the invitation is redeemed",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
 			},
 
 			"user_email_address": {
 				Description:      "The email address of the user being invited",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.StringIsEmailAddress,
+				ValidateDiagFunc: validation2.StringIsEmailAddress,
 			},
 
 			"user_display_name": {
 				Description:      "The display name of the user being invited",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"message": {
 				Description: "Customize the message sent to the invited user",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Optional:    true,
 				ForceNew:    true,
 				MaxItems:    1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"additional_recipients": {
 							Description: "Email addresses of additional recipients the invitation message should be sent to",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							MaxItems:    1,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.StringIsEmailAddress,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation2.StringIsEmailAddress,
 							},
 						},
 
 						"body": {
 							Description:      "Customized message body you want to send if you don't want to send the default message",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"message.0.language"},
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"language": {
 							Description:      "The language you want to send the default message in",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"message.0.body"},
-							ValidateDiagFunc: validate.ISO639Language,
+							ValidateDiagFunc: validation2.ISO639Language,
 						},
 					},
 				},
@@ -101,7 +101,7 @@ func invitationResource() *schema.Resource {
 
 			"user_type": {
 				Description: "The user type of the user being invited",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "Guest",
@@ -113,20 +113,20 @@ func invitationResource() *schema.Resource {
 
 			"redeem_url": {
 				Description: "The URL the user can use to redeem their invitation",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"user_id": {
 				Description: "Object ID of the invited user",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Invitations.InvitationsClient
 	usersClient := meta.(*clients.Client).Invitations.UsersClient
 
@@ -195,7 +195,7 @@ func invitationResourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	return invitationResourceRead(ctx, d, meta)
 }
 
-func invitationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Invitations.UsersClient
 
 	userID := d.Get("user_id").(string)
@@ -216,7 +216,7 @@ func invitationResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func invitationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Invitations.UsersClient
 
 	userID := d.Get("user_id").(string)

@@ -1,15 +1,17 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package validate
+package validation
 
 import (
+	"strings"
+
 	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"golang.org/x/text/language"
 )
 
-func UUID(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func ISO639Language(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 	v, ok := i.(string)
 	if !ok {
 		ret = append(ret, diag.Diagnostic{
@@ -20,12 +22,13 @@ func UUID(i interface{}, path cty.Path) (ret diag.Diagnostics) {
 		return
 	}
 
-	if _, err := uuid.ParseUUID(v); err != nil {
+	if _, err := language.Parse(v); err != nil && strings.Contains(err.Error(), "not well-formed") {
 		ret = append(ret, diag.Diagnostic{
 			Severity:      diag.Error,
-			Summary:       "Value must be a valid UUID",
+			Summary:       "Language value is not well-formed",
 			AttributePath: path,
 		})
+		return
 	}
 
 	return

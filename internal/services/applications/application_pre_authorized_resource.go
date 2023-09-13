@@ -14,65 +14,65 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func applicationPreAuthorizedResource() *schema.Resource {
-	return &schema.Resource{
+func applicationPreAuthorizedResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: applicationPreAuthorizedResourceCreate,
 		ReadContext:   applicationPreAuthorizedResourceRead,
 		UpdateContext: applicationPreAuthorizedResourceUpdate,
 		DeleteContext: applicationPreAuthorizedResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.ApplicationPreAuthorizedID(id)
 			return err
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"application_object_id": {
 				Description:      "The object ID of the application to which this pre-authorized application should be added",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"authorized_app_id": {
 				Description:      "The application ID of the pre-authorized application",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"permission_ids": {
 				Description: "The IDs of the permission scopes required by the pre-authorized application",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Required:    true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 		},
 	}
 }
 
-func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id := parse.NewApplicationPreAuthorizedID(d.Get("application_object_id").(string), d.Get("authorized_app_id").(string))
 
@@ -102,7 +102,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 
 	newPreAuthorizedApps = append(newPreAuthorizedApps, msgraph.ApiPreAuthorizedApplication{
 		AppId:         utils.String(id.AppId),
-		PermissionIds: tf.ExpandStringSlicePtr(d.Get("permission_ids").(*schema.Set).List()),
+		PermissionIds: tf.ExpandStringSlicePtr(d.Get("permission_ids").(*pluginsdk.Set).List()),
 	})
 
 	properties := msgraph.Application{
@@ -123,7 +123,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *schema.Resou
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
 }
 
-func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
@@ -152,7 +152,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 	for i, a := range newPreAuthorizedApps {
 		if a.AppId != nil && strings.EqualFold(*a.AppId, id.AppId) {
 			found = true
-			newPreAuthorizedApps[i].PermissionIds = tf.ExpandStringSlicePtr(d.Get("permission_ids").(*schema.Set).List())
+			newPreAuthorizedApps[i].PermissionIds = tf.ExpandStringSlicePtr(d.Get("permission_ids").(*pluginsdk.Set).List())
 			break
 		}
 	}
@@ -176,7 +176,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *schema.Resou
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
 }
 
-func applicationPreAuthorizedResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
@@ -219,7 +219,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func applicationPreAuthorizedResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {

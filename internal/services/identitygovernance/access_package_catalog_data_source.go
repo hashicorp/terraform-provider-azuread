@@ -11,25 +11,25 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func accessPackageCatalogDataSource() *schema.Resource {
-	return &schema.Resource{
+func accessPackageCatalogDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: accessPackageCatalogDataRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
 				Description:  "The ID of this access package catalog",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsUUID,
@@ -38,7 +38,7 @@ func accessPackageCatalogDataSource() *schema.Resource {
 
 			"display_name": {
 				Description:  "The display name of the access package catalog",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"object_id", "display_name"},
@@ -46,26 +46,26 @@ func accessPackageCatalogDataSource() *schema.Resource {
 
 			"description": {
 				Description: "The description of the access package catalog",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"externally_visible": {
 				Description: "Whether the access packages in this catalog can be requested by users outside the tenant",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"published": {
 				Description: "Whether the access packages in this catalog are available for management",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func accessPackageCatalogDataRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageCatalogDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
 	objectId := d.Get("object_id").(string)

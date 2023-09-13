@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -24,10 +23,10 @@ func TestAccAdministrativeUnit_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
@@ -40,10 +39,10 @@ func TestAccAdministrativeUnit_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
@@ -56,10 +55,10 @@ func TestAccAdministrativeUnit_withMembers(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.withMembers(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("object_id").IsUuid(),
 			),
@@ -72,10 +71,10 @@ func TestAccGroup_preventDuplicateNamesPass(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.preventDuplicateNamesPass(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestAdministrativeUnit-%d", data.RandomInteger)),
 			),
 		},
@@ -87,7 +86,7 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_administrative_unit", "test")
 	r := AdministrativeUnitResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
 	})
 }

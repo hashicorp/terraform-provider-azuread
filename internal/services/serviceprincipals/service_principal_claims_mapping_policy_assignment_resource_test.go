@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -24,10 +23,10 @@ func TestClaimsMappingPolicyAssignment_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_claims_mapping_policy_assignment", "test")
 	r := ServicePrincipalClaimsMappingPolicyAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicClaimsMappingPolicyAssignment(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},

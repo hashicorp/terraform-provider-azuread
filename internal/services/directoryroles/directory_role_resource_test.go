@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -23,10 +22,10 @@ func TestAccDirectoryRole_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role", "test")
 	r := DirectoryRoleResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.byDisplayName(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("description").Exists(),
 				check.That(data.ResourceName).Key("object_id").IsUuid(),
@@ -40,10 +39,10 @@ func TestAccDirectoryRole_byTemplateId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role", "test")
 	r := DirectoryRoleResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.byTemplateId(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("display_name").HasValue("Printer Administrator"),
 				check.That(data.ResourceName).Key("description").Exists(),

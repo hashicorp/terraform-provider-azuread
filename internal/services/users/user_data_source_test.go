@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -19,7 +18,7 @@ func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 	r := UserDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: r.byUserPrincipalName(data),
 		Check:  r.testCheckFunc(data),
 	}})
@@ -28,7 +27,7 @@ func TestAccUserDataSource_byUserPrincipalName(t *testing.T) {
 func TestAccUserDataSource_byUserPrincipalNameNonexistent(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config:      UserDataSource{}.byUserPrincipalNameNonexistent(data),
 		ExpectError: regexp.MustCompile("User with UPN \"[^\"]+\" was not found"),
 	}})
@@ -38,7 +37,7 @@ func TestAccUserDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 	r := UserDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: r.byObjectId(data),
 		Check:  r.testCheckFunc(data),
 	}})
@@ -47,7 +46,7 @@ func TestAccUserDataSource_byObjectId(t *testing.T) {
 func TestAccUserDataSource_byObjectIdNonexistent(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config:      UserDataSource{}.byObjectIdNonexistent(),
 		ExpectError: regexp.MustCompile("User not found with object ID:"),
 	}})
@@ -57,7 +56,7 @@ func TestAccUserDataSource_byMailNickname(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 	r := UserDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: r.byMailNickname(data),
 		Check:  r.testCheckFunc(data),
 	}})
@@ -66,7 +65,7 @@ func TestAccUserDataSource_byMailNickname(t *testing.T) {
 func TestAccUserDataSource_byMailNicknameNonexistent(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config:      UserDataSource{}.byMailNicknameNonexistent(data),
 		ExpectError: regexp.MustCompile("User not found with email alias:"),
 	}})
@@ -76,7 +75,7 @@ func TestAccUserDataSource_byMail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 	r := UserDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: r.byMail(data),
 		Check:  r.testCheckFunc(data),
 	}})
@@ -85,7 +84,7 @@ func TestAccUserDataSource_byMail(t *testing.T) {
 func TestAccUserDataSource_byMailNonexistent(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config:      UserDataSource{}.byMailNonexistent(data),
 		ExpectError: regexp.MustCompile("User not found with mail:"),
 	}})
@@ -95,7 +94,7 @@ func TestAccUserDataSource_byEmployeeId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 	r := UserDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: r.byEmployeeId(data),
 		Check:  r.testCheckFunc(data),
 	}})
@@ -104,14 +103,14 @@ func TestAccUserDataSource_byEmployeeId(t *testing.T) {
 func TestAccUserDataSource_byEmployeeIdNonexistent(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_user", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config:      UserDataSource{}.byEmployeeIdNonexistent(data),
 		ExpectError: regexp.MustCompile("User not found with employee ID:"),
 	}})
 }
 
-func (UserDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
+func (UserDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
+	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("account_enabled").Exists(),
 		check.That(data.ResourceName).Key("city").HasValue(fmt.Sprintf("acctestUser-%d-City", data.RandomInteger)),
 		check.That(data.ResourceName).Key("company_name").HasValue(fmt.Sprintf("acctestUser-%d-Company", data.RandomInteger)),

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,9 +16,9 @@ type UsersDataSource struct{}
 func TestAccUsersDataSource_byUserPrincipalNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byUserPrincipalNames(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -32,9 +31,9 @@ func TestAccUsersDataSource_byUserPrincipalNames(t *testing.T) {
 func TestAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byUserPrincipalNamesIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("3"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("3"),
@@ -47,9 +46,9 @@ func TestAccUsersDataSource_byUserPrincipalNamesIgnoreMissing(t *testing.T) {
 func TestAccUsersDataSource_byObjectIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byObjectIds(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -62,9 +61,9 @@ func TestAccUsersDataSource_byObjectIds(t *testing.T) {
 func TestAccUsersDataSource_byObjectIdsIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byObjectIdsIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -77,9 +76,9 @@ func TestAccUsersDataSource_byObjectIdsIgnoreMissing(t *testing.T) {
 func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byMailNicknames(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -92,9 +91,9 @@ func TestAccUsersDataSource_byMailNicknames(t *testing.T) {
 func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byMailNicknamesIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -107,9 +106,9 @@ func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 func TestAccUsersDataSource_byEmployeeIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byEmployeeIds(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -122,9 +121,9 @@ func TestAccUsersDataSource_byEmployeeIds(t *testing.T) {
 func TestAccUsersDataSource_byEmployeeIdsIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.byEmployeeIdsIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
@@ -137,9 +136,9 @@ func TestAccUsersDataSource_byEmployeeIdsIgnoreMissing(t *testing.T) {
 func TestAccUsersDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.noNames(),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("0"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("0"),
@@ -152,9 +151,9 @@ func TestAccUsersDataSource_noNames(t *testing.T) {
 func TestAccUsersDataSource_returnAll(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: UsersDataSource{}.returnAll(),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("user_principal_names.#").Exists(),
 			check.That(data.ResourceName).Key("object_ids.#").Exists(),
 			check.That(data.ResourceName).Key("mail_nicknames.#").Exists(),

@@ -12,34 +12,34 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func accessPackageResourcePackageAssociationResource() *schema.Resource {
-	return &schema.Resource{
+func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: accessPackageResourcePackageAssociationResourceCreate,
 		ReadContext:   accessPackageResourcePackageAssociationResourceRead,
 		DeleteContext: accessPackageResourcePackageAssociationResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(validate.AccessPackageResourcePackageAssociationID),
+		Importer: pluginsdk.ImporterValidatingResourceId(validate.AccessPackageResourcePackageAssociationID),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"access_package_id": {
 				Description:  "The ID of access package this resource association is configured to",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				ValidateFunc: validation.IsUUID,
 				Required:     true,
 				ForceNew:     true,
@@ -47,14 +47,14 @@ func accessPackageResourcePackageAssociationResource() *schema.Resource {
 
 			"catalog_resource_association_id": {
 				Description: "The ID of the access package catalog association",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 
 			"access_type": {
 				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "Member",
@@ -67,7 +67,7 @@ func accessPackageResourcePackageAssociationResource() *schema.Resource {
 	}
 }
 
-func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 
@@ -113,7 +113,7 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	return accessPackageResourcePackageAssociationResourceRead(ctx, d, meta)
 }
 
-func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
@@ -146,7 +146,7 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	return nil
 }
 
-func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 
 	id, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
