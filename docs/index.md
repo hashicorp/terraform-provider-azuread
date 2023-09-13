@@ -90,6 +90,7 @@ If you have configuration questions, or general questions about using the provid
 The following arguments are supported:
 
 * `client_id` - (Optional) The Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID` environment variable.
+* `client_id_file_path` (Optional) The path to a file containing the Client ID which should be used when authenticating as a service principal. This can also be sourced from the `ARM_CLIENT_ID_FILE_PATH` environment variable.
 * `environment` - (Optional) The Cloud Environment which be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), `germany` (also `german`), and `china`. Defaults to `global`. This can also be sourced from the `ARM_ENVIRONMENT` environment variable.
 * `metadata_host` - (Optional) The Hostname of the Azure Metadata Service (for example `management.azure.com`), used to obtain the Cloud Environment when using a Custom Azure Environment. This can also be sourced from the `ARM_METADATA_HOSTNAME` Environment Variable.
 
@@ -112,7 +113,7 @@ More information on [how to configure a Service Principal using a Client Certifi
 When authenticating as a Service Principal using a Client Secret, the following fields can be set:
 
 * `client_secret` - (Optional) The application password to be used when authenticating using a client secret. This can also be sourced from the `ARM_CLIENT_SECRET` environment variable.
-
+* `client_secret_file_path` - (Optional) The path to a file containing the application password to be used when authenticating using a client secret. This can also be sourced from the `ARM_CLIENT_SECRET_FILE_PATH` environment variable.
 More information on [how to configure a Service Principal using a Client Secret can be found in this guide](guides/service_principal_client_secret.html).
 
 ---
