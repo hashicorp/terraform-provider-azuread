@@ -5,6 +5,7 @@ package domains
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 )
 
 type Registration struct{}
@@ -21,14 +22,24 @@ func (r Registration) WebsiteCategories() []string {
 	}
 }
 
-// SupportedDataSources returns the supported Data Sources supported by this Service
+// SupportedDataSources returns the untyped Data Sources supported by this Service
 func (r Registration) SupportedDataSources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{
-		"azuread_domains": domainsDataSource(),
+	return map[string]*schema.Resource{}
+}
+
+// SupportedResources returns the untyped Resources supported by this Service
+func (r Registration) SupportedResources() map[string]*schema.Resource {
+	return map[string]*schema.Resource{}
+}
+
+// DataSources returns the typed DataSources supported by this service
+func (r Registration) DataSources() []sdk.DataSource {
+	return []sdk.DataSource{
+		DomainsDataSource{},
 	}
 }
 
-// SupportedResources returns the supported Resources supported by this Service
-func (r Registration) SupportedResources() map[string]*schema.Resource {
-	return map[string]*schema.Resource{}
+// Resources returns the typed Resources supported by this service
+func (r Registration) Resources() []sdk.Resource {
+	return []sdk.Resource{}
 }
