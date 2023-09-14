@@ -1,13 +1,13 @@
-## 2.42.0 (Unreleased)
+## 2.42.0 (September 15, 2023)
 
 IMPROVEMENTS:
 
-* provider: support for the `client_id_file_path` and `client_secret_file_path` provider properties [GH-1189]
-* `data.azuread_group` - support for looking up a group with the `mail_nickname` property [GH-1173]
+* provider: support for the `client_id_file_path` and `client_secret_file_path` provider properties ([#1189](https://github.com/hashicorp/terraform-provider-azuread/issues/1189))
+* `data.azuread_group` - support for looking up a group with the `mail_nickname` property ([#1173](https://github.com/hashicorp/terraform-provider-azuread/issues/1173))
 
 BUG FIXES:
 
-* `azuread_conditional_access_policy` - allow specifying `terms_of_use` in place of `built_in_controls` in the `grant_controls` block [GH-1168]
+* `azuread_conditional_access_policy` - allow specifying `terms_of_use` in place of `built_in_controls` in the `grant_controls` block ([#1168](https://github.com/hashicorp/terraform-provider-azuread/issues/1168))
 
 ## 2.41.0 (July 27, 2023)
 
