@@ -157,9 +157,25 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 }
 
 func TestAccProvider_clientSecretAuth(t *testing.T) {
+	t.Run("fromEnvironment", testAccProvider_clientSecretAuthFromEnvironment)
+	t.Run("fromFiles", testAccProvider_clientSecretAuthFromFiles)
+}
+
+func testAccProvider_clientSecretAuthFromEnvironment(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("TF_ACC not set")
 	}
+	if os.Getenv("ARM_CLIENT_ID") == "" {
+		t.Skip("ARM_CLIENT_ID not set")
+	}
+	if os.Getenv("ARM_CLIENT_SECRET") == "" {
+		t.Skip("ARM_CLIENT_SECRET not set")
+	}
+
+	// Ensure we are running using the expected env-vars
+	// t.SetEnv does automatic cleanup / resets the values after the test
+	t.Setenv("ARM_CLIENT_ID_FILE_PATH", "")
+	t.Setenv("ARM_CLIENT_SECRET_FILE_PATH", "")
 
 	provider := AzureADProvider()
 	ctx := context.Background()
@@ -172,13 +188,84 @@ func TestAccProvider_clientSecretAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		clientSecret, err := getClientSecret(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
 		authConfig := &auth.Credentials{
 			Environment: *env,
 			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
+			ClientID:    *clientId,
 
 			EnableAuthenticatingUsingClientSecret: true,
-			ClientSecret:                          d.Get("client_secret").(string),
+			ClientSecret:                          *clientSecret,
+		}
+
+		return buildClient(ctx, provider, authConfig, "")
+	}
+
+	d := provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+	if d != nil && d.HasError() {
+		t.Fatalf("err: %+v", d)
+	}
+
+	if errs := testCheckProvider(provider); len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+	}
+}
+
+func testAccProvider_clientSecretAuthFromFiles(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC not set")
+	}
+	if os.Getenv("ARM_CLIENT_ID_FILE_PATH") == "" {
+		t.Skip("ARM_CLIENT_ID_FILE_PATH not set")
+	}
+	if os.Getenv("ARM_CLIENT_SECRET_FILE_PATH") == "" {
+		t.Skip("ARM_CLIENT_SECRET_FILE_PATH not set")
+	}
+
+	// Ensure we are running using the expected env-vars
+	// t.SetEnv does automatic cleanup / resets the values after the test
+	t.Setenv("ARM_CLIENT_ID", "")
+	t.Setenv("ARM_CLIENT_SECRET", "")
+
+	provider := AzureADProvider()
+	ctx := context.Background()
+
+	// Support only client secret authentication
+	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+		envName := d.Get("environment").(string)
+		env, err := environments.FromName(envName)
+		if err != nil {
+			t.Fatalf("configuring environment %q: %v", envName, err)
+		}
+
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		clientSecret, err := getClientSecret(d)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		authConfig := &auth.Credentials{
+			Environment: *env,
+			TenantID:    d.Get("tenant_id").(string),
+			ClientID:    *clientId,
+
+			EnableAuthenticatingUsingClientSecret: true,
+			ClientSecret:                          *clientSecret,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
