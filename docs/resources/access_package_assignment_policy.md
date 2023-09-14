@@ -12,7 +12,7 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires the following application role: `EntitlementManagement.ReadWrite.All`.
 
-When authenticated with a user principal, this resource requires `Global Administrator` directory role, or one of the `Catalog Owner` and `Access Package Manager` role in Idneity Governance.
+When authenticated with a user principal, this resource requires `Global Administrator` directory role, or one of the `Catalog Owner` and `Access Package Manager` role in Identity Governance.
 
 ## Example Usage
 
@@ -33,8 +33,8 @@ resource "azuread_access_package" "example" {
   description  = "Access Package"
 }
 
-resource "azuread_access_package_assignment_policy" "test" {
-  access_package_id = azuread_access_package.test.id
+resource "azuread_access_package_assignment_policy" "example" {
+  access_package_id = azuread_access_package.example.id
   display_name      = "assignment-policy"
   description       = "My assignment policy"
   duration_in_days  = 90
@@ -50,7 +50,7 @@ resource "azuread_access_package_assignment_policy" "test" {
       approval_timeout_in_days = 14
 
       primary_approver {
-        object_id    = azuread_group.test.object_id
+        object_id    = azuread_group.example.object_id
         subject_type = "groupMembers"
       }
     }
@@ -71,7 +71,6 @@ resource "azuread_access_package_assignment_policy" "test" {
   }
 }
 ```
-
 
 ## Argument Reference
 
