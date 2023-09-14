@@ -34,8 +34,16 @@ func groupDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "object_id"},
+				ExactlyOneOf:     []string{"display_name", "object_id", "mail_nickname"},
 				ValidateDiagFunc: validate.NoEmptyStrings,
+			},
+
+			"mail_nickname": {
+				Description:  "The mail alias for the group, unique in the organisation",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
 			},
 
 			"object_id": {
@@ -43,7 +51,7 @@ func groupDataSource() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "object_id"},
+				ExactlyOneOf:     []string{"display_name", "object_id", "mail_nickname"},
 				ValidateDiagFunc: validate.UUID,
 			},
 
@@ -128,12 +136,6 @@ func groupDataSource() *schema.Resource {
 
 			"mail": {
 				Description: "The SMTP address for the group",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-
-			"mail_nickname": {
-				Description: "The mail alias for the group, unique in the organisation",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -266,6 +268,11 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		securityEnabled = utils.Bool(v.(bool))
 	}
 
+	var mailNickname string
+	if v, ok := d.GetOk("mail_nickname"); ok {
+		mailNickname = v.(string)
+	}
+
 	if displayName != "" {
 		filter := fmt.Sprintf("displayName eq '%s'", displayName)
 		if mailEnabled != nil {
@@ -285,6 +292,28 @@ func groupDataSourceRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return tf.ErrorDiagPathF(err, "display_name", "More than one group found matching specified filter (%s)", filter)
 		} else if count == 0 {
 			return tf.ErrorDiagPathF(err, "display_name", "No group found matching specified filter (%s)", filter)
+		}
+
+		group = (*groups)[0]
+	} else if mailNickname != "" {
+		filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
+		if mailEnabled != nil {
+			filter = fmt.Sprintf("%s and mailEnabled eq %t", filter, *mailEnabled)
+		}
+		if securityEnabled != nil {
+			filter = fmt.Sprintf("%s and securityEnabled eq %t", filter, *securityEnabled)
+		}
+
+		groups, _, err := client.List(ctx, odata.Query{Filter: filter})
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "mail_nickname", "No group found matching specified filter (%s)", filter)
+		}
+
+		count := len(*groups)
+		if count > 1 {
+			return tf.ErrorDiagPathF(err, "mail_nickname", "More than one group found matching specified filter (%s)", filter)
+		} else if count == 0 {
+			return tf.ErrorDiagPathF(err, "mail_nickname", "No group found matching specified filter (%s)", filter)
 		}
 
 		group = (*groups)[0]

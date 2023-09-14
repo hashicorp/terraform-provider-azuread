@@ -65,6 +65,45 @@ func TestAccGroupDataSource_byCaseInsensitiveDisplayName(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_byMailNickname(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.mailNickname(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
+func TestAccGroupDataSource_byMailNicknameWithSecurity(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.mailNicknameSecurity(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
+func TestAccGroupDataSource_byMailNicknameWithSecurityNotMail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []resource.TestStep{
+		{
+			Config: GroupDataSource{}.mailNicknameSecurityNotMail(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
 func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
@@ -208,6 +247,40 @@ data "azuread_group" "test" {
   display_name = upper(azuread_group.test.display_name)
 }
 `, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) mailNickname(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  mail_nickname = azuread_group.test.mail_nickname
+}
+`, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) mailNicknameSecurity(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  mail_nickname    = azuread_group.test.mail_nickname
+  security_enabled = true
+}
+`, GroupResource{}.basic(data))
+}
+
+func (GroupDataSource) mailNicknameSecurityNotMail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+%[2]s
+
+data "azuread_group" "test" {
+  mail_nickname    = azuread_group.test.mail_nickname
+  mail_enabled     = false
+  security_enabled = true
+}
+`, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
 }
 
 func (GroupDataSource) objectId(data acceptance.TestData) string {
