@@ -1,3 +1,9 @@
+## 2.42.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* provider: support for the `client_id_file_path` and `client_secret_file_path` provider properties [GH-1189]
+
 ## 2.41.0 (July 27, 2023)
 
 FEATURES:
