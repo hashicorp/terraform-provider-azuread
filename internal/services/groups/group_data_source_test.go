@@ -254,7 +254,7 @@ func (GroupDataSource) mailNickname(data acceptance.TestData) string {
 %[1]s
 
 data "azuread_group" "test" {
-	mail_nickname = azuread_group.test.mail_nickname
+  mail_nickname = azuread_group.test.mail_nickname
 }
 `, GroupResource{}.basic(data))
 }
@@ -264,8 +264,8 @@ func (GroupDataSource) mailNicknameSecurity(data acceptance.TestData) string {
 %[1]s
 
 data "azuread_group" "test" {
-	mail_nickname    = azuread_group.test.mail_nickname
-	security_enabled = true
+  mail_nickname    = azuread_group.test.mail_nickname
+  security_enabled = true
 }
 `, GroupResource{}.basic(data))
 }
@@ -276,9 +276,9 @@ func (GroupDataSource) mailNicknameSecurityNotMail(data acceptance.TestData) str
 %[2]s
 
 data "azuread_group" "test" {
-	mail_nickname    = azuread_group.test.mail_nickname
-	mail_enabled     = false
-	security_enabled = true
+  mail_nickname    = azuread_group.test.mail_nickname
+  mail_enabled     = false
+  security_enabled = true
 }
 `, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
 }
