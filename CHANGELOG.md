@@ -3,6 +3,7 @@
 IMPROVEMENTS:
 
 * provider: support for the `client_id_file_path` and `client_secret_file_path` provider properties [GH-1189]
+* `data.azuread_group` - support for looking up a group with the `mail_nickname` property [GH-1173]
 
 BUG FIXES:
 
