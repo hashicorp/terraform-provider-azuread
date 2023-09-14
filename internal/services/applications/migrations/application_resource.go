@@ -5,12 +5,9 @@ package migrations
 
 import (
 	"context"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 
-	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -18,20 +15,18 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_name", "name"},
 			},
 
 			"name": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "This property has been renamed to `display_name` and will be removed in version 2.0 of the AzureAD provider",
-				ExactlyOneOf:     []string{"display_name", "name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Deprecated:   "This property has been renamed to `display_name` and will be removed in version 2.0 of the AzureAD provider",
+				ExactlyOneOf: []string{"display_name", "name"},
 			},
 
 			"api": {
@@ -52,15 +47,13 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 									},
 
 									"admin_consent_description": {
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Type:     pluginsdk.TypeString,
+										Optional: true,
 									},
 
 									"admin_consent_display_name": {
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Type:     pluginsdk.TypeString,
+										Optional: true,
 									},
 
 									"enabled": {
@@ -72,28 +65,21 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeString,
 										Optional: true,
 										Default:  msgraph.PermissionScopeTypeUser,
-										ValidateFunc: validation.StringInSlice([]string{
-											msgraph.PermissionScopeTypeAdmin,
-											msgraph.PermissionScopeTypeUser,
-										}, false),
 									},
 
 									"user_consent_description": {
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Type:     pluginsdk.TypeString,
+										Optional: true,
 									},
 
 									"user_consent_display_name": {
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Type:     pluginsdk.TypeString,
+										Optional: true,
 									},
 
 									"value": {
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+										Type:     pluginsdk.TypeString,
+										Optional: true,
 									},
 								},
 							},
@@ -120,25 +106,17 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 							MinItems: 1,
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
-								ValidateFunc: validation.StringInSlice(
-									[]string{
-										msgraph.AppRoleAllowedMemberTypeApplication,
-										msgraph.AppRoleAllowedMemberTypeUser,
-									}, false,
-								),
 							},
 						},
 
 						"description": {
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Type:     pluginsdk.TypeString,
+							Required: true,
 						},
 
 						"display_name": {
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Type:     pluginsdk.TypeString,
+							Required: true,
 						},
 
 						"enabled": {
@@ -155,10 +133,9 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 						},
 
 						"value": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -183,22 +160,14 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Type:       pluginsdk.TypeString,
 				Optional:   true,
 				Deprecated: "[NOTE] This attribute will become a list in version 2.0 of the AzureAD provider",
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.GroupMembershipClaimAll,
-					msgraph.GroupMembershipClaimNone,
-					msgraph.GroupMembershipClaimApplicationGroup,
-					msgraph.GroupMembershipClaimDirectoryRole,
-					msgraph.GroupMembershipClaimSecurityGroup,
-				}, false),
 			},
 
 			"homepage": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
-				ConflictsWith:    []string{"web.0.homepage_url"},
-				Deprecated:       "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"web.0.homepage_url"},
+				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"identifier_uris": {
@@ -206,18 +175,16 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation2.IsAppUri,
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"logout_url": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
-				Computed:         true,
-				ConflictsWith:    []string{"web.0.logout_url"},
-				Deprecated:       "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"web.0.logout_url"},
+				Deprecated:    "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"oauth2_allow_implicit_flow": {
@@ -242,17 +209,15 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 						},
 
 						"admin_consent_description": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 
 						"admin_consent_display_name": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 
 						"is_enabled": {
@@ -262,10 +227,9 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 						},
 
 						"type": {
-							Type:         pluginsdk.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Admin", "User"}, false),
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 
 						"user_consent_description": {
@@ -281,10 +245,9 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 						},
 
 						"value": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -309,10 +272,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 									"source": {
 										Type:     pluginsdk.TypeString,
 										Optional: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"user"},
-											false,
-										),
 									},
 									"essential": {
 										Type:     pluginsdk.TypeBool,
@@ -324,18 +283,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 										Optional: true,
 										Elem: &pluginsdk.Schema{
 											Type: pluginsdk.TypeString,
-											ValidateFunc: validation.StringInSlice(
-												[]string{
-													"dns_domain_and_sam_account_name",
-													"emit_as_roles",
-													"include_externally_authenticated_upn",
-													"include_externally_authenticated_upn_without_hash",
-													"netbios_domain_and_sam_account_name",
-													"sam_account_name",
-													"use_guid",
-												},
-												false,
-											),
 										},
 									},
 								},
@@ -355,10 +302,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 									"source": {
 										Type:     pluginsdk.TypeString,
 										Optional: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{"user"},
-											false,
-										),
 									},
 									"essential": {
 										Type:     pluginsdk.TypeBool,
@@ -370,18 +313,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 										Optional: true,
 										Elem: &pluginsdk.Schema{
 											Type: pluginsdk.TypeString,
-											ValidateFunc: validation.StringInSlice(
-												[]string{
-													"dns_domain_and_sam_account_name",
-													"emit_as_roles",
-													"include_externally_authenticated_upn",
-													"include_externally_authenticated_upn_without_hash",
-													"netbios_domain_and_sam_account_name",
-													"sam_account_name",
-													"use_guid",
-												},
-												false,
-											),
 										},
 									},
 								},
@@ -396,8 +327,7 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					Type: pluginsdk.TypeString,
 				},
 			},
 
@@ -416,8 +346,7 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				ConflictsWith: []string{"web.0.redirect_uris"},
 				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					Type: pluginsdk.TypeString,
 				},
 			},
 
@@ -437,21 +366,13 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+										Type:     pluginsdk.TypeString,
+										Required: true,
 									},
 
 									"type": {
 										Type:     pluginsdk.TypeString,
 										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											[]string{
-												msgraph.ResourceAccessTypeRole,
-												msgraph.ResourceAccessTypeScope,
-											},
-											false, // force case sensitivity
-										),
 									},
 								},
 							},
@@ -465,18 +386,13 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"available_to_other_tenants"},
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.SignInAudienceAzureADMyOrg,
-					msgraph.SignInAudienceAzureADMultipleOrgs,
-				}, false),
 			},
 
 			"type": {
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Deprecated:   "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
-				ValidateFunc: validation.StringInSlice([]string{"webapp/api", "native"}, false),
-				Default:      "webapp/api",
+				Type:       pluginsdk.TypeString,
+				Optional:   true,
+				Deprecated: "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
+				Default:    "webapp/api",
 			},
 
 			"web": {
@@ -487,17 +403,15 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"homepage"},
-							ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"homepage"},
 						},
 
 						"logout_url": {
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"logout_url"},
-							ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"logout_url"},
 						},
 
 						"redirect_uris": {
@@ -505,8 +419,7 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 							Optional:      true,
 							ConflictsWith: []string{"reply_urls"},
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+								Type: pluginsdk.TypeString,
 							},
 						},
 

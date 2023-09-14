@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"strings"
@@ -163,7 +162,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Description:      "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
+				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"notes": {
@@ -337,8 +336,7 @@ func servicePrincipalResource() *pluginsdk.Resource {
 func servicePrincipalDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	suppress := false
 
-	switch {
-	case k == "saml_single_sign_on.#" && old == "1" && new == "0":
+	if k == "saml_single_sign_on.#" && old == "1" && new == "0" {
 		samlSingleSignOnRaw := d.Get("saml_single_sign_on").([]interface{})
 		if len(samlSingleSignOnRaw) == 1 {
 			suppress = true

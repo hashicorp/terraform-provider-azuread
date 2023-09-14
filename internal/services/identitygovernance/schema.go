@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
 func schemaLocalizedContent() *pluginsdk.Resource {
@@ -29,7 +28,7 @@ func schemaLocalizedContent() *pluginsdk.Resource {
 							Description:      "The language code of this question content",
 							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validation2.ISO639Language,
+							ValidateDiagFunc: validation.ISO639Language,
 						},
 
 						"content": {

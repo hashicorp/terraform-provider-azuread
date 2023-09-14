@@ -97,8 +97,7 @@ func (t thatWithKeyType) IsEmpty() pluginsdk.TestCheckFunc {
 
 // IsUuid returns a TestCheckFunc which validates that the specific key value is a valid UUID
 func (t thatWithKeyType) IsUuid() pluginsdk.TestCheckFunc {
-	r, _ := regexp.Compile(`^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`)
-	return t.MatchesRegex(r)
+	return t.MatchesRegex(regexp.MustCompile(`^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`))
 }
 
 // HasValue returns a TestCheckFunc which validates that the specific key has the

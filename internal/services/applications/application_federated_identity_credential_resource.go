@@ -6,7 +6,6 @@ package applications
 import (
 	"context"
 	"errors"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"strings"
@@ -60,7 +59,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 				// TODO: consider making this a scalar value instead of a list in v3.0 (the API now only accepts a single value)
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation2.ValidateDiag(validation.StringIsNotEmpty),
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
@@ -69,7 +68,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation2.ValidateDiag(validation.StringLenBetween(1, 120)),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(1, 120)),
 			},
 
 			"issuer": {

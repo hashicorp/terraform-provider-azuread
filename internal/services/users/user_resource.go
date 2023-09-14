@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"strings"
@@ -53,7 +52,7 @@ func userResource() *pluginsdk.Resource {
 				Description:      "The user principal name (UPN) of the user",
 				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validation2.StringIsEmailAddress,
+				ValidateDiagFunc: validation.StringIsEmailAddress,
 			},
 
 			"display_name": {
@@ -259,7 +258,7 @@ func userResource() *pluginsdk.Resource {
 				Description:      "The user's preferred language, in ISO 639-1 notation",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validation2.ISO639Language,
+				ValidateDiagFunc: validation.ISO639Language,
 			},
 
 			"show_in_address_list": {
@@ -413,11 +412,12 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
 	disablePasswordExpiration := d.Get("disable_password_expiration").(bool)
 
-	if disableStrongPassword && (!disablePasswordExpiration) {
+	switch {
+	case disableStrongPassword && (!disablePasswordExpiration):
 		passwordPolicies = "DisableStrongPassword"
-	} else if (!disableStrongPassword) && disablePasswordExpiration {
+	case (!disableStrongPassword) && disablePasswordExpiration:
 		passwordPolicies = "DisablePasswordExpiration"
-	} else if disableStrongPassword && disablePasswordExpiration {
+	case disableStrongPassword && disablePasswordExpiration:
 		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
 	}
 
@@ -507,11 +507,12 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	disableStrongPassword := d.Get("disable_strong_password").(bool)
 	disablePasswordExpiration := d.Get("disable_password_expiration").(bool)
 
-	if disableStrongPassword && (!disablePasswordExpiration) {
+	switch {
+	case disableStrongPassword && (!disablePasswordExpiration):
 		passwordPolicies = "DisableStrongPassword"
-	} else if (!disableStrongPassword) && disablePasswordExpiration {
+	case (!disableStrongPassword) && disablePasswordExpiration:
 		passwordPolicies = "DisablePasswordExpiration"
-	} else if disableStrongPassword && disablePasswordExpiration {
+	case disableStrongPassword && disablePasswordExpiration:
 		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
 	}
 

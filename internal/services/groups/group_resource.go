@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"regexp"
@@ -128,7 +127,7 @@ func groupResource() *pluginsdk.Resource {
 							Description:      "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
 							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validation2.ValidateDiag(validation.StringLenBetween(0, 3072)),
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(0, 3072)),
 						},
 					},
 				},
@@ -168,7 +167,7 @@ func groupResource() *pluginsdk.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation2.MailNickname,
+				ValidateDiagFunc: validation.MailNickname,
 			},
 
 			"members": {
@@ -551,10 +550,6 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if ownerObject.ID() == nil {
 			return nil, errors.New("ownerObject ID was nil")
 		}
-		// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-		//if ownerObject.ODataId == nil {
-		//	return nil, errors.New("ODataId was nil")
-		//}
 		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 			client.BaseClient.Endpoint, tenantId, id)))
 
@@ -913,10 +908,6 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			if memberObject == nil {
 				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-			//if memberObject.ODataId == nil {
-			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
-			//}
 			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 				client.BaseClient.Endpoint, tenantId, memberId)))
 
@@ -1159,10 +1150,6 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if memberObject == nil {
 					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
-				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-				//if ownerObject.ODataId == nil {
-				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", memberId)
-				//}
 				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, memberId)))
 
@@ -1204,10 +1191,6 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if ownerObject == nil {
 					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
-				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-				//if ownerObject.ODataId == nil {
-				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
-				//}
 				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, ownerId)))
 

@@ -127,11 +127,12 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 		directoryScopeId = v.(string)
 	}
 
-	if appScopeId != "" {
+	switch {
+	case appScopeId != "":
 		properties.AppScopeId = &appScopeId
-	} else if directoryScopeId != "" {
+	case directoryScopeId != "":
 		properties.DirectoryScopeId = &directoryScopeId
-	} else {
+	default:
 		properties.DirectoryScopeId = utils.String("/")
 	}
 

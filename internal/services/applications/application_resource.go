@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"net/url"
@@ -264,7 +263,7 @@ func applicationResource() *pluginsdk.Resource {
 				Description:      "Description of the application as shown to end users",
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validation2.ValidateDiag(validation.StringLenBetween(0, 1024)),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(0, 1024)),
 			},
 
 			"device_only_auth_enabled": {
@@ -336,7 +335,7 @@ func applicationResource() *pluginsdk.Resource {
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation2.IsAppUri,
+					ValidateDiagFunc: validation.IsAppUri,
 				},
 			},
 
@@ -422,7 +421,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation2.IsRedirectUriFunc(true, true),
+								ValidateDiagFunc: validation.IsRedirectUriFunc(true, true),
 							},
 						},
 					},
@@ -505,7 +504,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation2.IsRedirectUriFunc(false, false),
+								ValidateDiagFunc: validation.IsRedirectUriFunc(false, false),
 							},
 						},
 					},
@@ -556,14 +555,14 @@ func applicationResource() *pluginsdk.Resource {
 							Description:      "Home page or landing page of the application",
 							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
+							ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
 							Description:      "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
 							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validation2.IsLogoutUrl,
+							ValidateDiagFunc: validation.IsLogoutUrl,
 						},
 
 						"redirect_uris": {
@@ -573,7 +572,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation2.IsRedirectUriFunc(true, false),
+								ValidateDiagFunc: validation.IsRedirectUriFunc(true, false),
 							},
 						},
 
@@ -691,7 +690,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*pluginsdk.Set).List()
 		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*pluginsdk.Set).List()
 		webRedirectUris := diff.Get("web.0.redirect_uris").(*pluginsdk.Set).List()
-		allRedirectUris := append(pubRedirectUris, append(spaRedirectUris, webRedirectUris...)...)
+		allRedirectUris := append(pubRedirectUris, append(spaRedirectUris, webRedirectUris...)...) //nolint:gocritic
 
 		// applications must use v2 access tokens with personal account sign-ins
 		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
@@ -734,7 +733,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		}
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
-			if diags := validation2.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
+			if diags := validation.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
 			}

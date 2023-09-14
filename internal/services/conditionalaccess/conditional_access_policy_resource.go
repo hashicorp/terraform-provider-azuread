@@ -503,8 +503,7 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *pluginsdk.R
 func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	suppress := false
 
-	switch {
-	case k == "session_controls.#" && old == "0" && new == "1":
+	if k == "session_controls.#" && old == "0" && new == "1" {
 		// When an ineffectual `session_controls` block is configured, the API just ignores it and returns
 		// sessionControls: null
 		sessionControlsRaw := d.Get("session_controls").([]interface{})

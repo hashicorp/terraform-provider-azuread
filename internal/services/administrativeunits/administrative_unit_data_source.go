@@ -6,7 +6,6 @@ package administrativeunits
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"net/http"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 

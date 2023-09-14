@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"regexp"
@@ -59,7 +58,7 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation2.ValidateDiag(validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), "")),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), "")),
 			},
 
 			"end_date": {

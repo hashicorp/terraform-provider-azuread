@@ -5,7 +5,6 @@ package sdk
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"os"
 	"reflect"
 	"testing"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 func TestAccPluginSDKAndDecoder(t *testing.T) {

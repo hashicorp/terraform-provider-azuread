@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"time"
@@ -81,7 +80,7 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 				Description:      "The version of the role definition.",
 				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validation2.ValidateDiag(validation.StringLenBetween(1, 128)),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(1, 128)),
 			},
 
 			"description": {

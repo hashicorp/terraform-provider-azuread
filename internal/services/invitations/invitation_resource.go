@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	validation2 "github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"log"
 	"net/http"
 	"time"
@@ -42,7 +41,7 @@ func invitationResource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation2.IsHttpOrHttpsUrl,
+				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"user_email_address": {
@@ -50,7 +49,7 @@ func invitationResource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation2.StringIsEmailAddress,
+				ValidateDiagFunc: validation.StringIsEmailAddress,
 			},
 
 			"user_display_name": {
@@ -76,7 +75,7 @@ func invitationResource() *pluginsdk.Resource {
 							MaxItems:    1,
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation2.StringIsEmailAddress,
+								ValidateDiagFunc: validation.StringIsEmailAddress,
 							},
 						},
 
@@ -93,7 +92,7 @@ func invitationResource() *pluginsdk.Resource {
 							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ConflictsWith:    []string{"message.0.body"},
-							ValidateDiagFunc: validation2.ISO639Language,
+							ValidateDiagFunc: validation.ISO639Language,
 						},
 					},
 				},

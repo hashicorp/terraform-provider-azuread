@@ -157,7 +157,7 @@ func accessPackageResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	tf.Set(d, "display_name", accessPackage.DisplayName)
 	tf.Set(d, "description", accessPackage.Description)
 	tf.Set(d, "hidden", accessPackage.IsHidden)
-	//v1.0 graph API doesn't contain this info however beta contains
+	// v1.0 graph API doesn't contain this info however beta contains
 	tf.Set(d, "catalog_id", accessPackage.CatalogId)
 
 	return nil
