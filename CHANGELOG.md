@@ -4,6 +4,10 @@ IMPROVEMENTS:
 
 * provider: support for the `client_id_file_path` and `client_secret_file_path` provider properties [GH-1189]
 
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - allow specifying `terms_of_use` in place of `built_in_controls` in the `grant_controls` block [GH-1168]
+
 ## 2.41.0 (July 27, 2023)
 
 FEATURES:
