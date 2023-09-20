@@ -385,21 +385,22 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"built_in_controls": {
-							Type:     pluginsdk.TypeList,
-							Required: true,
+							Type:         pluginsdk.TypeList,
+							Optional:     true,
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
-								ValidateFunc: validation.StringInSlice([]string{
-									msgraph.ConditionalAccessGrantControlApprovedApplication,
-									msgraph.ConditionalAccessGrantControlBlock,
-									msgraph.ConditionalAccessGrantControlCompliantApplication,
-									msgraph.ConditionalAccessGrantControlCompliantDevice,
-									msgraph.ConditionalAccessGrantControlDomainJoinedDevice,
-									msgraph.ConditionalAccessGrantControlMfa,
-									msgraph.ConditionalAccessGrantControlPasswordChange,
-									msgraph.ConditionalAccessGrantControlUnknownFutureValue,
-								}, false),
 							},
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.ConditionalAccessGrantControlApprovedApplication,
+								msgraph.ConditionalAccessGrantControlBlock,
+								msgraph.ConditionalAccessGrantControlCompliantApplication,
+								msgraph.ConditionalAccessGrantControlCompliantDevice,
+								msgraph.ConditionalAccessGrantControlDomainJoinedDevice,
+								msgraph.ConditionalAccessGrantControlMfa,
+								msgraph.ConditionalAccessGrantControlPasswordChange,
+								msgraph.ConditionalAccessGrantControlUnknownFutureValue,
+							}, false),
 						},
 
 						"custom_authentication_factors": {
@@ -412,8 +413,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						},
 
 						"terms_of_use": {
-							Type:     pluginsdk.TypeList,
-							Optional: true,
+							Type:         pluginsdk.TypeList,
+							Optional:     true,
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
 								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
