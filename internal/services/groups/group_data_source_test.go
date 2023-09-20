@@ -67,10 +67,10 @@ func TestAccGroupDataSource_byCaseInsensitiveDisplayName(t *testing.T) {
 func TestAccGroupDataSource_byMailNickname(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNickname(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -80,10 +80,10 @@ func TestAccGroupDataSource_byMailNickname(t *testing.T) {
 func TestAccGroupDataSource_byMailNicknameWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNicknameSecurity(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -93,10 +93,10 @@ func TestAccGroupDataSource_byMailNicknameWithSecurity(t *testing.T) {
 func TestAccGroupDataSource_byMailNicknameWithSecurityNotMail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNicknameSecurityNotMail(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
