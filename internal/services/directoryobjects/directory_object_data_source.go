@@ -74,7 +74,7 @@ func directoryObjectDataSourceRead(ctx context.Context, d *schema.ResourceData, 
 	case odata.TypeServicePrincipal:
 		tf.Set(d, "type", "ServicePrincipal")
 	default:
-		tf.Set(d, "type", directoryObject.ODataShortType)
+		tf.Set(d, "type", directoryObject.ODataType)
 	}
 
 	return nil
