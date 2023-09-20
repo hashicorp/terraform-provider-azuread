@@ -74,7 +74,7 @@ func directoryObjectDataSourceRead(ctx context.Context, d *schema.ResourceData, 
 	case odata.TypeServicePrincipal:
 		tf.Set(d, "type", "ServicePrincipal")
 	default:
-		return diag.Errorf("unknown object type %q returned for directory object with ID: %q", *directoryObject.ODataType, objectId)
+		tf.Set(d, "type", directoryObject.ODataShortType)
 	}
 
 	return nil
