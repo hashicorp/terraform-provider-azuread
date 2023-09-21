@@ -34,7 +34,7 @@ func (b *ClientBuilder) Build(ctx context.Context) (*Client, error) {
 
 	authorizer, err := auth.NewAuthorizerFromCredentials(ctx, *b.AuthConfig, b.AuthConfig.Environment.MicrosoftGraph)
 	if err != nil {
-		return nil, fmt.Errorf("unable to build authorizer for Resource Manager API: %+v", err)
+		return nil, fmt.Errorf("unable to build authorizer: %+v", err)
 	}
 
 	client.Environment = b.AuthConfig.Environment
