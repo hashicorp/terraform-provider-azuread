@@ -59,6 +59,9 @@ jobs:
       - name: Set Client Secret Path
         run: echo "${{ secrets.ARM_CLIENT_SECRET }}" >"${RUNNER_TEMP}/client-secret" && echo "ARM_CLIENT_SECRET_PATH=${RUNNER_TEMP}/client-secret" >>${GITHUB_ENV}
 
+      - name: Set Client Certificate Path
+        run: echo "${{ secrets.ARM_CLIENT_CERTIFICATE }}" | base64 -d >"${RUNNER_TEMP}/client-certificate.pfx" && echo "ARM_CLIENT_CERTIFICATE_PATH=${RUNNER_TEMP}/client-certificate.pfx" >>${GITHUB_ENV}
+
       - name: Run provider tests
         run: make testacc TEST=./internal/provider TESTARGS="-run '^TestAcc'"
         env:
