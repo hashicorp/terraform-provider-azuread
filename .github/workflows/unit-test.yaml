@@ -29,3 +29,7 @@ jobs:
       - run: make test
         env:
           GITHUB_ACTIONS_STAGE: "UNIT_TESTS"
+
+  save-artifacts-on-fail:
+    if: ${{ needs.test.result }} == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
