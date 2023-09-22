@@ -1,3 +1,9 @@
+## 2.43.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_directory_role_eligibility_schedule_request` [GH-974]
+
 ## 2.42.0 (September 15, 2023)
 
 IMPROVEMENTS:
