@@ -126,8 +126,13 @@ func groupMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
 
-	members, _, err := client.ListMembers(ctx, id.GroupId)
+	members, status, err := client.ListMembers(ctx, id.GroupId)
 	if err != nil {
+		if status == http.StatusNotFound {
+			log.Printf("[DEBUG] Group with ID %q was not found - removing group member with ID %q from state", id.GroupId, d.Id())
+			d.SetId("")
+			return nil
+		}
 		return tf.ErrorDiagF(err, "Retrieving members for group with object ID: %q", id.GroupId)
 	}
 
