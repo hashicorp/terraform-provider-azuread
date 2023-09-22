@@ -32,9 +32,10 @@ func (r Registration) SupportedDataSources() map[string]*schema.Resource {
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"azuread_custom_directory_role":     customDirectoryRoleResource(),
-		"azuread_directory_role":            directoryRoleResource(),
-		"azuread_directory_role_assignment": directoryRoleAssignmentResource(),
-		"azuread_directory_role_member":     directoryRoleMemberResource(),
+		"azuread_custom_directory_role":                       customDirectoryRoleResource(),
+		"azuread_directory_role":                              directoryRoleResource(),
+		"azuread_directory_role_assignment":                   directoryRoleAssignmentResource(),
+		"azuread_directory_role_member":                       directoryRoleMemberResource(),
+		"azuread_directory_role_eligibility_schedule_request": directoryRoleEligibilityScheduleRequestResource(),
 	}
 }
