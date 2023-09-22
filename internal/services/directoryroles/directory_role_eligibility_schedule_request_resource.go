@@ -32,8 +32,8 @@ func directoryRoleEligibilityScheduleRequestResource() *schema.Resource {
 		},
 
 		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
-			if id == "" {
-				return errors.New("id was empty")
+			if _, err := uuid.ParseUUID(id); err != nil {
+				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
