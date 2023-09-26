@@ -389,7 +389,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						"built_in_controls": {
 							Type:         schema.TypeList,
 							Optional:     true,
-							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -405,6 +405,13 @@ func conditionalAccessPolicyResource() *schema.Resource {
 							},
 						},
 
+						"authentication_strength_id": {
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsUUID,
+						},
+
 						"custom_authentication_factors": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -417,7 +424,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						"terms_of_use": {
 							Type:         schema.TypeList,
 							Optional:     true,
-							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: validate.NoEmptyStrings,

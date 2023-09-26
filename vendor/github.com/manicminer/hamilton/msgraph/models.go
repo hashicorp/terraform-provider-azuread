@@ -1439,6 +1439,7 @@ type ServicePrincipal struct {
 	AppDisplayName                      *string                       `json:"appDisplayName,omitempty"`
 	AppId                               *string                       `json:"appId,omitempty"`
 	ApplicationTemplateId               *string                       `json:"applicationTemplateId,omitempty"`
+	AppMetadata                         *ServicePrincipalAppMetadata  `json:"appMetadata,omitempty"`
 	AppOwnerOrganizationId              *string                       `json:"appOwnerOrganizationId,omitempty"`
 	AppRoleAssignmentRequired           *bool                         `json:"appRoleAssignmentRequired,omitempty"`
 	AppRoles                            *[]AppRole                    `json:"appRoles,omitempty"`
@@ -1479,6 +1480,11 @@ func (s *ServicePrincipal) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	return nil
+}
+
+type ServicePrincipalAppMetadata struct {
+	Version *int              `json:"version,omitempty"`
+	Data    *[]KeyValueObject `json:"data,omitempty"`
 }
 
 type SynchronizationSchedule struct {

@@ -227,12 +227,13 @@ The following arguments are supported:
 
 `grant_controls` block supports the following:
 
+* `authentication_strength_id` - (Optional) ID of an Authentication Strength Policy to use in this policy.
 * `built_in_controls` - (Optional) List of built-in controls required by the policy. Possible values are: `block`, `mfa`, `approvedApplication`, `compliantApplication`, `compliantDevice`, `domainJoinedDevice`, `passwordChange` or `unknownFutureValue`.
 * `custom_authentication_factors` - (Optional) List of custom controls IDs required by the policy.
 * `operator` - (Required) Defines the relationship of the grant controls. Possible values are: `AND`, `OR`.
 * `terms_of_use` - (Optional) List of terms of use IDs required by the policy.
 
--> At least one of `built_in_controls` or `terms_of_use` must be specified.
+-> At least one of `built_in_controls`, `authentication_strength_id` or `terms_of_use` must be specified.
 
 ---
 

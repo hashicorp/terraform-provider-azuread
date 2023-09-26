@@ -298,6 +298,24 @@ func TestAccConditionalAccessPolicy_clientApplications(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_authenticationStrength(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []resource.TestStep{
+		{
+			Config: r.authenticationStrengthPolicy(data),
+			Check: resource.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("grant_controls.0.authentication_strength_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	var id *string
 
@@ -657,4 +675,33 @@ resource "azuread_conditional_access_policy" "test" {
   }
 }
 `, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) authenticationStrengthPolicy(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[2]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["None"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  grant_controls {
+    operator                   = "OR"
+    authentication_strength_id = azuread_authentication_strength_policy.test.id
+  }
+}
+`, AuthenticationStrengthPolicyResource{}.basic(data), data.RandomInteger)
 }
