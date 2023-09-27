@@ -324,7 +324,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			ClientCertificatePassword:   d.Get("client_certificate_password").(string),
 			ClientCertificatePath:       d.Get("client_certificate_path").(string),
 			ClientSecret:                *clientSecret,
-			OIDCAssertionToken:          idToken,
+			OIDCAssertionToken:          *idToken,
 			GitHubOIDCTokenRequestURL:   d.Get("oidc_request_url").(string),
 			GitHubOIDCTokenRequestToken: d.Get("oidc_request_token").(string),
 			EnableAuthenticatingUsingClientCertificate: true,
@@ -381,24 +381,26 @@ func decodeCertificate(clientCertificate string) ([]byte, error) {
 	return pfx, nil
 }
 
-func oidcToken(d *schema.ResourceData) (string, error) {
+func oidcToken(d *schema.ResourceData) (*string, error) {
 	idToken := d.Get("oidc_token").(string)
 
 	if path := d.Get("oidc_token_file_path").(string); path != "" {
-		fileToken, err := os.ReadFile(path)
+		fileTokenRaw, err := os.ReadFile(path)
 
 		if err != nil {
-			return "", fmt.Errorf("reading OIDC Token from file %q: %v", path, err)
+			return nil, fmt.Errorf("reading OIDC Token from file %q: %v", path, err)
 		}
 
-		if idToken != "" && idToken != string(fileToken) {
-			return "", fmt.Errorf("mismatch between supplied OIDC token and supplied OIDC token file contents - please either remove one or ensure they match")
+		fileToken := strings.TrimSpace(string(fileTokenRaw))
+
+		if idToken != "" && idToken != fileToken {
+			return nil, fmt.Errorf("mismatch between supplied OIDC token and supplied OIDC token file contents - please either remove one or ensure they match")
 		}
 
-		idToken = string(fileToken)
+		idToken = fileToken
 	}
 
-	return idToken, nil
+	return &idToken, nil
 }
 
 func getClientId(d *schema.ResourceData) (*string, error) {

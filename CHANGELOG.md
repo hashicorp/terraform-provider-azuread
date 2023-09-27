@@ -1,3 +1,9 @@
+## 2.43.0 (September 22, 2023)
+
+FEATURES:
+
+* **New Resource:** `azuread_directory_role_eligibility_schedule_request` ([#974](https://github.com/hashicorp/terraform-provider-azuread/issues/974))
+
 ## 2.42.0 (September 15, 2023)
 
 IMPROVEMENTS:

@@ -19,3 +19,7 @@ jobs:
       - run: bash scripts/gogetcookie.sh
       - run: make tools
       - run: make depscheck
+
+  save-artifacts-on-fail:
+    if: ${{ needs.depscheck.result }} == 'failure'
+    uses: ./.github/workflows/save-artifacts.yaml
