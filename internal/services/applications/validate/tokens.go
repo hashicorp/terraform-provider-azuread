@@ -8,11 +8,12 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 // RoleScopeClaimValue checks whether a value is valid for use in a `role` or `scp` claim, as used in App Roles and OAuth 2.0 Permission Scopes in Applications.
 // See https://docs.microsoft.com/en-us/graph/api/resources/approle?view=graph-rest-beta and https://docs.microsoft.com/en-us/graph/api/resources/permissionscope?view=graph-rest-beta
-func RoleScopeClaimValue(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func RoleScopeClaimValue(i interface{}, path cty.Path) (ret pluginsdk.Diagnostics) {
 	v, ok := i.(string)
 	if !ok {
 		ret = append(ret, diag.Diagnostic{

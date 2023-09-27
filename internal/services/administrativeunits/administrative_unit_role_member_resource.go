@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -66,7 +65,7 @@ func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 	}
 }
 
-func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	memberID := utils.String(d.Get("member_object_id").(string))
@@ -92,7 +91,7 @@ func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsd
 	return administrativeUnitRoleMemberResourceRead(ctx, d, meta)
 }
 
-func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())
@@ -115,7 +114,7 @@ func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.
 	return nil
 }
 
-func administrativeUnitRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())

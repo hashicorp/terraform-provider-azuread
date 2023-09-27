@@ -15,7 +15,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -439,7 +438,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDif
 	return nil
 }
 
-func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitsClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
@@ -932,7 +931,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	return groupResourceRead(ctx, d, meta)
 }
 
-func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
@@ -1247,7 +1246,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	return groupResourceRead(ctx, d, meta)
 }
 
-func groupResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
 	group, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -1364,7 +1363,7 @@ func groupResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inte
 	return nil
 }
 
-func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	groupId := d.Id()
 

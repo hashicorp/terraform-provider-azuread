@@ -13,7 +13,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -122,7 +121,7 @@ func administrativeUnitResourceCustomizeDiff(ctx context.Context, diff *pluginsd
 	return nil
 }
 
-func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -211,7 +210,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	return administrativeUnitResourceRead(ctx, d, meta)
 }
 
-func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -298,7 +297,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 	return administrativeUnitResourceRead(ctx, d, meta)
 }
 
-func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	administrativeUnit, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -333,7 +332,7 @@ func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	return nil
 }
 
-func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	administrativeUnitId := d.Id()
 

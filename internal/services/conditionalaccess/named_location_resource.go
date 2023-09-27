@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -104,7 +103,7 @@ func namedLocationResource() *pluginsdk.Resource {
 	}
 }
 
-func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	displayName := d.Get("display_name").(string)
@@ -146,7 +145,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	return namedLocationResourceRead(ctx, d, meta)
 }
 
-func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	base := msgraph.BaseNamedLocation{
@@ -235,7 +234,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 	return namedLocationResourceRead(ctx, d, meta)
 }
 
-func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	result, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -273,7 +272,7 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	return nil
 }
 
-func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 	namedLocationId := d.Id()
 

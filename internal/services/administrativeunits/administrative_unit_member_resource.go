@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
@@ -61,7 +60,7 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 	}
 }
 
-func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -135,7 +134,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 	return administrativeUnitMemberResourceRead(ctx, d, meta)
 }
 
-func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())
@@ -158,7 +157,7 @@ func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.Reso
 	return nil
 }
 
-func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())

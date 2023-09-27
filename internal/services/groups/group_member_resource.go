@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
@@ -62,7 +61,7 @@ func groupMemberResource() *pluginsdk.Resource {
 	}
 }
 
-func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -114,7 +113,7 @@ func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	return groupMemberResourceRead(ctx, d, meta)
 }
 
-func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
 	id, err := parse.GroupMemberID(d.Id())
@@ -149,7 +148,7 @@ func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	return nil
 }
 
-func groupMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func groupMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
 	id, err := parse.GroupMemberID(d.Id())

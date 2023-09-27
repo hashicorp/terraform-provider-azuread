@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -102,7 +101,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 	}
 }
 
-func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	roleId := d.Get("role_id").(string)
@@ -176,7 +175,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 	return directoryRoleAssignmentResourceRead(ctx, d, meta)
 }
 
-func directoryRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	id := d.Id()
@@ -200,7 +199,7 @@ func directoryRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.Resou
 	return nil
 }
 
-func directoryRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	if _, err := client.Delete(ctx, d.Id()); err != nil {

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
@@ -59,7 +58,7 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 	}
 }
 
-func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
@@ -103,7 +102,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 	return accessPackageResourceCatalogAssociationResourceRead(ctx, d, meta)
 }
 
-func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(d.Id())
@@ -129,7 +128,7 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 	return nil
 }
 
-func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 

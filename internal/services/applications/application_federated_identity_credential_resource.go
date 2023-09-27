@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
@@ -98,7 +97,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	objectId := d.Get("application_object_id").(string)
 
@@ -174,7 +173,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -201,7 +200,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
-func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
@@ -231,7 +230,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	return nil
 }
 
-func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())

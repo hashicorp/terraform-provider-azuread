@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -167,19 +166,19 @@ func applicationResource() *pluginsdk.Resource {
 							Type:        pluginsdk.TypeInt,
 							Optional:    true,
 							Default:     1,
-							ValidateDiagFunc: func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+							ValidateDiagFunc: func(i interface{}, path cty.Path) (ret pluginsdk.Diagnostics) {
 								v, ok := i.(int)
 								if !ok {
-									ret = append(ret, diag.Diagnostic{
-										Severity:      diag.Error,
+									ret = append(ret, pluginsdk.Diagnostic{
+										Severity:      pluginsdk.DiagError,
 										Summary:       "Expected an integer value",
 										AttributePath: path,
 									})
 									return
 								}
 								if v < 1 || v > 2 {
-									ret = append(ret, diag.Diagnostic{
-										Severity:      diag.Error,
+									ret = append(ret, pluginsdk.Diagnostic{
+										Severity:      pluginsdk.DiagError,
 										Summary:       "Value must be one of: 1, 2",
 										AttributePath: path,
 									})
@@ -896,7 +895,7 @@ func applicationDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool
 	return suppress
 }
 
-func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
@@ -1123,7 +1122,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	return applicationResourceRead(ctx, d, meta)
 }
 
-func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
@@ -1252,7 +1251,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	return applicationResourceRead(ctx, d, meta)
 }
 
-func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	app, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -1325,7 +1324,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	return nil
 }
 
-func applicationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appId := d.Id()
 

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -85,7 +84,7 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 	}
 }
 
-func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 	servicePrincipalsClient := meta.(*clients.Client).AppRoleAssignments.ServicePrincipalsClient
 
@@ -123,7 +122,7 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	return appRoleAssignmentResourceRead(ctx, d, meta)
 }
 
-func appRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func appRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 
 	id, err := parse.AppRoleAssignmentID(d.Id())
@@ -168,7 +167,7 @@ func appRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceDat
 	return nil
 }
 
-func appRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func appRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 
 	id, err := parse.AppRoleAssignmentID(d.Id())

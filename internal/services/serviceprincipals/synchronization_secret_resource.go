@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
@@ -70,7 +69,7 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 	}
 }
 
-func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
@@ -135,12 +134,12 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 	return synchronizationSecretResourceRead(ctx, d, meta)
 }
 
-func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	// Update is same as create
 	return synchronizationSecretResourceCreate(ctx, d, meta)
 }
 
-func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 
 	id, err := parse.SynchronizationSecretID(d.Id())
@@ -162,7 +161,7 @@ func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.Resourc
 	return nil
 }
 
-func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 

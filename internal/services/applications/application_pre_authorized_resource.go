@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -72,7 +71,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id := parse.NewApplicationPreAuthorizedID(d.Get("application_object_id").(string), d.Get("authorized_app_id").(string))
 
@@ -123,7 +122,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
 }
 
-func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
@@ -176,7 +175,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 	return applicationPreAuthorizedResourceRead(ctx, d, meta)
 }
 
-func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
@@ -219,7 +218,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.Reso
 	return nil
 }
 
-func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {

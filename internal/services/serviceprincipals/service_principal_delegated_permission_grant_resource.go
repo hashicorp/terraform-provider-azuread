@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -81,7 +80,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 	}
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 	servicePrincipalsClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
@@ -129,7 +128,7 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	return servicePrincipalDelegatedPermissionGrantResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	properties := msgraph.DelegatedPermissionGrant{
@@ -144,7 +143,7 @@ func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context,
 	return servicePrincipalDelegatedPermissionGrantResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	delegatedPermissionGrant, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -165,7 +164,7 @@ func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d
 	return nil
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	id := d.Id()

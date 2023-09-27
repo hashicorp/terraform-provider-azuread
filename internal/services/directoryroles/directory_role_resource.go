@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -70,7 +69,7 @@ func directoryRoleResource() *pluginsdk.Resource {
 	}
 }
 
-func directoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 	directoryRoleTemplatesClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplatesClient
 	displayName := d.Get("display_name").(string)
@@ -149,7 +148,7 @@ func directoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	return directoryRoleResourceRead(ctx, d, meta)
 }
 
-func directoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	directoryRole, status, err := client.Get(ctx, d.Id())
@@ -173,7 +172,7 @@ func directoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	return nil
 }
 
-func directoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	// Directory roles cannot be deactivated or deleted, so this is a no-op
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -536,7 +535,7 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.Resour
 	return suppress
 }
 
-func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
@@ -567,7 +566,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	return conditionalAccessPolicyResourceRead(ctx, d, meta)
 }
 
-func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
@@ -626,7 +625,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 	return nil
 }
 
-func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	policy, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -649,7 +648,7 @@ func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.Resou
 	return nil
 }
 
-func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 	policyId := d.Id()
 

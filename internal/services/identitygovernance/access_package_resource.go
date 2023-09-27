@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -78,7 +77,7 @@ func accessPackageResource() *pluginsdk.Resource {
 	}
 }
 
-func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
@@ -108,7 +107,7 @@ func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	return accessPackageResourceRead(ctx, d, meta)
 }
 
-func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
@@ -139,7 +138,7 @@ func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 	return accessPackageResourceRead(ctx, d, meta)
 }
 
-func accessPackageResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
 	objectId := d.Id()
@@ -163,7 +162,7 @@ func accessPackageResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	return nil
 }
 
-func accessPackageResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	accessPackageId := d.Id()
 

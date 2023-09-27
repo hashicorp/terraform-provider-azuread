@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -76,7 +75,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 	}
 }
 
-func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleEligibilityScheduleRequestClient
 
 	roleDefinitionId := d.Get("role_definition_id").(string)
@@ -128,7 +127,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 	return directoryRoleEligibilityScheduleRequestResourceRead(ctx, d, meta)
 }
 
-func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleEligibilityScheduleRequestClient
 
 	id := d.Id()
@@ -150,7 +149,7 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 	return nil
 }
 
-func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleEligibilityScheduleRequestClient
 
 	id := d.Id()

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
@@ -123,7 +122,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	objectId := d.Get("application_object_id").(string)
 
@@ -211,7 +210,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 	return applicationCertificateResourceRead(ctx, d, meta)
 }
 
-func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.CertificateID(d.Id())
@@ -255,7 +254,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 	return nil
 }
 
-func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.CertificateID(d.Id())

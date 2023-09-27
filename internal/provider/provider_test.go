@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 func TestProvider(t *testing.T) {
@@ -36,7 +37,7 @@ func TestAccProvider_cliAuth(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only Azure CLI authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -74,7 +75,7 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only client certificate authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -115,7 +116,7 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only client certificate authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		var certData []byte
 		if encodedCert := d.Get("client_certificate").(string); encodedCert != "" {
 			var err error
@@ -181,7 +182,7 @@ func testAccProvider_clientSecretAuthFromEnvironment(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only client secret authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -242,7 +243,7 @@ func testAccProvider_clientSecretAuthFromFiles(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only client secret authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -304,7 +305,7 @@ func testAccProvider_genericOidcAuthFromEnvironment(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only oidc authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -356,7 +357,7 @@ func testAccProvider_genericOidcAuthFromFiles(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only oidc authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {
@@ -407,7 +408,7 @@ func TestAccProvider_githubOidcAuth(t *testing.T) {
 	ctx := context.Background()
 
 	// Support only oidc authentication
-	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	provider.ConfigureContextFunc = func(ctx context.Context, d *pluginsdk.ResourceData) (interface{}, pluginsdk.Diagnostics) {
 		envName := d.Get("environment").(string)
 		env, err := environments.FromName(envName)
 		if err != nil {

@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -390,7 +389,7 @@ func userResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff
 	return nil
 }
 
-func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -498,7 +497,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -589,7 +588,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	return userResourceRead(ctx, d, meta)
 }
 
-func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 
 	objectId := d.Id()
@@ -683,7 +682,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	return nil
 }
 
-func userResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func userResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	userId := d.Id()
 

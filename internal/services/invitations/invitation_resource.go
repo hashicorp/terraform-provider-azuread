@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -125,7 +124,7 @@ func invitationResource() *pluginsdk.Resource {
 	}
 }
 
-func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Invitations.InvitationsClient
 	usersClient := meta.(*clients.Client).Invitations.UsersClient
 
@@ -194,7 +193,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 	return invitationResourceRead(ctx, d, meta)
 }
 
-func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Invitations.UsersClient
 
 	userID := d.Get("user_id").(string)
@@ -215,7 +214,7 @@ func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta
 	return nil
 }
 
-func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Invitations.UsersClient
 
 	userID := d.Get("user_id").(string)

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
@@ -65,7 +64,7 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 	}
 }
 
-func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 	directoryObjectsClient := meta.(*clients.Client).DirectoryRoles.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -137,7 +136,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	return directoryRoleMemberResourceRead(ctx, d, meta)
 }
 
-func directoryRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	id, err := parse.DirectoryRoleMemberID(d.Id())
@@ -160,7 +159,7 @@ func directoryRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	return nil
 }
 
-func directoryRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
 
 	id, err := parse.DirectoryRoleMemberID(d.Id())

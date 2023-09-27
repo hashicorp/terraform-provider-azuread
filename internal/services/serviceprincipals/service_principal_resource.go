@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
@@ -350,7 +349,7 @@ func servicePrincipalDiffSuppress(k, old, new string, d *pluginsdk.ResourceData)
 	return suppress
 }
 
-func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).ObjectID
@@ -507,7 +506,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	tenantId := meta.(*clients.Client).TenantID
 
@@ -577,7 +576,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 	return servicePrincipalResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Id()
 
@@ -639,7 +638,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	return nil
 }
 
-func servicePrincipalResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	servicePrincipalId := d.Id()
 

@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 func applicationPublishedAppIdsDataSource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
-		ReadContext: func(_ context.Context, d *pluginsdk.ResourceData, _ interface{}) diag.Diagnostics {
+		ReadContext: func(_ context.Context, d *pluginsdk.ResourceData, _ interface{}) pluginsdk.Diagnostics {
 			tf.Set(d, "result", environments.PublishedApis)
 			d.SetId("appIds")
 			return nil

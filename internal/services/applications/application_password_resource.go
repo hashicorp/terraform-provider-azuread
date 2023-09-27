@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -117,7 +116,7 @@ func applicationPasswordResource() *pluginsdk.Resource {
 	}
 }
 
-func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	objectId := d.Get("application_object_id").(string)
 
@@ -201,7 +200,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	return applicationPasswordResourceRead(ctx, d, meta)
 }
 
-func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.PasswordID(d.Id())
@@ -255,7 +254,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	return nil
 }
 
-func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics { //nolint
+func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	id, err := parse.PasswordID(d.Id())
