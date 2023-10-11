@@ -64,12 +64,14 @@ func flattenConditionalAccessUsers(in *msgraph.ConditionalAccessUsers) []interfa
 
 	return []interface{}{
 		map[string]interface{}{
-			"included_users":  tf.FlattenStringSlicePtr(in.IncludeUsers),
-			"excluded_users":  tf.FlattenStringSlicePtr(in.ExcludeUsers),
-			"included_groups": tf.FlattenStringSlicePtr(in.IncludeGroups),
-			"excluded_groups": tf.FlattenStringSlicePtr(in.ExcludeGroups),
-			"included_roles":  tf.FlattenStringSlicePtr(in.IncludeRoles),
-			"excluded_roles":  tf.FlattenStringSlicePtr(in.ExcludeRoles),
+			"included_users":                    tf.FlattenStringSlicePtr(in.IncludeUsers),
+			"excluded_users":                    tf.FlattenStringSlicePtr(in.ExcludeUsers),
+			"included_groups":                   tf.FlattenStringSlicePtr(in.IncludeGroups),
+			"excluded_groups":                   tf.FlattenStringSlicePtr(in.ExcludeGroups),
+			"included_roles":                    tf.FlattenStringSlicePtr(in.IncludeRoles),
+			"excluded_roles":                    tf.FlattenStringSlicePtr(in.ExcludeRoles),
+			"included_guests_or_external_users": flattenGuestsOrExternalUsers(in.IncludeGuestsOrExternalUsers),
+			"excluded_guests_or_external_users": flattenGuestsOrExternalUsers(in.ExcludeGuestsOrExternalUsers),
 		},
 	}
 }
@@ -195,6 +197,32 @@ func flattenConditionalAccessDeviceFilter(in *msgraph.ConditionalAccessFilter) [
 		map[string]interface{}{
 			"mode": in.Mode,
 			"rule": in.Rule,
+		},
+	}
+}
+
+func flattenGuestsOrExternalUsers(in *msgraph.ConditionalAccessGuestsOrExternalUsers) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"guest_or_external_user_types": tf.FlattenStringSlicePtr(in.GuestOrExternalUserTypes),
+			"external_tenants":             flattenExternalTenants(in.ExternalTenants),
+		},
+	}
+}
+
+func flattenExternalTenants(in *msgraph.ConditionalAccessExternalTenants) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"membership_kind": in.MembershipKind,
+			"members":         tf.FlattenStringSlicePtr(in.Members),
 		},
 	}
 }
@@ -340,6 +368,9 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 	result.ExcludeGroups = tf.ExpandStringSlicePtr(excludeGroups)
 	result.IncludeRoles = tf.ExpandStringSlicePtr(includeRoles)
 	result.ExcludeRoles = tf.ExpandStringSlicePtr(excludeRoles)
+
+	result.IncludeGuestsOrExternalUsers = expandGuestsOrExternalUsers(config["included_guests_or_external_users"].([]interface{}))
+	result.ExcludeGuestsOrExternalUsers = expandGuestsOrExternalUsers(config["excluded_guests_or_external_users"].([]interface{}))
 
 	return &result
 }
@@ -499,6 +530,45 @@ func expandConditionalAccessFilter(in []interface{}) *msgraph.ConditionalAccessF
 
 	result.Mode = pointer.To(config["mode"].(string))
 	result.Rule = pointer.To(config["rule"].(string))
+
+	return &result
+}
+
+func expandGuestsOrExternalUsers(in []interface{}) *msgraph.ConditionalAccessGuestsOrExternalUsers {
+	if len(in) == 0 || in[0] == nil {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessGuestsOrExternalUsers{}
+
+	config := in[0].(map[string]interface{})
+
+	types := config["guest_or_external_user_types"].([]interface{})
+
+	result.GuestOrExternalUserTypes = tf.ExpandStringSlicePtr(types)
+	result.ExternalTenants = expandExternalTenants(config["external_tenants"].([]interface{}))
+
+	return &result
+}
+
+func expandExternalTenants(in []interface{}) *msgraph.ConditionalAccessExternalTenants {
+	if len(in) == 0 || in[0] == nil {
+		return nil
+	}
+
+	result := msgraph.ConditionalAccessExternalTenants{}
+
+	config := in[0].(map[string]interface{})
+
+	members := config["members"].([]interface{})
+
+	result.MembershipKind = pointer.To(config["membership_kind"].(string))
+
+	// only membership_kind enumerated is allowed to have members field set
+	// so we omit setting an empty array when no members configured
+	if len(members) > 0 {
+		result.Members = tf.ExpandStringSlicePtr(members)
+	}
 
 	return &result
 }
