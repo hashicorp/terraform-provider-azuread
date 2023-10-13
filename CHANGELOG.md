@@ -1,3 +1,9 @@
+## 2.44.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_group_member` - resolve a bug when refreshing state if the group is missing [GH-1198]
+
 ## 2.43.0 (September 22, 2023)
 
 FEATURES:
