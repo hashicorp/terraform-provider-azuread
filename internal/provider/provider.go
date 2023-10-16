@@ -115,35 +115,35 @@ func AzureADProvider() *schema.Provider {
 			"client_id": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_ID", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_ID", ""),
 				Description: "The Client ID which should be used for service principal authentication",
 			},
 
 			"client_id_file_path": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_ID_FILE_PATH", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_ID_FILE_PATH", ""),
 				Description: "The path to a file containing the Client ID which should be used for service principal authentication",
 			},
 
 			"tenant_id": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_TENANT_ID", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_TENANT_ID", ""),
 				Description: "The Tenant ID which should be used. Works with all authentication methods except Managed Identity",
 			},
 
 			"environment": {
 				Type:        pluginsdk.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_ENVIRONMENT", "global"),
 				Description: "The cloud environment which should be used. Possible values are: `global` (also `public`), `usgovernmentl4` (also `usgovernment`), `usgovernmentl5` (also `dod`), and `china`. Defaults to `global`",
 			},
 
 			"metadata_host": {
 				Type:        pluginsdk.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_METADATA_HOSTNAME", ""),
 				Description: "The Hostname which should be used for the Azure Metadata Service.",
 			},
 
@@ -151,21 +151,21 @@ func AzureADProvider() *schema.Provider {
 			"client_certificate": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE", ""),
 				Description: "Base64 encoded PKCS#12 certificate bundle to use when authenticating as a Service Principal using a Client Certificate",
 			},
 
 			"client_certificate_password": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PASSWORD", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PASSWORD", ""),
 				Description: "The password to decrypt the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate",
 			},
 
 			"client_certificate_path": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PATH", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_CERTIFICATE_PATH", ""),
 				Description: "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate",
 			},
 
@@ -173,14 +173,14 @@ func AzureADProvider() *schema.Provider {
 			"client_secret": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_SECRET", ""),
 				Description: "The application password to use when authenticating as a Service Principal using a Client Secret",
 			},
 
 			"client_secret_file_path": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_CLIENT_SECRET_FILE_PATH", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_CLIENT_SECRET_FILE_PATH", ""),
 				Description: "The path to a file containing the application password to use when authenticating as a Service Principal using a Client Secret",
 			},
 
@@ -188,35 +188,35 @@ func AzureADProvider() *schema.Provider {
 			"use_oidc": {
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_OIDC", false),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_USE_OIDC", false),
 				Description: "Allow OpenID Connect to be used for authentication",
 			},
 
 			"oidc_token": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_OIDC_TOKEN", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_OIDC_TOKEN", ""),
 				Description: "The ID token for use when authenticating as a Service Principal using OpenID Connect.",
 			},
 
 			"oidc_token_file_path": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_OIDC_TOKEN_FILE_PATH", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_OIDC_TOKEN_FILE_PATH", ""),
 				Description: "The path to a file containing an ID token for use when authenticating as a Service Principal using OpenID Connect.",
 			},
 
 			"oidc_request_token": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, ""),
+				DefaultFunc: pluginsdk.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, ""),
 				Description: "The bearer token for the request to the OIDC provider. For use when authenticating as a Service Principal using OpenID Connect.",
 			},
 
 			"oidc_request_url": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, ""),
+				DefaultFunc: pluginsdk.MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, ""),
 				Description: "The URL for the OIDC provider from which to request an ID token. For use when authenticating as a Service Principal using OpenID Connect.",
 			},
 
@@ -224,7 +224,7 @@ func AzureADProvider() *schema.Provider {
 			"use_cli": {
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_CLI", true),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_USE_CLI", true),
 				Description: "Allow Azure CLI to be used for Authentication",
 			},
 
@@ -232,14 +232,14 @@ func AzureADProvider() *schema.Provider {
 			"use_msi": {
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_USE_MSI", false),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_USE_MSI", false),
 				Description: "Allow Managed Identity to be used for Authentication",
 			},
 
 			"msi_endpoint": {
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_MSI_ENDPOINT", ""),
 				Description: "The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically",
 			},
 
@@ -248,14 +248,14 @@ func AzureADProvider() *schema.Provider {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.Any(validation.IsUUID, validation.StringIsEmpty),
-				DefaultFunc:  schema.EnvDefaultFunc("ARM_PARTNER_ID", ""),
+				DefaultFunc:  pluginsdk.EnvDefaultFunc("ARM_PARTNER_ID", ""),
 				Description:  "A GUID/UUID that is registered with Microsoft to facilitate partner resource usage attribution",
 			},
 
 			"disable_terraform_partner_id": {
 				Type:        pluginsdk.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_DISABLE_TERRAFORM_PARTNER_ID", false),
 				Description: "Disable the Terraform Partner ID, which is used if a custom `partner_id` isn't specified",
 			},
 		},

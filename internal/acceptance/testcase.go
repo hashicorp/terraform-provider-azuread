@@ -45,7 +45,7 @@ func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, s
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
-			client, err := testclient.Build("") // TODO tenant id
+			client, err := testclient.Build(td.TenantID)
 			if err != nil {
 				return fmt.Errorf("building client: %+v", err)
 			}
@@ -89,7 +89,7 @@ func (td TestData) ResourceSequentialTest(t *testing.T, testResource types.TestR
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
-			client, err := testclient.Build("") // TODO tenant id
+			client, err := testclient.Build(td.TenantID)
 			if err != nil {
 				return fmt.Errorf("building client: %+v", err)
 			}
@@ -131,11 +131,7 @@ func (td TestData) runAcceptanceSequentialTest(t *testing.T, testCase resource.T
 
 func (td TestData) providers() map[string]func() (*schema.Provider, error) {
 	return map[string]func() (*schema.Provider, error){
-		"azurerm": func() (*schema.Provider, error) { //nolint:unparam
-			azurerm := provider.AzureADProvider()
-			return azurerm, nil
-		},
-		"azurerm-alt": func() (*schema.Provider, error) { //nolint:unparam
+		"azuread": func() (*schema.Provider, error) { //nolint:unparam
 			azurerm := provider.AzureADProvider()
 			return azurerm, nil
 		},
@@ -144,13 +140,9 @@ func (td TestData) providers() map[string]func() (*schema.Provider, error) {
 
 func (td TestData) externalProviders() map[string]resource.ExternalProvider {
 	return map[string]resource.ExternalProvider{
-		"azuread": {
-			VersionConstraint: "=2.8.0",
-			Source:            "registry.terraform.io/hashicorp/azuread",
-		},
-		"time": {
-			VersionConstraint: "=0.9.1",
-			Source:            "registry.terraform.io/hashicorp/time",
+		"random": {
+			VersionConstraint: "=3.5.1",
+			Source:            "registry.terraform.io/hashicorp/random",
 		},
 	}
 }

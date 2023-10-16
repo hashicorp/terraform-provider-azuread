@@ -5,174 +5,217 @@ package directoryroles
 
 import (
 	"context"
-	"errors"
-	"log"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func directoryRoleResource() *pluginsdk.Resource {
-	return &pluginsdk.Resource{
-		CreateContext: directoryRoleResourceCreate,
-		ReadContext:   directoryRoleResourceRead,
-		DeleteContext: directoryRoleResourceDelete,
+type DirectoryRoleModel struct {
+	Description string `tfschema:"description"`
+	DisplayName string `tfschema:"display_name"`
+	ObjectId    string `tfschema:"object_id"`
+	TemplateId  string `tfschema:"template_id"`
+}
 
-		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
-			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
-			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
-			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
+type DirectoryRoleResource struct{}
+
+func (r DirectoryRoleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+	return validation.IsUUID
+}
+
+var _ sdk.Resource = DirectoryRoleResource{}
+
+func (r DirectoryRoleResource) ResourceType() string {
+	return "azuread_directory_role"
+}
+
+func (r DirectoryRoleResource) ModelObject() interface{} {
+	return &DirectoryRoleModel{}
+}
+
+func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"display_name": {
+			Description:      "The display name of the directory role",
+			Type:             pluginsdk.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ForceNew:         true,
+			ExactlyOneOf:     []string{"display_name", "template_id"},
+			DiffSuppressFunc: suppress.CaseDifference,
+			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 		},
 
-		Schema: map[string]*pluginsdk.Schema{
-			"display_name": {
-				Description:      "The display name of the directory role",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ExactlyOneOf:     []string{"display_name", "template_id"},
-				DiffSuppressFunc: suppress.CaseDifference,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
-			},
-
-			"template_id": {
-				Description:      "The object ID of the template associated with the directory role",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ExactlyOneOf:     []string{"display_name", "template_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
-			},
-
-			"description": {
-				Description: "The description of the directory role",
-				Type:        pluginsdk.TypeString,
-				Computed:    true,
-			},
-
-			"object_id": {
-				Description: "The object ID of the directory role",
-				Type:        pluginsdk.TypeString,
-				Computed:    true,
-			},
+		"template_id": {
+			Description:      "The object ID of the template associated with the directory role",
+			Type:             pluginsdk.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ForceNew:         true,
+			ExactlyOneOf:     []string{"display_name", "template_id"},
+			ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 		},
 	}
 }
 
-func directoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
-	directoryRoleTemplatesClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplatesClient
-	displayName := d.Get("display_name").(string)
-	templateId := d.Get("template_id").(string)
+func (r DirectoryRoleResource) Attributes() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"description": {
+			Description: "The description of the directory role",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
+		},
 
-	// First we find the directory role template
-	var template *msgraph.DirectoryRoleTemplate
-	if displayName != "" {
-		templates, _, err := directoryRoleTemplatesClient.List(ctx)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Retrieving directory role templates: %q", err)
-		}
-		if templates == nil {
-			return tf.ErrorDiagF(errors.New("API error: nil result returned"), "Retrieving directory role templates")
-		}
+		"object_id": {
+			Description: "The object ID of the directory role",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
+		},
+	}
+}
 
-		for _, t := range *templates {
-			if t.DisplayName != nil && strings.EqualFold(displayName, *t.DisplayName) {
-				template = &t
-				break
+func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DirectoryRoles.DirectoryRolesClient
+			client.BaseClient.DisableRetries = true
+			defer func() { client.BaseClient.DisableRetries = false }()
+
+			directoryRoleTemplatesClient := metadata.Client.DirectoryRoles.DirectoryRoleTemplatesClient
+
+			var model DirectoryRoleModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
 			}
-		}
 
-		if template == nil {
-			return tf.ErrorDiagPathF(errors.New("template not found"), "Directory role template not found with display name %q", displayName)
-		}
-	} else {
-		var status int
-		var err error
-		template, status, err = directoryRoleTemplatesClient.Get(ctx, templateId)
-		if err != nil {
-			if status == http.StatusNotFound {
-				return tf.ErrorDiagPathF(nil, "template_id", "Directory role template with object ID %q was not found", templateId)
+			// First we find the directory role template
+			var template *msgraph.DirectoryRoleTemplate
+			if model.DisplayName != "" {
+				templates, _, err := directoryRoleTemplatesClient.List(ctx)
+				if err != nil {
+					return fmt.Errorf("listing directory role templates: %+v", err)
+				}
+				if templates == nil {
+					return fmt.Errorf("listing directory role templates: API error, result was nil")
+				}
+
+				for _, t := range *templates {
+					if strings.EqualFold(model.DisplayName, pointer.From(t.DisplayName)) {
+						template = &t
+						break
+					}
+				}
+
+				if template == nil {
+					return fmt.Errorf("no directory role template found with display name: %q", model.DisplayName)
+				}
+			} else if model.TemplateId != "" {
+				var status int
+				var err error
+				template, status, err = directoryRoleTemplatesClient.Get(ctx, model.TemplateId)
+				if err != nil {
+					if status == http.StatusNotFound {
+						return fmt.Errorf("no directory role template with object ID %q was found", model.TemplateId)
+					}
+					return fmt.Errorf("retrieving directory role template with object ID %q: %+v", model.TemplateId, err)
+				}
+
+				if template == nil {
+					return fmt.Errorf("retrieving directory role template with object ID %q: API error, result was nil", model.TemplateId)
+				}
 			}
-			return tf.ErrorDiagPathF(err, "template_id", "Retrieving directory role template with object ID %q: %+v", templateId, err)
-		}
 
-		if template == nil {
-			return tf.ErrorDiagPathF(errors.New("template not found"), "Directory role template not found with object ID %q", templateId)
-		}
-	}
+			if template == nil {
+				return fmt.Errorf("no directory role template found")
+			}
 
-	if template == nil {
-		return tf.ErrorDiagF(errors.New("template was nil"), "No template found")
-	}
+			if template.ID == nil {
+				return fmt.Errorf("received directory role template with nil ID (API error)")
+			}
 
-	if template.ID == nil {
-		return tf.ErrorDiagF(errors.New("API error: template returned with nil ID"), "Retrieving directory role template")
-	}
+			templateId := *template.ID
 
-	templateId = *template.ID
-
-	// Now look for the directory role created from that template
-	directoryRole, status, err := client.GetByTemplateId(ctx, templateId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			// Directory role was not found, so activate it
-			directoryRole, _, err = client.Activate(ctx, templateId)
+			// Now look for the directory role created from that template
+			directoryRole, status, err := client.GetByTemplateId(ctx, templateId)
 			if err != nil {
-				return tf.ErrorDiagPathF(err, "template_id", "Activating directory role for template ID %q: %+v", templateId, err)
+				if status == http.StatusNotFound {
+					// Directory role was not found, so activate it
+					directoryRole, _, err = client.Activate(ctx, templateId)
+					if err != nil {
+						return fmt.Errorf("activating directory role for template ID %q: %+v", templateId, err)
+					}
+				} else {
+					return fmt.Errorf("retrieving directory role with template ID %q: %+v", templateId, err)
+				}
 			}
-		} else {
-			return tf.ErrorDiagPathF(err, "template_id", "Retrieving directory role with template ID %q: %+v", templateId, err)
-		}
-	}
 
-	if directoryRole == nil {
-		return tf.ErrorDiagF(errors.New("unexpected: directoryRole was nil"), "Retrieving directory role for template ID %q", templateId)
-	}
-	if directoryRole.ID() == nil {
-		return tf.ErrorDiagF(errors.New("API error: directoryRole returned with nil ID"), "Retrieving directory role for template ID %q", templateId)
-	}
+			if directoryRole == nil {
+				return fmt.Errorf("retrieving directory role for template ID %q: result was nil", templateId)
+			}
+			if directoryRole.ID() == nil {
+				return fmt.Errorf("retrieving directory role for template ID %q: ID was nil (API error)", templateId)
+			}
 
-	d.SetId(*directoryRole.ID())
+			id := parse.NewDirectoryRoleID(*directoryRole.ID())
+			metadata.SetID(id)
 
-	return directoryRoleResourceRead(ctx, d, meta)
-}
-
-func directoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
-
-	directoryRole, status, err := client.Get(ctx, d.Id())
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Directory Role with ID %q was not found - removing from state", d.Id())
-			d.SetId("")
 			return nil
-		}
-		return tf.ErrorDiagPathF(err, "template_id", "Retrieving directory role with object ID %q: %+v", d.Id(), err)
+		},
 	}
-	if directoryRole == nil {
-		return tf.ErrorDiagF(errors.New("API error: nil directoryRole was returned"), "Retrieving directory role with object ID %q", d.Id())
-	}
-
-	tf.Set(d, "description", directoryRole.Description)
-	tf.Set(d, "display_name", directoryRole.DisplayName)
-	tf.Set(d, "object_id", directoryRole.ID())
-	tf.Set(d, "template_id", directoryRole.RoleTemplateId)
-
-	return nil
 }
 
-func directoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	// Directory roles cannot be deactivated or deleted, so this is a no-op
-	return nil
+func (r DirectoryRoleResource) Read() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.DirectoryRoles.DirectoryRolesClient
+			client.BaseClient.DisableRetries = true
+			defer func() { client.BaseClient.DisableRetries = false }()
+
+			id := parse.NewDirectoryRoleID(metadata.ResourceData.Id())
+
+			var state DirectoryRoleModel
+			if err := metadata.Decode(&state); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			directoryRole, status, err := client.Get(ctx, id.ID())
+			if err != nil {
+				if status == http.StatusNotFound {
+					return metadata.MarkAsGone(id)
+				}
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
+			if directoryRole == nil {
+				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			}
+
+			state.Description = pointer.From(directoryRole.Description)
+			state.DisplayName = pointer.From(directoryRole.DisplayName)
+			state.ObjectId = pointer.From(directoryRole.ID())
+			state.TemplateId = pointer.From(directoryRole.RoleTemplateId)
+
+			return metadata.Encode(&state)
+		},
+	}
+}
+
+func (r DirectoryRoleResource) Delete() sdk.ResourceFunc {
+	return sdk.ResourceFunc{
+		Timeout: 5 * time.Minute,
+		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			// Directory roles cannot be deactivated or deleted, so this is a no-op
+			return nil
+		},
+	}
 }

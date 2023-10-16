@@ -37,7 +37,7 @@ type ClientConfigDataSource struct{}
 var _ sdk.DataSource = ClientConfigDataSource{}
 
 func (r ClientConfigDataSource) ResourceType() string {
-	return "azurerm_aadb2c_directory"
+	return "azuread_client_config"
 }
 
 func (r ClientConfigDataSource) ModelObject() interface{} {

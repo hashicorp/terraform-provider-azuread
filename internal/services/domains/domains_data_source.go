@@ -28,7 +28,7 @@ func (DomainsId) String() string {
 
 type DomainsDataSourceModel struct {
 	AdminManaged      bool     `tfschema:"admin_managed"`
-	Domains           []Domain `tfschema:"tags"`
+	Domains           []Domain `tfschema:"domains"`
 	IncludeUnverified bool     `tfschema:"include_unverified"`
 	OnlyDefault       bool     `tfschema:"only_default"`
 	OnlyInitial       bool     `tfschema:"only_initial"`
@@ -52,7 +52,7 @@ type DomainsDataSource struct{}
 var _ sdk.DataSource = DomainsDataSource{}
 
 func (r DomainsDataSource) ResourceType() string {
-	return "azurerm_aadb2c_directory"
+	return "azuread_domains"
 }
 
 func (r DomainsDataSource) ModelObject() interface{} {

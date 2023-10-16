@@ -12,16 +12,15 @@ import (
 // without introducing a merge conflict into every PR.
 
 type (
-	BasicMapReader         = schema.BasicMapReader
-	MapFieldReader         = schema.MapFieldReader
-	MapFieldWriter         = schema.MapFieldWriter
-	Resource               = schema.Resource
-	ResourceData           = schema.ResourceData
-	ResourceDiff           = schema.ResourceDiff
-	SchemaDiffSuppressFunc = schema.SchemaDiffSuppressFunc
-	StateUpgrader          = schema.StateUpgrader
-	SchemaValidateFunc     = func(interface{}, string) ([]string, []error)
-	ValueType              = schema.ValueType
+	BasicMapReader     = schema.BasicMapReader
+	MapFieldReader     = schema.MapFieldReader
+	MapFieldWriter     = schema.MapFieldWriter
+	Resource           = schema.Resource
+	ResourceData       = schema.ResourceData
+	ResourceDiff       = schema.ResourceDiff
+	StateUpgrader      = schema.StateUpgrader
+	SchemaValidateFunc = func(interface{}, string) ([]string, []error)
+	ValueType          = schema.ValueType
 )
 
 type (
