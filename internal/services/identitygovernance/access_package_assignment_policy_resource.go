@@ -125,7 +125,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 						"requestor": {
 							Description: "The users who are allowed to request on this policy, which can be singleUser, groupMembers, and connectedOrganizationMembers",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Elem:        schemaUserSet(),
 						},
