@@ -6,6 +6,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-provider-azuread/version"
@@ -52,6 +54,70 @@ func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
 
 	// Default retry limit, can be overridden from within a resource
 	c.RetryableClient.RetryMax = 9
+
+	c.RetryableClient.Logger = log.New(io.Discard, "", log.LstdFlags)
+	c.RetryableClient.RequestLogHook = func(_ retryablehttp.Logger, req *http.Request, attempt int) {
+		if req == nil {
+			return
+		}
+
+		requestId, err := uuid.GenerateUUID()
+		if err != nil {
+			return
+		}
+
+		ctx := req.Context()
+
+		newReq := req.WithContext(context.WithValue(ctx, contextKey("requestId"), requestId))
+
+		authHeaderName := "Authorization"
+		authHeaderValue := newReq.Header.Get(authHeaderName)
+		if authHeaderValue != "" {
+			newReq.Header.Del(authHeaderName)
+		}
+
+		if dump, err := httputil.DumpRequestOut(newReq, true); err == nil {
+			log.Printf(`[DEBUG] ============================ Begin AzureAD Request Retry Attempt %d ============================
+Request ID: %s
+
+%s
+============================= End AzureAD Request Retry Attempt =============================
+`, attempt, requestId, dump)
+		} else {
+			// fallback to basic message
+			log.Printf("[DEBUG] AzureAD request retry attempt %d request %s: %s %s\n", attempt, requestId, newReq.Method, newReq.URL)
+		}
+
+		if authHeaderValue != "" {
+			newReq.Header.Add(authHeaderName, authHeaderValue)
+		}
+	}
+
+	c.RetryableClient.ResponseLogHook = func(_ retryablehttp.Logger, resp *http.Response) {
+		requestId := "UNKNOWN"
+
+		if resp.Request != nil {
+			if v := resp.Request.Context().Value(contextKey("requestId")); v != nil {
+				requestId = v.(string)
+			}
+		}
+
+		if resp != nil {
+			if dump, err2 := httputil.DumpResponse(resp, true); err2 == nil {
+				log.Printf(`[DEBUG] ============================ Begin AzureAD Response Retry Attempt ===========================
+	%s %s
+	Request ID: %s
+	
+	%s
+	============================= End AzureAD Response Retry Attempt ============================
+	`, resp.Request.Method, resp.Request.URL, requestId, dump)
+			} else {
+				log.Printf("[DEBUG] AzureAD Response retry attempt: %s for %s (%s %s)\n", resp.Status, requestId, resp.Request.Method, resp.Request.URL)
+			}
+		} else {
+			log.Printf("[DEBUG] AzureAD Request retry attempt for %s (%s %s) completed with no response", requestId, resp.Request.Method, resp.Request.URL)
+		}
+	}
 
 	// Explicitly set API version
 	c.ApiVersion = o.ApiVersion
