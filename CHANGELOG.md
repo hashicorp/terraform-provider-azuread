@@ -1,5 +1,7 @@
 ## 2.44.0 (Unreleased)
 
+* Developer Note: the Typed Resource SDK, as also used in the AzureRM provider, is now the preferred way of introducing new resources [GH-1188]
+
 BUG FIXES:
 
 * `azuread_group_member` - resolve a bug when refreshing state if the group is missing [GH-1198]
