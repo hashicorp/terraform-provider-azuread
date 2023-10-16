@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,9 +16,9 @@ type ServicePrincipalsDataSource struct{}
 func TestAccServicePrincipalsDataSource_byApplicationIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byApplicationIds(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("application_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
@@ -31,9 +30,9 @@ func TestAccServicePrincipalsDataSource_byApplicationIds(t *testing.T) {
 func TestAccServicePrincipalsDataSource_byApplicationIdsWithIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byApplicationIdsWithIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("application_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
@@ -45,9 +44,9 @@ func TestAccServicePrincipalsDataSource_byApplicationIdsWithIgnoreMissing(t *tes
 func TestAccServicePrincipalsDataSource_byDisplayNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byDisplayNames(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
@@ -58,9 +57,9 @@ func TestAccServicePrincipalsDataSource_byDisplayNames(t *testing.T) {
 func TestAccServicePrincipalsDataSource_byDisplayNamesWithIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byDisplayNamesWithIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("display_names.#").HasValue("3"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("3"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("3"),
@@ -71,9 +70,9 @@ func TestAccServicePrincipalsDataSource_byDisplayNamesWithIgnoreMissing(t *testi
 func TestAccServicePrincipalsDataSource_byObjectIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byObjectIds(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
@@ -84,9 +83,9 @@ func TestAccServicePrincipalsDataSource_byObjectIds(t *testing.T) {
 func TestAccServicePrincipalsDataSource_byObjectIdsWithIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.byObjectIdsWithIgnoreMissing(data),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
@@ -97,9 +96,9 @@ func TestAccServicePrincipalsDataSource_byObjectIdsWithIgnoreMissing(t *testing.
 func TestAccServicePrincipalsDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.noNames(),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("application_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("0"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
@@ -111,9 +110,9 @@ func TestAccServicePrincipalsDataSource_noNames(t *testing.T) {
 func TestAccServicePrincipalsDataSource_returnAll(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{{
+	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.returnAll(),
-		Check: resource.ComposeTestCheckFunc(
+		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("application_ids.#").Exists(),
 			check.That(data.ResourceName).Key("display_names.#").Exists(),
 			check.That(data.ResourceName).Key("object_ids.#").Exists(),

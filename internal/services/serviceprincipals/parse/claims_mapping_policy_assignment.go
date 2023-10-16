@@ -5,27 +5,27 @@ package parse
 
 import "fmt"
 
-type ClaimsMappingPolicyAssignmentId struct {
+type claimsMappingPolicyAssignmentId struct {
 	ObjectSubResourceId
 	ServicePrincipalId    string
 	ClaimsMappingPolicyId string
 }
 
-func NewClaimsMappingPolicyAssignmentID(ServicePolicyId, ClaimsMappingPolicyId string) ClaimsMappingPolicyAssignmentId {
-	return ClaimsMappingPolicyAssignmentId{
-		ObjectSubResourceId:   NewObjectSubResourceID(ServicePolicyId, "claimsMappingPolicy", ClaimsMappingPolicyId),
-		ServicePrincipalId:    ServicePolicyId,
-		ClaimsMappingPolicyId: ClaimsMappingPolicyId,
+func NewClaimsMappingPolicyAssignmentID(servicePolicyId, claimsMappingPolicyId string) claimsMappingPolicyAssignmentId {
+	return claimsMappingPolicyAssignmentId{
+		ObjectSubResourceId:   NewObjectSubResourceID(servicePolicyId, "claimsMappingPolicy", claimsMappingPolicyId),
+		ServicePrincipalId:    servicePolicyId,
+		ClaimsMappingPolicyId: claimsMappingPolicyId,
 	}
 }
 
-func ClaimsMappingPolicyAssignmentID(idString string) (*ClaimsMappingPolicyAssignmentId, error) {
+func ClaimsMappingPolicyAssignmentID(idString string) (*claimsMappingPolicyAssignmentId, error) {
 	id, err := ObjectSubResourceID(idString, "claimsMappingPolicy")
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse Claims Mapping Policy Assignment ID: %v", err)
 	}
 
-	return &ClaimsMappingPolicyAssignmentId{
+	return &claimsMappingPolicyAssignmentId{
 		ObjectSubResourceId:   *id,
 		ServicePrincipalId:    id.objectId,
 		ClaimsMappingPolicyId: id.subId,

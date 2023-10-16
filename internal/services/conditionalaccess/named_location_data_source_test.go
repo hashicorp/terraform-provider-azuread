@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,10 +16,10 @@ type NamedLocationDataSource struct{}
 func TestAccNamedLocationDataSource_country(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_named_location", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: NamedLocationDataSource{}.country(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("country.#").HasValue("1"),
 				check.That(data.ResourceName).Key("country.0.countries_and_regions.#").HasValue("3"),
 				check.That(data.ResourceName).Key("country.0.include_unknown_countries_and_regions").HasValue("true"),
@@ -32,10 +31,10 @@ func TestAccNamedLocationDataSource_country(t *testing.T) {
 func TestAccNamedLocationDataSource_ip(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_named_location", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: NamedLocationDataSource{}.ip(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("ip.#").HasValue("1"),
 				check.That(data.ResourceName).Key("ip.0.ip_ranges.#").HasValue("4"),
 				check.That(data.ResourceName).Key("ip.0.trusted").HasValue("true"),

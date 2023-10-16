@@ -4,20 +4,59 @@
 package acceptance
 
 import (
-	"log"
-	"os"
+	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
-	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
-func (td TestData) DataSourceTest(t *testing.T, steps []resource.TestStep) {
+func (td TestData) DataSourceTest(t *testing.T, steps []TestStep) {
+	// DataSources don't need a check destroy - however since this is a wrapper function
+	// and not matching the ignore pattern `XXX_data_source_test.go`, this needs to be explicitly opted out
+
+	//lintignore:AT001
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		Steps:    steps,
+	}
+	td.runAcceptanceTest(t, testCase)
+}
+
+func (td TestData) DataSourceTestInSequence(t *testing.T, steps []TestStep) {
+	// DataSources don't need a check destroy - however since this is a wrapper function
+	// and not matching the ignore pattern `XXX_data_source_test.go`, this needs to be explicitly opted out
+
+	//lintignore:AT001
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		Steps:    steps,
+	}
+
+	td.runAcceptanceSequentialTest(t, testCase)
+}
+
+func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, steps []TestStep) {
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		CheckDestroy: func(s *terraform.State) error {
+			client, err := testclient.Build(td.TenantID)
+			if err != nil {
+				return fmt.Errorf("building client: %+v", err)
+			}
+			return helpers.CheckDestroyedFunc(client, testResource, td.ResourceType, td.ResourceName)(s)
+		},
+		Steps: steps,
+	}
+	td.runAcceptanceTest(t, testCase)
+}
+
+func (td TestData) ResourceTestIgnoreDangling(t *testing.T, _ types.TestResource, steps []TestStep) {
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		Steps:    steps,
@@ -26,66 +65,84 @@ func (td TestData) DataSourceTest(t *testing.T, steps []resource.TestStep) {
 	td.runAcceptanceTest(t, testCase)
 }
 
-func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, steps []resource.TestStep) {
+// ResourceTestIgnoreCheckDestroyed skips the check to confirm the resource test has been destroyed.
+// This is done because certain resources can't actually be deleted.
+func (td TestData) ResourceTestSkipCheckDestroyed(t *testing.T, steps []TestStep) {
+	//lintignore:AT001
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		Steps:    steps,
+	}
+	td.runAcceptanceTest(t, testCase)
+}
+
+func (td TestData) ResourceSequentialTestSkipCheckDestroyed(t *testing.T, steps []TestStep) {
+	//lintignore:AT001
+	testCase := resource.TestCase{
+		PreCheck: func() { PreCheck(t) },
+		Steps:    steps,
+	}
+	td.runAcceptanceSequentialTest(t, testCase)
+}
+
+func (td TestData) ResourceSequentialTest(t *testing.T, testResource types.TestResource, steps []TestStep) {
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
-			client := buildClient(td.TenantID)
+			client, err := testclient.Build(td.TenantID)
+			if err != nil {
+				return fmt.Errorf("building client: %+v", err)
+			}
 			return helpers.CheckDestroyedFunc(client, testResource, td.ResourceType, td.ResourceName)(s)
 		},
 		Steps: steps,
 	}
 
-	td.runAcceptanceTest(t, testCase)
+	td.runAcceptanceSequentialTest(t, testCase)
 }
 
-func (td TestData) ResourceTestIgnoreDangling(t *testing.T, _ types.TestResource, steps []resource.TestStep) {
-	testCase := resource.TestCase{
-		PreCheck: func() { PreCheck(t) },
-		Steps:    steps,
+func RunTestsInSequence(t *testing.T, tests map[string]map[string]func(t *testing.T)) {
+	for group, m := range tests {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
 	}
-
-	td.runAcceptanceTest(t, testCase)
 }
 
 func (td TestData) runAcceptanceTest(t *testing.T, testCase resource.TestCase) {
-	testCase.ExternalProviders = map[string]resource.ExternalProvider{
-		"random": {
-			Source:            "hashicorp/random",
-			VersionConstraint: ">= 3.0.0",
-		},
-	}
-	testCase.ProviderFactories = map[string]func() (*schema.Provider, error){
-		"azuread": func() (*schema.Provider, error) {
-			return AzureADProvider, nil
-		},
-	}
+	testCase.ExternalProviders = td.externalProviders()
+	testCase.ProviderFactories = td.providers()
 
 	resource.ParallelTest(t, testCase)
 }
 
-func PreCheck(t *testing.T) {
-	variables := []string{
-		"ARM_CLIENT_ID",
-		"ARM_CLIENT_SECRET",
-		"ARM_TENANT_ID",
-		"ARM_TEST_LOCATION",
-		"ARM_TEST_LOCATION_ALT",
-	}
+func (td TestData) runAcceptanceSequentialTest(t *testing.T, testCase resource.TestCase) {
+	testCase.ExternalProviders = td.externalProviders()
+	testCase.ProviderFactories = td.providers()
 
-	for _, variable := range variables {
-		value := os.Getenv(variable)
-		if value == "" {
-			t.Fatalf("`%s` must be set for acceptance tests!", variable)
-		}
+	resource.Test(t, testCase)
+}
+
+func (td TestData) providers() map[string]func() (*schema.Provider, error) {
+	return map[string]func() (*schema.Provider, error){
+		"azuread": func() (*schema.Provider, error) { //nolint:unparam
+			azurerm := provider.AzureADProvider()
+			return azurerm, nil
+		},
 	}
 }
 
-func buildClient(tenantId string) *clients.Client {
-	client, err := testclient.Build(tenantId)
-	if err != nil {
-		log.Fatalf("building client: %+v", err)
+func (td TestData) externalProviders() map[string]resource.ExternalProvider {
+	return map[string]resource.ExternalProvider{
+		"random": {
+			VersionConstraint: "=3.5.1",
+			Source:            "registry.terraform.io/hashicorp/random",
+		},
 	}
-
-	return client
 }

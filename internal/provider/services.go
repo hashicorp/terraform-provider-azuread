@@ -4,6 +4,7 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments"
@@ -20,8 +21,16 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
 )
 
-func SupportedServices() []ServiceRegistration {
-	return []ServiceRegistration{
+func SupportedTypedServices() []sdk.TypedServiceRegistration {
+	return []sdk.TypedServiceRegistration{
+		directoryroles.Registration{},
+		domains.Registration{},
+		serviceprincipals.Registration{},
+	}
+}
+
+func SupportedUntypedServices() []sdk.UntypedServiceRegistration {
+	return []sdk.UntypedServiceRegistration{
 		administrativeunits.Registration{},
 		applications.Registration{},
 		approleassignments.Registration{},

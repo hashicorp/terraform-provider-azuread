@@ -13,41 +13,40 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func userFlowAttributeResource() *schema.Resource {
-	return &schema.Resource{
+func userFlowAttributeResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: userFlowAttributeResourceCreate,
 		ReadContext:   userFlowAttributeResourceRead,
 		UpdateContext: userFlowAttributeResourceUpdate,
 		DeleteContext: userFlowAttributeResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description: "The display name of the user flow attribute.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 
 			"data_type": {
 				Description: "The data type of the user flow attribute",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -61,20 +60,20 @@ func userFlowAttributeResource() *schema.Resource {
 
 			"description": {
 				Description: "The description of the user flow attribute that is shown to the user at the time of sign-up",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 
 			"attribute_type": {
 				Description: "The type of the user flow attribute",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func userFlowAttributeResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
 
 	displayName := d.Get("display_name").(string)
@@ -110,7 +109,7 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *schema.ResourceData
 	return userFlowAttributeResourceRead(ctx, d, meta)
 }
 
-func userFlowAttributeResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func userFlowAttributeResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
 	id := d.Id()
 
@@ -126,7 +125,7 @@ func userFlowAttributeResourceUpdate(ctx context.Context, d *schema.ResourceData
 	return userFlowAttributeResourceRead(ctx, d, meta)
 }
 
-func userFlowAttributeResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func userFlowAttributeResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
 	id := d.Id()
 
@@ -148,7 +147,7 @@ func userFlowAttributeResourceRead(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func userFlowAttributeResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func userFlowAttributeResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
 	id := d.Id()
 

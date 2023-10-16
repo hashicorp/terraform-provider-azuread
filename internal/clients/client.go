@@ -88,11 +88,12 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 
 	// Log the claims for debugging
 	claimsJson, err := json.Marshal(client.Claims)
-	if err != nil {
+	switch {
+	case err != nil:
 		log.Printf("[DEBUG] AzureAD Provider could not marshal access token claims for log outout")
-	} else if claimsJson == nil {
+	case claimsJson == nil:
 		log.Printf("[DEBUG] AzureAD Provider marshaled access token claims was nil")
-	} else {
+	default:
 		log.Printf("[DEBUG] AzureAD Provider access token claims: %s", claimsJson)
 	}
 

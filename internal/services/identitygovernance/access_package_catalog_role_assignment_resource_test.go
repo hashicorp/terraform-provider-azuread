@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -24,10 +23,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_group(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.group(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -42,10 +41,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_servicePrincipal(t *testi
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipal(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -60,10 +59,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.user(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),

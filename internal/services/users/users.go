@@ -22,10 +22,6 @@ func assignManager(ctx context.Context, client *msgraph.UsersClient, directoryOb
 		if managerObject == nil {
 			return errors.New("managerObject was nil")
 		}
-		// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-		//if managerObject.ODataId == nil {
-		//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve manager principal object %q", managerId)
-		//}
 		managerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 			client.BaseClient.Endpoint, tenantId, managerId)))
 

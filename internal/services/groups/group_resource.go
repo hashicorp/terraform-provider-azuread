@@ -15,14 +15,12 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -31,8 +29,8 @@ const (
 	groupDuplicateValueError = "Request contains a property with duplicate values"
 )
 
-func groupResource() *schema.Resource {
-	return &schema.Resource{
+func groupResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: groupResourceCreate,
 		ReadContext:   groupResourceRead,
 		UpdateContext: groupResourceUpdate,
@@ -40,59 +38,59 @@ func groupResource() *schema.Resource {
 
 		CustomizeDiff: groupResourceCustomizeDiff,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(20 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(20 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:      "The display name for the group",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"administrative_unit_ids": {
 				Description: "The administrative unit IDs in which the group should be. If empty, the group will be created at the tenant level.",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,
 				},
 			},
 
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role. This property can only be `true` for security-enabled groups.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				ForceNew:    true,
 			},
 
 			"auto_subscribe_new_members": {
 				Description: "Indicates whether new members added to the group will be auto-subscribed to receive email notifications.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"behaviors": {
 				Description: "The group behaviours for a Microsoft 365 group",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupResourceBehaviorOptionAllowOnlyMembersToPost,
 						msgraph.GroupResourceBehaviorOptionCalendarMemberReadOnly,
@@ -107,28 +105,28 @@ func groupResource() *schema.Resource {
 
 			"description": {
 				Description: "The description for the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"dynamic_membership": {
 				Description:   "An optional block to configure dynamic membership for the group. Cannot be used with `members`",
-				Type:          schema.TypeList,
+				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"members"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Required: true,
 						},
 
 						"rule": {
 							Description:      "Rule to determine members for a dynamic group. Required when `group_types` contains 'DynamicMembership'",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(0, 3072)),
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(0, 3072)),
 						},
 					},
 				},
@@ -136,57 +134,57 @@ func groupResource() *schema.Resource {
 
 			"external_senders_allowed": {
 				Description: "Indicates whether people external to the organization can send messages to the group.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_address_lists": {
 				Description: "Indicates whether the group is displayed in certain parts of the Outlook user interface: in the Address Book, in address lists for selecting message recipients, and in the Browse Groups dialog for searching groups.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"hide_from_outlook_clients": {
 				Description: "Indicates whether the group is displayed in Outlook clients, such as Outlook for Windows and Outlook on the web.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Computed:    true,
 			},
 
 			"mail_enabled": {
 				Description:  "Whether the group is a mail enabled, with a shared group mailbox. At least one of `mail_enabled` or `security_enabled` must be specified. A group can be mail enabled _and_ security enabled",
-				Type:         schema.TypeBool,
+				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
 			},
 
 			"mail_nickname": {
 				Description:      "The mail alias for the group, unique in the organisation",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.MailNickname,
+				ValidateDiagFunc: validation.MailNickname,
 			},
 
 			"members": {
 				Description:   "A set of members who should be present in this group. Supported object types are Users, Groups or Service Principals",
-				Type:          schema.TypeSet,
+				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"dynamic_membership"},
-				Set:           schema.HashString,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Set:           pluginsdk.HashString,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"onpremises_group_type": {
 				Description: "Indicates the target on-premise group type the group will be written back as",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -198,32 +196,32 @@ func groupResource() *schema.Resource {
 
 			"owners": {
 				Description: "A set of owners who own this group. Supported object types are Users or Service Principals",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
 				MinItems:    1,
 				MaxItems:    100,
-				Set:         schema.HashString,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Set:         pluginsdk.HashString,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"prevent_duplicate_names": {
 				Description: "If `true`, will return an error if an existing group is found with the same name",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"provisioning_options": {
 				Description: "The group provisioning options for a Microsoft 365 group",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupResourceProvisioningOptionTeam,
 					}, false),
@@ -232,14 +230,14 @@ func groupResource() *schema.Resource {
 
 			"security_enabled": {
 				Description:  "Whether the group is a security group for controlling access to in-app resources. At least one of `security_enabled` or `mail_enabled` must be specified. A group can be security enabled _and_ mail enabled",
-				Type:         schema.TypeBool,
+				Type:         pluginsdk.TypeBool,
 				Optional:     true,
 				AtLeastOneOf: []string{"mail_enabled", "security_enabled"},
 			},
 
 			"theme": {
 				Description: "The colour theme for a Microsoft 365 group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ValidateFunc: validation.StringInSlice([]string{
 					string(msgraph.GroupThemeNone),
@@ -255,11 +253,11 @@ func groupResource() *schema.Resource {
 
 			"types": {
 				Description: "A set of group types to configure for the group. `Unified` specifies a Microsoft 365 group. Required when `mail_enabled` is true",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				ForceNew:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						"DynamicMembership",
 						msgraph.GroupTypeUnified,
@@ -269,7 +267,7 @@ func groupResource() *schema.Resource {
 
 			"visibility": {
 				Description: "Specifies the group join policy and group content visibility",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				Computed:    true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -281,77 +279,77 @@ func groupResource() *schema.Resource {
 
 			"writeback_enabled": {
 				Description: "Whether this group should be synced from Azure AD to the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"mail": {
 				Description: "The SMTP address for the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"object_id": {
 				Description: "The object ID of the group",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_domain_name": {
 				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_netbios_name": {
 				Description: "The on-premises NetBIOS name, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sam_account_name": {
 				Description: "The on-premises SAM account name, synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_security_identifier": {
 				Description: "The on-premises security identifier (SID), synchronized from the on-premises directory when Azure AD Connect is used",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"onpremises_sync_enabled": {
 				Description: "Whether this group is synchronized from an on-premises directory (true), no longer synchronized (false), or has never been synchronized (null)",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Computed:    true,
 			},
 
 			"preferred_language": {
 				Description: "The preferred language for a Microsoft 365 group, in ISO 639-1 notation",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true, // API always returns "preferredLanguage should not be set"
 			},
 
 			"proxy_addresses": {
 				Description: "Email addresses for the group that direct to the same group mailbox",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 		},
 	}
 }
 
-func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func groupResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
 	// Check for duplicate names
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
-	if tf.ValueIsNotEmptyOrUnknown(diff.Id()) && diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
+	if pluginsdk.ValueIsNotEmptyOrUnknown(diff.Id()) && diff.Get("prevent_duplicate_names").(bool) && pluginsdk.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := groupFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
@@ -372,7 +370,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 	mailEnabled := diff.Get("mail_enabled").(bool)
 	securityEnabled := diff.Get("security_enabled").(bool)
 	groupTypes := make([]msgraph.GroupType, 0)
-	for _, v := range diff.Get("types").(*schema.Set).List() {
+	for _, v := range diff.Get("types").(*pluginsdk.Set).List() {
 		groupTypes = append(groupTypes, v.(string))
 	}
 
@@ -403,7 +401,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 			return fmt.Errorf("`auto_subscribe_new_members` is only supported for unified groups")
 		}
 
-		if behaviors, ok := diff.GetOk("behaviors"); ok && len(behaviors.(*schema.Set).List()) > 0 {
+		if behaviors, ok := diff.GetOk("behaviors"); ok && len(behaviors.(*pluginsdk.Set).List()) > 0 {
 			return fmt.Errorf("`behaviors` is only supported for unified groups")
 		}
 
@@ -419,7 +417,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 			return fmt.Errorf("`hide_from_outlook_clients` is only supported for unified groups")
 		}
 
-		if provisioning, ok := diff.GetOk("provisioning_options"); ok && len(provisioning.(*schema.Set).List()) > 0 {
+		if provisioning, ok := diff.GetOk("provisioning_options"); ok && len(provisioning.(*pluginsdk.Set).List()) > 0 {
 			return fmt.Errorf("`provisioning_options` is only supported for unified groups")
 		}
 
@@ -440,7 +438,7 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, 
 	return nil
 }
 
-func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitsClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
@@ -465,7 +463,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	groupTypes := make([]msgraph.GroupType, 0)
-	for _, v := range d.Get("types").(*schema.Set).List() {
+	for _, v := range d.Get("types").(*pluginsdk.Set).List() {
 		groupTypes = append(groupTypes, v.(string))
 	}
 
@@ -479,12 +477,12 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	behaviorOptions := make([]msgraph.GroupResourceBehaviorOption, 0)
-	for _, v := range d.Get("behaviors").(*schema.Set).List() {
+	for _, v := range d.Get("behaviors").(*pluginsdk.Set).List() {
 		behaviorOptions = append(behaviorOptions, v.(string))
 	}
 
 	provisioningOptions := make([]msgraph.GroupResourceProvisioningOption, 0)
-	for _, v := range d.Get("provisioning_options").(*schema.Set).List() {
+	for _, v := range d.Get("provisioning_options").(*pluginsdk.Set).List() {
 		provisioningOptions = append(provisioningOptions, v.(string))
 	}
 
@@ -551,10 +549,6 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if ownerObject.ID() == nil {
 			return nil, errors.New("ownerObject ID was nil")
 		}
-		// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-		//if ownerObject.ODataId == nil {
-		//	return nil, errors.New("ODataId was nil")
-		//}
 		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 			client.BaseClient.Endpoint, tenantId, id)))
 
@@ -568,7 +562,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// First look for the calling principal, then prefer users, followed by service principals, to try and avoid
 	// ownership-related API validation errors for Microsoft 365 groups.
 	if v, ok := d.GetOk("owners"); ok {
-		owners := v.(*schema.Set).List()
+		owners := v.(*pluginsdk.Set).List()
 		ownerCount := 0
 
 		// First look for the calling principal in the specified owners; it should always be included in the initial
@@ -625,7 +619,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var err error
 
 	if v, ok := d.GetOk("administrative_unit_ids"); ok {
-		administrativeUnitIds := tf.ExpandStringSlice(v.(*schema.Set).List())
+		administrativeUnitIds := tf.ExpandStringSlice(v.(*pluginsdk.Set).List())
 		for i, administrativeUnitId := range administrativeUnitIds {
 			// Create the group in the first administrative unit, as this requires fewer permissions than creating it at tenant level
 			if i == 0 {
@@ -905,7 +899,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Add members after the group is created
 	members := make(msgraph.Members, 0)
 	if v, ok := d.GetOk("members"); ok {
-		for _, memberId := range v.(*schema.Set).List() {
+		for _, memberId := range v.(*pluginsdk.Set).List() {
 			memberObject, _, err := directoryObjectsClient.Get(ctx, memberId.(string), odata.Query{})
 			if err != nil {
 				return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", memberId)
@@ -913,10 +907,6 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			if memberObject == nil {
 				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-			//if memberObject.ODataId == nil {
-			//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", memberId)
-			//}
 			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 				client.BaseClient.Endpoint, tenantId, memberId)))
 
@@ -941,7 +931,7 @@ func groupResourceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return groupResourceRead(ctx, d, meta)
 }
 
-func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
 	administrativeUnitClient := meta.(*clients.Client).Groups.AdministrativeUnitsClient
@@ -1016,7 +1006,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	groupTypes := make([]msgraph.GroupType, 0)
-	for _, v := range d.Get("types").(*schema.Set).List() {
+	for _, v := range d.Get("types").(*pluginsdk.Set).List() {
 		groupTypes = append(groupTypes, v.(string))
 	}
 
@@ -1139,7 +1129,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		existingMembers := *members
-		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*schema.Set).List())
+		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*pluginsdk.Set).List())
 		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
 		membersToAdd := utils.Difference(desiredMembers, existingMembers)
 
@@ -1159,10 +1149,6 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				if memberObject == nil {
 					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
-				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-				//if ownerObject.ODataId == nil {
-				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", memberId)
-				//}
 				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, memberId)))
 
@@ -1185,7 +1171,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		// If all owners are removed, restore the calling principal as the sole owner, in order to meet API
 		// restrictions about removing all owners, and maintain consistency with the Create behaviour.
 		// In theory this path should never be reached, since the property is Computed and has MinItems: 1, but we handle it anyway.
-		desiredOwners := tf.ExpandStringSlice(v.(*schema.Set).List())
+		desiredOwners := tf.ExpandStringSlice(v.(*pluginsdk.Set).List())
 		if len(desiredOwners) == 0 {
 			desiredOwners = []string{callerId}
 		}
@@ -1204,10 +1190,6 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				if ownerObject == nil {
 					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
-				// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-				//if ownerObject.ODataId == nil {
-				//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve owner principal object %q", ownerId)
-				//}
 				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, ownerId)))
 
@@ -1238,7 +1220,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			existingAdministrativeUnits = append(existingAdministrativeUnits, *administrativeUnit.ID)
 		}
 
-		desiredAdministrativeUnits := tf.ExpandStringSlice(v.(*schema.Set).List())
+		desiredAdministrativeUnits := tf.ExpandStringSlice(v.(*pluginsdk.Set).List())
 		administrativeUnitsToLeave := utils.Difference(existingAdministrativeUnits, desiredAdministrativeUnits)
 		administrativeUnitsToJoin := utils.Difference(desiredAdministrativeUnits, existingAdministrativeUnits)
 
@@ -1264,7 +1246,7 @@ func groupResourceUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	return groupResourceRead(ctx, d, meta)
 }
 
-func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 
 	group, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -1381,7 +1363,7 @@ func groupResourceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func groupResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupsClient
 	groupId := d.Id()
 

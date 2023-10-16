@@ -9,8 +9,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -24,10 +23,10 @@ func TestAccSynchronizationJob_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_synchronization_job", "test")
 	r := SynchronizationJobResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("template_id").Exists(),
 				check.That(data.ResourceName).Key("enabled").HasValue("true"),
@@ -41,10 +40,10 @@ func TestAccSynchronizationJob_disabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_synchronization_job", "test")
 	r := SynchronizationJobResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.disabled(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("template_id").Exists(),
 				check.That(data.ResourceName).Key("enabled").HasValue("false"),

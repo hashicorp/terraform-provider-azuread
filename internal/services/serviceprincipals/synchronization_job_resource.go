@@ -12,77 +12,75 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func synchronizationJobResource() *schema.Resource {
-	return &schema.Resource{
+func synchronizationJobResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: synchronizationJobResourceCreate,
 		ReadContext:   synchronizationJobResourceRead,
 		UpdateContext: synchronizationJobResourceUpdate,
 		DeleteContext: synchronizationJobResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(15 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(15 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.SynchronizationJobID(id)
 			return err
 		}),
 
 		SchemaVersion: 0,
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
 				Description:      "The object ID of the service principal for which this synchronization job should be created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 			"template_id": {
 				Description: "Identifier of the synchronization template this job is based on.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
 			"enabled": {
 				Description: "Whether or not the synchronization job is enabled",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Default:     true,
 				Optional:    true,
 			},
 			"schedule": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"expiration": {
 							Description: "Date and time when this job will expire, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 						"interval": {
 							Description: "The interval between synchronization iterations ISO8601. E.g. PT40M run every 40 minutes.",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 						"state": {
 							Description: "State.",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 					},
@@ -92,7 +90,7 @@ func synchronizationJobResource() *schema.Resource {
 	}
 }
 
-func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
@@ -131,7 +129,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 
 	// Wait for the job to appear, this can take several moments
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -166,7 +164,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *schema.ResourceDat
 	return synchronizationJobResourceRead(ctx, d, meta)
 }
 
-func synchronizationJobResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 
 	id, err := parse.SynchronizationJobID(d.Id())
@@ -190,7 +188,7 @@ func synchronizationJobResourceRead(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func synchronizationJobResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	id, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
@@ -212,7 +210,7 @@ func synchronizationJobResourceUpdate(ctx context.Context, d *schema.ResourceDat
 	return synchronizationJobResourceRead(ctx, d, meta)
 }
 
-func synchronizationJobResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 
 	id, err := parse.SynchronizationJobID(d.Id())

@@ -14,62 +14,61 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func servicePrincipalsDataSource() *schema.Resource {
-	return &schema.Resource{
+func servicePrincipalsDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: servicePrincipalsDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"application_ids": {
 				Description:  "The application IDs (client IDs) of the applications associated with the service principals",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"application_ids", "display_names", "object_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"display_names": {
 				Description:  "The display names of the applications associated with the service principals",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"application_ids", "display_names", "object_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"object_ids": {
 				Description:  "The object IDs of the service principals",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"application_ids", "display_names", "object_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"ignore_missing": {
 				Description:   "Ignore missing service principals and return the service principals that were found. The data source will still fail if no service principals are found",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"return_all"},
@@ -77,7 +76,7 @@ func servicePrincipalsDataSource() *schema.Resource {
 
 			"return_all": {
 				Description:   "Fetch all service principals with no filter and return all that were found. The data source will still fail if no service principals are found.",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
@@ -86,85 +85,85 @@ func servicePrincipalsDataSource() *schema.Resource {
 
 			"service_principals": {
 				Description: "A list of service_principals",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
 							Description: "Whether or not the service principal account is enabled",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"app_role_assignment_required": {
 							Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"application_id": {
 							Description: "The application ID (client ID) for the associated application",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"application_tenant_id": {
 							Description: "The tenant ID where the associated application is registered",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"display_name": {
 							Description: "The display name of the application associated with this service principal",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
 							Description: "The object ID of the service principal",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"preferred_single_sign_on_mode": {
 							Description: "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"saml_metadata_url": {
 							Description: "The URL where the service exposes SAML metadata for federation",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"service_principal_names": {
 							Description: "A list of identifier URI(s), copied over from the associated application",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Computed:    true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"sign_in_audience": {
 							Description: "The Microsoft account types that are supported for the associated application",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"tags": {
 							Description: "A set of tags to apply to the service principal",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Computed:    true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"type": {
 							Description: "Identifies whether the service principal represents an application or a managed identity",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 					},
@@ -174,7 +173,7 @@ func servicePrincipalsDataSource() *schema.Resource {
 	}
 }
 
-func servicePrincipalsDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()

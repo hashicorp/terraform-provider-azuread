@@ -14,75 +14,74 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func usersData() *schema.Resource {
-	return &schema.Resource{
+func usersData() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: usersDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Read: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"employee_ids": {
 				Description:  "The employee identifier assigned to the user by the organisation",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"mail_nicknames": {
 				Description:  "The email aliases of the users",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"object_ids": {
 				Description:  "The object IDs of the users",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"user_principal_names": {
 				Description:  "The user principal names (UPNs) of the users",
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"ignore_missing": {
 				Description:   "Ignore missing users and return users that were found. The data source will still fail if no users are found",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"return_all"},
@@ -90,7 +89,7 @@ func usersData() *schema.Resource {
 
 			"return_all": {
 				Description:   "Fetch all users with no filter and return all that were found. The data source will still fail if no users are found.",
-				Type:          schema.TypeBool,
+				Type:          pluginsdk.TypeBool,
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
@@ -99,73 +98,73 @@ func usersData() *schema.Resource {
 
 			"users": {
 				Description: "A list of users",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"account_enabled": {
 							Description: "Whether or not the account is enabled",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Computed:    true,
 						},
 
 						"display_name": {
 							Description: "The display name of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"employee_id": {
 							Description: "The employee identifier assigned to the user by the organisation",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"mail": {
 							Description: "The primary email address of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"mail_nickname": {
 							Description: "The email alias of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"object_id": {
 							Description: "The object ID of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_immutable_id": {
 							Description: "The value used to associate an on-premises Active Directory user account with their Azure AD user object",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_sam_account_name": {
 							Description: "The on-premise SAM account name of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"onpremises_user_principal_name": {
 							Description: "The on-premise user principal name of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"usage_location": {
 							Description: "The usage location of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 
 						"user_principal_name": {
 							Description: "The user principal name (UPN) of the user",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
 					},
@@ -175,7 +174,7 @@ func usersData() *schema.Resource {
 	}
 }
 
-func usersDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UsersClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()

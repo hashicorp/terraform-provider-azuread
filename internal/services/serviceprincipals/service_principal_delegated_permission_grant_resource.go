@@ -12,76 +12,75 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func servicePrincipalDelegatedPermissionGrantResource() *schema.Resource {
-	return &schema.Resource{
+func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: servicePrincipalDelegatedPermissionGrantResourceCreate,
 		UpdateContext: servicePrincipalDelegatedPermissionGrantResourceUpdate,
 		ReadContext:   servicePrincipalDelegatedPermissionGrantResourceRead,
 		DeleteContext: servicePrincipalDelegatedPermissionGrantResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if len(id) == 0 {
 				return fmt.Errorf("specified ID is not valid: %q", id)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"claim_values": {
 				Description: "A set of claim values for delegated permission scopes which should be included in access tokens for the resource",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				MinItems:    1,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.NoEmptyStrings,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 			},
 
 			"resource_service_principal_object_id": {
 				Description:      "The object ID of the service principal representing the resource to be accessed",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"service_principal_object_id": {
 				Description:      "The object ID of the service principal for which this delegated permission grant should be created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"user_object_id": {
 				Description:      "The object ID of the user on behalf of whom the service principal is authorized to access the resource",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 		},
 	}
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 	servicePrincipalsClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
@@ -105,7 +104,7 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	properties := msgraph.DelegatedPermissionGrant{
 		ClientId:   utils.String(servicePrincipalId),
 		ResourceId: utils.String(resourceId),
-		Scopes:     tf.ExpandStringSlicePtr(d.Get("claim_values").(*schema.Set).List()),
+		Scopes:     tf.ExpandStringSlicePtr(d.Get("claim_values").(*pluginsdk.Set).List()),
 	}
 
 	if v, ok := d.GetOk("user_object_id"); ok && v.(string) != "" {
@@ -129,12 +128,12 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	return servicePrincipalDelegatedPermissionGrantResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	properties := msgraph.DelegatedPermissionGrant{
 		Id:     utils.String(d.Id()),
-		Scopes: tf.ExpandStringSlicePtr(d.Get("claim_values").(*schema.Set).List()),
+		Scopes: tf.ExpandStringSlicePtr(d.Get("claim_values").(*pluginsdk.Set).List()),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -144,7 +143,7 @@ func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context,
 	return servicePrincipalDelegatedPermissionGrantResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	delegatedPermissionGrant, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -165,7 +164,7 @@ func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d
 	return nil
 }
 
-func servicePrincipalDelegatedPermissionGrantResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalDelegatedPermissionGrantResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	id := d.Id()

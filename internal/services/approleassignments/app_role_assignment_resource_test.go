@@ -10,8 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -25,10 +24,10 @@ func TestAccAppRoleAssignment_servicePrincipalForMsGraph(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipalForMsGraph(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -40,10 +39,10 @@ func TestAccAppRoleAssignment_servicePrincipalForTenantApp(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test_admin")
 	r := AppRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipalForTenantApp(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That("azuread_app_role_assignment.test_query").ExistsInAzure(r),
 			),
@@ -56,10 +55,10 @@ func TestAccAppRoleAssignment_groupForTenantApp(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.groupForTenantApp(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -71,10 +70,10 @@ func TestAccAppRoleAssignment_groupForTenantAppWithoutRole(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.groupForTenantAppWithoutRole(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -86,10 +85,10 @@ func TestAccAppRoleAssignment_userForTenantApp(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_app_role_assignment", "test")
 	r := AppRoleAssignmentResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.userForTenantApp(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},

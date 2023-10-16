@@ -16,23 +16,21 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
 const applicationResourceName = "azuread_application"
 
-func applicationResource() *schema.Resource {
-	return &schema.Resource{
+func applicationResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: applicationResourceCreate,
 		ReadContext:   applicationResourceRead,
 		UpdateContext: applicationResourceUpdate,
@@ -40,14 +38,14 @@ func applicationResource() *schema.Resource {
 
 		CustomizeDiff: applicationResourceCustomizeDiff,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(10 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(10 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
@@ -55,7 +53,7 @@ func applicationResource() *schema.Resource {
 		}),
 
 		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
+		StateUpgraders: []pluginsdk.StateUpgrader{
 			{
 				Type:    migrations.ResourceApplicationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
 				Upgrade: migrations.ResourceApplicationInstanceStateUpgradeV0,
@@ -63,74 +61,74 @@ func applicationResource() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:      "The display name for the application",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"api": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"known_client_applications": {
 							Description: "Used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Optional:    true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.UUID,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 							},
 						},
 
 						"mapped_claims_enabled": {
 							Description: "Allows an application to use claims mapping without specifying a custom signing key",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"oauth2_permission_scope": {
 							Description: "One or more `oauth2_permission_scope` blocks to describe delegated permissions exposed by the web API represented by this application",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Optional:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"id": {
 										Description:      "The unique identifier of the delegated permission",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Required:         true,
-										ValidateDiagFunc: validate.UUID,
+										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 									},
 
 									"admin_consent_description": {
 										Description:      "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"admin_consent_display_name": {
 										Description:      "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"enabled": {
 										Description: "Determines if the permission scope is enabled",
-										Type:        schema.TypeBool,
+										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 										Default:     true,
 									},
 
 									"type": {
 										Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions",
-										Type:        schema.TypeString,
+										Type:        pluginsdk.TypeString,
 										Optional:    true,
 										Default:     msgraph.PermissionScopeTypeUser,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -141,21 +139,21 @@ func applicationResource() *schema.Resource {
 
 									"user_consent_description": {
 										Description:      "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"user_consent_display_name": {
 										Description:      "Display name for the delegated permission that appears in the end user consent experience",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
-										ValidateDiagFunc: validate.NoEmptyStrings,
+										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
 									"value": {
 										Description:      "The value that is used for the `scp` claim in OAuth 2.0 access tokens",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 									},
@@ -165,22 +163,22 @@ func applicationResource() *schema.Resource {
 
 						"requested_access_token_version": {
 							Description: "The access token version expected by this resource",
-							Type:        schema.TypeInt,
+							Type:        pluginsdk.TypeInt,
 							Optional:    true,
 							Default:     1,
-							ValidateDiagFunc: func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+							ValidateDiagFunc: func(i interface{}, path cty.Path) (ret pluginsdk.Diagnostics) {
 								v, ok := i.(int)
 								if !ok {
-									ret = append(ret, diag.Diagnostic{
-										Severity:      diag.Error,
+									ret = append(ret, pluginsdk.Diagnostic{
+										Severity:      pluginsdk.DiagError,
 										Summary:       "Expected an integer value",
 										AttributePath: path,
 									})
 									return
 								}
 								if v < 1 || v > 2 {
-									ret = append(ret, diag.Diagnostic{
-										Severity:      diag.Error,
+									ret = append(ret, pluginsdk.Diagnostic{
+										Severity:      pluginsdk.DiagError,
 										Summary:       "Value must be one of: 1, 2",
 										AttributePath: path,
 									})
@@ -193,24 +191,24 @@ func applicationResource() *schema.Resource {
 			},
 
 			"app_role": {
-				Type:     schema.TypeSet,
+				Type:     pluginsdk.TypeSet,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"id": {
 							Description:      "The unique identifier of the app role",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.UUID,
+							ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 						},
 
 						"allowed_member_types": {
 							Description: "Specifies whether this app role definition can be assigned to users and groups by setting to `User`, or to other applications (that are accessing this application in a standalone scenario) by setting to `Application`, or to both",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							MinItems:    1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice(
 									[]string{
 										msgraph.AppRoleAllowedMemberTypeApplication,
@@ -222,28 +220,28 @@ func applicationResource() *schema.Resource {
 
 						"description": {
 							Description:      "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"display_name": {
 							Description:      "Display name for the app role that appears during app role assignment and in consent experiences",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.NoEmptyStrings,
+							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 						},
 
 						"enabled": {
 							Description: "Determines if the app role is enabled",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 							Default:     true,
 						},
 
 						"value": {
 							Description:      "The value that is used for the `roles` claim in ID tokens and OAuth 2.0 access tokens that are authenticating an assigned service or user principal",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: applicationsValidate.RoleScopeClaimValue,
 						},
@@ -253,61 +251,61 @@ func applicationResource() *schema.Resource {
 
 			"app_role_ids": {
 				Description: "Mapping of app role names to UUIDs",
-				Type:        schema.TypeMap,
+				Type:        pluginsdk.TypeMap,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"description": {
 				Description:      "Description of the application as shown to end users",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(0, 1024)),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(0, 1024)),
 			},
 
 			"device_only_auth_enabled": {
 				Description: "Specifies whether this application supports device authentication without a user.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"fallback_public_client_enabled": {
 				Description: "Specifies whether the application is a public client. Appropriate for apps using token grant flows that don't use a redirect URI",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"feature_tags": {
 				Description:   "Block of features to configure for this application using tags",
-				Type:          schema.TypeList,
+				Type:          pluginsdk.TypeList,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"tags"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"custom_single_sign_on": {
 							Description: "Whether this application represents a custom SAML application for linked service principals",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"enterprise": {
 							Description: "Whether this application represents an Enterprise Application for linked service principals",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"gallery": {
 							Description: "Whether this application represents a gallery application for linked service principals",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"hide": {
 							Description: "Whether this application is invisible to users in My Apps and Office 365 Launcher",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 					},
@@ -316,10 +314,10 @@ func applicationResource() *schema.Resource {
 
 			"group_membership_claims": {
 				Description: "Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						msgraph.GroupMembershipClaimAll,
 						msgraph.GroupMembershipClaimNone,
@@ -332,57 +330,57 @@ func applicationResource() *schema.Resource {
 
 			"identifier_uris": {
 				Description: "The user-defined URI(s) that uniquely identify an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.IsAppUri,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.IsAppUri,
 				},
 			},
 
 			"logo_image": {
 				Description:  "Base64 encoded logo image in gif, png or jpeg format",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringIsBase64,
 			},
 
 			"marketing_url": {
 				Description: "URL of the application's marketing page",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"notes": {
 				Description:      "User-specified notes relevant for the management of the application",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			// This is a top level attribute because d.SetNewComputed() doesn't work inside a block
 			"oauth2_permission_scope_ids": {
 				Description: "Mapping of OAuth2.0 permission scope names to UUIDs",
-				Type:        schema.TypeMap,
+				Type:        pluginsdk.TypeMap,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"oauth2_post_response_required": {
 				Description: "Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests.",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"optional_claims": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"access_token": schemaOptionalClaims(),
 						"id_token":     schemaOptionalClaims(),
 						"saml2_token":  schemaOptionalClaims(),
@@ -392,37 +390,37 @@ func applicationResource() *schema.Resource {
 
 			"owners": {
 				Description: "A list of object IDs of principals that will be granted ownership of the application",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Optional:    true,
-				Set:         schema.HashString,
+				Set:         pluginsdk.HashString,
 				MaxItems:    100,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: validate.UUID,
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				},
 			},
 
 			"privacy_statement_url": {
 				Description: "URL of the application's privacy statement",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"public_client": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Optional:    true,
 							MaxItems:    256,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectUriFunc(true, true),
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.IsRedirectUriFunc(true, true),
 							},
 						},
 					},
@@ -430,32 +428,32 @@ func applicationResource() *schema.Resource {
 			},
 
 			"required_resource_access": {
-				Type:     schema.TypeSet,
+				Type:     pluginsdk.TypeSet,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
 							Description: "",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Required:    true,
 						},
 
 						"resource_access": {
 							Description: "",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Required:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"id": {
 										Description:      "",
-										Type:             schema.TypeString,
+										Type:             pluginsdk.TypeString,
 										Required:         true,
-										ValidateDiagFunc: validate.UUID,
+										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 									},
 
 									"type": {
 										Description: "",
-										Type:        schema.TypeString,
+										Type:        pluginsdk.TypeString,
 										Required:    true,
 										ValidateFunc: validation.StringInSlice(
 											[]string{
@@ -474,13 +472,13 @@ func applicationResource() *schema.Resource {
 
 			"service_management_reference": {
 				Description: "References application or service contact information from a Service or Asset Management database",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"sign_in_audience": {
 				Description: "The Microsoft account types that are supported for the current application",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				Default:     msgraph.SignInAudienceAzureADMyOrg,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -492,20 +490,20 @@ func applicationResource() *schema.Resource {
 			},
 
 			"single_page_application": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"redirect_uris": {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Optional:    true,
 							MaxItems:    256,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectUriFunc(false, false),
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.IsRedirectUriFunc(false, false),
 							},
 						},
 					},
@@ -514,85 +512,85 @@ func applicationResource() *schema.Resource {
 
 			"support_url": {
 				Description: "URL of the application's support page",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"tags": {
 				Description:   "A set of tags to apply to the application",
-				Type:          schema.TypeSet,
+				Type:          pluginsdk.TypeSet,
 				Optional:      true,
 				Computed:      true,
-				Set:           schema.HashString,
+				Set:           pluginsdk.HashString,
 				ConflictsWith: []string{"feature_tags"},
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"template_id": {
 				Description:      "Unique ID of the application template from which this application is created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"terms_of_service_url": {
 				Description: "URL of the application's terms of service statement",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"web": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: applicationDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
 							Description:      "Home page or landing page of the application",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validate.IsHttpOrHttpsUrl,
+							ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
 							Description:      "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: validate.IsLogoutUrl,
+							ValidateDiagFunc: validation.IsLogoutUrl,
 						},
 
 						"redirect_uris": {
 							Description: "The URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Optional:    true,
 							MaxItems:    256,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.IsRedirectUriFunc(true, false),
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.IsRedirectUriFunc(true, false),
 							},
 						},
 
 						"implicit_grant": {
-							Type:             schema.TypeList,
+							Type:             pluginsdk.TypeList,
 							Optional:         true,
 							MaxItems:         1,
 							DiffSuppressFunc: applicationDiffSuppress,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"access_token_issuance_enabled": {
 										Description: "Whether this web application can request an access token using OAuth 2.0 implicit flow",
-										Type:        schema.TypeBool,
+										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"id_token_issuance_enabled": {
 										Description: "Whether this web application can request an ID token using OAuth 2.0 implicit flow",
-										Type:        schema.TypeBool,
+										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 								},
@@ -604,49 +602,49 @@ func applicationResource() *schema.Resource {
 
 			"application_id": {
 				Description: "The Application ID (also called Client ID)",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"object_id": {
 				Description: "The application's object ID",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"logo_url": {
 				Description: "CDN URL to the application's logo",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"prevent_duplicate_names": {
 				Description: "If `true`, will return an error if an existing application is found with the same name",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 				Default:     false,
 			},
 
 			"publisher_domain": {
 				Description: "The verified publisher domain for the application",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"disabled_by_microsoft": {
 				Description: "Whether Microsoft has disabled the registered application",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
 
-	if diff.Get("prevent_duplicate_names").(bool) && tf.ValueIsNotEmptyOrUnknown(newDisplayName) &&
+	if diff.Get("prevent_duplicate_names").(bool) && pluginsdk.ValueIsNotEmptyOrUnknown(newDisplayName) &&
 		(oldDisplayName.(string) == "" || oldDisplayName.(string) != newDisplayName.(string)) {
 		result, err := applicationFindByName(ctx, client, newDisplayName.(string))
 		if err != nil {
@@ -665,7 +663,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	}
 
 	// Validate roles and scopes to check for duplicate IDs or values
-	if err := applicationValidateRolesScopes(diff.Get("app_role").(*schema.Set).List(), diff.Get("api.0.oauth2_permission_scope").(*schema.Set).List()); err != nil {
+	if err := applicationValidateRolesScopes(diff.Get("app_role").(*pluginsdk.Set).List(), diff.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List()); err != nil {
 		return fmt.Errorf("checking for duplicate app roles / OAuth2.0 permission scopes: %v", err)
 	}
 
@@ -686,12 +684,12 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	// These apply only when personal account sign-ins are enabled for an application, and are enforced at plan time to avoid breaking existing
 	// applications that change from AAD (corporate) account sign-ins to personal account sign-ins
 	if s := diff.Get("sign_in_audience").(string); s == msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount || s == msgraph.SignInAudiencePersonalMicrosoftAccount {
-		oauth2PermissionScopes := diff.Get("api.0.oauth2_permission_scope").(*schema.Set).List()
-		identifierUris := diff.Get("identifier_uris").(*schema.Set).List()
-		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*schema.Set).List()
-		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*schema.Set).List()
-		webRedirectUris := diff.Get("web.0.redirect_uris").(*schema.Set).List()
-		allRedirectUris := append(pubRedirectUris, append(spaRedirectUris, webRedirectUris...)...)
+		oauth2PermissionScopes := diff.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List()
+		identifierUris := diff.Get("identifier_uris").(*pluginsdk.Set).List()
+		pubRedirectUris := diff.Get("public_client.0.redirect_uris").(*pluginsdk.Set).List()
+		spaRedirectUris := diff.Get("single_page_application.0.redirect_uris").(*pluginsdk.Set).List()
+		webRedirectUris := diff.Get("web.0.redirect_uris").(*pluginsdk.Set).List()
+		allRedirectUris := append(pubRedirectUris, append(spaRedirectUris, webRedirectUris...)...) //nolint:gocritic
 
 		// applications must use v2 access tokens with personal account sign-ins
 		if v, ok := diff.GetOk("api.0.requested_access_token_version"); !ok || v.(int) == 1 {
@@ -734,7 +732,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		}
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
-			if diags := validate.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
+			if diags := validation.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
 			}
@@ -767,7 +765,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 		// 50 resources per application
 		// 30 permissions per resource
 		// 200 permissions per application
-		requiredResourceAccess := diff.Get("required_resource_access").(*schema.Set).List()
+		requiredResourceAccess := diff.Get("required_resource_access").(*pluginsdk.Set).List()
 		if len(requiredResourceAccess) > 50 {
 			return fmt.Errorf("maximum of 50 `required_resource_access` blocks are supported when `sign_in_audience` is %q or %q",
 				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
@@ -800,7 +798,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *schema.Resource
 	return nil
 }
 
-func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+func applicationDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	suppress := false
 
 	switch {
@@ -809,13 +807,13 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		if len(apiRaw) == 1 {
 			suppress = true
 			api := apiRaw[0].(map[string]interface{})
-			if v, ok := api["known_client_applications"]; ok && len(v.(*schema.Set).List()) > 0 {
+			if v, ok := api["known_client_applications"]; ok && len(v.(*pluginsdk.Set).List()) > 0 {
 				suppress = false
 			}
 			if v, ok := api["mapped_claims_enabled"]; ok && v.(bool) {
 				suppress = false
 			}
-			if v, ok := api["oauth2_permission_scope"]; ok && len(v.(*schema.Set).List()) > 0 {
+			if v, ok := api["oauth2_permission_scope"]; ok && len(v.(*pluginsdk.Set).List()) > 0 {
 				suppress = false
 			}
 			if v, ok := api["requested_access_token_version"]; ok && v.(int) > 1 {
@@ -844,7 +842,7 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		if len(publicClientRaw) == 1 {
 			suppress = true
 			publicClient := publicClientRaw[0].(map[string]interface{})
-			if v, ok := publicClient["redirect_uris"]; ok && len(v.(*schema.Set).List()) > 0 {
+			if v, ok := publicClient["redirect_uris"]; ok && len(v.(*pluginsdk.Set).List()) > 0 {
 				suppress = false
 			}
 		}
@@ -854,7 +852,7 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		if len(spaRaw) == 1 {
 			suppress = true
 			spa := spaRaw[0].(map[string]interface{})
-			if v, ok := spa["redirect_uris"]; ok && len(v.(*schema.Set).List()) > 0 {
+			if v, ok := spa["redirect_uris"]; ok && len(v.(*pluginsdk.Set).List()) > 0 {
 				suppress = false
 			}
 		}
@@ -864,7 +862,7 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 		if len(webRaw) == 1 {
 			suppress = true
 			web := webRaw[0].(map[string]interface{})
-			if v, ok := web["redirect_uris"]; ok && len(v.(*schema.Set).List()) > 0 {
+			if v, ok := web["redirect_uris"]; ok && len(v.(*pluginsdk.Set).List()) > 0 {
 				suppress = false
 			}
 			if b, ok := web["implicit_grant"]; ok {
@@ -897,7 +895,7 @@ func applicationDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
 	return suppress
 }
 
-func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
@@ -935,7 +933,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("feature_tags"); ok {
 		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
-		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
 	if templateId != "" {
@@ -976,11 +974,11 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Create a new application
 	properties := msgraph.Application{
 		Api:                   api,
-		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(displayName),
-		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
+		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
@@ -993,7 +991,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
 		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
 		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
@@ -1024,7 +1022,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Retrieve and set the initial owners, which can be up to 20 in total when creating the application
 	if v, ok := d.GetOk("owners"); ok {
 		ownerCount := 0
-		for _, ownerIdRaw := range v.(*schema.Set).List() {
+		for _, ownerIdRaw := range v.(*pluginsdk.Set).List() {
 			ownerId := ownerIdRaw.(string)
 
 			// If the calling principal was found in the specified owners, we won't remove them later
@@ -1124,7 +1122,7 @@ func applicationResourceCreate(ctx context.Context, d *schema.ResourceData, meta
 	return applicationResourceRead(ctx, d, meta)
 }
 
-func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
@@ -1163,7 +1161,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
 		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
 	} else {
-		tags = tf.ExpandStringSlice(d.Get("tags").(*schema.Set).List())
+		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
 	properties := msgraph.Application{
@@ -1171,11 +1169,11 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			Id: utils.String(applicationId),
 		},
 		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List()),
+		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List()),
 		Description:           utils.NullableString(d.Get("description").(string)),
 		DisplayName:           utils.String(displayName),
-		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*schema.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*schema.Set).List()),
+		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
+		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
@@ -1188,7 +1186,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Oauth2RequirePostResponse:  utils.Bool(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*schema.Set).List()),
+		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
 		ServiceManagementReference: utils.NullableString(d.Get("service_management_reference").(string)),
 		SignInAudience:             utils.String(d.Get("sign_in_audience").(string)),
 		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
@@ -1196,11 +1194,11 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
-	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*schema.Set).List())); err != nil {
+	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())); err != nil {
 		return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", d.Id())
 	}
 
-	if err := applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*schema.Set).List())); err != nil {
+	if err := applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())); err != nil {
 		return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", d.Id())
 	}
 
@@ -1214,7 +1212,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return tf.ErrorDiagF(err, "Could not retrieve owners for application with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*schema.Set).List())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*pluginsdk.Set).List())
 		existingOwners := *owners
 		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
 		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
@@ -1253,7 +1251,7 @@ func applicationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return applicationResourceRead(ctx, d, meta)
 }
 
-func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 
 	app, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -1326,7 +1324,7 @@ func applicationResourceRead(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func applicationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func applicationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClient
 	appId := d.Id()
 
