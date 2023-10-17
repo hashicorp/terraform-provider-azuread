@@ -130,6 +130,8 @@ resource "azuread_application_registration" "test" {
   notes                        = "Testing application"
   service_management_reference = "app-for-testing"
 
+  homepage_url          = "https://app.hashitown-%[1]d.com/"
+  logout_url            = "https://app.hashitown-%[1]d.com/logout"
   marketing_url         = "https://hashitown-%[1]d.com/"
   privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
   support_url           = "https://support.hashitown-%[1]d.com/"

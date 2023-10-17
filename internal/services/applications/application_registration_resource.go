@@ -27,6 +27,8 @@ type ApplicationRegistrationModel struct {
 	Description                 string `tfschema:"description"`
 	DisabledByMicrosoft         string `tfschema:"disabled_by_microsoft"`
 	DisplayName                 string `tfschema:"display_name"`
+	HomepageUrl                 string `tfschema:"homepage_url"`
+	LogoutUrl                   string `tfschema:"logout_url"`
 	MarketingUrl                string `tfschema:"marketing_url"`
 	Notes                       string `tfschema:"notes"`
 	PrivacyStatementUrl         string `tfschema:"privacy_statement_url"`
@@ -68,6 +70,20 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringLenBetween(0, 1024),
+		},
+
+		"homepage_url": {
+			Description:  "URL of the home page for the application",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
+		},
+
+		"logout_url": {
+			Description:  "URL of the logout page for the application, where the session is cleared for single sign-out",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"marketing_url": {
@@ -197,6 +213,11 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 					SupportUrl:          tf.NullableString(model.SupportUrl),
 					TermsOfServiceUrl:   tf.NullableString(model.TermsOfServiceUrl),
 				},
+
+				Web: &msgraph.ApplicationWeb{
+					HomePageUrl: tf.NullableString(model.HomepageUrl),
+					LogoutUrl:   tf.NullableString(model.LogoutUrl),
+				},
 			}
 
 			result, _, err := client.Create(ctx, properties)
@@ -285,6 +306,11 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 				state.TermsOfServiceUrl = string(pointer.From(info.TermsOfServiceUrl))
 			}
 
+			if web := result.Web; web != nil {
+				state.HomepageUrl = string(pointer.From(web.HomePageUrl))
+				state.LogoutUrl = string(pointer.From(web.LogoutUrl))
+			}
+
 			if result.DisabledByMicrosoftStatus != nil {
 				state.DisabledByMicrosoft = fmt.Sprintf("%v", result.DisabledByMicrosoftStatus)
 			}
@@ -360,6 +386,18 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 
 				if rd.HasChange("terms_of_service_url") {
 					properties.Info.TermsOfServiceUrl = tf.NullableString(model.TermsOfServiceUrl)
+				}
+			}
+
+			if rd.HasChange("homepage_url") || rd.HasChange("logout_url") {
+				properties.Web = &msgraph.ApplicationWeb{}
+
+				if rd.HasChange("homepage_url") {
+					properties.Web.HomePageUrl = tf.NullableString(model.HomepageUrl)
+				}
+
+				if rd.HasChange("logout_url") {
+					properties.Web.LogoutUrl = tf.NullableString(model.LogoutUrl)
 				}
 			}
 
