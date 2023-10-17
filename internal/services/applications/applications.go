@@ -20,6 +20,8 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
+const applicationResourceName = "azuread_application"
+
 func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bool {
 	if !reflect.DeepEqual(existing.AllowedMemberTypes, new.AllowedMemberTypes) {
 		return true

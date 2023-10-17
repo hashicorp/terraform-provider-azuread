@@ -11,9 +11,9 @@ type ApplicationId struct {
 	ApplicationId string
 }
 
-func NewApplicationID(input string) ApplicationId {
+func NewApplicationID(applicationId string) ApplicationId {
 	return ApplicationId{
-		ApplicationId: input,
+		ApplicationId: applicationId,
 	}
 }
 

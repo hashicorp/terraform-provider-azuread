@@ -27,8 +27,6 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-const applicationResourceName = "azuread_application"
-
 func applicationResource() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		CreateContext: applicationResourceCreate,
