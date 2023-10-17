@@ -9,13 +9,13 @@ import (
 
 type OwnerId struct {
 	ApplicationId string
-	OwnerID       string
+	OwnerId       string
 }
 
 func NewOwnerID(applicationId, ownerId string) OwnerId {
 	return OwnerId{
 		ApplicationId: applicationId,
-		OwnerID:       ownerId,
+		OwnerId:       ownerId,
 	}
 }
 
@@ -34,7 +34,7 @@ func ParseOwnerID(input string) (*OwnerId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
 	}
 
-	if id.OwnerID, ok = parsed.Parsed["ownerId"]; !ok {
+	if id.OwnerId, ok = parsed.Parsed["ownerId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "ownerId", *parsed)
 	}
 
@@ -52,14 +52,15 @@ func ValidateOwnerID(input interface{}, key string) (warnings []string, errors [
 	id, err := ParseOwnerID(v)
 	if err != nil {
 		errors = append(errors, err)
+		return
 	}
 
-	return validation.IsUUID(id.OwnerID, "ID")
+	return validation.IsUUID(id.OwnerId, "ID")
 }
 
 func (id OwnerId) ID() string {
 	fmtString := "/applications/%s/owners/%s"
-	return fmt.Sprintf(fmtString, id.ApplicationId, id.OwnerID)
+	return fmt.Sprintf(fmtString, id.ApplicationId, id.OwnerId)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this B 2 C Directory ID
@@ -73,5 +74,5 @@ func (id OwnerId) Segments() []resourceids.Segment {
 }
 
 func (id OwnerId) String() string {
-	return fmt.Sprintf("Application Owner (Application ID: %q, Owner ID: %q)", id.ApplicationId, id.OwnerID)
+	return fmt.Sprintf("Application Owner (Application ID: %q, Owner ID: %q)", id.ApplicationId, id.OwnerId)
 }

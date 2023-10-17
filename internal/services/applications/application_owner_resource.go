@@ -42,7 +42,7 @@ func (r ApplicationOwnerResource) ModelObject() interface{} {
 func (r ApplicationOwnerResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"application_id": {
-			Description:  "The resource ID of the application to which the fallback public client setting should be applied",
+			Description:  "The resource ID of the application to which the owner should be added",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -86,7 +86,7 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			_, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerID)
+			_, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
 			if err != nil && status != http.StatusNotFound {
 				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
 			}
@@ -95,14 +95,14 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 			}
 
 			// Construct an @odata.id for the $ref endpoint
-			odataId := (odata.Id)(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s", client.BaseClient.Endpoint, metadata.Client.TenantID, id.OwnerID))
+			odataId := (odata.Id)(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s", client.BaseClient.Endpoint, metadata.Client.TenantID, id.OwnerId))
 
 			properties := &msgraph.Application{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: &id.ApplicationId,
 				},
 				Owners: &msgraph.Owners{{
-					Id:      &id.OwnerID,
+					Id:      &id.OwnerId,
 					ODataId: &odataId,
 				}},
 			}
@@ -135,7 +135,7 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerID)
+			result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
 			if err != nil {
 				if status == http.StatusNotFound {
 					return metadata.MarkAsGone(id)
@@ -148,7 +148,7 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 
 			state := ApplicationOwnerModel{
 				ApplicationId: applicationId.ID(),
-				OwnerObjectId: id.OwnerID,
+				OwnerObjectId: id.OwnerId,
 			}
 
 			return metadata.Encode(&state)
@@ -172,7 +172,7 @@ func (r ApplicationOwnerResource) Delete() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			_, err = client.RemoveOwners(ctx, id.ApplicationId, &[]string{id.OwnerID})
+			_, err = client.RemoveOwners(ctx, id.ApplicationId, &[]string{id.OwnerId})
 			if err != nil {
 				return fmt.Errorf("removing %s: %+v", id, err)
 			}

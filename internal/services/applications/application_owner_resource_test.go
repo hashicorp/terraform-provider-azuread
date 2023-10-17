@@ -85,7 +85,7 @@ func (r ApplicationOwnerResource) Exists(ctx context.Context, clients *clients.C
 		return nil, err
 	}
 
-	result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerID)
+	result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
 	if err != nil {
 		if status == http.StatusNotFound {
 			return pointer.To(false), nil

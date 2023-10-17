@@ -46,6 +46,7 @@ func ValidateApplicationID(input interface{}, key string) (warnings []string, er
 	id, err := ParseApplicationID(v)
 	if err != nil {
 		errors = append(errors, err)
+		return
 	}
 
 	return validation.IsUUID(id.ApplicationId, "ID")

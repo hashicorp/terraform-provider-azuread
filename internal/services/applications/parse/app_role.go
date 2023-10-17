@@ -52,6 +52,7 @@ func ValidateAppRoleID(input interface{}, key string) (warnings []string, errors
 	id, err := ParseAppRoleID(v)
 	if err != nil {
 		errors = append(errors, err)
+		return
 	}
 
 	return validation.IsUUID(id.RoleID, "ID")

@@ -46,6 +46,7 @@ func ValidateFallbackPublicClientID(input interface{}, key string) (warnings []s
 	id, err := ParseFallbackPublicClientID(v)
 	if err != nil {
 		errors = append(errors, err)
+		return
 	}
 
 	return validation.IsUUID(id.ApplicationId, "ID")

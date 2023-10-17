@@ -52,6 +52,7 @@ func ValidatePermissionScopeID(input interface{}, key string) (warnings []string
 	id, err := ParsePermissionScopeID(v)
 	if err != nil {
 		errors = append(errors, err)
+		return
 	}
 
 	return validation.IsUUID(id.ScopeID, "ID")
