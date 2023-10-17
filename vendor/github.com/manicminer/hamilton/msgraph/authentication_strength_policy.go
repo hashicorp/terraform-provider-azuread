@@ -141,6 +141,42 @@ func (c *AuthenticationStrengthPoliciesClient) Update(ctx context.Context, Authe
 	return status, nil
 }
 
+// Update amends an existing AuthenticationStrengthPolicy's allowed combinations
+func (c *AuthenticationStrengthPoliciesClient) UpdateAllowedCombinations(ctx context.Context, policy AuthenticationStrengthPolicy) (int, error) {
+	var status int
+
+	if policy.ID == nil {
+		return status, errors.New("cannot update AuthenticationStrengthPolicy with nil ID")
+	}
+
+	if policy.AllowedCombinations == nil {
+		return status, errors.New("cannot update AuthenticationStrengthPolicy with nil AllowedCombinations")
+	}
+
+	allowedCombinations := AuthenticationStrengthPolicy{
+		AllowedCombinations: policy.AllowedCombinations,
+	}
+
+	body, err := json.Marshal(allowedCombinations)
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+	_, status, _, err = c.BaseClient.Post(ctx, PostHttpRequestInput{
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/policies/authenticationStrengthPolicies/%s/updateAllowedCombinations", *policy.ID),
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("AuthenticationStrengthPoliciesClient.BaseClient.Post(): %v", err)
+	}
+
+	return status, nil
+}
+
 // Delete removes a AuthenticationStrengthPolicy.
 func (c *AuthenticationStrengthPoliciesClient) Delete(ctx context.Context, id string) (int, error) {
 	_, status, _, err := c.BaseClient.Delete(ctx, DeleteHttpRequestInput{
