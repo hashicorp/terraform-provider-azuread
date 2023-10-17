@@ -50,6 +50,7 @@ func (r Registration) DataSources() []sdk.DataSource {
 // Resources returns the typed Resources supported by this service
 func (r Registration) Resources() []sdk.Resource {
 	return []sdk.Resource{
+		ApplicationApiAccessResource{},
 		ApplicationAppRoleResource{},
 		ApplicationFallbackPublicClientResource{},
 		ApplicationIdentifierUriResource{},
