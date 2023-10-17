@@ -76,21 +76,21 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Description:  "URL of the home page for the application",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"logout_url": {
 			Description:  "URL of the logout page for the application, where the session is cleared for single sign-out",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsLogoutUrl,
 		},
 
 		"marketing_url": {
 			Description:  "URL of the marketing page for the application",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"notes": {
@@ -104,7 +104,7 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Description:  "URL of the privacy statement for the application",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"requested_access_token_version": {
@@ -149,14 +149,14 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Description:  "URL of the support page for the application",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 
 		"terms_of_service_url": {
 			Description:  "URL of the terms of service statement for the application",
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
-			ValidateFunc: validation.StringIsNotEmpty,
+			ValidateFunc: validation.IsHttpOrHttpsUrl,
 		},
 	}
 }

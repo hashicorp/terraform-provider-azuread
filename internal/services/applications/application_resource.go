@@ -61,10 +61,10 @@ func applicationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:      "The display name for the application",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name for the application",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"api": {
@@ -79,8 +79,8 @@ func applicationResource() *pluginsdk.Resource {
 							Type:        pluginsdk.TypeSet,
 							Optional:    true,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.IsUUID,
 							},
 						},
 
@@ -97,24 +97,24 @@ func applicationResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Description:      "The unique identifier of the delegated permission",
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+										Description:  "The unique identifier of the delegated permission",
+										Type:         pluginsdk.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsUUID,
 									},
 
 									"admin_consent_description": {
-										Description:      "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users",
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Description:  "Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users",
+										Type:         pluginsdk.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 
 									"admin_consent_display_name": {
-										Description:      "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users",
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Description:  "Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users",
+										Type:         pluginsdk.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 
 									"enabled": {
@@ -136,17 +136,17 @@ func applicationResource() *pluginsdk.Resource {
 									},
 
 									"user_consent_description": {
-										Description:      "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf",
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Description:  "Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf",
+										Type:         pluginsdk.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 
 									"user_consent_display_name": {
-										Description:      "Display name for the delegated permission that appears in the end user consent experience",
-										Type:             pluginsdk.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										Description:  "Display name for the delegated permission that appears in the end user consent experience",
+										Type:         pluginsdk.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringIsNotEmpty,
 									},
 
 									"value": {
@@ -194,10 +194,10 @@ func applicationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"id": {
-							Description:      "The unique identifier of the app role",
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+							Description:  "The unique identifier of the app role",
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.IsUUID,
 						},
 
 						"allowed_member_types": {
@@ -217,17 +217,17 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"description": {
-							Description:      "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Description:  "Description of the app role that appears when the role is being assigned and, if the role functions as an application permissions, during the consent experiences",
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 
 						"display_name": {
-							Description:      "Display name for the app role that appears during app role assignment and in consent experiences",
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Description:  "Display name for the app role that appears during app role assignment and in consent experiences",
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 
 						"enabled": {
@@ -257,10 +257,10 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"description": {
-				Description:      "Description of the application as shown to end users",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(0, 1024)),
+				Description:  "Description of the application as shown to end users",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 
 			"device_only_auth_enabled": {
@@ -331,8 +331,8 @@ func applicationResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.IsAppUri,
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.IsAppUri,
 				},
 			},
 
@@ -350,10 +350,10 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"notes": {
-				Description:      "User-specified notes relevant for the management of the application",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "User-specified notes relevant for the management of the application",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			// This is a top level attribute because d.SetNewComputed() doesn't work inside a block
@@ -393,8 +393,8 @@ func applicationResource() *pluginsdk.Resource {
 				Set:         pluginsdk.HashString,
 				MaxItems:    100,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.IsUUID,
 				},
 			},
 
@@ -417,8 +417,8 @@ func applicationResource() *pluginsdk.Resource {
 							Optional:    true,
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.IsRedirectUriFunc(true, true),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.IsRedirectUriFunc(true, true),
 							},
 						},
 					},
@@ -443,10 +443,10 @@ func applicationResource() *pluginsdk.Resource {
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
 									"id": {
-										Description:      "",
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+										Description:  "",
+										Type:         pluginsdk.TypeString,
+										Required:     true,
+										ValidateFunc: validation.IsUUID,
 									},
 
 									"type": {
@@ -500,8 +500,8 @@ func applicationResource() *pluginsdk.Resource {
 							Optional:    true,
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.IsRedirectUriFunc(false, false),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.IsRedirectUriFunc(false, false),
 							},
 						},
 					},
@@ -527,12 +527,12 @@ func applicationResource() *pluginsdk.Resource {
 			},
 
 			"template_id": {
-				Description:      "Unique ID of the application template from which this application is created",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "Unique ID of the application template from which this application is created",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"terms_of_service_url": {
@@ -549,17 +549,17 @@ func applicationResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"homepage_url": {
-							Description:      "Home page or landing page of the application",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
+							Description:  "Home page or landing page of the application",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsHttpOrHttpsUrl,
 						},
 
 						"logout_url": {
-							Description:      "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.IsLogoutUrl,
+							Description:  "The URL that will be used by Microsoft's authorization service to sign out a user using front-channel, back-channel or SAML logout protocols",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsLogoutUrl,
 						},
 
 						"redirect_uris": {
@@ -568,8 +568,8 @@ func applicationResource() *pluginsdk.Resource {
 							Optional:    true,
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.IsRedirectUriFunc(true, false),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.IsRedirectUriFunc(true, false),
 							},
 						},
 
@@ -730,7 +730,7 @@ func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.Resou
 		}
 		// urn scheme not supported with personal account sign-ins
 		for _, v := range identifierUris {
-			if diags := validation.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, cty.Path{}); diags.HasError() {
+			if _, errs := validation.IsUriFunc([]string{"http", "https", "api", "ms-appx"}, false, false, false)(v, "identifier_uris"); len(errs) > 0 {
 				return fmt.Errorf("`identifier_uris` is invalid. The URN scheme is not supported when `sign_in_audience` is %q or %q",
 					msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount, msgraph.SignInAudiencePersonalMicrosoftAccount)
 			}

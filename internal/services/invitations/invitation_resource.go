@@ -36,11 +36,11 @@ func invitationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"redirect_url": {
-				Description:      "The URL that the user should be redirected to once the invitation is redeemed",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
+				Description:  "The URL that the user should be redirected to once the invitation is redeemed",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"user_email_address": {

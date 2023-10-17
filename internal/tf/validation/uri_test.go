@@ -5,8 +5,6 @@ package validation
 
 import (
 	"testing"
-
-	"github.com/hashicorp/go-cty/cty"
 )
 
 func TestIsHTTPSURL(t *testing.T) {
@@ -42,10 +40,13 @@ func TestIsHTTPSURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsHttpsUrl(tc.Url, cty.Path{})
+			warnings, errors := IsHttpsUrl(tc.Url, "test")
 
-			if len(diags) != tc.Errors {
-				t.Fatalf("Expected URLIsHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
+			if len(warnings) > 0 {
+				t.Fatalf("Expected URLIsHTTPS to have 0 not %d warnings for %q", len(warnings), tc.Url)
+			}
+			if len(errors) != tc.Errors {
+				t.Fatalf("Expected URLIsHTTPS to have %d not %d errors for %q", tc.Errors, len(errors), tc.Url)
 			}
 		})
 	}
@@ -84,10 +85,13 @@ func TestIsHTTPOrHTTPSURL(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsHttpOrHttpsUrl(tc.Url, cty.Path{})
+			warnings, errors := IsHttpOrHttpsUrl(tc.Url, "test")
 
-			if len(diags) != tc.Errors {
-				t.Fatalf("Expected URLIsHTTPOrHTTPS to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
+			if len(warnings) > 0 {
+				t.Fatalf("Expected URLIsHTTPOrHTTPS to have 0 not %d warnings for %q", len(warnings), tc.Url)
+			}
+			if len(errors) != tc.Errors {
+				t.Fatalf("Expected URLIsHTTPOrHTTPS to have %d not %d errors for %q", tc.Errors, len(errors), tc.Url)
 			}
 		})
 	}
@@ -142,10 +146,13 @@ func TestIsAppURI(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.Url, func(t *testing.T) {
-			diags := IsAppUri(tc.Url, cty.Path{})
+			warnings, errors := IsAppUri(tc.Url, "test")
 
-			if len(diags) != tc.Errors {
-				t.Fatalf("Expected URLIsAppURI to have %d not %d errors for %q", tc.Errors, len(diags), tc.Url)
+			if len(warnings) > 0 {
+				t.Fatalf("Expected URLIsAppURI to have 0 not %d warnings for %q", len(warnings), tc.Url)
+			}
+			if len(errors) != tc.Errors {
+				t.Fatalf("Expected URLIsAppURI to have %d not %d errors for %q", tc.Errors, len(errors), tc.Url)
 			}
 		})
 	}
@@ -201,9 +208,13 @@ func TestIsUriFunc(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			diags := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.AllowTrailingSlash, tc.ForceTrailingSlash)
-			if len(diags(tc.Url, cty.Path{})) != tc.Errors {
-				t.Fatalf("Expected IsUriFunc to have %d errors for %v", tc.Errors, tc.Url)
+			warnings, errors := IsUriFunc(tc.Schemes, tc.UrnAllowed, tc.AllowTrailingSlash, tc.ForceTrailingSlash)(tc.Url, "test")
+
+			if len(warnings) > 0 {
+				t.Fatalf("Expected IsUriFunc() to have 0 not %d warnings for %q", len(warnings), tc.Url)
+			}
+			if len(errors) != tc.Errors {
+				t.Fatalf("Expected IsUriFunc() to have %d not %d errors for %v", tc.Errors, len(errors), tc.Url)
 			}
 		})
 	}

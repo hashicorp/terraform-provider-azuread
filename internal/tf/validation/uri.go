@@ -8,147 +8,100 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
-func IsAppUri(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"http", "https", "api", "ms-appx"}, true, false, false)(i, path)
+func IsAppUri(i interface{}, k string) (warnings []string, errors []error) {
+	return IsUriFunc([]string{"http", "https", "api", "ms-appx"}, true, false, false)(i, k)
 }
 
-func IsHttpOrHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"http", "https"}, false, true, false)(i, path)
+func IsHttpOrHttpsUrl(i interface{}, k string) (warnings []string, errors []error) {
+	return IsUriFunc([]string{"http", "https"}, false, true, false)(i, k)
 }
 
-func IsHttpsUrl(i interface{}, path cty.Path) diag.Diagnostics {
-	return IsUriFunc([]string{"https"}, false, true, false)(i, path)
+func IsHttpsUrl(i interface{}, k string) (warnings []string, errors []error) {
+	return IsUriFunc([]string{"https"}, false, true, false)(i, k)
 }
 
-func IsLogoutUrl(i interface{}, path cty.Path) (ret diag.Diagnostics) {
-	ret = IsUriFunc([]string{"http", "https"}, false, true, false)(i, path)
-	if len(ret) > 0 {
+func IsLogoutUrl(i interface{}, k string) (warnings []string, errors []error) {
+	warnings, errors = IsUriFunc([]string{"http", "https"}, false, true, false)(i, k)
+	if len(errors) > 0 {
 		return
 	}
 
 	if len(i.(string)) > 255 {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "URL must be 255 characters or less",
-			AttributePath: path,
-		})
+		errors = append(errors, fmt.Errorf("URL must be 255 characters or less for %q", k))
 	}
 
 	return
 }
 
-func IsRedirectUriFunc(urnAllowed bool, publicClient bool) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func IsRedirectUriFunc(urnAllowed bool, publicClient bool) pluginsdk.SchemaValidateFunc {
+	return func(i interface{}, k string) (warnings []string, errors []error) {
 		// See https://docs.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy#register-the-proxyidentityexperienceframework-application
 		var allowedSchemes []string
 		if !publicClient {
 			allowedSchemes = []string{"http", "https", "ms-appx-web"}
 		}
 
-		ret = IsUriFunc(allowedSchemes, urnAllowed, true, true)(i, path)
-		if len(ret) > 0 {
+		warnings, errors = IsUriFunc(allowedSchemes, urnAllowed, true, true)(i, k)
+		if len(errors) > 0 {
 			return
 		}
 
 		if len(i.(string)) > 256 {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI must be 256 characters or less",
-				AttributePath: path,
-			})
+			errors = append(errors, fmt.Errorf("URI must be 256 characters or less for %q", k))
 		}
 
 		return
 	}
 }
 
-func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash bool, forceTrailingSlash bool) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash bool, forceTrailingSlash bool) pluginsdk.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
 		v, ok := i.(string)
 		if !ok {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Expected a string value",
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("expected a string value for %q", k)}
 		}
 
 		if v == "" {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI must not be empty",
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("URI must not be empty for %q", k)}
 		}
 
 		if urnAllowed {
 			parts := strings.Split(v, ":")
 			if len(parts) >= 3 && parts[0] == "urn" {
-				return
+				return nil, nil
 			}
 		}
 
 		u, err := url.Parse(v)
 		if err != nil {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI is in an invalid format",
-				Detail:        err.Error(),
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("URI is in an invalid format for %q", k)}
 		}
 
 		if !allowTrailingSlash && u.Path == "/" {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI must not have a trailing slash when there is no path segment",
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("URI must not have a trailing slash when there is no path segment for %q", k)}
 		}
 
 		if u.Host == "" {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI has no host",
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("URI has no host for %q", k)}
 		}
 
 		if validURLSchemes == nil {
-			return
+			return nil, nil
 		}
 
 		if forceTrailingSlash && u.Path == "" {
-			ret = append(ret, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "URI must have a trailing slash when there is no path segment",
-				AttributePath: path,
-			})
-			return
+			return nil, []error{fmt.Errorf("URI must have a trailing slash when there is no path segment for %q", k)}
 		}
 
 		for _, s := range validURLSchemes {
 			if u.Scheme == s {
-				return
+				return nil, nil
 			}
 		}
 
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       fmt.Sprintf("Expected URI to have a scheme of: %s", strings.Join(validURLSchemes, ", ")),
-			AttributePath: path,
-		})
-
-		return
+		return nil, []error{fmt.Errorf("unexpected URI scheme for %q, expected one of: %s", k, strings.Join(validURLSchemes, ", "))}
 	}
 }

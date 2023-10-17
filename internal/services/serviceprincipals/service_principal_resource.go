@@ -158,10 +158,10 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"login_url": {
-				Description:      "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
+				Description:  "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"notes": {
