@@ -63,7 +63,7 @@ func (id PermissionScopeId) ID() string {
 	return fmt.Sprintf(fmtString, id.ApplicationId, id.ScopeID)
 }
 
-// Segments returns a slice of Resource ID Segments which comprise this B 2 C Directory ID
+// Segments returns a slice of Resource ID Segments which comprise this ID
 func (id PermissionScopeId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applications", "applications", "applications"),
