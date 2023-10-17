@@ -495,7 +495,7 @@ func applicationDataSource() *pluginsdk.Resource {
 }
 
 func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 

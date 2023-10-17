@@ -54,7 +54,7 @@ func TestAccApplicationPreAuthorized_requiresImport(t *testing.T) {
 }
 
 func (ApplicationPreAuthorizedResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
+	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 

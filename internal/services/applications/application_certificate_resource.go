@@ -123,7 +123,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 }
 
 func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	objectId := d.Get("application_object_id").(string)
 
 	credential, err := helpers.KeyCredentialForResource(d)
@@ -211,7 +211,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 }
 
 func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {
@@ -255,7 +255,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 }
 
 func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {

@@ -641,7 +641,7 @@ func applicationResource() *pluginsdk.Resource {
 }
 
 func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
 
 	if diff.Get("prevent_duplicate_names").(bool) && pluginsdk.ValueIsNotEmptyOrUnknown(newDisplayName) &&
@@ -896,7 +896,7 @@ func applicationDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool
 }
 
 func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	appTemplatesClient := meta.(*clients.Client).Applications.ApplicationTemplatesClient
 	directoryObjectsClient := meta.(*clients.Client).Applications.DirectoryObjectsClient
 	callerId := meta.(*clients.Client).ObjectID
@@ -980,10 +980,10 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
 		Info: &msgraph.InformationalUrl{
-			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
-			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
-			SupportUrl:          utils.String(d.Get("support_url").(string)),
-			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
+			MarketingUrl:        utils.NullableString(d.Get("marketing_url").(string)),
+			PrivacyStatementUrl: utils.NullableString(d.Get("privacy_statement_url").(string)),
+			SupportUrl:          utils.NullableString(d.Get("support_url").(string)),
+			TermsOfServiceUrl:   utils.NullableString(d.Get("terms_of_service_url").(string)),
 		},
 		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
@@ -1123,7 +1123,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	tenantId := meta.(*clients.Client).TenantID
 	applicationId := d.Id()
 	displayName := d.Get("display_name").(string)
@@ -1175,10 +1175,10 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
 		Info: &msgraph.InformationalUrl{
-			MarketingUrl:        utils.String(d.Get("marketing_url").(string)),
-			PrivacyStatementUrl: utils.String(d.Get("privacy_statement_url").(string)),
-			SupportUrl:          utils.String(d.Get("support_url").(string)),
-			TermsOfServiceUrl:   utils.String(d.Get("terms_of_service_url").(string)),
+			MarketingUrl:        utils.NullableString(d.Get("marketing_url").(string)),
+			PrivacyStatementUrl: utils.NullableString(d.Get("privacy_statement_url").(string)),
+			SupportUrl:          utils.NullableString(d.Get("support_url").(string)),
+			TermsOfServiceUrl:   utils.NullableString(d.Get("terms_of_service_url").(string)),
 		},
 		IsDeviceOnlyAuthSupported:  utils.Bool(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:     utils.Bool(d.Get("fallback_public_client_enabled").(bool)),
@@ -1252,7 +1252,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	app, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
@@ -1325,7 +1325,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 }
 
 func applicationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	appId := d.Id()
 
 	_, status, err := client.Get(ctx, appId, odata.Query{})

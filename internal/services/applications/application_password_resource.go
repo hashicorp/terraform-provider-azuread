@@ -117,7 +117,7 @@ func applicationPasswordResource() *pluginsdk.Resource {
 }
 
 func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	objectId := d.Get("application_object_id").(string)
 
 	credential, err := helpers.PasswordCredentialForResource(d)
@@ -201,7 +201,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 }
 
 func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.PasswordID(d.Id())
 	if err != nil {
@@ -255,7 +255,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 }
 
 func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.PasswordID(d.Id())
 	if err != nil {

@@ -98,7 +98,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 }
 
 func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	objectId := d.Get("application_object_id").(string)
 
 	tf.LockByName(applicationResourceName, objectId)
@@ -174,7 +174,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 }
 
 func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {
@@ -201,7 +201,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 }
 
 func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {
@@ -231,7 +231,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 }
 
 func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {

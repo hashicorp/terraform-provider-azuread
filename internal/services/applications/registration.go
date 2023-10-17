@@ -3,7 +3,10 @@
 
 package applications
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+)
 
 type Registration struct{}
 
@@ -36,5 +39,17 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 		"azuread_application_federated_identity_credential": applicationFederatedIdentityCredentialResource(),
 		"azuread_application_password":                      applicationPasswordResource(),
 		"azuread_application_pre_authorized":                applicationPreAuthorizedResource(),
+	}
+}
+
+// DataSources returns the typed DataSources supported by this service
+func (r Registration) DataSources() []sdk.DataSource {
+	return []sdk.DataSource{}
+}
+
+// Resources returns the typed Resources supported by this service
+func (r Registration) Resources() []sdk.Resource {
+	return []sdk.Resource{
+		ApplicationRegistrationResource{},
 	}
 }

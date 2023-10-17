@@ -72,7 +72,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 }
 
 func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id := parse.NewApplicationPreAuthorizedID(d.Get("application_object_id").(string), d.Get("authorized_app_id").(string))
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
@@ -123,7 +123,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 }
 
 func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
@@ -176,7 +176,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 }
 
 func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
@@ -219,7 +219,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.Reso
 }
 
 func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
