@@ -68,7 +68,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 				Description:  "The application ID of the pre-authorized application",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				Computed:     true, // TODO remove Computed in v3.0
+				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
 				Deprecated:   "The `authorized_app_id` property has been replaced with the `authorized_client_id` property and will be removed in version 3.0 of the AzureAD provider",
@@ -79,7 +79,7 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 				Description:  "The client ID of the pre-authorized application",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				Computed:     true,
+				Computed:     true, // TODO remove Computed in v3.0
 				ForceNew:     true,
 				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
 				ValidateFunc: validation.IsUUID,
