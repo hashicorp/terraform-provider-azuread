@@ -12,7 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
@@ -20,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 func applicationPasswordResource() *pluginsdk.Resource {
@@ -46,12 +47,25 @@ func applicationPasswordResource() *pluginsdk.Resource {
 		},
 
 		Schema: map[string]*pluginsdk.Schema{
+			"application_id": {
+				Description:  "The resource ID of the application for which this password should be created",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true, // TODO remove Computed in v3.0
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				ValidateFunc: parse.ValidateApplicationID,
+			},
+
 			"application_object_id": {
-				Description:      "The object ID of the application for which this password should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the application for which this password should be created",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
+				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
 			},
 
 			"display_name": {
@@ -82,12 +96,12 @@ func applicationPasswordResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:      "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"rotate_when_changed": {
@@ -118,7 +132,26 @@ func applicationPasswordResource() *pluginsdk.Resource {
 
 func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
 	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
-	objectId := d.Get("application_object_id").(string)
+
+	var applicationId *parse.ApplicationId
+	var err error
+	if v := d.Get("application_id").(string); v != "" {
+		if applicationId, err = parse.ParseApplicationID(v); err != nil {
+			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
+		}
+	} else {
+		// TODO: this permits parsing the application_object_id as either a structured ID or a bare UUID, to avoid
+		// breaking users who might have `application_object_id = azuread_application.foo.id` in their config, and
+		// should be removed in version 3.0 along with the application_object_id property
+		v = d.Get("application_object_id").(string)
+		if _, err = uuid.ParseUUID(v); err == nil {
+			applicationId = pointer.To(parse.NewApplicationID(v))
+		} else {
+			if applicationId, err = parse.ParseApplicationID(v); err != nil {
+				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
+			}
+		}
+	}
 
 	credential, err := helpers.PasswordCredentialForResource(d)
 	if err != nil {
@@ -126,24 +159,24 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		if kerr, ok := err.(helpers.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for application with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for %s", applicationId)
 	}
 	if credential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential was returned"), "Generating password credentials for application with object ID %q", objectId)
+		return tf.ErrorDiagF(errors.New("nil credential was returned"), "Generating password credentials for %s", applicationId)
 	}
 
-	tf.LockByName(applicationResourceName, objectId)
-	defer tf.UnlockByName(applicationResourceName, objectId)
+	tf.LockByName(applicationResourceName, applicationId.ApplicationId)
+	defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
 
-	app, status, err := client.Get(ctx, objectId, odata.Query{})
+	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", objectId)
+			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", applicationId.ApplicationId)
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", applicationId.ApplicationId)
 	}
 	if app == nil || app.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
+		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", applicationId.ApplicationId)
 	}
 
 	newCredential, _, err := client.AddPassword(ctx, *app.ID(), *credential)
@@ -208,7 +241,9 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := parse.NewApplicationID(id.ObjectId)
+
+	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -225,7 +260,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		return nil
 	}
 
-	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "application_id", applicationId.ID())
 
 	if credential.DisplayName != nil {
 		tf.Set(d, "display_name", credential.DisplayName)
@@ -250,6 +285,12 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		endDate = v.Format(time.RFC3339)
 	}
 	tf.Set(d, "end_date", endDate)
+
+	if v := d.Get("application_object_id").(string); v != "" {
+		tf.Set(d, "application_object_id", v)
+	} else {
+		tf.Set(d, "application_object_id", id.ObjectId)
+	}
 
 	return nil
 }
@@ -281,10 +322,10 @@ func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 
 		credential := helpers.GetPasswordCredential(app.PasswordCredentials, id.KeyId)
 		if credential == nil {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}

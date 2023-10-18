@@ -10,25 +10,22 @@ import (
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
 func ResourceApplicationPasswordInstanceResourceV0() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Schema: map[string]*pluginsdk.Schema{
 			"application_object_id": {
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Type:     pluginsdk.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"key_id": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 
 			"description": {
@@ -39,19 +36,17 @@ func ResourceApplicationPasswordInstanceResourceV0() *pluginsdk.Resource {
 			},
 
 			"value": {
-				Type:         pluginsdk.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(1, 863),
+				Type:      pluginsdk.TypeString,
+				Required:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 
 			"start_date": {
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 
 			"end_date": {
@@ -60,15 +55,13 @@ func ResourceApplicationPasswordInstanceResourceV0() *pluginsdk.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"end_date_relative"},
-				ValidateFunc: validation.IsRFC3339Time,
 			},
 
 			"end_date_relative": {
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ExactlyOneOf:     []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"end_date"},
 			},
 		},
 	}

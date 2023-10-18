@@ -12,14 +12,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -30,9 +31,9 @@ func applicationCertificateResource() *pluginsdk.Resource {
 		DeleteContext: applicationCertificateResourceDelete,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Create: pluginsdk.DefaultTimeout(10 * time.Minute),
 			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
-			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(10 * time.Minute),
 			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -42,12 +43,25 @@ func applicationCertificateResource() *pluginsdk.Resource {
 		}),
 
 		Schema: map[string]*pluginsdk.Schema{
+			"application_id": {
+				Description:  "The resource ID of the application for which this certificate should be created",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true, // TODO remove Computed in v3.0
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				ValidateFunc: parse.ValidateApplicationID,
+			},
+
 			"application_object_id": {
-				Description:      "The object ID of the application for which this certificate should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the application for which this certificate should be created",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
+				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
 			},
 
 			"encoding": {
@@ -64,12 +78,12 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"key_id": {
-				Description:      "A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"start_date": {
@@ -92,12 +106,12 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:      "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"type": {
@@ -112,7 +126,7 @@ func applicationCertificateResource() *pluginsdk.Resource {
 			},
 
 			"value": {
-				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argumen",
+				Description: "The certificate data, which can be PEM encoded, base64 encoded DER or hexadecimal encoded DER. See also the `encoding` argument",
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -124,7 +138,26 @@ func applicationCertificateResource() *pluginsdk.Resource {
 
 func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
-	objectId := d.Get("application_object_id").(string)
+
+	var applicationId *parse.ApplicationId
+	var err error
+	if v := d.Get("application_id").(string); v != "" {
+		if applicationId, err = parse.ParseApplicationID(v); err != nil {
+			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
+		}
+	} else {
+		// TODO: this permits parsing the application_object_id as either a structured ID or a bare UUID, to avoid
+		// breaking users who might have `application_object_id = azuread_application.foo.id` in their config, and
+		// should be removed in version 3.0 along with the application_object_id property
+		v = d.Get("application_object_id").(string)
+		if _, err = uuid.ParseUUID(v); err == nil {
+			applicationId = pointer.To(parse.NewApplicationID(v))
+		} else {
+			if applicationId, err = parse.ParseApplicationID(v); err != nil {
+				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
+			}
+		}
+	}
 
 	credential, err := helpers.KeyCredentialForResource(d)
 	if err != nil {
@@ -132,13 +165,13 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 		if kerr, ok := err.(helpers.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for application with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for %s", applicationId)
 	}
 
 	if credential.KeyId == nil {
 		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
 	}
-	id := parse.NewCredentialID(objectId, "certificate", *credential.KeyId)
+	id := parse.NewCredentialID(applicationId.ApplicationId, "certificate", *credential.KeyId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -218,7 +251,9 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := parse.NewApplicationID(id.ObjectId)
+
+	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
@@ -235,7 +270,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 		return nil
 	}
 
-	tf.Set(d, "application_object_id", id.ObjectId)
+	tf.Set(d, "application_id", applicationId.ID())
 	tf.Set(d, "key_id", id.KeyId)
 	tf.Set(d, "type", credential.Type)
 
@@ -250,6 +285,12 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 		endDate = v.Format(time.RFC3339)
 	}
 	tf.Set(d, "end_date", endDate)
+
+	if v := d.Get("application_object_id").(string); v != "" {
+		tf.Set(d, "application_object_id", v)
+	} else {
+		tf.Set(d, "application_object_id", id.ObjectId)
+	}
 
 	return nil
 }
@@ -304,10 +345,10 @@ func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.Reso
 
 		credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
 		if credential == nil {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
