@@ -124,7 +124,9 @@ resource "azuread_application_registration" "test" {
   display_name     = "acctest-AppRegistration-complete-%[1]d"
   sign_in_audience = "AzureADandPersonalMicrosoftAccount"
 
-  requested_access_token_version = 2
+  requested_access_token_version         = 2
+  implicit_access_token_issuance_enabled = true
+  implicit_id_token_issuance_enabled     = true
 
   description                  = "Acceptance testing application"
   notes                        = "Testing application"

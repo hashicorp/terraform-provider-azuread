@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
@@ -23,21 +22,23 @@ import (
 )
 
 type ApplicationRegistrationModel struct {
-	ClientId                    string `tfschema:"client_id"`
-	Description                 string `tfschema:"description"`
-	DisabledByMicrosoft         string `tfschema:"disabled_by_microsoft"`
-	DisplayName                 string `tfschema:"display_name"`
-	HomepageUrl                 string `tfschema:"homepage_url"`
-	LogoutUrl                   string `tfschema:"logout_url"`
-	MarketingUrl                string `tfschema:"marketing_url"`
-	Notes                       string `tfschema:"notes"`
-	PrivacyStatementUrl         string `tfschema:"privacy_statement_url"`
-	PublisherDomain             string `tfschema:"publisher_domain"`
-	RequestedAccessTokenVersion int    `tfschema:"requested_access_token_version"`
-	ServiceManagementReference  string `tfschema:"service_management_reference"`
-	SignInAudience              string `tfschema:"sign_in_audience"`
-	SupportUrl                  string `tfschema:"support_url"`
-	TermsOfServiceUrl           string `tfschema:"terms_of_service_url"`
+	ClientId                           string `tfschema:"client_id"`
+	Description                        string `tfschema:"description"`
+	DisabledByMicrosoft                string `tfschema:"disabled_by_microsoft"`
+	DisplayName                        string `tfschema:"display_name"`
+	HomepageUrl                        string `tfschema:"homepage_url"`
+	ImplicitAccessTokenIssuanceEnabled bool   `tfschema:"implicit_access_token_issuance_enabled"`
+	ImplicitIdTokenIssuanceEnabled     bool   `tfschema:"implicit_id_token_issuance_enabled"`
+	LogoutUrl                          string `tfschema:"logout_url"`
+	MarketingUrl                       string `tfschema:"marketing_url"`
+	Notes                              string `tfschema:"notes"`
+	PrivacyStatementUrl                string `tfschema:"privacy_statement_url"`
+	PublisherDomain                    string `tfschema:"publisher_domain"`
+	RequestedAccessTokenVersion        int    `tfschema:"requested_access_token_version"`
+	ServiceManagementReference         string `tfschema:"service_management_reference"`
+	SignInAudience                     string `tfschema:"sign_in_audience"`
+	SupportUrl                         string `tfschema:"support_url"`
+	TermsOfServiceUrl                  string `tfschema:"terms_of_service_url"`
 }
 
 type ApplicationRegistrationResource struct{}
@@ -77,6 +78,18 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.IsHttpOrHttpsUrl,
+		},
+
+		"implicit_access_token_issuance_enabled": {
+			Description: "Whether this application can request an access token using OAuth implicit flow",
+			Type:        pluginsdk.TypeBool,
+			Optional:    true,
+		},
+
+		"implicit_id_token_issuance_enabled": {
+			Description: "Whether this application can request an ID token using OAuth implicit flow",
+			Type:        pluginsdk.TypeBool,
+			Optional:    true,
 		},
 
 		"logout_url": {
@@ -217,6 +230,11 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 				Web: &msgraph.ApplicationWeb{
 					HomePageUrl: tf.NullableString(model.HomepageUrl),
 					LogoutUrl:   tf.NullableString(model.LogoutUrl),
+
+					ImplicitGrantSettings: &msgraph.ImplicitGrantSettings{
+						EnableAccessTokenIssuance: pointer.To(model.ImplicitAccessTokenIssuanceEnabled),
+						EnableIdTokenIssuance:     pointer.To(model.ImplicitIdTokenIssuanceEnabled),
+					},
 				},
 			}
 
@@ -231,29 +249,6 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 
 			id := parse.NewApplicationID(*result.ID())
 			metadata.SetID(id)
-
-			// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
-			// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-			uuid, err := uuid.GenerateUUID()
-			if err != nil {
-				return fmt.Errorf("failed to generate a UUID: %v", err)
-			}
-			tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
-			for _, displayNameToSet := range []string{tempDisplayName, model.DisplayName} {
-				// Consistency-related retries are handled by the SDK
-				status, err := client.Update(ctx, msgraph.Application{
-					DirectoryObject: msgraph.DirectoryObject{
-						Id: &id.ApplicationId,
-					},
-					DisplayName: utils.String(displayNameToSet),
-				})
-				if err != nil {
-					if status == http.StatusNotFound {
-						return fmt.Errorf("timed out whilst waiting for new %s to be replicated in Azure AD", id)
-					}
-					return fmt.Errorf("failed to patch %s after creating: %+v", id, err)
-				}
-			}
 
 			return nil
 		},
@@ -309,6 +304,11 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 			if web := result.Web; web != nil {
 				state.HomepageUrl = string(pointer.From(web.HomePageUrl))
 				state.LogoutUrl = string(pointer.From(web.LogoutUrl))
+
+				if implicitGrant := web.ImplicitGrantSettings; implicitGrant != nil {
+					state.ImplicitAccessTokenIssuanceEnabled = pointer.From(implicitGrant.EnableAccessTokenIssuance)
+					state.ImplicitIdTokenIssuanceEnabled = pointer.From(implicitGrant.EnableIdTokenIssuance)
+				}
 			}
 
 			if result.DisabledByMicrosoftStatus != nil {
@@ -389,7 +389,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 				}
 			}
 
-			if rd.HasChange("homepage_url") || rd.HasChange("logout_url") {
+			if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("homepage_url") || rd.HasChange("implicit_id_token_issuance_enabled") || rd.HasChange("logout_url") {
 				properties.Web = &msgraph.ApplicationWeb{}
 
 				if rd.HasChange("homepage_url") {
@@ -398,6 +398,18 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 
 				if rd.HasChange("logout_url") {
 					properties.Web.LogoutUrl = tf.NullableString(model.LogoutUrl)
+				}
+
+				if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("implicit_id_token_issuance_enabled") {
+					properties.Web.ImplicitGrantSettings = &msgraph.ImplicitGrantSettings{}
+
+					if rd.HasChange("implicit_access_token_issuance_enabled") {
+						properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = pointer.To(model.ImplicitAccessTokenIssuanceEnabled)
+					}
+
+					if rd.HasChange("implicit_id_token_issuance_enabled") {
+						properties.Web.ImplicitGrantSettings.EnableIdTokenIssuance = pointer.To(model.ImplicitIdTokenIssuanceEnabled)
+					}
 				}
 			}
 
