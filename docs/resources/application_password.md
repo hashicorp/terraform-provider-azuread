@@ -10,9 +10,9 @@ Manages a password credential associated with an application within Azure Active
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.OwnedBy` or `Application.ReadWrite.All`
 
--> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+-> When using the `Application.ReadWrite.OwnedBy` application role, the principal being used to run Terraform must be an owner of the application.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
@@ -21,19 +21,19 @@ When authenticated with a user principal, this resource requires one of the foll
 *Basic example*
 
 ```terraform
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "example"
 }
 
 resource "azuread_application_password" "example" {
-  application_object_id = azuread_application.example.object_id
+  application_id = azuread_application_registration.example.id
 }
 ```
 
 *Time-based rotation*
 
 ```terraform
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "example"
 }
 
@@ -42,7 +42,7 @@ resource "time_rotating" "example" {
 }
 
 resource "azuread_application_password" "example" {
-  application_object_id = azuread_application.example.object_id
+  application_id = azuread_application_registration.example.id
   rotate_when_changed = {
     rotation = time_rotating.example.id
   }
@@ -53,7 +53,11 @@ resource "azuread_application_password" "example" {
 
 The following arguments are supported:
 
-* `application_object_id` - (Required) The object ID of the application for which this password should be created. Changing this field forces a new resource to be created.
+* `application_id` - (Optional) The resource ID of the application for which this password should be created. Changing this field forces a new resource to be created.
+* `application_object_id` - (Optional, Deprecated) The object ID of the application for which this password should be created. Changing this field forces a new resource to be created.
+
+~> One of `application_id` or `application_object_id` must be specified.
+
 * `display_name` - (Optional) A display name for the password. Changing this field forces a new resource to be created.
 * `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
 * `end_date_relative` - (Optional) A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created.

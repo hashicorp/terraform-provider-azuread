@@ -10,42 +10,42 @@ Manages a certificate associated with an application within Azure Active Directo
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.OwnedBy` or `Application.ReadWrite.All`
 
--> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+-> When using the `Application.ReadWrite.OwnedBy` application role, the principal being used to run Terraform must be an owner of the application.
 
-When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+When authenticated with a user principal, this resource may require one of the following directory roles: `Application Administrator` or `Global Administrator`
 
 ## Example Usage
 
 *Using a PEM certificate*
 
 ```terraform
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "example"
 }
 
 resource "azuread_application_certificate" "example" {
-  application_object_id = azuread_application.example.id
-  type                  = "AsymmetricX509Cert"
-  value                 = file("cert.pem")
-  end_date              = "2021-05-01T01:02:03Z"
+  application_id = azuread_application_registration.example.id
+  type           = "AsymmetricX509Cert"
+  value          = file("cert.pem")
+  end_date       = "2021-05-01T01:02:03Z"
 }
 ```
 
 *Using a DER certificate*
 
 ```terraform
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "example"
 }
 
 resource "azuread_application_certificate" "example" {
-  application_object_id = azuread_application.example.id
-  type                  = "AsymmetricX509Cert"
-  encoding              = "base64"
-  value                 = base64encode(file("cert.der"))
-  end_date              = "2021-05-01T01:02:03Z"
+  application_id = azuread_application_registration.example.id
+  type           = "AsymmetricX509Cert"
+  encoding       = "base64"
+  value          = base64encode(file("cert.der"))
+  end_date       = "2021-05-01T01:02:03Z"
 }
 ```
 
@@ -107,12 +107,12 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_application_certificate" "example" {
-  application_object_id = azuread_application.example.id
-  type                  = "AsymmetricX509Cert"
-  encoding              = "hex"
-  value                 = azurerm_key_vault_certificate.example.certificate_data
-  end_date              = azurerm_key_vault_certificate.example.certificate_attribute[0].expires
-  start_date            = azurerm_key_vault_certificate.example.certificate_attribute[0].not_before
+  application_id = azuread_application.example.id
+  type           = "AsymmetricX509Cert"
+  encoding       = "hex"
+  value          = azurerm_key_vault_certificate.example.certificate_data
+  end_date       = azurerm_key_vault_certificate.example.certificate_attribute[0].expires
+  start_date     = azurerm_key_vault_certificate.example.certificate_attribute[0].not_before
 }
 ```
 
@@ -120,7 +120,11 @@ resource "azuread_application_certificate" "example" {
 
 The following arguments are supported:
 
-* `application_object_id` - (Required) The object ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
+* `application_id` - (Optional) The resource ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
+* `application_object_id` - (Optional, Deprecated) The object ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
+
+~> One of `application_id` or `application_object_id` must be specified.
+
 * `encoding` - (Optional) Specifies the encoding used for the supplied certificate data. Must be one of `pem`, `base64` or `hex`. Defaults to `pem`.
 
 -> **Tip for Azure Key Vault** The `hex` encoding option is useful for consuming certificate data from the [azurerm_key_vault_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) resource.
@@ -128,7 +132,7 @@ The following arguments are supported:
 * `end_date` - (Optional) The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If omitted, the API will decide a suitable expiry date, which is typically around 2 years from the start date. Changing this field forces a new resource to be created.
 * `end_date_relative` - (Optional) A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created.
 
-~> One of `end_date` or `end_date_relative` must be set. The maximum allowed duration is determined by Azure AD.
+~> One of `end_date` or `end_date_relative` must be specified. The maximum allowed duration is determined by Azure AD and is typically around 2 years from the creation date.
 
 * `key_id` - (Optional) A UUID used to uniquely identify this certificate. If omitted, a random UUID will be automatically generated. Changing this field forces a new resource to be created.
 * `start_date` - (Optional) The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the value is determined by Azure Active Directory and is usually the start date of the certificate for asymmetric keys, or the current timestamp for symmetric keys. Changing this field forces a new resource to be created.
