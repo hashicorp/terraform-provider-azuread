@@ -36,11 +36,11 @@ func IsLogoutUrl(i interface{}, k string) (warnings []string, errors []error) {
 	return
 }
 
-func IsRedirectUriFunc(urnAllowed bool, publicClient bool) pluginsdk.SchemaValidateFunc {
+func IsRedirectUriFunc(urnAllowed bool, allowAllSchemes bool) pluginsdk.SchemaValidateFunc {
 	return func(i interface{}, k string) (warnings []string, errors []error) {
 		// See https://docs.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy#register-the-proxyidentityexperienceframework-application
 		var allowedSchemes []string
-		if !publicClient {
+		if !allowAllSchemes {
 			allowedSchemes = []string{"http", "https", "ms-appx-web"}
 		}
 
@@ -57,7 +57,7 @@ func IsRedirectUriFunc(urnAllowed bool, publicClient bool) pluginsdk.SchemaValid
 	}
 }
 
-func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash bool, forceTrailingSlash bool) pluginsdk.SchemaValidateFunc {
+func IsUriFunc(validUriSchemes []string, urnAllowed bool, allowTrailingSlash bool, forceTrailingSlash bool) pluginsdk.SchemaValidateFunc {
 	return func(i interface{}, k string) ([]string, []error) {
 		v, ok := i.(string)
 		if !ok {
@@ -88,7 +88,7 @@ func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash boo
 			return nil, []error{fmt.Errorf("URI has no host for %q", k)}
 		}
 
-		if validURLSchemes == nil {
+		if len(validUriSchemes) == 0 {
 			return nil, nil
 		}
 
@@ -96,12 +96,12 @@ func IsUriFunc(validURLSchemes []string, urnAllowed bool, allowTrailingSlash boo
 			return nil, []error{fmt.Errorf("URI must have a trailing slash when there is no path segment for %q", k)}
 		}
 
-		for _, s := range validURLSchemes {
+		for _, s := range validUriSchemes {
 			if u.Scheme == s {
 				return nil, nil
 			}
 		}
 
-		return nil, []error{fmt.Errorf("unexpected URI scheme for %q, expected one of: %s", k, strings.Join(validURLSchemes, ", "))}
+		return nil, []error{fmt.Errorf("unexpected URI scheme for %q, expected one of: %s", k, strings.Join(validUriSchemes, ", "))}
 	}
 }
