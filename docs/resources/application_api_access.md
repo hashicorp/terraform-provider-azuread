@@ -6,20 +6,7 @@ subcategory: "Applications"
 
 Manages the API permissions for an application registration.
 
-This resource is analogous to the `required_resource_access` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle), for example:
-
-```terraform
-
-resource "azuread_application" "example" {
-  display_name = "example"
-
-  lifecycle {
-    ignore_changes = [
-      required_resource_access,
-    ]
-  }
-}
-```
+This resource is analogous to the `required_resource_access` block in the `azuread_application` resource. When using these resources together, you should use the `ignore_changes` [lifecycle meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle) (see example below).
 
 ## API Permissions
 
@@ -59,14 +46,34 @@ resource "azuread_application_api_access" "example_msgraph" {
 }
 ```
 
--> Tip: For managing permissions for an additional API, create another instance of this resource
+-> **Tip** For managing permissions for an additional API, create another instance of this resource
+
+*Usage with azuread_application resource*
+
+```terraform
+
+resource "azuread_application" "example" {
+  display_name = "example"
+
+  lifecycle {
+    ignore_changes = [
+      required_resource_access,
+    ]
+  }
+}
+
+resource "azuread_application_api_access" "example" {
+  application_id = azuread_application.example.id
+  # ...
+}
+```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration.
 * `api_client_id` - (Required) The client ID of the API to which access is being granted.
+* `application_id` - (Required) The resource ID of the application registration.
 * `role_ids` - (Optional) A set of role IDs to be granted to the application, as published by the API.
 * `scope_ids` - (Optional) A set of scope IDs to be granted to the application, as published by the API.
 
