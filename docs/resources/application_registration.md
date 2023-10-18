@@ -14,12 +14,12 @@ The following API permissions are required in order to use this resource.
 
 When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.OwnedBy` or `Application.ReadWrite.All`
 
-When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+When authenticated with a user principal, this resource may require one of the following directory roles: `Application Administrator` or `Global Administrator`
 
 ## Example Usage
 
 ```terraform
-resource "azuread_application_registration" "test" {
+resource "azuread_application_registration" "example" {
   display_name     = "Example Application"
   description      = "My example application"
   sign_in_audience = "AzureADMyOrg"
@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `description` - (Optional) A description of the application, as shown to end users.
 * `display_name` - (Required) The display name for the application.
-* `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
+* `group_membership_claims` - (Optional) Configures the `groups` claim issued in a user or OAuth access token that the app expects. Possible values are `None`, `SecurityGroup`, `DirectoryRole`, `ApplicationGroup` or `All`.
 * `homepage_url` - (Optional) Home page or landing page of the application.
 * `implicit_access_token_issuance_enabled` - (Optional) Whether this web application can request an access token using OAuth implicit flow.
 * `implicit_id_token_issuance_enabled` - (Optional) Whether this web application can request an ID token using OAuth implicit flow.
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `marketing_url` - (Optional) URL of the marketing page for the application.
 * `notes` - (Optional) User-specified notes relevant for the management of the application.
 * `privacy_statement_url` - (Optional) URL of the privacy statement for the application.
-* `requested_access_token_version` - (Optional) The access token version expected by this resource. Must be one of `1` or `2`, and must be `2` when `sign_in_audience` is either `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount` Defaults to `1`.
+* `requested_access_token_version` - (Optional) The access token version expected by this resource. Must be one of `1` or `2`, and must be `2` when `sign_in_audience` is either `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount` Defaults to `2`.
 * `service_management_reference` - (Optional) References application context information from a Service or Asset Management database.
 * `sign_in_audience` - (Optional) The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`. Defaults to `AzureADMyOrg`.
 * `support_url` - (Optional) URL of the support page for the application.

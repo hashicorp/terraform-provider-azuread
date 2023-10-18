@@ -18,7 +18,7 @@ When authenticated with a service principal, this resource requires one of the f
 
 Additionally, you may need the `User.Read.All` application role when including user principals in the `owners` property.
 
-When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+When authenticated with a user principal, this resource may require one of the following directory roles: `Application Administrator` or `Global Administrator`
 
 ## Example Usage
 

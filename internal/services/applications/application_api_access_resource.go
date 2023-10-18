@@ -21,14 +21,10 @@ import (
 )
 
 type ApplicationApiAccessModel struct {
-	ApplicationId string                           `tfschema:"application_id"`
-	ApiClientId   string                           `tfschema:"api_client_id"`
-	Permission    []ApplicationApiAccessPermission `tfschema:"permission"`
-}
-
-type ApplicationApiAccessPermission struct {
-	Id   string `tfschema:"id"`
-	Type string `tfschema:"type"`
+	ApplicationId string   `tfschema:"application_id"`
+	ApiClientId   string   `tfschema:"api_client_id"`
+	RoleIds       []string `tfschema:"role_ids"`
+	ScopeIds      []string `tfschema:"scope_ids"`
 }
 
 type ApplicationApiAccessResource struct{}
@@ -65,32 +61,25 @@ func (r ApplicationApiAccessResource) Arguments() map[string]*pluginsdk.Schema {
 			ValidateFunc: validation.IsUUID,
 		},
 
-		"permission": {
-			Description: "A list of permission IDs and their types that are being granted to the application",
-			Type:        pluginsdk.TypeSet,
-			Required:    true,
-			Elem: &pluginsdk.Resource{
-				Schema: map[string]*pluginsdk.Schema{
-					"id": {
-						Description:  "The ID of the app role or permission scope which is being granted",
-						Type:         pluginsdk.TypeString,
-						Required:     true,
-						ValidateFunc: validation.IsUUID,
-					},
+		"role_ids": {
+			Description:  "A set of role IDs to be granted to the application, as published by the API",
+			Type:         pluginsdk.TypeSet,
+			Optional:     true,
+			AtLeastOneOf: []string{"role_ids", "scope_ids"},
+			Elem: &pluginsdk.Schema{
+				Type:         pluginsdk.TypeString,
+				ValidateFunc: validation.IsUUID,
+			},
+		},
 
-					"type": {
-						Description: "The type of permission being granted",
-						Type:        pluginsdk.TypeString,
-						Required:    true,
-						ValidateFunc: validation.StringInSlice(
-							[]string{
-								msgraph.ResourceAccessTypeRole,
-								msgraph.ResourceAccessTypeScope,
-							},
-							false,
-						),
-					},
-				},
+		"scope_ids": {
+			Description:  "A set of scope IDs to be granted to the application, as published by the API",
+			Type:         pluginsdk.TypeSet,
+			Optional:     true,
+			AtLeastOneOf: []string{"role_ids", "scope_ids"},
+			Elem: &pluginsdk.Schema{
+				Type:         pluginsdk.TypeString,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
@@ -146,10 +135,16 @@ func (r ApplicationApiAccessResource) Create() sdk.ResourceFunc {
 			}
 
 			permissions := make([]msgraph.ResourceAccess, 0)
-			for _, permission := range model.Permission {
+			for _, roleId := range model.RoleIds {
 				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(permission.Id),
-					Type: permission.Type,
+					ID:   pointer.To(roleId),
+					Type: msgraph.ResourceAccessTypeRole,
+				})
+			}
+			for _, scopeId := range model.ScopeIds {
+				permissions = append(permissions, msgraph.ResourceAccess{
+					ID:   pointer.To(scopeId),
+					Type: msgraph.ResourceAccessTypeScope,
 				})
 			}
 
@@ -223,18 +218,22 @@ func (r ApplicationApiAccessResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: resourceAccess was nil", id)
 			}
 
-			permissions := make([]ApplicationApiAccessPermission, 0)
+			roleIds := make([]string, 0)
+			scopeIds := make([]string, 0)
 			for _, permission := range *api.ResourceAccess {
-				permissions = append(permissions, ApplicationApiAccessPermission{
-					Id:   pointer.From(permission.ID),
-					Type: permission.Type,
-				})
+				switch permission.Type {
+				case msgraph.ResourceAccessTypeRole:
+					roleIds = append(roleIds, pointer.From(permission.ID))
+				case msgraph.ResourceAccessTypeScope:
+					scopeIds = append(scopeIds, pointer.From(permission.ID))
+				}
 			}
 
 			state := ApplicationApiAccessModel{
 				ApplicationId: applicationId.ID(),
 				ApiClientId:   pointer.From(api.ResourceAppId),
-				Permission:    permissions,
+				RoleIds:       roleIds,
+				ScopeIds:      scopeIds,
 			}
 
 			return metadata.Encode(&state)
@@ -260,10 +259,16 @@ func (r ApplicationApiAccessResource) Update() sdk.ResourceFunc {
 
 			// Prepare a new API to replace the existing one
 			permissions := make([]msgraph.ResourceAccess, 0)
-			for _, permission := range model.Permission {
+			for _, roleId := range model.RoleIds {
 				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(permission.Id),
-					Type: permission.Type,
+					ID:   pointer.To(roleId),
+					Type: msgraph.ResourceAccessTypeRole,
+				})
+			}
+			for _, scopeId := range model.ScopeIds {
+				permissions = append(permissions, msgraph.ResourceAccess{
+					ID:   pointer.To(scopeId),
+					Type: msgraph.ResourceAccessTypeScope,
 				})
 			}
 			api := msgraph.RequiredResourceAccess{

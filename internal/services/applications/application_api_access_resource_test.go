@@ -171,20 +171,14 @@ resource "azuread_application_api_access" "test" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0000-c000-000000000000"
 
-  permission {
-    id   = "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30"
-    type = "Role"
-  }
+  role_ids = [
+    "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30",
+    "dbb9058a-0e50-45d7-ae91-66909b5d4664",
+  ]
 
-  permission {
-    id   = "dbb9058a-0e50-45d7-ae91-66909b5d4664"
-    type = "Role"
-  }
-
-  permission {
-    id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
-    type = "Scope"
-  }
+  scope_ids = [
+    "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+  ]
 }
 `, data.RandomInteger, data.RandomPassword)
 }
@@ -201,35 +195,27 @@ resource "azuread_application_api_access" "test" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0000-c000-000000000000"
 
-  permission {
-    id   = "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30"
-    type = "Role"
-  }
+  role_ids = [
+    "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30",
+    "dbb9058a-0e50-45d7-ae91-66909b5d4664",
+  ]
 
-  permission {
-    id   = "dbb9058a-0e50-45d7-ae91-66909b5d4664"
-    type = "Role"
-  }
-
-  permission {
-    id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
-    type = "Scope"
-  }
+  scope_ids = [
+    "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+  ]
 }
 
 resource "azuread_application_api_access" "test2" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0ff1-ce00-000000000000"
 
-  permission {
-    id   = "d13f72ca-a275-4b96-b789-48ebcc4da984"
-    type = "Role"
-  }
+  role_ids = [
+    "d13f72ca-a275-4b96-b789-48ebcc4da984",
+  ]
 
-  permission {
-    id   = "2beb830c-70d1-4f5b-a983-79cbdb0c6c6a"
-    type = "Scope"
-  }
+  scope_ids = [
+    "2beb830c-70d1-4f5b-a983-79cbdb0c6c6a",
+  ]
 }
 `, data.RandomInteger, data.RandomPassword)
 }
@@ -246,30 +232,23 @@ resource "azuread_application_api_access" "test" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0000-c000-000000000000"
 
-  permission {
-    id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
-    type = "Scope"
-  }
+  scope_ids = [
+    "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+  ]
 }
 
 resource "azuread_application_api_access" "test2" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0ff1-ce00-000000000000"
 
-  permission {
-    id   = "d13f72ca-a275-4b96-b789-48ebcc4da984"
-    type = "Role"
-  }
+  role_ids = [
+    "d13f72ca-a275-4b96-b789-48ebcc4da984",
+    "df021288-bdef-4463-88db-98f22de89214",
+  ]
 
-  permission {
-    id   = "df021288-bdef-4463-88db-98f22de89214"
-    type = "Role"
-  }
-
-  permission {
-    id   = "2beb830c-70d1-4f5b-a983-79cbdb0c6c6a"
-    type = "Scope"
-  }
+  scope_ids = [
+    "2beb830c-70d1-4f5b-a983-79cbdb0c6c6a",
+  ]
 }
 `, data.RandomInteger, data.RandomPassword)
 }
@@ -286,26 +265,21 @@ resource "azuread_application_api_access" "test" {
   application_id = azuread_application_registration.test.id
   api_client_id  = "00000003-0000-0000-c000-000000000000"
 
-  permission {
-    id   = "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30"
-    type = "Role"
-  }
+  role_ids = [
+    "9a5d68dd-52b0-4cc2-bd40-abcf44ac3a30",
+    "dbb9058a-0e50-45d7-ae91-66909b5d4664",
+  ]
 
-  permission {
-    id   = "dbb9058a-0e50-45d7-ae91-66909b5d4664"
-    type = "Role"
-  }
-
-  permission {
-    id   = "e1fe6dd8-ba31-4d61-89e7-88639da4683d"
-    type = "Scope"
-  }
+  scope_ids = [
+    "e1fe6dd8-ba31-4d61-89e7-88639da4683d",
+  ]
 }
 
 resource "azuread_application_api_access" "import" {
   application_id = azuread_application_api_access.test.application_id
   api_client_id  = azuread_application_api_access.test.api_client_id
-  permission     = azuread_application_api_access.test.permission
+  role_ids       = azuread_application_api_access.test.role_ids
+  scope_ids      = azuread_application_api_access.test.scope_ids
 }
 `, data.RandomInteger, data.RandomPassword)
 }

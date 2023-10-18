@@ -139,21 +139,11 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"requested_access_token_version": {
-			Description: "The access token version expected by this resource",
-			Type:        pluginsdk.TypeInt,
-			Optional:    true,
-			Default:     1,
-			ValidateFunc: func(i interface{}, key string) (warnings []string, errors []error) {
-				v, ok := i.(int)
-				if !ok {
-					errors = append(errors, fmt.Errorf("expected %q to be an integer", key))
-					return
-				}
-				if v < 1 || v > 2 {
-					errors = append(errors, fmt.Errorf("value for %q must be one of: 1, 2", key))
-				}
-				return
-			},
+			Description:  "The access token version expected by this resource",
+			Type:         pluginsdk.TypeInt,
+			Optional:     true,
+			Default:      2,
+			ValidateFunc: validation.IntBetween(1, 2),
 		},
 
 		"service_management_reference": {
