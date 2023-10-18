@@ -30,6 +30,7 @@ func TestAccApplicationRegistration_basic(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("client_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-AppRegistration-%d", data.RandomInteger)),
 			),
 		},
@@ -47,6 +48,7 @@ func TestAccApplicationRegistration_complete(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("client_id").Exists(),
+				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
 		data.ImportStep(),

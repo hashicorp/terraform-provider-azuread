@@ -33,6 +33,7 @@ type ApplicationRegistrationModel struct {
 	LogoutUrl                          string   `tfschema:"logout_url"`
 	MarketingUrl                       string   `tfschema:"marketing_url"`
 	Notes                              string   `tfschema:"notes"`
+	ObjectId                           string   `tfschema:"object_id"`
 	PrivacyStatementUrl                string   `tfschema:"privacy_statement_url"`
 	PublisherDomain                    string   `tfschema:"publisher_domain"`
 	RequestedAccessTokenVersion        int      `tfschema:"requested_access_token_version"`
@@ -205,6 +206,12 @@ func (r ApplicationRegistrationResource) Attributes() map[string]*pluginsdk.Sche
 			Computed:    true,
 		},
 
+		"object_id": {
+			Description: "The object ID of the application within the tenant",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
+		},
+
 		"publisher_domain": {
 			Description: "The verified publisher domain for the application",
 			Type:        pluginsdk.TypeString,
@@ -304,6 +311,7 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 				DisplayName:                pointer.From(result.DisplayName),
 				GroupMembershipClaims:      pointer.From(result.GroupMembershipClaims),
 				Notes:                      string(pointer.From(result.Notes)),
+				ObjectId:                   pointer.From(result.ID()),
 				PublisherDomain:            pointer.From(result.PublisherDomain),
 				ServiceManagementReference: string(pointer.From(result.ServiceManagementReference)),
 				SignInAudience:             pointer.From(result.SignInAudience),
