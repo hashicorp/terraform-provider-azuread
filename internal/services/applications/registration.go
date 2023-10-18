@@ -53,6 +53,7 @@ func (r Registration) Resources() []sdk.Resource {
 		ApplicationApiAccessResource{},
 		ApplicationAppRoleResource{},
 		ApplicationFallbackPublicClientResource{},
+		ApplicationFromTemplateResource{},
 		ApplicationIdentifierUriResource{},
 		ApplicationKnownClientsResource{},
 		ApplicationOwnerResource{},
