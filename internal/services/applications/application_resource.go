@@ -604,6 +604,12 @@ func applicationResource() *pluginsdk.Resource {
 				Computed:    true,
 			},
 
+			"client_id": {
+				Description: "The Client ID (also called Application ID)",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
+
 			"object_id": {
 				Description: "The application's object ID",
 				Type:        pluginsdk.TypeString,
@@ -1267,6 +1273,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "client_id", app.AppId)
 	tf.Set(d, "description", app.Description)
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))

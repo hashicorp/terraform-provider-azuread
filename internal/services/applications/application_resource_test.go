@@ -30,6 +30,7 @@ func TestAccApplication_basic(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
@@ -48,6 +49,7 @@ func TestAccApplication_basicFromTemplate(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
@@ -67,6 +69,7 @@ func TestAccApplication_complete(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -84,6 +87,7 @@ func TestAccApplication_completeFromTemplate(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
@@ -104,6 +108,7 @@ func TestAccApplication_update(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -113,6 +118,7 @@ func TestAccApplication_update(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -122,6 +128,7 @@ func TestAccApplication_update(t *testing.T) {
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -685,8 +692,8 @@ resource "azuread_application" "test" {
     requested_access_token_version = 2
 
     known_client_applications = [
-      azuread_application.known1.application_id,
-      azuread_application.known2.application_id,
+      azuread_application.known1.client_id,
+      azuread_application.known2.client_id,
     ]
 
     oauth2_permission_scope {
@@ -870,8 +877,8 @@ resource "azuread_application" "test" {
     requested_access_token_version = 2
 
     known_client_applications = [
-      azuread_application.known1.application_id,
-      azuread_application.known2.application_id,
+      azuread_application.known1.client_id,
+      azuread_application.known2.client_id,
     ]
 
     oauth2_permission_scope {
@@ -1178,7 +1185,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-related-%[1]d"
 
   required_resource_access {
-    resource_app_id = azuread_application.service.application_id
+    resource_app_id = azuread_application.service.client_id
 
     resource_access {
       id   = azuread_application.service.app_role_ids["user"]
@@ -1246,7 +1253,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-related-%[1]d"
 
   required_resource_access {
-    resource_app_id = azuread_application.service.application_id
+    resource_app_id = azuread_application.service.client_id
 
     resource_access {
       id   = azuread_application.service.app_role_ids["admin"]
