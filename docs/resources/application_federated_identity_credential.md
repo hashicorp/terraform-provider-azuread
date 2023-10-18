@@ -10,26 +10,26 @@ Manages a federated identity credential associated with an application within Az
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.All` or `Directory.ReadWrite.All`
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.OwnedBy` or `Application.ReadWrite.All`
 
--> It's possible to use this resource with the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property.
+-> When using the `Application.ReadWrite.OwnedBy` application role, the principal being used to run Terraform must be an owner of the application.
 
 When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
 
 ## Example Usage
 
 ```terraform
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "example"
 }
 
 resource "azuread_application_federated_identity_credential" "example" {
-  application_object_id = azuread_application.example.object_id
-  display_name          = "my-repo-deploy"
-  description           = "Deployments for my-repo"
-  audiences             = ["api://AzureADTokenExchange"]
-  issuer                = "https://token.actions.githubusercontent.com"
-  subject               = "repo:my-organization/my-repo:environment:prod"
+  application_id = azuread_application_registration.example.id
+  display_name   = "my-repo-deploy"
+  description    = "Deployments for my-repo"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:my-organization/my-repo:environment:prod"
 }
 ```
 
@@ -37,7 +37,11 @@ resource "azuread_application_federated_identity_credential" "example" {
 
 The following arguments are supported:
 
-* `application_object_id` - (Required) The object ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
+* `application_id` - (Optional) The resource ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
+* `application_object_id` - (Optional, Deprecated) The object ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
+
+~> One of `application_id` or `application_object_id` must be specified.
+
 * `audiences` - (Required) List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.
 * `description` - (Optional) A description for the federated identity credential.
 * `display_name` - (Required) A unique display name for the federated identity credential. Changing this forces a new resource to be created.
