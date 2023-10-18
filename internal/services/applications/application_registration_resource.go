@@ -22,23 +22,24 @@ import (
 )
 
 type ApplicationRegistrationModel struct {
-	ClientId                           string `tfschema:"client_id"`
-	Description                        string `tfschema:"description"`
-	DisabledByMicrosoft                string `tfschema:"disabled_by_microsoft"`
-	DisplayName                        string `tfschema:"display_name"`
-	HomepageUrl                        string `tfschema:"homepage_url"`
-	ImplicitAccessTokenIssuanceEnabled bool   `tfschema:"implicit_access_token_issuance_enabled"`
-	ImplicitIdTokenIssuanceEnabled     bool   `tfschema:"implicit_id_token_issuance_enabled"`
-	LogoutUrl                          string `tfschema:"logout_url"`
-	MarketingUrl                       string `tfschema:"marketing_url"`
-	Notes                              string `tfschema:"notes"`
-	PrivacyStatementUrl                string `tfschema:"privacy_statement_url"`
-	PublisherDomain                    string `tfschema:"publisher_domain"`
-	RequestedAccessTokenVersion        int    `tfschema:"requested_access_token_version"`
-	ServiceManagementReference         string `tfschema:"service_management_reference"`
-	SignInAudience                     string `tfschema:"sign_in_audience"`
-	SupportUrl                         string `tfschema:"support_url"`
-	TermsOfServiceUrl                  string `tfschema:"terms_of_service_url"`
+	ClientId                           string   `tfschema:"client_id"`
+	Description                        string   `tfschema:"description"`
+	DisabledByMicrosoft                string   `tfschema:"disabled_by_microsoft"`
+	DisplayName                        string   `tfschema:"display_name"`
+	GroupMembershipClaims              []string `tfschema:"group_membership_claims"`
+	HomepageUrl                        string   `tfschema:"homepage_url"`
+	ImplicitAccessTokenIssuanceEnabled bool     `tfschema:"implicit_access_token_issuance_enabled"`
+	ImplicitIdTokenIssuanceEnabled     bool     `tfschema:"implicit_id_token_issuance_enabled"`
+	LogoutUrl                          string   `tfschema:"logout_url"`
+	MarketingUrl                       string   `tfschema:"marketing_url"`
+	Notes                              string   `tfschema:"notes"`
+	PrivacyStatementUrl                string   `tfschema:"privacy_statement_url"`
+	PublisherDomain                    string   `tfschema:"publisher_domain"`
+	RequestedAccessTokenVersion        int      `tfschema:"requested_access_token_version"`
+	ServiceManagementReference         string   `tfschema:"service_management_reference"`
+	SignInAudience                     string   `tfschema:"sign_in_audience"`
+	SupportUrl                         string   `tfschema:"support_url"`
+	TermsOfServiceUrl                  string   `tfschema:"terms_of_service_url"`
 }
 
 type ApplicationRegistrationResource struct{}
@@ -71,6 +72,22 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Type:         pluginsdk.TypeString,
 			Optional:     true,
 			ValidateFunc: validation.StringLenBetween(0, 1024),
+		},
+
+		"group_membership_claims": {
+			Description: "Configures the `groups` claim that the app expects issued in a user or OAuth access token",
+			Type:        pluginsdk.TypeSet,
+			Optional:    true,
+			Elem: &pluginsdk.Schema{
+				Type: pluginsdk.TypeString,
+				ValidateFunc: validation.StringInSlice([]string{
+					msgraph.GroupMembershipClaimAll,
+					msgraph.GroupMembershipClaimNone,
+					msgraph.GroupMembershipClaimApplicationGroup,
+					msgraph.GroupMembershipClaimDirectoryRole,
+					msgraph.GroupMembershipClaimSecurityGroup,
+				}, false),
+			},
 		},
 
 		"homepage_url": {
@@ -212,6 +229,7 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 			properties := msgraph.Application{
 				DisplayName:                &model.DisplayName,
 				Description:                tf.NullableString(model.Description),
+				GroupMembershipClaims:      pointer.To(model.GroupMembershipClaims),
 				Notes:                      tf.NullableString(model.Notes),
 				ServiceManagementReference: tf.NullableString(model.ServiceManagementReference),
 				SignInAudience:             &model.SignInAudience,
@@ -284,6 +302,7 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 				ClientId:                   pointer.From(result.AppId),
 				Description:                string(pointer.From(result.Description)),
 				DisplayName:                pointer.From(result.DisplayName),
+				GroupMembershipClaims:      pointer.From(result.GroupMembershipClaims),
 				Notes:                      string(pointer.From(result.Notes)),
 				PublisherDomain:            pointer.From(result.PublisherDomain),
 				ServiceManagementReference: string(pointer.From(result.ServiceManagementReference)),
@@ -349,6 +368,10 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 
 			if rd.HasChange("description") {
 				properties.Description = tf.NullableString(model.Description)
+			}
+
+			if rd.HasChange("group_membership_claims") {
+				properties.GroupMembershipClaims = pointer.To(model.GroupMembershipClaims)
 			}
 
 			if rd.HasChange("notes") {
