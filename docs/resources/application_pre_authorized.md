@@ -74,7 +74,7 @@ The following arguments are supported:
 
 ~> One of `authorized_client_id` or `authorized_app_id` must be specified.
 
-* `permission_ids` - (Required) A set of permission scope IDs required by the authorized application. 
+* `permission_ids` - (Required) A set of permission scope IDs required by the authorized application.
 
 ## Attributes Reference
 

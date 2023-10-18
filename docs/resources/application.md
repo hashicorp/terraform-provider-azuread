@@ -328,7 +328,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
-* `application_id` - The Application ID (also called Client ID).
+* `application_id` - (Deprecated) The Client ID for the application.
+* `client_id` - The Client ID for the application.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
