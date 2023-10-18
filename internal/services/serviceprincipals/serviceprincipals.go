@@ -46,7 +46,7 @@ func flattenSamlSingleSignOn(in *msgraph.SamlSingleSignOnSettings) []map[string]
 	}}
 }
 
-func findByAppId(ctx context.Context, client *msgraph.ServicePrincipalsClient, appId string) (*msgraph.ServicePrincipal, error) {
+func findByClientId(ctx context.Context, client *msgraph.ServicePrincipalsClient, appId string) (*msgraph.ServicePrincipal, error) {
 	var servicePrincipal *msgraph.ServicePrincipal
 
 	result, _, err := client.List(ctx, odata.Query{Filter: fmt.Sprintf("appId eq '%s'", appId)})
@@ -65,7 +65,7 @@ func findByAppId(ctx context.Context, client *msgraph.ServicePrincipalsClient, a
 	return servicePrincipal, nil
 }
 
-func findByAppIdWithTimeout(ctx context.Context, timeout time.Duration, client *msgraph.ServicePrincipalsClient, appId string) (*msgraph.ServicePrincipal, error) {
+func findByClientIdWithTimeout(ctx context.Context, timeout time.Duration, client *msgraph.ServicePrincipalsClient, appId string) (*msgraph.ServicePrincipal, error) {
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithTimeout(ctx, timeout)
 	defer cancel()

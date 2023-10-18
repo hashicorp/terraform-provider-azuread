@@ -44,6 +44,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Computed:         true,
 				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Deprecated:       "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"client_id": {

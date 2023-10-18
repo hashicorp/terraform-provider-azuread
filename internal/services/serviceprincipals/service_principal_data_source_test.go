@@ -15,13 +15,25 @@ import (
 
 type ServicePrincipalDataSource struct{}
 
-func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
+func TestAccServicePrincipalDataSource_byClientId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: r.byApplicationId(data),
+			Config: r.byClientId(data),
+			Check:  r.testCheckFunc(data),
+		},
+	})
+}
+
+func TestAccServicePrincipalDataSource_byDeprecatedApplicationId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
+	r := ServicePrincipalDataSource{}
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.byDeprecatedApplicationId(data),
 			Check:  r.testCheckFunc(data),
 		},
 	})
@@ -98,7 +110,17 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) accept
 	)
 }
 
-func (ServicePrincipalDataSource) byApplicationId(data acceptance.TestData) string {
+func (ServicePrincipalDataSource) byClientId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_service_principal" "test" {
+  client_id = azuread_service_principal.test.client_id
+}
+`, ServicePrincipalResource{}.complete(data))
+}
+
+func (ServicePrincipalDataSource) byDeprecatedApplicationId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 

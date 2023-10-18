@@ -61,6 +61,7 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
 				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
 			},
 

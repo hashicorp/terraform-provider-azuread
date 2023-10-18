@@ -10,12 +10,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ServicePrincipalResource struct{}
@@ -313,6 +313,21 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipal_deprecatedId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+	})
+}
+
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalsClient
 	client.BaseClient.DisableRetries = true
@@ -325,7 +340,7 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 		}
 		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
+	return pointer.To(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
 }
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
@@ -337,7 +352,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 `, data.RandomInteger)
 }
@@ -415,7 +430,7 @@ func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -449,7 +464,7 @@ func (r ServicePrincipalResource) featureTags(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -483,7 +498,7 @@ func (r ServicePrincipalResource) noFeatureTags(data acceptance.TestData) string
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -546,8 +561,8 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-  owners         = []
+  client_id = azuread_application.test.client_id
+  owners    = []
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
@@ -561,7 +576,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
   owners = [
     azuread_user.testA.object_id,
   ]
@@ -578,7 +593,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
   owners = [
     azuread_user.testA.object_id,
     azuread_user.testB.object_id,
@@ -604,8 +619,8 @@ resource "azuread_application" "owner" {
 }
 
 resource "azuread_service_principal" "owner" {
-  count          = 27
-  application_id = azuread_application.owner[count.index].application_id
+  count     = 27
+  client_id = azuread_application.owner[count.index].client_id
 }
 
 resource "azuread_user" "owner" {
@@ -620,7 +635,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   owners = flatten([
     data.azuread_client_config.test.object_id,
@@ -636,8 +651,8 @@ func (ServicePrincipalResource) useExisting(_ acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-  use_existing   = true
+  client_id    = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+  use_existing = true
 }
 `
 }
@@ -655,9 +670,9 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-  owners         = [data.azuread_client_config.test.object_id]
-  use_existing   = true
+  client_id    = azuread_application.test.client_id
+  owners       = [data.azuread_client_config.test.object_id]
+  use_existing = true
 }
 `, data.RandomInteger, testApplicationTemplateId)
 }
@@ -679,15 +694,29 @@ resource "azuread_application" "testC" {
 }
 
 resource "azuread_service_principal" "testA" {
-  application_id = azuread_application.testA.application_id
+  client_id = azuread_application.testA.client_id
 }
 
 resource "azuread_service_principal" "testB" {
-  application_id = azuread_application.testB.application_id
+  client_id = azuread_application.testB.client_id
 }
 
 resource "azuread_service_principal" "testC" {
-  application_id = azuread_application.testC.application_id
+  client_id = azuread_application.testC.client_id
+}
+`, data.RandomInteger)
+}
+
+func (ServicePrincipalResource) deprecatedId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
 }
 `, data.RandomInteger)
 }

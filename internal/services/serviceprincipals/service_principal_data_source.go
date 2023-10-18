@@ -30,30 +30,40 @@ func servicePrincipalData() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "The object ID of the service principal",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
-				Description:      "The display name of the application associated with this service principal",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the application associated with this service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+
+			"client_id": {
+				Description:  "The client ID of the application associated with this service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"application_id": {
-				Description:      "The application ID (client ID) of the application associated with this service principal",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The application ID (client ID) of the application associated with this service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ValidateFunc: validation.IsUUID,
+				Deprecated:   "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"account_enabled": {
@@ -331,9 +341,15 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 			return tf.ErrorDiagF(nil, "No service principal found matching display name: %q", displayName)
 		}
 	} else {
-		applicationId := d.Get("application_id").(string)
+		var clientId string
+		if v := d.Get("client_id").(string); v != "" {
+			clientId = v
+		} else {
+			clientId = d.Get("application_id").(string)
+		}
+
 		query := odata.Query{
-			Filter: fmt.Sprintf("appId eq '%s'", applicationId),
+			Filter: fmt.Sprintf("appId eq '%s'", clientId),
 		}
 
 		result, _, err := client.List(ctx, query)
@@ -349,14 +365,14 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 				continue
 			}
 
-			if *sp.AppId == applicationId {
+			if *sp.AppId == clientId {
 				servicePrincipal = &sp
 				break
 			}
 		}
 
 		if servicePrincipal == nil {
-			return tf.ErrorDiagF(nil, "No service principal found for application ID: %q", applicationId)
+			return tf.ErrorDiagF(nil, "No service principal found for application ID: %q", clientId)
 		}
 	}
 
@@ -383,6 +399,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
+	tf.Set(d, "client_id", servicePrincipal.AppId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))

@@ -25,13 +25,13 @@ func TestAccApplicationDataSource_byObjectId(t *testing.T) {
 	})
 }
 
-func TestAccApplicationDataSource_byApplicationId(t *testing.T) {
+func TestAccApplicationDataSource_byApplicationIdDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: r.applicationId(data),
+			Config: r.applicationIdDeprecated(data),
 			Check:  r.testCheck(data),
 		},
 	})
@@ -101,7 +101,7 @@ data "azuread_application" "test" {
 `, ApplicationResource{}.complete(data))
 }
 
-func (ApplicationDataSource) applicationId(data acceptance.TestData) string {
+func (ApplicationDataSource) applicationIdDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 

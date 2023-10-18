@@ -13,13 +13,13 @@ import (
 
 type ServicePrincipalsDataSource struct{}
 
-func TestAccServicePrincipalsDataSource_byApplicationIds(t *testing.T) {
+func TestAccServicePrincipalsDataSource_byClientIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
 	data.DataSourceTest(t, []acceptance.TestStep{{
-		Config: ServicePrincipalsDataSource{}.byApplicationIds(data),
+		Config: ServicePrincipalsDataSource{}.byClientIds(data),
 		Check: acceptance.ComposeTestCheckFunc(
-			check.That(data.ResourceName).Key("application_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("client_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
@@ -27,11 +27,25 @@ func TestAccServicePrincipalsDataSource_byApplicationIds(t *testing.T) {
 	}})
 }
 
-func TestAccServicePrincipalsDataSource_byApplicationIdsWithIgnoreMissing(t *testing.T) {
+func TestAccServicePrincipalsDataSource_byClientIdsWithIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
 	data.DataSourceTest(t, []acceptance.TestStep{{
-		Config: ServicePrincipalsDataSource{}.byApplicationIdsWithIgnoreMissing(data),
+		Config: ServicePrincipalsDataSource{}.byClientIdsWithIgnoreMissing(data),
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("client_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
+		),
+	}})
+}
+
+func TestAccServicePrincipalsDataSource_byDeprecatedApplicationIds(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: ServicePrincipalsDataSource{}.byDeprecatedApplicationIds(data),
 		Check: acceptance.ComposeTestCheckFunc(
 			check.That(data.ResourceName).Key("application_ids.#").HasValue("2"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
@@ -180,7 +194,36 @@ data "azuread_service_principals" "test" {
 `, ServicePrincipalResource{}.threeServicePrincipalsABC(data))
 }
 
-func (ServicePrincipalsDataSource) byApplicationIds(data acceptance.TestData) string {
+func (ServicePrincipalsDataSource) byClientIds(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_service_principals" "test" {
+  client_ids = [
+    azuread_service_principal.testA.client_id,
+    azuread_service_principal.testB.client_id,
+  ]
+}
+`, ServicePrincipalResource{}.threeServicePrincipalsABC(data))
+}
+
+func (ServicePrincipalsDataSource) byClientIdsWithIgnoreMissing(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_service_principals" "test" {
+  ignore_missing = true
+
+  client_ids = [
+    azuread_service_principal.testA.client_id,
+    "e0000000-0000-0000-0000-000000000000",
+    azuread_service_principal.testB.client_id,
+  ]
+}
+`, ServicePrincipalResource{}.threeServicePrincipalsABC(data), data.RandomInteger)
+}
+
+func (ServicePrincipalsDataSource) byDeprecatedApplicationIds(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -191,22 +234,6 @@ data "azuread_service_principals" "test" {
   ]
 }
 `, ServicePrincipalResource{}.threeServicePrincipalsABC(data))
-}
-
-func (ServicePrincipalsDataSource) byApplicationIdsWithIgnoreMissing(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-data "azuread_service_principals" "test" {
-  ignore_missing = true
-
-  application_ids = [
-    azuread_service_principal.testA.application_id,
-    "e0000000-0000-0000-0000-000000000000",
-    azuread_service_principal.testB.application_id,
-  ]
-}
-`, ServicePrincipalResource{}.threeServicePrincipalsABC(data), data.RandomInteger)
 }
 
 func (ServicePrincipalsDataSource) noNames() string {
