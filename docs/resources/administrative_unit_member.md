@@ -52,7 +52,7 @@ In addition to all arguments above, the following attributes are exported:
 Administrative unit members can be imported using the object ID of the administrative unit and the object ID of the member, e.g.
 
 ```shell
-terraform import azuread_administrative_unit_member.test 00000000-0000-0000-0000-000000000000/member/11111111-1111-1111-1111-111111111111
+terraform import azuread_administrative_unit_member.example 00000000-0000-0000-0000-000000000000/member/11111111-1111-1111-1111-111111111111
 ```
 
 -> This ID format is unique to Terraform and is composed of the Administrative Unit Object ID and the target Member Object ID in the format `{AdministrativeUnitObjectID}/member/{MemberObjectID}`.

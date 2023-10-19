@@ -203,6 +203,9 @@ The following arguments are supported:
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
 
 * `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
+
+-> **Tip for Gallery Applications** This resource can  be used to instantiate a gallery application, however it will also attempt to manage the properties of the resulting application. If this is not desired, consider using the [azuread_application_registration](application_registration.html) resource instead.
+
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 * `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
@@ -341,5 +344,5 @@ In addition to all arguments above, the following attributes are exported:
 Applications can be imported using their object ID, e.g.
 
 ```shell
-terraform import azuread_application.test 00000000-0000-0000-0000-000000000000
+terraform import azuread_application.example 00000000-0000-0000-0000-000000000000
 ```

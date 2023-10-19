@@ -83,7 +83,7 @@ No additional attributes are exported.
 Certificates can be imported using the object ID of the associated service principal and the key ID of the certificate credential, e.g.
 
 ```shell
-terraform import azuread_service_principal_certificate.test 00000000-0000-0000-0000-000000000000/certificate/11111111-1111-1111-1111-111111111111
+terraform import azuread_service_principal_certificate.example 00000000-0000-0000-0000-000000000000/certificate/11111111-1111-1111-1111-111111111111
 ```
 
 -> This ID format is unique to Terraform and is composed of the service principal's object ID, the string "certificate" and the certificate's key ID in the format `{ServicePrincipalObjectId}/certificate/{CertificateKeyId}`.

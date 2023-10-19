@@ -76,7 +76,7 @@ data "azuread_user" "example" {
   user_principal_name = "jdoe@hashicorp.com"
 }
 
-resource "azuread_directory_role_assignment" "test" {
+resource "azuread_directory_role_assignment" "example" {
   role_id             = azuread_directory_role.example.template_id
   principal_object_id = data.azuread_user.example.object_id
   directory_scope_id  = format("/%s", azuread_application.example.object_id)
@@ -105,5 +105,5 @@ In addition to all arguments above, the following attributes are exported:
 Directory role assignments can be imported using the ID of the assignment, e.g.
 
 ```shell
-terraform import azuread_directory_role_assignment.test ePROZI_iKE653D_d6aoLHyr-lKgHI8ZGiIdz8CLVcng-1
+terraform import azuread_directory_role_assignment.example ePROZI_iKE653D_d6aoLHyr-lKgHI8ZGiIdz8CLVcng-1
 ```

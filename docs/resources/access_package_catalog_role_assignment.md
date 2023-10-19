@@ -57,5 +57,5 @@ In addition to all arguments above, the following attributes are exported:
 Catalog role assignments can be imported using the ID of the assignment, e.g.
 
 ```shell
-terraform import azuread_access_package_catalog_role_assignment.test 00000000-0000-0000-0000-000000000000
+terraform import azuread_access_package_catalog_role_assignment.example 00000000-0000-0000-0000-000000000000
 ```
