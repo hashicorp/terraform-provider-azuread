@@ -6,6 +6,7 @@ package applications_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"net/http"
 	"regexp"
 	"testing"
@@ -597,14 +598,21 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
-	app, status, err := client.Get(ctx, state.ID, odata.Query{})
+
+	id, err := parse.ParseApplicationID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	app, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+			return nil, fmt.Errorf("%s does not exist", id)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
-	return pointer.To(app.ID() != nil && *app.ID() == state.ID), nil
+
+	return pointer.To(app.ID() != nil && *app.ID() == id.ApplicationId), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {
