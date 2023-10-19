@@ -57,8 +57,8 @@ resource "azuread_application_identifier_uri" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration.
-* `identifier_uri` - (Required) The user-defined URI that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
+* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
+* `identifier_uri` - (Required) The user-defined URI that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant. Changing this forces a new resource to be created.
 
 ## Attributes Reference
 

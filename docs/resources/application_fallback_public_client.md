@@ -35,7 +35,7 @@ resource "azuread_application_fallback_public_client" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Required) The resource ID of the application registration.
+* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
 * `enabled` - (Required) Whether to enable the application as a fallback public client.
 
 -> Some configurations may require the Fallback Public Client setting to be `null`, for this case simply destroy this resource (or don't use it)

@@ -65,8 +65,8 @@ The following arguments are supported:
 
 * `admin_consent_description` - (Required) Delegated permission description that appears in all tenant-wide admin consent experiences, intended to be read by an administrator granting the permission on behalf of all users.
 * `admin_consent_display_name` - (Required) Display name for the delegated permission, intended to be read by an administrator granting the permission on behalf of all users.
-* `application_id` - (Required) The resource ID of the application registration.
-* `scope_id` - (Required) The unique identifier of the permission scope. Must be a valid UUID.
+* `application_id` - (Required) The resource ID of the application registration. Changing this forces a new resource to be created.
+* `scope_id` - (Required) The unique identifier of the permission scope. Must be a valid UUID. Changing this forces a new resource to be created.
 * `type` - (Required) Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions.
 * `user_consent_description` - (Required) Delegated permission description that appears in the end user consent experience, intended to be read by a user consenting on their own behalf.
 * `user_consent_display_name` - (Required) Display name for the delegated permission that appears in the end user consent experience.
