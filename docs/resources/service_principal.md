@@ -93,7 +93,11 @@ The following arguments are supported:
 * `account_enabled` - (Optional) Whether or not the service principal account is enabled. Defaults to `true`.
 * `alternative_names` - (Optional) A set of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
 * `app_role_assignment_required` - (Optional) Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application. Defaults to `false`.
-* `application_id` - (Required) The application ID (client ID) of the application for which to create a service principal.
+* `application_id` - (Optional, Deprecated) The client ID of the application for which to create a service principal.
+* `client_id` - (Optional) The client ID of the application for which to create a service principal.
+
+~. At least one of `client_id` or `application_id` must be specified.
+
 * `description` - (Optional) A description of the service principal provided for internal end-users.
 * `feature_tags` - (Optional) A `feature_tags` block as described below. Cannot be used together with the `tags` property.
 

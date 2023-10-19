@@ -24,11 +24,11 @@ data "azuread_service_principal" "example" {
 }
 ```
 
-*Look up by application ID (client ID)*
+*Look up by client ID*
 
 ```terraform
 data "azuread_service_principal" "example" {
-  application_id = "00000000-0000-0000-0000-000000000000"
+  client_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
@@ -44,23 +44,25 @@ data "azuread_service_principal" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional) The application ID (client ID) of the application associated with this service principal.
+* `application_id` - (Optional, Deprecated) The client ID of the application associated with this service principal.
+* `client_id` - (Optional) The client ID of the application associated with this service principal.
 * `display_name` - (Optional) The display name of the application associated with this service principal.
 * `object_id` - (Optional) The object ID of the service principal.
 
-~> One of `application_id`, `display_name` or `object_id` must be specified.
+~> One of `client_id`, `application_id`, `display_name` or `object_id` must be specified.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `account_enabled` - Whether or not the service principal account is enabled.
+* `account_enabled` - Whether the service principal account is enabled.
 * `alternative_names` - A list of alternative names, used to retrieve service principals by subscription, identify resource group and full resource ids for managed identities.
-* `application_id` - The application ID (client ID) of the application associated with this service principal.
+* `application_id` - (Deprecated) The client ID of the application associated with this service principal.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
 * `app_role_ids` - A mapping of app role values to app role IDs, as published by the associated application, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A list of app roles published by the associated application, as documented below. For more information [official documentation](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
 * `application_tenant_id` - The tenant ID where the associated application is registered.
+* `client_id` - (Deprecated) The client ID of the application associated with this service principal.
 * `description` - A description of the service principal provided for internal end-users.
 * `display_name` - The display name of the application associated with this service principal.
 * `features` - A `features` block as described below.
