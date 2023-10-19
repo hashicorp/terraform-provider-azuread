@@ -68,7 +68,7 @@ func (id RedirectUrisId) Segments() []resourceids.Segment {
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
 		resourceids.StaticSegment("redirectUris", "redirectUris", "redirectUris"),
-		resourceids.UserSpecifiedSegment("uriType", "web"),
+		resourceids.UserSpecifiedSegment("uriType", "Web"),
 	}
 }
 

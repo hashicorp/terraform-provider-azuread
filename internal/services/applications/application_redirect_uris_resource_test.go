@@ -69,6 +69,30 @@ func TestAccApplicationRedirectUris_web(t *testing.T) {
 	})
 }
 
+func TestAccApplicationRedirectUris_all(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_redirect_uris", "test_public")
+	data2 := acceptance.BuildTestData(t, "azuread_application_redirect_uris", "test_spa")
+	data3 := acceptance.BuildTestData(t, "azuread_application_redirect_uris", "test_web")
+	r := ApplicationRedirectUrisResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.all(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data2.ResourceName).ExistsInAzure(r),
+				check.That(data2.ResourceName).Key("application_id").Exists(),
+				check.That(data3.ResourceName).ExistsInAzure(r),
+				check.That(data3.ResourceName).Key("application_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+		data2.ImportStep(),
+		data3.ImportStep(),
+	})
+}
+
 func TestAccApplicationRedirectUris_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_redirect_uris", "test")
 	r := ApplicationRedirectUrisResource{}
@@ -177,6 +201,51 @@ resource "azuread_application_registration" "test" {
 }
 
 resource "azuread_application_redirect_uris" "test" {
+  application_id = azuread_application_registration.test.id
+  type           = "Web"
+
+  redirect_uris = [
+    "https://app.hashitown-%[1]d.com/",
+    "https://classic.hashitown-%[1]d.com/",
+    "urn:ietf:wg:oauth:2.0:oob",
+  ]
+}
+`, data.RandomInteger)
+}
+
+func (ApplicationRedirectUrisResource) all(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application_registration" "test" {
+  display_name = "acctest-RedirectUris-%[1]d"
+}
+
+resource "azuread_application_redirect_uris" "test_public" {
+  application_id = azuread_application_registration.test.id
+  type           = "PublicClient"
+
+  redirect_uris = [
+    "myapp://auth",
+    "sample.mobile.app.bundie.id://auth",
+    "https://login.microsoftonline.com/common/oauth2/nativeclient",
+    "https://login.live.com/oauth20_desktop.srf",
+    "ms-appx-web://Microsoft.AAD.BrokerPlugin/00000000-1111-1111-1111-222222222222",
+    "urn:ietf:wg:oauth:2.0:foo",
+  ]
+}
+
+resource "azuread_application_redirect_uris" "test_spa" {
+  application_id = azuread_application_registration.test.id
+  type           = "SPA"
+
+  redirect_uris = [
+    "https://mobile.hashitown-%[1]d.com/",
+    "https://beta.hashitown-%[1]d.com/",
+  ]
+}
+
+resource "azuread_application_redirect_uris" "test_web" {
   application_id = azuread_application_registration.test.id
   type           = "Web"
 
