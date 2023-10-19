@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -264,8 +263,8 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 
 		existingMembers := *members
 		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*pluginsdk.Set).List())
-		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
-		membersToAdd := utils.Difference(desiredMembers, existingMembers)
+		membersForRemoval := tf.Difference(existingMembers, desiredMembers)
+		membersToAdd := tf.Difference(desiredMembers, existingMembers)
 
 		if len(membersForRemoval) > 0 {
 			if _, err = client.RemoveMembers(ctx, d.Id(), &membersForRemoval); err != nil {

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -325,7 +324,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(upn)),
+			Filter: fmt.Sprintf("userPrincipalName eq '%s'", odata.EscapeSingleQuote(upn)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -355,7 +354,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		user = *u
 	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("mail eq '%s'", utils.EscapeSingleQuote(mail)),
+			Filter: fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(mail)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -373,7 +372,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		user = (*users)[0]
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(mailNickname)),
+			Filter: fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(mailNickname)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {
@@ -391,7 +390,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		user = (*users)[0]
 	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
 		query := odata.Query{
-			Filter: fmt.Sprintf("employeeId eq '%s'", utils.EscapeSingleQuote(employeeId)),
+			Filter: fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(employeeId)),
 		}
 		users, _, err := client.List(ctx, query)
 		if err != nil {

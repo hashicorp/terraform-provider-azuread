@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -1131,8 +1130,8 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		existingMembers := *members
 		desiredMembers := *tf.ExpandStringSlicePtr(d.Get("members").(*pluginsdk.Set).List())
-		membersForRemoval := utils.Difference(existingMembers, desiredMembers)
-		membersToAdd := utils.Difference(desiredMembers, existingMembers)
+		membersForRemoval := tf.Difference(existingMembers, desiredMembers)
+		membersToAdd := tf.Difference(desiredMembers, existingMembers)
 
 		if len(membersForRemoval) > 0 {
 			if _, err = client.RemoveMembers(ctx, d.Id(), &membersForRemoval); err != nil {
@@ -1178,8 +1177,8 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		existingOwners := *owners
-		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
-		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
+		ownersForRemoval := tf.Difference(existingOwners, desiredOwners)
+		ownersToAdd := tf.Difference(desiredOwners, existingOwners)
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
@@ -1222,8 +1221,8 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		desiredAdministrativeUnits := tf.ExpandStringSlice(v.(*pluginsdk.Set).List())
-		administrativeUnitsToLeave := utils.Difference(existingAdministrativeUnits, desiredAdministrativeUnits)
-		administrativeUnitsToJoin := utils.Difference(desiredAdministrativeUnits, existingAdministrativeUnits)
+		administrativeUnitsToLeave := tf.Difference(existingAdministrativeUnits, desiredAdministrativeUnits)
+		administrativeUnitsToJoin := tf.Difference(desiredAdministrativeUnits, existingAdministrativeUnits)
 
 		if len(administrativeUnitsToJoin) > 0 {
 			for _, newAdministrativeUnitId := range administrativeUnitsToJoin {

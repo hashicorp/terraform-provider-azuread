@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package utils
+package tf
 
 // Difference returns the elements in `a` that aren't in `b`.
 func Difference(a, b []string) []string {
