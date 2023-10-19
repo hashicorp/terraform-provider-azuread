@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -489,10 +490,10 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	var writebackConfiguration *msgraph.GroupWritebackConfiguration
 	if v := d.Get("writeback_enabled").(bool); v {
 		writebackConfiguration = &msgraph.GroupWritebackConfiguration{
-			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+			IsEnabled: pointer.To(d.Get("writeback_enabled").(bool)),
 		}
 		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
-			writebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+			writebackConfiguration.OnPremisesGroupType = pointer.To(onPremisesGroupType)
 		}
 	}
 
@@ -503,35 +504,35 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		DirectoryObject: msgraph.DirectoryObject{
 			ODataType: &odataType,
 		},
-		Description:                 utils.NullableString(description),
-		DisplayName:                 utils.String(displayName),
+		Description:                 tf.NullableString(description),
+		DisplayName:                 pointer.To(displayName),
 		GroupTypes:                  &groupTypes,
-		IsAssignableToRole:          utils.Bool(d.Get("assignable_to_role").(bool)),
-		MailEnabled:                 utils.Bool(mailEnabled),
-		MailNickname:                utils.String(mailNickname),
-		MembershipRule:              utils.NullableString(""),
+		IsAssignableToRole:          pointer.To(d.Get("assignable_to_role").(bool)),
+		MailEnabled:                 pointer.To(mailEnabled),
+		MailNickname:                pointer.To(mailNickname),
+		MembershipRule:              tf.NullableString(""),
 		ResourceBehaviorOptions:     &behaviorOptions,
 		ResourceProvisioningOptions: &provisioningOptions,
-		SecurityEnabled:             utils.Bool(securityEnabled),
+		SecurityEnabled:             pointer.To(securityEnabled),
 		WritebackConfiguration:      writebackConfiguration,
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
 		if d.Get("dynamic_membership.0.enabled").(bool) {
-			properties.MembershipRuleProcessingState = utils.String("On")
+			properties.MembershipRuleProcessingState = pointer.To("On")
 		} else {
-			properties.MembershipRuleProcessingState = utils.String("Paused")
+			properties.MembershipRuleProcessingState = pointer.To("Paused")
 		}
 
-		properties.MembershipRule = utils.NullableString(d.Get("dynamic_membership.0.rule").(string))
+		properties.MembershipRule = tf.NullableString(d.Get("dynamic_membership.0.rule").(string))
 	}
 
 	if theme := d.Get("theme").(string); theme != "" {
-		properties.Theme = utils.NullableString(theme)
+		properties.Theme = tf.NullableString(theme)
 	}
 
 	if visibility := d.Get("visibility").(string); visibility != "" {
-		properties.Visibility = utils.String(visibility)
+		properties.Visibility = pointer.To(visibility)
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -549,7 +550,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if ownerObject.ID() == nil {
 			return nil, errors.New("ownerObject ID was nil")
 		}
-		ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+		ownerObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 			client.BaseClient.Endpoint, tenantId, id)))
 
 		if ownerObject.ODataType == nil {
@@ -714,7 +715,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			DirectoryObject: msgraph.DirectoryObject{
 				Id: group.ID(),
 			},
-			DisplayName: utils.String(displayNameToSet),
+			DisplayName: pointer.To(displayNameToSet),
 		})
 		if err != nil {
 			if status == http.StatusNotFound {
@@ -731,11 +732,11 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		group, status, err := client.Get(ctx, *group.ID(), odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(group.DisplayName != nil && *group.DisplayName == displayName), nil
+		return pointer.To(group.DisplayName != nil && *group.DisplayName == displayName), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for update of `display_name` for group with object ID %q", *group.ID())
 	}
@@ -752,13 +753,13 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(group.Description != nil && *group.Description != ""), nil
+				return pointer.To(group.Description != nil && *group.Description != ""), nil
 			}); updated {
 				status, err = client.Update(ctx, msgraph.Group{
 					DirectoryObject: msgraph.DirectoryObject{
 						Id: group.ID(),
 					},
-					Description: utils.NullableString(""),
+					Description: tf.NullableString(""),
 				})
 				if err != nil {
 					if status == http.StatusNotFound {
@@ -775,7 +776,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					if err != nil {
 						return nil, err
 					}
-					return utils.Bool(group.Description == nil || *group.Description == ""), nil
+					return pointer.To(group.Description == nil || *group.Description == ""), nil
 				}); err != nil {
 					return tf.ErrorDiagF(err, "Waiting to remove `description` for group with object ID %q", *group.ID())
 				}
@@ -793,7 +794,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				AllowExternalSenders: utils.Bool(allowExternalSenders.(bool)),
+				AllowExternalSenders: pointer.To(allowExternalSenders.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
@@ -806,7 +807,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == allowExternalSenders), nil
+				return pointer.To(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == allowExternalSenders), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
@@ -818,7 +819,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				AutoSubscribeNewMembers: utils.Bool(autoSubscribeNewMembers.(bool)),
+				AutoSubscribeNewMembers: pointer.To(autoSubscribeNewMembers.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
@@ -831,7 +832,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == autoSubscribeNewMembers), nil
+				return pointer.To(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == autoSubscribeNewMembers), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
@@ -843,7 +844,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				HideFromAddressLists: utils.Bool(hideFromAddressList.(bool)),
+				HideFromAddressLists: pointer.To(hideFromAddressList.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
@@ -856,7 +857,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == hideFromAddressList), nil
+				return pointer.To(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == hideFromAddressList), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
@@ -868,7 +869,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				HideFromOutlookClients: utils.Bool(hideFromOutlookClients.(bool)),
+				HideFromOutlookClients: pointer.To(hideFromOutlookClients.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -881,7 +882,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == hideFromOutlookClients), nil
+				return pointer.To(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == hideFromOutlookClients), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -907,7 +908,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			if memberObject == nil {
 				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+			memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 				client.BaseClient.Endpoint, tenantId, memberId)))
 
 			members = append(members, *memberObject)
@@ -965,40 +966,40 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	group := msgraph.Group{
 		DirectoryObject: msgraph.DirectoryObject{
-			Id: utils.String(groupId),
+			Id: pointer.To(groupId),
 		},
-		Description:     utils.NullableString(d.Get("description").(string)),
-		DisplayName:     utils.String(displayName),
-		MailEnabled:     utils.Bool(d.Get("mail_enabled").(bool)),
-		MembershipRule:  utils.NullableString(""),
-		SecurityEnabled: utils.Bool(d.Get("security_enabled").(bool)),
+		Description:     tf.NullableString(d.Get("description").(string)),
+		DisplayName:     pointer.To(displayName),
+		MailEnabled:     pointer.To(d.Get("mail_enabled").(bool)),
+		MembershipRule:  tf.NullableString(""),
+		SecurityEnabled: pointer.To(d.Get("security_enabled").(bool)),
 	}
 
 	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
 		group.WritebackConfiguration = &msgraph.GroupWritebackConfiguration{
-			IsEnabled: utils.Bool(d.Get("writeback_enabled").(bool)),
+			IsEnabled: pointer.To(d.Get("writeback_enabled").(bool)),
 		}
 		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
-			group.WritebackConfiguration.OnPremisesGroupType = utils.String(onPremisesGroupType)
+			group.WritebackConfiguration.OnPremisesGroupType = pointer.To(onPremisesGroupType)
 		}
 	}
 
 	if v, ok := d.GetOk("dynamic_membership"); ok && len(v.([]interface{})) > 0 {
 		if d.Get("dynamic_membership.0.enabled").(bool) {
-			group.MembershipRuleProcessingState = utils.String("On")
+			group.MembershipRuleProcessingState = pointer.To("On")
 		} else {
-			group.MembershipRuleProcessingState = utils.String("Paused")
+			group.MembershipRuleProcessingState = pointer.To("Paused")
 		}
 
-		group.MembershipRule = utils.NullableString(d.Get("dynamic_membership.0.rule").(string))
+		group.MembershipRule = tf.NullableString(d.Get("dynamic_membership.0.rule").(string))
 	}
 
 	if theme := d.Get("theme").(string); theme != "" {
-		group.Theme = utils.NullableString(theme)
+		group.Theme = tf.NullableString(theme)
 	}
 
 	if d.HasChange("visibility") {
-		group.Visibility = utils.String(d.Get("visibility").(string))
+		group.Visibility = pointer.To(d.Get("visibility").(string))
 	}
 
 	if _, err := client.Update(ctx, group); err != nil {
@@ -1027,7 +1028,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				AllowExternalSenders: utils.Bool(v.(bool)),
+				AllowExternalSenders: pointer.To(v.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
@@ -1040,7 +1041,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == v.(bool)), nil
+				return pointer.To(groupExtra != nil && groupExtra.AllowExternalSenders != nil && *groupExtra.AllowExternalSenders == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `external_senders_allowed` for group with object ID %q", *group.ID())
 			}
@@ -1052,7 +1053,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				AutoSubscribeNewMembers: utils.Bool(v.(bool)),
+				AutoSubscribeNewMembers: pointer.To(v.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
@@ -1065,7 +1066,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == v.(bool)), nil
+				return pointer.To(groupExtra != nil && groupExtra.AutoSubscribeNewMembers != nil && *groupExtra.AutoSubscribeNewMembers == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `auto_subscribe_new_members` for group with object ID %q", *group.ID())
 			}
@@ -1077,7 +1078,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				HideFromAddressLists: utils.Bool(v.(bool)),
+				HideFromAddressLists: pointer.To(v.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
@@ -1090,7 +1091,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == v.(bool)), nil
+				return pointer.To(groupExtra != nil && groupExtra.HideFromAddressLists != nil && *groupExtra.HideFromAddressLists == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_address_lists` for group with object ID %q", *group.ID())
 			}
@@ -1102,7 +1103,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: group.ID(),
 				},
-				HideFromOutlookClients: utils.Bool(v.(bool)),
+				HideFromOutlookClients: pointer.To(v.(bool)),
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -1115,7 +1116,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if err != nil {
 					return nil, err
 				}
-				return utils.Bool(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == v.(bool)), nil
+				return pointer.To(groupExtra != nil && groupExtra.HideFromOutlookClients != nil && *groupExtra.HideFromOutlookClients == v.(bool)), nil
 			}); err != nil {
 				return tf.ErrorDiagF(err, "Waiting for update of `hide_from_outlook_clients` for group with object ID %q", *group.ID())
 			}
@@ -1149,7 +1150,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if memberObject == nil {
 					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
-				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, memberId)))
 
 				newMembers = append(newMembers, *memberObject)
@@ -1190,7 +1191,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				if ownerObject == nil {
 					return tf.ErrorDiagF(errors.New("returned ownerObject was nil"), "Could not retrieve owner principal object %q", ownerId)
 				}
-				ownerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				ownerObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, ownerId)))
 
 				newOwners = append(newOwners, *ownerObject)
@@ -1385,11 +1386,11 @@ func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, groupId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", groupId)
 	}
@@ -1401,7 +1402,7 @@ func addGroupToAdministrativeUnit(ctx context.Context, auClient *msgraph.Adminis
 	members := msgraph.Members{
 		group.DirectoryObject,
 	}
-	members[0].ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+	members[0].ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 		auClient.BaseClient.Endpoint, tenantId, *group.DirectoryObject.ID())))
 	_, err := auClient.AddMembers(ctx, administrativeUnitId, &members)
 	return err

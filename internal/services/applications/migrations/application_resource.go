@@ -709,7 +709,7 @@ func ResourceApplicationInstanceResourceV1() *pluginsdk.Resource {
 				MaxItems: 1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
-						"access_token": &pluginsdk.Schema{
+						"access_token": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
 							Elem: &pluginsdk.Resource{
@@ -740,7 +740,7 @@ func ResourceApplicationInstanceResourceV1() *pluginsdk.Resource {
 								},
 							},
 						},
-						"id_token": &pluginsdk.Schema{
+						"id_token": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
 							Elem: &pluginsdk.Resource{
@@ -771,7 +771,7 @@ func ResourceApplicationInstanceResourceV1() *pluginsdk.Resource {
 								},
 							},
 						},
-						"saml2_token": &pluginsdk.Schema{
+						"saml2_token": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
 							Elem: &pluginsdk.Resource{

@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -380,10 +380,10 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 
 func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) {
 	result = &msgraph.ApplicationApi{
-		AcceptMappedClaims:          utils.Bool(false),
+		AcceptMappedClaims:          pointer.To(false),
 		KnownClientApplications:     &[]string{},
 		OAuth2PermissionScopes:      &[]msgraph.PermissionScope{},
-		RequestedAccessTokenVersion: utils.Int32(int32(1)),
+		RequestedAccessTokenVersion: pointer.To(int32(1)),
 	}
 
 	if len(input) == 0 || input[0] == nil {
@@ -392,14 +392,14 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 
 	in := input[0].(map[string]interface{})
 	if v, ok := in["mapped_claims_enabled"]; ok {
-		result.AcceptMappedClaims = utils.Bool(v.(bool))
+		result.AcceptMappedClaims = pointer.To(v.(bool))
 	}
 	if v, ok := in["known_client_applications"]; ok {
 		result.KnownClientApplications = tf.ExpandStringSlicePtr(v.(*pluginsdk.Set).List())
 	}
 	result.OAuth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*pluginsdk.Set).List())
 	if v, ok := in["requested_access_token_version"]; ok {
-		result.RequestedAccessTokenVersion = utils.Int32(int32(v.(int)))
+		result.RequestedAccessTokenVersion = pointer.To(int32(v.(int)))
 	}
 
 	return
@@ -424,15 +424,15 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 		}
 
 		newAppRole := msgraph.AppRole{
-			ID:                 utils.String(appRole["id"].(string)),
+			ID:                 pointer.To(appRole["id"].(string)),
 			AllowedMemberTypes: &allowedMemberTypes,
-			Description:        utils.String(appRole["description"].(string)),
-			DisplayName:        utils.String(appRole["display_name"].(string)),
-			IsEnabled:          utils.Bool(appRole["enabled"].(bool)),
+			Description:        pointer.To(appRole["description"].(string)),
+			DisplayName:        pointer.To(appRole["display_name"].(string)),
+			IsEnabled:          pointer.To(appRole["enabled"].(bool)),
 		}
 
 		if v, ok := appRole["value"]; ok {
-			newAppRole.Value = utils.String(v.(string))
+			newAppRole.Value = pointer.To(v.(string))
 		}
 
 		result = append(result, newAppRole)
@@ -462,8 +462,8 @@ func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.Implic
 	}
 
 	return &msgraph.ImplicitGrantSettings{
-		EnableAccessTokenIssuance: utils.Bool(enableAccessTokenIssuance),
-		EnableIdTokenIssuance:     utils.Bool(enableIdTokenIssuance),
+		EnableAccessTokenIssuance: pointer.To(enableAccessTokenIssuance),
+		EnableIdTokenIssuance:     pointer.To(enableIdTokenIssuance),
 	}
 }
 
@@ -478,14 +478,14 @@ func expandApplicationOAuth2PermissionScope(in []interface{}) *[]msgraph.Permiss
 
 		result = append(result,
 			msgraph.PermissionScope{
-				AdminConsentDescription: utils.String(oauth2Permissions["admin_consent_description"].(string)),
-				AdminConsentDisplayName: utils.String(oauth2Permissions["admin_consent_display_name"].(string)),
-				ID:                      utils.String(oauth2Permissions["id"].(string)),
-				IsEnabled:               utils.Bool(oauth2Permissions["enabled"].(bool)),
+				AdminConsentDescription: pointer.To(oauth2Permissions["admin_consent_description"].(string)),
+				AdminConsentDisplayName: pointer.To(oauth2Permissions["admin_consent_display_name"].(string)),
+				ID:                      pointer.To(oauth2Permissions["id"].(string)),
+				IsEnabled:               pointer.To(oauth2Permissions["enabled"].(bool)),
 				Type:                    oauth2Permissions["type"].(string),
-				UserConsentDescription:  utils.String(oauth2Permissions["user_consent_description"].(string)),
-				UserConsentDisplayName:  utils.String(oauth2Permissions["user_consent_display_name"].(string)),
-				Value:                   utils.String(oauth2Permissions["value"].(string)),
+				UserConsentDescription:  pointer.To(oauth2Permissions["user_consent_description"].(string)),
+				UserConsentDisplayName:  pointer.To(oauth2Permissions["user_consent_display_name"].(string)),
+				Value:                   pointer.To(oauth2Permissions["value"].(string)),
 			},
 		)
 	}
@@ -526,8 +526,8 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 		}
 
 		newClaim := msgraph.OptionalClaim{
-			Name:                 utils.String(optionalClaim["name"].(string)),
-			Essential:            utils.Bool(optionalClaim["essential"].(bool)),
+			Name:                 pointer.To(optionalClaim["name"].(string)),
+			Essential:            pointer.To(optionalClaim["essential"].(bool)),
 			AdditionalProperties: &additionalProps,
 		}
 
@@ -566,7 +566,7 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.Requir
 		requiredResourceAccess := raw.(map[string]interface{})
 
 		result = append(result, msgraph.RequiredResourceAccess{
-			ResourceAppId: utils.String(requiredResourceAccess["resource_app_id"].(string)),
+			ResourceAppId: pointer.To(requiredResourceAccess["resource_app_id"].(string)),
 			ResourceAccess: expandApplicationResourceAccess(
 				requiredResourceAccess["resource_access"].([]interface{}),
 			),
@@ -586,7 +586,7 @@ func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
 
 		result = append(result, msgraph.ResourceAccess{
-			ID:   utils.String(resourceAccess["id"].(string)),
+			ID:   pointer.To(resourceAccess["id"].(string)),
 			Type: resourceAccess["type"].(string),
 		})
 	}
@@ -611,9 +611,9 @@ func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) 
 
 func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) {
 	result = &msgraph.ApplicationWeb{
-		HomePageUrl:           utils.NullableString(""),
+		HomePageUrl:           tf.NullableString(""),
 		ImplicitGrantSettings: expandApplicationImplicitGrantSettings(nil),
-		LogoutUrl:             utils.NullableString(""),
+		LogoutUrl:             tf.NullableString(""),
 		RedirectUris:          &[]string{},
 	}
 
@@ -622,8 +622,8 @@ func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) 
 	}
 
 	in := input[0].(map[string]interface{})
-	result.HomePageUrl = utils.NullableString(in["homepage_url"].(string))
-	result.LogoutUrl = utils.NullableString(in["logout_url"].(string))
+	result.HomePageUrl = tf.NullableString(in["homepage_url"].(string))
+	result.LogoutUrl = tf.NullableString(in["logout_url"].(string))
 	result.ImplicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
 	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 

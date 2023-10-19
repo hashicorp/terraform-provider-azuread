@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type SynchronizationSecretResource struct{}
@@ -55,7 +55,7 @@ func (r SynchronizationSecretResource) Exists(ctx context.Context, clients *clie
 		}
 		return nil, fmt.Errorf("Retrieving synchronization secrets for service principal %q", id.ServicePrincipalId)
 	}
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (SynchronizationSecretResource) template(data acceptance.TestData) string {

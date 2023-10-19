@@ -9,12 +9,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -56,7 +56,7 @@ func claimsMappingPolicyResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 
 	claimsMappingPolicy := msgraph.ClaimsMappingPolicy{
 		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: utils.String(d.Get("display_name").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
 	}
 	policy, _, err := client.Create(ctx, claimsMappingPolicy)
 	if err != nil {
@@ -102,7 +102,7 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 			Id: &objectId,
 		},
 		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: utils.String(d.Get("display_name").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
 	}
 	_, err := client.Update(ctx, claimsMappingPolicy)
 	if err != nil {

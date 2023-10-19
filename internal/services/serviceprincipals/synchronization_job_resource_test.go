@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type SynchronizationJobResource struct{}
@@ -70,7 +70,7 @@ func (r SynchronizationJobResource) Exists(ctx context.Context, clients *clients
 		}
 		return nil, fmt.Errorf("Retrieving synchronization job with object ID %q", id.JobId)
 	}
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (SynchronizationJobResource) template(data acceptance.TestData) string {

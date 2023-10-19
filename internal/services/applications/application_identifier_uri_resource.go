@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/manicminer/hamilton/msgraph"
 	"net/http"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
+	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationIdentifierUriModel struct {

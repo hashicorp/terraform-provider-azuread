@@ -10,12 +10,12 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type UserResource struct{}
@@ -139,7 +139,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 		}
 		return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(user.ID() != nil && *user.ID() == state.ID), nil
+	return pointer.To(user.ID() != nil && *user.ID() == state.ID), nil
 }
 
 func (UserResource) basic(data acceptance.TestData) string {

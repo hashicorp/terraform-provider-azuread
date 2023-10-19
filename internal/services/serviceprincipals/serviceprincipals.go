@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -26,7 +26,7 @@ func expandSamlSingleSignOn(in []interface{}) *msgraph.SamlSingleSignOnSettings 
 
 	samlSingleSignOnSettings := in[0].(map[string]interface{})
 
-	result.RelayState = utils.String(samlSingleSignOnSettings["relay_state"].(string))
+	result.RelayState = pointer.To(samlSingleSignOnSettings["relay_state"].(string))
 
 	return &result
 }

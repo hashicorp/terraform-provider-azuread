@@ -10,12 +10,12 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ApplicationResource struct{}
@@ -604,7 +604,7 @@ func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client
 		}
 		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(app.ID() != nil && *app.ID() == state.ID), nil
+	return pointer.To(app.ID() != nil && *app.ID() == state.ID), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {

@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type servicePrincipalTokenSigningCertificateResource struct{}
@@ -83,7 +83,7 @@ func (r servicePrincipalTokenSigningCertificateResource) Exists(ctx context.Cont
 	if servicePrincipal.KeyCredentials != nil {
 		for _, cred := range *servicePrincipal.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}
 		}
 	}

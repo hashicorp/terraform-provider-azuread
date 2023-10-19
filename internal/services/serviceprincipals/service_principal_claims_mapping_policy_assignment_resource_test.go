@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ServicePrincipalClaimsMappingPolicyAssignmentResource struct{}
@@ -70,17 +70,17 @@ func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx contex
 	policyList, status, err := client.ListClaimsMappingPolicy(ctx, id.ServicePrincipalId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), fmt.Errorf("Service Policy with object ID %q does not exist", id.ServicePrincipalId)
+			return pointer.To(false), fmt.Errorf("Service Policy with object ID %q does not exist", id.ServicePrincipalId)
 		}
-		return utils.Bool(false), fmt.Errorf("failed to retrieve claims mapping policy assignments with service policy ID %q: %+v", id.ServicePrincipalId, err)
+		return pointer.To(false), fmt.Errorf("failed to retrieve claims mapping policy assignments with service policy ID %q: %+v", id.ServicePrincipalId, err)
 	}
 
 	// Check the assignment is found in the currently assigned policies
 	for _, policy := range *policyList {
 		if policy.ID() != nil && *policy.ID() == id.ClaimsMappingPolicyId {
-			return utils.Bool(true), nil
+			return pointer.To(true), nil
 		}
 	}
 
-	return utils.Bool(false), nil
+	return pointer.To(false), nil
 }

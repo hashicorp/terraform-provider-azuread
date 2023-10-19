@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -137,7 +136,7 @@ func (r ApplicationFromTemplateResource) Create() sdk.ResourceFunc {
 				result, status, err := client.Get(ctx, *result.Application.ID(), odata.Query{})
 				if err != nil {
 					if status == http.StatusNotFound {
-						return utils.Bool(false), nil
+						return pointer.To(false), nil
 					}
 					return nil, err
 				}

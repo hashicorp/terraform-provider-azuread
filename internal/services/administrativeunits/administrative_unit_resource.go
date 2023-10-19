@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -151,13 +152,13 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
 	properties := msgraph.AdministrativeUnit{
-		Description: utils.NullableString(d.Get("description").(string)),
-		DisplayName: utils.String(tempDisplayName),
-		Visibility:  utils.String(msgraph.AdministrativeUnitVisibilityPublic),
+		Description: tf.NullableString(d.Get("description").(string)),
+		DisplayName: pointer.To(tempDisplayName),
+		Visibility:  pointer.To(msgraph.AdministrativeUnitVisibilityPublic),
 	}
 
 	if d.Get("hidden_membership_enabled").(bool) {
-		properties.Visibility = utils.String(msgraph.AdministrativeUnitVisibilityHiddenMembership)
+		properties.Visibility = pointer.To(msgraph.AdministrativeUnitVisibilityHiddenMembership)
 	}
 
 	administrativeUnit, _, err := client.Create(ctx, properties)
@@ -175,7 +176,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	status, err := client.Update(ctx, msgraph.AdministrativeUnit{
 		ID:          administrativeUnit.ID,
-		DisplayName: utils.String(displayName),
+		DisplayName: pointer.To(displayName),
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -195,7 +196,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 			if memberObject == nil {
 				return tf.ErrorDiagF(errors.New("memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 			}
-			memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+			memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 				client.BaseClient.Endpoint, tenantId, memberId)))
 
 			members = append(members, *memberObject)
@@ -241,14 +242,14 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 	}
 
 	administrativeUnit := msgraph.AdministrativeUnit{
-		ID:          utils.String(administrativeUnitId),
-		Description: utils.NullableString(d.Get("description").(string)),
-		DisplayName: utils.String(displayName),
-		Visibility:  utils.String(msgraph.AdministrativeUnitVisibilityPublic),
+		ID:          pointer.To(administrativeUnitId),
+		Description: tf.NullableString(d.Get("description").(string)),
+		DisplayName: pointer.To(displayName),
+		Visibility:  pointer.To(msgraph.AdministrativeUnitVisibilityPublic),
 	}
 
 	if d.Get("hidden_membership_enabled").(bool) {
-		administrativeUnit.Visibility = utils.String(msgraph.AdministrativeUnitVisibilityHiddenMembership)
+		administrativeUnit.Visibility = pointer.To(msgraph.AdministrativeUnitVisibilityHiddenMembership)
 	}
 
 	if _, err := client.Update(ctx, administrativeUnit); err != nil {
@@ -282,7 +283,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 				if memberObject == nil {
 					return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
 				}
-				memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, memberId)))
 
 				newMembers = append(newMembers, *memberObject)
@@ -354,11 +355,11 @@ func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.Resource
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, administrativeUnitId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of administrative unit with object ID %q", administrativeUnitId)
 	}

@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -261,10 +261,10 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	var mailEnabled, securityEnabled *bool
 	if v, exists := d.GetOkExists("mail_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
-		mailEnabled = utils.Bool(v.(bool))
+		mailEnabled = pointer.To(v.(bool))
 	}
 	if v, exists := d.GetOkExists("security_enabled"); exists { //nolint:staticcheck // needed to detect unset booleans
-		securityEnabled = utils.Bool(v.(bool))
+		securityEnabled = pointer.To(v.(bool))
 	}
 
 	var mailNickname string

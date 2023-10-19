@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -109,7 +109,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	displayName := d.Get("display_name").(string)
 
 	base := msgraph.BaseNamedLocation{
-		DisplayName: utils.String(displayName),
+		DisplayName: pointer.To(displayName),
 	}
 
 	if v, ok := d.GetOk("ip"); ok {
@@ -149,7 +149,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	base := msgraph.BaseNamedLocation{
-		ID: utils.String(d.Id()),
+		ID: pointer.To(d.Id()),
 	}
 
 	if d.HasChange("display_name") {
@@ -291,7 +291,7 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 				BaseNamedLocation: &msgraph.BaseNamedLocation{
 					ID: &namedLocationId,
 				},
-				IsTrusted: utils.Bool(false),
+				IsTrusted: pointer.To(false),
 			}
 			if _, err := client.UpdateIP(ctx, properties); err != nil {
 				return tf.ErrorDiagF(err, "Updating named location with ID %q", namedLocationId)
@@ -320,11 +320,11 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, namedLocationId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "waiting for deletion of named location with ID %q", namedLocationId)
 	}

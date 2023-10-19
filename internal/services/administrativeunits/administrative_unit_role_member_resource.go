@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -68,12 +68,12 @@ func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
-	memberID := utils.String(d.Get("member_object_id").(string))
-	adminUnitID := utils.String(d.Get("administrative_unit_object_id").(string))
+	memberID := pointer.To(d.Get("member_object_id").(string))
+	adminUnitID := pointer.To(d.Get("administrative_unit_object_id").(string))
 
 	properties := msgraph.ScopedRoleMembership{
 		AdministrativeUnitId: adminUnitID,
-		RoleId:               utils.String(d.Get("role_object_id").(string)),
+		RoleId:               pointer.To(d.Get("role_object_id").(string)),
 		RoleMemberInfo: &msgraph.Identity{
 			Id: memberID,
 		},

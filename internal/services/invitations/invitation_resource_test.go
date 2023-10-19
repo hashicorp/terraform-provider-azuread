@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type InvitationResource struct{}
@@ -154,7 +154,7 @@ func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client,
 		return nil, fmt.Errorf("failed to retrieve invited user with object ID %q: %+v", userID, err)
 	}
 
-	return utils.Bool(user.ID() != nil && *user.ID() == userID), nil
+	return pointer.To(user.ID() != nil && *user.ID() == userID), nil
 }
 
 func (InvitationResource) basic(data acceptance.TestData) string {

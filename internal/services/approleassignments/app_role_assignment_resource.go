@@ -11,13 +11,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -98,9 +98,9 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		return tf.ErrorDiagF(err, "Could not retrieve service principal for resource (Object ID: %q)", resourceId)
 	}
 	properties := msgraph.AppRoleAssignment{
-		AppRoleId:   utils.String(appRoleId),
-		PrincipalId: utils.String(principalId),
-		ResourceId:  utils.String(resourceId),
+		AppRoleId:   pointer.To(appRoleId),
+		PrincipalId: pointer.To(principalId),
+		ResourceId:  pointer.To(resourceId),
 	}
 
 	appRoleAssignment, _, err := client.Assign(ctx, properties)

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -467,11 +466,11 @@ func (r ApplicationRegistrationResource) Delete() sdk.ResourceFunc {
 				client.BaseClient.DisableRetries = true
 				if _, status, err := client.Get(ctx, id.ApplicationId, odata.Query{}); err != nil {
 					if status == http.StatusNotFound {
-						return utils.Bool(false), nil
+						return pointer.To(false), nil
 					}
 					return nil, err
 				}
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}); err != nil {
 				return fmt.Errorf("waiting for deletion of %s: %q", id, err)
 			}

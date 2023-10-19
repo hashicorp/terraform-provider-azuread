@@ -4,8 +4,8 @@
 package conditionalaccess
 
 import (
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -414,31 +414,31 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 	config := in[0].(map[string]interface{})
 
 	result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-		IsEnabled: utils.Bool(config["application_enforced_restrictions_enabled"].(bool)),
+		IsEnabled: pointer.To(config["application_enforced_restrictions_enabled"].(bool)),
 	}
 
 	if cloudAppSecurity := config["cloud_app_security_policy"].(string); cloudAppSecurity != "" {
 		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled:            utils.Bool(true),
-			CloudAppSecurityType: utils.String(cloudAppSecurity),
+			IsEnabled:            pointer.To(true),
+			CloudAppSecurityType: pointer.To(cloudAppSecurity),
 		}
 	}
 
 	DisableResilienceDefaults := config["disable_resilience_defaults"]
-	result.DisableResilienceDefaults = utils.Bool(DisableResilienceDefaults.(bool))
+	result.DisableResilienceDefaults = pointer.To(DisableResilienceDefaults.(bool))
 
 	if persistentBrowserMode := config["persistent_browser_mode"].(string); persistentBrowserMode != "" {
 		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
-			IsEnabled: utils.Bool(true),
-			Mode:      utils.String(persistentBrowserMode),
+			IsEnabled: pointer.To(true),
+			Mode:      pointer.To(persistentBrowserMode),
 		}
 	}
 
 	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
 		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: utils.Bool(true),
-			Type:      utils.String(config["sign_in_frequency_period"].(string)),
-			Value:     utils.Int32(int32(signInFrequency)),
+			IsEnabled: pointer.To(true),
+			Type:      pointer.To(config["sign_in_frequency_period"].(string)),
+			Value:     pointer.To(int32(signInFrequency)),
 		}
 	}
 
@@ -454,8 +454,8 @@ func expandConditionalAccessFilter(in []interface{}) *msgraph.ConditionalAccessF
 
 	config := in[0].(map[string]interface{})
 
-	result.Mode = utils.String(config["mode"].(string))
-	result.Rule = utils.String(config["rule"].(string))
+	result.Mode = pointer.To(config["mode"].(string))
+	result.Rule = pointer.To(config["rule"].(string))
 
 	return &result
 }
@@ -472,7 +472,7 @@ func expandCountryNamedLocation(in []interface{}) *msgraph.CountryNamedLocation 
 	includeUnknown := config["include_unknown_countries_and_regions"]
 
 	result.CountriesAndRegions = tf.ExpandStringSlicePtr(countriesAndRegions)
-	result.IncludeUnknownCountriesAndRegions = utils.Bool(includeUnknown.(bool))
+	result.IncludeUnknownCountriesAndRegions = pointer.To(includeUnknown.(bool))
 
 	return &result
 }
@@ -489,7 +489,7 @@ func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
 	trusted := config["trusted"]
 
 	result.IPRanges = expandIPNamedLocationIPRange(ipRanges)
-	result.IsTrusted = utils.Bool(trusted.(bool))
+	result.IsTrusted = pointer.To(trusted.(bool))
 
 	return &result
 }
@@ -502,7 +502,7 @@ func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIP
 	result := make([]msgraph.IPNamedLocationIPRange, 0)
 	for _, cidr := range in {
 		result = append(result, msgraph.IPNamedLocationIPRange{
-			CIDRAddress: utils.String(cidr.(string)),
+			CIDRAddress: pointer.To(cidr.(string)),
 		})
 	}
 

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -151,7 +150,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 
 	credential := msgraph.FederatedIdentityCredential{
 		Audiences:   tf.ExpandStringSlicePtr(d.Get("audiences").([]interface{})),
-		Description: utils.NullableString(d.Get("description").(string)),
+		Description: tf.NullableString(d.Get("description").(string)),
 		Issuer:      pointer.To(d.Get("issuer").(string)),
 		Name:        pointer.To(d.Get("display_name").(string)),
 		Subject:     pointer.To(d.Get("subject").(string)),
@@ -221,7 +220,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 	credential := msgraph.FederatedIdentityCredential{
 		ID:          pointer.To(id.KeyId),
 		Audiences:   tf.ExpandStringSlicePtr(d.Get("audiences").([]interface{})),
-		Description: utils.NullableString(d.Get("description").(string)),
+		Description: tf.NullableString(d.Get("description").(string)),
 		Issuer:      pointer.To(d.Get("issuer").(string)),
 		Subject:     pointer.To(d.Get("subject").(string)),
 	}

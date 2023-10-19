@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -85,7 +85,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 
 	now := time.Now()
 	properties := msgraph.UnifiedRoleEligibilityScheduleRequest{
-		Action:           utils.String(msgraph.UnifiedRoleScheduleRequestActionAdminAssign),
+		Action:           pointer.To(msgraph.UnifiedRoleScheduleRequestActionAdminAssign),
 		RoleDefinitionId: &roleDefinitionId,
 		PrincipalId:      &principalId,
 		Justification:    &justification,
@@ -93,7 +93,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 		ScheduleInfo: &msgraph.RequestSchedule{
 			StartDateTime: &now,
 			Expiration: &msgraph.ExpirationPattern{
-				Type: utils.String(msgraph.ExpirationPatternTypeNoExpiration),
+				Type: pointer.To(msgraph.ExpirationPatternTypeNoExpiration),
 			},
 		},
 	}
@@ -115,11 +115,11 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 		resr, status, err := client.Get(ctx, *roleEligibilityScheduleRequest.ID, odata.Query{})
 		if err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(resr != nil), nil
+		return pointer.To(resr != nil), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for role eligibility schedule request for %q to be created for directory role %q", principalId, roleDefinitionId)
 	}
@@ -158,7 +158,7 @@ func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, 
 		return tf.ErrorDiagF(err, "Retrieving roleEligibilityScheduleRequest %q", id)
 	}
 
-	roleEligibilityScheduleRequest.Action = utils.String(msgraph.UnifiedRoleScheduleRequestActionAdminRemove)
+	roleEligibilityScheduleRequest.Action = pointer.To(msgraph.UnifiedRoleScheduleRequestActionAdminRemove)
 
 	if _, _, err := client.Create(ctx, *roleEligibilityScheduleRequest); err != nil {
 		return tf.ErrorDiagF(err, "Deleting role eligibility schedule request %q: %+v", d.Id(), err)

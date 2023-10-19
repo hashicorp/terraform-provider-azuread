@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type AdministrativeUnitMemberResource struct{}
@@ -120,12 +120,12 @@ func (r AdministrativeUnitMemberResource) Exists(ctx context.Context, clients *c
 
 	if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve administrative unit member %q (administrative unit ID: %q): %+v", id.MemberId, id.AdministrativeUnitId, err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (AdministrativeUnitMemberResource) templateThreeUsers(data acceptance.TestData) string {

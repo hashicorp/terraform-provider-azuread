@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type GroupMemberResource struct{}
@@ -155,7 +155,7 @@ func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.Client
 	if members != nil {
 		for _, objectId := range *members {
 			if strings.EqualFold(objectId, id.MemberId) {
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}
 		}
 	}
