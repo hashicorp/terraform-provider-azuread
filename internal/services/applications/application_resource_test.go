@@ -6,7 +6,6 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"net/http"
 	"regexp"
 	"testing"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationResource struct{}
