@@ -119,11 +119,11 @@ func flattenConditionalAccessGrantControls(in *msgraph.ConditionalAccessGrantCon
 
 	return []interface{}{
 		map[string]interface{}{
-			"operator":                      in.Operator,
-			"built_in_controls":             tf.FlattenStringSlicePtr(in.BuiltInControls),
-			"authentication_strength_id":    in.AuthenticationStrength.ID,
-			"custom_authentication_factors": tf.FlattenStringSlicePtr(in.CustomAuthenticationFactors),
-			"terms_of_use":                  tf.FlattenStringSlicePtr(in.TermsOfUse),
+			"operator":                          in.Operator,
+			"built_in_controls":                 tf.FlattenStringSlicePtr(in.BuiltInControls),
+			"authentication_strength_policy_id": in.AuthenticationStrength.ID,
+			"custom_authentication_factors":     tf.FlattenStringSlicePtr(in.CustomAuthenticationFactors),
+			"terms_of_use":                      tf.FlattenStringSlicePtr(in.TermsOfUse),
 		},
 	}
 }
@@ -393,7 +393,7 @@ func expandConditionalAccessGrantControls(in []interface{}) *msgraph.Conditional
 	config := in[0].(map[string]interface{})
 
 	operator := config["operator"].(string)
-	authenticationStrengthId := config["authentication_strength_id"].(string)
+	authenticationStrengthId := config["authentication_strength_policy_id"].(string)
 	builtInControls := config["built_in_controls"].([]interface{})
 	customAuthenticationFactors := config["custom_authentication_factors"].([]interface{})
 	termsOfUse := config["terms_of_use"].([]interface{})

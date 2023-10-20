@@ -11,72 +11,72 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func authenticationStrengthPolicyResource() *schema.Resource {
-	return &schema.Resource{
+func authenticationStrengthPolicyResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: authenticationStrengthPolicyCreate,
 		ReadContext:   authenticationStrengthPolicyRead,
 		UpdateContext: authenticationStrengthPolicyUpdate,
 		DeleteContext: authenticationStrengthPolicyDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:      "The display name for the authentication strength policy",
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				Description:  "The display name for the authentication strength policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
 				Description: "The description for the authentication strength policy",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"allowed_combinations": {
 				Description: "The allowed MFA methods for this policy",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Required:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 		},
 	}
 }
 
-func authenticationStrengthPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
 
 	properties := msgraph.AuthenticationStrengthPolicy{
-		DisplayName:         utils.String(d.Get("display_name").(string)),
-		Description:         utils.String(d.Get("description").(string)),
-		AllowedCombinations: tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*schema.Set).List()),
+		DisplayName:         pointer.To(d.Get("display_name").(string)),
+		Description:         pointer.To(d.Get("description").(string)),
+		AllowedCombinations: tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*pluginsdk.Set).List()),
 	}
 
 	authenticationStrengthPolicy, _, err := client.Create(ctx, properties)
@@ -89,14 +89,14 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *schema.ResourceD
 	return authenticationStrengthPolicyRead(ctx, d, meta)
 }
 
-func authenticationStrengthPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
 
 	properties := msgraph.AuthenticationStrengthPolicy{
-		ID:          utils.String(d.Id()),
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		Description: utils.String(d.Get("description").(string)),
-		// AllowedCombinations: tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*schema.Set).List()),
+		ID:          pointer.To(d.Id()),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		Description: pointer.To(d.Get("description").(string)),
+		// AllowedCombinations: tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*pluginsdk.Set).List()),
 	}
 
 	_, err := client.Update(ctx, properties)
@@ -105,7 +105,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("allowed_combinations") {
-		properties.AllowedCombinations = tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*schema.Set).List())
+		properties.AllowedCombinations = tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*pluginsdk.Set).List())
 		_, err := client.UpdateAllowedCombinations(ctx, properties)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not update authentication strength policy allowed combinations")
@@ -115,7 +115,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *schema.ResourceD
 	return authenticationStrengthPolicyRead(ctx, d, meta)
 }
 
-func authenticationStrengthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
 
 	authenticationStrengthPolicy, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -138,7 +138,7 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func authenticationStrengthPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func authenticationStrengthPolicyDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
 	authenticationStrengthPolicyId := d.Id()
 
@@ -161,11 +161,11 @@ func authenticationStrengthPolicyDelete(ctx context.Context, d *schema.ResourceD
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, authenticationStrengthPolicyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "waiting for deletion of Authentication Strength Policy with ID %q", authenticationStrengthPolicyId)
 	}

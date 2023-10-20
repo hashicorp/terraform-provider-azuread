@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 type AuthenticationStrengthPolicyResource struct{}
@@ -24,10 +23,10 @@ func TestAccAuthenticationStrengthPolicy_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_authentication_strength_policy", "test")
 	r := AuthenticationStrengthPolicyResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -39,10 +38,10 @@ func TestAccAuthenticationStrengthPolicy_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_authentication_strength_policy", "test")
 	r := AuthenticationStrengthPolicyResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -54,24 +53,24 @@ func TestAccAuthenticationStrengthPolicy_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_authentication_strength_policy", "test")
 	r := AuthenticationStrengthPolicyResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -79,10 +78,10 @@ func TestAccAuthenticationStrengthPolicy_update(t *testing.T) {
 	})
 }
 
-func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	var id *string
 
-	authstrengthpolicy, status, err := clients.ConditionalAccess.AuthenticationStrengthPoliciesClient.Get(ctx, state.ID, odata.Query{})
+	authstrengthpolicy, status, err := client.ConditionalAccess.AuthenticationStrengthPoliciesClient.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Authentication Strength Policy with ID %q does not exist", state.ID)
@@ -91,7 +90,7 @@ func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, client
 	}
 	id = authstrengthpolicy.ID
 
-	return utils.Bool(id != nil && *id == state.ID), nil
+	return pointer.To(id != nil && *id == state.ID), nil
 }
 
 func (AuthenticationStrengthPolicyResource) basic(data acceptance.TestData) string {
