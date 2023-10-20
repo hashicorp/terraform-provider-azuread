@@ -4,29 +4,29 @@
 
 FEATURES:
 
-* **New Resource:** `azuread_application_api_access`
-* **New Resource:** `azuread_application_app_role`
-* **New Resource:** `azuread_application_fallback_public_client`
-* **New Resource:** `azuread_application_from_template`
-* **New Resource:** `azuread_application_identifier_uri`
-* **New Resource:** `azuread_application_known_clients`
-* **New Resource:** `azuread_application_owner`
-* **New Resource:** `azuread_application_permission_scope`
-* **New Resource:** `azuread_application_redirect_uris`
-* **New Resource:** `azuread_application_registration`
+* **New Resource:** `azuread_application_api_access` [GH-1214]
+* **New Resource:** `azuread_application_app_role` [GH-1214]
+* **New Resource:** `azuread_application_fallback_public_client` [GH-1214]
+* **New Resource:** `azuread_application_from_template` [GH-1214]
+* **New Resource:** `azuread_application_identifier_uri` [GH-1214]
+* **New Resource:** `azuread_application_known_clients` [GH-1214]
+* **New Resource:** `azuread_application_owner` [GH-1214]
+* **New Resource:** `azuread_application_permission_scope [GH-1214]`
+* **New Resource:** `azuread_application_redirect_uris` [GH-1214]
+* **New Resource:** `azuread_application_registration` [GH-1214]
 
 ENHANCEMENTS:
 
-* `data.azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute
-* `data.azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property
-* `data.azuread_service_principals` - support for the `client_ids` property, deprecate the `application_ids` property
-* `data.azuread_service_principals` - export the `client_id` attribute in the `service_principals` block, deprecate the `application_id` attribute
-* `azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute
-* `azuread_application_federated_identity_credential` - support for the `application_id` property, deprecate the `application_object_id` property
-* `azuread_application_certificate` - support for the `application_id` property, deprecate the `application_object_id` property
-* `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property
-* `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property
-* `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property
+* `data.azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute [GH-1214]
+* `data.azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property [GH-1214]
+* `data.azuread_service_principals` - support for the `client_ids` property, deprecate the `application_ids` property [GH-1214]
+* `data.azuread_service_principals` - export the `client_id` attribute in the `service_principals` block, deprecate the `application_id` attribute [GH-1214]
+* `azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute [GH-1214]
+* `azuread_application_federated_identity_credential` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
+* `azuread_application_certificate` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
+* `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
+* `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
+* `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property [GH-1214]
 
 BUG FIXES:
 
