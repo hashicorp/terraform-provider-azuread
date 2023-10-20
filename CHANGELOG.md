@@ -14,6 +14,7 @@ FEATURES:
 * **New Resource:** `azuread_application_permission_scope [GH-1214]`
 * **New Resource:** `azuread_application_redirect_uris` [GH-1214]
 * **New Resource:** `azuread_application_registration` [GH-1214]
+* **New Resource:** `azuread_authentication_strength_policy` [GH-1171]
 
 ENHANCEMENTS:
 
@@ -27,6 +28,7 @@ ENHANCEMENTS:
 * `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
 * `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
 * `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property [GH-1214]
+* `azuread_conditional_access_policy` - support for the `authentication_strength_policy_id` property in the `grant_controls` block [GH_1171]
 
 BUG FIXES:
 
