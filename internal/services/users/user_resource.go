@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -421,41 +421,41 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	properties := msgraph.User{
-		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
-		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
-		City:                    utils.NullableString(d.Get("city").(string)),
-		ConsentProvidedForMinor: utils.NullableString(d.Get("consent_provided_for_minor").(string)),
-		CompanyName:             utils.NullableString(d.Get("company_name").(string)),
-		Country:                 utils.NullableString(d.Get("country").(string)),
-		Department:              utils.NullableString(d.Get("department").(string)),
-		DisplayName:             utils.String(d.Get("display_name").(string)),
-		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
+		AccountEnabled:          pointer.To(d.Get("account_enabled").(bool)),
+		AgeGroup:                tf.NullableString(d.Get("age_group").(string)),
+		City:                    tf.NullableString(d.Get("city").(string)),
+		ConsentProvidedForMinor: tf.NullableString(d.Get("consent_provided_for_minor").(string)),
+		CompanyName:             tf.NullableString(d.Get("company_name").(string)),
+		Country:                 tf.NullableString(d.Get("country").(string)),
+		Department:              tf.NullableString(d.Get("department").(string)),
+		DisplayName:             pointer.To(d.Get("display_name").(string)),
+		EmployeeId:              tf.NullableString(d.Get("employee_id").(string)),
 		EmployeeOrgData: &msgraph.EmployeeOrgData{
-			CostCenter: utils.String(d.Get("cost_center").(string)),
-			Division:   utils.String(d.Get("division").(string)),
+			CostCenter: pointer.To(d.Get("cost_center").(string)),
+			Division:   pointer.To(d.Get("division").(string)),
 		},
-		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
-		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
-		GivenName:         utils.NullableString(d.Get("given_name").(string)),
-		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
-		Mail:              utils.NullableString(d.Get("mail").(string)),
-		MailNickname:      utils.String(mailNickName),
-		MobilePhone:       utils.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:    utils.NullableString(d.Get("office_location").(string)),
+		EmployeeType:      tf.NullableString(d.Get("employee_type").(string)),
+		FaxNumber:         tf.NullableString(d.Get("fax_number").(string)),
+		GivenName:         tf.NullableString(d.Get("given_name").(string)),
+		JobTitle:          tf.NullableString(d.Get("job_title").(string)),
+		Mail:              tf.NullableString(d.Get("mail").(string)),
+		MailNickname:      pointer.To(mailNickName),
+		MobilePhone:       tf.NullableString(d.Get("mobile_phone").(string)),
+		OfficeLocation:    tf.NullableString(d.Get("office_location").(string)),
 		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*pluginsdk.Set).List()),
-		PasswordPolicies:  utils.NullableString(passwordPolicies),
-		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList: utils.Bool(d.Get("show_in_address_list").(bool)),
-		State:             utils.NullableString(d.Get("state").(string)),
-		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
-		Surname:           utils.NullableString(d.Get("surname").(string)),
-		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
-		UserPrincipalName: utils.String(upn),
+		PasswordPolicies:  tf.NullableString(passwordPolicies),
+		PostalCode:        tf.NullableString(d.Get("postal_code").(string)),
+		PreferredLanguage: tf.NullableString(d.Get("preferred_language").(string)),
+		ShowInAddressList: pointer.To(d.Get("show_in_address_list").(bool)),
+		State:             tf.NullableString(d.Get("state").(string)),
+		StreetAddress:     tf.NullableString(d.Get("street_address").(string)),
+		Surname:           tf.NullableString(d.Get("surname").(string)),
+		UsageLocation:     tf.NullableString(d.Get("usage_location").(string)),
+		UserPrincipalName: pointer.To(upn),
 
 		PasswordProfile: &msgraph.UserPasswordProfile{
-			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
-			Password:                      utils.String(password),
+			ForceChangePasswordNextSignIn: pointer.To(d.Get("force_password_change").(bool)),
+			Password:                      pointer.To(password),
 		},
 	}
 
@@ -464,7 +464,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("onpremises_immutable_id"); ok {
-		properties.OnPremisesImmutableId = utils.String(v.(string))
+		properties.OnPremisesImmutableId = pointer.To(v.(string))
 	}
 
 	user, _, err := client.Create(ctx, properties)
@@ -517,43 +517,43 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 	properties := msgraph.User{
 		DirectoryObject: msgraph.DirectoryObject{
-			Id: utils.String(d.Id()),
+			Id: pointer.To(d.Id()),
 		},
-		AccountEnabled:          utils.Bool(d.Get("account_enabled").(bool)),
-		AgeGroup:                utils.NullableString(d.Get("age_group").(string)),
-		City:                    utils.NullableString(d.Get("city").(string)),
-		CompanyName:             utils.NullableString(d.Get("company_name").(string)),
-		ConsentProvidedForMinor: utils.NullableString(d.Get("consent_provided_for_minor").(string)),
-		Country:                 utils.NullableString(d.Get("country").(string)),
-		Department:              utils.NullableString(d.Get("department").(string)),
-		DisplayName:             utils.String(d.Get("display_name").(string)),
-		EmployeeId:              utils.NullableString(d.Get("employee_id").(string)),
+		AccountEnabled:          pointer.To(d.Get("account_enabled").(bool)),
+		AgeGroup:                tf.NullableString(d.Get("age_group").(string)),
+		City:                    tf.NullableString(d.Get("city").(string)),
+		CompanyName:             tf.NullableString(d.Get("company_name").(string)),
+		ConsentProvidedForMinor: tf.NullableString(d.Get("consent_provided_for_minor").(string)),
+		Country:                 tf.NullableString(d.Get("country").(string)),
+		Department:              tf.NullableString(d.Get("department").(string)),
+		DisplayName:             pointer.To(d.Get("display_name").(string)),
+		EmployeeId:              tf.NullableString(d.Get("employee_id").(string)),
 		EmployeeOrgData: &msgraph.EmployeeOrgData{
-			CostCenter: utils.String(d.Get("cost_center").(string)),
-			Division:   utils.String(d.Get("division").(string)),
+			CostCenter: pointer.To(d.Get("cost_center").(string)),
+			Division:   pointer.To(d.Get("division").(string)),
 		},
-		EmployeeType:      utils.NullableString(d.Get("employee_type").(string)),
-		FaxNumber:         utils.NullableString(d.Get("fax_number").(string)),
-		GivenName:         utils.NullableString(d.Get("given_name").(string)),
-		JobTitle:          utils.NullableString(d.Get("job_title").(string)),
-		MailNickname:      utils.String(d.Get("mail_nickname").(string)),
-		MobilePhone:       utils.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:    utils.NullableString(d.Get("office_location").(string)),
+		EmployeeType:      tf.NullableString(d.Get("employee_type").(string)),
+		FaxNumber:         tf.NullableString(d.Get("fax_number").(string)),
+		GivenName:         tf.NullableString(d.Get("given_name").(string)),
+		JobTitle:          tf.NullableString(d.Get("job_title").(string)),
+		MailNickname:      pointer.To(d.Get("mail_nickname").(string)),
+		MobilePhone:       tf.NullableString(d.Get("mobile_phone").(string)),
+		OfficeLocation:    tf.NullableString(d.Get("office_location").(string)),
 		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*pluginsdk.Set).List()),
-		PasswordPolicies:  utils.NullableString(passwordPolicies),
-		PostalCode:        utils.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage: utils.NullableString(d.Get("preferred_language").(string)),
-		State:             utils.NullableString(d.Get("state").(string)),
-		StreetAddress:     utils.NullableString(d.Get("street_address").(string)),
-		Surname:           utils.NullableString(d.Get("surname").(string)),
-		UsageLocation:     utils.NullableString(d.Get("usage_location").(string)),
-		UserPrincipalName: utils.String(d.Get("user_principal_name").(string)),
+		PasswordPolicies:  tf.NullableString(passwordPolicies),
+		PostalCode:        tf.NullableString(d.Get("postal_code").(string)),
+		PreferredLanguage: tf.NullableString(d.Get("preferred_language").(string)),
+		State:             tf.NullableString(d.Get("state").(string)),
+		StreetAddress:     tf.NullableString(d.Get("street_address").(string)),
+		Surname:           tf.NullableString(d.Get("surname").(string)),
+		UsageLocation:     tf.NullableString(d.Get("usage_location").(string)),
+		UserPrincipalName: pointer.To(d.Get("user_principal_name").(string)),
 	}
 
 	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
 		properties.PasswordProfile = &msgraph.UserPasswordProfile{
-			ForceChangePasswordNextSignIn: utils.Bool(d.Get("force_password_change").(bool)),
-			Password:                      utils.String(password),
+			ForceChangePasswordNextSignIn: pointer.To(d.Get("force_password_change").(bool)),
+			Password:                      pointer.To(password),
 		}
 	}
 
@@ -563,16 +563,16 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 	if d.HasChange("mail") {
 		if mail := d.Get("mail").(string); mail != "" {
-			properties.Mail = utils.NullableString(mail)
+			properties.Mail = tf.NullableString(mail)
 		}
 	}
 
 	if d.HasChange("onpremises_immutable_id") {
-		properties.OnPremisesImmutableId = utils.String(d.Get("onpremises_immutable_id").(string))
+		properties.OnPremisesImmutableId = pointer.To(d.Get("onpremises_immutable_id").(string))
 	}
 
 	if d.HasChange("show_in_address_list") {
-		properties.ShowInAddressList = utils.Bool(d.Get("show_in_address_list").(bool))
+		properties.ShowInAddressList = pointer.To(d.Get("show_in_address_list").(bool))
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -706,11 +706,11 @@ func userResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, userId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of user with object ID %q", userId)
 	}

@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ConditionalAccessPolicyResource struct{}
@@ -309,7 +309,7 @@ func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *cl
 	}
 	id = app.ID
 
-	return utils.Bool(id != nil && *id == state.ID), nil
+	return pointer.To(id != nil && *id == state.ID), nil
 }
 
 func (ConditionalAccessPolicyResource) basic(data acceptance.TestData) string {

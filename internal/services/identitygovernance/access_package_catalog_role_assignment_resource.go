@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -78,10 +78,10 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 	roleId := d.Get("role_id").(string)
 
 	properties := msgraph.UnifiedRoleAssignment{
-		DirectoryScopeId: utils.String("/"),
-		PrincipalId:      utils.String(principalId),
-		RoleDefinitionId: utils.String(roleId),
-		AppScopeId:       utils.String("/AccessPackageCatalog/" + catalogId),
+		DirectoryScopeId: pointer.To("/"),
+		PrincipalId:      pointer.To(principalId),
+		RoleDefinitionId: pointer.To(roleId),
+		AppScopeId:       pointer.To("/AccessPackageCatalog/" + catalogId),
 	}
 
 	assignment, status, err := client.Create(ctx, properties)
@@ -112,7 +112,7 @@ func accessPackageCatalogRoleAssignmentResourceRead(ctx context.Context, d *plug
 
 	catalogId := strings.TrimPrefix(*assignment.AppScopeId, "/AccessPackageCatalog/")
 
-	tf.Set(d, "catalog_id", utils.String(catalogId))
+	tf.Set(d, "catalog_id", pointer.To(catalogId))
 	tf.Set(d, "principal_object_id", assignment.PrincipalId)
 	tf.Set(d, "role_id", assignment.RoleDefinitionId)
 

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -443,11 +443,11 @@ func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *plugins
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageAssignmentPolicyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of access package assignment policy with object ID %q", accessPackageAssignmentPolicyId)
 	}
@@ -469,13 +469,13 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.Resourc
 	}
 
 	properties := msgraph.AccessPackageAssignmentPolicy{
-		ID:              utils.String(d.Id()),
-		DisplayName:     utils.String(d.Get("display_name").(string)),
-		Description:     utils.String(d.Get("description").(string)),
-		CanExtend:       utils.Bool(d.Get("extension_enabled").(bool)),
-		DurationInDays:  utils.Int32(int32(d.Get("duration_in_days").(int))),
+		ID:              pointer.To(d.Id()),
+		DisplayName:     pointer.To(d.Get("display_name").(string)),
+		Description:     pointer.To(d.Get("description").(string)),
+		CanExtend:       pointer.To(d.Get("extension_enabled").(bool)),
+		DurationInDays:  pointer.To(int32(d.Get("duration_in_days").(int))),
 		Questions:       expandAccessPackageQuestions(d.Get("question").([]interface{})),
-		AccessPackageId: utils.String(d.Get("access_package_id").(string)),
+		AccessPackageId: pointer.To(d.Get("access_package_id").(string)),
 	}
 
 	expirationDateValue := d.Get("expiration_date").(string)

@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -84,7 +84,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 
 	properties := msgraph.AccessPackageResourceRequest{
 		CatalogId:   &catalogId,
-		RequestType: utils.String("AdminAdd"),
+		RequestType: pointer.To("AdminAdd"),
 		AccessPackageResource: &msgraph.AccessPackageResource{
 			OriginId:     &resourceOriginId,
 			OriginSystem: resourceOriginSystem,

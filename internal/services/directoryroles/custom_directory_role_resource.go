@@ -11,13 +11,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -115,12 +115,12 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	displayName := d.Get("display_name").(string)
 
 	properties := msgraph.UnifiedRoleDefinition{
-		Description:     utils.NullableString(d.Get("description").(string)),
-		DisplayName:     utils.String(displayName),
-		IsEnabled:       utils.Bool(d.Get("enabled").(bool)),
+		Description:     tf.NullableString(d.Get("description").(string)),
+		DisplayName:     pointer.To(displayName),
+		IsEnabled:       pointer.To(d.Get("enabled").(bool)),
 		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*pluginsdk.Set).List()),
-		TemplateId:      utils.String(d.Get("template_id").(string)),
-		Version:         utils.String(d.Get("version").(string)),
+		TemplateId:      pointer.To(d.Get("template_id").(string)),
+		Version:         pointer.To(d.Get("version").(string)),
 	}
 
 	role, _, err := client.Create(ctx, properties)
@@ -147,12 +147,12 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: &roleId,
 		},
-		Description:     utils.NullableString(d.Get("description").(string)),
-		DisplayName:     utils.String(displayName),
-		IsEnabled:       utils.Bool(d.Get("enabled").(bool)),
+		Description:     tf.NullableString(d.Get("description").(string)),
+		DisplayName:     pointer.To(displayName),
+		IsEnabled:       pointer.To(d.Get("enabled").(bool)),
 		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*pluginsdk.Set).List()),
-		TemplateId:      utils.String(d.Get("template_id").(string)),
-		Version:         utils.String(d.Get("version").(string)),
+		TemplateId:      pointer.To(d.Get("template_id").(string)),
+		Version:         pointer.To(d.Get("version").(string)),
 	}
 
 	_, err := client.Update(ctx, properties)

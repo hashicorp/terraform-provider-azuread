@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -200,7 +199,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		expectedCount = len(upns)
 		for _, v := range upns {
 			query := odata.Query{
-				Filter: fmt.Sprintf("userPrincipalName eq '%s'", utils.EscapeSingleQuote(v.(string))),
+				Filter: fmt.Sprintf("userPrincipalName eq '%s'", odata.EscapeSingleQuote(v.(string))),
 			}
 			result, _, err := client.List(ctx, query)
 			if err != nil {
@@ -243,7 +242,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			expectedCount = len(mailNicknames)
 			for _, v := range mailNicknames {
 				query := odata.Query{
-					Filter: fmt.Sprintf("mailNickname eq '%s'", utils.EscapeSingleQuote(v.(string))),
+					Filter: fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(v.(string))),
 				}
 				result, _, err := client.List(ctx, query)
 				if err != nil {
@@ -268,7 +267,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			expectedCount = len(employeeIds)
 			for _, v := range employeeIds {
 				query := odata.Query{
-					Filter: fmt.Sprintf("employeeId eq '%s'", utils.EscapeSingleQuote(v.(string))),
+					Filter: fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(v.(string))),
 				}
 				result, _, err := client.List(ctx, query)
 				if err != nil {

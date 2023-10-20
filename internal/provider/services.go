@@ -23,6 +23,7 @@ import (
 
 func SupportedTypedServices() []sdk.TypedServiceRegistration {
 	return []sdk.TypedServiceRegistration{
+		applications.Registration{},
 		directoryroles.Registration{},
 		domains.Registration{},
 		serviceprincipals.Registration{},

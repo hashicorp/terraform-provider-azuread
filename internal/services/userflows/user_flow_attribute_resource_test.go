@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type UserflowAttributeResource struct{}
@@ -82,7 +82,7 @@ func (r UserflowAttributeResource) Exists(ctx context.Context, clients *clients.
 		return nil, fmt.Errorf("failed to retrieve User Flow attribute with ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(userFlowAttr.ID != nil && *userFlowAttr.ID == state.ID), nil
+	return pointer.To(userFlowAttr.ID != nil && *userFlowAttr.ID == state.ID), nil
 }
 
 func (r UserflowAttributeResource) basic(data acceptance.TestData) string {

@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ServicePrincipalDelegatedPermissionGrantResource struct{}
@@ -61,7 +61,7 @@ func (r ServicePrincipalDelegatedPermissionGrantResource) Exists(ctx context.Con
 		return nil, fmt.Errorf("failed to retrieve Delegated Permission Grant with ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (r ServicePrincipalDelegatedPermissionGrantResource) template(data acceptance.TestData) string {

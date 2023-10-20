@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -19,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -47,12 +47,25 @@ func servicePrincipalResource() *pluginsdk.Resource {
 		}),
 
 		Schema: map[string]*pluginsdk.Schema{
+			"client_id": {
+				Description:  "The client ID of the application for which to create a service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true, // TODO remove Computed in v3.0
+				ForceNew:     true,
+				ExactlyOneOf: []string{"client_id", "application_id"},
+				ValidateFunc: validation.IsUUID,
+			},
+
 			"application_id": {
-				Description:      "The application ID (client ID) of the application for which to create a service principal",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The application ID (client ID) of the application for which to create a service principal",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"client_id", "application_id"},
+				ValidateFunc: validation.IsUUID,
+				Deprecated:   "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"account_enabled": {
@@ -67,8 +80,8 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 
@@ -158,10 +171,10 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"login_url": {
-				Description:      "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
+				Description:  "The URL where the service provider redirects the user to Azure AD to authenticate. Azure AD uses the URL to launch the application from Microsoft 365 or the Azure AD My Apps. When blank, Azure AD performs IdP-initiated sign-on for applications configured with SAML-based single sign-on",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"notes": {
@@ -176,8 +189,8 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 
@@ -187,8 +200,8 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Optional:    true,
 				Set:         pluginsdk.HashString,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.IsUUID,
 				},
 			},
 
@@ -299,10 +312,10 @@ func servicePrincipalResource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"relay_state": {
-							Description:      "The relative URI the service provider would redirect to after completion of the single sign-on flow",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Description:  "The relative URI the service provider would redirect to after completion of the single sign-on flow",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 					},
 				},
@@ -355,17 +368,22 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	callerId := meta.(*clients.Client).ObjectID
 	tenantId := meta.(*clients.Client).TenantID
 
-	appId := d.Get("application_id").(string)
+	var clientId string
+	if v := d.Get("client_id").(string); v != "" {
+		clientId = v
+	} else {
+		clientId = d.Get("application_id").(string)
+	}
 
 	var servicePrincipal *msgraph.ServicePrincipal
 	var err error
 
 	if d.Get("use_existing").(bool) {
 		// Assume that a service principal already exists and try to look for it, whilst retrying to defeat eventual consistency
-		servicePrincipal, err = findByAppIdWithTimeout(ctx, 5*time.Minute, client, appId)
+		servicePrincipal, err = findByClientIdWithTimeout(ctx, 5*time.Minute, client, clientId)
 	} else {
 		// Otherwise perform a single List operation to check for an existing service principal
-		servicePrincipal, err = findByAppId(ctx, client, appId)
+		servicePrincipal, err = findByClientId(ctx, client, clientId)
 	}
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not list existing service principals")
@@ -400,15 +418,15 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
 
 	properties := msgraph.ServicePrincipal{
-		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
+		AccountEnabled:             pointer.To(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*pluginsdk.Set).List()),
-		AppId:                      utils.String(d.Get("application_id").(string)),
-		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
-		Description:                utils.NullableString(tempDescription),
-		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
-		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		AppId:                      pointer.To(clientId),
+		AppRoleAssignmentRequired:  pointer.To(d.Get("app_role_assignment_required").(bool)),
+		Description:                tf.NullableString(tempDescription),
+		LoginUrl:                   tf.NullableString(d.Get("login_url").(string)),
+		Notes:                      tf.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*pluginsdk.Set).List()),
-		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		PreferredSingleSignOnMode:  tf.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       &tags,
 	}
@@ -424,7 +442,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	// @odata.id returned by API cannot be relied upon, so construct our own
-	callerObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+	callerObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 		client.BaseClient.Endpoint, tenantId, callerId)))
 
 	ownersFirst20 := msgraph.Owners{*callerObject}
@@ -446,7 +464,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 			}
 
 			ownerObject := msgraph.DirectoryObject{
-				ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+				ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 					client.BaseClient.Endpoint, tenantId, ownerId))),
 				Id: &ownerId,
 			}
@@ -479,7 +497,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: servicePrincipal.ID(),
 		},
-		Description: utils.NullableString(d.Get("description").(string)),
+		Description: tf.NullableString(d.Get("description").(string)),
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -521,16 +539,16 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			Id: utils.String(d.Id()),
+			Id: pointer.To(d.Id()),
 		},
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*pluginsdk.Set).List()),
-		AccountEnabled:             utils.Bool(d.Get("account_enabled").(bool)),
-		AppRoleAssignmentRequired:  utils.Bool(d.Get("app_role_assignment_required").(bool)),
-		Description:                utils.NullableString(d.Get("description").(string)),
-		LoginUrl:                   utils.NullableString(d.Get("login_url").(string)),
-		Notes:                      utils.NullableString(d.Get("notes").(string)),
+		AccountEnabled:             pointer.To(d.Get("account_enabled").(bool)),
+		AppRoleAssignmentRequired:  pointer.To(d.Get("app_role_assignment_required").(bool)),
+		Description:                tf.NullableString(d.Get("description").(string)),
+		LoginUrl:                   tf.NullableString(d.Get("login_url").(string)),
+		Notes:                      tf.NullableString(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*pluginsdk.Set).List()),
-		PreferredSingleSignOnMode:  utils.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		PreferredSingleSignOnMode:  tf.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       &tags,
 	}
@@ -547,14 +565,14 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 
 		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*pluginsdk.Set).List())
 		existingOwners := *owners
-		ownersForRemoval := utils.Difference(existingOwners, desiredOwners)
-		ownersToAdd := utils.Difference(desiredOwners, existingOwners)
+		ownersForRemoval := tf.Difference(existingOwners, desiredOwners)
+		ownersToAdd := tf.Difference(desiredOwners, existingOwners)
 
 		if len(ownersToAdd) > 0 {
 			newOwners := make(msgraph.Owners, 0)
 			for _, ownerId := range ownersToAdd {
 				newOwners = append(newOwners, msgraph.DirectoryObject{
-					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 						client.BaseClient.Endpoint, tenantId, ownerId))),
 					Id: &ownerId,
 				})
@@ -608,6 +626,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
 	tf.Set(d, "application_id", servicePrincipal.AppId)
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
+	tf.Set(d, "client_id", servicePrincipal.AppId)
 	tf.Set(d, "description", servicePrincipal.Description)
 	tf.Set(d, "display_name", servicePrincipal.DisplayName)
 	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
@@ -664,11 +683,11 @@ func servicePrincipalResourceDelete(ctx context.Context, d *pluginsdk.ResourceDa
 			client.BaseClient.DisableRetries = true
 			if _, status, err := client.Get(ctx, servicePrincipalId, odata.Query{}); err != nil {
 				if status == http.StatusNotFound {
-					return utils.Bool(false), nil
+					return pointer.To(false), nil
 				}
 				return nil, err
 			}
-			return utils.Bool(true), nil
+			return pointer.To(true), nil
 		}); err != nil {
 			return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", servicePrincipalId)
 		}

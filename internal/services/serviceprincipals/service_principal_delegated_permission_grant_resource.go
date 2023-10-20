@@ -11,12 +11,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -102,16 +102,16 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	}
 
 	properties := msgraph.DelegatedPermissionGrant{
-		ClientId:   utils.String(servicePrincipalId),
-		ResourceId: utils.String(resourceId),
+		ClientId:   pointer.To(servicePrincipalId),
+		ResourceId: pointer.To(resourceId),
 		Scopes:     tf.ExpandStringSlicePtr(d.Get("claim_values").(*pluginsdk.Set).List()),
 	}
 
 	if v, ok := d.GetOk("user_object_id"); ok && v.(string) != "" {
-		properties.PrincipalId = utils.String(v.(string))
-		properties.ConsentType = utils.String(msgraph.DelegatedPermissionGrantConsentTypePrincipal)
+		properties.PrincipalId = pointer.To(v.(string))
+		properties.ConsentType = pointer.To(msgraph.DelegatedPermissionGrantConsentTypePrincipal)
 	} else {
-		properties.ConsentType = utils.String(msgraph.DelegatedPermissionGrantConsentTypeAllPrincipals)
+		properties.ConsentType = pointer.To(msgraph.DelegatedPermissionGrantConsentTypeAllPrincipals)
 	}
 
 	delegatedPermissionGrant, _, err := client.Create(ctx, properties)
@@ -132,7 +132,7 @@ func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context,
 	client := meta.(*clients.Client).ServicePrincipals.DelegatedPermissionGrantsClient
 
 	properties := msgraph.DelegatedPermissionGrant{
-		Id:     utils.String(d.Id()),
+		Id:     pointer.To(d.Id()),
 		Scopes: tf.ExpandStringSlicePtr(d.Get("claim_values").(*pluginsdk.Set).List()),
 	}
 

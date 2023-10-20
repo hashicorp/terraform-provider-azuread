@@ -9,12 +9,12 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -55,12 +55,12 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 
 	properties := msgraph.ServicePrincipal{
 		DirectoryObject: msgraph.DirectoryObject{
-			Id: utils.String(d.Get("service_principal_id").(string)),
+			Id: pointer.To(d.Get("service_principal_id").(string)),
 		},
 		ClaimsMappingPolicies: &[]msgraph.ClaimsMappingPolicy{
 			{
 				DirectoryObject: msgraph.DirectoryObject{
-					ODataId: (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+					ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 						client.BaseClient.Endpoint, tenantId, policyId))),
 					Id: &policyId,
 				},

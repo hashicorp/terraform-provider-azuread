@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -20,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -103,7 +103,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 
 	keyCreds := msgraph.KeyCredential{}
 	if v, ok := d.GetOk("display_name"); ok {
-		keyCreds.DisplayName = utils.String(v.(string))
+		keyCreds.DisplayName = pointer.To(v.(string))
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -299,10 +299,10 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 
 		credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
 		if credential == nil {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of token signing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}

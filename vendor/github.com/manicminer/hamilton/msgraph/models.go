@@ -1140,11 +1140,11 @@ type ImplicitGrantSettings struct {
 }
 
 type InformationalUrl struct {
-	LogoUrl             *string `json:"logoUrl,omitempty"`
-	MarketingUrl        *string `json:"marketingUrl"`
-	PrivacyStatementUrl *string `json:"privacyStatementUrl"`
-	SupportUrl          *string `json:"supportUrl"`
-	TermsOfServiceUrl   *string `json:"termsOfServiceUrl"`
+	LogoUrl             *StringNullWhenEmpty `json:"logoUrl,omitempty"`
+	MarketingUrl        *StringNullWhenEmpty `json:"marketingUrl"`
+	PrivacyStatementUrl *StringNullWhenEmpty `json:"privacyStatementUrl"`
+	SupportUrl          *StringNullWhenEmpty `json:"supportUrl"`
+	TermsOfServiceUrl   *StringNullWhenEmpty `json:"termsOfServiceUrl"`
 }
 
 // Invitation describes a Invitation object.
@@ -1439,6 +1439,7 @@ type ServicePrincipal struct {
 	AppDisplayName                      *string                       `json:"appDisplayName,omitempty"`
 	AppId                               *string                       `json:"appId,omitempty"`
 	ApplicationTemplateId               *string                       `json:"applicationTemplateId,omitempty"`
+	AppMetadata                         *ServicePrincipalAppMetadata  `json:"appMetadata,omitempty"`
 	AppOwnerOrganizationId              *string                       `json:"appOwnerOrganizationId,omitempty"`
 	AppRoleAssignmentRequired           *bool                         `json:"appRoleAssignmentRequired,omitempty"`
 	AppRoles                            *[]AppRole                    `json:"appRoles,omitempty"`
@@ -1479,6 +1480,11 @@ func (s *ServicePrincipal) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	return nil
+}
+
+type ServicePrincipalAppMetadata struct {
+	Version *int              `json:"version,omitempty"`
+	Data    *[]KeyValueObject `json:"data,omitempty"`
 }
 
 type SynchronizationSchedule struct {

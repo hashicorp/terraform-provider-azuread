@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -90,9 +90,9 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	attr := msgraph.UserFlowAttribute{
-		DataType:    utils.String(d.Get("data_type").(string)),
-		Description: utils.String(d.Get("description").(string)),
-		DisplayName: utils.String(displayName),
+		DataType:    pointer.To(d.Get("data_type").(string)),
+		Description: pointer.To(d.Get("description").(string)),
+		DisplayName: pointer.To(displayName),
 	}
 
 	userFlowAttr, _, err := client.Create(ctx, attr)
@@ -114,8 +114,8 @@ func userFlowAttributeResourceUpdate(ctx context.Context, d *pluginsdk.ResourceD
 	id := d.Id()
 
 	attr := msgraph.UserFlowAttribute{
-		ID:          utils.String(id),
-		Description: utils.String(d.Get("description").(string)),
+		ID:          pointer.To(id),
+		Description: pointer.To(d.Get("description").(string)),
 	}
 
 	if _, err := client.Update(ctx, attr); err != nil {
@@ -170,11 +170,11 @@ func userFlowAttributeResourceDelete(ctx context.Context, d *pluginsdk.ResourceD
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, id, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of user flow attribute with ID %q", id)
 	}

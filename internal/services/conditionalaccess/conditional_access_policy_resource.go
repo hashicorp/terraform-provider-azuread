@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -539,8 +539,8 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		State:       utils.String(d.Get("state").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		State:       pointer.To(d.Get("state").(string)),
 		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 	}
 
@@ -570,9 +570,9 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		ID:          utils.String(d.Id()),
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		State:       utils.String(d.Get("state").(string)),
+		ID:          pointer.To(d.Id()),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		State:       pointer.To(d.Get("state").(string)),
 		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 	}
 
@@ -672,11 +672,11 @@ func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.Res
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, policyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of conditional access policy with ID %q", policyId)
 	}

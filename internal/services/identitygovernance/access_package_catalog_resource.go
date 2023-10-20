@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -88,10 +88,10 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *pluginsdk.Resour
 	}
 
 	properties := msgraph.AccessPackageCatalog{
-		DisplayName:         utils.String(displayName),
-		Description:         utils.String(d.Get("description").(string)),
+		DisplayName:         pointer.To(displayName),
+		Description:         pointer.To(d.Get("description").(string)),
 		State:               state,
-		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
+		IsExternallyVisible: pointer.To(d.Get("externally_visible").(bool)),
 	}
 
 	accessPackageCatalog, _, err := client.Create(ctx, properties)
@@ -117,11 +117,11 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *pluginsdk.Resour
 	}
 
 	properties := msgraph.AccessPackageCatalog{
-		ID:                  utils.String(d.Id()),
-		DisplayName:         utils.String(d.Get("display_name").(string)),
-		Description:         utils.String(d.Get("description").(string)),
+		ID:                  pointer.To(d.Id()),
+		DisplayName:         pointer.To(d.Get("display_name").(string)),
+		Description:         pointer.To(d.Get("description").(string)),
 		State:               state,
-		IsExternallyVisible: utils.Bool(d.Get("externally_visible").(bool)),
+		IsExternallyVisible: pointer.To(d.Get("externally_visible").(bool)),
 	}
 
 	if _, err := client.Update(ctx, properties); err != nil {
@@ -183,11 +183,11 @@ func accessPackageCatalogResourceDelete(ctx context.Context, d *pluginsdk.Resour
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageCatalogId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of access package catalog with object ID %q", accessPackageCatalogId)
 	}

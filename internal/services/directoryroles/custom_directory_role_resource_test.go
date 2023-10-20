@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type CustomDirectoryRoleResource struct{}
@@ -141,7 +141,7 @@ func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *client
 		return nil, fmt.Errorf("failed to retrieve Custom Directory Role with object ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
+	return pointer.To(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (r CustomDirectoryRoleResource) basic(data acceptance.TestData) string {

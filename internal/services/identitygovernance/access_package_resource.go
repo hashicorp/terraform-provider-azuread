@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -90,9 +90,9 @@ func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	}
 
 	properties := msgraph.AccessPackage{
-		DisplayName: utils.String(displayName),
-		Description: utils.String(d.Get("description").(string)),
-		IsHidden:    utils.Bool(d.Get("hidden").(bool)),
+		DisplayName: pointer.To(displayName),
+		Description: pointer.To(d.Get("description").(string)),
+		IsHidden:    pointer.To(d.Get("hidden").(bool)),
 		Catalog:     accessPackageCatalog,
 		CatalogId:   accessPackageCatalog.ID,
 	}
@@ -123,10 +123,10 @@ func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 	defer tf.UnlockByName(accessPackageResourceName, objectId)
 
 	properties := msgraph.AccessPackage{
-		ID:          utils.String(objectId),
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		Description: utils.String(d.Get("description").(string)),
-		IsHidden:    utils.Bool(d.Get("hidden").(bool)),
+		ID:          pointer.To(objectId),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		Description: pointer.To(d.Get("description").(string)),
+		IsHidden:    pointer.To(d.Get("hidden").(bool)),
 		Catalog:     accessPackageCatalog,
 		CatalogId:   accessPackageCatalog.ID,
 	}
@@ -186,11 +186,11 @@ func accessPackageResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of access package with object ID %q", accessPackageId)
 	}

@@ -59,7 +59,7 @@ func ApplicationFlattenAppRoleIDs(in *[]msgraph.AppRole) map[string]string {
 
 func ApplicationFlattenAppRoles(in *[]msgraph.AppRole) (result []map[string]interface{}) {
 	if in == nil {
-		return
+		return //nolint:nakedret
 	}
 
 	for _, role := range *in {
@@ -177,7 +177,7 @@ func ApplicationFlattenOAuth2PermissionScopeIDs(in *[]msgraph.PermissionScope) m
 
 func ApplicationFlattenOAuth2PermissionScopes(in *[]msgraph.PermissionScope) (result []map[string]interface{}) {
 	if in == nil {
-		return
+		return //nolint:nakedret
 	}
 
 	for _, p := range *in {

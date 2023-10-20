@@ -33,7 +33,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
@@ -42,7 +42,17 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Deprecated:       "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
+			},
+
+			"client_id": {
+				Description:      "The Client ID (also called Application ID)",
+				Type:             pluginsdk.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
@@ -57,7 +67,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
@@ -495,7 +505,7 @@ func applicationDataSource() *pluginsdk.Resource {
 }
 
 func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
@@ -517,11 +527,14 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
 			fieldName = "appId"
 			fieldValue = applicationId
+		} else if clientId, ok := d.Get("client_id").(string); ok && clientId != "" {
+			fieldName = "appId"
+			fieldValue = clientId
 		} else if displayName, ok := d.Get("display_name").(string); ok && displayName != "" {
 			fieldName = "displayName"
 			fieldValue = displayName
 		} else {
-			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id` or `displayName` must be specified")
+			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, or `displayName` must be specified")
 		}
 
 		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
@@ -571,6 +584,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId)
+	tf.Set(d, "client_id", app.AppId)
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
 	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
 	tf.Set(d, "display_name", app.DisplayName)

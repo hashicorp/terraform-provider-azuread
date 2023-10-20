@@ -11,13 +11,13 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -36,11 +36,11 @@ func invitationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"redirect_url": {
-				Description:      "The URL that the user should be redirected to once the invitation is redeemed",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.IsHttpOrHttpsUrl,
+				Description:  "The URL that the user should be redirected to once the invitation is redeemed",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsHttpOrHttpsUrl,
 			},
 
 			"user_email_address": {
@@ -129,17 +129,17 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 	usersClient := meta.(*clients.Client).Invitations.UsersClient
 
 	properties := msgraph.Invitation{
-		InvitedUserEmailAddress: utils.String(d.Get("user_email_address").(string)),
-		InviteRedirectURL:       utils.String(d.Get("redirect_url").(string)),
-		InvitedUserType:         utils.String(d.Get("user_type").(string)),
+		InvitedUserEmailAddress: pointer.To(d.Get("user_email_address").(string)),
+		InviteRedirectURL:       pointer.To(d.Get("redirect_url").(string)),
+		InvitedUserType:         pointer.To(d.Get("user_type").(string)),
 	}
 
 	if v, ok := d.GetOk("user_display_name"); ok {
-		properties.InvitedUserDisplayName = utils.String(v.(string))
+		properties.InvitedUserDisplayName = pointer.To(v.(string))
 	}
 
 	if v, ok := d.GetOk("message"); ok {
-		properties.SendInvitationMessage = utils.Bool(true)
+		properties.SendInvitationMessage = pointer.To(true)
 		properties.InvitedUserMessageInfo = expandInvitedUserMessageInfo(v.([]interface{}))
 	}
 
@@ -169,7 +169,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: invitation.InvitedUser.ID(),
 		},
-		CompanyName: utils.NullableString("TERRAFORM_UPDATE"),
+		CompanyName: tf.NullableString("TERRAFORM_UPDATE"),
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -181,7 +181,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: invitation.InvitedUser.ID(),
 		},
-		CompanyName: utils.NullableString(""),
+		CompanyName: tf.NullableString(""),
 	})
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -239,11 +239,11 @@ func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, me
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, userID, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of invited user with object ID %q", userID)
 	}

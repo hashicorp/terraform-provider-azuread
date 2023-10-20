@@ -12,13 +12,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -42,20 +43,46 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 		}),
 
 		Schema: map[string]*pluginsdk.Schema{
+			"application_id": {
+				Description:  "The resource ID of the application to which this pre-authorized application should be added",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true, // TODO remove Computed in v3.0
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				ValidateFunc: parse.ValidateApplicationID,
+			},
+
 			"application_object_id": {
-				Description:      "The object ID of the application to which this pre-authorized application should be added",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the application to which this pre-authorized application should be added",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"application_id", "application_object_id"},
+				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
+				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
 			},
 
 			"authorized_app_id": {
-				Description:      "The application ID of the pre-authorized application",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The application ID of the pre-authorized application",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
+				Deprecated:   "The `authorized_app_id` property has been replaced with the `authorized_client_id` property and will be removed in version 3.0 of the AzureAD provider",
+				ValidateFunc: validation.IsUUID,
+			},
+
+			"authorized_client_id": {
+				Description:  "The client ID of the pre-authorized application",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true, // TODO remove Computed in v3.0
+				ForceNew:     true,
+				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"permission_ids": {
@@ -63,8 +90,8 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.IsUUID,
 				},
 			},
 		},
@@ -72,8 +99,36 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 }
 
 func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
-	id := parse.NewApplicationPreAuthorizedID(d.Get("application_object_id").(string), d.Get("authorized_app_id").(string))
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+
+	var applicationId *parse.ApplicationId
+	var err error
+	if v := d.Get("application_id").(string); v != "" {
+		if applicationId, err = parse.ParseApplicationID(v); err != nil {
+			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
+		}
+	} else {
+		// TODO: this permits parsing the application_object_id as either a structured ID or a bare UUID, to avoid
+		// breaking users who might have `application_object_id = azuread_application.foo.id` in their config, and
+		// should be removed in version 3.0 along with the application_object_id property
+		v = d.Get("application_object_id").(string)
+		if _, err = uuid.ParseUUID(v); err == nil {
+			applicationId = pointer.To(parse.NewApplicationID(v))
+		} else {
+			if applicationId, err = parse.ParseApplicationID(v); err != nil {
+				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
+			}
+		}
+	}
+
+	var authorizedClientId string
+	if v := d.Get("authorized_client_id").(string); v != "" {
+		authorizedClientId = v
+	} else {
+		authorizedClientId = d.Get("authorized_app_id").(string)
+	}
+
+	id := parse.NewApplicationPreAuthorizedID(applicationId.ApplicationId, authorizedClientId)
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -100,7 +155,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 	}
 
 	newPreAuthorizedApps = append(newPreAuthorizedApps, msgraph.ApiPreAuthorizedApplication{
-		AppId:         utils.String(id.AppId),
+		AppId:         pointer.To(id.AppId),
 		PermissionIds: tf.ExpandStringSlicePtr(d.Get("permission_ids").(*pluginsdk.Set).List()),
 	})
 
@@ -123,7 +178,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 }
 
 func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
@@ -176,13 +231,16 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 }
 
 func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := parse.NewApplicationID(id.ObjectId)
+
+	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			log.Printf("[DEBUG] Application with ID %q for pre-authorized application %q was not found - removing from state!", id.ObjectId, id.AppId)
@@ -211,15 +269,22 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.Reso
 		return nil
 	}
 
-	d.Set("application_object_id", id.ObjectId)
-	d.Set("authorized_app_id", id.AppId)
-	d.Set("permission_ids", tf.FlattenStringSlicePtr(preAuthorizedApp.PermissionIds))
+	tf.Set(d, "application_id", applicationId.ID())
+	tf.Set(d, "authorized_app_id", id.AppId)
+	tf.Set(d, "authorized_client_id", id.AppId)
+	tf.Set(d, "permission_ids", tf.FlattenStringSlicePtr(preAuthorizedApp.PermissionIds))
+
+	if v := d.Get("application_object_id").(string); v != "" {
+		tf.Set(d, "application_object_id", v)
+	} else {
+		tf.Set(d, "application_object_id", id.ObjectId)
+	}
 
 	return nil
 }
 
 func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClient
+	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
 	id, err := parse.ApplicationPreAuthorizedID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())

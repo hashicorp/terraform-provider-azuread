@@ -10,13 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 // To create test certificates:
@@ -170,8 +170,42 @@ func TestAccApplicationCertificate_requiresImport(t *testing.T) {
 	})
 }
 
+func TestAccApplicationCertificate_deprecatedId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
+	r := ApplicationCertificateResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId(data, endDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
+		},
+		data.ImportStep("encoding", "end_date_relative", "value"),
+	})
+}
+
+func TestAccApplicationCertificate_deprecatedId2(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_certificate", "test")
+	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
+	r := ApplicationCertificateResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId2(data, endDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+			),
+		},
+		data.ImportStep("application_object_id", "encoding", "end_date_relative", "value"),
+	})
+}
+
 func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
+	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
@@ -191,7 +225,7 @@ func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clien
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}
 		}
 	}
@@ -212,10 +246,10 @@ func (r ApplicationCertificateResource) basic(data acceptance.TestData, endDate 
 %[1]s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.test.id
-  type                  = "AsymmetricX509Cert"
-  end_date              = "%[2]s"
-  value                 = <<EOT
+  application_id = azuread_application.test.id
+  type           = "AsymmetricX509Cert"
+  end_date       = "%[2]s"
+  value          = <<EOT
 %[3]s
 EOT
 }
@@ -227,13 +261,13 @@ func (r ApplicationCertificateResource) complete(data acceptance.TestData, start
 %[1]s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.test.id
-  key_id                = "%[2]s"
-  type                  = "AsymmetricX509Cert"
-  start_date            = "%[3]s"
-  end_date              = "%[4]s"
-  encoding              = "pem"
-  value                 = <<EOT
+  application_id = azuread_application.test.id
+  key_id         = "%[2]s"
+  type           = "AsymmetricX509Cert"
+  start_date     = "%[3]s"
+  end_date       = "%[4]s"
+  encoding       = "pem"
+  value          = <<EOT
 %[5]s
 EOT
 }
@@ -245,11 +279,11 @@ func (r ApplicationCertificateResource) base64Cert(data acceptance.TestData, end
 %[1]s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.test.id
-  type                  = "AsymmetricX509Cert"
-  end_date              = "%[2]s"
-  encoding              = "base64"
-  value                 = <<EOT
+  application_id = azuread_application.test.id
+  type           = "AsymmetricX509Cert"
+  end_date       = "%[2]s"
+  encoding       = "base64"
+  value          = <<EOT
 %[3]s
 EOT
 }
@@ -261,11 +295,11 @@ func (r ApplicationCertificateResource) hexCert(data acceptance.TestData, endDat
 %[1]s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.test.id
-  type                  = "AsymmetricX509Cert"
-  end_date              = "%[2]s"
-  encoding              = "hex"
-  value                 = <<EOT
+  application_id = azuread_application.test.id
+  type           = "AsymmetricX509Cert"
+  end_date       = "%[2]s"
+  encoding       = "hex"
+  value          = <<EOT
 %[3]s
 EOT
 }
@@ -277,10 +311,10 @@ func (r ApplicationCertificateResource) relativeEndDate(data acceptance.TestData
 %[1]s
 
 resource "azuread_application_certificate" "test" {
-  application_object_id = azuread_application.test.id
-  end_date_relative     = "2280h"
-  type                  = "AsymmetricX509Cert"
-  value                 = <<EOT
+  application_id    = azuread_application.test.id
+  end_date_relative = "2280h"
+  type              = "AsymmetricX509Cert"
+  value             = <<EOT
 %[2]s
 EOT
 }
@@ -292,11 +326,41 @@ func (r ApplicationCertificateResource) requiresImport(data acceptance.TestData,
 %[1]s
 
 resource "azuread_application_certificate" "import" {
-  application_object_id = azuread_application_certificate.test.application_object_id
-  key_id                = azuread_application_certificate.test.key_id
-  type                  = azuread_application_certificate.test.type
-  end_date              = azuread_application_certificate.test.end_date
-  value                 = azuread_application_certificate.test.value
+  application_id = azuread_application_certificate.test.application_id
+  key_id         = azuread_application_certificate.test.key_id
+  type           = azuread_application_certificate.test.type
+  end_date       = azuread_application_certificate.test.end_date
+  value          = azuread_application_certificate.test.value
 }
 `, r.basic(data, endDate))
+}
+
+func (r ApplicationCertificateResource) deprecatedId(data acceptance.TestData, endDate string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_certificate" "test" {
+  application_object_id = azuread_application.test.object_id
+  type                  = "AsymmetricX509Cert"
+  end_date              = "%[2]s"
+  value                 = <<EOT
+%[3]s
+EOT
+}
+`, r.template(data), endDate, applicationCertificatePem)
+}
+
+func (r ApplicationCertificateResource) deprecatedId2(data acceptance.TestData, endDate string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_certificate" "test" {
+  application_object_id = azuread_application.test.id
+  type                  = "AsymmetricX509Cert"
+  end_date              = "%[2]s"
+  value                 = <<EOT
+%[3]s
+EOT
+}
+`, r.template(data), endDate, applicationCertificatePem)
 }

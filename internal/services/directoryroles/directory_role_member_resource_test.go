@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type DirectoryRoleMemberResource struct{}
@@ -120,12 +120,12 @@ func (r DirectoryRoleMemberResource) Exists(ctx context.Context, clients *client
 
 	if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve directory role member %q (role ID: %q): %+v", id.MemberId, id.DirectoryRoleId, err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (DirectoryRoleMemberResource) templateThreeUsers(data acceptance.TestData) string {

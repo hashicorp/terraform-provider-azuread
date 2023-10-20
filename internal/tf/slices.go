@@ -1,9 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package utils
-
-import "strings"
+package tf
 
 // Difference returns the elements in `a` that aren't in `b`.
 func Difference(a, b []string) []string {
@@ -18,14 +16,4 @@ func Difference(a, b []string) []string {
 		}
 	}
 	return diff
-}
-
-// EnsureStringInSlice ensures the given string is contained in a slice
-func EnsureStringInSlice(sl []string, in string) []string {
-	for _, s := range sl {
-		if strings.EqualFold(s, in) {
-			return sl
-		}
-	}
-	return append(sl, in)
 }

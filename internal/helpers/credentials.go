@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -141,10 +141,10 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 	}
 
 	credential := msgraph.KeyCredential{
-		KeyId: utils.String(keyId),
+		KeyId: pointer.To(keyId),
 		Type:  keyType,
 		Usage: msgraph.KeyCredentialUsageVerify,
-		Key:   utils.String(encodedValue),
+		Key:   pointer.To(encodedValue),
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -190,7 +190,7 @@ func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.Password
 
 	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these
 	if v, ok := d.GetOk("display_name"); ok {
-		credential.DisplayName = utils.String(v.(string))
+		credential.DisplayName = pointer.To(v.(string))
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {

@@ -25,13 +25,25 @@ func TestAccApplicationDataSource_byObjectId(t *testing.T) {
 	})
 }
 
-func TestAccApplicationDataSource_byApplicationId(t *testing.T) {
+func TestAccApplicationDataSource_byApplicationIdDeprecated(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: r.applicationId(data),
+			Config: r.applicationIdDeprecated(data),
+			Check:  r.testCheck(data),
+		},
+	})
+}
+
+func TestAccApplicationDataSource_byClientId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
+	r := ApplicationDataSource{}
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.clientId(data),
 			Check:  r.testCheck(data),
 		},
 	})
@@ -52,6 +64,7 @@ func TestAccApplicationDataSource_byDisplayName(t *testing.T) {
 func (ApplicationDataSource) testCheck(data acceptance.TestData) acceptance.TestCheckFunc {
 	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("application_id").IsUuid(),
+		check.That(data.ResourceName).Key("client_id").IsUuid(),
 		check.That(data.ResourceName).Key("object_id").IsUuid(),
 		check.That(data.ResourceName).Key("api.0.oauth2_permission_scopes.#").HasValue("2"),
 		check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
@@ -88,12 +101,22 @@ data "azuread_application" "test" {
 `, ApplicationResource{}.complete(data))
 }
 
-func (ApplicationDataSource) applicationId(data acceptance.TestData) string {
+func (ApplicationDataSource) applicationIdDeprecated(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_application" "test" {
   application_id = upper(azuread_application.test.application_id)
+}
+`, ApplicationResource{}.complete(data))
+}
+
+func (ApplicationDataSource) clientId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_application" "test" {
+  client_id = upper(azuread_application.test.client_id)
 }
 `, ApplicationResource{}.complete(data))
 }

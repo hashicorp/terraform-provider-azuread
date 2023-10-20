@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// TODO: Remove this legacy ID in v3.0
+
 type CredentialId struct {
 	ObjectId string
 	KeyType  string

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -111,7 +111,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 
 	// Create a new synchronization job
 	synchronizationJob := msgraph.SynchronizationJob{
-		TemplateId: utils.String(d.Get("template_id").(string)),
+		TemplateId: pointer.To(d.Get("template_id").(string)),
 	}
 
 	newJob, _, err := client.Create(ctx, synchronizationJob, *servicePrincipal.ID())
@@ -232,10 +232,10 @@ func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.Resource
 
 		job, _, _ := client.Get(ctx, id.JobId, id.ServicePrincipalId)
 		if job == nil {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of synchronization job %q from service principal with object ID %q", id.JobId, id.ServicePrincipalId)
 	}

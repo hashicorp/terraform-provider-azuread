@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type DirectoryRoleResource struct{}
@@ -64,7 +64,7 @@ func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Clie
 		}
 		return nil, fmt.Errorf("failed to retrieve Directory Role with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(role.ID() != nil && *role.ID() == state.ID), nil
+	return pointer.To(role.ID() != nil && *role.ID() == state.ID), nil
 }
 
 func (DirectoryRoleResource) byDisplayName(_ acceptance.TestData) string {
