@@ -2,6 +2,32 @@
 
 * Developer Note: the Typed Resource SDK, as also used in the AzureRM provider, is now the preferred way of introducing new resources [GH-1188]
 
+FEATURES:
+
+* **New Resource:** `azuread_application_api_access`
+* **New Resource:** `azuread_application_app_role`
+* **New Resource:** `azuread_application_fallback_public_client`
+* **New Resource:** `azuread_application_from_template`
+* **New Resource:** `azuread_application_identifier_uri`
+* **New Resource:** `azuread_application_known_clients`
+* **New Resource:** `azuread_application_owner`
+* **New Resource:** `azuread_application_permission_scope`
+* **New Resource:** `azuread_application_redirect_uris`
+* **New Resource:** `azuread_application_registration`
+
+ENHANCEMENTS:
+
+* `data.azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute
+* `data.azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property
+* `data.azuread_service_principals` - support for the `client_ids` property, deprecate the `application_ids` property
+* `data.azuread_service_principals` - export the `client_id` attribute in the `service_principals` block, deprecate the `application_id` attribute
+* `azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute
+* `azuread_application_federated_identity_credential` - support for the `application_id` property, deprecate the `application_object_id` property
+* `azuread_application_certificate` - support for the `application_id` property, deprecate the `application_object_id` property
+* `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property
+* `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property
+* `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property
+
 BUG FIXES:
 
 * `azuread_group_member` - resolve a bug when refreshing state if the group is missing [GH-1198]
