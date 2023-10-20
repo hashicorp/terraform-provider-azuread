@@ -386,7 +386,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						"built_in_controls": {
 							Type:         pluginsdk.TypeList,
 							Optional:     true,
-							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Elem: &pluginsdk.Schema{
 								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -402,6 +402,13 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							},
 						},
 
+						"authentication_strength_policy_id": {
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsUUID,
+						},
+
 						"custom_authentication_factors": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
@@ -414,7 +421,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						"terms_of_use": {
 							Type:         pluginsdk.TypeList,
 							Optional:     true,
-							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.terms_of_use"},
+							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Elem: &pluginsdk.Schema{
 								Type:             pluginsdk.TypeString,
 								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
