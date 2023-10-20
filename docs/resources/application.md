@@ -6,15 +6,19 @@ subcategory: "Applications"
 
 Manages an application registration within Azure Active Directory.
 
+For a more lightweight alternative, please see the [azuread_application_registration](application_registration.html) resource. Please note that this resource should not be used together with the `azuread_application_registration` resource when managing the same application.
+
 ## API Permissions
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires the following application role: `Application.ReadWrite.All`
+When authenticated with a service principal, this resource requires one of the following application roles: `Application.ReadWrite.OwnedBy` or `Application.ReadWrite.All`
 
--> It is usually possible to create applications using this resource with just the `Application.ReadWrite.OwnedBy` application role, provided the principal being used to run Terraform is included in the `owners` property. However, this is not officially supported by the API so if you receive a `403` you need to investigate what API call is failing and add additional permissions as necessary. One commonly needed additional permission is `User.Read.All`, in case you specify additional `owners`.
+-> When using the `Application.ReadWrite.OwnedBy` application role, you should ensure that the principal being used to run Terraform is included in the `owners` property.
 
-When authenticated with a user principal, this resource requires one of the following directory roles: `Application Administrator` or `Global Administrator`
+Additionally, you may need the `User.Read.All` application role when including user principals in the `owners` property.
+
+When authenticated with a user principal, this resource may require one of the following directory roles: `Application Administrator` or `Global Administrator`
 
 ## Example Usage
 
@@ -199,6 +203,9 @@ The following arguments are supported:
 -> **Tags and Features** Azure Active Directory uses special tag values to configure the behavior of applications. These can be specified using either the `tags` property or with the `feature_tags` block. If you need to set any custom tag values not supported by the `feature_tags` block, it's recommended to use the `tags` property. Tag values also propagate to any linked service principals.
 
 * `template_id` - (Optional) Unique ID for a templated application in the Azure AD App Gallery, from which to create the application. Changing this forces a new resource to be created.
+
+-> **Tip for Gallery Applications** This resource can  be used to instantiate a gallery application, however it will also attempt to manage the properties of the resulting application. If this is not desired, consider using the [azuread_application_registration](application_registration.html) resource instead.
+
 * `terms_of_service_url` - (Optional) URL of the application's terms of service statement.
 * `web` - (Optional) A `web` block as documented below, which configures web related settings for this application.
 
@@ -324,7 +331,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
-* `application_id` - The Application ID (also called Client ID).
+* `client_id` - The Client ID for the application.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
@@ -336,5 +343,5 @@ In addition to all arguments above, the following attributes are exported:
 Applications can be imported using their object ID, e.g.
 
 ```shell
-terraform import azuread_application.test 00000000-0000-0000-0000-000000000000
+terraform import azuread_application.example 00000000-0000-0000-0000-000000000000
 ```

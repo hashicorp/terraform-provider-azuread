@@ -1,34 +1,78 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package parse
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
+)
 
 type AppRoleId struct {
-	ObjectId string
-	RoleId   string
+	ApplicationId string
+	RoleID        string
 }
 
-func NewAppRoleID(objectId, roleId string) AppRoleId {
+func NewAppRoleID(applicationId, roleId string) AppRoleId {
 	return AppRoleId{
-		ObjectId: objectId,
-		RoleId:   roleId,
+		ApplicationId: applicationId,
+		RoleID:        roleId,
+	}
+}
+
+// ParseAppRoleID parses 'input' into an AppRoleId
+func ParseAppRoleID(input string) (*AppRoleId, error) {
+	parser := resourceids.NewParserFromResourceIdType(AppRoleId{})
+	parsed, err := parser.Parse(input, false)
+	if err != nil {
+		return nil, fmt.Errorf("parsing %q: %+v", input, err)
+	}
+
+	var ok bool
+	id := AppRoleId{}
+
+	if id.ApplicationId, ok = parsed.Parsed["applicationId"]; !ok {
+		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
+	}
+
+	if id.RoleID, ok = parsed.Parsed["roleId"]; !ok {
+		return nil, resourceids.NewSegmentNotSpecifiedError(id, "roleId", *parsed)
+	}
+
+	return &id, nil
+}
+
+// ValidateAppRoleID checks that 'input' can be parsed as an Application ID
+func ValidateAppRoleID(input interface{}, key string) (warnings []string, errors []error) {
+	v, ok := input.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected %q to be a string", key))
+		return
+	}
+
+	id, err := ParseAppRoleID(v)
+	if err != nil {
+		errors = append(errors, err)
+		return
+	}
+
+	return validation.IsUUID(id.RoleID, "ID")
+}
+
+func (id AppRoleId) ID() string {
+	fmtString := "/applications/%s/appRoles/%s"
+	return fmt.Sprintf(fmtString, id.ApplicationId, id.RoleID)
+}
+
+// Segments returns a slice of Resource ID Segments which comprise this ID
+func (id AppRoleId) Segments() []resourceids.Segment {
+	return []resourceids.Segment{
+		resourceids.StaticSegment("applications", "applications", "applications"),
+		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
+		resourceids.StaticSegment("appRoles", "appRoles", "appRoles"),
+		resourceids.UserSpecifiedSegment("roleId", "11111111-1111-1111-1111-111111111111"),
 	}
 }
 
 func (id AppRoleId) String() string {
-	return id.ObjectId + "/role/" + id.RoleId
-}
-
-func AppRoleID(idString string) (*AppRoleId, error) {
-	id, err := ObjectSubResourceID(idString, "role")
-	if err != nil {
-		return nil, fmt.Errorf("unable to parse App Role ID: %v", err)
-	}
-
-	return &AppRoleId{
-		ObjectId: id.objectId,
-		RoleId:   id.subId,
-	}, nil
+	return fmt.Sprintf("App Role (Application ID: %q, Role ID: %q)", id.ApplicationId, id.RoleID)
 }

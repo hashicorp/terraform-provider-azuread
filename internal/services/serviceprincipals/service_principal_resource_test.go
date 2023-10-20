@@ -10,13 +10,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ServicePrincipalResource struct{}
@@ -27,10 +26,10 @@ func TestAccServicePrincipal_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -43,10 +42,10 @@ func TestAccServicePrincipal_complete(t *testing.T) {
 	r := ServicePrincipalResource{}
 	tenantId := os.Getenv("ARM_TENANT_ID")
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
@@ -69,10 +68,10 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
@@ -83,7 +82,7 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 		data.ImportStep("use_existing"),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
@@ -94,7 +93,7 @@ func TestAccServicePrincipal_completeUpdate(t *testing.T) {
 		data.ImportStep("use_existing"),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").HasValue("0"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
@@ -110,10 +109,10 @@ func TestAccServicePrincipal_featureTags(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -125,66 +124,66 @@ func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.noFeatureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.noFeatureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("use_existing"),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -196,10 +195,10 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -207,7 +206,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.singleOwner(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
@@ -215,7 +214,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -223,7 +222,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.singleOwner(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
@@ -231,7 +230,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.threeOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
 			),
@@ -239,7 +238,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -252,10 +251,10 @@ func TestAccApplication_createWithNoOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -268,10 +267,10 @@ func TestAccServicePrincipal_manyOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.manyOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
 			),
@@ -284,10 +283,10 @@ func TestAccServicePrincipal_useExisting(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "msgraph")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTestIgnoreDangling(t, r, []resource.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.useExisting(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_roles.#").Exists(),
 				check.That(data.ResourceName).Key("app_role_ids.%").Exists(),
@@ -303,10 +302,25 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.fromApplicationTemplate(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("use_existing"),
+	})
+}
+
+func TestAccServicePrincipal_deprecatedId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
+	r := ServicePrincipalResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId(data),
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -326,7 +340,7 @@ func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.C
 		}
 		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
+	return pointer.To(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
 }
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {
@@ -338,7 +352,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 `, data.RandomInteger)
 }
@@ -416,7 +430,7 @@ func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -450,7 +464,7 @@ func (r ServicePrincipalResource) featureTags(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -484,7 +498,7 @@ func (r ServicePrincipalResource) noFeatureTags(data acceptance.TestData) string
 %[1]s
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   account_enabled               = false
   alternative_names             = ["foo", "bar"]
@@ -547,8 +561,8 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-  owners         = []
+  client_id = azuread_application.test.client_id
+  owners    = []
 }
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
@@ -562,7 +576,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
   owners = [
     azuread_user.testA.object_id,
   ]
@@ -579,7 +593,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
   owners = [
     azuread_user.testA.object_id,
     azuread_user.testB.object_id,
@@ -605,8 +619,8 @@ resource "azuread_application" "owner" {
 }
 
 resource "azuread_service_principal" "owner" {
-  count          = 27
-  application_id = azuread_application.owner[count.index].application_id
+  count     = 27
+  client_id = azuread_application.owner[count.index].client_id
 }
 
 resource "azuread_user" "owner" {
@@ -621,7 +635,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 
   owners = flatten([
     data.azuread_client_config.test.object_id,
@@ -637,8 +651,8 @@ func (ServicePrincipalResource) useExisting(_ acceptance.TestData) string {
 provider "azuread" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-  use_existing   = true
+  client_id    = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
+  use_existing = true
 }
 `
 }
@@ -656,9 +670,9 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-  owners         = [data.azuread_client_config.test.object_id]
-  use_existing   = true
+  client_id    = azuread_application.test.client_id
+  owners       = [data.azuread_client_config.test.object_id]
+  use_existing = true
 }
 `, data.RandomInteger, testApplicationTemplateId)
 }
@@ -680,15 +694,29 @@ resource "azuread_application" "testC" {
 }
 
 resource "azuread_service_principal" "testA" {
-  application_id = azuread_application.testA.application_id
+  client_id = azuread_application.testA.client_id
 }
 
 resource "azuread_service_principal" "testB" {
-  application_id = azuread_application.testB.application_id
+  client_id = azuread_application.testB.client_id
 }
 
 resource "azuread_service_principal" "testC" {
-  application_id = azuread_application.testC.application_id
+  client_id = azuread_application.testC.client_id
+}
+`, data.RandomInteger)
+}
+
+func (ServicePrincipalResource) deprecatedId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctestServicePrincipal-%[1]d"
+}
+
+resource "azuread_service_principal" "test" {
+  application_id = azuread_application.test.application_id
 }
 `, data.RandomInteger)
 }

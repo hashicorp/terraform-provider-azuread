@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -25,10 +24,10 @@ func TestAccNamedLocation_basicIP(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicIP(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -40,10 +39,10 @@ func TestAccNamedLocation_completeIP(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.completeIP(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -55,24 +54,24 @@ func TestAccNamedLocation_updateIP(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicIP(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.completeIP(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basicIP(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -84,10 +83,10 @@ func TestAccNamedLocation_basicCountry(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicCountry(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -99,10 +98,10 @@ func TestAccNamedLocation_completeCountry(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.completeCountry(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -114,24 +113,24 @@ func TestAccNamedLocation_updateCountry(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_named_location", "test")
 	r := NamedLocationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicCountry(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.completeCountry(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basicCountry(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -150,10 +149,10 @@ func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Clie
 	ipnl, ok1 := (*namedLocation).(msgraph.IPNamedLocation)
 	cnl, ok2 := (*namedLocation).(msgraph.CountryNamedLocation)
 	if ok1 {
-		return utils.Bool(ipnl.ID != nil && *ipnl.ID == state.ID), nil
+		return pointer.To(ipnl.ID != nil && *ipnl.ID == state.ID), nil
 	}
 	if ok2 {
-		return utils.Bool(cnl.ID != nil && *cnl.ID == state.ID), nil
+		return pointer.To(cnl.ID != nil && *cnl.ID == state.ID), nil
 	}
 	return nil, fmt.Errorf("Unable to match object ID %q to a known type", state.ID)
 }

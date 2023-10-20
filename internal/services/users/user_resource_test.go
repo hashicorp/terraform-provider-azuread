@@ -10,13 +10,12 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type UserResource struct{}
@@ -25,10 +24,10 @@ func TestAccUser_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -40,10 +39,10 @@ func TestAccUser_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -55,24 +54,24 @@ func TestAccUser_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("force_password_change", "password"),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("force_password_change", "password"),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -86,10 +85,10 @@ func TestAccUser_threeUsersABC(t *testing.T) {
 	dataC := acceptance.BuildTestData(t, "azuread_user", "testC")
 	r := UserResource{}
 
-	dataA.ResourceTest(t, r, []resource.TestStep{
+	dataA.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.threeUsersABC(dataA),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(dataA.ResourceName).ExistsInAzure(r),
 				check.That(dataB.ResourceName).ExistsInAzure(r),
 				check.That(dataC.ResourceName).ExistsInAzure(r),
@@ -105,10 +104,10 @@ func TestAccUser_withRandomProvider(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.withRandomProvider(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -120,7 +119,7 @@ func TestAccUser_passwordOmitted(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user", "test")
 	r := UserResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config:      r.passwordOmitted(data),
 			ExpectError: regexp.MustCompile("`password` is required when creating a new user"),
@@ -140,7 +139,7 @@ func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state
 		}
 		return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
 	}
-	return utils.Bool(user.ID() != nil && *user.ID() == state.ID), nil
+	return pointer.To(user.ID() != nil && *user.ID() == state.ID), nil
 }
 
 func (UserResource) basic(data acceptance.TestData) string {

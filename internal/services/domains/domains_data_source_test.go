@@ -6,7 +6,6 @@ package domains_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,7 +16,7 @@ func TestAccDomainsDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 	r := DomainsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.basic(),
 			Check:  r.testCheckFunc(data),
@@ -29,7 +28,7 @@ func TestAccDomainsDataSource_onlyDefault(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 	r := DomainsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.onlyDefault(),
 			Check: r.testCheckFunc(data,
@@ -43,7 +42,7 @@ func TestAccDomainsDataSource_onlyInitial(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 	r := DomainsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.onlyInitial(),
 			Check: r.testCheckFunc(data,
@@ -57,7 +56,7 @@ func TestAccDomainsDataSource_onlyRoot(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 	r := DomainsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.onlyRoot(),
 			Check: r.testCheckFunc(data,
@@ -71,7 +70,7 @@ func TestAccDomainsDataSource_supportsServices(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_domains", "test")
 	r := DomainsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: DomainsDataSource{}.supportsServices(),
 			Check:  r.testCheckFunc(data),
@@ -79,8 +78,8 @@ func TestAccDomainsDataSource_supportsServices(t *testing.T) {
 	})
 }
 
-func (DomainsDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...resource.TestCheckFunc) resource.TestCheckFunc {
-	checks := []resource.TestCheckFunc{
+func (DomainsDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...acceptance.TestCheckFunc) acceptance.TestCheckFunc {
+	checks := []acceptance.TestCheckFunc{
 		check.That(data.ResourceName).Key("domains.0.domain_name").Exists(),
 		check.That(data.ResourceName).Key("domains.0.admin_managed").Exists(),
 		check.That(data.ResourceName).Key("domains.0.default").Exists(),
@@ -90,7 +89,7 @@ func (DomainsDataSource) testCheckFunc(data acceptance.TestData, additionalCheck
 		check.That(data.ResourceName).Key("domains.0.verified").Exists(),
 	}
 	checks = append(checks, additionalChecks...)
-	return resource.ComposeTestCheckFunc(checks...)
+	return acceptance.ComposeTestCheckFunc(checks...)
 }
 
 func (DomainsDataSource) basic() string {

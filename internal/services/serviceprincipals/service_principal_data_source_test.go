@@ -9,20 +9,31 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
 
 type ServicePrincipalDataSource struct{}
 
-func TestAccServicePrincipalDataSource_byApplicationId(t *testing.T) {
+func TestAccServicePrincipalDataSource_byClientId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: r.byApplicationId(data),
+			Config: r.byClientId(data),
+			Check:  r.testCheckFunc(data),
+		},
+	})
+}
+
+func TestAccServicePrincipalDataSource_byDeprecatedApplicationId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
+	r := ServicePrincipalDataSource{}
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.byDeprecatedApplicationId(data),
 			Check:  r.testCheckFunc(data),
 		},
 	})
@@ -32,7 +43,7 @@ func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byDisplayName(data),
 			Check:  r.testCheckFunc(data),
@@ -44,7 +55,7 @@ func TestAccServicePrincipalDataSource_byDisplayNameDuplicates(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config:      r.byDisplayNameDuplicates(data),
 			ExpectError: regexp.MustCompile("Found multiple service principals matching filter:"),
@@ -56,7 +67,7 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byObjectId(data),
 			Check:  r.testCheckFunc(data),
@@ -64,9 +75,9 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	})
 }
 
-func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) resource.TestCheckFunc {
+func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
 	tenantId := os.Getenv("ARM_TENANT_ID")
-	return resource.ComposeTestCheckFunc(
+	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("account_enabled").HasValue("false"),
 		check.That(data.ResourceName).Key("alternative_names.#").HasValue("2"),
 		check.That(data.ResourceName).Key("app_role_assignment_required").HasValue("true"),
@@ -99,7 +110,17 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) resour
 	)
 }
 
-func (ServicePrincipalDataSource) byApplicationId(data acceptance.TestData) string {
+func (ServicePrincipalDataSource) byClientId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_service_principal" "test" {
+  client_id = azuread_service_principal.test.client_id
+}
+`, ServicePrincipalResource{}.complete(data))
+}
+
+func (ServicePrincipalDataSource) byDeprecatedApplicationId(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 

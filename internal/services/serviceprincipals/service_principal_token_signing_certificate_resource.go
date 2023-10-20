@@ -13,59 +13,56 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func servicePrincipalTokenSigningCertificateResource() *schema.Resource {
-	return &schema.Resource{
+func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: servicePrincipalTokenSigningCertificateResourceCreate,
 		ReadContext:   servicePrincipalTokenSigningCertificateResourceRead,
 		DeleteContext: servicePrincipalTokenSigningCertificateResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.SigningCertificateID(id)
 			return err
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
 				Description:      "The object ID of the service principal for which this certificate should be created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"display_name": {
 				Description:      "A friendly name for the certificate",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.ValidateDiag(validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), "")),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), "")),
 			},
 
 			"end_date": {
 				Description:  "The end date until which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Default is 3 years from current date.",
-				Type:         schema.TypeString,
+				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
@@ -74,25 +71,25 @@ func servicePrincipalTokenSigningCertificateResource() *schema.Resource {
 
 			"key_id": {
 				Description: "A UUID used to uniquely identify the verify certificate.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"thumbprint": {
 				Description: "The thumbprint of the certificate.",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"start_date": {
 				Description: "The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"value": {
 				Description: "The certificate data, which is PEM encoded but does not include the header/footer",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 				Sensitive:   true,
 			},
@@ -100,13 +97,13 @@ func servicePrincipalTokenSigningCertificateResource() *schema.Resource {
 	}
 }
 
-func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
 
 	keyCreds := msgraph.KeyCredential{}
 	if v, ok := d.GetOk("display_name"); ok {
-		keyCreds.DisplayName = utils.String(v.(string))
+		keyCreds.DisplayName = pointer.To(v.(string))
 	}
 
 	if v, ok := d.GetOk("end_date"); ok {
@@ -127,7 +124,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&resource.StateChangeConf{ //nolint:staticcheck
+	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -175,7 +172,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 	return servicePrincipalTokenSigningCertificateResourceRead(ctx, d, meta)
 }
 
-func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
 	id, err := parse.SigningCertificateID(d.Id())
@@ -234,7 +231,7 @@ func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d 
 	return nil
 }
 
-func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
 	id, err := parse.SigningCertificateID(d.Id())
@@ -302,10 +299,10 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 
 		credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
 		if credential == nil {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of token signing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}

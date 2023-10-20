@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type UserflowAttributeResource struct{}
@@ -24,10 +23,10 @@ func TestAccUserFlowAttribute_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserflowAttributeResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -38,16 +37,16 @@ func TestAccUserFlowAttribute_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserflowAttributeResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		{
 			Config: r.update(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -58,10 +57,10 @@ func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserflowAttributeResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -83,7 +82,7 @@ func (r UserflowAttributeResource) Exists(ctx context.Context, clients *clients.
 		return nil, fmt.Errorf("failed to retrieve User Flow attribute with ID %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(userFlowAttr.ID != nil && *userFlowAttr.ID == state.ID), nil
+	return pointer.To(userFlowAttr.ID != nil && *userFlowAttr.ID == state.ID), nil
 }
 
 func (r UserflowAttributeResource) basic(data acceptance.TestData) string {

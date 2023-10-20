@@ -12,66 +12,64 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func namedLocationResource() *schema.Resource {
-	return &schema.Resource{
+func namedLocationResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: namedLocationResourceCreate,
 		ReadContext:   namedLocationResourceRead,
 		UpdateContext: namedLocationResourceUpdate,
 		DeleteContext: namedLocationResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 
 			"display_name": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"ip": {
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				MaxItems:     1,
 				ExactlyOneOf: []string{"ip", "country"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"ip_ranges": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"trusted": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 						},
 					},
@@ -79,23 +77,23 @@ func namedLocationResource() *schema.Resource {
 			},
 
 			"country": {
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				MaxItems:     1,
 				ExactlyOneOf: []string{"ip", "country"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"countries_and_regions": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 							},
 						},
 
 						"include_unknown_countries_and_regions": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 						},
 					},
@@ -105,13 +103,13 @@ func namedLocationResource() *schema.Resource {
 	}
 }
 
-func namedLocationResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	displayName := d.Get("display_name").(string)
 
 	base := msgraph.BaseNamedLocation{
-		DisplayName: utils.String(displayName),
+		DisplayName: pointer.To(displayName),
 	}
 
 	if v, ok := d.GetOk("ip"); ok {
@@ -147,11 +145,11 @@ func namedLocationResourceCreate(ctx context.Context, d *schema.ResourceData, me
 	return namedLocationResourceRead(ctx, d, meta)
 }
 
-func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	base := msgraph.BaseNamedLocation{
-		ID: utils.String(d.Id()),
+		ID: pointer.To(d.Id()),
 	}
 
 	if d.HasChange("display_name") {
@@ -159,7 +157,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 		base.DisplayName = &displayName
 	}
 
-	var updateRefreshFunc resource.StateRefreshFunc //nolint:staticcheck
+	var updateRefreshFunc pluginsdk.StateRefreshFunc //nolint:staticcheck
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
@@ -221,7 +219,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Waiting for named location %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &resource.StateChangeConf{ //nolint:staticcheck
+	stateConf := &pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Updated"},
 		Timeout:                   time.Until(timeout),
@@ -236,7 +234,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *schema.ResourceData, me
 	return namedLocationResourceRead(ctx, d, meta)
 }
 
-func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 
 	result, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -274,7 +272,7 @@ func namedLocationResourceRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
 	namedLocationId := d.Id()
 
@@ -293,7 +291,7 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 				BaseNamedLocation: &msgraph.BaseNamedLocation{
 					ID: &namedLocationId,
 				},
-				IsTrusted: utils.Bool(false),
+				IsTrusted: pointer.To(false),
 			}
 			if _, err := client.UpdateIP(ctx, properties); err != nil {
 				return tf.ErrorDiagF(err, "Updating named location with ID %q", namedLocationId)
@@ -322,11 +320,11 @@ func namedLocationResourceDelete(ctx context.Context, d *schema.ResourceData, me
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, namedLocationId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "waiting for deletion of named location with ID %q", namedLocationId)
 	}

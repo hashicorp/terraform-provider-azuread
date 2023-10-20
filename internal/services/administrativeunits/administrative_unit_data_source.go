@@ -10,67 +10,66 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func administrativeUnitDataSource() *schema.Resource {
-	return &schema.Resource{
+func administrativeUnitDataSource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		ReadContext: administrativeUnitDataSourceRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
 				Description:      "The object ID of the administrative unit",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"display_name": {
 				Description:      "The display name for the administrative unit",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"description": {
 				Description: "The description for the administrative unit",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 
 			"members": {
 				Description: "A list of object IDs of members who are be present in this administrative unit.",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Computed:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"visibility": {
 				Description: "Whether the administrative unit and its members are hidden or publicly viewable in the directory",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func administrativeUnitDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	var administrativeUnit msgraph.AdministrativeUnit

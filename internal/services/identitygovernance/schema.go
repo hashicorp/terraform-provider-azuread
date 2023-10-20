@@ -5,36 +5,35 @@ package identitygovernance
 
 import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
-func schemaLocalizedContent() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
+func schemaLocalizedContent() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
+		Schema: map[string]*pluginsdk.Schema{
 			"default_text": {
 				Description: "The default text of this question",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 
 			"localized_text": {
 				Description: "The localized text of this question",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Optional:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"language_code": {
 							Description:      "The language code of this question content",
-							Type:             schema.TypeString,
+							Type:             pluginsdk.TypeString,
 							Required:         true,
-							ValidateDiagFunc: validate.ISO639Language,
+							ValidateDiagFunc: validation.ISO639Language,
 						},
 
 						"content": {
 							Description: "The localized content of this question",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Required:    true,
 						},
 					},
@@ -44,12 +43,12 @@ func schemaLocalizedContent() *schema.Resource {
 	}
 }
 
-func schemaUserSet() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
+func schemaUserSet() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
+		Schema: map[string]*pluginsdk.Schema{
 			"subject_type": {
 				Description: "Type of users",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ValidateFunc: validation.StringInSlice([]string{
 					odata.ShortTypeConnectedOrganizationMembers,
@@ -63,13 +62,13 @@ func schemaUserSet() *schema.Resource {
 
 			"backup": {
 				Description: "For a user in an approval stage, this property indicates whether the user is a backup fallback approver",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"object_id": {
 				Description: "The object ID of the subject",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 		},

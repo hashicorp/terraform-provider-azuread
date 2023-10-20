@@ -10,23 +10,21 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
 const accessPackageAssignmentPolicyResourceName = "azuread_access_package_assignment_policy"
 
-func accessPackageAssignmentPolicyResource() *schema.Resource {
-	return &schema.Resource{
+func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: accessPackageAssignmentPolicyResourceCreate,
 		ReadContext:   accessPackageAssignmentPolicyResourceRead,
 		UpdateContext: accessPackageAssignmentPolicyResourceUpdate,
@@ -34,45 +32,45 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 		CustomizeDiff: assignmentPolicyCustomDiff,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"access_package_id": {
 				Description:      "The ID of the access package that will contain the policy",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"display_name": {
 				Description:      "The display name of the policy",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"description": {
 				Description:      "The description of the policy",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"duration_in_days": {
 				Description:   "How many days this assignment is valid for",
-				Type:          schema.TypeInt,
+				Type:          pluginsdk.TypeInt,
 				Optional:      true,
 				ConflictsWith: []string{"expiration_date"},
 				ValidateFunc:  validation.IntBetween(0, 3660),
@@ -80,7 +78,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 			"expiration_date": {
 				Description:   "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
-				Type:          schema.TypeString,
+				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"duration_in_days"},
 				ValidateFunc:  validation.IsRFC3339Time,
@@ -89,27 +87,27 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 			"extension_enabled": {
 				Description: "When enabled, users will be able to request extension of their access to this package before their access expires",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Optional:    true,
 			},
 
 			"requestor_settings": {
 				Description:      "This block configures the users who can request access",
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"requests_accepted": {
 							Description: "Whether to accept requests now, when disabled, no new requests can be made using this policy",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"scope_type": {
 							Description: "Specify the scopes of the requestors",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.RequestorSettingsScopeTypeAllConfiguredConnectedOrganizationSubjects,
@@ -125,7 +123,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 						"requestor": {
 							Description: "The users who are allowed to request on this policy, which can be singleUser, groupMembers, and connectedOrganizationMembers",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem:        schemaUserSet(),
 						},
@@ -135,70 +133,70 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 			"approval_settings": {
 				Description:      "Settings of whether approvals are required and how they are obtained",
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"approval_required": {
 							Description: "Whether an approval is required",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"approval_required_for_extension": {
 							Description: "Whether an approval is required to grant extension. Same approval settings used to approve initial access will apply",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"requestor_justification_required": {
 							Description: "Whether requestor are required to provide a justification to request an access package. Justification is visible to other approvers and the requestor",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"approval_stage": {
 							Description: "The process to obtain an approval",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Optional:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"approval_timeout_in_days": {
 										Description: "Decision must be made in how many days? If a request is not approved within this time period after it is made, it will be automatically rejected",
-										Type:        schema.TypeInt,
+										Type:        pluginsdk.TypeInt,
 										Required:    true,
 									},
 
 									"approver_justification_required": {
 										Description: "Whether an approver must provide a justification for their decision. Justification is visible to other approvers and the requestor",
-										Type:        schema.TypeBool,
+										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"alternative_approval_enabled": {
 										Description: "If no action taken, forward to alternate approvers?",
-										Type:        schema.TypeBool,
+										Type:        pluginsdk.TypeBool,
 										Optional:    true,
 									},
 
 									"enable_alternative_approval_in_days": {
 										Description: "Forward to alternate approver(s) after how many days?",
-										Type:        schema.TypeInt,
+										Type:        pluginsdk.TypeInt,
 										Optional:    true,
 									},
 
 									"primary_approver": {
 										Description: "The users who will be asked to approve requests. A collection of singleUser, groupMembers, requestorManager, internalSponsors and externalSponsors. When creating or updating a policy, include at least one userSet in this collection",
-										Type:        schema.TypeList,
+										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem:        schemaUserSet(),
 									},
 
 									"alternative_approver": {
 										Description: "If escalation is enabled and the primary approvers do not respond before the escalation time, the escalationApprovers are the users who will be asked to approve requests. This can be a collection of singleUser, groupMembers, requestorManager, internalSponsors and externalSponsors. When creating or updating a policy, if there are no escalation approvers, or escalation approvers are not required for the stage, the value of this property should be an empty collection",
-										Type:        schema.TypeList,
+										Type:        pluginsdk.TypeList,
 										Optional:    true,
 										Elem:        schemaUserSet(),
 									},
@@ -211,21 +209,21 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 			"assignment_review_settings": {
 				Description:      "The settings of whether assignment review is needed and how it's conducted",
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				MaxItems:         1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"enabled": {
 							Description: "Whether to enable assignment review",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"review_frequency": {
 							Description: "This will determine how often the access review campaign runs",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.AccessReviewRecurrenceTypeAnnual,
@@ -238,7 +236,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 						"review_type": {
 							Description: "Self review or specific reviewers",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.AccessReviewReviewerTypeManager,
@@ -249,39 +247,39 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 						"starting_on": {
 							Description:  "This is the date the access review campaign will start on, formatted as an RFC3339 date string in UTC(e.g. 2018-01-01T01:02:03Z), default is now. Once an access review has been created, you cannot update its start date",
-							Type:         schema.TypeString,
+							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.IsRFC3339Time,
 						},
 
 						"duration_in_days": {
 							Description: "How many days each occurrence of the access review series will run",
-							Type:        schema.TypeInt,
+							Type:        pluginsdk.TypeInt,
 							Optional:    true,
 						},
 
 						"reviewer": {
 							Description: "If the reviewerType is Reviewers, this collection specifies the users who will be reviewers, either by ID or as members of a group, using a collection of singleUser and groupMembers",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Optional:    true,
 							Elem:        schemaUserSet(),
 						},
 
 						"access_recommendation_enabled": {
 							Description: "Whether to show Show reviewer decision helpers. If enabled, system recommendations based on users' access information will be shown to the reviewers. The reviewer will be recommended to approve the review if the user has signed-in at least once during the last 30 days. The reviewer will be recommended to deny the review if the user has not signed-in during the last 30 days",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"approver_justification_required": {
 							Description: "Whether a reviewer need provide a justification for their decision. Justification is visible to other reviewers and the requestor",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"access_review_timeout_behavior": {
 							Description: "What actions the system takes if reviewers don't respond in time",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Optional:    true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.AccessReviewTimeoutBehaviorTypeAcceptAccessRecommendation,
@@ -295,38 +293,38 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 			"question": {
 				Description:      "One or more questions to the requestor",
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				DiffSuppressFunc: assignmentPolicyDiffSuppress,
 				Optional:         true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"required": {
 							Description: "Whether this question is required",
-							Type:        schema.TypeBool,
+							Type:        pluginsdk.TypeBool,
 							Optional:    true,
 						},
 
 						"sequence": {
 							Description: "The sequence number of this question",
-							Type:        schema.TypeInt,
+							Type:        pluginsdk.TypeInt,
 							Optional:    true,
 						},
 
 						"choice": {
 							Description: "Configuration of a choice to the question",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Optional:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"actual_value": {
 										Description: "The actual value of this choice",
-										Type:        schema.TypeString,
+										Type:        pluginsdk.TypeString,
 										Required:    true,
 									},
 
 									"display_value": {
 										Description: "The display text of this choice",
-										Type:        schema.TypeList,
+										Type:        pluginsdk.TypeList,
 										Required:    true,
 										MaxItems:    1,
 										Elem:        schemaLocalizedContent(),
@@ -337,7 +335,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 
 						"text": {
 							Description: "The content of this question",
-							Type:        schema.TypeList,
+							Type:        pluginsdk.TypeList,
 							Required:    true,
 							MaxItems:    1,
 							Elem:        schemaLocalizedContent(),
@@ -349,7 +347,7 @@ func accessPackageAssignmentPolicyResource() *schema.Resource {
 	}
 }
 
-func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
 	var properties msgraph.AccessPackageAssignmentPolicy
@@ -368,7 +366,7 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *schema.
 	return accessPackageAssignmentPolicyResourceRead(ctx, d, meta)
 }
 
-func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
 	var properties msgraph.AccessPackageAssignmentPolicy
@@ -387,7 +385,7 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *schema.
 	return accessPackageAssignmentPolicyResourceRead(ctx, d, meta)
 }
 
-func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
 	objectId := d.Id()
@@ -421,7 +419,7 @@ func accessPackageAssignmentPolicyResourceRead(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 	accessPackageAssignmentPolicyId := d.Id()
 
@@ -445,11 +443,11 @@ func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *schema.
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, accessPackageAssignmentPolicyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of access package assignment policy with object ID %q", accessPackageAssignmentPolicyId)
 	}
@@ -457,7 +455,7 @@ func accessPackageAssignmentPolicyResourceDelete(ctx context.Context, d *schema.
 	return nil
 }
 
-func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceData, meta interface{}) (msgraph.AccessPackageAssignmentPolicy, error) {
+func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) (msgraph.AccessPackageAssignmentPolicy, error) {
 	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
 	accessPackageId := d.Get("access_package_id").(string)
@@ -471,13 +469,13 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceDa
 	}
 
 	properties := msgraph.AccessPackageAssignmentPolicy{
-		ID:              utils.String(d.Id()),
-		DisplayName:     utils.String(d.Get("display_name").(string)),
-		Description:     utils.String(d.Get("description").(string)),
-		CanExtend:       utils.Bool(d.Get("extension_enabled").(bool)),
-		DurationInDays:  utils.Int32(int32(d.Get("duration_in_days").(int))),
+		ID:              pointer.To(d.Id()),
+		DisplayName:     pointer.To(d.Get("display_name").(string)),
+		Description:     pointer.To(d.Get("description").(string)),
+		CanExtend:       pointer.To(d.Get("extension_enabled").(bool)),
+		DurationInDays:  pointer.To(int32(d.Get("duration_in_days").(int))),
 		Questions:       expandAccessPackageQuestions(d.Get("question").([]interface{})),
-		AccessPackageId: utils.String(d.Get("access_package_id").(string)),
+		AccessPackageId: pointer.To(d.Get("access_package_id").(string)),
 	}
 
 	expirationDateValue := d.Get("expiration_date").(string)
@@ -503,7 +501,7 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *schema.ResourceDa
 	return properties, nil
 }
 
-func assignmentPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+func assignmentPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	if k == "approval_settings.#" && old == "1" && new == "0" {
 		return true
 	}
@@ -531,7 +529,7 @@ func assignmentPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bo
 	return false
 }
 
-func assignmentPolicyCustomDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func assignmentPolicyCustomDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
 	if reviewSettings := diff.Get("assignment_review_settings").([]interface{}); len(reviewSettings) > 0 {
 		reviewSetting := reviewSettings[0].(map[string]interface{})
 		if reviewSetting["enabled"].(bool) &&

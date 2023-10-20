@@ -11,99 +11,97 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func directoryRoleAssignmentResource() *schema.Resource {
-	return &schema.Resource{
+func directoryRoleAssignmentResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: directoryRoleAssignmentResourceCreate,
 		ReadContext:   directoryRoleAssignmentResourceRead,
 		DeleteContext: directoryRoleAssignmentResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if id == "" {
 				return errors.New("id was empty")
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"role_id": {
 				Description:      "The object ID of the directory role for this assignment",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"principal_object_id": {
 				Description:      "The object ID of the member principal",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"app_scope_id": {
 				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"app_scope_object_id": {
 				Deprecated:       "`app_scope_object_id` has been renamed to `app_scope_id` and will be removed in version 3.0 or the AzureAD Provider",
 				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_id", "directory_scope_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"directory_scope_id": {
 				Description:      "Identifier of the directory object representing the scope of the assignment",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"directory_scope_object_id": {
 				Description:      "Identifier of the directory object representing the scope of the assignment",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ForceNew:         true,
 				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_id"},
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 		},
 	}
 }
 
-func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	roleId := d.Get("role_id").(string)
@@ -128,12 +126,13 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		directoryScopeId = v.(string)
 	}
 
-	if appScopeId != "" {
+	switch {
+	case appScopeId != "":
 		properties.AppScopeId = &appScopeId
-	} else if directoryScopeId != "" {
+	case directoryScopeId != "":
 		properties.DirectoryScopeId = &directoryScopeId
-	} else {
-		properties.DirectoryScopeId = utils.String("/")
+	default:
+		properties.DirectoryScopeId = pointer.To("/")
 	}
 
 	assignment, status, err := client.Create(ctx, properties)
@@ -152,7 +151,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for directory role %q assignment to principal %q to take effect", roleId, principalId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -176,7 +175,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *schema.Resour
 	return directoryRoleAssignmentResourceRead(ctx, d, meta)
 }
 
-func directoryRoleAssignmentResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	id := d.Id()
@@ -200,7 +199,7 @@ func directoryRoleAssignmentResourceRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func directoryRoleAssignmentResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func directoryRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleAssignmentsClient
 
 	if _, err := client.Delete(ctx, d.Id()); err != nil {

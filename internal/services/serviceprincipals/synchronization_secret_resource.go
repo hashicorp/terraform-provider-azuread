@@ -11,56 +11,54 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func synchronizationSecretResource() *schema.Resource {
-	return &schema.Resource{
+func synchronizationSecretResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: synchronizationSecretResourceCreate,
 		ReadContext:   synchronizationSecretResourceRead,
 		UpdateContext: synchronizationSecretResourceUpdate,
 		DeleteContext: synchronizationSecretResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(4 * time.Minute),
-			Update: schema.DefaultTimeout(3 * time.Minute),
-			Delete: schema.DefaultTimeout(3 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(4 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(3 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(3 * time.Minute),
 		},
 
 		SchemaVersion: 0,
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
 				Description:      "The object ID of the service principal for which this synchronization secret should be created",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 			"credential": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"key": {
 							Description: "Name for this key-value pair.",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Required:    true,
 						},
 						"value": {
 							Description: "Value for this key-value pair.",
-							Type:        schema.TypeString,
+							Type:        pluginsdk.TypeString,
 							Required:    true,
 							Sensitive:   true,
 						},
@@ -71,7 +69,7 @@ func synchronizationSecretResource() *schema.Resource {
 	}
 }
 
-func synchronizationSecretResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
@@ -102,7 +100,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 
 	// Wait for the secret to appear
 	timeout, _ := ctx.Deadline()
-	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -136,12 +134,12 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *schema.Resource
 	return synchronizationSecretResourceRead(ctx, d, meta)
 }
 
-func synchronizationSecretResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	// Update is same as create
 	return synchronizationSecretResourceCreate(ctx, d, meta)
 }
 
-func synchronizationSecretResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 
 	id, err := parse.SynchronizationSecretID(d.Id())
@@ -163,7 +161,7 @@ func synchronizationSecretResourceRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func synchronizationSecretResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
 
@@ -205,10 +203,10 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *schema.Resource
 
 		// Test if credentials are removed
 		if allCredentialsRemoved(*credentials, *synchronizationSecrets.Credentials) {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of synchronization secrets from service principal with object ID %q", id.ServicePrincipalId)
 	}

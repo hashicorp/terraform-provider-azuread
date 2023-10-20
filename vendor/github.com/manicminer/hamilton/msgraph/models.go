@@ -1140,11 +1140,11 @@ type ImplicitGrantSettings struct {
 }
 
 type InformationalUrl struct {
-	LogoUrl             *string `json:"logoUrl,omitempty"`
-	MarketingUrl        *string `json:"marketingUrl"`
-	PrivacyStatementUrl *string `json:"privacyStatementUrl"`
-	SupportUrl          *string `json:"supportUrl"`
-	TermsOfServiceUrl   *string `json:"termsOfServiceUrl"`
+	LogoUrl             *StringNullWhenEmpty `json:"logoUrl,omitempty"`
+	MarketingUrl        *StringNullWhenEmpty `json:"marketingUrl"`
+	PrivacyStatementUrl *StringNullWhenEmpty `json:"privacyStatementUrl"`
+	SupportUrl          *StringNullWhenEmpty `json:"supportUrl"`
+	TermsOfServiceUrl   *StringNullWhenEmpty `json:"termsOfServiceUrl"`
 }
 
 // Invitation describes a Invitation object.

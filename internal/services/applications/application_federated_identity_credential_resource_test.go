@@ -9,14 +9,13 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ApplicationFederatedIdentityCredentialResource struct{}
@@ -25,10 +24,10 @@ func TestAccApplicationFederatedIdentityCredential_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
 	r := ApplicationFederatedIdentityCredentialResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential_id").Exists(),
 			),
@@ -41,10 +40,10 @@ func TestAccApplicationFederatedIdentityCredential_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
 	r := ApplicationFederatedIdentityCredentialResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential_id").Exists(),
 			),
@@ -57,10 +56,10 @@ func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
 	r := ApplicationFederatedIdentityCredentialResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential_id").Exists(),
 			),
@@ -68,7 +67,7 @@ func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential_id").Exists(),
 			),
@@ -76,7 +75,7 @@ func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential_id").Exists(),
 			),
@@ -85,8 +84,42 @@ func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 	})
 }
 
+func TestAccApplicationFederatedIdentityCredential_deprecatedId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
+	r := ApplicationFederatedIdentityCredentialResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_object_id").Exists(),
+				check.That(data.ResourceName).Key("credential_id").Exists(),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccApplicationFederatedIdentityCredential_deprecatedId2(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
+	r := ApplicationFederatedIdentityCredentialResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId2(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_object_id").Exists(),
+				check.That(data.ResourceName).Key("credential_id").Exists(),
+			),
+		},
+		data.ImportStep("application_object_id"),
+	})
+}
+
 func (r ApplicationFederatedIdentityCredentialResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
+	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
@@ -103,7 +136,7 @@ func (r ApplicationFederatedIdentityCredentialResource) Exists(ctx context.Conte
 		return nil, fmt.Errorf("failed to retrieve Federated Identity Credential %q for Application with object ID %q: %+v", id.KeyId, id.ObjectId, err)
 	}
 
-	return utils.Bool(credential != nil), nil
+	return pointer.To(credential != nil), nil
 }
 
 func (ApplicationFederatedIdentityCredentialResource) template(data acceptance.TestData) string {
@@ -119,11 +152,11 @@ func (r ApplicationFederatedIdentityCredentialResource) basic(data acceptance.Te
 %[1]s
 
 resource "azuread_application_federated_identity_credential" "test" {
-  application_object_id = azuread_application.test.object_id
-  display_name          = "hashitown-%[2]s"
-  audiences             = ["api://HashiTownLikesAzureAD"]
-  issuer                = "https://tokens.hashitown.net"
-  subject               = "%[3]s"
+  application_id = azuread_application.test.id
+  display_name   = "hashitown-%[2]s"
+  audiences      = ["api://HashiTownLikesAzureAD"]
+  issuer         = "https://tokens.hashitown.net"
+  subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.RandomID)
 }
@@ -133,12 +166,40 @@ func (r ApplicationFederatedIdentityCredentialResource) complete(data acceptance
 %[1]s
 
 resource "azuread_application_federated_identity_credential" "test" {
-  application_object_id = azuread_application.test.object_id
-  display_name          = "hashitown-%[2]s"
-  description           = "Funtime tokens for HashiTown"
-  audiences             = ["api://HashiTownLikesAzureAD"]
-  issuer                = "https://vending.hashitown.net"
-  subject               = "%[3]s"
+  application_id = azuread_application.test.id
+  display_name   = "hashitown-%[2]s"
+  description    = "Funtime tokens for HashiTown"
+  audiences      = ["api://HashiTownLikesAzureAD"]
+  issuer         = "https://vending.hashitown.net"
+  subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.UUID())
+}
+
+func (r ApplicationFederatedIdentityCredentialResource) deprecatedId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_federated_identity_credential" "test" {
+  application_object_id = azuread_application.test.object_id
+  display_name          = "hashitown-%[2]s"
+  audiences             = ["api://HashiTownLikesAzureAD"]
+  issuer                = "https://tokens.hashitown.net"
+  subject               = "%[3]s"
+}
+`, r.template(data), data.RandomString, data.RandomID)
+}
+
+func (r ApplicationFederatedIdentityCredentialResource) deprecatedId2(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_federated_identity_credential" "test" {
+  application_object_id = azuread_application.test.id
+  display_name          = "hashitown-%[2]s"
+  audiences             = ["api://HashiTownLikesAzureAD"]
+  issuer                = "https://tokens.hashitown.net"
+  subject               = "%[3]s"
+}
+`, r.template(data), data.RandomString, data.RandomID)
 }

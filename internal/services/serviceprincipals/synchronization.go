@@ -6,7 +6,7 @@ package serviceprincipals
 import (
 	"time"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -20,8 +20,8 @@ func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.S
 		item := raw.(map[string]interface{})
 
 		result = append(result, msgraph.SynchronizationSecretKeyStringValuePair{
-			Key:   utils.String(item["key"].(string)),
-			Value: utils.String(""),
+			Key:   pointer.To(item["key"].(string)),
+			Value: pointer.To(""),
 		})
 	}
 
@@ -38,8 +38,8 @@ func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.
 		item := raw.(map[string]interface{})
 
 		result = append(result, msgraph.SynchronizationSecretKeyStringValuePair{
-			Key:   utils.String(item["key"].(string)),
-			Value: utils.String(item["value"].(string)),
+			Key:   pointer.To(item["key"].(string)),
+			Value: pointer.To(item["value"].(string)),
 		})
 	}
 
@@ -78,7 +78,7 @@ func flattenSynchronizationSecretKeyStringValuePair(in *[]msgraph.Synchronizatio
 				}
 				currentItem := raw.(map[string]interface{})
 				if currentItem["key"].(string) == *item.Key {
-					value = utils.String(currentItem["value"].(string))
+					value = pointer.To(currentItem["value"].(string))
 				}
 			}
 		}

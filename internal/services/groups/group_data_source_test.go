@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,10 +16,10 @@ type GroupDataSource struct{}
 func TestAccGroupDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.displayName(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -29,10 +28,10 @@ func TestAccGroupDataSource_byDisplayName(t *testing.T) {
 func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.displayNameSecurity(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -42,10 +41,10 @@ func TestAccGroupDataSource_byDisplayNameWithSecurity(t *testing.T) {
 func TestAccGroupDataSource_byDisplayNameWithSecurityNotMail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.displayNameSecurityNotMail(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -55,10 +54,10 @@ func TestAccGroupDataSource_byDisplayNameWithSecurityNotMail(t *testing.T) {
 func TestAccGroupDataSource_byCaseInsensitiveDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.caseInsensitiveDisplayName(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -68,10 +67,10 @@ func TestAccGroupDataSource_byCaseInsensitiveDisplayName(t *testing.T) {
 func TestAccGroupDataSource_byMailNickname(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNickname(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -81,10 +80,10 @@ func TestAccGroupDataSource_byMailNickname(t *testing.T) {
 func TestAccGroupDataSource_byMailNicknameWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNicknameSecurity(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -94,10 +93,10 @@ func TestAccGroupDataSource_byMailNicknameWithSecurity(t *testing.T) {
 func TestAccGroupDataSource_byMailNicknameWithSecurityNotMail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.mailNicknameSecurityNotMail(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -107,10 +106,10 @@ func TestAccGroupDataSource_byMailNicknameWithSecurityNotMail(t *testing.T) {
 func TestAccGroupDataSource_byObjectId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.objectId(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -120,10 +119,10 @@ func TestAccGroupDataSource_byObjectId(t *testing.T) {
 func TestAccGroupDataSource_byObjectIdWithSecurity(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.objectIdSecurity(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 			),
 		},
@@ -133,10 +132,10 @@ func TestAccGroupDataSource_byObjectIdWithSecurity(t *testing.T) {
 func TestAccGroupDataSource_dynamicMembership(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.dynamicMembership(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("dynamic_membership.#").HasValue("1"),
 				check.That(data.ResourceName).Key("dynamic_membership.0.enabled").HasValue("true"),
@@ -149,10 +148,10 @@ func TestAccGroupDataSource_dynamicMembership(t *testing.T) {
 func TestAccGroupDataSource_members(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.members(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("members.#").HasValue("3"),
 			),
@@ -163,10 +162,10 @@ func TestAccGroupDataSource_members(t *testing.T) {
 func TestAccGroupDataSource_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.owners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
 			),
@@ -177,10 +176,10 @@ func TestAccGroupDataSource_owners(t *testing.T) {
 func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.unifiedWithExtraSettings(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("auto_subscribe_new_members").HasValue("true"),
 				check.That(data.ResourceName).Key("external_senders_allowed").HasValue("true"),
@@ -194,10 +193,10 @@ func TestAccGroupDataSource_unifiedExtraSettings(t *testing.T) {
 func TestAccGroupDataSource_writeback(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupDataSource{}.writeback(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("writeback_enabled").HasValue("true"),
 				check.That(data.ResourceName).Key("onpremises_group_type").HasValue("UniversalSecurityGroup"),

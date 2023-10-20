@@ -11,22 +11,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func conditionalAccessPolicyResource() *schema.Resource {
-	return &schema.Resource{
+func conditionalAccessPolicyResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: conditionalAccessPolicyResourceCreate,
 		ReadContext:   conditionalAccessPolicyResourceRead,
 		UpdateContext: conditionalAccessPolicyResourceUpdate,
@@ -34,29 +31,29 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 		CustomizeDiff: conditionalAccessPolicyCustomizeDiff,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(15 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(15 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"state": {
-				Type:     schema.TypeString,
+				Type:     pluginsdk.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					msgraph.ConditionalAccessPolicyStateDisabled,
@@ -66,43 +63,43 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"conditions": {
-				Type:     schema.TypeList,
+				Type:     pluginsdk.TypeList,
 				Required: true,
 				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"applications": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"included_applications": {
-										Type:         schema.TypeList,
+										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_applications": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"included_user_actions": {
-										Type:         schema.TypeList,
+										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 								},
@@ -110,26 +107,26 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"client_applications": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"included_service_principals": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_service_principals": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 								},
@@ -137,65 +134,65 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"users": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"included_users": {
-										Type:         schema.TypeList,
+										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_users": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"included_groups": {
-										Type:         schema.TypeList,
+										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_groups": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"included_roles": {
-										Type:         schema.TypeList,
+										Type:         pluginsdk.TypeList,
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_roles": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 								},
@@ -203,10 +200,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"client_app_types": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessClientAppTypeAll,
 									msgraph.ConditionalAccessClientAppTypeBrowser,
@@ -219,19 +216,19 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"devices": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"filter": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
 										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
 												"mode": {
-													Type:     schema.TypeString,
+													Type:     pluginsdk.TypeString,
 													Required: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														msgraph.ConditionalAccessFilterModeExclude,
@@ -240,9 +237,9 @@ func conditionalAccessPolicyResource() *schema.Resource {
 												},
 
 												"rule": {
-													Type:             schema.TypeString,
+													Type:             pluginsdk.TypeString,
 													Required:         true,
-													ValidateDiagFunc: validate.NoEmptyStrings,
+													ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 												},
 											},
 										},
@@ -252,26 +249,26 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"locations": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"included_locations": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Required: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 
 									"excluded_locations": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: validate.NoEmptyStrings,
+										Elem: &pluginsdk.Schema{
+											Type:             pluginsdk.TypeString,
+											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 										},
 									},
 								},
@@ -279,16 +276,16 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"platforms": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
 									"included_platforms": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &pluginsdk.Schema{
+											Type: pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
 												msgraph.ConditionalAccessDevicePlatformAll,
 												msgraph.ConditionalAccessDevicePlatformAndroid,
@@ -303,10 +300,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 									},
 
 									"excluded_platforms": {
-										Type:     schema.TypeList,
+										Type:     pluginsdk.TypeList,
 										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &pluginsdk.Schema{
+											Type: pluginsdk.TypeString,
 											ValidateFunc: validation.StringInSlice([]string{
 												msgraph.ConditionalAccessDevicePlatformAll,
 												msgraph.ConditionalAccessDevicePlatformAndroid,
@@ -324,10 +321,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"service_principal_risk_levels": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessRiskLevelHigh,
 									msgraph.ConditionalAccessRiskLevelLow,
@@ -339,10 +336,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"sign_in_risk_levels": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessRiskLevelHidden,
 									msgraph.ConditionalAccessRiskLevelHigh,
@@ -355,10 +352,10 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"user_risk_levels": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessRiskLevelHidden,
 									msgraph.ConditionalAccessRiskLevelHigh,
@@ -374,24 +371,24 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"grant_controls": {
-				Type:         schema.TypeList,
+				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				AtLeastOneOf: []string{"grant_controls", "session_controls"},
 				MaxItems:     1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"operator": {
-							Type:         schema.TypeString,
+							Type:         pluginsdk.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"AND", "OR"}, false),
 						},
 
 						"built_in_controls": {
-							Type:         schema.TypeList,
+							Type:         pluginsdk.TypeList,
 							Optional:     true,
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &pluginsdk.Schema{
+								Type: pluginsdk.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
 									msgraph.ConditionalAccessGrantControlApprovedApplication,
 									msgraph.ConditionalAccessGrantControlBlock,
@@ -407,27 +404,27 @@ func conditionalAccessPolicyResource() *schema.Resource {
 
 						"authentication_strength_id": {
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
-							Type:         schema.TypeString,
+							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.IsUUID,
 						},
 
 						"custom_authentication_factors": {
-							Type:     schema.TypeList,
+							Type:     pluginsdk.TypeList,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 							},
 						},
 
 						"terms_of_use": {
-							Type:         schema.TypeList,
+							Type:         pluginsdk.TypeList,
 							Optional:     true,
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_id", "grant_controls.0.terms_of_use"},
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 							},
 						},
 					},
@@ -435,20 +432,20 @@ func conditionalAccessPolicyResource() *schema.Resource {
 			},
 
 			"session_controls": {
-				Type:             schema.TypeList,
+				Type:             pluginsdk.TypeList,
 				Optional:         true,
 				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
 				MaxItems:         1,
 				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"application_enforced_restrictions_enabled": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 						},
 
 						"cloud_app_security_policy": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.ConditionalAccessCloudAppSecuritySessionControlTypeBlockDownloads,
@@ -459,12 +456,12 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"disable_resilience_defaults": {
-							Type:     schema.TypeBool,
+							Type:     pluginsdk.TypeBool,
 							Optional: true,
 						},
 
 						"persistent_browser_mode": {
-							Type:     schema.TypeString,
+							Type:     pluginsdk.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.PersistentBrowserSessionModeAlways,
@@ -473,14 +470,14 @@ func conditionalAccessPolicyResource() *schema.Resource {
 						},
 
 						"sign_in_frequency": {
-							Type:         schema.TypeInt,
+							Type:         pluginsdk.TypeInt,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency_period"},
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 
 						"sign_in_frequency_period": {
-							Type:         schema.TypeString,
+							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
 							ValidateFunc: validation.StringInSlice([]string{"days", "hours"}, false),
@@ -492,7 +489,7 @@ func conditionalAccessPolicyResource() *schema.Resource {
 	}
 }
 
-func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
 	// See https://github.com/microsoftgraph/msgraph-metadata/issues/93
 	if old, new := diff.GetChange("session_controls.0.sign_in_frequency"); old.(int) > 0 && new.(int) == 0 {
 		diff.ForceNew("session_controls.0.sign_in_frequency")
@@ -511,11 +508,10 @@ func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *schema.Reso
 	return nil
 }
 
-func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceData) bool {
+func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	suppress := false
 
-	switch {
-	case k == "session_controls.#" && old == "0" && new == "1":
+	if k == "session_controls.#" && old == "0" && new == "1" {
 		// When an ineffectual `session_controls` block is configured, the API just ignores it and returns
 		// sessionControls: null
 		sessionControlsRaw := d.Get("session_controls").([]interface{})
@@ -546,12 +542,12 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *schema.ResourceD
 	return suppress
 }
 
-func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		State:       utils.String(d.Get("state").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		State:       pointer.To(d.Get("state").(string)),
 		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 	}
 
@@ -577,13 +573,13 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *schema.Resour
 	return conditionalAccessPolicyResourceRead(ctx, d, meta)
 }
 
-func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	properties := msgraph.ConditionalAccessPolicy{
-		ID:          utils.String(d.Id()),
-		DisplayName: utils.String(d.Get("display_name").(string)),
-		State:       utils.String(d.Get("state").(string)),
+		ID:          pointer.To(d.Id()),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
+		State:       pointer.To(d.Get("state").(string)),
 		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
 	}
 
@@ -603,7 +599,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 	// in a timeout loop, instead we're hoping that this allows enough time/activity for the update to be reflected.
 	log.Printf("[DEBUG] Waiting for conditional access policy %q to be updated", d.Id())
 	timeout, _ := ctx.Deadline()
-	stateConf := &resource.StateChangeConf{ //nolint:staticcheck
+	stateConf := &pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Pending"},
 		Target:                    []string{"Done"},
 		Timeout:                   time.Until(timeout),
@@ -636,7 +632,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func conditionalAccessPolicyResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 
 	policy, status, err := client.Get(ctx, d.Id(), odata.Query{})
@@ -659,7 +655,7 @@ func conditionalAccessPolicyResourceRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func conditionalAccessPolicyResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PoliciesClient
 	policyId := d.Id()
 
@@ -683,11 +679,11 @@ func conditionalAccessPolicyResourceDelete(ctx context.Context, d *schema.Resour
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.Get(ctx, policyId, odata.Query{}); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of conditional access policy with ID %q", policyId)
 	}

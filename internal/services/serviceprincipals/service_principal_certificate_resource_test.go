@@ -10,14 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 // To create test certificates:
@@ -73,10 +72,10 @@ func TestAccServicePrincipalCertificate_basic(t *testing.T) {
 	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
@@ -91,10 +90,10 @@ func TestAccServicePrincipalCertificate_complete(t *testing.T) {
 	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data, startDate, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
@@ -108,10 +107,10 @@ func TestAccServicePrincipalCertificate_base64Cert(t *testing.T) {
 	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.base64Cert(data, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
@@ -125,10 +124,10 @@ func TestAccServicePrincipalCertificate_hexCert(t *testing.T) {
 	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.hexCert(data, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
@@ -141,10 +140,10 @@ func TestAccServicePrincipalCertificate_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal_certificate", "test")
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.relativeEndDate(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 				check.That(data.ResourceName).Key("end_date").Exists(),
@@ -159,10 +158,10 @@ func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 	endDate := time.Now().AddDate(0, 3, 27).UTC().Format(time.RFC3339)
 	r := ServicePrincipalCertificateResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("key_id").Exists(),
 			),
@@ -192,7 +191,7 @@ func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients
 	if servicePrincipal.KeyCredentials != nil {
 		for _, cred := range *servicePrincipal.KeyCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}
 		}
 	}

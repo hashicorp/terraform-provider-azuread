@@ -11,58 +11,56 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func administrativeUnitMemberResource() *schema.Resource {
-	return &schema.Resource{
+func administrativeUnitMemberResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: administrativeUnitMemberResourceCreate,
 		ReadContext:   administrativeUnitMemberResourceRead,
 		DeleteContext: administrativeUnitMemberResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			_, err := parse.AdministrativeUnitMemberID(id)
 			return err
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"administrative_unit_object_id": {
 				Description:      "The object ID of the administrative unit",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
 			"member_object_id": {
 				Description:      "The object ID of the member",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 		},
 	}
 }
 
-func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
 	tenantId := meta.(*clients.Client).TenantID
@@ -95,11 +93,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.Resou
 	if memberObject == nil {
 		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", id.MemberId)
 	}
-	// TODO: remove this workaround for https://github.com/hashicorp/terraform-provider-azuread/issues/588
-	//if memberObject.ODataId == nil {
-	//	return tf.ErrorDiagF(errors.New("ODataId was nil"), "Could not retrieve member principal object %q", id.MemberId)
-	//}
-	memberObject.ODataId = (*odata.Id)(utils.String(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
+	memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
 		client.BaseClient.Endpoint, tenantId, id.MemberId)))
 
 	members := &msgraph.Members{*memberObject}
@@ -114,7 +108,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.Resou
 		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for member %q to reflect for administrative unit %q", id.MemberId, id.AdministrativeUnitId)
 	}
 	timeout := time.Until(deadline)
-	_, err = (&resource.StateChangeConf{ //nolint:staticcheck
+	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
 		Pending:                   []string{"Waiting"},
 		Target:                    []string{"Done"},
 		Timeout:                   timeout,
@@ -140,7 +134,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *schema.Resou
 	return administrativeUnitMemberResourceRead(ctx, d, meta)
 }
 
-func administrativeUnitMemberResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())
@@ -163,7 +157,7 @@ func administrativeUnitMemberResourceRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func administrativeUnitMemberResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())
@@ -184,11 +178,11 @@ func administrativeUnitMemberResourceDelete(ctx context.Context, d *schema.Resou
 		client.BaseClient.DisableRetries = true
 		if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
 			if status == http.StatusNotFound {
-				return utils.Bool(false), nil
+				return pointer.To(false), nil
 			}
 			return nil, err
 		}
-		return utils.Bool(true), nil
+		return pointer.To(true), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for removal of member %q from administrative unit with object ID %q", id.MemberId, id.AdministrativeUnitId)
 	}

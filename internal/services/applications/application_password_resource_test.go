@@ -10,14 +10,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type ApplicationPasswordResource struct{}
@@ -26,10 +25,10 @@ func TestAccApplicationPassword_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	r := ApplicationPasswordResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("end_date").Exists(),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -46,10 +45,10 @@ func TestAccApplicationPassword_complete(t *testing.T) {
 	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
 	r := ApplicationPasswordResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data, startDate, endDate),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("end_date").Exists(),
 				check.That(data.ResourceName).Key("key_id").Exists(),
@@ -64,10 +63,10 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
 	r := ApplicationPasswordResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.relativeEndDate(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("end_date").Exists(),
 				check.That(data.ResourceName).Key("end_date_relative").HasValue("8760h"),
@@ -79,8 +78,46 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
+func TestAccApplicationPassword_deprecatedId(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
+	r := ApplicationPasswordResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_object_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
+func TestAccApplicationPassword_deprecatedId2(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
+	r := ApplicationPasswordResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.deprecatedId2(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_object_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+			),
+		},
+	})
+}
+
 func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
+	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
@@ -100,7 +137,7 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	if app.PasswordCredentials != nil {
 		for _, cred := range *app.PasswordCredentials {
 			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
-				return utils.Bool(true), nil
+				return pointer.To(true), nil
 			}
 		}
 	}
@@ -121,7 +158,7 @@ func (r ApplicationPasswordResource) basic(data acceptance.TestData) string {
 %[1]s
 
 resource "azuread_application_password" "test" {
-  application_object_id = azuread_application.test.object_id
+  application_id = azuread_application.test.id
 }
 `, r.template(data))
 }
@@ -131,10 +168,10 @@ func (r ApplicationPasswordResource) complete(data acceptance.TestData, startDat
 %[1]s
 
 resource "azuread_application_password" "test" {
-  application_object_id = azuread_application.test.object_id
-  display_name          = "terraform-%[2]s"
-  start_date            = "%[3]s"
-  end_date              = "%[4]s"
+  application_id = azuread_application.test.id
+  display_name   = "terraform-%[2]s"
+  start_date     = "%[3]s"
+  end_date       = "%[4]s"
 }
 `, r.template(data), data.RandomString, startDate, endDate)
 }
@@ -144,9 +181,29 @@ func (r ApplicationPasswordResource) relativeEndDate(data acceptance.TestData) s
 %[1]s
 
 resource "azuread_application_password" "test" {
-  application_object_id = azuread_application.test.id
-  display_name          = "terraform-%[2]s"
-  end_date_relative     = "8760h"
+  application_id    = azuread_application.test.id
+  display_name      = "terraform-%[2]s"
+  end_date_relative = "8760h"
 }
 `, r.template(data), data.RandomString)
+}
+
+func (r ApplicationPasswordResource) deprecatedId(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_password" "test" {
+  application_object_id = azuread_application.test.object_id
+}
+`, r.template(data))
+}
+
+func (r ApplicationPasswordResource) deprecatedId2(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_application_password" "test" {
+  application_object_id = azuread_application.test.id
+}
+`, r.template(data))
 }

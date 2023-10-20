@@ -11,66 +11,64 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
-	"github.com/hashicorp/terraform-provider-azuread/internal/validate"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func customDirectoryRoleResource() *schema.Resource {
-	return &schema.Resource{
+func customDirectoryRoleResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: customDirectoryRoleResourceCreate,
 		UpdateContext: customDirectoryRoleResourceUpdate,
 		ReadContext:   customDirectoryRoleResourceRead,
 		DeleteContext: customDirectoryRoleResourceDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+		Timeouts: &pluginsdk.ResourceTimeout{
+			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Update: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
 				Description:      "The display name of the custom directory role",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.NoEmptyStrings,
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
 			"enabled": {
 				Description: "Indicates whether the role is enabled for assignment",
-				Type:        schema.TypeBool,
+				Type:        pluginsdk.TypeBool,
 				Required:    true,
 			},
 
 			"permissions": {
 				Description: "List of permissions that are included in the custom directory role",
-				Type:        schema.TypeSet,
+				Type:        pluginsdk.TypeSet,
 				Required:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
+				Elem: &pluginsdk.Resource{
+					Schema: map[string]*pluginsdk.Schema{
 						"allowed_resource_actions": {
 							Description: "Set of tasks that can be performed on a resource",
-							Type:        schema.TypeSet,
+							Type:        pluginsdk.TypeSet,
 							Required:    true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: validate.NoEmptyStrings,
+							Elem: &pluginsdk.Schema{
+								Type:             pluginsdk.TypeString,
+								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 							},
 						},
 					},
@@ -79,23 +77,23 @@ func customDirectoryRoleResource() *schema.Resource {
 
 			"version": {
 				Description:      "The version of the role definition.",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Required:         true,
-				ValidateDiagFunc: validate.ValidateDiag(validation.StringLenBetween(1, 128)),
+				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(1, 128)),
 			},
 
 			"description": {
 				Description: "The description of the custom directory role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Optional:    true,
 			},
 
 			"template_id": {
 				Description:      "Custom template identifier that is typically used if one needs an identifier to be the same across different directories.",
-				Type:             schema.TypeString,
+				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: validate.UUID,
+				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 
 				// The template ID _can_ technically be changed but doing so mutates the role ID - essentially
 				// causing the equivalent of a ForceNew by the API :/
@@ -104,25 +102,25 @@ func customDirectoryRoleResource() *schema.Resource {
 
 			"object_id": {
 				Description: "The object ID of the directory role",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func customDirectoryRoleResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func customDirectoryRoleResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleDefinitionsClient
 
 	displayName := d.Get("display_name").(string)
 
 	properties := msgraph.UnifiedRoleDefinition{
-		Description:     utils.NullableString(d.Get("description").(string)),
-		DisplayName:     utils.String(displayName),
-		IsEnabled:       utils.Bool(d.Get("enabled").(bool)),
-		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*schema.Set).List()),
-		TemplateId:      utils.String(d.Get("template_id").(string)),
-		Version:         utils.String(d.Get("version").(string)),
+		Description:     tf.NullableString(d.Get("description").(string)),
+		DisplayName:     pointer.To(displayName),
+		IsEnabled:       pointer.To(d.Get("enabled").(bool)),
+		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*pluginsdk.Set).List()),
+		TemplateId:      pointer.To(d.Get("template_id").(string)),
+		Version:         pointer.To(d.Get("version").(string)),
 	}
 
 	role, _, err := client.Create(ctx, properties)
@@ -139,7 +137,7 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *schema.ResourceDa
 	return customDirectoryRoleResourceRead(ctx, d, meta)
 }
 
-func customDirectoryRoleResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleDefinitionsClient
 	roleId := d.Id()
 
@@ -149,12 +147,12 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *schema.ResourceDa
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: &roleId,
 		},
-		Description:     utils.NullableString(d.Get("description").(string)),
-		DisplayName:     utils.String(displayName),
-		IsEnabled:       utils.Bool(d.Get("enabled").(bool)),
-		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*schema.Set).List()),
-		TemplateId:      utils.String(d.Get("template_id").(string)),
-		Version:         utils.String(d.Get("version").(string)),
+		Description:     tf.NullableString(d.Get("description").(string)),
+		DisplayName:     pointer.To(displayName),
+		IsEnabled:       pointer.To(d.Get("enabled").(bool)),
+		RolePermissions: expandCustomRolePermissions(d.Get("permissions").(*pluginsdk.Set).List()),
+		TemplateId:      pointer.To(d.Get("template_id").(string)),
+		Version:         pointer.To(d.Get("version").(string)),
 	}
 
 	_, err := client.Update(ctx, properties)
@@ -165,7 +163,7 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *schema.ResourceDa
 	return customDirectoryRoleResourceRead(ctx, d, meta)
 }
 
-func customDirectoryRoleResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func customDirectoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleDefinitionsClient
 	roleId := d.Id()
 
@@ -193,7 +191,7 @@ func customDirectoryRoleResourceRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func customDirectoryRoleResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func customDirectoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.RoleDefinitionsClient
 	roleId := d.Id()
 

@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 run:
-  deadline: 30m10s
+  timeout: 20m
   modules-download-mode: vendor
+  skip-files:
+    - "internal/services/.*/.*_gen.go$"
 
 issues:
   max-per-linter: 0
@@ -12,30 +14,29 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
+    - asciicheck
+    - bidichk
     - errcheck
+    - gocritic
     - gofmt
     - goimports
     - gosimple
     - govet
     - ineffassign
-    - interfacer
-    - nakedret
     - misspell
+    - nakedret
     - prealloc
+    - reassign
     - staticcheck
-    - structcheck
     - typecheck
-    - unused
-    - unparam
     - unconvert
-    - varcheck
+    - unparam
+    - unused
     - vet
     - vetshadow
-    - whitespace
 
 linters-settings:
   errcheck:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set|Clear,fmt:.*,io:Close
-  goimports:
-    local-prefixes: github.com/hashicorp/terraform-provider-azuread/azuread
+  nakedret:
+    max-func-lines: 40

@@ -6,7 +6,6 @@ package directoryroles_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,7 +16,7 @@ func TestAccDirectoryRolesDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_directory_roles", "test")
 	r := DirectoryRolesDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.basic(),
 			Check:  r.testCheckFunc(data),
@@ -25,8 +24,8 @@ func TestAccDirectoryRolesDataSource_basic(t *testing.T) {
 	})
 }
 
-func (DirectoryRolesDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...resource.TestCheckFunc) resource.TestCheckFunc {
-	checks := []resource.TestCheckFunc{
+func (DirectoryRolesDataSource) testCheckFunc(data acceptance.TestData, additionalChecks ...acceptance.TestCheckFunc) acceptance.TestCheckFunc {
+	checks := []acceptance.TestCheckFunc{
 		check.That(data.ResourceName).Key("roles.0.description").Exists(),
 		check.That(data.ResourceName).Key("roles.0.display_name").Exists(),
 		check.That(data.ResourceName).Key("roles.0.object_id").Exists(),
@@ -35,7 +34,7 @@ func (DirectoryRolesDataSource) testCheckFunc(data acceptance.TestData, addition
 		check.That(data.ResourceName).Key("template_ids.#").Exists(),
 	}
 	checks = append(checks, additionalChecks...)
-	return resource.ComposeTestCheckFunc(checks...)
+	return acceptance.ComposeTestCheckFunc(checks...)
 }
 
 func (DirectoryRolesDataSource) basic() string {

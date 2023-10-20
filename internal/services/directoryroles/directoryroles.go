@@ -4,8 +4,8 @@
 package directoryroles
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -20,7 +20,7 @@ func expandCustomRolePermissions(in []interface{}) *[]msgraph.UnifiedRolePermiss
 
 		var allowedResourceActions *[]string
 		if v, ok := perm["allowed_resource_actions"]; ok {
-			allowedResourceActions = tf.ExpandStringSlicePtr(v.(*schema.Set).List())
+			allowedResourceActions = tf.ExpandStringSlicePtr(v.(*pluginsdk.Set).List())
 		}
 
 		result = append(result, msgraph.UnifiedRolePermission{

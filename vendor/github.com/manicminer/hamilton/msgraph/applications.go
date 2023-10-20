@@ -275,6 +275,50 @@ func (c *ApplicationsClient) RestoreDeleted(ctx context.Context, id string) (*Ap
 	return &restoredApplication, status, nil
 }
 
+// SetFallbackPublicClient amends the manifest of an existing Application.
+func (c *ApplicationsClient) SetFallbackPublicClient(ctx context.Context, id string, fallbackPublicClient *bool) (int, error) {
+	var status int
+
+	application := struct {
+		DirectoryObject
+		IsFallbackPublicClient *bool `json:"isFallbackPublicClient"`
+	}{
+		DirectoryObject: DirectoryObject{
+			Id: &id,
+		},
+		IsFallbackPublicClient: fallbackPublicClient,
+	}
+
+	body, err := json.Marshal(application)
+	if err != nil {
+		return status, fmt.Errorf("json.Marshal(): %v", err)
+	}
+
+	checkApplicationConsistency := func(resp *http.Response, o *odata.OData) bool {
+		if resp == nil {
+			return false
+		}
+		if resp.StatusCode == http.StatusNotFound {
+			return true
+		}
+		return false
+	}
+
+	_, status, _, err = c.BaseClient.Patch(ctx, PatchHttpRequestInput{
+		Body:                   body,
+		ConsistencyFailureFunc: checkApplicationConsistency,
+		ValidStatusCodes:       []int{http.StatusNoContent},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/applications/%s", *application.ID()),
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("ApplicationsClient.BaseClient.Patch(): %v", err)
+	}
+
+	return status, nil
+}
+
 // AddPassword appends a new password credential to an Application.
 func (c *ApplicationsClient) AddPassword(ctx context.Context, applicationId string, passwordCredential PasswordCredential) (*PasswordCredential, int, error) {
 	var status int

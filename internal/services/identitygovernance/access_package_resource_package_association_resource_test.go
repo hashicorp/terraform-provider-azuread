@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type AccessPackageResourcePackageAssociationResource struct{}
@@ -24,11 +23,11 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_package_association", "test")
 	r := AccessPackageResourcePackageAssociationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config:  r.complete(data),
 			Destroy: false,
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -49,13 +48,13 @@ func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Contex
 	_, status, err := client.Get(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
 		return nil, fmt.Errorf("failed to retrieve access package resource association with ID %q: %+v", id.ID(), err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.TestData) string {

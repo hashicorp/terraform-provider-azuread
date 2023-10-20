@@ -6,7 +6,6 @@ package identitygovernance_test
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 )
@@ -17,10 +16,10 @@ func TestAccAccessPackageCatalogRoleDataSource_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_access_package_catalog_role", "test")
 	r := AccessPackageCatalogRoleDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("display_name").Exists(),
 				check.That(data.ResourceName).Key("template_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),

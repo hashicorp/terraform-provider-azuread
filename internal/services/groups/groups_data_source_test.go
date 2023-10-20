@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -22,10 +21,10 @@ func TestAccGroupsDataSource_byDisplayNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 	r := GroupsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byDisplayNames(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
@@ -37,10 +36,10 @@ func TestAccGroupsDataSource_byDisplayNamesIgnoreMissing(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 	r := GroupsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byDisplayNamesIgnoreMissing(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
@@ -53,10 +52,10 @@ func TestAccGroupsDataSource_byDisplayNamePrefix(t *testing.T) {
 	r := GroupsDataSource{}
 	moreThanZero := regexp.MustCompile("^[1-9][0-9]*$")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byDisplayNamePrefix(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").MatchesRegex(moreThanZero),
 				check.That(data.ResourceName).Key("object_ids.#").MatchesRegex(moreThanZero),
 			),
@@ -68,10 +67,10 @@ func TestAccGroupsDataSource_byObjectIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 	r := GroupsDataSource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.byObjectIds(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
 			),
@@ -82,10 +81,10 @@ func TestAccGroupsDataSource_byObjectIds(t *testing.T) {
 func TestAccGroupsDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.noNames(),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").HasValue("0"),
 				check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
 			),
@@ -96,10 +95,10 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 func TestAccGroupsDataSource_returnAll(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.returnAll(),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 			),
@@ -110,10 +109,10 @@ func TestAccGroupsDataSource_returnAll(t *testing.T) {
 func TestAccGroupsDataSource_returnAllMailEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.returnAllMailEnabled(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlyMailEnabledGroups()),
@@ -125,10 +124,10 @@ func TestAccGroupsDataSource_returnAllMailEnabled(t *testing.T) {
 func TestAccGroupsDataSource_returnAllSecurityEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.returnAllSecurityEnabled(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlySecurityEnabledGroups()),
@@ -140,10 +139,10 @@ func TestAccGroupsDataSource_returnAllSecurityEnabled(t *testing.T) {
 func TestAccGroupsDataSource_returnAllMailNotSecurityEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.returnAllMailNotSecurityEnabled(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlyMailEnabledGroupsNotSecurityEnabledGroups()),
@@ -155,10 +154,10 @@ func TestAccGroupsDataSource_returnAllMailNotSecurityEnabled(t *testing.T) {
 func TestAccGroupsDataSource_returnAllSecurityNotMailEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: GroupsDataSource{}.returnAllSecurityNotMailEnabled(data),
-			Check: resource.ComposeAggregateTestCheckFunc(
+			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids").ValidatesWith(testCheckHasOnlySecurityEnabledGroupsNotMailEnabledGroups()),

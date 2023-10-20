@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type AccessPackageResourceCatalogAssociationResource struct{}
@@ -24,10 +23,10 @@ func TestAccAccessPackageResourceCatalogAssociation_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_catalog_association", "test")
 	r := AccessPackageResourceCatalogAssociationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -39,10 +38,10 @@ func TestAccAccessPackageResourceCatalogAssociation_requiresImport(t *testing.T)
 	data := acceptance.BuildTestData(t, "azuread_access_package_resource_catalog_association", "test")
 	r := AccessPackageResourceCatalogAssociationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -63,13 +62,13 @@ func (r AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Cont
 	_, status, err := client.Get(ctx, id.CatalogId, id.OriginId)
 	if err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 
 		return nil, fmt.Errorf("failed to retrieve access package catalog association with ID %q: %+v", id.ID(), err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (r AccessPackageResourceCatalogAssociationResource) complete(data acceptance.TestData) string {

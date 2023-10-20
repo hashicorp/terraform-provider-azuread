@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type InvitationResource struct{}
@@ -24,10 +23,10 @@ func TestAccInvitation_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("redeem_url").Exists(),
 				check.That(data.ResourceName).Key("redirect_url").HasValue("https://portal.azure.com"),
@@ -43,10 +42,10 @@ func TestAccInvitation_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.member(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("redeem_url").Exists(),
 				check.That(data.ResourceName).Key("redirect_url").HasValue("https://portal.azure.com"),
@@ -62,10 +61,10 @@ func TestAccInvitation_message(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.withMessage(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("redeem_url").Exists(),
 				check.That(data.ResourceName).Key("redirect_url").HasValue("https://portal.azure.com"),
@@ -83,10 +82,10 @@ func TestAccInvitation_messageWithCustomizedBody(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.withMessageHavingCustomizedBody(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("redeem_url").Exists(),
 				check.That(data.ResourceName).Key("redirect_url").HasValue("https://portal.azure.com"),
@@ -107,10 +106,10 @@ func TestAccInvitation_messageWithLanguage(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.withMessageHavingLanguage(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("redeem_url").Exists(),
 				check.That(data.ResourceName).Key("redirect_url").HasValue("https://portal.azure.com"),
@@ -130,10 +129,10 @@ func TestAccInvitation_withGroupMembership(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", fmt.Sprintf("test.%d", count-1))
 	r := InvitationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.withGroupMembership(data, count),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -155,7 +154,7 @@ func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client,
 		return nil, fmt.Errorf("failed to retrieve invited user with object ID %q: %+v", userID, err)
 	}
 
-	return utils.Bool(user.ID() != nil && *user.ID() == userID), nil
+	return pointer.To(user.ID() != nil && *user.ID() == userID), nil
 }
 
 func (InvitationResource) basic(data acceptance.TestData) string {

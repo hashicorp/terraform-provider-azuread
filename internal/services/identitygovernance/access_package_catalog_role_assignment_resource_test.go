@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
 )
 
 type AccessPackageCatalogRoleAssignmentResource struct{}
@@ -24,10 +23,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_group(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.group(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -42,10 +41,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_servicePrincipal(t *testi
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.servicePrincipal(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -60,10 +59,10 @@ func TestAccAccessPackageCatalogRoleAssignmentResource_user(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_access_package_catalog_role_assignment", "test")
 	r := AccessPackageCatalogRoleAssignmentResource{}
 
-	data.DataSourceTest(t, []resource.TestStep{
+	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config: r.user(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("catalog_id").IsUuid(),
 				check.That(data.ResourceName).Key("principal_object_id").IsUuid(),
@@ -81,12 +80,12 @@ func (r AccessPackageCatalogRoleAssignmentResource) Exists(ctx context.Context, 
 
 	if _, status, err := client.Get(ctx, state.ID, odata.Query{}); err != nil {
 		if status == http.StatusNotFound {
-			return utils.Bool(false), nil
+			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve directory role assignment %q: %+v", state.ID, err)
 	}
 
-	return utils.Bool(true), nil
+	return pointer.To(true), nil
 }
 
 func (AccessPackageCatalogRoleAssignmentResource) group(data acceptance.TestData) string {

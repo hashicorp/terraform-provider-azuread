@@ -9,55 +9,54 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-func claimsMappingPolicyResource() *schema.Resource {
-	return &schema.Resource{
+func claimsMappingPolicyResource() *pluginsdk.Resource {
+	return &pluginsdk.Resource{
 		CreateContext: claimsMappingPolicyResourceCreate,
 		ReadContext:   claimsMappingPolicyResourceRead,
 		UpdateContext: claimsMappingPolicyResourceUpdate,
 		DeleteContext: claimsMappingPolicyResourceDelete,
 
-		Importer: tf.ValidateResourceIDPriorToImport(func(id string) error {
+		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
 			if _, err := uuid.ParseUUID(id); err != nil {
 				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
 			}
 			return nil
 		}),
 
-		Schema: map[string]*schema.Schema{
+		Schema: map[string]*pluginsdk.Schema{
 			"definition": {
 				Description: "A string collection containing a JSON string that defines the rules and settings for this policy",
-				Type:        schema.TypeList,
+				Type:        pluginsdk.TypeList,
 				Required:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &pluginsdk.Schema{
+					Type: pluginsdk.TypeString,
 				},
 			},
 
 			"display_name": {
 				Description: "Display name for this policy",
-				Type:        schema.TypeString,
+				Type:        pluginsdk.TypeString,
 				Required:    true,
 			},
 		},
 	}
 }
 
-func claimsMappingPolicyResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func claimsMappingPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
 
 	claimsMappingPolicy := msgraph.ClaimsMappingPolicy{
 		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: utils.String(d.Get("display_name").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
 	}
 	policy, _, err := client.Create(ctx, claimsMappingPolicy)
 	if err != nil {
@@ -73,7 +72,7 @@ func claimsMappingPolicyResourceCreate(ctx context.Context, d *schema.ResourceDa
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
 }
 
-func claimsMappingPolicyResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func claimsMappingPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
 	objectId := d.Id()
 
@@ -94,7 +93,7 @@ func claimsMappingPolicyResourceRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func claimsMappingPolicyResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
 	objectId := d.Id()
 
@@ -103,7 +102,7 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *schema.ResourceDa
 			Id: &objectId,
 		},
 		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: utils.String(d.Get("display_name").(string)),
+		DisplayName: pointer.To(d.Get("display_name").(string)),
 	}
 	_, err := client.Update(ctx, claimsMappingPolicy)
 	if err != nil {
@@ -113,7 +112,7 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *schema.ResourceDa
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
 }
 
-func claimsMappingPolicyResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func claimsMappingPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
 	objectId := d.Id()
 

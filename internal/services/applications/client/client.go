@@ -10,6 +10,7 @@ import (
 
 type Client struct {
 	ApplicationsClient         *msgraph.ApplicationsClient
+	ApplicationsClientBeta     *msgraph.ApplicationsClient
 	ApplicationTemplatesClient *msgraph.ApplicationTemplatesClient
 	DirectoryObjectsClient     *msgraph.DirectoryObjectsClient
 }
@@ -18,8 +19,11 @@ func NewClient(o *common.ClientOptions) *Client {
 	applicationsClient := msgraph.NewApplicationsClient()
 	o.ConfigureClient(&applicationsClient.BaseClient)
 
+	applicationsClientBeta := msgraph.NewApplicationsClient()
+	o.ConfigureClient(&applicationsClientBeta.BaseClient)
+
 	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
-	applicationsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	applicationsClientBeta.BaseClient.ApiVersion = msgraph.VersionBeta
 
 	applicationTemplatesClient := msgraph.NewApplicationTemplatesClient()
 	o.ConfigureClient(&applicationTemplatesClient.BaseClient)
@@ -29,6 +33,7 @@ func NewClient(o *common.ClientOptions) *Client {
 
 	return &Client{
 		ApplicationsClient:         applicationsClient,
+		ApplicationsClientBeta:     applicationsClientBeta,
 		ApplicationTemplatesClient: applicationTemplatesClient,
 		DirectoryObjectsClient:     directoryObjectsClient,
 	}

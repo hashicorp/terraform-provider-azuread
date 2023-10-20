@@ -10,13 +10,13 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/utils"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationResource struct{}
@@ -25,12 +25,13 @@ func TestAccApplication_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
@@ -43,12 +44,13 @@ func TestAccApplication_basicFromTemplate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basicFromTemplate(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
@@ -62,12 +64,13 @@ func TestAccApplication_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -79,12 +82,13 @@ func TestAccApplication_completeFromTemplate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.completeFromTemplate(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
@@ -99,30 +103,33 @@ func TestAccApplication_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.complete(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("application_id").Exists(),
+				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
 		},
@@ -138,10 +145,10 @@ func TestAccApplication_appRoles(t *testing.T) {
 		data.UUID(),
 	}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("0"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
@@ -150,7 +157,7 @@ func TestAccApplication_appRoles(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.appRoleNoValue(data, roleIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
@@ -159,7 +166,7 @@ func TestAccApplication_appRoles(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.appRole(data, roleIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
@@ -168,7 +175,7 @@ func TestAccApplication_appRoles(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.appRolesUpdate(data, roleIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("2"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
@@ -177,7 +184,7 @@ func TestAccApplication_appRoles(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("app_role.#").HasValue("0"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("0"),
@@ -191,10 +198,10 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsIdsUnknown(t *testing.
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.duplicateAppRolesOauth2PermissionsIdsUnknown(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
@@ -208,7 +215,7 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsValues(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config:      r.duplicateAppRolesOauth2PermissionsValues(data),
 			ExpectError: regexp.MustCompile("validation failed: duplicate value found:"),
@@ -220,10 +227,10 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWith
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithCommonMetadata(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).Key("app_role.#").HasValue("1"),
 				check.That(data.ResourceName).Key("app_role_ids.%").HasValue("1"),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("1"),
@@ -237,7 +244,7 @@ func TestAccApplication_duplicateAppRolesOauth2PermissionsMatchingIdAndValueWith
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config:      r.duplicateAppRolesOauth2PermissionsMatchingIdAndValueWithMismatchingMetadata(data),
 			ExpectError: regexp.MustCompile("validation failed: The following values must match for the"),
@@ -249,24 +256,24 @@ func TestAccApplication_groupMembershipClaimsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.withGroupMembershipClaims(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -283,10 +290,10 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.UUID(),
 	}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("0"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
@@ -295,7 +302,7 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopes(data, scopeIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("2"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
@@ -304,7 +311,7 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopesUpdate(data, scopeIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("3"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("3"),
@@ -313,7 +320,7 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopes(data, scopeIDs),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("2"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
@@ -322,7 +329,7 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("api.0.oauth2_permission_scope.#").HasValue("0"),
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
@@ -336,10 +343,10 @@ func TestAccApplication_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -347,7 +354,7 @@ func TestAccApplication_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.singleOwner(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
@@ -355,7 +362,7 @@ func TestAccApplication_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -363,7 +370,7 @@ func TestAccApplication_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.singleOwner(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("1"),
 			),
@@ -371,7 +378,7 @@ func TestAccApplication_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.threeOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("3"),
 			),
@@ -379,7 +386,7 @@ func TestAccApplication_owners(t *testing.T) {
 		data.ImportStep(),
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -392,10 +399,10 @@ func TestAccApplication_createWithNoOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.noOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
@@ -408,10 +415,10 @@ func TestAccApplication_manyOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.manyOwners(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("owners.#").HasValue("45"),
 			),
@@ -424,10 +431,10 @@ func TestAccApplication_preventDuplicateNamesPass(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.preventDuplicateNamesPass(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -439,7 +446,7 @@ func TestAccApplication_preventDuplicateNamesFail(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		data.RequiresImportErrorStep(r.preventDuplicateNamesFail(data)),
 	})
 }
@@ -454,17 +461,17 @@ func TestAccApplication_related(t *testing.T) {
 		data.UUID(),
 	}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.related(data, uuids),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.relatedUpdate(data, uuids),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -476,10 +483,10 @@ func TestAccApplication_featureTags(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -491,66 +498,66 @@ func TestAccApplication_featureTagsUpdate(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.noFeatureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.tags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.noFeatureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.featureTags(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -562,24 +569,24 @@ func TestAccApplication_logo(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application", "test")
 	r := ApplicationResource{}
 
-	data.ResourceTest(t, r, []resource.TestStep{
+	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.logo(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep("logo"),
 		{
 			Config: r.basic(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
 		{
 			Config: r.logo(data),
-			Check: resource.ComposeTestCheckFunc(
+			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
@@ -588,17 +595,24 @@ func TestAccApplication_logo(t *testing.T) {
 }
 
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
+	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
-	app, status, err := client.Get(ctx, state.ID, odata.Query{})
+
+	id, err := parse.ParseApplicationID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	app, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", state.ID)
+			return nil, fmt.Errorf("%s does not exist", id)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
-	return utils.Bool(app.ID() != nil && *app.ID() == state.ID), nil
+
+	return pointer.To(app.ID() != nil && *app.ID() == id.ApplicationId), nil
 }
 
 func (ApplicationResource) basic(data acceptance.TestData) string {
@@ -686,8 +700,8 @@ resource "azuread_application" "test" {
     requested_access_token_version = 2
 
     known_client_applications = [
-      azuread_application.known1.application_id,
-      azuread_application.known2.application_id,
+      azuread_application.known1.client_id,
+      azuread_application.known2.client_id,
     ]
 
     oauth2_permission_scope {
@@ -871,8 +885,8 @@ resource "azuread_application" "test" {
     requested_access_token_version = 2
 
     known_client_applications = [
-      azuread_application.known1.application_id,
-      azuread_application.known2.application_id,
+      azuread_application.known1.client_id,
+      azuread_application.known2.client_id,
     ]
 
     oauth2_permission_scope {
@@ -1179,7 +1193,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-related-%[1]d"
 
   required_resource_access {
-    resource_app_id = azuread_application.service.application_id
+    resource_app_id = azuread_application.service.client_id
 
     resource_access {
       id   = azuread_application.service.app_role_ids["user"]
@@ -1247,7 +1261,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-related-%[1]d"
 
   required_resource_access {
-    resource_app_id = azuread_application.service.application_id
+    resource_app_id = azuread_application.service.client_id
 
     resource_access {
       id   = azuread_application.service.app_role_ids["admin"]
