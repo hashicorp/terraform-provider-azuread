@@ -30,12 +30,11 @@ output "application_object_id" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional, Deprecated) Specifies the Client ID of the application.
 * `client_id` - (Optional) Specifies the Client ID of the application.
 * `display_name` - (Optional) Specifies the display name of the application.
 * `object_id` - (Optional) Specifies the Object ID of the application.
 
-~> One of `client_id`, `application_id`, `display_name`, or `object_id` must be specified.
+~> One of `client_id`, `display_name`, or `object_id` must be specified.
 
 ## Attributes Reference
 
@@ -44,7 +43,6 @@ The following attributes are exported:
 * `api` - An `api` block as documented below.
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `app_roles` - A collection of `app_role` blocks as documented below. For more information see [official documentation on Application Roles](https://docs.microsoft.com/en-us/azure/architecture/multitenant-identity/app-roles).
-* `application_id` - (Deprecated) The Client ID for the application.
 * `client_id` - The Client ID for the application.
 * `description` - A description of the application, as shown to end users.
 * `device_only_auth_enabled` - Specifies whether this application supports device authentication without a user.

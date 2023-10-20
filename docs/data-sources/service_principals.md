@@ -55,14 +55,13 @@ data "azuread_service_principals" "example" {
 
 The following arguments are supported:
 
-* `application_ids` - (Optional, Deprecated) A list of client IDs of the applications associated with the service principals.
 * `client_ids` - (Optional) A list of client IDs of the applications associated with the service principals.
 * `display_names` - (Optional) A list of display names of the applications associated with the service principals.
 * `ignore_missing` - (Optional) Ignore missing service principals and return all service principals that are found. The data source will still fail if no service principals are found. Defaults to false.
 * `object_ids` - (Optional) The object IDs of the service principals.
 * `return_all` - (Optional) When `true`, the data source will return all service principals. Cannot be used with `ignore_missing`. Defaults to false.
 
-~> Either `return_all`, or one of `client_ids`, `application_ids`, `display_names` or `object_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
+~> Either `return_all`, or one of `client_ids`, `display_names` or `object_ids` must be specified. These _may_ be specified as an empty list, in which case no results will be returned.
 
 ## Attributes Reference
 
@@ -80,7 +79,6 @@ The following attributes are exported:
 
 * `account_enabled` - Whether the service principal account is enabled.
 * `app_role_assignment_required` - Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application.
-* `application_id` - (Deprecated) The client ID of the application associated with this service principal.
 * `application_tenant_id` - The tenant ID where the associated application is registered.
 * `client_ids` - The client ID of the application associated with this service principal.
 * `display_name` - The display name of the application associated with this service principal.

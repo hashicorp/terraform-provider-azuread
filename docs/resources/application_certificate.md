@@ -120,11 +120,7 @@ resource "azuread_application_certificate" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional) The resource ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
-* `application_object_id` - (Optional, Deprecated) The object ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
-
-~> One of `application_id` or `application_object_id` must be specified.
-
+* `application_id` - (Required) The resource ID of the application for which this certificate should be created. Changing this field forces a new resource to be created.
 * `encoding` - (Optional) Specifies the encoding used for the supplied certificate data. Must be one of `pem`, `base64` or `hex`. Defaults to `pem`.
 
 -> **Tip for Azure Key Vault** The `hex` encoding option is useful for consuming certificate data from the [azurerm_key_vault_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_certificate) resource.

@@ -64,16 +64,8 @@ resource "azuread_application_pre_authorized" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional) The resource ID of the application for which permissions are being authorized. Changing this field forces a new resource to be created.
-* `application_object_id` - (Optional, Deprecated) The object ID of the application for which permissions are being authorized. Changing this field forces a new resource to be created.
-
-~> One of `application_id` or `application_object_id` must be specified.
-
-* `authorized_app_id` - (Optional, Deprecated) The client ID of the application being authorized. Changing this field forces a new resource to be created.
-* `authorized_client_id` - (Optional) The client ID of the application being authorized. Changing this field forces a new resource to be created.
-
-~> One of `authorized_client_id` or `authorized_app_id` must be specified.
-
+* `application_id` - (Required) The resource ID of the application for which permissions are being authorized. Changing this field forces a new resource to be created.
+* `authorized_client_id` - (Required) The client ID of the application being authorized. Changing this field forces a new resource to be created.
 * `permission_ids` - (Required) A set of permission scope IDs required by the authorized application.
 
 ## Attributes Reference

@@ -37,11 +37,7 @@ resource "azuread_application_federated_identity_credential" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Optional) The resource ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
-* `application_object_id` - (Optional, Deprecated) The object ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
-
-~> One of `application_id` or `application_object_id` must be specified.
-
+* `application_id` - (Required) The resource ID of the application for which this federated identity credential should be created. Changing this field forces a new resource to be created.
 * `audiences` - (Required) List of audiences that can appear in the external token. This specifies what should be accepted in the `aud` claim of incoming tokens.
 * `description` - (Optional) A description for the federated identity credential.
 * `display_name` - (Required) A unique display name for the federated identity credential. Changing this forces a new resource to be created.
