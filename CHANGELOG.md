@@ -1,38 +1,38 @@
-## 2.44.0 (Unreleased)
+## 2.44.0 (October 20, 2023)
 
-* Developer Note: the Typed Resource SDK, as also used in the AzureRM provider, is now the preferred way of introducing new resources [GH-1188]
+* Developer Note: the Typed Resource SDK, as also used in the AzureRM provider, is now the preferred way of introducing new resources ([#1188](https://github.com/hashicorp/terraform-provider-azuread/issues/1188))
 
 FEATURES:
 
-* **New Resource:** `azuread_application_api_access` [GH-1214]
-* **New Resource:** `azuread_application_app_role` [GH-1214]
-* **New Resource:** `azuread_application_fallback_public_client` [GH-1214]
-* **New Resource:** `azuread_application_from_template` [GH-1214]
-* **New Resource:** `azuread_application_identifier_uri` [GH-1214]
-* **New Resource:** `azuread_application_known_clients` [GH-1214]
-* **New Resource:** `azuread_application_owner` [GH-1214]
-* **New Resource:** `azuread_application_permission_scope [GH-1214]`
-* **New Resource:** `azuread_application_redirect_uris` [GH-1214]
-* **New Resource:** `azuread_application_registration` [GH-1214]
-* **New Resource:** `azuread_authentication_strength_policy` [GH-1171]
+* **New Resource:** `azuread_application_api_access` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_app_role` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_fallback_public_client` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_from_template` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_identifier_uri` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_known_clients` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_owner` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_permission_scope ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))`
+* **New Resource:** `azuread_application_redirect_uris` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_application_registration` ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* **New Resource:** `azuread_authentication_strength_policy` ([#1171](https://github.com/hashicorp/terraform-provider-azuread/issues/1171))
 
 ENHANCEMENTS:
 
-* `data.azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute [GH-1214]
-* `data.azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property [GH-1214]
-* `data.azuread_service_principals` - support for the `client_ids` property, deprecate the `application_ids` property [GH-1214]
-* `data.azuread_service_principals` - export the `client_id` attribute in the `service_principals` block, deprecate the `application_id` attribute [GH-1214]
-* `azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute [GH-1214]
-* `azuread_application_federated_identity_credential` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
-* `azuread_application_certificate` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
-* `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
-* `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property [GH-1214]
-* `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property [GH-1214]
+* `data.azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `data.azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `data.azuread_service_principals` - support for the `client_ids` property, deprecate the `application_ids` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `data.azuread_service_principals` - export the `client_id` attribute in the `service_principals` block, deprecate the `application_id` attribute ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_application` - export the `client_id` attribute, deprecate the `application_id` attribute ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_application_federated_identity_credential` - support for the `application_id` property, deprecate the `application_object_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_application_certificate` - support for the `application_id` property, deprecate the `application_object_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_application_password` - support for the `application_id` property, deprecate the `application_object_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_application_pre_authorized` - support for the `application_id` property, deprecate the `application_object_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
+* `azuread_service_principal` - support for the `client_id` property, deprecate the `application_id` property ([#1214](https://github.com/hashicorp/terraform-provider-azuread/issues/1214))
 * `azuread_conditional_access_policy` - support for the `authentication_strength_policy_id` property in the `grant_controls` block [GH_1171]
 
 BUG FIXES:
 
-* `azuread_group_member` - resolve a bug when refreshing state if the group is missing [GH-1198]
+* `azuread_group_member` - resolve a bug when refreshing state if the group is missing ([#1198](https://github.com/hashicorp/terraform-provider-azuread/issues/1198))
 
 ## 2.43.0 (September 22, 2023)
 
