@@ -1,3 +1,12 @@
+## 2.44.1 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application_certificate` - work around an unexpected diff with the `application_object_id` property [GH-1221]
+* `azuread_application_federated_identity_credential` - work around an unexpected diff with the `application_object_id` property [GH-1221]
+* `azuread_application_password` - work around an unexpected diff with the `application_object_id` property [GH-1221]
+* `azuread_application_pre_authorized` - work around an unexpected diff with the `application_object_id` property [GH-1221]
+
 ## 2.44.0 (October 20, 2023)
 
 * Developer Note: the Typed Resource SDK, as also used in the AzureRM provider, is now the preferred way of introducing new resources ([#1188](https://github.com/hashicorp/terraform-provider-azuread/issues/1188))
