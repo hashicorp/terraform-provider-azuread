@@ -46,7 +46,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id               = azuread_application.example.application_id
+  client_id                    = azuread_application.example.client_id
   app_role_assignment_required = false
   owners                       = [data.azuread_client_config.current.object_id]
 
@@ -63,8 +63,8 @@ resource "azuread_service_principal" "example" {
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 ```
 
@@ -81,8 +81,8 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
-  use_existing   = true
+  client_id    = azuread_application.example.client_id
+  use_existing = true
 }
 ```
 
