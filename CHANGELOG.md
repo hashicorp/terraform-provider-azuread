@@ -1,11 +1,11 @@
-## 2.44.1 (Unreleased)
+## 2.44.1 (October 23, 2023)
 
 BUG FIXES:
 
-* `azuread_application_certificate` - work around an unexpected diff with the `application_object_id` property [GH-1221]
-* `azuread_application_federated_identity_credential` - work around an unexpected diff with the `application_object_id` property [GH-1221]
-* `azuread_application_password` - work around an unexpected diff with the `application_object_id` property [GH-1221]
-* `azuread_application_pre_authorized` - work around an unexpected diff with the `application_object_id` property [GH-1221]
+* `azuread_application_certificate` - work around an unexpected diff with the `application_object_id` property ([#1221](https://github.com/hashicorp/terraform-provider-azuread/issues/1221))
+* `azuread_application_federated_identity_credential` - work around an unexpected diff with the `application_object_id` property ([#1221](https://github.com/hashicorp/terraform-provider-azuread/issues/1221))
+* `azuread_application_password` - work around an unexpected diff with the `application_object_id` property ([#1221](https://github.com/hashicorp/terraform-provider-azuread/issues/1221))
+* `azuread_application_pre_authorized` - work around an unexpected diff with the `application_object_id` property ([#1221](https://github.com/hashicorp/terraform-provider-azuread/issues/1221))
 
 ## 2.44.0 (October 20, 2023)
 
