@@ -62,6 +62,20 @@ func applicationCertificateResource() *pluginsdk.Resource {
 				ExactlyOneOf: []string{"application_id", "application_object_id"},
 				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
 				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
+				DiffSuppressFunc: func(_, oldValue, newValue string, _ *pluginsdk.ResourceData) bool {
+					// Where oldValue is a UUID (i.e. the bare object ID), and newValue is a properly formed application
+					// resource ID, we'll ignore a diff where these point to the same application resource.
+					// This maintains compatibility with configurations mixing the ID attributes, e.g.
+					//     application_object_id = azuread_application.example.id
+					if _, err := uuid.ParseUUID(oldValue); err == nil {
+						if applicationId, err := parse.ParseApplicationID(newValue); err == nil {
+							if applicationId.ApplicationId == oldValue {
+								return true
+							}
+						}
+					}
+					return false
+				},
 			},
 
 			"encoding": {
