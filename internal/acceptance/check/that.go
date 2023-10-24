@@ -48,6 +48,17 @@ func That(resourceName string) thatType {
 	}
 }
 
+// DoesNotExistInAzure validates that the specified resource does not exist within Azure
+func (t thatType) DoesNotExistInAzure(testResource types.TestResource) pluginsdk.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client, err := testclient.Build(t.tenantId)
+		if err != nil {
+			return fmt.Errorf("building client: %+v", err)
+		}
+		return helpers.DoesNotExistInAzure(client, testResource, t.resourceName)(s)
+	}
+}
+
 // ExistsInAzure validates that the specified resource exists within Azure
 func (t thatType) ExistsInAzure(testResource types.TestResource) pluginsdk.TestCheckFunc {
 	return func(s *terraform.State) error {
