@@ -476,11 +476,34 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 
+						"sign_in_frequency_authentication_type": {
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Default:  msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication,
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication,
+								msgraph.ConditionalAccessAuthenticationTypeSecondaryAuthentication,
+							}, false),
+						},
+
+						"sign_in_frequency_interval": {
+							Type:     pluginsdk.TypeString,
+							Optional: true,
+							Default:  msgraph.ConditionalAccessFrequencyIntervalTimeBased,
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.ConditionalAccessFrequencyIntervalTimeBased,
+								msgraph.ConditionalAccessFrequencyIntervalEveryTime,
+							}, false),
+						},
+
 						"sign_in_frequency_period": {
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
 							RequiredWith: []string{"session_controls.0.sign_in_frequency"},
-							ValidateFunc: validation.StringInSlice([]string{"days", "hours"}, false),
+							ValidateFunc: validation.StringInSlice([]string{
+								msgraph.ConditionalAccessFrequencyTypeDays,
+								msgraph.ConditionalAccessFrequencyTypeHours,
+							}, false),
 						},
 					},
 				},
@@ -489,20 +512,20 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 	}
 }
 
-func conditionalAccessPolicyCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
-	// See https://github.com/microsoftgraph/msgraph-metadata/issues/93
-	if old, new := diff.GetChange("session_controls.0.sign_in_frequency"); old.(int) > 0 && new.(int) == 0 {
-		diff.ForceNew("session_controls.0.sign_in_frequency")
+func conditionalAccessPolicyCustomizeDiff(_ context.Context, diff *pluginsdk.ResourceDiff, _ interface{}) error {
+	// The API does not like sessionControls being set with ineffectual properties, so this additional validation complements
+	// AtLeastOneOf: []string{"grant_controls", "session_controls"} by helping to ensure that either `grant_controls` or a
+	// useful `session_controls` block has been set in the configuration.
+	var sessionControlsSetButIneffective bool
+	if diff.Get("session_controls.#").(int) == 1 && !diff.Get("session_controls.0.application_enforced_restrictions_enabled").(bool) &&
+		diff.Get("session_controls.0.cloud_app_security_policy").(string) == "" && !diff.Get("session_controls.0.disable_resilience_defaults").(bool) &&
+		diff.Get("session_controls.0.persistent_browser_mode").(string) == "" && diff.Get("session_controls.0.sign_in_frequency").(int) == 0 &&
+		diff.Get("session_controls.0.sign_in_frequency_authentication_type").(string) == msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication &&
+		diff.Get("session_controls.0.sign_in_frequency_interval").(string) == msgraph.ConditionalAccessFrequencyIntervalTimeBased {
+		sessionControlsSetButIneffective = true
 	}
-	if old, new := diff.GetChange("session_controls.0.sign_in_frequency_period"); old.(string) != "" && new.(string) == "" {
-		diff.ForceNew("session_controls.0.sign_in_frequency")
-	}
-
-	if old, new := diff.GetChange("conditions.0.devices.#"); old.(int) > 0 && new.(int) == 0 {
-		diff.ForceNew("conditions.0.devices")
-	}
-	if old, new := diff.GetChange("conditions.0.devices.0.filter.#"); old.(int) > 0 && new.(int) == 0 {
-		diff.ForceNew("conditions.0.devices.0.filter")
+	if diff.Get("grant_controls.#").(int) == 0 && sessionControlsSetButIneffective {
+		return fmt.Errorf("when specifying `session_controls` but not `grant_controls`, one of the properties in the `session_controls` block must be set to an effective value in order for session controls to work")
 	}
 
 	return nil
@@ -531,6 +554,12 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.Resour
 				suppress = false
 			}
 			if v, ok := sessionControls["sign_in_frequency"]; ok && v.(int) > 0 {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency_authentication_type"]; ok && v.(string) != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication {
+				suppress = false
+			}
+			if v, ok := sessionControls["sign_in_frequency_interval"]; ok && v.(string) != msgraph.ConditionalAccessFrequencyIntervalTimeBased {
 				suppress = false
 			}
 			if v, ok := sessionControls["sign_in_frequency_period"]; ok && v.(string) != "" {

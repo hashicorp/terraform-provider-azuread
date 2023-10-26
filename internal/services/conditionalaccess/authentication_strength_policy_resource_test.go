@@ -95,6 +95,8 @@ func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, client
 
 func (AuthenticationStrengthPolicyResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_authentication_strength_policy" "test" {
   display_name         = "acctestASP-%[1]d"
   description          = "test"
@@ -105,6 +107,8 @@ resource "azuread_authentication_strength_policy" "test" {
 
 func (AuthenticationStrengthPolicyResource) complete(data acceptance.TestData) string {
 	return fmt.Sprintf(`
+provider "azuread" {}
+
 resource "azuread_authentication_strength_policy" "test" {
   display_name = "acctestASP-%[1]d"
   description  = "test"
