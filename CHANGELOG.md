@@ -4,6 +4,15 @@ FEATURES:
 
 * **New Resource:** `azuread_application_optional_claims` [GH-1223]
 
+ENHANCEMENTS:
+
+* `azuread_conditional_access_policy` - improved plan-time validation for the `session_controls` block [GH-1229]
+* `azuread_conditional_access_policy` - support for the `sign_in_frequency_authentication_type` and `sign_in_frequency_interval` properties in the `session_controls` block [GH-1229]
+
+BUG FIXES:
+
+* `azuread_conditional_access_policy` - removing the `devices` or `session_controls` blocks will no longer force a new resource to be created [GH-1229]
+
 ## 2.44.1 (October 23, 2023)
 
 BUG FIXES:
