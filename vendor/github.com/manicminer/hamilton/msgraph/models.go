@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/manicminer/hamilton/errors"
+	"github.com/manicminer/hamilton/internal/utils"
 )
 
 type AccessPackage struct {
@@ -628,7 +629,7 @@ type ConditionalAccessConditionSet struct {
 	Applications               *ConditionalAccessApplications       `json:"applications,omitempty"`
 	ClientApplications         *ConditionalAccessClientApplications `json:"clientApplications,omitempty"`
 	ClientAppTypes             *[]ConditionalAccessClientAppType    `json:"clientAppTypes,omitempty"`
-	Devices                    *ConditionalAccessDevices            `json:"devices,omitempty"`
+	Devices                    *ConditionalAccessDevices            `json:"devices"`
 	DeviceStates               *ConditionalAccessDeviceStates       `json:"deviceStates,omitempty"`
 	Locations                  *ConditionalAccessLocations          `json:"locations"`
 	Platforms                  *ConditionalAccessPlatforms          `json:"platforms"`
@@ -693,12 +694,77 @@ type ConditionalAccessSessionControls struct {
 }
 
 type ConditionalAccessUsers struct {
-	IncludeUsers  *[]string `json:"includeUsers,omitempty"`
-	ExcludeUsers  *[]string `json:"excludeUsers,omitempty"`
-	IncludeGroups *[]string `json:"includeGroups,omitempty"`
-	ExcludeGroups *[]string `json:"excludeGroups,omitempty"`
-	IncludeRoles  *[]string `json:"includeRoles,omitempty"`
-	ExcludeRoles  *[]string `json:"excludeRoles,omitempty"`
+	IncludeUsers                 *[]string                               `json:"includeUsers,omitempty"`
+	ExcludeUsers                 *[]string                               `json:"excludeUsers,omitempty"`
+	IncludeGroups                *[]string                               `json:"includeGroups,omitempty"`
+	ExcludeGroups                *[]string                               `json:"excludeGroups,omitempty"`
+	IncludeRoles                 *[]string                               `json:"includeRoles,omitempty"`
+	ExcludeRoles                 *[]string                               `json:"excludeRoles,omitempty"`
+	IncludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"includeGuestsOrExternalUsers"`
+	ExcludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"excludeGuestsOrExternalUsers"`
+}
+
+type ConditionalAccessGuestsOrExternalUsers struct {
+	GuestOrExternalUserTypes *[]ConditionalAccessGuestOrExternalUserType `json:"-"` // see ConditionalAccessGuestsOrExternalUsers.MarshalJSON / ConditionalAccessGuestsOrExternalUsers.UnmarshalJSON
+	ExternalTenants          *ConditionalAccessExternalTenants           `json:"externalTenants,omitempty"`
+}
+
+type ConditionalAccessExternalTenants struct {
+	ODataType      *odata.Type                                     `json:"@odata.type,omitempty"`
+	MembershipKind *ConditionalAccessExternalTenantsMembershipKind `json:"membershipKind,omitempty"`
+	Members        *[]string                                       `json:"members,omitempty"`
+}
+
+func (c ConditionalAccessGuestsOrExternalUsers) MarshalJSON() ([]byte, error) {
+	var val *StringNullWhenEmpty
+	if c.GuestOrExternalUserTypes != nil {
+		theTypes := StringNullWhenEmpty(strings.Join(*c.GuestOrExternalUserTypes, ","))
+		val = &theTypes
+	}
+
+	// Local type needed to avoid recursive MarshalJSON calls
+	type conditionalAccessGuestsOrExternalUsers ConditionalAccessGuestsOrExternalUsers
+	guestOrExternalUsers := struct {
+		GuestOrExternalUserTypes *StringNullWhenEmpty `json:"guestOrExternalUserTypes,omitempty"`
+		*conditionalAccessGuestsOrExternalUsers
+	}{
+		GuestOrExternalUserTypes:               val,
+		conditionalAccessGuestsOrExternalUsers: (*conditionalAccessGuestsOrExternalUsers)(&c),
+	}
+
+	if c.ExternalTenants != nil && c.ExternalTenants.MembershipKind != nil {
+		switch *c.ExternalTenants.MembershipKind {
+		case ConditionalAccessExternalTenantsMembershipKindAll:
+			c.ExternalTenants.ODataType = utils.StringPtr("#microsoft.graph.conditionalAccessAllExternalTenants")
+		case ConditionalAccessExternalTenantsMembershipKindEnumerated:
+			c.ExternalTenants.ODataType = utils.StringPtr("#microsoft.graph.conditionalAccessEnumeratedExternalTenants")
+		}
+	}
+
+	buf, err := json.Marshal(&guestOrExternalUsers)
+	return buf, err
+}
+
+func (c *ConditionalAccessGuestsOrExternalUsers) UnmarshalJSON(data []byte) error {
+	// Local type needed to avoid recursive UnmarshalJSON calls
+	type conditionalAccessGuestsOrExternalUsers ConditionalAccessGuestsOrExternalUsers
+	guestOrExternalUsers := struct {
+		GuestOrExternalUserTypes *string `json:"guestOrExternalUserTypes"`
+		*conditionalAccessGuestsOrExternalUsers
+	}{
+		conditionalAccessGuestsOrExternalUsers: (*conditionalAccessGuestsOrExternalUsers)(c),
+	}
+	if err := json.Unmarshal(data, &guestOrExternalUsers); err != nil {
+		return err
+	}
+	if guestOrExternalUsers.GuestOrExternalUserTypes != nil {
+		var types []string
+		for _, s := range strings.Split(*guestOrExternalUsers.GuestOrExternalUserTypes, ",") {
+			types = append(types, strings.TrimSpace(s))
+		}
+		c.GuestOrExternalUserTypes = &types
+	}
+	return nil
 }
 
 type ConnectionInfo struct {
@@ -1586,9 +1652,11 @@ type SignInActivity struct {
 }
 
 type SignInFrequencySessionControl struct {
-	IsEnabled *bool   `json:"isEnabled,omitempty"`
-	Type      *string `json:"type,omitempty"`
-	Value     *int32  `json:"value,omitempty"`
+	AuthenticationType *ConditionalAccessAuthenticationType `json:"authenticationType,omitempty"`
+	FrequencyInterval  *ConditionalAccessFrequencyInterval  `json:"frequencyInterval,omitempty"`
+	IsEnabled          *bool                                `json:"isEnabled,omitempty"`
+	Type               *string                              `json:"type,omitempty"`
+	Value              *int32                               `json:"value,omitempty"`
 }
 
 type SignInReport struct {

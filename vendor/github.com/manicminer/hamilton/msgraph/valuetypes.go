@@ -319,6 +319,14 @@ const (
 	CredentialUsageSummaryPeriod1  CredentialUsageSummaryPeriod = "D1"
 )
 
+type ConditionalAccessAuthenticationType = string
+
+const (
+	ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication ConditionalAccessAuthenticationType = "primaryAndSecondaryAuthentication"
+	ConditionalAccessAuthenticationTypeSecondaryAuthentication           ConditionalAccessAuthenticationType = "secondaryAuthentication"
+	ConditionalAccessAuthenticationTypeUnknownFutureValue                ConditionalAccessAuthenticationType = "unknownFutureValue"
+)
+
 type ConditionalAccessClientAppType = string
 
 const (
@@ -372,6 +380,21 @@ const (
 	ConditionalAccessFilterModeInclude ConditionalAccessFilterMode = "include"
 )
 
+type ConditionalAccessFrequencyInterval = string
+
+const (
+	ConditionalAccessFrequencyIntervalTimeBased          ConditionalAccessFrequencyInterval = "timeBased"
+	ConditionalAccessFrequencyIntervalEveryTime          ConditionalAccessFrequencyInterval = "everyTime"
+	ConditionalAccessFrequencyIntervalUnknownFutureValue ConditionalAccessFrequencyInterval = "unknownFutureValue"
+)
+
+type ConditionalAccessFrequencyType = string
+
+const (
+	ConditionalAccessFrequencyTypeDays  ConditionalAccessFrequencyType = "days"
+	ConditionalAccessFrequencyTypeHours ConditionalAccessFrequencyType = "hours"
+)
+
 type ConditionalAccessGrantControl = string
 
 const (
@@ -402,6 +425,27 @@ const (
 	ConditionalAccessRiskLevelMedium             ConditionalAccessRiskLevel = "medium"
 	ConditionalAccessRiskLevelNone               ConditionalAccessRiskLevel = "none"
 	ConditionalAccessRiskLevelUnknownFutureValue ConditionalAccessRiskLevel = "unknownFutureValue"
+)
+
+type ConditionalAccessGuestOrExternalUserType = string
+
+const (
+	ConditionalAccessGuestOrExternalUserTypeNone                   ConditionalAccessGuestOrExternalUserType = "none"
+	ConditionalAccessGuestOrExternalUserTypeInternalGuest          ConditionalAccessGuestOrExternalUserType = "internalGuest"
+	ConditionalAccessGuestOrExternalUserTypeB2bCollaborationGuest  ConditionalAccessGuestOrExternalUserType = "b2bCollaborationGuest"
+	ConditionalAccessGuestOrExternalUserTypeB2bCollaborationMember ConditionalAccessGuestOrExternalUserType = "b2bCollaborationMember"
+	ConditionalAccessGuestOrExternalUserTypeB2bDirectConnectUser   ConditionalAccessGuestOrExternalUserType = "b2bDirectConnectUser"
+	ConditionalAccessGuestOrExternalUserTypeOtherExternalUser      ConditionalAccessGuestOrExternalUserType = "otherExternalUser"
+	ConditionalAccessGuestOrExternalUserTypeServiceProvider        ConditionalAccessGuestOrExternalUserType = "serviceProvider"
+	ConditionalAccessGuestOrExternalUserTypeUnknownFutureValue     ConditionalAccessGuestOrExternalUserType = "unknownFutureValue"
+)
+
+type ConditionalAccessExternalTenantsMembershipKind = string
+
+const (
+	ConditionalAccessExternalTenantsMembershipKindAll                ConditionalAccessExternalTenantsMembershipKind = "all"
+	ConditionalAccessExternalTenantsMembershipKindEnumerated         ConditionalAccessExternalTenantsMembershipKind = "enumerated"
+	ConditionalAccessExternalTenantsMembershipKindUnknownFutureValue ConditionalAccessExternalTenantsMembershipKind = "unknownFutureValue"
 )
 
 type ConnectedOrganizationState = string

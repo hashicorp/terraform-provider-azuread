@@ -187,7 +187,7 @@ The following arguments are supported:
 
 `devices` block supports the following:
 
-* `filter` - (Optional) A `filter` block as described below. A `filter` block can be added to an existing policy, but removing the `filter` block forces a new resource to be created.
+* `filter` - (Optional) A `filter` block as described below.
 
 ---
 
@@ -246,8 +246,10 @@ The following arguments are supported:
 * `cloud_app_security_policy` - (Optional) Enables cloud app security and specifies the cloud app security policy to use. Possible values are: `blockDownloads`, `mcasConfigured`, `monitorOnly` or `unknownFutureValue`.
 * `disable_resilience_defaults` - (Optional) Disables [resilience defaults](https://learn.microsoft.com/en-us/azure/active-directory/conditional-access/resilience-defaults). Defaults to `false`.
 * `persistent_browser_mode` - (Optional) Session control to define whether to persist cookies. Possible values are: `always` or `never`.
-* `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
-* `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified. Due to an API issue, removing this property forces a new resource to be created.
+* `sign_in_frequency` - (Optional) Number of days or hours to enforce sign-in frequency. Required when `sign_in_frequency_period` is specified.
+* `sign_in_frequency_authentication_type` - (Optional) Authentication type for enforcing sign-in frequency. Possible values are: `primaryAndSecondaryAuthentication` or `secondaryAuthentication`. Defaults to `primaryAndSecondaryAuthentication`.
+* `sign_in_frequency_interval` - (Optional) The interval to apply to sign-in frequency control. Possible values are: `timeBased` or `everyTime`. Defaults to `timeBased`.
+* `sign_in_frequency_period` - (Optional) The time period to enforce sign-in frequency. Possible values are: `hours` or `days`. Required when `sign_in_frequency_period` is specified.
 
 ---
 

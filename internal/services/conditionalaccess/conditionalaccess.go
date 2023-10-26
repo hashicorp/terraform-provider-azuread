@@ -140,12 +140,12 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 
 	applicationEnforceRestrictions := false
 	if in.ApplicationEnforcedRestrictions != nil {
-		applicationEnforceRestrictions = *in.ApplicationEnforcedRestrictions.IsEnabled
+		applicationEnforceRestrictions = pointer.From(in.ApplicationEnforcedRestrictions.IsEnabled)
 	}
 
 	cloudAppSecurity := ""
-	if in.CloudAppSecurity != nil && in.CloudAppSecurity.CloudAppSecurityType != nil {
-		cloudAppSecurity = *in.CloudAppSecurity.CloudAppSecurityType
+	if in.CloudAppSecurity != nil {
+		cloudAppSecurity = pointer.From(in.CloudAppSecurity.CloudAppSecurityType)
 	}
 
 	disableResilienceDefaults := false
@@ -154,15 +154,22 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 	}
 
 	signInFrequency := 0
+	signInFrequencyAuthenticationType := ""
+	signInFrequencyInterval := ""
 	signInFrequencyPeriod := ""
-	if in.SignInFrequency != nil && in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
-		signInFrequency = int(*in.SignInFrequency.Value)
-		signInFrequencyPeriod = *in.SignInFrequency.Type
+	if in.SignInFrequency != nil {
+		if in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
+			signInFrequency = int(*in.SignInFrequency.Value)
+			signInFrequencyPeriod = *in.SignInFrequency.Type
+		}
+
+		signInFrequencyAuthenticationType = pointer.From(in.SignInFrequency.AuthenticationType)
+		signInFrequencyInterval = pointer.From(in.SignInFrequency.FrequencyInterval)
 	}
 
 	persistentBrowserMode := ""
-	if in.PersistentBrowser != nil && in.PersistentBrowser.Mode != nil {
-		persistentBrowserMode = *in.PersistentBrowser.Mode
+	if in.PersistentBrowser != nil {
+		persistentBrowserMode = pointer.From(in.PersistentBrowser.Mode)
 	}
 
 	return []interface{}{
@@ -172,6 +179,8 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 			"disable_resilience_defaults":               disableResilienceDefaults,
 			"persistent_browser_mode":                   persistentBrowserMode,
 			"sign_in_frequency":                         signInFrequency,
+			"sign_in_frequency_authentication_type":     signInFrequencyAuthenticationType,
+			"sign_in_frequency_interval":                signInFrequencyInterval,
 			"sign_in_frequency_period":                  signInFrequencyPeriod,
 		},
 	}
@@ -448,12 +457,32 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 		}
 	}
 
-	if signInFrequency := config["sign_in_frequency"].(int); signInFrequency > 0 {
-		result.SignInFrequency = &msgraph.SignInFrequencySessionControl{
-			IsEnabled: pointer.To(true),
-			Type:      pointer.To(config["sign_in_frequency_period"].(string)),
-			Value:     pointer.To(int32(signInFrequency)),
-		}
+	signInFrequency := msgraph.SignInFrequencySessionControl{}
+	if frequencyValue := config["sign_in_frequency"].(int); frequencyValue > 0 {
+		signInFrequency.IsEnabled = pointer.To(true)
+		signInFrequency.Type = pointer.To(config["sign_in_frequency_period"].(string))
+		signInFrequency.Value = pointer.To(int32(frequencyValue))
+	}
+
+	if authenticationType, ok := config["sign_in_frequency_authentication_type"]; ok {
+		signInFrequency.AuthenticationType = pointer.To(authenticationType.(string))
+	}
+
+	if interval, ok := config["sign_in_frequency_interval"]; ok {
+		signInFrequency.FrequencyInterval = pointer.To(interval.(string))
+	}
+
+	// API returns 400 error if signInFrequency is set with all default/zero values
+	if pointer.From(signInFrequency.IsEnabled) || pointer.From(signInFrequency.FrequencyInterval) != msgraph.ConditionalAccessFrequencyIntervalTimeBased ||
+		pointer.From(signInFrequency.AuthenticationType) != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication {
+		result.SignInFrequency = &signInFrequency
+	}
+
+	// API does not accept ineffectual and sessionControls object, and it will not remove any existing sessionControls unless the entire object is set to null
+	if (result.ApplicationEnforcedRestrictions == nil || !pointer.From(result.ApplicationEnforcedRestrictions.IsEnabled)) &&
+		result.CloudAppSecurity == nil && !pointer.From(result.DisableResilienceDefaults) &&
+		result.PersistentBrowser == nil && result.SignInFrequency == nil {
+		return nil
 	}
 
 	return &result
