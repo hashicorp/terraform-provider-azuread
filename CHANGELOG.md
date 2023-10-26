@@ -1,3 +1,9 @@
+## 2.45.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `azuread_application_optional_claims` [GH-1223]
+
 ## 2.44.1 (October 23, 2023)
 
 BUG FIXES:
