@@ -340,7 +340,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Applications can be imported using their object ID, e.g.
+Applications can be imported using their object ID, in the following format.
 
 ```shell
 terraform import azuread_application.example /applications/00000000-0000-0000-0000-000000000000
