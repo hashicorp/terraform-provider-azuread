@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * `azuread_conditional_access_policy` - improved plan-time validation for the `session_controls` block [GH-1229]
 * `azuread_conditional_access_policy` - support for the `sign_in_frequency_authentication_type` and `sign_in_frequency_interval` properties in the `session_controls` block [GH-1229]
+* `azuread_conditional_access_policy` - support for the `included_guests_or_external_users` and `excluded_guests_or_external_users` blocks in he `users` block [GH-1222]
 
 BUG FIXES:
 
