@@ -1,18 +1,18 @@
-## 2.45.0 (Unreleased)
+## 2.45.0 (October 27, 2023)
 
 FEATURES:
 
-* **New Resource:** `azuread_application_optional_claims` [GH-1223]
+* **New Resource:** `azuread_application_optional_claims` ([#1223](https://github.com/hashicorp/terraform-provider-azuread/issues/1223))
 
 ENHANCEMENTS:
 
-* `azuread_conditional_access_policy` - improved plan-time validation for the `session_controls` block [GH-1229]
-* `azuread_conditional_access_policy` - support for the `sign_in_frequency_authentication_type` and `sign_in_frequency_interval` properties in the `session_controls` block [GH-1229]
-* `azuread_conditional_access_policy` - support for the `included_guests_or_external_users` and `excluded_guests_or_external_users` blocks in the `users` block [GH-1222]
+* `azuread_conditional_access_policy` - improved plan-time validation for the `session_controls` block ([#1229](https://github.com/hashicorp/terraform-provider-azuread/issues/1229))
+* `azuread_conditional_access_policy` - support for the `sign_in_frequency_authentication_type` and `sign_in_frequency_interval` properties in the `session_controls` block ([#1229](https://github.com/hashicorp/terraform-provider-azuread/issues/1229))
+* `azuread_conditional_access_policy` - support for the `included_guests_or_external_users` and `excluded_guests_or_external_users` blocks in the `users` block ([#1222](https://github.com/hashicorp/terraform-provider-azuread/issues/1222))
 
 BUG FIXES:
 
-* `azuread_conditional_access_policy` - removing the `devices` or `session_controls` blocks will no longer force a new resource to be created [GH-1229]
+* `azuread_conditional_access_policy` - removing the `devices` or `session_controls` blocks will no longer force a new resource to be created ([#1229](https://github.com/hashicorp/terraform-provider-azuread/issues/1229))
 
 ## 2.44.1 (October 23, 2023)
 
