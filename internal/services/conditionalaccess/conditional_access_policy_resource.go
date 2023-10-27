@@ -142,7 +142,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_users": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
+										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -161,7 +161,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_groups": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
+										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -180,7 +180,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_roles": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users"},
+										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -193,6 +193,109 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										},
+									},
+
+									"included_guests_or_external_users": {
+										Type:         pluginsdk.TypeList,
+										Optional:     true,
+										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
+												"guest_or_external_user_types": {
+													Type:     pluginsdk.TypeList,
+													Required: true,
+													Elem: &pluginsdk.Schema{
+														Type: pluginsdk.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															msgraph.ConditionalAccessGuestOrExternalUserTypeNone,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeInternalGuest,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bCollaborationGuest,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bCollaborationMember,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bDirectConnectUser,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeOtherExternalUser,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeServiceProvider,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeUnknownFutureValue,
+														}, false),
+													},
+												},
+												"external_tenants": {
+													Type:     pluginsdk.TypeList,
+													Optional: true,
+													Elem: &pluginsdk.Resource{
+														Schema: map[string]*pluginsdk.Schema{
+															"membership_kind": {
+																Type:     pluginsdk.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindAll,
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindEnumerated,
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindUnknownFutureValue,
+																}, false),
+															},
+															"members": {
+																Type:     pluginsdk.TypeList,
+																Optional: true,
+																Elem: &pluginsdk.Schema{
+																	Type:             pluginsdk.TypeString,
+																	ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+
+									"excluded_guests_or_external_users": {
+										Type:     pluginsdk.TypeList,
+										Optional: true,
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
+												"guest_or_external_user_types": {
+													Type:     pluginsdk.TypeList,
+													Required: true,
+													Elem: &pluginsdk.Schema{
+														Type: pluginsdk.TypeString,
+														ValidateFunc: validation.StringInSlice([]string{
+															msgraph.ConditionalAccessGuestOrExternalUserTypeNone,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeInternalGuest,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bCollaborationGuest,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bCollaborationMember,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeB2bDirectConnectUser,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeOtherExternalUser,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeServiceProvider,
+															msgraph.ConditionalAccessGuestOrExternalUserTypeUnknownFutureValue,
+														}, false),
+													},
+												},
+												"external_tenants": {
+													Type:     pluginsdk.TypeList,
+													Optional: true,
+													Elem: &pluginsdk.Resource{
+														Schema: map[string]*pluginsdk.Schema{
+															"membership_kind": {
+																Type:     pluginsdk.TypeString,
+																Required: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindAll,
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindEnumerated,
+																	msgraph.ConditionalAccessExternalTenantsMembershipKindUnknownFutureValue,
+																}, false),
+															},
+															"members": {
+																Type:     pluginsdk.TypeList,
+																Optional: true,
+																Elem: &pluginsdk.Schema{
+																	Type:             pluginsdk.TypeString,
+																	ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+																},
+															},
+														},
+													},
+												},
+											},
 										},
 									},
 								},
