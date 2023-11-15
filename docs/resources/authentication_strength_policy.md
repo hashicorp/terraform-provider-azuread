@@ -1,5 +1,5 @@
 ---
-subcategory: "Conditional Access"
+subcategory: "Policies"
 ---
 
 # Resource: azuread_authentication_strength_policy

@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package conditionalaccess
+package policies
 
 import (
 	"context"
@@ -71,7 +71,7 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 }
 
 func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
+	client := meta.(*clients.Client).Policies.AuthenticationStrengthPoliciesClient
 
 	properties := msgraph.AuthenticationStrengthPolicy{
 		DisplayName:         pointer.To(d.Get("display_name").(string)),
@@ -90,13 +90,12 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.Resour
 }
 
 func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
+	client := meta.(*clients.Client).Policies.AuthenticationStrengthPoliciesClient
 
 	properties := msgraph.AuthenticationStrengthPolicy{
 		ID:          pointer.To(d.Id()),
 		DisplayName: pointer.To(d.Get("display_name").(string)),
 		Description: pointer.To(d.Get("description").(string)),
-		// AllowedCombinations: tf.ExpandStringSlicePtr(d.Get("allowed_combinations").(*pluginsdk.Set).List()),
 	}
 
 	_, err := client.Update(ctx, properties)
@@ -116,7 +115,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 }
 
 func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
+	client := meta.(*clients.Client).Policies.AuthenticationStrengthPoliciesClient
 
 	authenticationStrengthPolicy, status, err := client.Get(ctx, d.Id(), odata.Query{})
 	if err != nil {
@@ -139,7 +138,7 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 }
 
 func authenticationStrengthPolicyDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccess.AuthenticationStrengthPoliciesClient
+	client := meta.(*clients.Client).Policies.AuthenticationStrengthPoliciesClient
 	authenticationStrengthPolicyId := d.Id()
 
 	if _, status, err := client.Get(ctx, authenticationStrengthPolicyId, odata.Query{}); err != nil {

@@ -602,10 +602,16 @@ resource "azuread_conditional_access_policy" "test" {
 
 func (ConditionalAccessPolicyResource) authenticationStrengthPolicy(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-%[1]s
+provider "azuread" {}
+
+resource "azuread_authentication_strength_policy" "test" {
+  display_name         = "acctestASP-%[1]d"
+  description          = "test"
+  allowed_combinations = ["password"]
+}
 
 resource "azuread_conditional_access_policy" "test" {
-  display_name = "acctest-CONPOLICY-%[2]d"
+  display_name = "acctest-CONPOLICY-%[1]d"
   state        = "disabled"
 
   conditions {
@@ -626,7 +632,7 @@ resource "azuread_conditional_access_policy" "test" {
     authentication_strength_policy_id = azuread_authentication_strength_policy.test.id
   }
 }
-`, AuthenticationStrengthPolicyResource{}.basic(data), data.RandomInteger)
+`, data.RandomInteger)
 }
 
 func (ConditionalAccessPolicyResource) guestsOrExternalUsersAllServiceProvidersIncluded(data acceptance.TestData) string {
