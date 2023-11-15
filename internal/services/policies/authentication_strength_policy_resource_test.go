@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package conditionalaccess_test
+package policies_test
 
 import (
 	"context"
@@ -81,7 +81,7 @@ func TestAccAuthenticationStrengthPolicy_update(t *testing.T) {
 func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	var id *string
 
-	authstrengthpolicy, status, err := client.ConditionalAccess.AuthenticationStrengthPoliciesClient.Get(ctx, state.ID, odata.Query{})
+	authstrengthpolicy, status, err := client.Policies.AuthenticationStrengthPoliciesClient.Get(ctx, state.ID, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
 			return nil, fmt.Errorf("Authentication Strength Policy with ID %q does not exist", state.ID)

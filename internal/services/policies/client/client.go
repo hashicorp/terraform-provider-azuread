@@ -9,14 +9,19 @@ import (
 )
 
 type Client struct {
-	ClaimsMappingPolicyClient *msgraph.ClaimsMappingPolicyClient
+	AuthenticationStrengthPoliciesClient *msgraph.AuthenticationStrengthPoliciesClient
+	ClaimsMappingPolicyClient            *msgraph.ClaimsMappingPolicyClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
+	authenticationStrengthpoliciesClient := msgraph.NewAuthenticationStrengthPoliciesClient()
+	o.ConfigureClient(&authenticationStrengthpoliciesClient.BaseClient)
+
 	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient()
 	o.ConfigureClient(&claimsMappingPolicyClient.BaseClient)
 
 	return &Client{
-		ClaimsMappingPolicyClient: claimsMappingPolicyClient,
+		AuthenticationStrengthPoliciesClient: authenticationStrengthpoliciesClient,
+		ClaimsMappingPolicyClient:            claimsMappingPolicyClient,
 	}
 }

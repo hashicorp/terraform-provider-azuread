@@ -27,6 +27,7 @@ func (r Registration) SupportedDataSources() map[string]*pluginsdk.Resource {
 // SupportedResources returns the supported Resources supported by this Service
 func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
-		"azuread_claims_mapping_policy": claimsMappingPolicyResource(),
+		"azuread_authentication_strength_policy": authenticationStrengthPolicyResource(),
+		"azuread_claims_mapping_policy":          claimsMappingPolicyResource(),
 	}
 }
