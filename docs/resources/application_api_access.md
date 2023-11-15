@@ -36,12 +36,12 @@ resource "azuread_application_api_access" "example_msgraph" {
   api_client_id  = data.azuread_application_published_app_ids.well_known.result["MicrosoftGraph"]
 
   role_ids = [
-    azuread_service_principal.msgraph.app_role_ids["Group.Read.All"],
-    azuread_service_principal.msgraph.app_role_ids["User.Read.All"],
+    data.azuread_service_principal.msgraph.app_role_ids["Group.Read.All"],
+    data.azuread_service_principal.msgraph.app_role_ids["User.Read.All"],
   ]
 
   scope_ids = [
-    azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.ReadWrite"],
+    data.azuread_service_principal.msgraph.oauth2_permission_scope_ids["User.ReadWrite"],
   ]
 }
 ```
