@@ -343,5 +343,5 @@ In addition to all arguments above, the following attributes are exported:
 Applications can be imported using the object ID of the application, in the following format.
 
 ```shell
-terraform import azuread_application_registration.example /applications/00000000-0000-0000-0000-000000000000
+terraform import azuread_application.example /applications/00000000-0000-0000-0000-000000000000
 ```
