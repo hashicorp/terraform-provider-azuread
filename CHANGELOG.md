@@ -1,3 +1,9 @@
+## 2.46.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `data.azuread_application` - update the resource ID format to match the `azuread_application` resource [GH-1255]
+
 ## 2.45.0 (October 27, 2023)
 
 FEATURES:
