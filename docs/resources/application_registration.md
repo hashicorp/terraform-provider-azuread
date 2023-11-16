@@ -59,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `client_id` - The Client ID for the application, which is globally unique.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
-* `id` - The resource ID for the application, for use when referencing this resource in your Terraform configuration.
+* `id` - The Terraform resource ID for the application, for use when referencing this resource in your Terraform configuration.
 * `object_id` - The object ID of the application within the tenant.
 * `publisher_domain` - The verified publisher domain for the application.
 
