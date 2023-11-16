@@ -333,6 +333,7 @@ In addition to all arguments above, the following attributes are exported:
 * `app_role_ids` - A mapping of app role values to app role IDs, intended to be useful when referencing app roles in other resources in your configuration.
 * `client_id` - The Client ID for the application.
 * `disabled_by_microsoft` - Whether Microsoft has disabled the registered application. If the application is disabled, this will be a string indicating the status/reason, e.g. `DisabledDueToViolationOfServicesAgreement`
+* `id` - The Terraform resource ID for the application, for use when referencing this resource in your Terraform configuration.
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
