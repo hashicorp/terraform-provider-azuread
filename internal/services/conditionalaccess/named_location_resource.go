@@ -64,7 +64,8 @@ func namedLocationResource() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeList,
 							Required: true,
 							Elem: &pluginsdk.Schema{
-								Type: pluginsdk.TypeString,
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.PrefixLengthAtLeast(8),
 							},
 						},
 
@@ -88,7 +89,8 @@ func namedLocationResource() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeList,
 							Required: true,
 							Elem: &pluginsdk.Schema{
-								Type: pluginsdk.TypeString,
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 

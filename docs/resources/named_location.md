@@ -61,7 +61,7 @@ The following arguments are supported:
 
 `ip` block supports the following:
 
-* `ip_ranges` - (Required) List of IP address ranges in IPv4 CIDR format (e.g. `1.2.3.4/32`) or any allowable IPv6 format from IETF RFC596.
+* `ip_ranges` - (Required) List of IP address ranges in IPv4 CIDR format (e.g. `1.2.3.4/32`) or any allowable IPv6 format from IETF RFC596. Each CIDR prefix must be `/8` or larger.
 * `trusted` - (Optional) Whether the named location is trusted. Defaults to `false`.
 
 ---
