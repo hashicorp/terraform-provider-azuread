@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * `data.azuread_application` - update the resource ID format to match the `azuread_application` resource [GH-1255]
+* `azuread_named_location` - add validation for the `ip_ranges` property in the `ip` block [GH-1254]
 
 ## 2.45.0 (October 27, 2023)
 
