@@ -51,6 +51,7 @@ The following attributes are exported:
 * `fallback_public_client_enabled` - The fallback application type as public client, such as an installed application running on a mobile device.
 * `feature_tags` - A `features` block as described below.
 * `group_membership_claims` - The `groups` claim issued in a user or OAuth 2.0 access token that the app expects.
+* `id` - The Terraform resource ID for the application, for use when referencing this data source in your Terraform configuration.
 * `identifier_uris` - A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant.
 * `logo_url` - CDN URL to the application's logo.
 * `notes` - User-specified notes relevant for the management of the application.

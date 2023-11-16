@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
@@ -578,7 +579,8 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
 	}
 
-	d.SetId(*app.ID())
+	id := parse.NewApplicationID(*app.ID())
+	d.SetId(id.ID())
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
