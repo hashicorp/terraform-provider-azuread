@@ -78,5 +78,5 @@ No additional attributes are exported.
 Application API Access can be imported using the object ID of the application and the URI type, in the following format.
 
 ```shell
-terraform import azuread_application_redirect_uris.example /applications/00000000-0000-0000-0000-000000000000/uriType/Web
+terraform import azuread_application_redirect_uris.example /applications/00000000-0000-0000-0000-000000000000/redirectUris/Web
 ```
