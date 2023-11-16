@@ -6,7 +6,6 @@ package applications
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"net/http"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
