@@ -386,10 +386,6 @@ func groupResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDif
 		return fmt.Errorf("`mail_enabled` must be true for unified groups")
 	}
 
-	if mailNickname := diff.Get("mail_nickname").(string); mailEnabled && mailNickname == "" {
-		return fmt.Errorf("`mail_nickname` is required for mail-enabled groups")
-	}
-
 	if diff.Get("assignable_to_role").(bool) && !securityEnabled {
 		return fmt.Errorf("`assignable_to_role` can only be `true` for security-enabled groups")
 	}
@@ -972,6 +968,14 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		MailEnabled:     pointer.To(d.Get("mail_enabled").(bool)),
 		MembershipRule:  tf.NullableString(""),
 		SecurityEnabled: pointer.To(d.Get("security_enabled").(bool)),
+	}
+
+	if d.HasChange("mail_nickname") {
+		mailNickname := d.Get("mail_nickname").(string)
+		if mailNickname == "" {
+			mailNickname = groupDefaultMailNickname()
+		}
+		group.MailNickname = pointer.To(mailNickname)
 	}
 
 	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
