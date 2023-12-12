@@ -92,6 +92,9 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 	if result == nil {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Result is nil")
 	}
+	if len(*result) == 0 {
+		return tf.ErrorDiagPathF(nil, "display_name", "No Named Location was found with display name %q", displayName)
+	}
 	if len(*result) > 1 {
 		return tf.ErrorDiagPathF(nil, "display_name", "More than one Named Location was found with display name %q", displayName)
 	}
