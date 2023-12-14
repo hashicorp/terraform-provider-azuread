@@ -1,3 +1,9 @@
+## 2.47.0 (Unreleased)
+
+BUG FIXES:
+
+* `data.azuread_named_location` - fix a potential crash if the named location is not found [GH-1274]
+
 ## 2.46.0 (November 16, 2023)
 
 ENHANCEMENTS:
