@@ -1,9 +1,9 @@
-## 2.47.0 (Unreleased)
+## 2.47.0 (December 14, 2023)
 
 BUG FIXES:
 
-* `azuread_access_package_assignment_policy` - fix a potential crash when removing the `question` block [GH-1273]
-* `data.azuread_named_location` - fix a potential crash if the named location is not found [GH-1274]
+* `azuread_access_package_assignment_policy` - fix a potential crash when removing the `question` block ([#1273](https://github.com/hashicorp/terraform-provider-azuread/issues/1273))
+* `data.azuread_named_location` - fix a potential crash if the named location is not found ([#1274](https://github.com/hashicorp/terraform-provider-azuread/issues/1274))
 
 ## 2.46.0 (November 16, 2023)
 
