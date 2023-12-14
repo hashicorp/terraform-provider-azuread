@@ -233,36 +233,45 @@ func userSetShortType(in string) *string {
 func expandAccessPackageQuestions(questions []interface{}) *[]msgraph.AccessPackageQuestion {
 	result := make([]msgraph.AccessPackageQuestion, 0)
 
-	for _, v := range questions {
-		v_map := v.(map[string]interface{})
-		v_text_list := v_map["text"].([]interface{})
-		v_text := v_text_list[0].(map[string]interface{})
+	for _, questionRaw := range questions {
+		question := questionRaw.(map[string]interface{})
+		textList := question["text"].([]interface{})
 
-		q := msgraph.AccessPackageQuestion{
-			IsRequired: pointer.To(v_map["required"].(bool)),
-			Sequence:   pointer.To(int32(v_map["sequence"].(int))),
-			Text:       expandAccessPackageLocalizedContent(v_text),
+		if len(textList) == 0 {
+			continue
 		}
 
-		v_map_choices := v_map["choice"].([]interface{})
-		q.ODataType = pointer.To(odata.TypeAccessPackageTextInputQuestion)
-		if len(v_map_choices) > 0 {
-			q.ODataType = pointer.To(odata.TypeAccessPackageMultipleChoiceQuestion)
+		text := textList[0].(map[string]interface{})
+
+		resultQuestion := msgraph.AccessPackageQuestion{
+			ODataType:  pointer.To(odata.TypeAccessPackageTextInputQuestion),
+			IsRequired: pointer.To(question["required"].(bool)),
+			Sequence:   pointer.To(int32(question["sequence"].(int))),
+			Text:       expandAccessPackageLocalizedContent(text),
+		}
+
+		if choicesRaw := question["choice"].([]interface{}); len(choicesRaw) > 0 {
+			resultQuestion.ODataType = pointer.To(odata.TypeAccessPackageMultipleChoiceQuestion)
 			choices := make([]msgraph.AccessPackageMultipleChoiceQuestions, 0)
 
-			for _, c := range v_map_choices {
-				c_map := c.(map[string]interface{})
-				c_map_display_value := c_map["display_value"].([]interface{})
+			for _, choiceRaw := range choicesRaw {
+				choice := choiceRaw.(map[string]interface{})
+				displayValue := make(map[string]interface{})
+				if v := choice["display_value"].([]interface{}); len(v) > 0 {
+					displayValue = v[0].(map[string]interface{})
+				}
 				choices = append(choices, msgraph.AccessPackageMultipleChoiceQuestions{
-					ActualValue:  pointer.To(c_map["actual_value"].(string)),
-					DisplayValue: expandAccessPackageLocalizedContent(c_map_display_value[0].(map[string]interface{})),
+					ActualValue:  pointer.To(choice["actual_value"].(string)),
+					DisplayValue: expandAccessPackageLocalizedContent(displayValue),
 				})
 			}
 
-			q.Choices = &choices
+			if len(choices) > 0 {
+				resultQuestion.Choices = pointer.To(choices)
+			}
 		}
 
-		result = append(result, q)
+		result = append(result, resultQuestion)
 	}
 
 	return &result
@@ -304,6 +313,10 @@ func flattenAccessPackageQuestions(input *[]msgraph.AccessPackageQuestion) []map
 }
 
 func expandAccessPackageLocalizedContent(input map[string]interface{}) *msgraph.AccessPackageLocalizedContent {
+	if len(input) == 0 {
+		return nil
+	}
+
 	result := msgraph.AccessPackageLocalizedContent{
 		DefaultText: pointer.To(input["default_text"].(string)),
 	}
