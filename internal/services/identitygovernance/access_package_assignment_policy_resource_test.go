@@ -93,6 +93,28 @@ func TestAccAccessPackageAssignmentPolicy_update(t *testing.T) {
 	})
 }
 
+func TestAccAccessPackageAssignmentPolicy_removeQuestion(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_access_package_assignment_policy", "test")
+	r := AccessPackageAssignmentPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("access_package_id"),
+		{
+			Config: r.basicWithoutQuestion(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep("access_package_id"),
+	})
+}
+
 func (AccessPackageAssignmentPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageAssignmentPolicyClient
 	client.BaseClient.DisableRetries = true
@@ -185,6 +207,59 @@ resource "azuread_access_package_assignment_policy" "test" {
     text {
       default_text = "hello, how are you?"
     }
+  }
+}
+`, data.RandomInteger)
+}
+
+func (AccessPackageAssignmentPolicyResource) basicWithoutQuestion(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_group" "test" {
+  display_name     = "test-group-%[1]d"
+  security_enabled = true
+}
+
+resource "azuread_access_package_catalog" "test_catalog" {
+  display_name = "testacc-asscess-assignment-%[1]d"
+  description  = "TestAcc Catalog %[1]d for access assignment policy"
+}
+
+resource "azuread_access_package" "test" {
+  display_name = "testacc-asscess-assignment-%[1]d"
+  description  = "TestAcc Access Package %[1]d for access assignment policy"
+  catalog_id   = azuread_access_package_catalog.test_catalog.id
+}
+
+resource "azuread_access_package_assignment_policy" "test" {
+  display_name      = "testacc-asscess-assignment-%[1]d"
+  description       = "TestAcc Access Package Assignnment Policy %[1]d"
+  duration_in_days  = 90
+  access_package_id = azuread_access_package.test.id
+
+  requestor_settings {
+    scope_type = "AllExistingDirectoryMemberUsers"
+  }
+
+  approval_settings {
+    approval_required = true
+    approval_stage {
+      approval_timeout_in_days = 14
+
+      primary_approver {
+        object_id    = azuread_group.test.object_id
+        subject_type = "groupMembers"
+      }
+    }
+  }
+
+  assignment_review_settings {
+    enabled                        = true
+    review_frequency               = "weekly"
+    duration_in_days               = 3
+    review_type                    = "Self"
+    access_review_timeout_behavior = "keepAccess"
   }
 }
 `, data.RandomInteger)
