@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* `azuread_access_package_assignment_policy` - fix a potential crash when removing the `question` block [GH-1273]
 * `data.azuread_named_location` - fix a potential crash if the named location is not found [GH-1274]
 
 ## 2.46.0 (November 16, 2023)
