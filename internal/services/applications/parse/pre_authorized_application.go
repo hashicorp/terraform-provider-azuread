@@ -10,8 +10,8 @@ type ApplicationPreAuthorizedId struct {
 	AppId    string
 }
 
-func NewApplicationPreAuthorizedID(objectId, appId string) ApplicationPreAuthorizedId {
-	return ApplicationPreAuthorizedId{
+func NewApplicationPreAuthorizedID(objectId, appId string) *ApplicationPreAuthorizedId {
+	return &ApplicationPreAuthorizedId{
 		ObjectId: objectId,
 		AppId:    appId,
 	}
