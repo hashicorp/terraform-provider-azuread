@@ -348,7 +348,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 			return tf.ErrorDiagF(err, "Removing pre-authorized application %q from application with object ID %q", id.AppId, id.ObjectId)
 		}
 
-		// Random delay before checking if the pre-authorized application was removed
+		// Random delay to mitigate race conditions, and to allow time for the posible concurent operations to complete before validating
 		randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
 		time.Sleep(randomDelay)
 
