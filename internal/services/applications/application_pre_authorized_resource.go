@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -304,42 +305,84 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with ID %q for pre-authorized application %q was not found - removing from state!", id.ObjectId, id.AppId)
-			d.SetId("")
+	// Random delay to mitigate race conditions in concurrent operations
+	randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
+	time.Sleep(randomDelay)
+
+	// Retry loop
+	for i := 0; i < 5; i++ {
+		app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+		if err != nil {
+			if status == http.StatusNotFound {
+				log.Printf("[DEBUG] Application with ID %q for pre-authorized application %q was not found - removing from state!", id.ObjectId, id.AppId)
+				d.SetId("")
+				return nil
+			}
+			return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
+		}
+		if app == nil || app.ID() == nil {
+			return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
+		}
+		if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
+			return tf.ErrorDiagF(errors.New("application with nil preAuthorizedApplications was returned"), "API error retrieving application with object ID %q", id.ObjectId)
+		}
+
+		newPreAuthorizedApps := make([]msgraph.ApiPreAuthorizedApplication, 0)
+		for _, a := range *app.Api.PreAuthorizedApplications {
+			if a.AppId != nil && !strings.EqualFold(*a.AppId, id.AppId) {
+				newPreAuthorizedApps = append(newPreAuthorizedApps, a)
+				break
+			}
+		}
+
+		properties := msgraph.Application{
+			DirectoryObject: msgraph.DirectoryObject{
+				Id: app.ID(),
+			},
+			Api: &msgraph.ApplicationApi{
+				PreAuthorizedApplications: &newPreAuthorizedApps,
+			},
+		}
+
+		if _, err := client.Update(ctx, properties); err != nil {
+			return tf.ErrorDiagF(err, "Removing pre-authorized application %q from application with object ID %q", id.AppId, id.ObjectId)
+		}
+
+		// Random delay before checking if the pre-authorized application was removed
+		randomDelay := time.Duration(rand.Intn(1000)) * time.Millisecond
+		time.Sleep(randomDelay)
+
+		isPresent, diag := validatePreAuthorizedApplicationRemoved(ctx, client, id.ObjectId, id.AppId)
+		if diag.HasError() {
+			return diag
+		}
+		if !isPresent {
 			return nil
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
-	}
-	if app == nil || app.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", id.ObjectId)
-	}
-	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
-		return tf.ErrorDiagF(errors.New("application with nil preAuthorizedApplications was returned"), "API error retrieving application with object ID %q", id.ObjectId)
 	}
 
-	newPreAuthorizedApps := make([]msgraph.ApiPreAuthorizedApplication, 0)
+	return tf.ErrorDiagF(errors.New("max retries reached"), "Failed to remove pre-authorized application %q from application with object ID %q after multiple attempts", id.AppId, id.ObjectId)
+}
+
+func validatePreAuthorizedApplicationRemoved(ctx context.Context, client *msgraph.ApplicationsClient, objectId, appId string) (bool, pluginsdk.Diagnostics) {
+	app, _, err := client.Get(ctx, objectId, odata.Query{})
+	if err != nil {
+		return false, tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", objectId)
+	}
+	if app == nil || app.ID() == nil {
+		return false, tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", objectId)
+	}
+	if app.Api == nil || app.Api.PreAuthorizedApplications == nil {
+		return false, tf.ErrorDiagF(errors.New("application with nil preAuthorizedApplications was returned"), "API error retrieving application with object ID %q", objectId)
+	}
+
+	isPresent := false
 	for _, a := range *app.Api.PreAuthorizedApplications {
-		if a.AppId != nil && !strings.EqualFold(*a.AppId, id.AppId) {
-			newPreAuthorizedApps = append(newPreAuthorizedApps, a)
+		if a.AppId != nil && strings.EqualFold(*a.AppId, appId) {
+			isPresent = true
 			break
 		}
 	}
 
-	properties := msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: app.ID(),
-		},
-		Api: &msgraph.ApplicationApi{
-			PreAuthorizedApplications: &newPreAuthorizedApps,
-		},
-	}
-
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Removing pre-authorized application %q from application with object ID %q", id.AppId, id.ObjectId)
-	}
-
-	return nil
+	return isPresent, nil
 }
