@@ -304,6 +304,9 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 		return tf.ErrorDiagPathF(err, "id", "Parsing pre-authorized application ID %q", d.Id())
 	}
 
+	tf.LockByName(applicationResourceName, id.ObjectId)
+	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
+
 	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
 	if err != nil {
 		if status == http.StatusNotFound {
