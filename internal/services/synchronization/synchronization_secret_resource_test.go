@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package serviceprincipals_test
+package synchronization_test
 
 import (
 	"context"
@@ -14,18 +14,46 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 )
 
 type SynchronizationSecretResource struct{}
 
-func TestAccSynchronizationSecret_basic(t *testing.T) {
+func TestAccSynchronizationSecret(t *testing.T) {
+	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
+		"synchronizationSecret": {
+			"withApplicationResource":             testAccSynchronizationSecret_withApplicationResource,
+			"withApplicationFromTemplateResource": testAccSynchronizationSecret_withApplicationFromTemplateResource,
+		},
+	})
+}
+
+func testAccSynchronizationSecret_withApplicationResource(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_synchronization_secret", "test")
 	r := SynchronizationSecretResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.withApplicationResource(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("credential.#").HasValue("2"),
+				check.That(data.ResourceName).Key("credential.0.key").HasValue("BaseAddress"),
+				check.That(data.ResourceName).Key("credential.0.value").HasValue("https://test-address.azuredatabricks.net"),
+				check.That(data.ResourceName).Key("credential.1.key").HasValue("SecretToken"),
+				check.That(data.ResourceName).Key("credential.1.value").HasValue("password-value"),
+			),
+		},
+	})
+}
+
+func testAccSynchronizationSecret_withApplicationFromTemplateResource(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_synchronization_secret", "test")
+	r := SynchronizationSecretResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.withApplicationFromTemplateResource(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 				check.That(data.ResourceName).Key("credential.#").HasValue("2"),
@@ -58,7 +86,7 @@ func (r SynchronizationSecretResource) Exists(ctx context.Context, clients *clie
 	return pointer.To(true), nil
 }
 
-func (SynchronizationSecretResource) template(data acceptance.TestData) string {
+func (r SynchronizationSecretResource) withApplicationResource(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -79,12 +107,6 @@ resource "azuread_service_principal" "test" {
   owners         = [data.azuread_client_config.test.object_id]
   use_existing   = true
 }
-`, data.RandomInteger)
-}
-
-func (r SynchronizationSecretResource) basic(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
 
 resource "azuread_synchronization_secret" "test" {
   service_principal_id = azuread_service_principal.test.id
@@ -98,5 +120,35 @@ resource "azuread_synchronization_secret" "test" {
     value = "password-value"
   }
 }
-`, r.template(data))
+`, data.RandomInteger)
+}
+
+func (r SynchronizationSecretResource) withApplicationFromTemplateResource(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_client_config" "test" {}
+
+data "azuread_application_template" "test" {
+  display_name = "Azure Databricks SCIM Provisioning Connector"
+}
+
+resource "azuread_application_from_template" "test" {
+  display_name = "acctestSynchronizationJob-%[1]d"
+  template_id  = data.azuread_application_template.test.template_id
+}
+
+resource "azuread_synchronization_secret" "test" {
+  service_principal_id = azuread_application_from_template.test.service_principal_object_id
+
+  credential {
+    key   = "BaseAddress"
+    value = "https://test-address.azuredatabricks.net"
+  }
+  credential {
+    key   = "SecretToken"
+    value = "password-value"
+  }
+}
+`, data.RandomInteger)
 }

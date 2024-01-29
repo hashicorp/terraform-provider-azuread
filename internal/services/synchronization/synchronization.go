@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package serviceprincipals
+package synchronization
 
 import (
 	"time"
@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/manicminer/hamilton/msgraph"
 )
+
+const servicePrincipalResourceName = "azuread_service_principal"
 
 func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.SynchronizationSecretKeyStringValuePair {
 	result := make([]msgraph.SynchronizationSecretKeyStringValuePair, 0)

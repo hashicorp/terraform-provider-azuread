@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package serviceprincipals
+package synchronization
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
@@ -91,8 +91,8 @@ func synchronizationJobResource() *pluginsdk.Resource {
 }
 
 func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
-	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
+	spClient := meta.(*clients.Client).Synchronization.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
 
 	tf.LockByName(servicePrincipalResourceName, objectId)
@@ -165,7 +165,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 }
 
 func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
 	id, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
@@ -189,7 +189,7 @@ func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 }
 
 func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 	id, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job with ID %q", d.Id())
@@ -211,7 +211,7 @@ func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 }
 
 func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
 	id, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
