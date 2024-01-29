@@ -17,9 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/invitations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/userflows"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
 )
+
+//go:generate go run ../tools/generator-services/main.go -path=../../
 
 func SupportedTypedServices() []sdk.TypedServiceRegistration {
 	return []sdk.TypedServiceRegistration{
@@ -44,6 +47,7 @@ func SupportedUntypedServices() []sdk.UntypedServiceRegistration {
 		invitations.Registration{},
 		policies.Registration{},
 		serviceprincipals.Registration{},
+		synchronization.Registration{},
 		userflows.Registration{},
 		users.Registration{},
 	}

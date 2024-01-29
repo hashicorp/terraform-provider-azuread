@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package serviceprincipals
+package synchronization
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
@@ -70,8 +70,8 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 }
 
 func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
-	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
+	spClient := meta.(*clients.Client).Synchronization.ServicePrincipalsClient
 	objectId := d.Get("service_principal_id").(string)
 
 	tf.LockByName(servicePrincipalResourceName, objectId)
@@ -140,7 +140,7 @@ func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.Resou
 }
 
 func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
 	id, err := parse.SynchronizationSecretID(d.Id())
 	if err != nil {
@@ -162,8 +162,8 @@ func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.Resourc
 }
 
 func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
-	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
+	spClient := meta.(*clients.Client).Synchronization.ServicePrincipalsClient
 
 	id, err := parse.SynchronizationSecretID(d.Id())
 	if err != nil {

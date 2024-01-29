@@ -12,6 +12,11 @@ func (r Registration) Name() string {
 	return "Administrative Units"
 }
 
+// AssociatedGitHubLabel is the issue/PR label which can be applied to PRs that include changes to this service package
+func (r Registration) AssociatedGitHubLabel() string {
+	return "feature/administrative-units"
+}
+
 // WebsiteCategories returns a list of categories which can be used for the sidebar
 func (r Registration) WebsiteCategories() []string {
 	return []string{

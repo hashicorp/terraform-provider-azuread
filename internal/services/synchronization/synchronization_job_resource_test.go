@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package serviceprincipals_test
+package synchronization_test
 
 import (
 	"context"
@@ -14,12 +14,21 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 )
 
 type SynchronizationJobResource struct{}
 
-func TestAccSynchronizationJob_basic(t *testing.T) {
+func TestAccSynchronizationJob(t *testing.T) {
+	acceptance.RunTestsInSequence(t, map[string]map[string]func(t *testing.T){
+		"synchronizationJob": {
+			"basic":    testAccSynchronizationJob_basic,
+			"disabled": testAccSynchronizationJob_disabled,
+		},
+	})
+}
+
+func testAccSynchronizationJob_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_synchronization_job", "test")
 	r := SynchronizationJobResource{}
 
@@ -36,7 +45,7 @@ func TestAccSynchronizationJob_basic(t *testing.T) {
 	})
 }
 
-func TestAccSynchronizationJob_disabled(t *testing.T) {
+func testAccSynchronizationJob_disabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_synchronization_job", "test")
 	r := SynchronizationJobResource{}
 

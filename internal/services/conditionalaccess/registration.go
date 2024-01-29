@@ -11,7 +11,12 @@ type Registration struct{}
 
 // Name is the name of this Service
 func (r Registration) Name() string {
-	return "ConditionalAccess"
+	return "Conditional Access"
+}
+
+// AssociatedGitHubLabel is the issue/PR label which can be applied to PRs that include changes to this service package
+func (r Registration) AssociatedGitHubLabel() string {
+	return "feature/conditional-access"
 }
 
 // WebsiteCategories returns a list of categories which can be used for the sidebar
