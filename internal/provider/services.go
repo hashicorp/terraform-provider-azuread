@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/users"
 )
 
+//go:generate go run ../tools/generator-services/main.go -path=../../
+
 func SupportedTypedServices() []sdk.TypedServiceRegistration {
 	return []sdk.TypedServiceRegistration{
 		applications.Registration{},

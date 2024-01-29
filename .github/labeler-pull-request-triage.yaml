@@ -1,9 +1,23 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
+# NOTE: this file is generated via 'make generate'
 dependencies:
-  - go.mod
-  - go.sum
-  - vendor/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - go.mod
+    - go.sum
+    - vendor/**/*
 documentation:
-  - website/**/*
+- changed-files:
+  - any-glob-to-any-file: 
+    - docs/**/*
+    - examples/**/*
+tooling:
+- changed-files:
+  - any-glob-to-any-file: 
+    - .github/**/*
+    - internal/tools/**/*
+    - scripts/**/*
+    - GNUmakefile
+state-migration:
+- changed-files:
+  - any-glob-to-any-file: 
+    - internal/services/**/migration/**/*

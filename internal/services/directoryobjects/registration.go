@@ -9,7 +9,7 @@ type Registration struct{}
 
 // Name is the name of this Service
 func (r Registration) Name() string {
-	return "DirectoryObjects"
+	return "Directory Objects"
 }
 
 // WebsiteCategories returns a list of categories which can be used for the sidebar
