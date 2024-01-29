@@ -21,3 +21,73 @@ state-migration:
 - changed-files:
   - any-glob-to-any-file: 
     - internal/services/**/migration/**/*
+feature/administrative-units:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/administrativeunits/**/*
+
+feature/app-role-assignments:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/approleassignments/**/*
+
+feature/applications:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/applications/**/*
+
+feature/conditional-access:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/conditionalaccess/**/*
+
+feature/directory-objects:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/directoryobjects/**/*
+
+feature/directory-roles:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/directoryroles/**/*
+
+feature/domains:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/domains/**/*
+
+feature/groups:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/groups/**/*
+
+feature/identity-governance:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/identitygovernance/**/*
+
+feature/invitations:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/invitations/**/*
+
+feature/policies:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/policies/**/*
+
+feature/service-principals:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/serviceprincipals/**/*
+    - internal/services/synchronization/**/*
+
+feature/user-flows:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/userflows/**/*
+
+feature/users:
+- changed-files:
+  - any-glob-to-any-file:
+    - internal/services/users/**/*

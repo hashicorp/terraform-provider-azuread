@@ -229,7 +229,7 @@ crash:
   - 'panic:'
 `
 
-const azurerm = "azurerm_"
+const providerPrefix = "azuread_"
 
 type githubIssueLabelsGenerator struct{}
 
@@ -310,12 +310,12 @@ func (githubIssueLabelsGenerator) run(outputFileName string, _ map[string]struct
 
 		longestPrefix := longestCommonPrefix(labelToNames[labelName])
 		var prefixGroups []Prefix
-		// If there is no common prefix for a service, separate it into groups using the next segment of the name (azurerm_xxx) and add multiple possible prefixes for the label
-		// For example, under "service/signalr" we separate names into groups of 2 prefixes.
+		// If there is no common prefix for a service, separate it into groups using the next segment of the name (azuread_xxx) and add multiple possible prefixes for the label
+		// For example in AzureRM, under "service/signalr" we separate names into groups of 2 prefixes.
 		// The prefix azurerm_signalr matches resources `azurerm_signalr_shared_private_link_resource`, `azurerm_signalr_service`, `azurerm_signalr_service_custom_domain` etc.
 		// And web_pubsub matches `azurerm_web_pubsub_hub`, `azurerm_web_pubsub_network_acl` etc.
 		// But both share the "service/signalr" label.
-		if longestPrefix == azurerm {
+		if longestPrefix == providerPrefix {
 			prefixGroups = getPrefixesForNames(labelToNames[labelName])
 		} else {
 			prefixGroups = []Prefix{
@@ -346,18 +346,18 @@ func (githubIssueLabelsGenerator) run(outputFileName string, _ map[string]struct
 			if prefixHasMatch(labelName, prefix, labelToPrefixes) {
 
 				for _, name := range prefix.Names {
-					prefixes = append(prefixes, strings.TrimPrefix(name+"\\W+", azurerm))
+					prefixes = append(prefixes, strings.TrimPrefix(name+"\\W+", providerPrefix))
 				}
 			} else {
-				prefixes = append(prefixes, strings.TrimPrefix(prefix.CommonPrefix, azurerm))
+				prefixes = append(prefixes, strings.TrimPrefix(prefix.CommonPrefix, providerPrefix))
 			}
 		}
 
 		if len(prefixes) > 1 {
-			out = append(out, fmt.Sprintf("  - '### (|New or )Affected Resource\\(s\\)\\/Data Source\\(s\\)((.|\\n)*)azurerm_(%s)((.|\\n)*)###'", strings.Join(prefixes, "|")))
+			out = append(out, fmt.Sprintf("  - '### (|New or )Affected Resource\\(s\\)\\/Data Source\\(s\\)((.|\\n)*)%s(%s)((.|\\n)*)###'", providerPrefix, strings.Join(prefixes, "|")))
 		}
 		if len(prefixes) == 1 {
-			out = append(out, fmt.Sprintf("  - '### (|New or )Affected Resource\\(s\\)\\/Data Source\\(s\\)((.|\\n)*)azurerm_%s((.|\\n)*)###'", prefixes[0]))
+			out = append(out, fmt.Sprintf("  - '### (|New or )Affected Resource\\(s\\)\\/Data Source\\(s\\)((.|\\n)*)%s%s((.|\\n)*)###'", providerPrefix, prefixes[0]))
 		}
 		// NOTE: it's possible for a Service to contain 0 Data Sources/Resources (during initial generation)
 
@@ -430,8 +430,8 @@ func commonPrefixGroups(names []string) [][]string {
 	if len(names) > 0 {
 		sort.Strings(names)
 
-		// get the prefix of the first name in the list matching azurerm_xxxx or azurerm_xxx_* and add it to the first group
-		re := regexp.MustCompile("azurerm_[a-zA-Z0-9]+($|_)")
+		// get the prefix of the first name in the list matching azuread_xxxx or azuread_xxx_* and add it to the first group
+		re := regexp.MustCompile(fmt.Sprintf("%s[a-zA-Z0-9]+($|_)", providerPrefix))
 		prefix := ""
 		if match := re.FindStringSubmatch(names[0]); match != nil {
 			prefix = strings.TrimSuffix(match[0], "_")
