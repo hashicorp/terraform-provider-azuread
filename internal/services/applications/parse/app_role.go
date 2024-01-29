@@ -12,8 +12,8 @@ type AppRoleId struct {
 	RoleID        string
 }
 
-func NewAppRoleID(applicationId, roleId string) AppRoleId {
-	return AppRoleId{
+func NewAppRoleID(applicationId, roleId string) *AppRoleId {
+	return &AppRoleId{
 		ApplicationId: applicationId,
 		RoleID:        roleId,
 	}
@@ -21,14 +21,14 @@ func NewAppRoleID(applicationId, roleId string) AppRoleId {
 
 // ParseAppRoleID parses 'input' into an AppRoleId
 func ParseAppRoleID(input string) (*AppRoleId, error) {
-	parser := resourceids.NewParserFromResourceIdType(AppRoleId{})
+	parser := resourceids.NewParserFromResourceIdType(&AppRoleId{})
 	parsed, err := parser.Parse(input, false)
 	if err != nil {
 		return nil, fmt.Errorf("parsing %q: %+v", input, err)
 	}
 
 	var ok bool
-	id := AppRoleId{}
+	id := &AppRoleId{}
 
 	if id.ApplicationId, ok = parsed.Parsed["applicationId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
@@ -38,7 +38,7 @@ func ParseAppRoleID(input string) (*AppRoleId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "roleId", *parsed)
 	}
 
-	return &id, nil
+	return id, nil
 }
 
 // ValidateAppRoleID checks that 'input' can be parsed as an Application ID
@@ -58,13 +58,13 @@ func ValidateAppRoleID(input interface{}, key string) (warnings []string, errors
 	return validation.IsUUID(id.RoleID, "ID")
 }
 
-func (id AppRoleId) ID() string {
+func (id *AppRoleId) ID() string {
 	fmtString := "/applications/%s/appRoles/%s"
 	return fmt.Sprintf(fmtString, id.ApplicationId, id.RoleID)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
-func (id AppRoleId) Segments() []resourceids.Segment {
+func (id *AppRoleId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
@@ -73,6 +73,20 @@ func (id AppRoleId) Segments() []resourceids.Segment {
 	}
 }
 
-func (id AppRoleId) String() string {
+func (id *AppRoleId) String() string {
 	return fmt.Sprintf("App Role (Application ID: %q, Role ID: %q)", id.ApplicationId, id.RoleID)
+}
+
+func (id *AppRoleId) FromParseResult(input resourceids.ParseResult) error {
+	var ok bool
+
+	if id.ApplicationId, ok = input.Parsed["applicationId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
+	}
+
+	if id.RoleID, ok = input.Parsed["roleId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "roleId", input)
+	}
+
+	return nil
 }

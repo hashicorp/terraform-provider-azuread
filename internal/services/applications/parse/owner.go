@@ -12,8 +12,8 @@ type OwnerId struct {
 	OwnerId       string
 }
 
-func NewOwnerID(applicationId, ownerId string) OwnerId {
-	return OwnerId{
+func NewOwnerID(applicationId, ownerId string) *OwnerId {
+	return &OwnerId{
 		ApplicationId: applicationId,
 		OwnerId:       ownerId,
 	}
@@ -21,14 +21,14 @@ func NewOwnerID(applicationId, ownerId string) OwnerId {
 
 // ParseOwnerID parses 'input' into an OwnerId
 func ParseOwnerID(input string) (*OwnerId, error) {
-	parser := resourceids.NewParserFromResourceIdType(OwnerId{})
+	parser := resourceids.NewParserFromResourceIdType(&OwnerId{})
 	parsed, err := parser.Parse(input, false)
 	if err != nil {
 		return nil, fmt.Errorf("parsing %q: %+v", input, err)
 	}
 
 	var ok bool
-	id := OwnerId{}
+	id := &OwnerId{}
 
 	if id.ApplicationId, ok = parsed.Parsed["applicationId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
@@ -38,7 +38,7 @@ func ParseOwnerID(input string) (*OwnerId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "ownerId", *parsed)
 	}
 
-	return &id, nil
+	return id, nil
 }
 
 // ValidateOwnerID checks that 'input' can be parsed as an Application ID
@@ -58,13 +58,13 @@ func ValidateOwnerID(input interface{}, key string) (warnings []string, errors [
 	return validation.IsUUID(id.OwnerId, "ID")
 }
 
-func (id OwnerId) ID() string {
+func (id *OwnerId) ID() string {
 	fmtString := "/applications/%s/owners/%s"
 	return fmt.Sprintf(fmtString, id.ApplicationId, id.OwnerId)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
-func (id OwnerId) Segments() []resourceids.Segment {
+func (id *OwnerId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
@@ -73,6 +73,20 @@ func (id OwnerId) Segments() []resourceids.Segment {
 	}
 }
 
-func (id OwnerId) String() string {
+func (id *OwnerId) String() string {
 	return fmt.Sprintf("Application Owner (Application ID: %q, Owner ID: %q)", id.ApplicationId, id.OwnerId)
+}
+
+func (id *OwnerId) FromParseResult(input resourceids.ParseResult) error {
+	var ok bool
+
+	if id.ApplicationId, ok = input.Parsed["applicationId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
+	}
+
+	if id.OwnerId, ok = input.Parsed["ownerId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "ownerId", input)
+	}
+
+	return nil
 }

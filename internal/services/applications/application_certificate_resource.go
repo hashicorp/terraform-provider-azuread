@@ -165,7 +165,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 		// should be removed in version 3.0 along with the application_object_id property
 		v = d.Get("application_object_id").(string)
 		if _, err = uuid.ParseUUID(v); err == nil {
-			applicationId = pointer.To(parse.NewApplicationID(v))
+			applicationId = parse.NewApplicationID(v)
 		} else {
 			if applicationId, err = parse.ParseApplicationID(v); err != nil {
 				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)

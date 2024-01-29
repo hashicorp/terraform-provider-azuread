@@ -11,8 +11,8 @@ type IdentifierUriId struct {
 	IdentifierUri string
 }
 
-func NewIdentifierUriID(applicationId, identifierUri string) IdentifierUriId {
-	return IdentifierUriId{
+func NewIdentifierUriID(applicationId, identifierUri string) *IdentifierUriId {
+	return &IdentifierUriId{
 		ApplicationId: applicationId,
 		IdentifierUri: identifierUri,
 	}
@@ -20,14 +20,14 @@ func NewIdentifierUriID(applicationId, identifierUri string) IdentifierUriId {
 
 // ParseIdentifierUriID parses 'input' into an IdentifierUriId
 func ParseIdentifierUriID(input string) (*IdentifierUriId, error) {
-	parser := resourceids.NewParserFromResourceIdType(IdentifierUriId{})
+	parser := resourceids.NewParserFromResourceIdType(&IdentifierUriId{})
 	parsed, err := parser.Parse(input, false)
 	if err != nil {
 		return nil, fmt.Errorf("parsing %q: %+v", input, err)
 	}
 
 	var ok bool
-	id := IdentifierUriId{}
+	id := &IdentifierUriId{}
 
 	if id.ApplicationId, ok = parsed.Parsed["applicationId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
@@ -37,7 +37,7 @@ func ParseIdentifierUriID(input string) (*IdentifierUriId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "identifierUri", *parsed)
 	}
 
-	return &id, nil
+	return id, nil
 }
 
 // ValidateIdentifierUriID checks that 'input' can be parsed as an Application ID
@@ -56,13 +56,13 @@ func ValidateIdentifierUriID(input interface{}, key string) (warnings []string, 
 	return
 }
 
-func (id IdentifierUriId) ID() string {
+func (id *IdentifierUriId) ID() string {
 	fmtString := "/applications/%s/identifierUris/%s"
 	return fmt.Sprintf(fmtString, id.ApplicationId, id.IdentifierUri)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
-func (id IdentifierUriId) Segments() []resourceids.Segment {
+func (id *IdentifierUriId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
@@ -71,6 +71,20 @@ func (id IdentifierUriId) Segments() []resourceids.Segment {
 	}
 }
 
-func (id IdentifierUriId) String() string {
+func (id *IdentifierUriId) String() string {
 	return fmt.Sprintf("Application IdentifierUri (Application ID: %q, IdentifierUri ID: %q)", id.ApplicationId, id.IdentifierUri)
+}
+
+func (id *IdentifierUriId) FromParseResult(input resourceids.ParseResult) error {
+	var ok bool
+
+	if id.ApplicationId, ok = input.Parsed["applicationId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
+	}
+
+	if id.IdentifierUri, ok = input.Parsed["identifierUri"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "identifierUri", input)
+	}
+
+	return nil
 }

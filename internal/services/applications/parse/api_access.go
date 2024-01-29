@@ -12,8 +12,8 @@ type ApiAccessId struct {
 	ApiClientId   string
 }
 
-func NewApiAccessID(applicationId, apiClientId string) ApiAccessId {
-	return ApiAccessId{
+func NewApiAccessID(applicationId, apiClientId string) *ApiAccessId {
+	return &ApiAccessId{
 		ApplicationId: applicationId,
 		ApiClientId:   apiClientId,
 	}
@@ -21,14 +21,14 @@ func NewApiAccessID(applicationId, apiClientId string) ApiAccessId {
 
 // ParseApiAccessID parses 'input' into an ApiAccessId
 func ParseApiAccessID(input string) (*ApiAccessId, error) {
-	parser := resourceids.NewParserFromResourceIdType(ApiAccessId{})
+	parser := resourceids.NewParserFromResourceIdType(&ApiAccessId{})
 	parsed, err := parser.Parse(input, false)
 	if err != nil {
 		return nil, fmt.Errorf("parsing %q: %+v", input, err)
 	}
 
 	var ok bool
-	id := ApiAccessId{}
+	id := &ApiAccessId{}
 
 	if id.ApplicationId, ok = parsed.Parsed["applicationId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
@@ -38,7 +38,7 @@ func ParseApiAccessID(input string) (*ApiAccessId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "apiClientId", *parsed)
 	}
 
-	return &id, nil
+	return id, nil
 }
 
 // ValidateApiAccessID checks that 'input' can be parsed as an Application ID
@@ -58,13 +58,13 @@ func ValidateApiAccessID(input interface{}, key string) (warnings []string, erro
 	return validation.IsUUID(id.ApiClientId, "ID")
 }
 
-func (id ApiAccessId) ID() string {
+func (id *ApiAccessId) ID() string {
 	fmtString := "/applications/%s/apiAccess/%s"
 	return fmt.Sprintf(fmtString, id.ApplicationId, id.ApiClientId)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
-func (id ApiAccessId) Segments() []resourceids.Segment {
+func (id *ApiAccessId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
@@ -73,6 +73,20 @@ func (id ApiAccessId) Segments() []resourceids.Segment {
 	}
 }
 
-func (id ApiAccessId) String() string {
+func (id *ApiAccessId) String() string {
 	return fmt.Sprintf("Application API Access (Application ID: %q, API Client ID: %q)", id.ApplicationId, id.ApiClientId)
+}
+
+func (id *ApiAccessId) FromParseResult(input resourceids.ParseResult) error {
+	var ok bool
+
+	if id.ApplicationId, ok = input.Parsed["applicationId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
+	}
+
+	if id.ApiClientId, ok = input.Parsed["roleId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "apiClientId", input)
+	}
+
+	return nil
 }

@@ -13,8 +13,8 @@ type FromTemplateId struct {
 	ServicePrincipalId string
 }
 
-func NewFromTemplateID(templateId, applicationId, servicePrincipalId string) FromTemplateId {
-	return FromTemplateId{
+func NewFromTemplateID(templateId, applicationId, servicePrincipalId string) *FromTemplateId {
+	return &FromTemplateId{
 		TemplateId:         templateId,
 		ApplicationId:      applicationId,
 		ServicePrincipalId: servicePrincipalId,
@@ -23,14 +23,14 @@ func NewFromTemplateID(templateId, applicationId, servicePrincipalId string) Fro
 
 // ParseFromTemplateID parses 'input' into an FromTemplateId
 func ParseFromTemplateID(input string) (*FromTemplateId, error) {
-	parser := resourceids.NewParserFromResourceIdType(FromTemplateId{})
+	parser := resourceids.NewParserFromResourceIdType(&FromTemplateId{})
 	parsed, err := parser.Parse(input, false)
 	if err != nil {
 		return nil, fmt.Errorf("parsing %q: %+v", input, err)
 	}
 
 	var ok bool
-	id := FromTemplateId{}
+	id := &FromTemplateId{}
 
 	if id.TemplateId, ok = parsed.Parsed["templateId"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "templateId", *parsed)
@@ -44,7 +44,7 @@ func ParseFromTemplateID(input string) (*FromTemplateId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "servicePrincipalId", *parsed)
 	}
 
-	return &id, nil
+	return id, nil
 }
 
 // ValidateFromTemplateID checks that 'input' can be parsed as an Application ID
@@ -76,13 +76,13 @@ func ValidateFromTemplateID(input interface{}, key string) (warnings []string, e
 	return
 }
 
-func (id FromTemplateId) ID() string {
+func (id *FromTemplateId) ID() string {
 	fmtString := "/applicationTemplates/%s/instantiate/%s/%s"
 	return fmt.Sprintf(fmtString, id.TemplateId, id.ApplicationId, id.ServicePrincipalId)
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
-func (id FromTemplateId) Segments() []resourceids.Segment {
+func (id *FromTemplateId) Segments() []resourceids.Segment {
 	return []resourceids.Segment{
 		resourceids.StaticSegment("applicationTemplates", "applicationTemplates", "applicationTemplates"),
 		resourceids.UserSpecifiedSegment("templateId", "00000000-0000-0000-0000-000000000000"),
@@ -92,6 +92,24 @@ func (id FromTemplateId) Segments() []resourceids.Segment {
 	}
 }
 
-func (id FromTemplateId) String() string {
+func (id *FromTemplateId) String() string {
 	return fmt.Sprintf("Application From Template (Template ID: %q, Application ID: %q, Service Principal ID: %q)", id.TemplateId, id.ApplicationId, id.ServicePrincipalId)
+}
+
+func (id *FromTemplateId) FromParseResult(input resourceids.ParseResult) error {
+	var ok bool
+
+	if id.TemplateId, ok = input.Parsed["templateId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "templateId", input)
+	}
+
+	if id.ApplicationId, ok = input.Parsed["applicationId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
+	}
+
+	if id.ServicePrincipalId, ok = input.Parsed["servicePrincipalId"]; !ok {
+		return resourceids.NewSegmentNotSpecifiedError(id, "servicePrincipalId", input)
+	}
+
+	return nil
 }
