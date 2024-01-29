@@ -972,7 +972,7 @@ resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[2]d"
   security_enabled = true
   members = [
-	azuread_group.nested.object_id
+    azuread_group.nested.object_id
   ]
 }
 `, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
