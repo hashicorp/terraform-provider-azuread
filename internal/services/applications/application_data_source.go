@@ -34,7 +34,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uris"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
@@ -43,7 +43,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uris"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 				Deprecated:       "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
@@ -53,7 +53,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uris"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
@@ -68,7 +68,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id"},
+				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uris"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
@@ -279,10 +279,12 @@ func applicationDataSource() *pluginsdk.Resource {
 			"identifier_uris": {
 				Description: "A list of user-defined URI(s) that uniquely identify a Web application within it's Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
 				Type:        pluginsdk.TypeList,
+				Optional:    true,
 				Computed:    true,
 				Elem: &pluginsdk.Schema{
 					Type: pluginsdk.TypeString,
 				},
+				ExactlyOneOf: []string{"application_id", "client_id", "display_name", "object_id", "identifier_uris"},
 			},
 
 			"logo_url": {
@@ -525,6 +527,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 	} else {
 		var fieldName, fieldValue string
+		filterOp := "%s eq '%s'"
 		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
 			fieldName = "appId"
 			fieldValue = applicationId
@@ -534,11 +537,18 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		} else if displayName, ok := d.Get("display_name").(string); ok && displayName != "" {
 			fieldName = "displayName"
 			fieldValue = displayName
+		} else if identifier_uris, ok := d.Get("identifier_uris").([]interface{}); ok && len(identifier_uris) > 0 {
+			if len(identifier_uris) != 1 {
+				return tf.ErrorDiagF(nil, "When specifying `identifier_uris` in data source, exactly one uri should be provided")
+			}
+			fieldName = "IdentifierUris"
+			fieldValue = identifier_uris[0].(string)
+			filterOp = "%s/any(uri:uri eq '%s')"
 		} else {
-			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, or `displayName` must be specified")
+			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, `displayName`, or `identifier_uris` must be specified")
 		}
 
-		filter := fmt.Sprintf("%s eq '%s'", fieldName, fieldValue)
+		filter := fmt.Sprintf(filterOp, fieldName, fieldValue)
 
 		result, _, err := client.List(ctx, odata.Query{Filter: filter})
 		if err != nil {
