@@ -604,6 +604,7 @@ const (
 	GroupResourceBehaviorOptionCalendarMemberReadOnly                   GroupResourceBehaviorOption = "CalendarMemberReadOnly"
 	GroupResourceBehaviorOptionConnectorsDisabled                       GroupResourceBehaviorOption = "ConnectorsDisabled"
 	GroupResourceBehaviorOptionHideGroupInOutlook                       GroupResourceBehaviorOption = "HideGroupInOutlook"
+	GroupResourceBehaviorOptionSkipExchangeInstantOn                    GroupResourceBehaviorOption = "SkipExchangeInstantOn"
 	GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled GroupResourceBehaviorOption = "SubscribeMembersToCalendarEventsDisabled"
 	GroupResourceBehaviorOptionSubscribeNewGroupMembers                 GroupResourceBehaviorOption = "SubscribeNewGroupMembers"
 	GroupResourceBehaviorOptionWelcomeEmailDisabled                     GroupResourceBehaviorOption = "WelcomeEmailDisabled"
