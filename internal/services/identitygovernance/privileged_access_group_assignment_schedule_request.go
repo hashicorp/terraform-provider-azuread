@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
@@ -259,6 +260,13 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Read() sdk.Resou
 				return fmt.Errorf("retrieving %s: API error, result was nil", id)
 			}
 
+			if slices.Contains([]string{
+				msgraph.PrivilegedAccessGroupAssignmentStatusCanceled,
+				msgraph.PrivilegedAccessGroupAssignmentStatusRevoked,
+			}, result.Status) {
+				metadata.MarkAsGone(id)
+			}
+
 			model.AssignmentType = result.AccessId
 			model.GroupId = *result.GroupId
 			model.Justification = *result.Justification
@@ -303,24 +311,63 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Delete() sdk.Res
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
-				ID:          &id.RequestId,
-				AccessId:    model.AssignmentType,
-				PrincipalId: &model.PrincipalId,
-				GroupId:     &model.GroupId,
-				Action:      msgraph.PrivilegedAccessGroupActionAdminRemove,
-			})
-			if err != nil {
-				if status == http.StatusNotFound {
-					return metadata.MarkAsGone(id)
-				}
-				return fmt.Errorf("retrieving %s: %+v", id, err)
-			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			switch model.Status {
+			case msgraph.PrivilegedAccessGroupAssignmentStatusDenied:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusFailed:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusGranted:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingAdminDecision:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingApproval:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingProvisioning:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingScheduledCreation:
+				return cancelRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusProvisioned:
+				return revokeRequest(ctx, metadata, client, id, &model)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusScheduleCreated:
+				return revokeRequest(ctx, metadata, client, id, &model)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusCanceled:
+				return metadata.MarkAsGone(id)
+			case msgraph.PrivilegedAccessGroupAssignmentStatusRevoked:
+				return metadata.MarkAsGone(id)
 			}
 
-			return nil
+			return fmt.Errorf("unknown status: %s", model.Status)
 		},
 	}
+}
+
+func cancelRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId) error {
+	status, err := client.Cancel(ctx, id.RequestId)
+	if err != nil {
+		if status == http.StatusNotFound {
+			return metadata.MarkAsGone(id)
+		}
+		return fmt.Errorf("cancelling %s: %+v", id, err)
+	}
+	return metadata.MarkAsGone(id)
+}
+
+func revokeRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId, model *PrivilegedAccessGroupAssignmentScheduleRequestModel) error {
+	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
+		ID:          &id.RequestId,
+		AccessId:    model.AssignmentType,
+		PrincipalId: &model.PrincipalId,
+		GroupId:     &model.GroupId,
+		Action:      msgraph.PrivilegedAccessGroupActionAdminRemove,
+	})
+	if err != nil {
+		if status == http.StatusNotFound {
+			return metadata.MarkAsGone(id)
+		}
+		return fmt.Errorf("retrieving %s: %+v", id, err)
+	}
+	if result == nil {
+		return fmt.Errorf("retrieving %s: API error, result was nil", id)
+	}
+	return metadata.MarkAsGone(id)
 }
