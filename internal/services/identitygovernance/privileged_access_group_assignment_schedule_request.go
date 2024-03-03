@@ -225,6 +225,10 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Create() sdk.Res
 				return fmt.Errorf("ID returned for assignment schedule request is nil/empty")
 			}
 
+			if req.Status == msgraph.PrivilegedAccessGroupAssignmentStatusFailed {
+				return fmt.Errorf("Assignment schedule request is in a failed state")
+			}
+
 			id := parse.NewPrivilegedAccessGroupAssignmentScheduleRequestID(*req.ID)
 			metadata.SetID(id)
 
