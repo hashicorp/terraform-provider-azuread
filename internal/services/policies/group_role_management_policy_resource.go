@@ -679,11 +679,12 @@ func (r RoleManagementPolicyResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("Got the wrong number of policies, expected 1, got %d", len(*policies))
 			}
 
-			id, err := parse.ParseRoleManagementPolicyID(*(*policies)[0].ID)
+			assignmentId, err := parse.ParseRoleManagementPolicyAssignmentID(*(*policies)[0].ID)
 			if err != nil {
-				return fmt.Errorf("Could not parse policy ID, %+v", err)
+				return fmt.Errorf("Could not parse policy assignment ID, %+v", err)
 			}
 
+			id := parse.NewRoleManagementPolicyID(assignmentId.ScopeType, assignmentId.ScopeId, assignmentId.PolicyId)
 			metadata.SetID(id)
 
 			policy, _, err := policyClient.Get(ctx, id.ID())
@@ -1099,6 +1100,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 	}
 
 	return &msgraph.UnifiedRoleManagementPolicy{
+		ID:    policy.ID,
 		Rules: pointer.To(returnRules),
 	}, nil
 }
