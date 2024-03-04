@@ -17,84 +17,84 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-type RoleManagementPolicyModel struct {
-	Description            string                                   `tfschema:"description"`
-	DisplayName            string                                   `tfschema:"display_name"`
-	GroupId                string                                   `tfschema:"object_id"`
-	ScopeType              msgraph.UnifiedRoleManagementPolicyScope `tfschema:"assignment_type"`
-	ActiveAssignmentRules  []ActiveAssignmentRules                  `tfschema:"active_assignment_rules"`
-	EligbleAssignmentRules []EligibleAssignmentRules                `tfschema:"eligible_assignment_rules"`
-	ActivationRules        []ActivationRules                        `tfschema:"activation_rules"`
-	NotificationRules      []NotificationRules                      `tfschema:"notification_rules"`
+type GroupRoleManagementPolicyModel struct {
+	Description            string                                             `tfschema:"description"`
+	DisplayName            string                                             `tfschema:"display_name"`
+	GroupId                string                                             `tfschema:"object_id"`
+	ScopeType              msgraph.UnifiedRoleManagementPolicyScope           `tfschema:"assignment_type"`
+	ActiveAssignmentRules  []GroupRoleManagementPolicyActiveAssignmentRules   `tfschema:"active_assignment_rules"`
+	EligbleAssignmentRules []GroupRoleManagementPolicyEligibleAssignmentRules `tfschema:"eligible_assignment_rules"`
+	ActivationRules        []GroupRoleManagementPolicyActivationRules         `tfschema:"activation_rules"`
+	NotificationRules      []GroupRoleManagementPolicyNotificationRules       `tfschema:"notification_rules"`
 }
 
-type ActiveAssignmentRules struct {
+type GroupRoleManagementPolicyActiveAssignmentRules struct {
 	ExpirationRequired     bool   `tfschema:"expiration_required"`
 	ExpireAfter            string `tfschema:"expire_after"`
 	RequireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
 	RequireJustification   bool   `tfschema:"require_justification"`
 }
 
-type EligibleAssignmentRules struct {
+type GroupRoleManagementPolicyEligibleAssignmentRules struct {
 	ExpirationRequired bool   `tfschema:"expiration_required"`
 	ExpireAfter        string `tfschema:"expire_after"`
 }
 
-type ActivationRules struct {
-	MaximumDuration                 string          `tfschema:"maximum_duration"`
-	RequireApproval                 bool            `tfschema:"require_approval"`
-	ApprovalStages                  []ApprovalStage `tfschema:"approval_stages"`
-	RequireConditionalAccessContext string          `tfschema:"require_conditional_access_authentication_context"`
-	RequireMultiFactorAuth          bool            `tfschema:"require_multifactor_authentication"`
-	RequireJustification            bool            `tfschema:"require_justification"`
-	RequireTicketInfo               bool            `tfschema:"require_ticket_info"`
+type GroupRoleManagementPolicyActivationRules struct {
+	MaximumDuration                 string                                   `tfschema:"maximum_duration"`
+	RequireApproval                 bool                                     `tfschema:"require_approval"`
+	ApprovalStages                  []GroupRoleManagementPolicyApprovalStage `tfschema:"approval_stages"`
+	RequireConditionalAccessContext string                                   `tfschema:"require_conditional_access_authentication_context"`
+	RequireMultiFactorAuth          bool                                     `tfschema:"require_multifactor_authentication"`
+	RequireJustification            bool                                     `tfschema:"require_justification"`
+	RequireTicketInfo               bool                                     `tfschema:"require_ticket_info"`
 }
 
-type ApprovalStage struct {
-	PrimaryApprovers []Approver `tfschema:"primary_approvers"`
+type GroupRoleManagementPolicyApprovalStage struct {
+	PrimaryApprovers []GroupRoleManagementPolicyApprover `tfschema:"primary_approvers"`
 }
 
-type Approver struct {
+type GroupRoleManagementPolicyApprover struct {
 	Description string `tfschema:"description"`
 	ObjectId    string `tfschema:"object_id"`
 	ObjectType  string `tfschema:"object_type"`
 }
 
-type NotificationRules struct {
-	AdminNotifications    []NotificationRule `tfschema:"admin_notifications"`
-	ApproverNotifications []NotificationRule `tfschema:"approver_notifications"`
-	AssigneeNotifications []NotificationRule `tfschema:"assignee_notifications"`
+type GroupRoleManagementPolicyNotificationRules struct {
+	AdminNotifications    []GroupRoleManagementPolicyNotificationRule `tfschema:"admin_notifications"`
+	ApproverNotifications []GroupRoleManagementPolicyNotificationRule `tfschema:"approver_notifications"`
+	AssigneeNotifications []GroupRoleManagementPolicyNotificationRule `tfschema:"assignee_notifications"`
 }
 
-type NotificationRule struct {
-	EligibleAssignments []NotificationSettings `tfschema:"eligible_assignments"`
-	ActiveAssignments   []NotificationSettings `tfschema:"active_assignments"`
-	Activations         []NotificationSettings `tfschema:"activations"`
+type GroupRoleManagementPolicyNotificationRule struct {
+	EligibleAssignments []GroupRoleManagementPolicyNotificationSettings `tfschema:"eligible_assignments"`
+	ActiveAssignments   []GroupRoleManagementPolicyNotificationSettings `tfschema:"active_assignments"`
+	Activations         []GroupRoleManagementPolicyNotificationSettings `tfschema:"activations"`
 }
 
-type NotificationSettings struct {
+type GroupRoleManagementPolicyNotificationSettings struct {
 	NotificationLevel    msgraph.UnifiedRoleManagementPolicyRuleNotificationLevel `tfschema:"notification_level"`
 	DefaultRecipients    bool                                                     `tfschema:"default_recipients"`
 	AdditionalRecipients []string                                                 `tfschema:"additional_recipients"`
 }
 
-type RoleManagementPolicyResource struct{}
+type GroupRoleManagementPolicyResource struct{}
 
-func (r RoleManagementPolicyResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (r GroupRoleManagementPolicyResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return validation.IsUUID
 }
 
-var _ sdk.Resource = RoleManagementPolicyResource{}
+var _ sdk.Resource = GroupRoleManagementPolicyResource{}
 
-func (r RoleManagementPolicyResource) ResourceType() string {
+func (r GroupRoleManagementPolicyResource) ResourceType() string {
 	return "azuread_group_role_management_policy"
 }
 
-func (r RoleManagementPolicyResource) ModelObject() interface{} {
-	return &RoleManagementPolicyModel{}
+func (r GroupRoleManagementPolicyResource) ModelObject() interface{} {
+	return &GroupRoleManagementPolicyModel{}
 }
 
-func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
+func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"object_id": {
 			Description:      "ID of the group to which this policy is assigned",
@@ -629,7 +629,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 	}
 }
 
-func (r RoleManagementPolicyResource) Attributes() map[string]*pluginsdk.Schema {
+func (r GroupRoleManagementPolicyResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
 			Description: "The display name of the policy",
@@ -645,7 +645,7 @@ func (r RoleManagementPolicyResource) Attributes() map[string]*pluginsdk.Schema 
 	}
 }
 
-func (r RoleManagementPolicyResource) Create() sdk.ResourceFunc {
+func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -694,7 +694,7 @@ func (r RoleManagementPolicyResource) Create() sdk.ResourceFunc {
 	}
 }
 
-func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
+func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -705,7 +705,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("Could not parse policy ID, %+v", err)
 			}
 
-			var model RoleManagementPolicyModel
+			var model GroupRoleManagementPolicyModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
@@ -723,25 +723,25 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 			model.GroupId = *result.ScopeId
 
 			if len(model.EligbleAssignmentRules) == 0 {
-				model.EligbleAssignmentRules = make([]EligibleAssignmentRules, 1)
+				model.EligbleAssignmentRules = make([]GroupRoleManagementPolicyEligibleAssignmentRules, 1)
 			}
 			if len(model.ActiveAssignmentRules) == 0 {
-				model.ActiveAssignmentRules = make([]ActiveAssignmentRules, 1)
+				model.ActiveAssignmentRules = make([]GroupRoleManagementPolicyActiveAssignmentRules, 1)
 			}
 			if len(model.ActivationRules) == 0 {
-				model.ActivationRules = make([]ActivationRules, 1)
+				model.ActivationRules = make([]GroupRoleManagementPolicyActivationRules, 1)
 			}
 			if len(model.NotificationRules) == 0 {
-				model.NotificationRules = make([]NotificationRules, 1)
+				model.NotificationRules = make([]GroupRoleManagementPolicyNotificationRules, 1)
 			}
 			if len(model.NotificationRules[0].AdminNotifications) == 0 {
-				model.NotificationRules[0].AdminNotifications = make([]NotificationRule, 1)
+				model.NotificationRules[0].AdminNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
 			if len(model.NotificationRules[0].ApproverNotifications) == 0 {
-				model.NotificationRules[0].ApproverNotifications = make([]NotificationRule, 1)
+				model.NotificationRules[0].ApproverNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
 			if len(model.NotificationRules[0].AssigneeNotifications) == 0 {
-				model.NotificationRules[0].AssigneeNotifications = make([]NotificationRule, 1)
+				model.NotificationRules[0].AssigneeNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
 
 			for _, rule := range *result.Rules {
@@ -771,19 +771,19 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Approval_EndUser_Assignment":
 					model.ActivationRules[0].RequireApproval = *rule.Setting.IsApprovalRequired
-					model.ActivationRules[0].ApprovalStages = make([]ApprovalStage, 0)
+					model.ActivationRules[0].ApprovalStages = make([]GroupRoleManagementPolicyApprovalStage, 0)
 					for _, stage := range *rule.Setting.ApprovalStages {
-						primaryApprovers := make([]Approver, 0)
+						primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
 						for _, approver := range *stage.PrimaryApprovers {
 							switch {
 							case *approver.ODataType == "#microsoft.graph.singleUser":
-								primaryApprovers = append(primaryApprovers, Approver{
+								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
 									Description: *approver.Description,
 									ObjectId:    *approver.ID,
 									ObjectType:  "user",
 								})
 							case *approver.ODataType == "#microsoft.graph.groupMembers":
-								primaryApprovers = append(primaryApprovers, Approver{
+								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
 									Description: *approver.Description,
 									ObjectId:    *approver.ID,
 									ObjectType:  "group",
@@ -791,7 +791,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 							default:
 								return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
 							}
-							model.ActivationRules[0].ApprovalStages = append(model.ActivationRules[0].ApprovalStages, ApprovalStage{
+							model.ActivationRules[0].ApprovalStages = append(model.ActivationRules[0].ApprovalStages, GroupRoleManagementPolicyApprovalStage{
 								PrimaryApprovers: primaryApprovers,
 							})
 						}
@@ -819,7 +819,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Admin_Admin_Eligibility":
 					if len(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -827,7 +827,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Admin_Admin_Assignment":
 					if len(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -835,7 +835,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Admin_EndUser_Assignment":
 					if len(model.NotificationRules[0].AdminNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].Activations = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AdminNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AdminNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -843,7 +843,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Approver_Admin_Eligibility":
 					if len(model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -851,7 +851,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Approver_Admin_Assignment":
 					if len(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -859,7 +859,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Approver_EndUser_Assignment":
 					if len(model.NotificationRules[0].ApproverNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].Activations = make([]NotificationSettings, 1)
+						model.NotificationRules[0].ApproverNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].ApproverNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -867,7 +867,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Requestor_Admin_Eligibility":
 					if len(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -875,7 +875,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Requestor_Admin_Assignment":
 					if len(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -883,7 +883,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Notification_Requestor_EndUser_Assignment":
 					if len(model.NotificationRules[0].AssigneeNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].Activations = make([]NotificationSettings, 1)
+						model.NotificationRules[0].AssigneeNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
 					}
 					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
@@ -897,7 +897,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 	}
 }
 
-func (r RoleManagementPolicyResource) Update() sdk.ResourceFunc {
+func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -933,7 +933,7 @@ func (r RoleManagementPolicyResource) Update() sdk.ResourceFunc {
 	}
 }
 
-func (r RoleManagementPolicyResource) Delete() sdk.ResourceFunc {
+func (r GroupRoleManagementPolicyResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
@@ -948,7 +948,7 @@ func (r RoleManagementPolicyResource) Delete() sdk.ResourceFunc {
 }
 
 func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.UnifiedRoleManagementPolicy) (*msgraph.UnifiedRoleManagementPolicy, error) {
-	var model RoleManagementPolicyModel
+	var model GroupRoleManagementPolicyModel
 	if err := metadata.Decode(&model); err != nil {
 		return nil, fmt.Errorf("decoding: %+v", err)
 	}
