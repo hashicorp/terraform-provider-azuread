@@ -6,10 +6,9 @@ package policies
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"slices"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies/parse"
@@ -23,23 +22,27 @@ type RoleManagementPolicyModel struct {
 	DisplayName            string                                   `tfschema:"display_name"`
 	GroupId                string                                   `tfschema:"object_id"`
 	ScopeType              msgraph.UnifiedRoleManagementPolicyScope `tfschema:"assignment_type"`
-	ActiveAssignmentRules  AssignmentRules                          `tfschema:"active_assignment_rules`
-	EligbleAssignmentRules AssignmentRules                          `tfschema:"eligible_assignment_rules`
+	ActiveAssignmentRules  AssignmentRules                          `tfschema:"active_assignment_rules"`
+	EligbleAssignmentRules AssignmentRules                          `tfschema:"eligible_assignment_rules"`
 	ActivationRules        ActivationRules                          `tfschema:"activation_rules"`
 	NotificationRules      NotificationRules                        `tfschema:"notification_rules"`
 }
 
 type AssignmentRules struct {
-	AllowPermanent        bool   `tfschema:"allow_permanent"`
-	ExpireAfter           string `tfschema:"expire_after"`
-	ReqireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
-	RequireJustification  bool   `tfschema:"require_justification"`
+	AllowPermanent         bool   `tfschema:"allow_permanent"`
+	ExpireAfter            string `tfschema:"expire_after"`
+	RequireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
+	RequireJustification   bool   `tfschema:"require_justification"`
 }
 
 type ActivationRules struct {
-	MaximumDuration string          `tfschema:"maximum_duration"`
-	RequireApproval bool            `tfschema:"require_approval"`
-	ApprovalStages  []ApprovalStage `tfschema:"approval_stages"`
+	MaximumDuration                 string          `tfschema:"maximum_duration"`
+	RequireApproval                 bool            `tfschema:"require_approval"`
+	ApprovalStages                  []ApprovalStage `tfschema:"approval_stages"`
+	RequireConditionalAccessContext string          `tfschema:"require_conditional_access_authentication_context"`
+	RequireMultiFactorAuth          bool            `tfschema:"require_multifactor_authentication"`
+	RequireJustification            bool            `tfschema:"require_justification"`
+	RequireTicketInfo               bool            `tfschema:"require_ticket_info"`
 }
 
 type ApprovalStage struct {
@@ -92,6 +95,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Description:      "ID of the group to which this policy is assigned",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
+			ForceNew:         true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 		},
 
@@ -99,6 +103,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Description: "The ID of the assignment to the group",
 			Type:        pluginsdk.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 				msgraph.PrivilegedAccessGroupRelationshipMember,
 				msgraph.PrivilegedAccessGroupRelationshipOwner,
@@ -112,8 +117,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Optional:    true,
 			Computed:    true,
 			Elem: map[string]*pluginsdk.Schema{
-				// Expiration_Admin_Eligibility #microsoft.graph.unifiedRoleManagementPolicyExpirationRule
-				"allow_permanent": { // isExpirationRequired
+				"allow_permanent": {
 					Description:   "Whether assignments can be permanent",
 					Type:          pluginsdk.TypeBool,
 					Optional:      true,
@@ -121,7 +125,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					ConflictsWith: []string{"eligible_assignment.0.allow_permanent"},
 				},
 
-				"expire_after": { // maximumDuration
+				"expire_after": {
 					Description:      "The duration after which assignments expire",
 					Type:             pluginsdk.TypeString,
 					Optional:         true,
@@ -138,8 +142,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Optional:    true,
 			Computed:    true,
 			Elem: map[string]*pluginsdk.Schema{
-				// Expiration_Admin_Assignment #microsoft.graph.unifiedRoleManagementPolicyExpirationRule
-				"allow_permanent": { // isExpirationRequired
+				"allow_permanent": {
 					Description:   "Whether assignments can be permanent",
 					Type:          pluginsdk.TypeBool,
 					Optional:      true,
@@ -147,7 +150,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					ConflictsWith: []string{"eligible_assignment.0.allow_permanent"},
 				},
 
-				"expire_after": { // maximumDuration
+				"expire_after": {
 					Description:      "The duration after which assignments expire",
 					Type:             pluginsdk.TypeString,
 					Optional:         true,
@@ -156,14 +159,14 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
 				},
 
-				// Enablement_Admin_Assignment #microsoft.graph.unifiedRoleManagementPolicyEnablementRule
-				"require_multifactor_authentication": { // enabledRule "MultiFactorAuthentication"
+				"require_multifactor_authentication": {
 					Description: "Whether multi-factor authentication is required to make an assignment",
 					Type:        pluginsdk.TypeBool,
 					Optional:    true,
 					Computed:    true,
 				},
-				"require_justification": { // enabledRule "Justification"
+
+				"require_justification": {
 					Description: "Whether a justification is required to make an assignment",
 					Type:        pluginsdk.TypeBool,
 					Optional:    true,
@@ -178,8 +181,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Optional:    true,
 			Computed:    true,
 			Elem: map[string]*pluginsdk.Schema{
-				// Expiration_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyExpirationRule
-				"maximum_duration": { // maximumDuration
+				"maximum_duration": {
 					Description: "The maximum duration an activation can be valid for",
 					Type:        pluginsdk.TypeString,
 					Optional:    true,
@@ -192,22 +194,21 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					}, false)),
 				},
 
-				// Approval_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyApprovalRule
-				"require_approval": { // setting.isApprovalRequired
+				"require_approval": {
 					Description: "Whether an approval is required for activation",
 					Type:        pluginsdk.TypeBool,
 					Optional:    true,
 					Computed:    true,
 				},
 
-				"approval_stages": { // setting.approvalStages
+				"approval_stages": {
 					Description: "The approval stages for the activation",
 					Type:        pluginsdk.TypeMap,
 					Optional:    true,
 					MinItems:    1,
 					MaxItems:    1,
 					Elem: map[string]*pluginsdk.Schema{
-						"primary_approvers": { // primaryApprovers
+						"primary_approvers": {
 							Description: "The IDs of the users or groups who can approve the activation",
 							Type:        pluginsdk.TypeList,
 							Optional:    true,
@@ -215,14 +216,14 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							MinItems:    1,
 							Elem: &pluginsdk.Resource{
 								Schema: map[string]*pluginsdk.Schema{
-									"description": { // description
+									"description": {
 										Description:      "The description of the approver",
 										Type:             pluginsdk.TypeString,
 										Required:         true,
 										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 									},
 
-									"user_id": { // "@odata.type" : "#microsoft.graph.singleUser", user
+									"user_id": {
 										Description:      "The ID of the user to act as an approver",
 										Type:             pluginsdk.TypeString,
 										Required:         true,
@@ -230,7 +231,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 									},
 
-									"group_id": { // "@odata.type" : "#microsoft.graph.groupMembers"
+									"group_id": {
 										Description:      "The ID of the group to act as an approver",
 										Type:             pluginsdk.TypeString,
 										Required:         true,
@@ -243,8 +244,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					},
 				},
 
-				// AuthenticationContext_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyAuthenticationContextRule
-				"require_conditional_access_authentication_context": { // isEnabled, claimValue
+				"require_conditional_access_authentication_context": {
 					Description:      "Whether a conditional access context is required during activation",
 					Type:             pluginsdk.TypeString,
 					Optional:         true,
@@ -253,8 +253,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 				},
 
-				// Enablement_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyEnablementRule
-				"require_multifactor_authentication": { // enabledRule "MultiFactorAuthentication"
+				"require_multifactor_authentication": {
 					Description:   "Whether multi-factor authentication is required during activation",
 					Type:          pluginsdk.TypeBool,
 					Optional:      true,
@@ -262,14 +261,14 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					ConflictsWith: []string{"activation.0.require_conditional_access"},
 				},
 
-				"require_justification": { // enabledRules "Justification"
+				"require_justification": {
 					Description: "Whether a justification is required during activation",
 					Type:        pluginsdk.TypeBool,
 					Optional:    true,
 					Computed:    true,
 				},
 
-				"require_ticket_info": { // enabledRules "Ticketing"
+				"require_ticket_info": {
 					Description: "Whether ticket information is required during activation",
 					Type:        pluginsdk.TypeBool,
 					Optional:    true,
@@ -290,27 +289,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					Optional:    true,
 					Computed:    true,
 					Elem: map[string]*pluginsdk.Schema{
-						// Notification_Admin_Admin_Eligibility #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"eligible_assignments": {
 							Description: "The admin notifications for eligible assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -321,27 +319,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Admin_Admin_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"active_assignments": {
 							Description: "The admin notifications for active assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -352,27 +349,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Admin_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"activations": {
 							Description: "The admin notifications for role activation",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -391,27 +387,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					Optional:    true,
 					Computed:    true,
 					Elem: map[string]*pluginsdk.Schema{
-						// Notification_Approver_Admin_Eligibility #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"eligible_assignments": {
 							Description: "The admin notifications for eligible assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -422,27 +417,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Approver_Admin_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"active_assignments": {
 							Description: "The admin notifications for active assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -453,27 +447,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Approver_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"activations": {
 							Description: "The admin notifications for role activation",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -492,27 +485,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 					Optional:    true,
 					Computed:    true,
 					Elem: map[string]*pluginsdk.Schema{
-						// Notification_Requestor_Admin_Eligibility #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"eligible_assignments": {
 							Description: "The admin notifications for eligible assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -523,27 +515,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Requestor_Admin_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"active_assignments": {
 							Description: "The admin notifications for active assignments",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -554,27 +545,26 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 							},
 						},
 
-						// Notification_Requestor_EndUser_Assignment #microsoft.graph.unifiedRoleManagementPolicyNotificationRule
 						"activations": {
 							Description: "The admin notifications for role activation",
 							Type:        pluginsdk.TypeMap,
 							Optional:    true,
 							Computed:    true,
 							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": { // notificationLevel All/Critical
+								"notification_level": {
 									Description:      "What level of notifications are sent",
 									Type:             pluginsdk.TypeString,
 									Optional:         true,
 									Computed:         true,
 									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 								},
-								"default_recipients": { // isDefaultRecipientsEnabled
+								"default_recipients": {
 									Description: "Whether the default recipients are notified",
 									Type:        pluginsdk.TypeBool,
 									Optional:    true,
 									Computed:    true,
 								},
-								"additional_recipients": { // notificationRecipients
+								"additional_recipients": {
 									Description: "The additional recipients to notify",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
@@ -613,6 +603,46 @@ func (r RoleManagementPolicyResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			policyClient := metadata.Client.Policies.RoleManagementPolicyClient
+			assignmentClient := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
+
+			// Fetch the existing policy, as they already exist
+			policies, _, err := assignmentClient.List(ctx, odata.Query{
+				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group'", metadata.ResourceData.Get("object_id").(string)),
+			})
+			if err != nil {
+				return fmt.Errorf("Could not list existing policy, %+v", err)
+			}
+			if len(*policies) != 0 {
+				return fmt.Errorf("Got the wrong number of policies, expected 1, got %d", len(*policies))
+			}
+
+			id, err := parse.ParseRoleManagementPolicyID(*(*policies)[0].ID)
+			if err != nil {
+				return fmt.Errorf("Could not parse policy ID, %+v", err)
+			}
+
+			metadata.SetID(id)
+
+			policy, _, err := policyClient.Get(ctx, id.ID())
+			if err != nil {
+				return fmt.Errorf("Could not retrieve existing policy, %+v", err)
+			}
+			if policy == nil {
+				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			}
+
+			policyUpdate, err := buildPolicyForUpdate(pointer.To(metadata), policy)
+			if err != nil {
+				return fmt.Errorf("Could not build update request, %+v", err)
+			}
+
+			_, err = policyClient.Update(ctx, *policyUpdate)
+			if err != nil {
+				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+			}
+
+			return nil
 		},
 	}
 }
@@ -621,6 +651,149 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Policies.RoleManagementPolicyClient
+
+			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
+			if err != nil {
+				return fmt.Errorf("Could not parse policy ID, %+v", err)
+			}
+
+			var model RoleManagementPolicyModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
+
+			result, _, err := client.Get(ctx, id.ID())
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
+			if result == nil {
+				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			}
+
+			model.Description = *result.Description
+			model.DisplayName = *result.DisplayName
+			model.GroupId = *result.ScopeId
+			model.ScopeType = result.ScopeType
+
+			for _, rule := range *result.Rules {
+				switch *rule.ID {
+				case "Expiration_Admin_Eligibility":
+					model.EligbleAssignmentRules.AllowPermanent = *rule.IsExpirationRequired
+					model.EligbleAssignmentRules.ExpireAfter = *rule.MaximumDuration
+
+				case "Enablement_Admin_Assignment":
+					model.ActiveAssignmentRules.RequireMultiFactorAuth = false
+					model.ActiveAssignmentRules.RequireJustification = false
+					for _, enabledRule := range *rule.EnabledRules {
+						switch enabledRule {
+						case "MultiFactorAuthentication":
+							model.ActiveAssignmentRules.RequireMultiFactorAuth = true
+						case "Justification":
+							model.ActiveAssignmentRules.RequireJustification = true
+						}
+					}
+
+				case "Expiration_Admin_Assignment":
+					model.ActiveAssignmentRules.AllowPermanent = *rule.IsExpirationRequired
+					model.ActiveAssignmentRules.ExpireAfter = *rule.MaximumDuration
+
+				case "Expiration_EndUser_Assignment":
+					model.ActivationRules.MaximumDuration = *rule.MaximumDuration
+
+				case "Approval_EndUser_Assignment":
+					model.ActivationRules.RequireApproval = *rule.Setting.IsApprovalRequired
+					model.ActivationRules.ApprovalStages = make([]ApprovalStage, 0)
+					for _, stage := range *rule.Setting.ApprovalStages {
+						primaryApprovers := make([]Approver, 0)
+						for _, approver := range *stage.PrimaryApprovers {
+							switch {
+							case *approver.ODataType == "#microsoft.graph.singleUser":
+								primaryApprovers = append(primaryApprovers, Approver{
+									Description: *approver.Description,
+									UserId:      *approver.ID,
+								})
+							case *approver.ODataType == "#microsoft.graph.groupMembers":
+								primaryApprovers = append(primaryApprovers, Approver{
+									Description: *approver.Description,
+									GroupId:     *approver.ID,
+								})
+							default:
+								return fmt.Errorf("unknown approver type: %s", approver.ODataType)
+							}
+							model.ActivationRules.ApprovalStages = append(model.ActivationRules.ApprovalStages, ApprovalStage{
+								PrimaryApprovers: primaryApprovers,
+							})
+						}
+					}
+
+				case "AuthenticationContext_EndUser_Assignment":
+					model.ActivationRules.RequireConditionalAccessContext = *rule.ClaimValue
+
+				case "Enablement_EndUser_Assignment":
+					model.ActivationRules.RequireMultiFactorAuth = false
+					model.ActivationRules.RequireJustification = false
+					model.ActivationRules.RequireTicketInfo = false
+					for _, enabledRule := range *rule.EnabledRules {
+						switch enabledRule {
+						case "MultiFactorAuthentication":
+							model.ActivationRules.RequireMultiFactorAuth = true
+						case "Justification":
+							model.ActivationRules.RequireJustification = true
+						case "Ticketing":
+							model.ActivationRules.RequireTicketInfo = true
+						}
+					}
+
+				case "Notification_Admin_Admin_Eligibility":
+					model.NotificationRules.AdminNotifications.EligibleAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AdminNotifications.EligibleAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AdminNotifications.EligibleAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Admin_Admin_Assignment":
+					model.NotificationRules.AdminNotifications.ActiveAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AdminNotifications.ActiveAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AdminNotifications.ActiveAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Admin_EndUser_Assignment":
+					model.NotificationRules.AdminNotifications.Activations.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AdminNotifications.Activations.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AdminNotifications.Activations.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Approver_Admin_Eligibility":
+					model.NotificationRules.ApproverNotifications.EligibleAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.ApproverNotifications.EligibleAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.ApproverNotifications.EligibleAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Approver_Admin_Assignment":
+					model.NotificationRules.ApproverNotifications.ActiveAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.ApproverNotifications.ActiveAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.ApproverNotifications.ActiveAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Approver_EndUser_Assignment":
+					model.NotificationRules.ApproverNotifications.Activations.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.ApproverNotifications.Activations.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.ApproverNotifications.Activations.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Requestor_Admin_Eligibility":
+					model.NotificationRules.AssigneeNotifications.EligibleAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AssigneeNotifications.EligibleAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AssigneeNotifications.EligibleAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Requestor_Admin_Assignment":
+					model.NotificationRules.AssigneeNotifications.ActiveAssignments.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AssigneeNotifications.ActiveAssignments.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AssigneeNotifications.ActiveAssignments.AdditionalRecipients = *rule.NotificationRecipients
+
+				case "Notification_Requestor_EndUser_Assignment":
+					model.NotificationRules.AssigneeNotifications.Activations.NotificationLevel = rule.NotificationLevel
+					model.NotificationRules.AssigneeNotifications.Activations.DefaultRecipients = *rule.IsDefaultRecipientsEnabled
+					model.NotificationRules.AssigneeNotifications.Activations.AdditionalRecipients = *rule.NotificationRecipients
+
+				}
+			}
+
+			return metadata.Encode(&model)
 		},
 	}
 }
@@ -629,6 +802,34 @@ func (r RoleManagementPolicyResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			client := metadata.Client.Policies.RoleManagementPolicyClient
+
+			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
+			if err != nil {
+				return fmt.Errorf("Could not parse policy ID, %+v", err)
+			}
+
+			metadata.SetID(id)
+
+			policy, _, err := client.Get(ctx, id.ID())
+			if err != nil {
+				return fmt.Errorf("Could not retrieve existing policy, %+v", err)
+			}
+			if policy == nil {
+				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			}
+
+			policyUpdate, err := buildPolicyForUpdate(pointer.To(metadata), policy)
+			if err != nil {
+				return fmt.Errorf("Could not build update request, %+v", err)
+			}
+
+			_, err = client.Update(ctx, *policyUpdate)
+			if err != nil {
+				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+			}
+
+			return nil
 		},
 	}
 }
@@ -637,6 +838,203 @@ func (r RoleManagementPolicyResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
+
+			return metadata.MarkAsGone(id)
 		},
 	}
+}
+
+func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.UnifiedRoleManagementPolicy) (*msgraph.UnifiedRoleManagementPolicy, error) {
+	var model RoleManagementPolicyModel
+	if err := metadata.Decode(&model); err != nil {
+		return nil, fmt.Errorf("decoding: %+v", err)
+	}
+
+	// Take the slice of rules and convert it to a map with the ID as the key
+	policyRules := make(map[string]msgraph.UnifiedRoleManagementPolicyRule)
+	for _, rule := range *policy.Rules {
+		policyRules[*rule.ID] = rule
+	}
+
+	if metadata.ResourceData.HasChange("eligible_assignment_rules") {
+		rule := policyRules["Expiration_Admin_Eligibility"]
+		rule.IsExpirationRequired = pointer.To(model.EligbleAssignmentRules.AllowPermanent)
+		rule.MaximumDuration = pointer.To(model.EligbleAssignmentRules.ExpireAfter)
+		policyRules["Expiration_Admin_Eligibility"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("active_assignment_rules.require_multifactor_authentication") ||
+		metadata.ResourceData.HasChange("active_assignment_rules.require_justification") {
+		enabledRules := make([]string, 0)
+		if model.EligbleAssignmentRules.RequireMultiFactorAuth {
+			enabledRules = append(enabledRules, "MultiFactorAuthentication")
+		}
+		if model.EligbleAssignmentRules.RequireJustification {
+			enabledRules = append(enabledRules, "Justification")
+		}
+
+		rule := policyRules["Enablement_Admin_Assignment"]
+		rule.EnabledRules = pointer.To(enabledRules)
+		policyRules["Enablement_Admin_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("active_assignment_rules.allow_permanent") ||
+		metadata.ResourceData.HasChange("active_assignment_rules.expire_after") {
+		rule := policyRules["Expiration_Admin_Assignment"]
+		rule.IsExpirationRequired = pointer.To(model.EligbleAssignmentRules.AllowPermanent)
+		rule.MaximumDuration = pointer.To(model.EligbleAssignmentRules.ExpireAfter)
+		policyRules["Expiration_Admin_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("activation_rules.maximum_duration") {
+		rule := policyRules["Expiration_EndUser_Assignment"]
+		rule.MaximumDuration = pointer.To(model.ActivationRules.MaximumDuration)
+		policyRules["Expiration_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("activation_rules.require_approval") ||
+		metadata.ResourceData.HasChange("activation_rules.approval_stages") {
+		rule := policyRules["Approval_EndUser_Assignment"]
+		approvalStages := make([]msgraph.ApprovalStage, 0)
+		for _, stage := range model.ActivationRules.ApprovalStages {
+			primaryApprovers := make([]msgraph.UserSet, 0)
+			for _, approver := range stage.PrimaryApprovers {
+				if approver.UserId != "" {
+					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
+						ODataType:   pointer.To("#microsoft.graph.singleUser"),
+						ID:          &approver.UserId,
+						Description: &approver.Description,
+					})
+				} else if approver.GroupId != "" {
+					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
+						ODataType:   pointer.To("#microsoft.graph.groupMembers"),
+						ID:          &approver.GroupId,
+						Description: &approver.Description,
+					})
+				} else {
+					return nil, fmt.Errorf("either user_id or group_id must be set")
+				}
+			}
+
+			approvalStages = append(approvalStages, msgraph.ApprovalStage{
+				PrimaryApprovers: &primaryApprovers,
+			})
+		}
+
+		rule.Setting.IsApprovalRequired = pointer.To(model.ActivationRules.RequireApproval)
+		rule.Setting.ApprovalStages = &approvalStages
+		policyRules["Approval_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("activation_rules.require_conditional_access_authentication_context") {
+		rule := policyRules["AuthenticationContext_EndUser_Assignment"]
+		_, set := metadata.ResourceData.GetOk("activation_rules.require_conditional_access_authentication_context")
+		rule.IsEnabled = pointer.To(set)
+		rule.ClaimValue = pointer.To(model.ActivationRules.RequireConditionalAccessContext)
+		policyRules["AuthenticationContext_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("activation_rules.require_multifactor_authentication") ||
+		metadata.ResourceData.HasChange("activation_rules.require_justification") ||
+		metadata.ResourceData.HasChange("activation_rules.require_ticket_info") {
+		enabledRules := make([]string, 0)
+		if model.ActivationRules.RequireMultiFactorAuth {
+			enabledRules = append(enabledRules, "MultiFactorAuthentication")
+		}
+		if model.ActivationRules.RequireJustification {
+			enabledRules = append(enabledRules, "Justification")
+		}
+		if model.ActivationRules.RequireTicketInfo {
+			enabledRules = append(enabledRules, "Ticketing")
+		}
+
+		rule := policyRules["Enablement_EndUser_Assignment"]
+		rule.EnabledRules = pointer.To(enabledRules)
+		policyRules["Enablement_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.admin_notifications.eligible_assignments") {
+		rule := policyRules["Notification_Admin_Admin_Eligibility"]
+		rule.NotificationLevel = model.NotificationRules.AdminNotifications.EligibleAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AdminNotifications.EligibleAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AdminNotifications.EligibleAssignments.AdditionalRecipients
+		policyRules["Notification_Admin_Admin_Eligibility"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.admin_notifications.active_assignments") {
+		rule := policyRules["Notification_Admin_Admin_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.AdminNotifications.ActiveAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AdminNotifications.ActiveAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AdminNotifications.ActiveAssignments.AdditionalRecipients
+		policyRules["Notification_Admin_Admin_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.admin_notifications.activations") {
+		rule := policyRules["Notification_Admin_EndUser_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.AdminNotifications.Activations.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AdminNotifications.Activations.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AdminNotifications.Activations.AdditionalRecipients
+		policyRules["Notification_Admin_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.approver_notifications.eligible_assignments") {
+		rule := policyRules["Notification_Approver_Admin_Eligibility"]
+		rule.NotificationLevel = model.NotificationRules.ApproverNotifications.EligibleAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.ApproverNotifications.EligibleAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.ApproverNotifications.EligibleAssignments.AdditionalRecipients
+		policyRules["Notification_Approver_Admin_Eligibility"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.approver_notifications.active_assignments") {
+		rule := policyRules["Notification_Approver_Admin_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.ApproverNotifications.ActiveAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.ApproverNotifications.ActiveAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.ApproverNotifications.ActiveAssignments.AdditionalRecipients
+		policyRules["Notification_Approver_Admin_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.approver_notifications.activations") {
+		rule := policyRules["Notification_Approver_EndUser_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.ApproverNotifications.Activations.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.ApproverNotifications.Activations.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.ApproverNotifications.Activations.AdditionalRecipients
+		policyRules["Notification_Approver_EndUser_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.assignee_notifications.eligible_assignments") {
+		rule := policyRules["Notification_Requestor_Admin_Eligibility"]
+		rule.NotificationLevel = model.NotificationRules.AssigneeNotifications.EligibleAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AssigneeNotifications.EligibleAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AssigneeNotifications.EligibleAssignments.AdditionalRecipients
+		policyRules["Notification_Requestor_Admin_Eligibility"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.assignee_notifications.active_assignments") {
+		rule := policyRules["Notification_Requestor_Admin_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.AssigneeNotifications.ActiveAssignments.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AssigneeNotifications.ActiveAssignments.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AssigneeNotifications.ActiveAssignments.AdditionalRecipients
+		policyRules["Notification_Requestor_Admin_Assignment"] = rule
+	}
+
+	if metadata.ResourceData.HasChange("notification_rules.assignee_notifications.activations") {
+		rule := policyRules["Notification_Requestor_EndUser_Assignment"]
+		rule.NotificationLevel = model.NotificationRules.AssigneeNotifications.Activations.NotificationLevel
+		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules.AssigneeNotifications.Activations.DefaultRecipients)
+		rule.NotificationRecipients = &model.NotificationRules.AssigneeNotifications.Activations.AdditionalRecipients
+		policyRules["Notification_Requestor_EndUser_Assignment"] = rule
+	}
+
+	returnRules := make([]msgraph.UnifiedRoleManagementPolicyRule, 0)
+	for _, rule := range policyRules {
+		returnRules = append(returnRules, rule)
+	}
+
+	return &msgraph.UnifiedRoleManagementPolicy{
+		Rules: pointer.To(returnRules),
+	}, nil
 }
