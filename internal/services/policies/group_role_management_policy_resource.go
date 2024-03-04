@@ -129,7 +129,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 						Description:      "The duration after which assignments expire",
 						Type:             pluginsdk.TypeString,
 						Optional:         true,
-						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P30D", "P90D", "P180D", "P365D"}, false)),
 					},
 				},
 			},
@@ -153,7 +153,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 						Description:      "The duration after which assignments expire",
 						Type:             pluginsdk.TypeString,
 						Optional:         true,
-						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P30D", "P90D", "P180D", "P365D"}, false)),
 					},
 
 					"require_multifactor_authentication": {
@@ -182,7 +182,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
 					"maximum_duration": {
-						Description: "The maximum duration an activation can be valid for",
+						Description: "The time after which the an activation can be valid for",
 						Type:        pluginsdk.TypeString,
 						Optional:    true,
 						Computed:    true,
@@ -921,11 +921,22 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 	updatedRules := make([]msgraph.UnifiedRoleManagementPolicyRule, 0)
 
 	if metadata.ResourceData.HasChange("eligible_assignment_rules") {
+		expirationRequired := policyRules["Expiration_Admin_Eligibility"].IsExpirationRequired
+		maximumDuration := policyRules["Expiration_Admin_Eligibility"].MaximumDuration
+
+		if metadata.ResourceData.HasChange("eligible_assignment_rules.0.expiration_required") {
+			expirationRequired = pointer.To(model.EligbleAssignmentRules[0].ExpirationRequired)
+		}
+		if metadata.ResourceData.HasChange("eligible_assignment_rules.0.expire_after") {
+			maximumDuration = pointer.To(model.EligbleAssignmentRules[0].ExpireAfter)
+		}
+
 		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                   pointer.To("Expiration_Admin_Eligibility"),
-			ODataType:            pointer.To("#microsoft.graph.unifiedRoleManagementPolicyExpirationRule"),
-			IsExpirationRequired: pointer.To(model.EligbleAssignmentRules[0].AllowPermanent),
-			MaximumDuration:      pointer.To(model.EligbleAssignmentRules[0].ExpireAfter),
+			ID:                   policyRules["Expiration_Admin_Eligibility"].ID,
+			ODataType:            policyRules["Expiration_Admin_Eligibility"].ODataType,
+			Target:               policyRules["Expiration_Admin_Eligibility"].Target,
+			IsExpirationRequired: expirationRequired,
+			MaximumDuration:      maximumDuration,
 		}
 		updatedRules = append(updatedRules, rule)
 	}
@@ -940,64 +951,114 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 			enabledRules = append(enabledRules, "Justification")
 		}
 
-		rule := policyRules["Enablement_Admin_Assignment"]
-		rule.EnabledRules = pointer.To(enabledRules)
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:           policyRules["Enablement_Admin_Assignment"].ID,
+			ODataType:    policyRules["Enablement_Admin_Assignment"].ODataType,
+			Target:       policyRules["Enablement_Admin_Assignment"].Target,
+			EnabledRules: pointer.To(enabledRules),
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("active_assignment_rules.0.allow_permanent") ||
+	if metadata.ResourceData.HasChange("active_assignment_rules.0.expiration_required") ||
 		metadata.ResourceData.HasChange("active_assignment_rules.0.expire_after") {
-		rule := policyRules["Expiration_Admin_Assignment"]
-		rule.IsExpirationRequired = pointer.To(model.ActiveAssignmentRules[0].AllowPermanent)
-		rule.MaximumDuration = pointer.To(model.ActiveAssignmentRules[0].ExpireAfter)
+		expirationRequired := policyRules["Expiration_Admin_Assignment"].IsExpirationRequired
+		maximumDuration := policyRules["Expiration_Admin_Assignment"].MaximumDuration
+
+		if metadata.ResourceData.HasChange("active_assignment_rules.0.expiration_required") {
+			expirationRequired = pointer.To(model.EligbleAssignmentRules[0].ExpirationRequired)
+		}
+		if metadata.ResourceData.HasChange("active_assignment_rules.0.expire_after") {
+			maximumDuration = pointer.To(model.EligbleAssignmentRules[0].ExpireAfter)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                   policyRules["Expiration_Admin_Assignment"].ID,
+			ODataType:            policyRules["Expiration_Admin_Assignment"].ODataType,
+			Target:               policyRules["Expiration_Admin_Assignment"].Target,
+			IsExpirationRequired: expirationRequired,
+			MaximumDuration:      maximumDuration,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.maximum_duration") {
-		rule := policyRules["Expiration_EndUser_Assignment"]
-		rule.MaximumDuration = pointer.To(model.ActivationRules[0].MaximumDuration)
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:              policyRules["Expiration_EndUser_Assignment"].ID,
+			ODataType:       policyRules["Expiration_EndUser_Assignment"].ODataType,
+			Target:          policyRules["Expiration_EndUser_Assignment"].Target,
+			MaximumDuration: pointer.To(model.EligbleAssignmentRules[0].ExpireAfter),
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.require_approval") ||
 		metadata.ResourceData.HasChange("activation_rules.0.approval_stages") {
-		rule := policyRules["Approval_EndUser_Assignment"]
-		approvalStages := make([]msgraph.ApprovalStage, 0)
-		for _, stage := range model.ActivationRules[0].ApprovalStages {
-			primaryApprovers := make([]msgraph.UserSet, 0)
-			for _, approver := range stage.PrimaryApprovers {
-				if approver.ObjectType == "user" {
-					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
-						ODataType:   pointer.To("#microsoft.graph.singleUser"),
-						ID:          &approver.ObjectId,
-						Description: &approver.Description,
-					})
-				} else if approver.ObjectType == "group" {
-					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
-						ODataType:   pointer.To("#microsoft.graph.groupMembers"),
-						ID:          &approver.ObjectId,
-						Description: &approver.Description,
-					})
-				} else {
-					return nil, fmt.Errorf("either user_id or group_id must be set")
+		isApprovalRequired := policyRules["Approval_EndUser_Assignment"].Setting.IsApprovalRequired
+		var approvalStages []msgraph.ApprovalStage
+		if metadata.ResourceData.HasChange("activation_rules.0.require_approval") {
+			isApprovalRequired = pointer.To(model.ActivationRules[0].RequireApproval)
+		}
+		if metadata.ResourceData.HasChange("activation_rules.0.approval_stages") {
+			approvalStages = make([]msgraph.ApprovalStage, 0)
+			for _, stage := range model.ActivationRules[0].ApprovalStages {
+				primaryApprovers := make([]msgraph.UserSet, 0)
+				for _, approver := range stage.PrimaryApprovers {
+					if approver.ObjectType == "user" {
+						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
+							ODataType:   pointer.To("#microsoft.graph.singleUser"),
+							ID:          &approver.ObjectId,
+							Description: &approver.Description,
+						})
+					} else if approver.ObjectType == "group" {
+						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
+							ODataType:   pointer.To("#microsoft.graph.groupMembers"),
+							ID:          &approver.ObjectId,
+							Description: &approver.Description,
+						})
+					} else {
+						return nil, fmt.Errorf("either user_id or group_id must be set")
+					}
 				}
-			}
 
-			approvalStages = append(approvalStages, msgraph.ApprovalStage{
-				PrimaryApprovers: &primaryApprovers,
-			})
+				approvalStages = append(approvalStages, msgraph.ApprovalStage{
+					PrimaryApprovers: &primaryApprovers,
+				})
+			}
+		} else {
+			approvalStages = *policyRules["Approval_EndUser_Assignment"].Setting.ApprovalStages
 		}
 
-		rule.Setting.IsApprovalRequired = pointer.To(model.ActivationRules[0].RequireApproval)
-		rule.Setting.ApprovalStages = &approvalStages
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:        policyRules["Approval_EndUser_Assignment"].ID,
+			ODataType: policyRules["Approval_EndUser_Assignment"].ODataType,
+			Target:    policyRules["Approval_EndUser_Assignment"].Target,
+			Setting: pointer.To(msgraph.ApprovalSettings{
+				IsApprovalRequired: isApprovalRequired,
+				ApprovalStages:     &approvalStages,
+			}),
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.require_conditional_access_authentication_context") {
-		rule := policyRules["AuthenticationContext_EndUser_Assignment"]
-		_, set := metadata.ResourceData.GetOk("activation_rules.0.require_conditional_access_authentication_context")
-		rule.IsEnabled = pointer.To(set)
-		rule.ClaimValue = pointer.To(model.ActivationRules[0].RequireConditionalAccessContext)
+		isEnabled := policyRules["AuthenticationContext_EndUser_Assignment"].IsEnabled
+		claimValue := policyRules["AuthenticationContext_EndUser_Assignment"].ClaimValue
+
+		if _, set := metadata.ResourceData.GetOk("activation_rules.0.require_conditional_access_authentication_context"); set {
+			isEnabled = pointer.To(true)
+			claimValue = pointer.To(model.ActivationRules[0].RequireConditionalAccessContext)
+		} else {
+			isEnabled = pointer.To(false)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:         policyRules["AuthenticationContext_EndUser_Assignment"].ID,
+			ODataType:  policyRules["AuthenticationContext_EndUser_Assignment"].ODataType,
+			Target:     policyRules["AuthenticationContext_EndUser_Assignment"].Target,
+			IsEnabled:  isEnabled,
+			ClaimValue: claimValue,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
@@ -1015,80 +1076,246 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 			enabledRules = append(enabledRules, "Ticketing")
 		}
 
-		rule := policyRules["Enablement_EndUser_Assignment"]
-		rule.EnabledRules = pointer.To(enabledRules)
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:           policyRules["Enablement_EndUser_Assignment"].ID,
+			ODataType:    policyRules["Enablement_EndUser_Assignment"].ODataType,
+			Target:       policyRules["Enablement_EndUser_Assignment"].Target,
+			EnabledRules: &enabledRules,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments") {
-		rule := policyRules["Notification_Admin_Admin_Eligibility"]
-		rule.NotificationLevel = model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Admin_Admin_Eligibility"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Admin_Admin_Eligibility"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Admin_Admin_Eligibility"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.notification_level") {
+			level = model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Admin_Admin_Eligibility"].ID,
+			ODataType:                  policyRules["Notification_Admin_Admin_Eligibility"].ODataType,
+			Target:                     policyRules["Notification_Admin_Admin_Eligibility"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments") {
-		rule := policyRules["Notification_Admin_Admin_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Admin_Admin_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Admin_Admin_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Admin_Admin_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.notification_level") {
+			level = model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Admin_Admin_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Admin_Admin_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Admin_Admin_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations") {
-		rule := policyRules["Notification_Admin_EndUser_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].AdminNotifications[0].Activations[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AdminNotifications[0].Activations[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AdminNotifications[0].Activations[0].AdditionalRecipients
+		level := policyRules["Notification_Admin_EndUser_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Admin_EndUser_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Admin_EndUser_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.notification_level") {
+			level = model.NotificationRules[0].AdminNotifications[0].Activations[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].Activations[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].Activations[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Admin_EndUser_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Admin_EndUser_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Admin_EndUser_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments") {
-		rule := policyRules["Notification_Approver_Admin_Eligibility"]
-		rule.NotificationLevel = model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Approver_Admin_Eligibility"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Approver_Admin_Eligibility"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Approver_Admin_Eligibility"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.notification_level") {
+			level = model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Approver_Admin_Eligibility"].ID,
+			ODataType:                  policyRules["Notification_Approver_Admin_Eligibility"].ODataType,
+			Target:                     policyRules["Notification_Approver_Admin_Eligibility"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments") {
-		rule := policyRules["Notification_Approver_Admin_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Approver_Admin_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Approver_Admin_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Approver_Admin_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.notification_level") {
+			level = model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Approver_Admin_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Approver_Admin_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Approver_Admin_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations") {
-		rule := policyRules["Notification_Approver_EndUser_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].ApproverNotifications[0].Activations[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].ApproverNotifications[0].Activations[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].ApproverNotifications[0].Activations[0].AdditionalRecipients
+		level := policyRules["Notification_Approver_EndUser_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Approver_EndUser_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Approver_EndUser_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.notification_level") {
+			level = model.NotificationRules[0].ApproverNotifications[0].Activations[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].ApproverNotifications[0].Activations[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].ApproverNotifications[0].Activations[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Approver_EndUser_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Approver_EndUser_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Approver_EndUser_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments") {
-		rule := policyRules["Notification_Requestor_Admin_Eligibility"]
-		rule.NotificationLevel = model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Requestor_Admin_Eligibility"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Requestor_Admin_Eligibility"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Requestor_Admin_Eligibility"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.notification_level") {
+			level = model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Requestor_Admin_Eligibility"].ID,
+			ODataType:                  policyRules["Notification_Requestor_Admin_Eligibility"].ODataType,
+			Target:                     policyRules["Notification_Requestor_Admin_Eligibility"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments") {
-		rule := policyRules["Notification_Requestor_Admin_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].AdditionalRecipients
+		level := policyRules["Notification_Requestor_Admin_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Requestor_Admin_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Requestor_Admin_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.notification_level") {
+			level = model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Requestor_Admin_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Requestor_Admin_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Requestor_Admin_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations") {
-		rule := policyRules["Notification_Requestor_EndUser_Assignment"]
-		rule.NotificationLevel = model.NotificationRules[0].AssigneeNotifications[0].Activations[0].NotificationLevel
-		rule.IsDefaultRecipientsEnabled = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].Activations[0].DefaultRecipients)
-		rule.NotificationRecipients = &model.NotificationRules[0].AssigneeNotifications[0].Activations[0].AdditionalRecipients
+		level := policyRules["Notification_Requestor_EndUser_Assignment"].NotificationLevel
+		defaultRecipients := policyRules["Notification_Requestor_EndUser_Assignment"].IsDefaultRecipientsEnabled
+		additionalRecipients := policyRules["Notification_Requestor_EndUser_Assignment"].NotificationRecipients
+
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.notification_level") {
+			level = model.NotificationRules[0].AssigneeNotifications[0].Activations[0].NotificationLevel
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.default_recipients") {
+			defaultRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].Activations[0].DefaultRecipients)
+		}
+		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.additional_recipients") {
+			additionalRecipients = pointer.To(model.NotificationRules[0].AssigneeNotifications[0].Activations[0].AdditionalRecipients)
+		}
+
+		rule := msgraph.UnifiedRoleManagementPolicyRule{
+			ID:                         policyRules["Notification_Requestor_EndUser_Assignment"].ID,
+			ODataType:                  policyRules["Notification_Requestor_EndUser_Assignment"].ODataType,
+			Target:                     policyRules["Notification_Requestor_EndUser_Assignment"].Target,
+			NotificationLevel:          level,
+			IsDefaultRecipientsEnabled: defaultRecipients,
+			NotificationRecipients:     additionalRecipients,
+		}
 		updatedRules = append(updatedRules, rule)
 	}
 
