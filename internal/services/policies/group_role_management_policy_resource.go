@@ -51,8 +51,8 @@ type ApprovalStage struct {
 
 type Approver struct {
 	Description string `tfschema:"description"`
-	UserId      string `tfschema:"user_id"`
-	GroupId     string `tfschema:"group_id"`
+	ObjectId    string `tfschema:"object_id"`
+	ObjectType  string `tfschema:"object_type"`
 }
 
 type NotificationRules struct {
@@ -113,463 +113,527 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 
 		"eligible_assignment_rules": {
 			Description: "The rules for eligible assignment of the policy",
-			Type:        pluginsdk.TypeMap,
+			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
-			Elem: map[string]*pluginsdk.Schema{
-				"allow_permanent": {
-					Description:   "Whether assignments can be permanent",
-					Type:          pluginsdk.TypeBool,
-					Optional:      true,
-					Computed:      true,
-					ConflictsWith: []string{"eligible_assignment.0.allow_permanent"},
-				},
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"allow_permanent": {
+						Description:   "Whether assignments can be permanent",
+						Type:          pluginsdk.TypeBool,
+						Optional:      true,
+						Computed:      true,
+						ConflictsWith: []string{"eligible_assignment_rules.0.expire_after"},
+					},
 
-				"expire_after": {
-					Description:      "The duration after which assignments expire",
-					Type:             pluginsdk.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ConflictsWith:    []string{"eligible_assignment.0.allow_permanent"},
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
+					"expire_after": {
+						Description:      "The duration after which assignments expire",
+						Type:             pluginsdk.TypeString,
+						Optional:         true,
+						Computed:         true,
+						ConflictsWith:    []string{"eligible_assignment_rules.0.allow_permanent"},
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
+					},
 				},
 			},
 		},
 
 		"active_assignment_rules": {
 			Description: "The rules for active assignment of the policy",
-			Type:        pluginsdk.TypeMap,
+			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
-			Elem: map[string]*pluginsdk.Schema{
-				"allow_permanent": {
-					Description:   "Whether assignments can be permanent",
-					Type:          pluginsdk.TypeBool,
-					Optional:      true,
-					Computed:      true,
-					ConflictsWith: []string{"eligible_assignment.0.allow_permanent"},
-				},
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"allow_permanent": {
+						Description:   "Whether assignments can be permanent",
+						Type:          pluginsdk.TypeBool,
+						Optional:      true,
+						Computed:      true,
+						ConflictsWith: []string{"active_assignment_rules.0.expire_after"},
+					},
 
-				"expire_after": {
-					Description:      "The duration after which assignments expire",
-					Type:             pluginsdk.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ConflictsWith:    []string{"eligible_assignment.0.allow_permanent"},
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
-				},
+					"expire_after": {
+						Description:      "The duration after which assignments expire",
+						Type:             pluginsdk.TypeString,
+						Optional:         true,
+						Computed:         true,
+						ConflictsWith:    []string{"active_assignment_rules.0.allow_permanent"},
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P1M", "P3M", "P6M", "P1Y"}, false)),
+					},
 
-				"require_multifactor_authentication": {
-					Description: "Whether multi-factor authentication is required to make an assignment",
-					Type:        pluginsdk.TypeBool,
-					Optional:    true,
-					Computed:    true,
-				},
+					"require_multifactor_authentication": {
+						Description: "Whether multi-factor authentication is required to make an assignment",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 
-				"require_justification": {
-					Description: "Whether a justification is required to make an assignment",
-					Type:        pluginsdk.TypeBool,
-					Optional:    true,
-					Computed:    true,
+					"require_justification": {
+						Description: "Whether a justification is required to make an assignment",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 				},
 			},
 		},
 
 		"activation_rules": {
 			Description: "The activation rules of the policy",
-			Type:        pluginsdk.TypeMap,
+			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
-			Elem: map[string]*pluginsdk.Schema{
-				"maximum_duration": {
-					Description: "The maximum duration an activation can be valid for",
-					Type:        pluginsdk.TypeString,
-					Optional:    true,
-					Computed:    true,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-						"PT30M", "PT1H", "PT1H30M", "PT2H", "PT2H30M", "PT3H", "PT3H30M", "PT4H", "PT4H30M", "PT5H", "PT5H30M", "PT6H",
-						"PT6H30M", "PT7H", "PT7H30M", "PT8H", "PT8H30M", "PT9H", "PT9H30M", "PT10H", "PT10H30M", "PT11H", "PT11H30M", "PT12H",
-						"PT12H30M", "PT13H", "PT13H30M", "PT14H", "PT14H30M", "PT15H", "PT15H30M", "PT16H", "PT16H30M", "PT17H", "PT17H30M", "PT18H",
-						"PT18H30M", "PT19H", "PT19H30M", "PT20H", "PT20H30M", "PT21H", "PT21H30M", "PT22H", "PT22H30M", "PT23H", "PT23H30M", "P1D",
-					}, false)),
-				},
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"maximum_duration": {
+						Description: "The maximum duration an activation can be valid for",
+						Type:        pluginsdk.TypeString,
+						Optional:    true,
+						Computed:    true,
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+							"PT30M", "PT1H", "PT1H30M", "PT2H", "PT2H30M", "PT3H", "PT3H30M", "PT4H", "PT4H30M", "PT5H", "PT5H30M", "PT6H",
+							"PT6H30M", "PT7H", "PT7H30M", "PT8H", "PT8H30M", "PT9H", "PT9H30M", "PT10H", "PT10H30M", "PT11H", "PT11H30M", "PT12H",
+							"PT12H30M", "PT13H", "PT13H30M", "PT14H", "PT14H30M", "PT15H", "PT15H30M", "PT16H", "PT16H30M", "PT17H", "PT17H30M", "PT18H",
+							"PT18H30M", "PT19H", "PT19H30M", "PT20H", "PT20H30M", "PT21H", "PT21H30M", "PT22H", "PT22H30M", "PT23H", "PT23H30M", "P1D",
+						}, false)),
+					},
 
-				"require_approval": {
-					Description: "Whether an approval is required for activation",
-					Type:        pluginsdk.TypeBool,
-					Optional:    true,
-					Computed:    true,
-				},
+					"require_approval": {
+						Description: "Whether an approval is required for activation",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 
-				"approval_stages": {
-					Description: "The approval stages for the activation",
-					Type:        pluginsdk.TypeMap,
-					Optional:    true,
-					MinItems:    1,
-					MaxItems:    1,
-					Elem: map[string]*pluginsdk.Schema{
-						"primary_approvers": {
-							Description: "The IDs of the users or groups who can approve the activation",
-							Type:        pluginsdk.TypeList,
-							Optional:    true,
-							Computed:    true,
-							MinItems:    1,
-							Elem: &pluginsdk.Resource{
-								Schema: map[string]*pluginsdk.Schema{
-									"description": {
-										Description:      "The description of the approver",
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
-									},
+					"approval_stages": {
+						Description: "The approval stages for the activation",
+						Type:        pluginsdk.TypeList,
+						Optional:    true,
+						MaxItems:    1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"primary_approvers": {
+									Description: "The IDs of the users or groups who can approve the activation",
+									Type:        pluginsdk.TypeList,
+									Required:    true,
+									MinItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"description": {
+												Description:      "The description of the approver",
+												Type:             pluginsdk.TypeString,
+												Required:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											},
 
-									"user_id": {
-										Description:      "The ID of the user to act as an approver",
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ConflictsWith:    []string{"approvers.0.group_id"},
-										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
-									},
+											"object_id": {
+												Description:      "The ID of the useror group to act as an approver",
+												Type:             pluginsdk.TypeString,
+												Required:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+											},
 
-									"group_id": {
-										Description:      "The ID of the group to act as an approver",
-										Type:             pluginsdk.TypeString,
-										Required:         true,
-										ConflictsWith:    []string{"approvers.0.user_id"},
-										ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+											"object_type": {
+												Description:      "The type of the object to act as an approver",
+												Type:             pluginsdk.TypeString,
+												Required:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"user", "group"}, false)),
+											},
+										},
 									},
 								},
 							},
 						},
 					},
-				},
 
-				"require_conditional_access_authentication_context": {
-					Description:      "Whether a conditional access context is required during activation",
-					Type:             pluginsdk.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ConflictsWith:    []string{"activation.0.require_multifactor_authentication"},
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
-				},
+					"require_conditional_access_authentication_context": {
+						Description:      "Whether a conditional access context is required during activation",
+						Type:             pluginsdk.TypeString,
+						Optional:         true,
+						Computed:         true,
+						ConflictsWith:    []string{"activation_rules.0.require_multifactor_authentication"},
+						ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					},
 
-				"require_multifactor_authentication": {
-					Description:   "Whether multi-factor authentication is required during activation",
-					Type:          pluginsdk.TypeBool,
-					Optional:      true,
-					Computed:      true,
-					ConflictsWith: []string{"activation.0.require_conditional_access"},
-				},
+					"require_multifactor_authentication": {
+						Description:   "Whether multi-factor authentication is required during activation",
+						Type:          pluginsdk.TypeBool,
+						Optional:      true,
+						Computed:      true,
+						ConflictsWith: []string{"activation_rules.0.require_conditional_access_authentication_context"},
+					},
 
-				"require_justification": {
-					Description: "Whether a justification is required during activation",
-					Type:        pluginsdk.TypeBool,
-					Optional:    true,
-					Computed:    true,
-				},
+					"require_justification": {
+						Description: "Whether a justification is required during activation",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 
-				"require_ticket_info": {
-					Description: "Whether ticket information is required during activation",
-					Type:        pluginsdk.TypeBool,
-					Optional:    true,
-					Computed:    true,
+					"require_ticket_info": {
+						Description: "Whether ticket information is required during activation",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 				},
 			},
 		},
 
 		"notification_rules": {
 			Description: "The notification rules of the policy",
-			Type:        pluginsdk.TypeMap,
+			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
-			Elem: map[string]*pluginsdk.Schema{
-				"admin_notifications": {
-					Description: "The admin notifications on assignment",
-					Type:        pluginsdk.TypeMap,
-					Optional:    true,
-					Computed:    true,
-					Elem: map[string]*pluginsdk.Schema{
-						"eligible_assignments": {
-							Description: "The admin notifications for eligible assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: map[string]*pluginsdk.Schema{
+					"admin_notifications": {
+						Description: "The admin notifications on assignment",
+						Type:        pluginsdk.TypeList,
+						Optional:    true,
+						Computed:    true,
+						MaxItems:    1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"eligible_assignments": {
+									Description: "The admin notifications for eligible assignments",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
-							},
-						},
 
-						"active_assignments": {
-							Description: "The admin notifications for active assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+								"active_assignments": {
+									Description: "The admin notifications for active assignments",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
-							},
-						},
 
-						"activations": {
-							Description: "The admin notifications for role activation",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+								"activations": {
+									Description: "The admin notifications for role activation",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
-									},
-								},
-							},
-						},
-					},
-				},
-
-				"approver_notifications": {
-					Description: "The admin notifications on assignment",
-					Type:        pluginsdk.TypeMap,
-					Optional:    true,
-					Computed:    true,
-					Elem: map[string]*pluginsdk.Schema{
-						"eligible_assignments": {
-							Description: "The admin notifications for eligible assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
 									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
-									},
-								},
-							},
-						},
-
-						"active_assignments": {
-							Description: "The admin notifications for active assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
-									},
-								},
-							},
-						},
-
-						"activations": {
-							Description: "The admin notifications for role activation",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
 							},
 						},
 					},
-				},
 
-				"assignee_notifications": {
-					Description: "The admin notifications on assignment",
-					Type:        pluginsdk.TypeMap,
-					Optional:    true,
-					Computed:    true,
-					Elem: map[string]*pluginsdk.Schema{
-						"eligible_assignments": {
-							Description: "The admin notifications for eligible assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+					"approver_notifications": {
+						Description: "The admin notifications on assignment",
+						Type:        pluginsdk.TypeList,
+						Optional:    true,
+						Computed:    true,
+						MaxItems:    1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"eligible_assignments": {
+									Description: "The admin notifications for eligible assignments",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
+									},
+								},
+
+								"active_assignments": {
+									Description: "The admin notifications for active assignments",
+									Type:        pluginsdk.TypeList,
+									Optional:    true,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
+									},
+								},
+
+								"activations": {
+									Description: "The admin notifications for role activation",
+									Type:        pluginsdk.TypeList,
+									Optional:    true,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description: "What level of notifications are sent",
+												Type:        pluginsdk.TypeString,
+												Optional:    true,
+												Computed:    true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
+													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
+												}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
 							},
 						},
+					},
 
-						"active_assignments": {
-							Description: "The admin notifications for active assignments",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+					"assignee_notifications": {
+						Description: "The admin notifications on assignment",
+						Type:        pluginsdk.TypeList,
+						Optional:    true,
+						Computed:    true,
+						MaxItems:    1,
+						Elem: &pluginsdk.Resource{
+							Schema: map[string]*pluginsdk.Schema{
+								"eligible_assignments": {
+									Description: "The admin notifications for eligible assignments",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description:      "What level of notifications are sent",
+												Type:             pluginsdk.TypeString,
+												Optional:         true,
+												Computed:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
-							},
-						},
 
-						"activations": {
-							Description: "The admin notifications for role activation",
-							Type:        pluginsdk.TypeMap,
-							Optional:    true,
-							Computed:    true,
-							Elem: map[string]*pluginsdk.Schema{
-								"notification_level": {
-									Description:      "What level of notifications are sent",
-									Type:             pluginsdk.TypeString,
-									Optional:         true,
-									Computed:         true,
-									ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-								},
-								"default_recipients": {
-									Description: "Whether the default recipients are notified",
-									Type:        pluginsdk.TypeBool,
-									Optional:    true,
-									Computed:    true,
-								},
-								"additional_recipients": {
-									Description: "The additional recipients to notify",
+								"active_assignments": {
+									Description: "The admin notifications for active assignments",
 									Type:        pluginsdk.TypeList,
 									Optional:    true,
-									Elem: &pluginsdk.Schema{
-										Type: pluginsdk.TypeString,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description:      "What level of notifications are sent",
+												Type:             pluginsdk.TypeString,
+												Optional:         true,
+												Computed:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
+									},
+								},
+
+								"activations": {
+									Description: "The admin notifications for role activation",
+									Type:        pluginsdk.TypeList,
+									Optional:    true,
+									Computed:    true,
+									MaxItems:    1,
+									Elem: &pluginsdk.Resource{
+										Schema: map[string]*pluginsdk.Schema{
+											"notification_level": {
+												Description:      "What level of notifications are sent",
+												Type:             pluginsdk.TypeString,
+												Optional:         true,
+												Computed:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
+											},
+											"default_recipients": {
+												Description: "Whether the default recipients are notified",
+												Type:        pluginsdk.TypeBool,
+												Optional:    true,
+												Computed:    true,
+											},
+											"additional_recipients": {
+												Description: "The additional recipients to notify",
+												Type:        pluginsdk.TypeList,
+												Optional:    true,
+												Elem: &pluginsdk.Schema{
+													Type: pluginsdk.TypeString,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -584,17 +648,15 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 func (r RoleManagementPolicyResource) Attributes() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
 		"display_name": {
-			Description:      "The display name of the policy",
-			Type:             pluginsdk.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			Description: "The display name of the policy",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
 		},
 
 		"description": {
-			Description:      "Description of the policy",
-			Type:             pluginsdk.TypeString,
-			Optional:         true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			Description: "Description of the policy",
+			Type:        pluginsdk.TypeString,
+			Computed:    true,
 		},
 	}
 }
@@ -711,12 +773,14 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 							case *approver.ODataType == "#microsoft.graph.singleUser":
 								primaryApprovers = append(primaryApprovers, Approver{
 									Description: *approver.Description,
-									UserId:      *approver.ID,
+									ObjectId:    *approver.ID,
+									ObjectType:  "user",
 								})
 							case *approver.ODataType == "#microsoft.graph.groupMembers":
 								primaryApprovers = append(primaryApprovers, Approver{
 									Description: *approver.Description,
-									GroupId:     *approver.ID,
+									ObjectId:    *approver.ID,
+									ObjectType:  "group",
 								})
 							default:
 								return fmt.Errorf("unknown approver type: %s", approver.ODataType)
@@ -903,16 +967,16 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		for _, stage := range model.ActivationRules.ApprovalStages {
 			primaryApprovers := make([]msgraph.UserSet, 0)
 			for _, approver := range stage.PrimaryApprovers {
-				if approver.UserId != "" {
+				if approver.ObjectType == "user" {
 					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
 						ODataType:   pointer.To("#microsoft.graph.singleUser"),
-						ID:          &approver.UserId,
+						ID:          &approver.ObjectId,
 						Description: &approver.Description,
 					})
-				} else if approver.GroupId != "" {
+				} else if approver.ObjectType == "group" {
 					primaryApprovers = append(primaryApprovers, msgraph.UserSet{
 						ODataType:   pointer.To("#microsoft.graph.groupMembers"),
-						ID:          &approver.GroupId,
+						ID:          &approver.ObjectId,
 						Description: &approver.Description,
 					})
 				} else {
