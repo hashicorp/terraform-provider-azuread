@@ -670,12 +670,12 @@ func (r RoleManagementPolicyResource) Create() sdk.ResourceFunc {
 
 			// Fetch the existing policy, as they already exist
 			policies, _, err := assignmentClient.List(ctx, odata.Query{
-				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group'", metadata.ResourceData.Get("object_id").(string)),
+				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group' and roleDefinitionId eq '%s'", metadata.ResourceData.Get("object_id").(string), metadata.ResourceData.Get("assignment_type").(string)),
 			})
 			if err != nil {
 				return fmt.Errorf("Could not list existing policy, %+v", err)
 			}
-			if len(*policies) != 0 {
+			if len(*policies) != 1 {
 				return fmt.Errorf("Got the wrong number of policies, expected 1, got %d", len(*policies))
 			}
 
