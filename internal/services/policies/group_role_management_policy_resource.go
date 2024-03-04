@@ -29,7 +29,7 @@ type RoleManagementPolicyModel struct {
 }
 
 type AssignmentRules struct {
-	AllowPermanent         bool   `tfschema:"allow_permanent"`
+	ExpirationRequired     bool   `tfschema:"expiration_required"`
 	ExpireAfter            string `tfschema:"expire_after"`
 	RequireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
 	RequireJustification   bool   `tfschema:"require_justification"`
@@ -119,8 +119,8 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			MaxItems:    1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"allow_permanent": {
-						Description: "Whether assignments can be permanent",
+					"expiration_required": {
+						Description: "Must the assignment have an expiry date",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 					},
@@ -143,8 +143,8 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 			MaxItems:    1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"allow_permanent": {
-						Description: "Whether assignments can be permanent",
+					"expiration_required": {
+						Description: "Must the assignment have an expiry date",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
 					},
@@ -734,7 +734,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 			for _, rule := range *result.Rules {
 				switch *rule.ID {
 				case "Expiration_Admin_Eligibility":
-					model.EligbleAssignmentRules[0].AllowPermanent = *rule.IsExpirationRequired
+					model.EligbleAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
 					model.EligbleAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
 
 				case "Enablement_Admin_Assignment":
@@ -750,7 +750,7 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 					}
 
 				case "Expiration_Admin_Assignment":
-					model.ActiveAssignmentRules[0].AllowPermanent = *rule.IsExpirationRequired
+					model.ActiveAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
 					model.ActiveAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
 
 				case "Expiration_EndUser_Assignment":
