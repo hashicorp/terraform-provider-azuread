@@ -3,7 +3,10 @@
 
 package policies
 
-import "github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+)
 
 type Registration struct{}
 
@@ -34,5 +37,17 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
 		"azuread_authentication_strength_policy": authenticationStrengthPolicyResource(),
 		"azuread_claims_mapping_policy":          claimsMappingPolicyResource(),
+	}
+}
+
+// DataSources returns the typed DataSources supported by this service
+func (r Registration) DataSources() []sdk.DataSource {
+	return []sdk.DataSource{
+	}
+}
+
+// Resources returns the typed Resources supported by this service
+func (r Registration) Resources() []sdk.Resource {
+	return []sdk.Resource{
 	}
 }
