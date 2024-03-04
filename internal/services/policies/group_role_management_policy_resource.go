@@ -22,17 +22,22 @@ type RoleManagementPolicyModel struct {
 	DisplayName            string                                   `tfschema:"display_name"`
 	GroupId                string                                   `tfschema:"object_id"`
 	ScopeType              msgraph.UnifiedRoleManagementPolicyScope `tfschema:"assignment_type"`
-	ActiveAssignmentRules  []AssignmentRules                        `tfschema:"active_assignment_rules"`
-	EligbleAssignmentRules []AssignmentRules                        `tfschema:"eligible_assignment_rules"`
+	ActiveAssignmentRules  []ActiveAssignmentRules                  `tfschema:"active_assignment_rules"`
+	EligbleAssignmentRules []EligibleAssignmentRules                `tfschema:"eligible_assignment_rules"`
 	ActivationRules        []ActivationRules                        `tfschema:"activation_rules"`
 	NotificationRules      []NotificationRules                      `tfschema:"notification_rules"`
 }
 
-type AssignmentRules struct {
+type ActiveAssignmentRules struct {
 	ExpirationRequired     bool   `tfschema:"expiration_required"`
 	ExpireAfter            string `tfschema:"expire_after"`
 	RequireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
 	RequireJustification   bool   `tfschema:"require_justification"`
+}
+
+type EligibleAssignmentRules struct {
+	ExpirationRequired bool   `tfschema:"expiration_required"`
+	ExpireAfter        string `tfschema:"expire_after"`
 }
 
 type ActivationRules struct {
@@ -729,7 +734,28 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 			model.Description = *result.Description
 			model.DisplayName = *result.DisplayName
 			model.GroupId = *result.ScopeId
-			model.ScopeType = result.ScopeType
+
+			if len(model.EligbleAssignmentRules) == 0 {
+				model.EligbleAssignmentRules = make([]EligibleAssignmentRules, 1)
+			}
+			if len(model.ActiveAssignmentRules) == 0 {
+				model.ActiveAssignmentRules = make([]ActiveAssignmentRules, 1)
+			}
+			if len(model.ActivationRules) == 0 {
+				model.ActivationRules = make([]ActivationRules, 1)
+			}
+			if len(model.NotificationRules) == 0 {
+				model.NotificationRules = make([]NotificationRules, 1)
+			}
+			if len(model.NotificationRules[0].AdminNotifications) == 0 {
+				model.NotificationRules[0].AdminNotifications = make([]NotificationRule, 1)
+			}
+			if len(model.NotificationRules[0].ApproverNotifications) == 0 {
+				model.NotificationRules[0].ApproverNotifications = make([]NotificationRule, 1)
+			}
+			if len(model.NotificationRules[0].AssigneeNotifications) == 0 {
+				model.NotificationRules[0].AssigneeNotifications = make([]NotificationRule, 1)
+			}
 
 			for _, rule := range *result.Rules {
 				switch *rule.ID {
@@ -805,46 +831,73 @@ func (r RoleManagementPolicyResource) Read() sdk.ResourceFunc {
 					}
 
 				case "Notification_Admin_Admin_Eligibility":
+					if len(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments) == 0 {
+						model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Admin_Admin_Assignment":
+					if len(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments) == 0 {
+						model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Admin_EndUser_Assignment":
+					if len(model.NotificationRules[0].AdminNotifications[0].Activations) == 0 {
+						model.NotificationRules[0].AdminNotifications[0].Activations = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AdminNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AdminNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AdminNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_Admin_Eligibility":
+					if len(model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments) == 0 {
+						model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_Admin_Assignment":
+					if len(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments) == 0 {
+						model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_EndUser_Assignment":
+					if len(model.NotificationRules[0].ApproverNotifications[0].Activations) == 0 {
+						model.NotificationRules[0].ApproverNotifications[0].Activations = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].ApproverNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].ApproverNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].ApproverNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_Admin_Eligibility":
+					if len(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments) == 0 {
+						model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_Admin_Assignment":
+					if len(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments) == 0 {
+						model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_EndUser_Assignment":
+					if len(model.NotificationRules[0].AssigneeNotifications[0].Activations) == 0 {
+						model.NotificationRules[0].AssigneeNotifications[0].Activations = make([]NotificationSettings, 1)
+					}
 					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
 					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
 					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
