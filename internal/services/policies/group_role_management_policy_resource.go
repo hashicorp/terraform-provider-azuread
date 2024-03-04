@@ -128,12 +128,14 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 						Description: "Must the assignment have an expiry date",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
+						Computed:    true,
 					},
 
 					"expire_after": {
 						Description:      "The duration after which assignments expire",
 						Type:             pluginsdk.TypeString,
 						Optional:         true,
+						Computed:         true,
 						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P30D", "P90D", "P180D", "P365D"}, false)),
 					},
 				},
@@ -152,12 +154,14 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 						Description: "Must the assignment have an expiry date",
 						Type:        pluginsdk.TypeBool,
 						Optional:    true,
+						Computed:    true,
 					},
 
 					"expire_after": {
 						Description:      "The duration after which assignments expire",
 						Type:             pluginsdk.TypeString,
 						Optional:         true,
+						Computed:         true,
 						ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"P15D", "P30D", "P90D", "P180D", "P365D"}, false)),
 					},
 
@@ -308,8 +312,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -318,8 +321,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -344,8 +346,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -354,13 +355,13 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												Computed:    true,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -380,8 +381,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -390,8 +390,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -427,8 +426,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -437,8 +435,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -463,8 +460,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -473,8 +469,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -499,8 +494,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description: "What level of notifications are sent",
 												Type:        pluginsdk.TypeString,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
 													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
@@ -509,8 +503,7 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -546,15 +539,13 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description:      "What level of notifications are sent",
 												Type:             pluginsdk.TypeString,
-												Optional:         true,
-												Computed:         true,
+												Required:         true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 											},
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -579,15 +570,13 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description:      "What level of notifications are sent",
 												Type:             pluginsdk.TypeString,
-												Optional:         true,
-												Computed:         true,
+												Required:         true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 											},
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
@@ -612,15 +601,13 @@ func (r RoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 											"notification_level": {
 												Description:      "What level of notifications are sent",
 												Type:             pluginsdk.TypeString,
-												Optional:         true,
-												Computed:         true,
+												Required:         true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
 											},
 											"default_recipients": {
 												Description: "Whether the default recipients are notified",
 												Type:        pluginsdk.TypeBool,
-												Optional:    true,
-												Computed:    true,
+												Required:    true,
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
