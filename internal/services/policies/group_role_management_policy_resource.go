@@ -335,6 +335,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -370,6 +371,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
 												Computed:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -404,6 +406,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -449,6 +452,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -483,6 +487,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -517,6 +522,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
@@ -559,6 +565,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												Description: "The additional recipients to notify",
 												Type:        pluginsdk.TypeList,
 												Optional:    true,
+												MinItems:    1,
 												Elem: &pluginsdk.Schema{
 													Type: pluginsdk.TypeString,
 												},
