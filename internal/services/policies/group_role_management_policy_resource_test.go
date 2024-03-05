@@ -80,7 +80,7 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  object_id       = azuread_group.pam.object_id
+  group_id        = azuread_group.pam.id
   assignment_type = "member"
 
   eligible_assignment_rules {
@@ -125,7 +125,7 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  object_id       = azuread_group.pam.object_id
+  group_id        = azuread_group.pam.id
   assignment_type = "owner"
 
   eligible_assignment_rules {

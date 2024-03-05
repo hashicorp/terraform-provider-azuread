@@ -20,7 +20,7 @@ import (
 type GroupRoleManagementPolicyModel struct {
 	Description             string                                             `tfschema:"description"`
 	DisplayName             string                                             `tfschema:"display_name"`
-	GroupId                 string                                             `tfschema:"object_id"`
+	GroupId                 string                                             `tfschema:"group_id"`
 	ScopeType               msgraph.UnifiedRoleManagementPolicyScope           `tfschema:"assignment_type"`
 	ActiveAssignmentRules   []GroupRoleManagementPolicyActiveAssignmentRules   `tfschema:"active_assignment_rules"`
 	EligibleAssignmentRules []GroupRoleManagementPolicyEligibleAssignmentRules `tfschema:"eligible_assignment_rules"`
@@ -97,7 +97,7 @@ func (r GroupRoleManagementPolicyResource) ModelObject() interface{} {
 
 func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
-		"object_id": {
+		"group_id": {
 			Description:      "ID of the group to which this policy is assigned",
 			Type:             pluginsdk.TypeString,
 			Required:         true,
@@ -669,7 +669,7 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 
 			// Fetch the existing policy, as they already exist
 			policies, _, err := assignmentClient.List(ctx, odata.Query{
-				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group' and roleDefinitionId eq '%s'", metadata.ResourceData.Get("object_id").(string), metadata.ResourceData.Get("assignment_type").(string)),
+				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group' and roleDefinitionId eq '%s'", metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("assignment_type").(string)),
 			})
 			if err != nil {
 				return fmt.Errorf("Could not list existing policy, %+v", err)

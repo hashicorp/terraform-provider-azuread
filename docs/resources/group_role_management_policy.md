@@ -58,7 +58,7 @@ resource "azuread_group_role_management_policy" "example" {
 
 ## Argument Reference
 
-* `object_id` - (Required) The Object ID of the Azure AD group for which the policy applies.
+* `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
 * `assignment_type` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
 * `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.
 * `activation_rules` - (Optional) An `activation_rules` block as defined below.
