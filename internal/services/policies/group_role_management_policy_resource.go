@@ -778,29 +778,25 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 				case "Approval_EndUser_Assignment":
 					model.ActivationRules[0].RequireApproval = *rule.Setting.IsApprovalRequired
-					model.ActivationRules[0].ApprovalStages = make([]GroupRoleManagementPolicyApprovalStage, 0)
-					for _, stage := range *rule.Setting.ApprovalStages {
-						primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
-						for _, approver := range *stage.PrimaryApprovers {
-							switch {
-							case *approver.ODataType == "#microsoft.graph.singleUser":
-								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-									ID:   *approver.UserID,
-									Type: "singleUser",
-								})
-							case *approver.ODataType == "#microsoft.graph.groupMembers":
-								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-									ID:   *approver.GroupID,
-									Type: "groupMembers",
-								})
-							default:
-								return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
-							}
-							model.ActivationRules[0].ApprovalStages = append(model.ActivationRules[0].ApprovalStages, GroupRoleManagementPolicyApprovalStage{
-								PrimaryApprovers: primaryApprovers,
+
+					primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
+					for _, approver := range *(*rule.Setting.ApprovalStages)[0].PrimaryApprovers {
+						switch {
+						case *approver.ODataType == "#microsoft.graph.singleUser":
+							primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+								ID:   pointer.ToString(approver.UserID),
+								Type: "singleUser",
 							})
+						case *approver.ODataType == "#microsoft.graph.groupMembers":
+							primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+								ID:   pointer.ToString(approver.GroupID),
+								Type: "groupMembers",
+							})
+						default:
+							return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
 						}
 					}
+					model.ActivationRules[0].ApprovalStages = []GroupRoleManagementPolicyApprovalStage{{PrimaryApprovers: primaryApprovers}}
 
 				case "AuthenticationContext_EndUser_Assignment":
 					if rule.ClaimValue != nil && *rule.ClaimValue != "" {
@@ -1062,12 +1058,12 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 					case "singleUser":
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
 							ODataType: pointer.To("#microsoft.graph.singleUser"),
-							UserID:    &approver.ID,
+							UserID:    pointer.To(approver.ID),
 						})
 					case "groupMembers":
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
 							ODataType: pointer.To("#microsoft.graph.groupMembers"),
-							GroupID:   &approver.ID,
+							GroupID:   pointer.To(approver.ID),
 						})
 					}
 				}
