@@ -141,9 +141,8 @@ resource "azuread_group_role_management_policy" "test" {
 		require_approval = true
 		approval_stages {
 			primary_approver {
+				user_id     = azuread_user.approver.object_id
 				description = azuread_user.approver.display_name
-				object_id   = azuread_user.approver.object_id
-				object_type = "user"
 			}
 		}
 	}

@@ -33,6 +33,7 @@ type GroupRoleManagementPolicyActiveAssignmentRules struct {
 	ExpireAfter            string `tfschema:"expire_after"`
 	RequireMultiFactorAuth bool   `tfschema:"require_multifactor_authentication"`
 	RequireJustification   bool   `tfschema:"require_justification"`
+	RequireTicketInfo      bool   `tfschema:"require_ticket_info"`
 }
 
 type GroupRoleManagementPolicyEligibleAssignmentRules struct {
@@ -44,7 +45,7 @@ type GroupRoleManagementPolicyActivationRules struct {
 	MaximumDuration                 string                                   `tfschema:"maximum_duration"`
 	RequireApproval                 bool                                     `tfschema:"require_approval"`
 	ApprovalStages                  []GroupRoleManagementPolicyApprovalStage `tfschema:"approval_stages"`
-	RequireConditionalAccessContext string                                   `tfschema:"require_conditional_access_authentication_context"`
+	RequireConditionalAccessContext string                                   `tfschema:"required_conditional_access_authentication_context"`
 	RequireMultiFactorAuth          bool                                     `tfschema:"require_multifactor_authentication"`
 	RequireJustification            bool                                     `tfschema:"require_justification"`
 	RequireTicketInfo               bool                                     `tfschema:"require_ticket_info"`
@@ -56,8 +57,8 @@ type GroupRoleManagementPolicyApprovalStage struct {
 
 type GroupRoleManagementPolicyApprover struct {
 	Description string `tfschema:"description"`
-	ObjectId    string `tfschema:"object_id"`
-	ObjectType  string `tfschema:"object_type"`
+	GroupId     string `tfschema:"group_id"`
+	UserId      string `tfschema:"user_id"`
 }
 
 type GroupRoleManagementPolicyNotificationRules struct {
@@ -178,6 +179,13 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Optional:    true,
 						Computed:    true,
 					},
+
+					"require_ticket_info": {
+						Description: "Whether ticket information is required to make an assignment",
+						Type:        pluginsdk.TypeBool,
+						Optional:    true,
+						Computed:    true,
+					},
 				},
 			},
 		},
@@ -231,18 +239,18 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 												ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 											},
 
-											"object_id": {
-												Description:      "The ID of the useror group to act as an approver",
+											"group_id": {
+												Description:      "The ID of the group to act as an approver",
 												Type:             pluginsdk.TypeString,
-												Required:         true,
+												Optional:         true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 											},
 
-											"object_type": {
-												Description:      "The type of the object to act as an approver",
+											"user_id": {
+												Description:      "The ID of the user to act as an approver",
 												Type:             pluginsdk.TypeString,
-												Required:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"user", "group"}, false)),
+												Optional:         true,
+												ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 											},
 										},
 									},
@@ -251,7 +259,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						},
 					},
 
-					"require_conditional_access_authentication_context": {
+					"required_conditional_access_authentication_context": {
 						Description:      "Whether a conditional access context is required during activation",
 						Type:             pluginsdk.TypeString,
 						Optional:         true,
@@ -265,7 +273,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Type:          pluginsdk.TypeBool,
 						Optional:      true,
 						Computed:      true,
-						ConflictsWith: []string{"activation_rules.0.require_conditional_access_authentication_context"},
+						ConflictsWith: []string{"activation_rules.0.required_conditional_access_authentication_context"},
 					},
 
 					"require_justification": {
@@ -779,14 +787,12 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 							case *approver.ODataType == "#microsoft.graph.singleUser":
 								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
 									Description: *approver.Description,
-									ObjectId:    *approver.UserID,
-									ObjectType:  "user",
+									UserId:      *approver.UserID,
 								})
 							case *approver.ODataType == "#microsoft.graph.groupMembers":
 								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
 									Description: *approver.Description,
-									ObjectId:    *approver.GroupID,
-									ObjectType:  "group",
+									GroupId:     *approver.GroupID,
 								})
 							default:
 								return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
@@ -991,6 +997,9 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		if model.ActiveAssignmentRules[0].RequireJustification {
 			enabledRules = append(enabledRules, "Justification")
 		}
+		if model.ActiveAssignmentRules[0].RequireTicketInfo {
+			enabledRules = append(enabledRules, "Ticketing")
+		}
 
 		rule := msgraph.UnifiedRoleManagementPolicyRule{
 			ID:           policyRules["Enablement_Admin_Assignment"].ID,
@@ -1050,20 +1059,23 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 			for _, stage := range model.ActivationRules[0].ApprovalStages {
 				primaryApprovers := make([]msgraph.UserSet, 0)
 				for _, approver := range stage.PrimaryApprovers {
-					if approver.ObjectType == "user" {
+					if approver.UserId != "" && approver.GroupId != "" {
+						return nil, fmt.Errorf("Only one of user_id or group_id can be set in a block")
+					} else if approver.UserId == "" && approver.GroupId == "" {
+						return nil, fmt.Errorf("One of user_id or group_id must be set in a block")
+					}
+					if approver.UserId != "" {
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
 							ODataType:   pointer.To("#microsoft.graph.singleUser"),
-							UserID:      &approver.ObjectId,
+							UserID:      &approver.UserId,
 							Description: &approver.Description,
 						})
-					} else if approver.ObjectType == "group" {
+					} else if approver.GroupId != "" {
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
-							ODataType:   pointer.To("#microsoft.graph.groupMembers"),
-							GroupID:     &approver.ObjectId,
+							ODataType:   pointer.To("#microsoft.graph.singleUser"),
+							GroupID:     &approver.GroupId,
 							Description: &approver.Description,
 						})
-					} else {
-						return nil, fmt.Errorf("either user_id or group_id must be set")
 					}
 				}
 
@@ -1087,11 +1099,11 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("activation_rules.0.require_conditional_access_authentication_context") {
+	if metadata.ResourceData.HasChange("activation_rules.0.required_conditional_access_authentication_context") {
 		isEnabled := policyRules["AuthenticationContext_EndUser_Assignment"].IsEnabled
 		claimValue := policyRules["AuthenticationContext_EndUser_Assignment"].ClaimValue
 
-		if _, set := metadata.ResourceData.GetOk("activation_rules.0.require_conditional_access_authentication_context"); set {
+		if _, set := metadata.ResourceData.GetOk("activation_rules.0.required_conditional_access_authentication_context"); set {
 			isEnabled = pointer.To(true)
 			claimValue = pointer.To(model.ActivationRules[0].RequireConditionalAccessContext)
 		} else {
