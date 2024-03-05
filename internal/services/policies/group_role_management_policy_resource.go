@@ -226,7 +226,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 							Schema: map[string]*pluginsdk.Schema{
 								"primary_approver": {
 									Description: "The IDs of the users or groups who can approve the activation",
-									Type:        pluginsdk.TypeList,
+									Type:        pluginsdk.TypeSet,
 									Required:    true,
 									MinItems:    1,
 									Elem: &pluginsdk.Resource{
@@ -325,7 +325,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -360,7 +360,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -395,7 +395,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -441,7 +441,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -476,7 +476,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -511,7 +511,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -554,7 +554,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -586,7 +586,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
@@ -618,7 +618,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 											},
 											"additional_recipients": {
 												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeList,
+												Type:        pluginsdk.TypeSet,
 												Optional:    true,
 												Computed:    true,
 												Elem: &pluginsdk.Schema{
