@@ -82,8 +82,8 @@ One of `expiration_required` or `expire_after` must be provided.
 An `activation_rules` block supports the following:
 
 * `maximum_duration` - (Optional) The maximum length of time an activated role can be valid, in an IS)8601 Duration format (e.g. `PT8H`). Valid range is `PT30M` to `PT23H30M`, in 30 minute increments, or `PT1D`.
-* `approval_stages` - (Optional) An `approval_stages` block as defined below.
-* `require_approval` - (Optional) Is approval required for activation. If `true` an `approval_stages` block must be provided.
+* `approval_stage` - (Optional) An `approval_stage` block as defined below.
+* `require_approval` - (Optional) Is approval required for activation. If `true` an `approval_stage` block must be provided.
 * `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation. Conflicts with `require_multifactor_authentication`.
 * `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to activate the role. Conflicts with `required_conditional_access_authentication_context`.
 * `require_justification` - (Optional) Is a justification required during activation of the role.
@@ -99,7 +99,7 @@ An `admin_notifications` block supports the following:
 
 ---
 
-An `approval_stages` block supports the following:
+An `approval_stage` block supports the following:
 
 * One or more `primary_approver` blocks as defined below.
 

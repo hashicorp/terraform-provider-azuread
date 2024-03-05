@@ -44,7 +44,7 @@ type GroupRoleManagementPolicyEligibleAssignmentRules struct {
 type GroupRoleManagementPolicyActivationRules struct {
 	MaximumDuration                 string                                   `tfschema:"maximum_duration"`
 	RequireApproval                 bool                                     `tfschema:"require_approval"`
-	ApprovalStages                  []GroupRoleManagementPolicyApprovalStage `tfschema:"approval_stages"`
+	ApprovalStages                  []GroupRoleManagementPolicyApprovalStage `tfschema:"approval_stage"`
 	RequireConditionalAccessContext string                                   `tfschema:"required_conditional_access_authentication_context"`
 	RequireMultiFactorAuth          bool                                     `tfschema:"require_multifactor_authentication"`
 	RequireJustification            bool                                     `tfschema:"require_justification"`
@@ -218,7 +218,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Computed:    true,
 					},
 
-					"approval_stages": {
+					"approval_stage": {
 						Description: "The approval stages for the activation",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
@@ -1044,9 +1044,9 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.require_approval") ||
-		metadata.ResourceData.HasChange("activation_rules.0.approval_stages") {
-		if model.ActivationRules[0].RequireApproval && len(model.ActivationRules[0].ApprovalStages[0].PrimaryApprovers) > 1 {
-			return nil, fmt.Errorf("require_approval is true, but no approvers are provided")
+		metadata.ResourceData.HasChange("activation_rules.0.approval_stage") {
+		if model.ActivationRules[0].RequireApproval && len(model.ActivationRules[0].ApprovalStages) != 1 {
+			return nil, fmt.Errorf("require_approval is true, but no approval_stages are provided")
 		}
 
 		isApprovalRequired := policyRules["Approval_EndUser_Assignment"].Setting.IsApprovalRequired
@@ -1054,15 +1054,15 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		if *isApprovalRequired != model.ActivationRules[0].RequireApproval {
 			isApprovalRequired = pointer.To(model.ActivationRules[0].RequireApproval)
 		}
-		if metadata.ResourceData.HasChange("activation_rules.0.approval_stages") {
+		if metadata.ResourceData.HasChange("activation_rules.0.approval_stage") {
 			approvalStages = make([]msgraph.ApprovalStage, 0)
 			for _, stage := range model.ActivationRules[0].ApprovalStages {
 				primaryApprovers := make([]msgraph.UserSet, 0)
 				for _, approver := range stage.PrimaryApprovers {
 					if approver.UserId != "" && approver.GroupId != "" {
-						return nil, fmt.Errorf("Only one of user_id or group_id can be set in a block")
+						return nil, fmt.Errorf("only one of user_id or group_id can be set in a primary_approver block")
 					} else if approver.UserId == "" && approver.GroupId == "" {
-						return nil, fmt.Errorf("One of user_id or group_id must be set in a block")
+						return nil, fmt.Errorf("one of user_id or group_id must be set in a primary_approver block")
 					}
 					if approver.UserId != "" {
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
