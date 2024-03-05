@@ -148,11 +148,8 @@ A `notification_settings` block supports the following:
 
 A `primary_approver` block supports the following:
 
-* `user_id` - (Required) The ID of the user or group which will act as an approver.
-* `group_id` - (Required) The ID of the user or group which will act as an approver.
-* `description` - (Required) A description of the approver.
-
-Only one of `user_id` or `group_id` can be supplied per block. Multiple approvers can be set by providing multiple `primary_approver` blocks.
+* `object_id` - (Required) The ID of the object which will act as an approver.
+* `type` - (Required) The type of object acting as an approver. Possible options are `singleUser` and `groupMember`.
 
 ## Attributes Reference
 

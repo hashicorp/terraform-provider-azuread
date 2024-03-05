@@ -56,9 +56,8 @@ type GroupRoleManagementPolicyApprovalStage struct {
 }
 
 type GroupRoleManagementPolicyApprover struct {
-	Description string `tfschema:"description"`
-	GroupId     string `tfschema:"group_id"`
-	UserId      string `tfschema:"user_id"`
+	ID   string `tfschema:"object_id"`
+	Type string `tfschema:"type"`
 }
 
 type GroupRoleManagementPolicyNotificationRules struct {
@@ -232,25 +231,18 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 									MinItems:    1,
 									Elem: &pluginsdk.Resource{
 										Schema: map[string]*pluginsdk.Schema{
-											"description": {
-												Description:      "The description of the approver",
+											"object_id": {
+												Description:      "The ID of the object to act as an approver",
 												Type:             pluginsdk.TypeString,
 												Required:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
-											},
-
-											"group_id": {
-												Description:      "The ID of the group to act as an approver",
-												Type:             pluginsdk.TypeString,
-												Optional:         true,
 												ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 											},
 
-											"user_id": {
-												Description:      "The ID of the user to act as an approver",
+											"type": {
+												Description:      "The type of object acting as an approver",
 												Type:             pluginsdk.TypeString,
 												Optional:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"singleUser", "groupMembers"}, false)),
 											},
 										},
 									},
@@ -793,13 +785,13 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 							switch {
 							case *approver.ODataType == "#microsoft.graph.singleUser":
 								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-									Description: *approver.Description,
-									UserId:      *approver.UserID,
+									ID:   *approver.UserID,
+									Type: "singleUser",
 								})
 							case *approver.ODataType == "#microsoft.graph.groupMembers":
 								primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-									Description: *approver.Description,
-									GroupId:     *approver.GroupID,
+									ID:   *approver.GroupID,
+									Type: "groupMembers",
 								})
 							default:
 								return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
@@ -1066,22 +1058,16 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 			for _, stage := range model.ActivationRules[0].ApprovalStages {
 				primaryApprovers := make([]msgraph.UserSet, 0)
 				for _, approver := range stage.PrimaryApprovers {
-					if approver.UserId != "" && approver.GroupId != "" {
-						return nil, fmt.Errorf("only one of user_id or group_id can be set in a primary_approver block")
-					} else if approver.UserId == "" && approver.GroupId == "" {
-						return nil, fmt.Errorf("one of user_id or group_id must be set in a primary_approver block")
-					}
-					if approver.UserId != "" {
+					switch approver.Type {
+					case "singleUser":
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
-							ODataType:   pointer.To("#microsoft.graph.singleUser"),
-							UserID:      &approver.UserId,
-							Description: &approver.Description,
+							ODataType: pointer.To("#microsoft.graph.singleUser"),
+							UserID:    &approver.ID,
 						})
-					} else if approver.GroupId != "" {
+					case "groupMembers":
 						primaryApprovers = append(primaryApprovers, msgraph.UserSet{
-							ODataType:   pointer.To("#microsoft.graph.singleUser"),
-							GroupID:     &approver.GroupId,
-							Description: &approver.Description,
+							ODataType: pointer.To("#microsoft.graph.groupMembers"),
+							GroupID:   &approver.ID,
 						})
 					}
 				}

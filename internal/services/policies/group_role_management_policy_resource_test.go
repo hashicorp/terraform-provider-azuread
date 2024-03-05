@@ -139,10 +139,10 @@ resource "azuread_group_role_management_policy" "test" {
 	activation_rules {
 		maximum_duration = "PT1H"
 		require_approval = true
-		approval_stages {
+		approval_stage {
 			primary_approver {
-				user_id     = azuread_user.approver.object_id
-				description = azuread_user.approver.display_name
+				object_id = azuread_user.approver.object_id
+				type      = "singleUser" 
 			}
 		}
 	}
