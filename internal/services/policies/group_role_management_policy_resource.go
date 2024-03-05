@@ -300,112 +300,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Computed:    true,
 						MaxItems:    1,
 						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"eligible_assignments": {
-									Description: "The admin notifications for eligible assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"active_assignments": {
-									Description: "The admin notifications for active assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"activations": {
-									Description: "The admin notifications for role activation",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-							},
+							Schema: notificationRuleSchema(),
 						},
 					},
 
@@ -416,112 +311,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Computed:    true,
 						MaxItems:    1,
 						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"eligible_assignments": {
-									Description: "The admin notifications for eligible assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"active_assignments": {
-									Description: "The admin notifications for active assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"activations": {
-									Description: "The admin notifications for role activation",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description: "What level of notifications are sent",
-												Type:        pluginsdk.TypeString,
-												Required:    true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelAll,
-													msgraph.UnifiedRoleManagementPolicyRuleNotificationLevelCritical,
-												}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-							},
+							Schema: notificationRuleSchema(),
 						},
 					},
 
@@ -532,103 +322,7 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 						Computed:    true,
 						MaxItems:    1,
 						Elem: &pluginsdk.Resource{
-							Schema: map[string]*pluginsdk.Schema{
-								"eligible_assignments": {
-									Description: "The admin notifications for eligible assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description:      "What level of notifications are sent",
-												Type:             pluginsdk.TypeString,
-												Required:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"active_assignments": {
-									Description: "The admin notifications for active assignments",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description:      "What level of notifications are sent",
-												Type:             pluginsdk.TypeString,
-												Required:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-
-								"activations": {
-									Description: "The admin notifications for role activation",
-									Type:        pluginsdk.TypeList,
-									Optional:    true,
-									Computed:    true,
-									MaxItems:    1,
-									Elem: &pluginsdk.Resource{
-										Schema: map[string]*pluginsdk.Schema{
-											"notification_level": {
-												Description:      "What level of notifications are sent",
-												Type:             pluginsdk.TypeString,
-												Required:         true,
-												ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
-											},
-											"default_recipients": {
-												Description: "Whether the default recipients are notified",
-												Type:        pluginsdk.TypeBool,
-												Required:    true,
-											},
-											"additional_recipients": {
-												Description: "The additional recipients to notify",
-												Type:        pluginsdk.TypeSet,
-												Optional:    true,
-												Computed:    true,
-												Elem: &pluginsdk.Schema{
-													Type: pluginsdk.TypeString,
-												},
-											},
-										},
-									},
-								},
-							},
+							Schema: notificationRuleSchema(),
 						},
 					},
 				},
@@ -820,77 +514,49 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 					}
 
 				case "Notification_Admin_Admin_Eligibility":
-					if len(model.NotificationRules[0].AdminNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Admin_Admin_Assignment":
-					if len(model.NotificationRules[0].AdminNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Admin_EndUser_Assignment":
-					if len(model.NotificationRules[0].AdminNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].AdminNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AdminNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AdminNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AdminNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AdminNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_Admin_Eligibility":
-					if len(model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_Admin_Assignment":
-					if len(model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Approver_EndUser_Assignment":
-					if len(model.NotificationRules[0].ApproverNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].ApproverNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].ApproverNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].ApproverNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].ApproverNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].ApproverNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_Admin_Eligibility":
-					if len(model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_Admin_Assignment":
-					if len(model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0].AdditionalRecipients = *rule.NotificationRecipients
 
 				case "Notification_Requestor_EndUser_Assignment":
-					if len(model.NotificationRules[0].AssigneeNotifications[0].Activations) == 0 {
-						model.NotificationRules[0].AssigneeNotifications[0].Activations = make([]GroupRoleManagementPolicyNotificationSettings, 1)
+					model.NotificationRules[0].AssigneeNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
 					}
-					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].NotificationLevel = rule.NotificationLevel
-					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].DefaultRecipients = *rule.IsDefaultRecipientsEnabled
-					model.NotificationRules[0].AssigneeNotifications[0].Activations[0].AdditionalRecipients = *rule.NotificationRecipients
-
 				}
 			}
 
@@ -1134,269 +800,192 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments") {
-		level := policyRules["Notification_Admin_Admin_Eligibility"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Admin_Admin_Eligibility"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Admin_Admin_Eligibility"].NotificationRecipients
-		data := model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Admin_Admin_Eligibility"].ID,
-			ODataType:                  policyRules["Notification_Admin_Admin_Eligibility"].ODataType,
-			Target:                     policyRules["Notification_Admin_Admin_Eligibility"].Target,
-			RecipientType:              policyRules["Notification_Admin_Admin_Eligibility"].RecipientType,
-			NotificationType:           policyRules["Notification_Admin_Admin_Eligibility"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Admin_Admin_Eligibility"],
+				model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments") {
-		level := policyRules["Notification_Admin_Admin_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Admin_Admin_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Admin_Admin_Assignment"].NotificationRecipients
-
-		data := model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Admin_Admin_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Admin_Admin_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Admin_Admin_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Admin_Admin_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Admin_Admin_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Admin_Admin_Assignment"],
+				model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations") {
-		level := policyRules["Notification_Admin_EndUser_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Admin_EndUser_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Admin_EndUser_Assignment"].NotificationRecipients
-		data := model.NotificationRules[0].AdminNotifications[0].Activations[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Admin_EndUser_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Admin_EndUser_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Admin_EndUser_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Admin_EndUser_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Admin_EndUser_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Admin_EndUser_Assignment"],
+				model.NotificationRules[0].AdminNotifications[0].Activations[0],
+				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments") {
-		level := policyRules["Notification_Approver_Admin_Eligibility"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Approver_Admin_Eligibility"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Approver_Admin_Eligibility"].NotificationRecipients
-		data := model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Approver_Admin_Eligibility"].ID,
-			ODataType:                  policyRules["Notification_Approver_Admin_Eligibility"].ODataType,
-			Target:                     policyRules["Notification_Approver_Admin_Eligibility"].Target,
-			RecipientType:              policyRules["Notification_Approver_Admin_Eligibility"].RecipientType,
-			NotificationType:           policyRules["Notification_Approver_Admin_Eligibility"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Approver_Admin_Eligibility"],
+				model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments") {
-		level := policyRules["Notification_Approver_Admin_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Approver_Admin_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Approver_Admin_Assignment"].NotificationRecipients
-		data := model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Approver_Admin_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Approver_Admin_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Approver_Admin_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Approver_Admin_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Approver_Admin_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Approver_Admin_Assignment"],
+				model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations") {
-		level := policyRules["Notification_Approver_EndUser_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Approver_EndUser_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Approver_EndUser_Assignment"].NotificationRecipients
-		data := model.NotificationRules[0].ApproverNotifications[0].Activations[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Approver_EndUser_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Approver_EndUser_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Approver_EndUser_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Approver_EndUser_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Approver_EndUser_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Approver_EndUser_Assignment"],
+				model.NotificationRules[0].ApproverNotifications[0].Activations[0],
+				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments") {
-		level := policyRules["Notification_Requestor_Admin_Eligibility"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Requestor_Admin_Eligibility"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Requestor_Admin_Eligibility"].NotificationRecipients
-		data := model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Requestor_Admin_Eligibility"].ID,
-			ODataType:                  policyRules["Notification_Requestor_Admin_Eligibility"].ODataType,
-			Target:                     policyRules["Notification_Requestor_Admin_Eligibility"].Target,
-			RecipientType:              policyRules["Notification_Requestor_Admin_Eligibility"].RecipientType,
-			NotificationType:           policyRules["Notification_Requestor_Admin_Eligibility"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Requestor_Admin_Eligibility"],
+				model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments") {
-		level := policyRules["Notification_Requestor_Admin_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Requestor_Admin_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Requestor_Admin_Assignment"].NotificationRecipients
-		data := model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Requestor_Admin_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Requestor_Admin_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Requestor_Admin_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Requestor_Admin_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Requestor_Admin_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Requestor_Admin_Assignment"],
+				model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0],
+				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.additional_recipients"),
+			),
+		)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations") {
-		level := policyRules["Notification_Requestor_EndUser_Assignment"].NotificationLevel
-		defaultRecipients := policyRules["Notification_Requestor_EndUser_Assignment"].IsDefaultRecipientsEnabled
-		additionalRecipients := policyRules["Notification_Requestor_EndUser_Assignment"].NotificationRecipients
-		data := model.NotificationRules[0].AssigneeNotifications[0].Activations[0]
-
-		if level != data.NotificationLevel {
-			level = data.NotificationLevel
-		}
-		if *defaultRecipients != data.DefaultRecipients {
-			defaultRecipients = pointer.To(data.DefaultRecipients)
-		}
-		if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.additional_recipients") {
-			additionalRecipients = pointer.To(data.AdditionalRecipients)
-		}
-
-		rule := msgraph.UnifiedRoleManagementPolicyRule{
-			ID:                         policyRules["Notification_Requestor_EndUser_Assignment"].ID,
-			ODataType:                  policyRules["Notification_Requestor_EndUser_Assignment"].ODataType,
-			Target:                     policyRules["Notification_Requestor_EndUser_Assignment"].Target,
-			RecipientType:              policyRules["Notification_Requestor_EndUser_Assignment"].RecipientType,
-			NotificationType:           policyRules["Notification_Requestor_EndUser_Assignment"].NotificationType,
-			NotificationLevel:          level,
-			IsDefaultRecipientsEnabled: defaultRecipients,
-			NotificationRecipients:     additionalRecipients,
-		}
-		updatedRules = append(updatedRules, rule)
+		updatedRules = append(updatedRules,
+			expandNotificationSettings(
+				policyRules["Notification_Requestor_EndUser_Assignment"],
+				model.NotificationRules[0].AssigneeNotifications[0].Activations[0],
+				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.additional_recipients"),
+			),
+		)
 	}
 
 	return &msgraph.UnifiedRoleManagementPolicy{
 		ID:    policy.ID,
 		Rules: pointer.To(updatedRules),
 	}, nil
+}
+
+func expandNotificationSettings(rule msgraph.UnifiedRoleManagementPolicyRule, data GroupRoleManagementPolicyNotificationSettings, recipientChange bool) msgraph.UnifiedRoleManagementPolicyRule {
+	level := rule.NotificationLevel
+	defaultRecipients := rule.IsDefaultRecipientsEnabled
+	additionalRecipients := rule.NotificationRecipients
+
+	if level != data.NotificationLevel {
+		level = data.NotificationLevel
+	}
+	if *defaultRecipients != data.DefaultRecipients {
+		defaultRecipients = pointer.To(data.DefaultRecipients)
+	}
+	if recipientChange {
+		additionalRecipients = pointer.To(data.AdditionalRecipients)
+	}
+
+	return msgraph.UnifiedRoleManagementPolicyRule{
+		ID:                         rule.ID,
+		ODataType:                  rule.ODataType,
+		Target:                     rule.Target,
+		RecipientType:              rule.RecipientType,
+		NotificationType:           rule.NotificationType,
+		NotificationLevel:          level,
+		IsDefaultRecipientsEnabled: defaultRecipients,
+		NotificationRecipients:     additionalRecipients,
+	}
+}
+
+func flattenNotificationSettings(rule *msgraph.UnifiedRoleManagementPolicyRule) *GroupRoleManagementPolicyNotificationSettings {
+	return &GroupRoleManagementPolicyNotificationSettings{
+		NotificationLevel:    rule.NotificationLevel,
+		DefaultRecipients:    *rule.IsDefaultRecipientsEnabled,
+		AdditionalRecipients: *rule.NotificationRecipients,
+	}
+}
+
+func notificationRuleSchema() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"eligible_assignments": {
+			Description: "The admin notifications for eligible assignments",
+			Type:        pluginsdk.TypeList,
+			Optional:    true,
+			Computed:    true,
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: notificationSettingsSchema(),
+			},
+		},
+		"active_assignments": {
+			Description: "The admin notifications for active assignments",
+			Type:        pluginsdk.TypeList,
+			Optional:    true,
+			Computed:    true,
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: notificationSettingsSchema(),
+			},
+		},
+		"activations": {
+			Description: "The admin notifications for role activation",
+			Type:        pluginsdk.TypeList,
+			Optional:    true,
+			Computed:    true,
+			MaxItems:    1,
+			Elem: &pluginsdk.Resource{
+				Schema: notificationSettingsSchema(),
+			},
+		},
+	}
+}
+
+func notificationSettingsSchema() map[string]*pluginsdk.Schema {
+	return map[string]*pluginsdk.Schema{
+		"notification_level": {
+			Description:      "What level of notifications are sent",
+			Type:             pluginsdk.TypeString,
+			Required:         true,
+			ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{"All", "Critical"}, false)),
+		},
+		"default_recipients": {
+			Description: "Whether the default recipients are notified",
+			Type:        pluginsdk.TypeBool,
+			Required:    true,
+		},
+		"additional_recipients": {
+			Description: "The additional recipients to notify",
+			Type:        pluginsdk.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			Elem: &pluginsdk.Schema{
+				Type: pluginsdk.TypeString,
+			},
+		},
+	}
 }
