@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/helpers"
 	"github.com/manicminer/hamilton/msgraph"
 )
 
@@ -35,7 +36,7 @@ func TestPrivilegedAccessGroupEligiblityScheduleRequest_member(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				sleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+1*time.Second),
 			),
 		},
 	})
@@ -53,7 +54,7 @@ func TestPrivilegedAccessGroupEligiblityScheduleRequest_owner(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				sleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+1*time.Second),
 			),
 		},
 	})
@@ -61,7 +62,7 @@ func TestPrivilegedAccessGroupEligiblityScheduleRequest_owner(t *testing.T) {
 }
 
 func (PrivilegedAccessGroupEligiblityScheduleRequestResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestClient
+	client := clients.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
@@ -155,11 +156,4 @@ resource "azuread_privileged_access_group_eligibility_schedule_request" "owner" 
   justification   = "required"
 }
 `, data.RandomString, data.RandomPassword)
-}
-
-func sleepCheck(d time.Duration) acceptance.TestCheckFunc {
-	return func(s *terraform.State) error {
-		time.Sleep(d)
-		return nil
-	}
 }

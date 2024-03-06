@@ -10,6 +10,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -162,7 +163,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			var model PrivilegedAccessGroupEligibilityScheduleRequestModel
 			if err := metadata.Decode(&model); err != nil {
@@ -175,7 +176,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 			if model.ExpirationDate != "" || model.Duration != "" {
 				if model.Duration != "" {
 					schedule.Expiration.Duration = &model.Duration
-					schedule.Expiration.Type = msgraph.ExpirationPatternTypeAfterDuration
+					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
 				}
 
 				if model.ExpirationDate != "" {
@@ -184,12 +185,12 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 						return fmt.Errorf("parsing %s: %+v", model.StartDate, err)
 					}
 					schedule.Expiration.EndDateTime = &endDate
-					schedule.Expiration.Type = msgraph.ExpirationPatternTypeAfterDateTime
+					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
 				}
 			} else if model.PermanentAssignment {
-				schedule.Expiration.Type = msgraph.ExpirationPatternTypeNoExpiration
+				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
 			} else {
-				schedule.Expiration.Type = msgraph.ExpirationPatternTypeNotSpecified
+				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNotSpecified)
 			}
 
 			if model.StartDate != "" {
@@ -241,7 +242,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Read() sdk.Reso
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			id, err := parse.ParsePrivilegedAccessGroupEligibilityScheduleRequestID(metadata.ResourceData.Id())
 			if err != nil {
@@ -274,7 +275,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Read() sdk.Reso
 			model.AssignmentType = result.AccessId
 			model.GroupId = *result.GroupId
 			model.Justification = *result.Justification
-			model.PermanentAssignment = result.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
+			model.PermanentAssignment = *result.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
 			model.PrincipalId = *result.PrincipalId
 			model.StartDate = result.ScheduleInfo.StartDateTime.Format(time.RFC3339)
 			model.Status = result.Status
@@ -303,7 +304,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Delete() sdk.Re
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			id, err := parse.ParsePrivilegedAccessGroupEligibilityScheduleRequestID(metadata.ResourceData.Id())
 			if err != nil {
@@ -317,23 +318,23 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Delete() sdk.Re
 
 			switch model.Status {
 			case msgraph.PrivilegedAccessGroupEligibilityStatusDenied:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusFailed:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusGranted:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusPendingAdminDecision:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusPendingApproval:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusPendingProvisioning:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusPendingScheduledCreation:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelEligibilityRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusProvisioned:
-				return revokeRequest(ctx, metadata, client, id, &model)
+				return revokeEligibilityRequest(ctx, metadata, client, id, &model)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusScheduleCreated:
-				return revokeRequest(ctx, metadata, client, id, &model)
+				return revokeEligibilityRequest(ctx, metadata, client, id, &model)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusCanceled:
 				return metadata.MarkAsGone(id)
 			case msgraph.PrivilegedAccessGroupEligibilityStatusRevoked:
@@ -345,7 +346,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Delete() sdk.Re
 	}
 }
 
-func cancelRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestClient, id *parse.PrivilegedAccessGroupEligibilityScheduleRequestId) error {
+func cancelEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient, id *parse.PrivilegedAccessGroupEligibilityScheduleRequestId) error {
 	status, err := client.Cancel(ctx, id.RequestId)
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -356,7 +357,7 @@ func cancelRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *m
 	return metadata.MarkAsGone(id)
 }
 
-func revokeRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestClient, id *parse.PrivilegedAccessGroupEligibilityScheduleRequestId, model *PrivilegedAccessGroupEligibilityScheduleRequestModel) error {
+func revokeEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient, id *parse.PrivilegedAccessGroupEligibilityScheduleRequestId, model *PrivilegedAccessGroupEligibilityScheduleRequestModel) error {
 	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupEligibilityScheduleRequest{
 		ID:          &id.RequestId,
 		AccessId:    model.AssignmentType,

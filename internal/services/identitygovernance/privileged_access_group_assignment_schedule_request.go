@@ -10,6 +10,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -88,30 +89,30 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Arguments() map[
 		},
 
 		"expiration_date": {
-			Description:   "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
-			Type:          pluginsdk.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"duration", "permanent_assignment"},
-			ValidateFunc:  validation.IsRFC3339Time,
+			Description:  "The date that this assignment expires, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ExactlyOneOf: []string{"duration", "expiration_date", "permanent_assignment"},
+			ValidateFunc: validation.IsRFC3339Time,
 		},
 
 		"duration": {
-			Description:   "The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days)",
-			Type:          pluginsdk.TypeString,
-			Optional:      true,
-			ForceNew:      true,
-			ConflictsWith: []string{"expiration_date", "permanent_assignment"},
-			ValidateFunc:  validation.StringIsNotEmpty,
+			Description:  "The duration of the assignment, formatted as an ISO8601 duration string (e.g. P3D for 3 days)",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			ForceNew:     true,
+			ExactlyOneOf: []string{"duration", "expiration_date", "permanent_assignment"},
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 
 		"permanent_assignment": {
-			Description:   "Is the assignment permanent",
-			Type:          pluginsdk.TypeBool,
-			Optional:      true,
-			ForceNew:      true,
-			Computed:      true,
-			ConflictsWith: []string{"expiration_date", "duration"},
+			Description:  "Is the assignment permanent",
+			Type:         pluginsdk.TypeBool,
+			Optional:     true,
+			ForceNew:     true,
+			Computed:     true,
+			ExactlyOneOf: []string{"duration", "expiration_date", "permanent_assignment"},
 		},
 
 		"justification": {
@@ -175,7 +176,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Create() sdk.Res
 			if model.ExpirationDate != "" || model.Duration != "" {
 				if model.Duration != "" {
 					schedule.Expiration.Duration = &model.Duration
-					schedule.Expiration.Type = msgraph.ExpirationPatternTypeAfterDuration
+					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
 				}
 
 				if model.ExpirationDate != "" {
@@ -184,12 +185,12 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Create() sdk.Res
 						return fmt.Errorf("parsing %s: %+v", model.StartDate, err)
 					}
 					schedule.Expiration.EndDateTime = &endDate
-					schedule.Expiration.Type = msgraph.ExpirationPatternTypeAfterDateTime
+					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
 				}
 			} else if model.PermanentAssignment {
-				schedule.Expiration.Type = msgraph.ExpirationPatternTypeNoExpiration
+				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
 			} else {
-				schedule.Expiration.Type = msgraph.ExpirationPatternTypeNotSpecified
+				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNotSpecified)
 			}
 
 			if model.StartDate != "" {
@@ -274,7 +275,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Read() sdk.Resou
 			model.AssignmentType = result.AccessId
 			model.GroupId = *result.GroupId
 			model.Justification = *result.Justification
-			model.PermanentAssignment = result.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
+			model.PermanentAssignment = *result.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
 			model.PrincipalId = *result.PrincipalId
 			model.StartDate = result.ScheduleInfo.StartDateTime.Format(time.RFC3339)
 			model.Status = result.Status
@@ -317,23 +318,23 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Delete() sdk.Res
 
 			switch model.Status {
 			case msgraph.PrivilegedAccessGroupAssignmentStatusDenied:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusFailed:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusGranted:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingAdminDecision:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingApproval:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingProvisioning:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingScheduledCreation:
-				return cancelRequest(ctx, metadata, client, id)
+				return cancelAssignmentRequest(ctx, metadata, client, id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusProvisioned:
-				return revokeRequest(ctx, metadata, client, id, &model)
+				return revokeAssignmentRequest(ctx, metadata, client, id, &model)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusScheduleCreated:
-				return revokeRequest(ctx, metadata, client, id, &model)
+				return revokeAssignmentRequest(ctx, metadata, client, id, &model)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusCanceled:
 				return metadata.MarkAsGone(id)
 			case msgraph.PrivilegedAccessGroupAssignmentStatusRevoked:
@@ -345,7 +346,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Delete() sdk.Res
 	}
 }
 
-func cancelRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId) error {
+func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId) error {
 	status, err := client.Cancel(ctx, id.RequestId)
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -356,7 +357,7 @@ func cancelRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *m
 	return metadata.MarkAsGone(id)
 }
 
-func revokeRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId, model *PrivilegedAccessGroupAssignmentScheduleRequestModel) error {
+func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupAssignmentScheduleRequestId, model *PrivilegedAccessGroupAssignmentScheduleRequestModel) error {
 	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
 		ID:          &id.RequestId,
 		AccessId:    model.AssignmentType,

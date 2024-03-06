@@ -9,16 +9,16 @@ import (
 )
 
 type Client struct {
-	AccessPackageAssignmentPolicyClient                   *msgraph.AccessPackageAssignmentPolicyClient
-	AccessPackageCatalogClient                            *msgraph.AccessPackageCatalogClient
-	AccessPackageCatalogRoleAssignmentsClient             *msgraph.EntitlementRoleAssignmentsClient
-	AccessPackageCatalogRoleClient                        *msgraph.EntitlementRoleDefinitionsClient
-	AccessPackageClient                                   *msgraph.AccessPackageClient
-	AccessPackageResourceClient                           *msgraph.AccessPackageResourceClient
-	AccessPackageResourceRequestClient                    *msgraph.AccessPackageResourceRequestClient
-	AccessPackageResourceRoleScopeClient                  *msgraph.AccessPackageResourceRoleScopeClient
-	PrivilegedAccessGroupAssignmentScheduleRequestsClient *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient
-	PrivilegedAccessGroupEligibilityScheduleRequestClient *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestClient
+	AccessPackageAssignmentPolicyClient                    *msgraph.AccessPackageAssignmentPolicyClient
+	AccessPackageCatalogClient                             *msgraph.AccessPackageCatalogClient
+	AccessPackageCatalogRoleAssignmentsClient              *msgraph.EntitlementRoleAssignmentsClient
+	AccessPackageCatalogRoleClient                         *msgraph.EntitlementRoleDefinitionsClient
+	AccessPackageClient                                    *msgraph.AccessPackageClient
+	AccessPackageResourceClient                            *msgraph.AccessPackageResourceClient
+	AccessPackageResourceRequestClient                     *msgraph.AccessPackageResourceRequestClient
+	AccessPackageResourceRoleScopeClient                   *msgraph.AccessPackageResourceRoleScopeClient
+	PrivilegedAccessGroupAssignmentScheduleRequestsClient  *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+	PrivilegedAccessGroupEligibilityScheduleRequestsClient *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -59,19 +59,19 @@ func NewClient(o *common.ClientOptions) *Client {
 	privilegedAccessGroupAssignmentScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupAssignmentScheduleRequestsClient()
 	o.ConfigureClient(&privilegedAccessGroupAssignmentScheduleRequestsClient.BaseClient)
 
-	privilegedAccessGroupEligibilityScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleRequestClient()
+	privilegedAccessGroupEligibilityScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleRequestsClient()
 	o.ConfigureClient(&privilegedAccessGroupEligibilityScheduleRequestsClient.BaseClient)
 
 	return &Client{
-		AccessPackageAssignmentPolicyClient:                   accessPackageAssignmentPolicyClient,
-		AccessPackageCatalogClient:                            accessPackageCatalogClient,
-		AccessPackageCatalogRoleAssignmentsClient:             accessPackageCatalogRoleAssignmentsClient,
-		AccessPackageCatalogRoleClient:                        accessPackageCatalogRoleClient,
-		AccessPackageClient:                                   accessPackageClient,
-		AccessPackageResourceClient:                           accessPackageResourceClient,
-		AccessPackageResourceRequestClient:                    accessPackageResourceRequestClient,
-		AccessPackageResourceRoleScopeClient:                  accessPackageResourceRoleScopeClient,
-		PrivilegedAccessGroupAssignmentScheduleRequestsClient: privilegedAccessGroupAssignmentScheduleRequestsClient,
-		PrivilegedAccessGroupEligibilityScheduleRequestClient: privilegedAccessGroupEligibilityScheduleRequestsClient,
+		AccessPackageAssignmentPolicyClient:                    accessPackageAssignmentPolicyClient,
+		AccessPackageCatalogClient:                             accessPackageCatalogClient,
+		AccessPackageCatalogRoleAssignmentsClient:              accessPackageCatalogRoleAssignmentsClient,
+		AccessPackageCatalogRoleClient:                         accessPackageCatalogRoleClient,
+		AccessPackageClient:                                    accessPackageClient,
+		AccessPackageResourceClient:                            accessPackageResourceClient,
+		AccessPackageResourceRequestClient:                     accessPackageResourceRequestClient,
+		AccessPackageResourceRoleScopeClient:                   accessPackageResourceRoleScopeClient,
+		PrivilegedAccessGroupAssignmentScheduleRequestsClient:  privilegedAccessGroupAssignmentScheduleRequestsClient,
+		PrivilegedAccessGroupEligibilityScheduleRequestsClient: privilegedAccessGroupEligibilityScheduleRequestsClient,
 	}
 }
