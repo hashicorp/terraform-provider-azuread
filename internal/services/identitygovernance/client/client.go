@@ -17,6 +17,7 @@ type Client struct {
 	AccessPackageResourceClient                           *msgraph.AccessPackageResourceClient
 	AccessPackageResourceRequestClient                    *msgraph.AccessPackageResourceRequestClient
 	AccessPackageResourceRoleScopeClient                  *msgraph.AccessPackageResourceRoleScopeClient
+	PrivilegedAccessGroupAssignmentScheduleRequestsClient *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient
 	PrivilegedAccessGroupEligibilityScheduleRequestClient *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestClient
 }
 
@@ -55,6 +56,9 @@ func NewClient(o *common.ClientOptions) *Client {
 	o.ConfigureClient(&accessPackageResourceRoleScopeClient.BaseClient)
 	accessPackageResourceRoleScopeClient.BaseClient.ApiVersion = msgraph.VersionBeta
 
+	privilegedAccessGroupAssignmentScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupAssignmentScheduleRequestsClient()
+	o.ConfigureClient(&privilegedAccessGroupAssignmentScheduleRequestsClient.BaseClient)
+
 	privilegedAccessGroupEligibilityScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleRequestClient()
 	o.ConfigureClient(&privilegedAccessGroupEligibilityScheduleRequestsClient.BaseClient)
 
@@ -67,6 +71,7 @@ func NewClient(o *common.ClientOptions) *Client {
 		AccessPackageResourceClient:                           accessPackageResourceClient,
 		AccessPackageResourceRequestClient:                    accessPackageResourceRequestClient,
 		AccessPackageResourceRoleScopeClient:                  accessPackageResourceRoleScopeClient,
+		PrivilegedAccessGroupAssignmentScheduleRequestsClient: privilegedAccessGroupAssignmentScheduleRequestsClient,
 		PrivilegedAccessGroupEligibilityScheduleRequestClient: privilegedAccessGroupEligibilityScheduleRequestsClient,
 	}
 }
