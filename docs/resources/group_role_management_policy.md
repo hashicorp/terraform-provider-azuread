@@ -145,10 +145,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An assignment schedule can be imported using the ID, e.g.
-
-```shell
-terraform import azuread_privileged_access_group_eligibility_schedule_request.example Group_00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000000
-```
-
 Because these policies are created automatically by Entra ID, they will auto-import on first use.
