@@ -30,6 +30,7 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		directoryroles.Registration{},
 		domains.Registration{},
 		policies.Registration{},
+		identitygovernance.Registration{},
 		serviceprincipals.Registration{},
 	}
 }
