@@ -92,10 +92,17 @@ resource "azuread_group_role_management_policy" "test" {
   }
 
 	notification_rules {
-		approver_notifications {
-			eligible_assignments {
+		eligible_assignments {
+		  approver_notifications {
 				notification_level    = "Critical"
 				default_recipients    = false
+				additional_recipients = ["someone@example.com"]
+			}
+		}
+		eligible_activations {
+		  assignee_notifications {
+				notification_level    = "All"
+				default_recipients    = true
 				additional_recipients = ["someone@example.com"]
 			}
 		}
@@ -148,8 +155,8 @@ resource "azuread_group_role_management_policy" "test" {
 	}
 
 	notification_rules {
-		admin_notifications {
-			active_assignments {
+		active_assignments {
+			admin_notifications {
 				notification_level    = "Critical"
 				default_recipients    = false
 				additional_recipients = ["someone@example.com"]

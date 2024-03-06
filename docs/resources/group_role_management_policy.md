@@ -91,33 +91,9 @@ An `activation_rules` block supports the following:
 
 ---
 
-An `admin_notifications` block supports the following:
-
-* `activations` An optional `notification_settings` block as defined below for configuring notifications to adminstrators of role activations.
-* `active_assignments` An optional `notification_settings` block as defined below for configuring notifications to adminstrators of new active assignments.
-* `eligible_assignments` An optional `notification_settings` block as defined below for configuring notifications to adminstrators of new eligible assignments.
-
----
-
 An `approval_stage` block supports the following:
 
 * One or more `primary_approver` blocks as defined below.
-
----
-
-An `approver_notifications` block supports the following:
-
-* `activations` - An optional `notification_settings` block as defined below for configuring notifications to approvers of new activation request.
-* `active_assignments` - An optional `notification_settings` block as defined below for configuring notifications to approvers of new active assignment requests.
-* `eligible_assignments` - An optional `notification_settings` block as defined below for configuring notifications to approvers of new eligible assignment requests.
-
----
-
-An `assignee_notifications` block supports the following:
-
-* `activations` - An optional `notification_settings` block as defined below for configuring notifications to assignees of role activations.
-* `active_assignments` - An optional `notification_settings` block as defined below for configuring notifications to assignees of new active assignments.
-* `eligible_assignments` - An optional `notification_settings` block as defined below for configuring notifications to assignees of new eligible assignments.
 
 ---
 
@@ -132,12 +108,20 @@ One of `expiration_required` or `expire_after` must be provided.
 
 A `notification_rules` block supports the following:
 
-* `admin_notifications` - (Optional) An `admin_notifications` block as defined above.
-* `approver_notifications` - (Optional) An `approver_notifications` block as defined above.
-* `assignee_notifications` - (Optional) An `assignee_notifications` block as defined above.
+* `active_assignments` - An optional `notification_events` block as defined below to configure notfications on active role assignments.
+* `eligible_activations` - An optional `notification_events` block as defined below for configuring notifications on activation of eligible role.
+* `eligible_assignments` - An optional `notification_events` block as defined below to configure notification on eligible role assignments.
 
 ---
 
+An `notification_events` block supports the following:
+
+* `admin_notifications` - (Optional) An `notification_settings` block as defined below.
+* `approver_notifications` - (Optional) An `notification_settings` block as defined below.
+* `assignee_notifications` - (Optional) An `notification_settings` block as defined below.
+
+
+---
 A `notification_settings` block supports the following:
 
 * `notification_level` - (Required) What level of notifications should be sent. Options are `All` or `Critical`.
@@ -149,7 +133,7 @@ A `notification_settings` block supports the following:
 A `primary_approver` block supports the following:
 
 * `object_id` - (Required) The ID of the object which will act as an approver.
-* `type` - (Required) The type of object acting as an approver. Possible options are `singleUser` and `groupMember`.
+* `type` - (Required) The type of object acting as an approver. Possible options are `singleUser` and `groupMembers`.
 
 ## Attributes Reference
 

@@ -25,7 +25,7 @@ type GroupRoleManagementPolicyModel struct {
 	ActiveAssignmentRules   []GroupRoleManagementPolicyActiveAssignmentRules   `tfschema:"active_assignment_rules"`
 	EligibleAssignmentRules []GroupRoleManagementPolicyEligibleAssignmentRules `tfschema:"eligible_assignment_rules"`
 	ActivationRules         []GroupRoleManagementPolicyActivationRules         `tfschema:"activation_rules"`
-	NotificationRules       []GroupRoleManagementPolicyNotificationRules       `tfschema:"notification_rules"`
+	NotificationRules       []GroupRoleManagementPolicyNotificationEvents      `tfschema:"notification_rules"`
 }
 
 type GroupRoleManagementPolicyActiveAssignmentRules struct {
@@ -60,16 +60,16 @@ type GroupRoleManagementPolicyApprover struct {
 	Type string `tfschema:"type"`
 }
 
-type GroupRoleManagementPolicyNotificationRules struct {
-	AdminNotifications    []GroupRoleManagementPolicyNotificationRule `tfschema:"admin_notifications"`
-	ApproverNotifications []GroupRoleManagementPolicyNotificationRule `tfschema:"approver_notifications"`
-	AssigneeNotifications []GroupRoleManagementPolicyNotificationRule `tfschema:"assignee_notifications"`
+type GroupRoleManagementPolicyNotificationEvents struct {
+	ActiveAssignments   []GroupRoleManagementPolicyNotificationRule `tfschema:"active_assignments"`
+	EligibleActivations []GroupRoleManagementPolicyNotificationRule `tfschema:"eligible_activations"`
+	EligibleAssignments []GroupRoleManagementPolicyNotificationRule `tfschema:"eligible_assignments"`
 }
 
 type GroupRoleManagementPolicyNotificationRule struct {
-	EligibleAssignments []GroupRoleManagementPolicyNotificationSettings `tfschema:"eligible_assignments"`
-	ActiveAssignments   []GroupRoleManagementPolicyNotificationSettings `tfschema:"active_assignments"`
-	Activations         []GroupRoleManagementPolicyNotificationSettings `tfschema:"activations"`
+	AdminNotifications    []GroupRoleManagementPolicyNotificationSettings `tfschema:"admin_notifications"`
+	ApproverNotifications []GroupRoleManagementPolicyNotificationSettings `tfschema:"approver_notifications"`
+	AssigneeNotifications []GroupRoleManagementPolicyNotificationSettings `tfschema:"assignee_notifications"`
 }
 
 type GroupRoleManagementPolicyNotificationSettings struct {
@@ -293,8 +293,8 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			MaxItems:    1,
 			Elem: &pluginsdk.Resource{
 				Schema: map[string]*pluginsdk.Schema{
-					"admin_notifications": {
-						Description: "The admin notifications on assignment",
+					"active_assignments": {
+						Description: "Notifications about active assignments",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -303,9 +303,8 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 							Schema: notificationRuleSchema(),
 						},
 					},
-
-					"approver_notifications": {
-						Description: "The admin notifications on assignment",
+					"eligible_activations": {
+						Description: "Notifications about activations of eligible assignments",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -314,9 +313,8 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 							Schema: notificationRuleSchema(),
 						},
 					},
-
-					"assignee_notifications": {
-						Description: "The admin notifications on assignment",
+					"eligible_assignments": {
+						Description: "Notifications about eligible assignments",
 						Type:        pluginsdk.TypeList,
 						Optional:    true,
 						Computed:    true,
@@ -434,43 +432,20 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				model.ActivationRules = make([]GroupRoleManagementPolicyActivationRules, 1)
 			}
 			if len(model.NotificationRules) == 0 {
-				model.NotificationRules = make([]GroupRoleManagementPolicyNotificationRules, 1)
+				model.NotificationRules = make([]GroupRoleManagementPolicyNotificationEvents, 1)
 			}
-			if len(model.NotificationRules[0].AdminNotifications) == 0 {
-				model.NotificationRules[0].AdminNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
+			if len(model.NotificationRules[0].EligibleActivations) == 0 {
+				model.NotificationRules[0].EligibleActivations = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
-			if len(model.NotificationRules[0].ApproverNotifications) == 0 {
-				model.NotificationRules[0].ApproverNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
+			if len(model.NotificationRules[0].ActiveAssignments) == 0 {
+				model.NotificationRules[0].ActiveAssignments = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
-			if len(model.NotificationRules[0].AssigneeNotifications) == 0 {
-				model.NotificationRules[0].AssigneeNotifications = make([]GroupRoleManagementPolicyNotificationRule, 1)
+			if len(model.NotificationRules[0].EligibleAssignments) == 0 {
+				model.NotificationRules[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
 
 			for _, rule := range *result.Rules {
 				switch *rule.ID {
-				case "Expiration_Admin_Eligibility":
-					model.EligibleAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
-					model.EligibleAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
-
-				case "Enablement_Admin_Assignment":
-					model.ActiveAssignmentRules[0].RequireMultiFactorAuth = false
-					model.ActiveAssignmentRules[0].RequireJustification = false
-					for _, enabledRule := range *rule.EnabledRules {
-						switch enabledRule {
-						case "MultiFactorAuthentication":
-							model.ActiveAssignmentRules[0].RequireMultiFactorAuth = true
-						case "Justification":
-							model.ActiveAssignmentRules[0].RequireJustification = true
-						}
-					}
-
-				case "Expiration_Admin_Assignment":
-					model.ActiveAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
-					model.ActiveAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
-
-				case "Expiration_EndUser_Assignment":
-					model.ActivationRules[0].MaximumDuration = *rule.MaximumDuration
-
 				case "Approval_EndUser_Assignment":
 					model.ActivationRules[0].RequireApproval = *rule.Setting.IsApprovalRequired
 
@@ -498,6 +473,18 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 						model.ActivationRules[0].RequireConditionalAccessContext = *rule.ClaimValue
 					}
 
+				case "Enablement_Admin_Assignment":
+					model.ActiveAssignmentRules[0].RequireMultiFactorAuth = false
+					model.ActiveAssignmentRules[0].RequireJustification = false
+					for _, enabledRule := range *rule.EnabledRules {
+						switch enabledRule {
+						case "MultiFactorAuthentication":
+							model.ActiveAssignmentRules[0].RequireMultiFactorAuth = true
+						case "Justification":
+							model.ActiveAssignmentRules[0].RequireJustification = true
+						}
+					}
+
 				case "Enablement_EndUser_Assignment":
 					model.ActivationRules[0].RequireMultiFactorAuth = false
 					model.ActivationRules[0].RequireJustification = false
@@ -513,48 +500,59 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 						}
 					}
 
-				case "Notification_Admin_Admin_Eligibility":
-					model.NotificationRules[0].AdminNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+				case "Expiration_Admin_Eligibility":
+					model.EligibleAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
+					model.EligibleAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
+
+				case "Expiration_Admin_Assignment":
+					model.ActiveAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
+					model.ActiveAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
+
+				case "Expiration_EndUser_Assignment":
+					model.ActivationRules[0].MaximumDuration = *rule.MaximumDuration
+
+				case "Notification_Admin_Admin_Assignment":
+					model.NotificationRules[0].ActiveAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
-				case "Notification_Admin_Admin_Assignment":
-					model.NotificationRules[0].AdminNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+				case "Notification_Admin_Admin_Eligibility":
+					model.NotificationRules[0].EligibleAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
 				case "Notification_Admin_EndUser_Assignment":
-					model.NotificationRules[0].AdminNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
-
-				case "Notification_Approver_Admin_Eligibility":
-					model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+					model.NotificationRules[0].EligibleActivations[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
 				case "Notification_Approver_Admin_Assignment":
-					model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+					model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
+					}
+
+				case "Notification_Approver_Admin_Eligibility":
+					model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
 				case "Notification_Approver_EndUser_Assignment":
-					model.NotificationRules[0].ApproverNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
-
-				case "Notification_Requestor_Admin_Eligibility":
-					model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments = []GroupRoleManagementPolicyNotificationSettings{
+					model.NotificationRules[0].EligibleActivations[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
 				case "Notification_Requestor_Admin_Assignment":
-					model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments = []GroupRoleManagementPolicyNotificationSettings{
+					model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
+						*flattenNotificationSettings(pointer.To(rule)),
+					}
+
+				case "Notification_Requestor_Admin_Eligibility":
+					model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 
 				case "Notification_Requestor_EndUser_Assignment":
-					model.NotificationRules[0].AssigneeNotifications[0].Activations = []GroupRoleManagementPolicyNotificationSettings{
+					model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
 						*flattenNotificationSettings(pointer.To(rule)),
 					}
 				}
@@ -799,92 +797,92 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		updatedRules = append(updatedRules, rule)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.admin_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Admin_Admin_Eligibility"],
-				model.NotificationRules[0].AdminNotifications[0].EligibleAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.eligible_assignments.0.additional_recipients"),
+				model.NotificationRules[0].EligibleAssignments[0].AdminNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.admin_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.admin_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Admin_Admin_Assignment"],
-				model.NotificationRules[0].AdminNotifications[0].ActiveAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.active_assignments.0.additional_recipients"),
+				model.NotificationRules[0].ActiveAssignments[0].AdminNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.admin_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.admin_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Admin_EndUser_Assignment"],
-				model.NotificationRules[0].AdminNotifications[0].Activations[0],
-				metadata.ResourceData.HasChange("notification_rules.0.admin_notifications.0.activations.0.additional_recipients"),
+				model.NotificationRules[0].EligibleActivations[0].AdminNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.admin_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.approver_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Approver_Admin_Eligibility"],
-				model.NotificationRules[0].ApproverNotifications[0].EligibleAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.eligible_assignments.0.additional_recipients"),
+				model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.approver_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.approver_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Approver_Admin_Assignment"],
-				model.NotificationRules[0].ApproverNotifications[0].ActiveAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.active_assignments.0.additional_recipients"),
+				model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.approver_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.approver_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Approver_EndUser_Assignment"],
-				model.NotificationRules[0].ApproverNotifications[0].Activations[0],
-				metadata.ResourceData.HasChange("notification_rules.0.approver_notifications.0.activations.0.additional_recipients"),
+				model.NotificationRules[0].EligibleActivations[0].ApproverNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.approver_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.assignee_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Requestor_Admin_Eligibility"],
-				model.NotificationRules[0].AssigneeNotifications[0].EligibleAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.eligible_assignments.0.additional_recipients"),
+				model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.assignee_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments") {
+	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.assignee_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Requestor_Admin_Assignment"],
-				model.NotificationRules[0].AssigneeNotifications[0].ActiveAssignments[0],
-				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.active_assignments.0.additional_recipients"),
+				model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.assignee_notifications.0.additional_recipients"),
 			),
 		)
 	}
 
-	if metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations") {
+	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.assignee_notifications") {
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
 				policyRules["Notification_Requestor_EndUser_Assignment"],
-				model.NotificationRules[0].AssigneeNotifications[0].Activations[0],
-				metadata.ResourceData.HasChange("notification_rules.0.assignee_notifications.0.activations.0.additional_recipients"),
+				model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications[0],
+				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.assignee_notifications.0.additional_recipients"),
 			),
 		)
 	}
@@ -932,8 +930,8 @@ func flattenNotificationSettings(rule *msgraph.UnifiedRoleManagementPolicyRule) 
 
 func notificationRuleSchema() map[string]*pluginsdk.Schema {
 	return map[string]*pluginsdk.Schema{
-		"eligible_assignments": {
-			Description: "The admin notifications for eligible assignments",
+		"admin_notifications": {
+			Description: "Admin notification settings",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -942,8 +940,8 @@ func notificationRuleSchema() map[string]*pluginsdk.Schema {
 				Schema: notificationSettingsSchema(),
 			},
 		},
-		"active_assignments": {
-			Description: "The admin notifications for active assignments",
+		"approver_notifications": {
+			Description: "Approver notification settings",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
@@ -952,8 +950,8 @@ func notificationRuleSchema() map[string]*pluginsdk.Schema {
 				Schema: notificationSettingsSchema(),
 			},
 		},
-		"activations": {
-			Description: "The admin notifications for role activation",
+		"assignee_notifications": {
+			Description: "Assignee notification settings",
 			Type:        pluginsdk.TypeList,
 			Optional:    true,
 			Computed:    true,
