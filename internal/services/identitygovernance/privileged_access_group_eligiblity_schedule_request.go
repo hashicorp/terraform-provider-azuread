@@ -189,7 +189,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 			} else if model.PermanentAssignment {
 				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
 			} else {
-				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNotSpecified)
+				return fmt.Errorf("either expiration_date or duration must be set, or permanent_assignment must be true")
 			}
 
 			if model.StartDate != "" {
