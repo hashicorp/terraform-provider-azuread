@@ -4,6 +4,7 @@
 package identitygovernance
 
 import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -60,7 +61,7 @@ func privilegedAccessGroupScheduleRequestArguments() map[string]*pluginsdk.Schem
 			Optional:         true,
 			ForceNew:         true,
 			Computed:         true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
+			ValidateDiagFunc: validate.ScheduleStartDate,
 		},
 
 		"expiration_date": {
@@ -69,7 +70,7 @@ func privilegedAccessGroupScheduleRequestArguments() map[string]*pluginsdk.Schem
 			Optional:         true,
 			ForceNew:         true,
 			ConflictsWith:    []string{"duration"},
-			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
+			ValidateDiagFunc: validate.ScheduleExpiryDate,
 		},
 
 		"duration": {
