@@ -4,7 +4,11 @@
 package identitygovernance
 
 import (
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
+	"fmt"
+	"time"
+
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 	"github.com/manicminer/hamilton/msgraph"
@@ -61,7 +65,7 @@ func privilegedAccessGroupScheduleRequestArguments() map[string]*pluginsdk.Schem
 			Optional:         true,
 			ForceNew:         true,
 			Computed:         true,
-			ValidateDiagFunc: validate.ScheduleStartDate,
+			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
 		},
 
 		"expiration_date": {
@@ -70,7 +74,7 @@ func privilegedAccessGroupScheduleRequestArguments() map[string]*pluginsdk.Schem
 			Optional:         true,
 			ForceNew:         true,
 			ConflictsWith:    []string{"duration"},
-			ValidateDiagFunc: validate.ScheduleExpiryDate,
+			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
 		},
 
 		"duration": {
@@ -132,4 +136,52 @@ func privilegedAccessGroupScheduleRequestAttributes() map[string]*pluginsdk.Sche
 			Computed:    true,
 		},
 	}
+}
+
+func buildRequestSchedule(model *PrivilegedAccessGroupScheduleRequestModel, metadata *sdk.ResourceMetaData) (*msgraph.RequestSchedule, error) {
+	schedule := msgraph.RequestSchedule{}
+	schedule.Expiration = &msgraph.ExpirationPattern{}
+	var startDate, expiryDate time.Time
+
+	if model.StartDate != "" {
+		startDate, err := time.Parse(time.RFC3339, model.StartDate)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s: %+v", model.StartDate, err)
+		}
+		if metadata.ResourceData.HasChange("start_date") {
+			if startDate.Before(time.Now()) {
+				return nil, fmt.Errorf("start_date must be in the future")
+			}
+		}
+		schedule.StartDateTime = &startDate
+	}
+
+	if model.ExpirationDate != "" {
+		expiryDate, err := time.Parse(time.RFC3339, model.ExpirationDate)
+		if err != nil {
+			return nil, fmt.Errorf("parsing %s: %+v", model.ExpirationDate, err)
+		}
+		if metadata.ResourceData.HasChange("expiry_date") {
+			if expiryDate.Before(time.Now().Add(5 * time.Minute)) {
+				return nil, fmt.Errorf("expiry_date must be at least 5 minutes in the future")
+			}
+		}
+		schedule.Expiration.EndDateTime = &expiryDate
+		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
+	} else if model.Duration != "" {
+		schedule.Expiration.Duration = &model.Duration
+		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
+	} else if model.PermanentAssignment {
+		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
+	} else {
+		return nil, fmt.Errorf("either expiration_date or duration must be set, or permanent_assignment must be true")
+	}
+
+	if model.StartDate != "" && model.ExpirationDate != "" {
+		if expiryDate.Before(startDate.Add(5 * time.Minute)) {
+			return nil, fmt.Errorf("expiration_date must be at least 5 minutes after start_date")
+		}
+	}
+
+	return &schedule, nil
 }

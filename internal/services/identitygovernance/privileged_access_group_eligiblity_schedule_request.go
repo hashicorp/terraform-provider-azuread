@@ -10,7 +10,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -53,38 +52,9 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			schedule := msgraph.RequestSchedule{}
-			schedule.Expiration = &msgraph.ExpirationPattern{}
-
-			if model.ExpirationDate != "" || model.Duration != "" {
-				if model.Duration != "" {
-					schedule.Expiration.Duration = &model.Duration
-					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
-				}
-
-				if model.ExpirationDate != "" {
-					endDate, err := time.Parse(time.RFC3339, model.ExpirationDate)
-					if err != nil {
-						return fmt.Errorf("parsing %s: %+v", model.StartDate, err)
-					}
-					schedule.Expiration.EndDateTime = &endDate
-					schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
-				}
-			} else if model.PermanentAssignment {
-				schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
-			} else {
-				return fmt.Errorf("either expiration_date or duration must be set, or permanent_assignment must be true")
-			}
-
-			if model.StartDate != "" {
-				startDate, err := time.Parse(time.RFC3339, model.StartDate)
-				if err != nil {
-					return fmt.Errorf("parsing %s: %+v", model.StartDate, err)
-				}
-				schedule.StartDateTime = &startDate
-			} else {
-				now := time.Now()
-				schedule.StartDateTime = &now
+			schedule, err := buildRequestSchedule(&model, &metadata)
+			if err != nil {
+				return err
 			}
 
 			properties := msgraph.PrivilegedAccessGroupEligibilityScheduleRequest{
@@ -93,11 +63,14 @@ func (r PrivilegedAccessGroupEligibilityScheduleRequestResource) Create() sdk.Re
 				GroupId:       &model.GroupId,
 				Action:        msgraph.PrivilegedAccessGroupActionAdminAssign,
 				Justification: &model.Justification,
-				ScheduleInfo:  &schedule,
-				TicketInfo: &msgraph.TicketInfo{
+				ScheduleInfo:  schedule,
+			}
+
+			if model.TicketNumber != "" || model.TicketSystem != "" {
+				properties.TicketInfo = &msgraph.TicketInfo{
 					TicketNumber: &model.TicketNumber,
 					TicketSystem: &model.TicketSystem,
-				},
+				}
 			}
 
 			req, _, err := client.Create(ctx, properties)
