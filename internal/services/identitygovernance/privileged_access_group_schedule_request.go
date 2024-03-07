@@ -60,12 +60,27 @@ func privilegedAccessGroupScheduleRequestArguments() map[string]*pluginsdk.Schem
 		},
 
 		"start_date": {
-			Description:      "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
-			Type:             pluginsdk.TypeString,
-			Optional:         true,
-			ForceNew:         true,
-			Computed:         true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.IsRFC3339Time),
+			Description:           "The date that this assignment starts, formatted as an RFC3339 date string in UTC (e.g. 2018-01-01T01:02:03Z)",
+			Type:                  pluginsdk.TypeString,
+			Optional:              true,
+			ForceNew:              true,
+			Computed:              true,
+			ValidateDiagFunc:      validation.ValidateDiag(validation.IsRFC3339Time),
+			DiffSuppressOnRefresh: true,
+			DiffSuppressFunc: func(k, old, new string, d *pluginsdk.ResourceData) bool {
+				// Suppress diffs if the start date is in the past
+				oldTime, err := time.Parse(time.RFC3339, old)
+				if err == nil {
+					return oldTime.Before(time.Now())
+				}
+				// Suppress diffs if the new date is within 5 minutes of the old date
+				// Activation of a future start time is never exactly at the requested time
+				newTime, err := time.Parse(time.RFC3339, new)
+				if err == nil {
+					return newTime.Before(oldTime.Add(5 * time.Minute))
+				}
+				return false
+			},
 		},
 
 		"expiration_date": {
