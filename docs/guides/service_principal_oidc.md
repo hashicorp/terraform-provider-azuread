@@ -48,7 +48,7 @@ An application will need a federated credential specified for each GitHub Enviro
 
 On the Azure Active Directory application page, go to **Certificates and secrets**.
 
-In the Federated credentials tab, select Add credential. The Add a credential blade opens. In the **Federated credential scenario** drop-down box select **GitHub actions deploying Azure resources**. 
+In the Federated credentials tab, select Add credential. The Add a credential blade opens. In the **Federated credential scenario** drop-down box select **GitHub actions deploying Azure resources**.
 
 Specify the **Organization** and **Repository** for your GitHub Actions workflow. For **Entity type**, select **Environment**, **Branch**, **Pull request**, or **Tag** and specify the value. The values must exactly match the configuration in the GitHub workflow. For our example, let's select **Branch** and specify `main`.
 
@@ -99,6 +99,7 @@ When storing the credentials as Environment Variables, for example:
 $ export ARM_CLIENT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
+$ export ARM_USE_OIDC=true
 ```
 
 The provider will use the `ARM_OIDC_TOKEN` environment variable as an OIDC token. You can use this variable to specify the token provided by your OIDC provider. If your OIDC provider provides an ID token in a file, you can specify the path to this file with the `ARM_OIDC_TOKEN_FILE_PATH` environment variable.
@@ -130,14 +131,14 @@ terraform {
 }
 # Configure the Microsoft Azure Provider
 provider "azuread" {
-  use_oidc = true
+  use_oidc = true # or use the environment variable "ARM_USE_OIDC=true"
   features {}
 }
 ```
 
 -> **Note:** Support for OpenID Connect was added in version 2.23.0 of the Terraform AzureAD provider.
 
-~> **Note:** If using the AzureRM Backend you may also need to configure OIDC there too, see [the documentation for the AzureRM Backend](https://www.terraform.io/language/settings/backends/azurerm) for more information. 
+~> **Note:** If using the AzureRM Backend you may also need to configure OIDC there too, see [the documentation for the AzureRM Backend](https://www.terraform.io/language/settings/backends/azurerm) for more information.
 
 More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
@@ -148,4 +149,3 @@ Next you should follow the [Configuring a Service Principal for managing Azure A
 [azure-portal]: https://portal.azure.com/
 [azure-portal-aad-overview]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/Overview
 [azure-portal-applications-blade]: https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps/RegisteredApps/Overview
-
