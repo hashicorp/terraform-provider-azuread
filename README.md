@@ -102,6 +102,18 @@ $ $GOPATH/bin/terraform-provider-azuread
 ...
 ```
 
+To compile the provider for attached debugging run `make debug`. 
+
+```sh
+$ make debug
+...
+Provider started. To attach Terraform CLI, set the TF_REATTACH_PROVIDERS environment variable with the following:
+    TF_REATTACH_PROVIDERS='{"registry.terraform.io/hashicorp/azuread":{"Protocol":"grpc","ProtocolVersion":5,"Pid":16227,"Test":true,"Addr":{"Network":"unix","String":"/var/folders/dy/r91ps1bx7fscm_v64qbwd0nh0000gn/T/plugin1540622971"}}}'
+```
+
+See the [documentation](https://developer.hashicorp.com/terraform/plugin/debugging#starting-a-provider-in-debug-mode) for attaching a debugger.
+
+
 In order to test the provider, you can simply run `make test`.
 
 ```sh

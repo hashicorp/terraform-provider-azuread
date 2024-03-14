@@ -21,6 +21,10 @@ tools:
 build: fmtcheck
 	go install
 
+debug: fmtcheck
+	go build -gcflags="all=-N -l" -trimpath -o terraform-provider-azuread
+	dlv exec --listen=:51000 --headless=true --api-version=2 --accept-multiclient --continue terraform-provider-azuread -- -debug
+
 fumpt:
 	@echo "==> Fixing source code with gofmt..."
 	# This logic should match the search logic in scripts/gofmtcheck.sh
