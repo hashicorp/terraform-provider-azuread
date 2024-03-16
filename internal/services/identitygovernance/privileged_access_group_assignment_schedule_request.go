@@ -10,6 +10,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -110,45 +111,58 @@ func (r PrivilegedAccessGroupAssignmentScheduleRequestResource) Read() sdk.Resou
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			result, status, err := client.Get(ctx, id.ID())
+			// Schedule requests are never deleted. New ones are created when changes are made.
+			// Therefore on a read, we need to find the latest version of the request.
+			// This is to cater for changes being made outside of Terraform.
+			requests, _, err := client.List(ctx, odata.Query{
+				Filter: fmt.Sprintf("groupId eq '%s' and principalId eq '%s'", model.GroupId, model.PrincipalId),
+				OrderBy: odata.OrderBy{
+					Field:     "createdDateTime",
+					Direction: odata.Descending,
+				},
+			})
 			if err != nil {
-				if status == http.StatusNotFound {
-					return metadata.MarkAsGone(id)
-				}
-				return fmt.Errorf("retrieving %s: %+v", id, err)
+				return fmt.Errorf("listing requests: %+v", err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			if len(*requests) == 0 {
+				return metadata.MarkAsGone(id)
 			}
+			request := (*requests)[0]
 
 			if slices.Contains([]string{
 				msgraph.PrivilegedAccessGroupAssignmentStatusCanceled,
 				msgraph.PrivilegedAccessGroupAssignmentStatusRevoked,
-			}, result.Status) {
+			}, request.Status) {
 				metadata.MarkAsGone(id)
-			}
+			} else {
+				model.AssignmentType = request.AccessId
+				model.GroupId = *request.GroupId
+				model.Justification = *request.Justification
+				model.PermanentAssignment = *request.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
+				model.PrincipalId = *request.PrincipalId
+				model.StartDate = request.ScheduleInfo.StartDateTime.Format(time.RFC3339)
+				model.Status = request.Status
+				model.TargetScheduleId = *request.TargetScheduleId
 
-			model.AssignmentType = result.AccessId
-			model.GroupId = *result.GroupId
-			model.Justification = *result.Justification
-			model.PermanentAssignment = *result.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
-			model.PrincipalId = *result.PrincipalId
-			model.StartDate = result.ScheduleInfo.StartDateTime.Format(time.RFC3339)
-			model.Status = result.Status
-			model.TargetScheduleId = *result.TargetScheduleId
+				if request.ScheduleInfo.Expiration.EndDateTime != nil {
+					model.ExpirationDate = request.ScheduleInfo.Expiration.EndDateTime.Format(time.RFC3339)
+				}
+				if request.ScheduleInfo.Expiration.Duration != nil {
+					model.Duration = *request.ScheduleInfo.Expiration.Duration
+				}
 
-			if result.ScheduleInfo.Expiration.EndDateTime != nil {
-				model.ExpirationDate = result.ScheduleInfo.Expiration.EndDateTime.Format(time.RFC3339)
-			}
-			if result.ScheduleInfo.Expiration.Duration != nil {
-				model.Duration = *result.ScheduleInfo.Expiration.Duration
-			}
+				if request.TicketInfo.TicketNumber != nil {
+					model.TicketNumber = *request.TicketInfo.TicketNumber
+				}
+				if request.TicketInfo.TicketSystem != nil {
+					model.TicketSystem = *request.TicketInfo.TicketSystem
+				}
 
-			if result.TicketInfo.TicketNumber != nil {
-				model.TicketNumber = *result.TicketInfo.TicketNumber
-			}
-			if result.TicketInfo.TicketSystem != nil {
-				model.TicketSystem = *result.TicketInfo.TicketSystem
+				// Update the ID if it has changed
+				if *request.ID != id.ID() {
+					id = parse.NewPrivilegedAccessGroupAssignmentScheduleRequestID(*request.ID)
+					metadata.SetID(id)
+				}
 			}
 
 			return metadata.Encode(&model)
