@@ -31,3 +31,30 @@ func GroupMemberID(idString string) (*GroupMemberId, error) {
 		MemberId:            id.subId,
 	}, nil
 }
+
+type GroupOwnerId struct {
+	ObjectSubResourceId
+	GroupId string
+	OwnerId string
+}
+
+func NewGroupOwnerID(groupId, ownerId string) GroupOwnerId {
+	return GroupOwnerId{
+		ObjectSubResourceId: NewObjectSubResourceID(groupId, "owner", ownerId),
+		GroupId:             groupId,
+		OwnerId:             ownerId,
+	}
+}
+
+func GroupOwnerID(idString string) (*GroupOwnerId, error) {
+	id, err := ObjectSubResourceID(idString, "owner")
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse Owner ID: %v", err)
+	}
+
+	return &GroupOwnerId{
+		ObjectSubResourceId: *id,
+		GroupId:             id.objectId,
+		OwnerId:             id.subId,
+	}, nil
+}

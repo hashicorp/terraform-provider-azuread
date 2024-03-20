@@ -37,5 +37,6 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 	return map[string]*pluginsdk.Resource{
 		"azuread_group":        groupResource(),
 		"azuread_group_member": groupMemberResource(),
+		"azuread_group_owner":  groupOwnerResource(),
 	}
 }
