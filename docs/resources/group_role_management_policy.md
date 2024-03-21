@@ -58,24 +58,12 @@ resource "azuread_group_role_management_policy" "example" {
 
 ## Argument Reference
 
-* `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
-* `assignment_type` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
-* `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.
 * `activation_rules` - (Optional) An `activation_rules` block as defined below.
+* `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.
+* `assignment_type` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
 * `eligible_assignment_rules` - (Optional) An `eligible_assignment_rules` block as defined below.
+* `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
 * `notification_rules` - (Optional) An `notification_rules` block as defined below.
-
----
-
-An `active_assignment_rules` block supports the following:
-
-* `expiration_required` - (Optional) Must an assignment have an expiry date. `false` allows permanent assignment.
-* `expire_after` - (Optional) The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.
-* `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to create new assignments.
-* `require_justification` - (Optional) Is a justification required to create new assignments.
-* `require_ticket_info` - (Optional) Is ticket information required to create new assignments.
-
-One of `expiration_required` or `expire_after` must be provided.
 
 ---
 
@@ -88,6 +76,18 @@ An `activation_rules` block supports the following:
 * `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to activate the role. Conflicts with `required_conditional_access_authentication_context`.
 * `require_justification` - (Optional) Is a justification required during activation of the role.
 * `require_ticket_info` - (Optional) Is ticket information requrired during activation of the role.
+
+---
+
+An `active_assignment_rules` block supports the following:
+
+* `expiration_required` - (Optional) Must an assignment have an expiry date. `false` allows permanent assignment.
+* `expire_after` - (Optional) The maximum length of time an assignment can be valid, as an ISO8601 duration. Permitted values: `P15D`, `P30D`, `P90D`, `P180D`, or `P365D`.
+* `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to create new assignments.
+* `require_justification` - (Optional) Is a justification required to create new assignments.
+* `require_ticket_info` - (Optional) Is ticket information required to create new assignments.
+
+One of `expiration_required` or `expire_after` must be provided.
 
 ---
 
