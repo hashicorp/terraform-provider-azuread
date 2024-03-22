@@ -954,6 +954,30 @@ resource "azuread_group" "test" {
 `, r.templateThreeUsers(data), data.RandomInteger)
 }
 
+func (r GroupResource) withTransitiveMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "azuread_group" "nested" {
+  display_name     = "acctestGroup-%[2]d-Nested"
+  security_enabled = true
+  members = [
+    azuread_user.test.object_id,
+    azuread_group.member.object_id,
+    azuread_service_principal.test.object_id
+  ]
+}
+
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[2]d"
+  security_enabled = true
+  members = [
+    azuread_group.nested.object_id
+  ]
+}
+`, r.templateDiverseDirectoryObjects(data), data.RandomInteger)
+}
+
 func (r GroupResource) withOwnersAndMembers(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s

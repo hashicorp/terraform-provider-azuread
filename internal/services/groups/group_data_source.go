@@ -148,6 +148,13 @@ func groupDataSource() *pluginsdk.Resource {
 				},
 			},
 
+			"include_transitive_members": {
+				Description: "Specifies whether to include transitive members (a flat list of all nested members).",
+				Type:        pluginsdk.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+
 			"onpremises_domain_name": {
 				Description: "The on-premises FQDN, also called dnsDomainName, synchronized from the on-premises directory when Azure AD Connect is used",
 				Type:        pluginsdk.TypeString,
@@ -423,9 +430,20 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	tf.Set(d, "hide_from_address_lists", hideFromAddressLists)
 	tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
-	members, _, err := client.ListMembers(ctx, d.Id())
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
+	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
+	var members *[]string
+	if includeTransitiveMembers {
+		var err error
+		members, _, err = client.ListTransitiveMembers(ctx, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve transitive group members for group with object ID: %q", d.Id())
+		}
+	} else {
+		var err error
+		members, _, err = client.ListMembers(ctx, d.Id())
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
+		}
 	}
 	tf.Set(d, "members", members)
 

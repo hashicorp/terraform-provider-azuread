@@ -159,6 +159,20 @@ func TestAccGroupDataSource_members(t *testing.T) {
 	})
 }
 
+func TestAccGroupDataSource_transitiveMembers(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: GroupDataSource{}.transitiveMembers(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestGroup-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("members.#").HasValue("4"),
+			),
+		},
+	})
+}
+
 func TestAccGroupDataSource_owners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_group", "test")
 
@@ -312,6 +326,17 @@ data "azuread_group" "test" {
   object_id = azuread_group.test.object_id
 }
 `, GroupResource{}.withThreeMembers(data))
+}
+
+func (GroupDataSource) transitiveMembers(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_group" "test" {
+  object_id                  = azuread_group.test.object_id
+  include_transitive_members = true
+}
+`, GroupResource{}.withTransitiveMembers(data))
 }
 
 func (GroupDataSource) dynamicMembership(data acceptance.TestData) string {
