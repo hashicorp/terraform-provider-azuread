@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package utils
 
 // BoolPtr returns a pointer to the provided boolean variable.
