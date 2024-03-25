@@ -89,6 +89,23 @@ func TestAccApplicationPreAuthorized_deprecatedId2(t *testing.T) {
 	})
 }
 
+func TestAccApplicationPreAuthorized_multiple_create_destroy_recreate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_pre_authorized", "authorized_1")
+	r := ApplicationPreAuthorizedResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.multiple_create(data),
+		},
+		{
+			Config: r.multiple_destroy(data),
+		},
+		{
+			Config: r.multiple_create(data),
+		},
+	})
+}
+
 func (ApplicationPreAuthorizedResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
@@ -248,4 +265,84 @@ resource "azuread_application_pre_authorized" "test" {
   permission_ids        = ["%[2]s", "%[3]s"]
 }
 `, data.RandomInteger, data.UUID(), data.UUID())
+}
+
+func (ApplicationPreAuthorizedResource) multiple_create(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "authorized_1" {
+  display_name = "acctestApp-authorized-1-%[1]d"
+}
+
+resource "azuread_application" "authorized_2" {
+  display_name = "acctestApp-authorized-2-%[1]d"
+}
+
+resource "azuread_application" "authorized_3" {
+  display_name = "acctestApp-authorized-3-%[1]d"
+}
+
+resource "azuread_application" "authorizer" {
+  display_name = "acctestApp-authorizer-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "11111111-1111-1111-1111-111111111111"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+}
+
+resource "azuread_application_pre_authorized" "authorize_1" {
+  application_id       = azuread_application.authorizer.id
+  authorized_client_id = azuread_application.authorized_1.client_id
+  permission_ids       = ["11111111-1111-1111-1111-111111111111"]
+}
+
+resource "azuread_application_pre_authorized" "authorize_2" {
+  application_id       = azuread_application.authorizer.id
+  authorized_client_id = azuread_application.authorized_2.client_id
+  permission_ids       = ["11111111-1111-1111-1111-111111111111"]
+}
+
+resource "azuread_application_pre_authorized" "authorize_3" {
+  application_id       = azuread_application.authorizer.id
+  authorized_client_id = azuread_application.authorized_3.client_id
+  permission_ids       = ["11111111-1111-1111-1111-111111111111"]
+}
+`, data.RandomInteger)
+}
+
+func (ApplicationPreAuthorizedResource) multiple_destroy(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_application" "authorized_1" {
+  display_name = "acctestApp-authorized-1-%[1]d"
+}
+
+resource "azuread_application" "authorized_2" {
+  display_name = "acctestApp-authorized-2-%[1]d"
+}
+
+resource "azuread_application" "authorized_3" {
+  display_name = "acctestApp-authorized-3-%[1]d"
+}
+
+resource "azuread_application" "authorizer" {
+  display_name = "acctestApp-authorizer-%[1]d"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Administer the application"
+      admin_consent_display_name = "Administer"
+      enabled                    = true
+      id                         = "11111111-1111-1111-1111-111111111111"
+      type                       = "Admin"
+      value                      = "administer"
+    }
+  }
+}
+`, data.RandomInteger)
 }
