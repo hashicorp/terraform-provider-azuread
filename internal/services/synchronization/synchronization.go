@@ -48,6 +48,41 @@ func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.
 	return &result
 }
 
+func expandSynchronizationJobApplicationParameters(in []interface{}) *[]msgraph.SynchronizationJobApplicationParameters {
+	result := make([]msgraph.SynchronizationJobApplicationParameters, 0)
+
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		item := raw.(map[string]interface{})
+
+		result = append(result, msgraph.SynchronizationJobApplicationParameters{
+			Subjects: expandSynchronizationJobSubject(item["subjects"].([]interface{})),
+			RuleId:   pointer.To(item["rule_id"].(string)),
+		})
+	}
+
+	return &result
+}
+
+func expandSynchronizationJobSubject(in []interface{}) *[]msgraph.SynchronizationJobSubject {
+	result := make([]msgraph.SynchronizationJobSubject, 0)
+	for _, raw := range in {
+		if raw == nil {
+			continue
+		}
+		item := raw.(map[string]interface{})
+
+		result = append(result, msgraph.SynchronizationJobSubject{
+			ObjectId:       pointer.To(item["object_id"].(string)),
+			ObjectTypeName: pointer.To(item["object_type_name"].(string)),
+		})
+	}
+
+	return &result
+}
+
 func flattenSynchronizationSchedule(in *msgraph.SynchronizationSchedule) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
