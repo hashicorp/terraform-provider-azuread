@@ -33,8 +33,9 @@ The following arguments are supported:
 * `client_id` - (Optional) Specifies the Client ID of the application.
 * `display_name` - (Optional) Specifies the display name of the application.
 * `object_id` - (Optional) Specifies the Object ID of the application.
+* `identifier_uris` - (Optional) Specifies a list containing one identifying URI of the application.
 
-~> One of `client_id`, `display_name`, or `object_id` must be specified.
+~> One of `client_id`, `display_name`, `object_id`, or `identifier_uris` must be specified.
 
 ## Attributes Reference
 
