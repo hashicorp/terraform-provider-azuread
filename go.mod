@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
-	github.com/manicminer/hamilton v0.66.0
+	github.com/manicminer/hamilton v0.67.0
 	golang.org/x/text v0.14.0
 )
 

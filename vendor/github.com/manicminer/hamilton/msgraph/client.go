@@ -58,6 +58,10 @@ type Uri struct {
 // RetryableErrorHandler ensures that the response is returned after exhausting retries for a request
 // We can't return an error here, or net/http will not return the response
 func RetryableErrorHandler(resp *http.Response, err error, numTries int) (*http.Response, error) {
+	if resp == nil {
+		return nil, err
+	}
+
 	return resp, nil
 }
 
