@@ -613,6 +613,22 @@ func (r GroupRoleManagementPolicyResource) Delete() sdk.ResourceFunc {
 	}
 }
 
+func (r GroupRoleManagementPolicyResource) CustomImporter() sdk.ResourceRunFunc {
+	return func(ctx context.Context, metadata sdk.ResourceMetaData) error {
+		id, err := parse.ParseRoleManagementPolicyAssignmentID(metadata.ResourceData.Id())
+		if err != nil {
+			return err
+		}
+		if err = metadata.ResourceData.Set("assignment_type", id.RoleDefinitionId); err != nil {
+			return err
+		}
+		metadata.SetID(parse.NewRoleManagementPolicyID(id.ScopeType, id.ScopeId, id.PolicyId))
+
+		return r.Read().Func(ctx, metadata)
+	}
+
+}
+
 func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.UnifiedRoleManagementPolicy) (*msgraph.UnifiedRoleManagementPolicy, error) {
 	var model GroupRoleManagementPolicyModel
 	if err := metadata.Decode(&model); err != nil {
