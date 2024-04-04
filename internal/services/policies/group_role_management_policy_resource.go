@@ -81,7 +81,7 @@ type GroupRoleManagementPolicyNotificationSettings struct {
 type GroupRoleManagementPolicyResource struct{}
 
 func (r GroupRoleManagementPolicyResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return validation.IsUUID
+	return parse.ValidateRoleManagementPolicyAssignmentID
 }
 
 var _ sdk.Resource = GroupRoleManagementPolicyResource{}

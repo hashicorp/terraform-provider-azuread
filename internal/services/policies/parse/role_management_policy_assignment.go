@@ -69,3 +69,18 @@ func (id *RoleManagementPolicyAssignmentId) ID() string {
 func (id *RoleManagementPolicyAssignmentId) String() string {
 	return fmt.Sprintf("Role Management Policy Assignment ID: %s_%s_%s_%s", id.ScopeType, id.ScopeId, id.PolicyId, id.RoleDefinitionId)
 }
+
+func ValidateRoleManagementPolicyAssignmentID(input interface{}, key string) (warnings []string, errors []error) {
+	v, ok := input.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected %q to be a string", key))
+		return
+	}
+
+	_, err := ParseRoleManagementPolicyAssignmentID(v)
+	if err != nil {
+		errors = append(errors, err)
+	}
+
+	return
+}
