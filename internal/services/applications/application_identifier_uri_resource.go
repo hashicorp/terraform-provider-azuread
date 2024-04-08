@@ -51,11 +51,11 @@ func (r ApplicationIdentifierUriResource) Arguments() map[string]*pluginsdk.Sche
 		},
 
 		"identifier_uri": {
-			Description:  "The user-defined URI that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
+			Description:  "The user-defined URI or URI-like string that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: validation.IsAppUri,
+			ValidateFunc: validation.StringIsNotEmpty,
 		},
 	}
 }
