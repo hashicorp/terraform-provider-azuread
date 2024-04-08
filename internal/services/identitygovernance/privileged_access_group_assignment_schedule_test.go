@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"slices"
 	"testing"
 	"time"
 
@@ -17,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/helpers"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 )
 
-type PrivilegedAccessGroupAssignmentScheduleRequestResource struct{}
+type PrivilegedAccessGroupAssignmentScheduleResource struct{}
 
-func TestPrivilegedAccessGroupAssignmentScheduleRequest_member(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule_request", "member")
-	r := PrivilegedAccessGroupAssignmentScheduleRequestResource{}
+func TestPrivilegedAccessGroupAssignmentSchedule_member(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule", "member")
+	r := PrivilegedAccessGroupAssignmentScheduleResource{}
 
 	endTime := time.Now().AddDate(0, 2, 0).UTC()
 
@@ -36,15 +35,16 @@ func TestPrivilegedAccessGroupAssignmentScheduleRequest_member(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				helpers.SleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 
-func TestPrivilegedAccessGroupAssignmentScheduleRequest_owner(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule_request", "owner")
-	r := PrivilegedAccessGroupAssignmentScheduleRequestResource{}
+func TestPrivilegedAccessGroupAssignmentSchedule_owner(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_assignment_schedule", "owner")
+	r := PrivilegedAccessGroupAssignmentScheduleResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -54,43 +54,40 @@ func TestPrivilegedAccessGroupAssignmentScheduleRequest_owner(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				helpers.SleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
+		data.ImportStep(),
 	})
 
 }
 
-func (PrivilegedAccessGroupAssignmentScheduleRequestResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+func (PrivilegedAccessGroupAssignmentScheduleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+	client := clients.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
-	request, status, err := client.Get(ctx, state.ID)
+	id, err := parse.ParsePrivilegedAccessGroupScheduleID(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse privileged group assignment schedule ID %q: %+v", state.ID, err)
+	}
+
+	_, status, err := client.Get(ctx, id.ID())
 	if err != nil {
 		if status == http.StatusNotFound {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve privileged group assignment schedule request with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve privileged group assignment schedule with ID %q: %+v", id.ID(), err)
 	}
-
-	// Requests are not deleted, but marked as canceled or revoked.
-	if slices.Contains([]string{
-		msgraph.PrivilegedAccessGroupAssignmentStatusCanceled,
-		msgraph.PrivilegedAccessGroupAssignmentStatusRevoked,
-	}, request.Status) {
-		return pointer.To(false), nil
-	} else {
-		return pointer.To(true), nil
-	}
+	return pointer.To(true), nil
 }
 
-func (PrivilegedAccessGroupAssignmentScheduleRequestResource) member(data acceptance.TestData, endTime time.Time) string {
+func (PrivilegedAccessGroupAssignmentScheduleResource) member(data acceptance.TestData, endTime time.Time) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
 resource "azuread_group" "pam" {
-  display_name     = "Privileged %[1]s"
+  display_name     = "Privileged Assignment %[1]s"
   mail_enabled     = false
   security_enabled = true
 }
@@ -105,7 +102,7 @@ resource "azuread_user" "member" {
   password            = "%[2]s"
 }
 
-resource "azuread_privileged_access_group_assignment_schedule_request" "member" {
+resource "azuread_privileged_access_group_assignment_schedule" "member" {
   group_id        = azuread_group.pam.id
   principal_id    = azuread_user.member.id
   assignment_type = "member"
@@ -115,7 +112,7 @@ resource "azuread_privileged_access_group_assignment_schedule_request" "member" 
 `, data.RandomString, data.RandomPassword, endTime.Format(time.RFC3339))
 }
 
-func (PrivilegedAccessGroupAssignmentScheduleRequestResource) owner(data acceptance.TestData) string {
+func (PrivilegedAccessGroupAssignmentScheduleResource) owner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -124,13 +121,13 @@ data "azuread_domains" "test" {
 }
 
 resource "azuread_user" "manual_owner" {
-  user_principal_name = "pam-owner-manual-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "pam-eligible-owner-manual-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "PAM Owner (Manual) %[1]s"
   password            = "%[2]s"
 }
 
 resource "azuread_group" "pam" {
-  display_name     = "Privileged %[1]s"
+  display_name     = "Privileged Assignment %[1]s"
   mail_enabled     = false
   security_enabled = true
 
@@ -141,16 +138,15 @@ resource "azuread_group" "pam" {
 	}
 }
 
-resource "azuread_user" "assigned_owner" {
-  user_principal_name = "pam-owner-assigned-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "PAM Owner (Assigned) %[1]s"
+resource "azuread_user" "eligibile_owner" {
+  user_principal_name = "pam-eligible-owner-eligible-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "PAM Owner (Eligible) %[1]s"
   password            = "%[2]s"
 }
 
-
-resource "azuread_privileged_access_group_assignment_schedule_request" "owner" {
+resource "azuread_privileged_access_group_assignment_schedule" "owner" {
   group_id        = azuread_group.pam.id
-  principal_id    = azuread_user.assigned_owner.id
+  principal_id    = azuread_user.eligibile_owner.id
   assignment_type = "owner"
   duration        = "P30D"
   justification   = "required"

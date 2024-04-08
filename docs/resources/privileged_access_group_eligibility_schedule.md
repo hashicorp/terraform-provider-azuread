@@ -2,15 +2,15 @@
 subcategory: "Identity Governance"
 ---
 
-# Resource: azuread_privileged_access_group_assignment_schedule_request
+# Resource: azuread_privileged_access_group_eligibility_schedule
 
-Manages an active assignment to a privileged access group.
+Manages an eligible assignment to a privileged access group.
 
 ## API Permissions
 
 The following API permissions are required in order to use this resource.
 
-When authenticated with a service principal, this resource requires the `PrivilegedAssignmentSchedule.ReadWrite.AzureADGroup` Microsoft Graph API permissions.
+When authenticated with a service principal, this resource requires the `PrivilegedEligibilitySchedule.ReadWrite.AzureADGroup` Microsoft Graph API permissions.
 
 When authenticated with a user principal, this resource requires `Global Administrator` directory role, or the `Privileged Role Administrator` role in Identity Governance.
 
@@ -29,7 +29,7 @@ resource "azuread_user" "member" {
   password            = "SecretP@sswd99!"
 }
 
-resource "azuread_privileged_access_group_assignment_schedule_request" "example" {
+resource "azuread_privileged_access_group_eligibility_schedule" "example" {
   group_id        = azuread_group.pim.id
   principal_id    = azuread_user.member.id
   assignment_type = "member"
@@ -63,8 +63,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-An assignment schedule can be imported using the ID, e.g.
+An assignment schedule can be imported using the schedule ID, e.g.
 
 ```shell
-terraform import azuread_privileged_access_group_assignment_schedule_request.example 00000000-0000-0000-0000-000000000000
+terraform import azuread_privileged_access_group_eligibility_schedule.example 00000000-0000-0000-0000-000000000000_member_00000000-0000-0000-0000-000000000000
 ```

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"slices"
 	"testing"
 	"time"
 
@@ -17,14 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/helpers"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 )
 
-type PrivilegedAccessGroupEligiblityScheduleRequestResource struct{}
+type PrivilegedAccessGroupEligibilityScheduleResource struct{}
 
-func TestPrivilegedAccessGroupEligiblityScheduleRequest_member(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule_request", "member")
-	r := PrivilegedAccessGroupEligiblityScheduleRequestResource{}
+func TestPrivilegedAccessGroupEligibilitySchedule_member(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule", "member")
+	r := PrivilegedAccessGroupEligibilityScheduleResource{}
 
 	endTime := time.Now().AddDate(0, 2, 0).UTC()
 
@@ -36,15 +35,16 @@ func TestPrivilegedAccessGroupEligiblityScheduleRequest_member(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				helpers.SleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 
-func TestPrivilegedAccessGroupEligiblityScheduleRequest_owner(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule_request", "owner")
-	r := PrivilegedAccessGroupEligiblityScheduleRequestResource{}
+func TestPrivilegedAccessGroupEligibilitySchedule_owner(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_privileged_access_group_eligibility_schedule", "owner")
+	r := PrivilegedAccessGroupEligibilityScheduleResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -54,38 +54,34 @@ func TestPrivilegedAccessGroupEligiblityScheduleRequest_owner(t *testing.T) {
 				// There is a minimum life of 5 minutes for a schedule request to exist.
 				// Attempting to delete the request within this time frame will result in
 				// a 400 error on destroy, which we can't trap.
-				helpers.SleepCheck(5*time.Minute+1*time.Second),
+				helpers.SleepCheck(5*time.Minute+15*time.Second),
 			),
 		},
+		data.ImportStep(),
 	})
-
 }
 
-func (PrivilegedAccessGroupEligiblityScheduleRequestResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
+func (PrivilegedAccessGroupEligibilityScheduleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+	client := clients.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleClient
 	client.BaseClient.DisableRetries = true
 	defer func() { client.BaseClient.DisableRetries = false }()
 
-	request, status, err := client.Get(ctx, state.ID)
+	id, err := parse.ParsePrivilegedAccessGroupScheduleID(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse privileged group assignment schedule ID %q: %+v", state.ID, err)
+	}
+
+	_, status, err := client.Get(ctx, id.ID())
 	if err != nil {
 		if status == http.StatusNotFound {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve privileged group assignment schedule request with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve privileged group assignment schedule request with ID %q: %+v", id.ID(), err)
 	}
-
-	// Requests are not deleted, but marked as canceled or revoked.
-	if slices.Contains([]string{
-		msgraph.PrivilegedAccessGroupEligibilityStatusCanceled,
-		msgraph.PrivilegedAccessGroupEligibilityStatusRevoked,
-	}, request.Status) {
-		return pointer.To(false), nil
-	} else {
-		return pointer.To(true), nil
-	}
+	return pointer.To(true), nil
 }
 
-func (PrivilegedAccessGroupEligiblityScheduleRequestResource) member(data acceptance.TestData, endTime time.Time) string {
+func (PrivilegedAccessGroupEligibilityScheduleResource) member(data acceptance.TestData, endTime time.Time) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -105,7 +101,7 @@ resource "azuread_user" "member" {
   password            = "%[2]s"
 }
 
-resource "azuread_privileged_access_group_eligibility_schedule_request" "member" {
+resource "azuread_privileged_access_group_eligibility_schedule" "member" {
   group_id        = azuread_group.pam.id
   principal_id    = azuread_user.member.id
   assignment_type = "member"
@@ -115,7 +111,7 @@ resource "azuread_privileged_access_group_eligibility_schedule_request" "member"
 `, data.RandomString, data.RandomPassword, endTime.Format(time.RFC3339))
 }
 
-func (PrivilegedAccessGroupEligiblityScheduleRequestResource) owner(data acceptance.TestData) string {
+func (PrivilegedAccessGroupEligibilityScheduleResource) owner(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -148,7 +144,7 @@ resource "azuread_user" "eligibile_owner" {
 }
 
 
-resource "azuread_privileged_access_group_eligibility_schedule_request" "owner" {
+resource "azuread_privileged_access_group_eligibility_schedule" "owner" {
   group_id        = azuread_group.pam.id
   principal_id    = azuread_user.eligibile_owner.id
   assignment_type = "owner"
