@@ -32,6 +32,7 @@ func TestGroupRoleManagementPolicy_member(t *testing.T) {
 				check.That(data.ResourceName).Key("eligible_assignment_rules.0.expiration_required").Exists(),
 			),
 		},
+		data.ImportStep(),
 	})
 }
 
@@ -49,6 +50,7 @@ func TestGroupRoleManagementPolicy_owner(t *testing.T) {
 				check.That(data.ResourceName).Key("eligible_assignment_rules.0.expiration_required").Exists(),
 			),
 		},
+		data.ImportStep(),
 	})
 
 }
@@ -80,8 +82,8 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  group_id        = azuread_group.pam.id
-  assignment_type = "member"
+  group_id = azuread_group.pam.id
+  role_id  = "member"
 
   eligible_assignment_rules {
     expiration_required = false
@@ -132,8 +134,8 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  group_id        = azuread_group.pam.id
-  assignment_type = "owner"
+  group_id = azuread_group.pam.id
+  role_id  = "owner"
 
   eligible_assignment_rules {
     expiration_required = false

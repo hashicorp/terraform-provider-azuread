@@ -21,7 +21,7 @@ type GroupRoleManagementPolicyModel struct {
 	Description             string                                             `tfschema:"description"`
 	DisplayName             string                                             `tfschema:"display_name"`
 	GroupId                 string                                             `tfschema:"group_id"`
-	ScopeType               msgraph.UnifiedRoleManagementPolicyScope           `tfschema:"assignment_type"`
+	RoleId                  msgraph.UnifiedRoleManagementPolicyScope           `tfschema:"role_id"`
 	ActiveAssignmentRules   []GroupRoleManagementPolicyActiveAssignmentRules   `tfschema:"active_assignment_rules"`
 	EligibleAssignmentRules []GroupRoleManagementPolicyEligibleAssignmentRules `tfschema:"eligible_assignment_rules"`
 	ActivationRules         []GroupRoleManagementPolicyActivationRules         `tfschema:"activation_rules"`
@@ -81,7 +81,7 @@ type GroupRoleManagementPolicyNotificationSettings struct {
 type GroupRoleManagementPolicyResource struct{}
 
 func (r GroupRoleManagementPolicyResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return parse.ValidateRoleManagementPolicyAssignmentID
+	return parse.ValidateRoleManagementPolicyID
 }
 
 var _ sdk.Resource = GroupRoleManagementPolicyResource{}
@@ -104,8 +104,8 @@ func (r GroupRoleManagementPolicyResource) Arguments() map[string]*pluginsdk.Sch
 			ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 		},
 
-		"assignment_type": {
-			Description: "The ID of the assignment to the group",
+		"role_id": {
+			Description: "The ID of the role of this policy to the group",
 			Type:        pluginsdk.TypeString,
 			Required:    true,
 			ForceNew:    true,
@@ -349,29 +349,16 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			policyClient := metadata.Client.Policies.RoleManagementPolicyClient
-			assignmentClient := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
+			client := metadata.Client.Policies.RoleManagementPolicyClient
 
 			// Fetch the existing policy, as they already exist
-			policies, _, err := assignmentClient.List(ctx, odata.Query{
-				Filter: fmt.Sprintf("scopeId eq '%s' and scopeType eq 'Group' and roleDefinitionId eq '%s'", metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("assignment_type").(string)),
-			})
-			if err != nil {
-				return fmt.Errorf("Could not list existing policy, %+v", err)
-			}
-			if len(*policies) != 1 {
-				return fmt.Errorf("Got the wrong number of policies, expected 1, got %d", len(*policies))
-			}
-
-			assignmentId, err := parse.ParseRoleManagementPolicyAssignmentID(*(*policies)[0].ID)
+			id, err := getPolicyId(ctx, metadata, metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("role_id").(string))
 			if err != nil {
 				return fmt.Errorf("Could not parse policy assignment ID, %+v", err)
 			}
-
-			id := parse.NewRoleManagementPolicyID(assignmentId.ScopeType, assignmentId.ScopeId, assignmentId.PolicyId)
 			metadata.SetID(id)
 
-			policy, _, err := policyClient.Get(ctx, id.ID())
+			policy, _, err := client.Get(ctx, id.ID())
 			if err != nil {
 				return fmt.Errorf("Could not retrieve existing policy, %+v", err)
 			}
@@ -384,10 +371,17 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("Could not build update request, %+v", err)
 			}
 
-			_, err = policyClient.Update(ctx, *policyUpdate)
+			_, err = client.Update(ctx, *policyUpdate)
 			if err != nil {
 				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
 			}
+
+			// Update the ID as it changes on modification
+			id, err = getPolicyId(ctx, metadata, metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("role_id").(string))
+			if err != nil {
+				return fmt.Errorf("Could not parse policy assignment ID, %+v", err)
+			}
+			metadata.SetID(id)
 
 			return nil
 		},
@@ -398,7 +392,8 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Policies.RoleManagementPolicyClient
+			clientPolicy := metadata.Client.Policies.RoleManagementPolicyClient
+			clientAssignment := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
 
 			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
 			if err != nil {
@@ -410,7 +405,7 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			result, _, err := client.Get(ctx, id.ID())
+			result, _, err := clientPolicy.Get(ctx, id.ID())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
@@ -418,9 +413,20 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: API error, result was nil", id)
 			}
 
+			assignments, _, err := clientAssignment.List(ctx, odata.Query{
+				Filter: fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", id.ScopeId, id.ID()),
+			})
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
+			if len(*assignments) != 1 {
+				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*assignments))
+			}
+
 			model.Description = *result.Description
 			model.DisplayName = *result.DisplayName
 			model.GroupId = *result.ScopeId
+			model.RoleId = *(*assignments)[0].RoleDefinitionId
 
 			if len(model.EligibleAssignmentRules) == 0 {
 				model.EligibleAssignmentRules = make([]GroupRoleManagementPolicyEligibleAssignmentRules, 1)
@@ -573,7 +579,6 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 			if err != nil {
 				return fmt.Errorf("Could not parse policy ID, %+v", err)
 			}
-
 			metadata.SetID(id)
 
 			policy, _, err := client.Get(ctx, id.ID())
@@ -594,6 +599,13 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
 			}
 
+			// Update the ID as it changes on modification
+			id, err = getPolicyId(ctx, metadata, metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("role_id").(string))
+			if err != nil {
+				return fmt.Errorf("Could not parse policy assignment ID, %+v", err)
+			}
+			metadata.SetID(id)
+
 			return nil
 		},
 	}
@@ -611,22 +623,6 @@ func (r GroupRoleManagementPolicyResource) Delete() sdk.ResourceFunc {
 			return metadata.MarkAsGone(id)
 		},
 	}
-}
-
-func (r GroupRoleManagementPolicyResource) CustomImporter() sdk.ResourceRunFunc {
-	return func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-		id, err := parse.ParseRoleManagementPolicyAssignmentID(metadata.ResourceData.Id())
-		if err != nil {
-			return err
-		}
-		if err = metadata.ResourceData.Set("assignment_type", id.RoleDefinitionId); err != nil {
-			return err
-		}
-		metadata.SetID(parse.NewRoleManagementPolicyID(id.ScopeType, id.ScopeId, id.PolicyId))
-
-		return r.Read().Func(ctx, metadata)
-	}
-
 }
 
 func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.UnifiedRoleManagementPolicy) (*msgraph.UnifiedRoleManagementPolicy, error) {
@@ -907,6 +903,29 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 		ID:    policy.ID,
 		Rules: pointer.To(updatedRules),
 	}, nil
+}
+
+// There isn't a reliable way to get the policy ID from the policy API, as the policy ID changes with each modification
+func getPolicyId(ctx context.Context, metadata sdk.ResourceMetaData, scopeId, roleDefinitionId string) (*parse.RoleManagementPolicyId, error) {
+	client := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
+
+	assignments, _, err := client.List(ctx, odata.Query{
+		Filter: fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and roleDefinitionId eq '%s'", scopeId, roleDefinitionId),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Could not list existing policy assignments, %+v", err)
+	}
+	if len(*assignments) != 1 {
+		return nil, fmt.Errorf("Got the wrong number of policy assignments, expected 1, got %d", len(*assignments))
+	}
+
+	assignmentId, err := parse.ParseRoleManagementPolicyAssignmentID(*(*assignments)[0].ID)
+	if err != nil {
+		return nil, fmt.Errorf("Could not parse policy assignment ID, %+v", err)
+	}
+
+	return parse.NewRoleManagementPolicyID(assignmentId.ScopeType, assignmentId.ScopeId, assignmentId.PolicyId), nil
+
 }
 
 func expandNotificationSettings(rule msgraph.UnifiedRoleManagementPolicyRule, data GroupRoleManagementPolicyNotificationSettings, recipientChange bool) msgraph.UnifiedRoleManagementPolicyRule {

@@ -60,10 +60,10 @@ resource "azuread_group_role_management_policy" "example" {
 
 * `activation_rules` - (Optional) An `activation_rules` block as defined below.
 * `active_assignment_rules` - (Optional) An `active_assignment_rules` block as defined below.
-* `assignment_type` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
 * `eligible_assignment_rules` - (Optional) An `eligible_assignment_rules` block as defined below.
 * `group_id` - (Required) The ID of the Azure AD group for which the policy applies.
 * `notification_rules` - (Optional) A `notification_rules` block as defined below.
+* `role_id` - (Required) The type of assignment this policy coveres. Can be either `member` or `owner`.
 
 ---
 
