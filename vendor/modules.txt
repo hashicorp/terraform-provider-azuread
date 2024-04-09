@@ -60,11 +60,11 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/hashicorp/errwrap v1.1.0
 ## explicit
 github.com/hashicorp/errwrap
-# github.com/hashicorp/go-azure-helpers v0.66.1
+# github.com/hashicorp/go-azure-helpers v0.66.2
 ## explicit; go 1.21
 github.com/hashicorp/go-azure-helpers/lang/pointer
 github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids
-# github.com/hashicorp/go-azure-sdk/sdk v0.20240125.1122928
+# github.com/hashicorp/go-azure-sdk/sdk v0.20240411.1104331
 ## explicit; go 1.21
 github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims
