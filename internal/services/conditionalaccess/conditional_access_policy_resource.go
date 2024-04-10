@@ -111,6 +111,30 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
+
+									"filter": {
+										Type:     pluginsdk.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
+												"mode": {
+													Type:     pluginsdk.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														msgraph.ConditionalAccessFilterModeExclude,
+														msgraph.ConditionalAccessFilterModeInclude,
+													}, false),
+												},
+
+												"rule": {
+													Type:             pluginsdk.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+												},
+											},
+										},
+									},
 								},
 							},
 						},
