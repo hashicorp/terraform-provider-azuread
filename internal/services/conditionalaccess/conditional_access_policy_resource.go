@@ -86,7 +86,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_applications": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -105,7 +105,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_user_actions": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
 										Elem: &pluginsdk.Schema{
 											Type:         pluginsdk.TypeString,
 											ValidateFunc: validation.StringIsNotEmpty,
@@ -113,9 +113,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									},
 
 									"filter": {
-										Type:     pluginsdk.TypeList,
-										Optional: true,
-										MaxItems: 1,
+										Type:         pluginsdk.TypeList,
+										Optional:     true,
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
+										MaxItems:     1,
 										Elem: &pluginsdk.Resource{
 											Schema: map[string]*pluginsdk.Schema{
 												"mode": {
