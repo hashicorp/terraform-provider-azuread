@@ -4,7 +4,7 @@
 package conditionalaccess
 
 import (
-	"strings"
+	"log"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
@@ -65,6 +65,7 @@ func flattenConditionalAccessApplications(in stable.ConditionalAccessApplication
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
 			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
 			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+			"filter":                flattenConditionalAccessFilter(in.ApplicationFilter),
 		},
 	}
 }
@@ -108,7 +109,7 @@ func flattenConditionalAccessDevices(in *stable.ConditionalAccessDevices) []inte
 
 	return []interface{}{
 		map[string]interface{}{
-			"filter": flattenConditionalAccessDeviceFilter(in.DeviceFilter),
+			"filter": flattenConditionalAccessFilter(in.DeviceFilter),
 		},
 	}
 }
@@ -228,10 +229,13 @@ func flattenConditionalAccessSessionControls(in *stable.ConditionalAccessSession
 	}
 }
 
-func flattenConditionalAccessDeviceFilter(in *stable.ConditionalAccessFilter) []interface{} {
+func flattenConditionalAccessFilter(in *msgraph.ConditionalAccessFilter) []interface{} {
 	if in == nil {
+		log.Print("=== no access filters to flatten")
 		return []interface{}{}
 	}
+
+	log.Printf("=== access filters are being flattened: %s", *in.Rule)
 
 	return []interface{}{
 		map[string]interface{}{
@@ -425,7 +429,10 @@ func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAcc
 	result.ExcludeApplications = tf.ExpandStringSlicePtr(excludeApplications)
 	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
 	if len(filter) > 0 {
+		log.Printf("=== appliction filter being expanded %+v \n", filter...)
 		result.ApplicationFilter = expandConditionalAccessFilter(filter)
+	} else {
+		log.Println("=== no application filter to expand")
 	}
 
 	return result
