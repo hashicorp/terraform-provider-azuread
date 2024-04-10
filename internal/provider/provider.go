@@ -298,7 +298,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		)
 
 		if metadataHost != "" {
-			if env, err = environments.FromEndpoint(ctx, fmt.Sprintf("https://%s", metadataHost), envName); err != nil {
+			if env, err = environments.FromEndpoint(ctx, fmt.Sprintf("https://%s", metadataHost)); err != nil {
 				return nil, pluginsdk.DiagFromErr(err)
 			}
 		} else if env, err = environments.FromName(envName); err != nil {
