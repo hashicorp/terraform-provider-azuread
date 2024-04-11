@@ -1,6 +1,6 @@
 ## 2.48.0 (Unreleased)
 
-ENHAHCEMENTS:
+ENHANCEMENTS:
 
 * dependencies: updating to `v0.20240411.1104331` of `github.com/hashicorp/go-azure-sdk/sdk` [GH-1353]
 
