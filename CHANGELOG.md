@@ -1,12 +1,12 @@
-## 2.48.0 (Unreleased)
+## 2.48.0 (April 11, 2024)
 
 ENHANCEMENTS:
 
-* dependencies: updating to `v0.20240411.1104331` of `github.com/hashicorp/go-azure-sdk/sdk` [GH-1353]
+* dependencies: updating to `v0.20240411.1104331` of `github.com/hashicorp/go-azure-sdk/sdk` ([#1353](https://github.com/hashicorp/terraform-provider-azuread/issues/1353))
 
 BUG FIXES:
 
-* provider: fix an issue where the provider was not correctly configured when using a custom metadata host [GH-1353]
+* provider: fix an issue where the provider was not correctly configured when using a custom metadata host ([#1353](https://github.com/hashicorp/terraform-provider-azuread/issues/1353))
 
 ## 2.47.0 (December 14, 2023)
 
