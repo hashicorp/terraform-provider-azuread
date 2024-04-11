@@ -1,3 +1,13 @@
+## 2.48.0 (Unreleased)
+
+ENHAHCEMENTS:
+
+* dependencies: updating to `v0.20240411.1104331` of `github.com/hashicorp/go-azure-sdk/sdk` [GH-1353]
+
+BUG FIXES:
+
+* provider: fix an issue where the provider was not correctly configured when using a custom metadata host [GH-1353]
+
 ## 2.47.0 (December 14, 2023)
 
 BUG FIXES:
