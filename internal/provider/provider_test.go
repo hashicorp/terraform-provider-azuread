@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -44,10 +43,14 @@ func TestAccProvider_cliAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
 
+		authConfig := &auth.Credentials{
+			Environment:                       *env,
+			TenantID:                          *tenantId,
 			EnableAuthenticatingUsingAzureCLI: true,
 		}
 
@@ -82,14 +85,23 @@ func TestAccProvider_clientCertificateAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
 
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		authConfig := &auth.Credentials{
+			Environment:               *env,
+			TenantID:                  *tenantId,
+			ClientID:                  *clientId,
+			ClientCertificatePath:     d.Get("client_certificate_path").(string),
+			ClientCertificatePassword: d.Get("client_certificate_password").(string),
 			EnableAuthenticatingUsingClientCertificate: true,
-			ClientCertificatePath:                      d.Get("client_certificate_path").(string),
-			ClientCertificatePassword:                  d.Get("client_certificate_password").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -122,7 +134,7 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 			var err error
 			certData, err = decodeCertificate(encodedCert)
 			if err != nil {
-				return nil, diag.FromErr(err)
+				return nil, pluginsdk.DiagFromErr(err)
 			}
 		}
 
@@ -132,14 +144,23 @@ func TestAccProvider_clientCertificateInlineAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
 
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		authConfig := &auth.Credentials{
+			Environment:               *env,
+			TenantID:                  *tenantId,
+			ClientID:                  *clientId,
+			ClientCertificateData:     certData,
+			ClientCertificatePassword: d.Get("client_certificate_password").(string),
 			EnableAuthenticatingUsingClientCertificate: true,
-			ClientCertificateData:                      certData,
-			ClientCertificatePassword:                  d.Get("client_certificate_password").(string),
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -191,21 +212,25 @@ func testAccProvider_clientSecretAuthFromEnvironment(t *testing.T) {
 
 		clientId, err := getClientId(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		clientSecret, err := getClientSecret(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    *clientId,
-
-			EnableAuthenticatingUsingClientSecret: true,
+			Environment:                           *env,
+			TenantID:                              *tenantId,
+			ClientID:                              *clientId,
 			ClientSecret:                          *clientSecret,
+			EnableAuthenticatingUsingClientSecret: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -252,21 +277,25 @@ func testAccProvider_clientSecretAuthFromFiles(t *testing.T) {
 
 		clientId, err := getClientId(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		clientSecret, err := getClientSecret(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    *clientId,
-
-			EnableAuthenticatingUsingClientSecret: true,
+			Environment:                           *env,
+			TenantID:                              *tenantId,
+			ClientID:                              *clientId,
 			ClientSecret:                          *clientSecret,
+			EnableAuthenticatingUsingClientSecret: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -312,18 +341,27 @@ func testAccProvider_genericOidcAuthFromEnvironment(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		idToken, err := oidcToken(d)
+		idToken, err := getOidcToken(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
-
-			EnableAuthenticationUsingOIDC: true,
+			Environment:                   *env,
+			TenantID:                      *tenantId,
+			ClientID:                      *clientId,
 			OIDCAssertionToken:            *idToken,
+			EnableAuthenticationUsingOIDC: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -364,18 +402,27 @@ func testAccProvider_genericOidcAuthFromFiles(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		idToken, err := oidcToken(d)
+		idToken, err := getOidcToken(d)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
 		}
 
 		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
-
-			EnableAuthenticationUsingOIDC: true,
+			Environment:                   *env,
+			TenantID:                      *tenantId,
+			ClientID:                      *clientId,
 			OIDCAssertionToken:            *idToken,
+			EnableAuthenticationUsingOIDC: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
@@ -415,14 +462,23 @@ func TestAccProvider_githubOidcAuth(t *testing.T) {
 			t.Fatalf("configuring environment %q: %v", envName, err)
 		}
 
-		authConfig := &auth.Credentials{
-			Environment: *env,
-			TenantID:    d.Get("tenant_id").(string),
-			ClientID:    d.Get("client_id").(string),
+		clientId, err := getClientId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
 
-			EnableAuthenticationUsingGitHubOIDC: true,
+		tenantId, err := getTenantId(d)
+		if err != nil {
+			return nil, pluginsdk.DiagFromErr(err)
+		}
+
+		authConfig := &auth.Credentials{
+			Environment:                         *env,
+			TenantID:                            *tenantId,
+			ClientID:                            *clientId,
 			GitHubOIDCTokenRequestToken:         d.Get("oidc_request_token").(string),
 			GitHubOIDCTokenRequestURL:           d.Get("oidc_request_url").(string),
+			EnableAuthenticationUsingGitHubOIDC: true,
 		}
 
 		return buildClient(ctx, provider, authConfig, "")
