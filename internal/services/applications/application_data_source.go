@@ -374,7 +374,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"resource_app_id": {
-							Description: "The unique identifier for the resource that the application requires access to. This is the Application ID of the target application",
+							Description: "The unique identifier for the resource that the application requires access to. This is the Client ID (also called Application ID) of the target application",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
