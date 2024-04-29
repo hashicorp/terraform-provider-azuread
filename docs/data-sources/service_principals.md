@@ -27,7 +27,7 @@ data "azuread_service_principals" "example" {
 }
 ```
 
-*Look up by application IDs (client IDs*
+*Look up by application IDs (client IDs)
 
 ```terraform
 data "azuread_service_principals" "example" {
