@@ -93,22 +93,22 @@ resource "azuread_group_role_management_policy" "test" {
     expire_after = "P365D"
   }
 
-	notification_rules {
-		eligible_assignments {
-		  approver_notifications {
-				notification_level    = "Critical"
-				default_recipients    = false
-				additional_recipients = ["someone@example.com"]
-			}
-		}
-		eligible_activations {
-		  assignee_notifications {
-				notification_level    = "All"
-				default_recipients    = true
-				additional_recipients = ["someone@example.com"]
-			}
-		}
-	}
+  notification_rules {
+    eligible_assignments {
+      approver_notifications {
+        notification_level    = "Critical"
+        default_recipients    = false
+        additional_recipients = ["someone@example.com"]
+      }
+    }
+    eligible_activations {
+      assignee_notifications {
+        notification_level    = "All"
+        default_recipients    = true
+        additional_recipients = ["someone@example.com"]
+      }
+    }
+  }
 }
 `, data.RandomString)
 }
@@ -120,9 +120,9 @@ provider "azuread" {}
 data "azuread_domains" "test" {
   only_initial = true
 }
- 
+
 resource "azuread_user" "approver" {
-	user_principal_name = "pam-approver-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
+  user_principal_name = "pam-approver-%[1]s@${data.azuread_domains.test.domains.0.domain_name}"
   display_name        = "PAM Approver Test %[1]s"
   password            = "%[2]s"
 }
@@ -145,26 +145,26 @@ resource "azuread_group_role_management_policy" "test" {
     expire_after = "P90D"
   }
 
-	activation_rules {
-		maximum_duration = "PT1H"
-		require_approval = true
-		approval_stage {
-			primary_approver {
-				object_id = azuread_user.approver.object_id
-				type      = "singleUser" 
-			}
-		}
-	}
+  activation_rules {
+    maximum_duration = "PT1H"
+    require_approval = true
+    approval_stage {
+      primary_approver {
+        object_id = azuread_user.approver.object_id
+        type      = "singleUser"
+      }
+    }
+  }
 
-	notification_rules {
-		active_assignments {
-			admin_notifications {
-				notification_level    = "Critical"
-				default_recipients    = false
-				additional_recipients = ["someone@example.com"]
-			}
-		}
-	}
+  notification_rules {
+    active_assignments {
+      admin_notifications {
+        notification_level    = "Critical"
+        default_recipients    = false
+        additional_recipients = ["someone@example.com"]
+      }
+    }
+  }
 }
 `, data.RandomString, data.RandomPassword)
 }

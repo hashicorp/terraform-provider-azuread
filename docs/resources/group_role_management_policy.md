@@ -44,8 +44,8 @@ resource "azuread_group_role_management_policy" "example" {
   notification_rules {
     approver_notifications {
       eligible_assignments {
-        notification_level    = "Critical"
-        default_recipients    = false
+        notification_level = "Critical"
+        default_recipients = false
         additional_recipients = [
           "someone@example.com",
           "someone.else@example.com",

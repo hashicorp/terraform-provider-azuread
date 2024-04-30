@@ -130,11 +130,11 @@ resource "azuread_group" "pam" {
   mail_enabled     = false
   security_enabled = true
 
-	owners = [azuread_user.manual_owner.object_id]
+  owners = [azuread_user.manual_owner.object_id]
 
-	lifecycle {
-		ignore_changes = [owners]
-	}
+  lifecycle {
+    ignore_changes = [owners]
+  }
 }
 
 resource "azuread_user" "eligibile_owner" {
