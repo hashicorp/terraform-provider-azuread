@@ -45,17 +45,17 @@ func ParseRoleManagementPolicyAssignmentID(input string) (*RoleManagementPolicyA
 		return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: %+v", err)
 	}
 
-	if id.ScopeType == msgraph.UnifiedRoleManagementPolicyScopeDirectory ||
-		id.ScopeType == msgraph.UnifiedRoleManagementPolicyScopeDirectoryRole {
+	switch id.ScopeType {
+	case msgraph.UnifiedRoleManagementPolicyScopeDirectory, msgraph.UnifiedRoleManagementPolicyScopeDirectoryRole:
 		if _, err := validation.IsUUID(id.RoleDefinitionId, "RoleDefinitionId"); len(err) > 0 {
 			return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: %+v", err)
 		}
-	} else if id.ScopeType == msgraph.UnifiedRoleManagementPolicyScopeGroup {
+	case msgraph.UnifiedRoleManagementPolicyScopeGroup:
 		if id.RoleDefinitionId != msgraph.PrivilegedAccessGroupRelationshipMember &&
 			id.RoleDefinitionId != msgraph.PrivilegedAccessGroupRelationshipOwner {
 			return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: invalid RoleDefinitionId")
 		}
-	} else {
+	default:
 		return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: invalid ScopeType")
 	}
 

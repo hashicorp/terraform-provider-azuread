@@ -766,7 +766,7 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *msgraph.Unifie
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.required_conditional_access_authentication_context") {
-		isEnabled := policyRules["AuthenticationContext_EndUser_Assignment"].IsEnabled
+		var isEnabled *bool
 		claimValue := policyRules["AuthenticationContext_EndUser_Assignment"].ClaimValue
 
 		if _, set := metadata.ResourceData.GetOk("activation_rules.0.required_conditional_access_authentication_context"); set {

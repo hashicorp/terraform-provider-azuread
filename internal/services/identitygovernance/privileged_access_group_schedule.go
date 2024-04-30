@@ -157,7 +157,8 @@ func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *s
 		schedule.StartDateTime = &startDate
 	}
 
-	if model.ExpirationDate != "" {
+	switch {
+	case model.ExpirationDate != "":
 		expiryDate, err := time.Parse(time.RFC3339, model.ExpirationDate)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %+v", model.ExpirationDate, err)
@@ -169,12 +170,12 @@ func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *s
 		}
 		schedule.Expiration.EndDateTime = &expiryDate
 		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
-	} else if model.Duration != "" {
+	case model.Duration != "":
 		schedule.Expiration.Duration = &model.Duration
 		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
-	} else if model.PermanentAssignment {
+	case model.PermanentAssignment:
 		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
-	} else {
+	default:
 		return nil, fmt.Errorf("either expiration_date or duration must be set, or permanent_assignment must be true")
 	}
 
