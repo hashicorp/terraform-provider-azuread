@@ -29,6 +29,8 @@ func SupportedTypedServices() []sdk.TypedServiceRegistration {
 		applications.Registration{},
 		directoryroles.Registration{},
 		domains.Registration{},
+		policies.Registration{},
+		identitygovernance.Registration{},
 		serviceprincipals.Registration{},
 	}
 }
