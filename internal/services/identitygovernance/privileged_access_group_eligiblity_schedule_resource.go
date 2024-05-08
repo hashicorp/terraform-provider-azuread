@@ -17,35 +17,35 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
-type PrivilegedAccessGroupAssignmentScheduleResource struct{}
+type PrivilegedAccessGroupEligibilityScheduleResource struct{}
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidatePrivilegedAccessGroupScheduleID
 }
 
-var _ sdk.Resource = PrivilegedAccessGroupAssignmentScheduleResource{}
+var _ sdk.Resource = PrivilegedAccessGroupEligibilityScheduleResource{}
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) ResourceType() string {
-	return "azuread_privileged_access_group_assignment_schedule"
+func (r PrivilegedAccessGroupEligibilityScheduleResource) ResourceType() string {
+	return "azuread_privileged_access_group_eligibility_schedule"
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) ModelObject() interface{} {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) ModelObject() interface{} {
 	return &PrivilegedAccessGroupScheduleModel{}
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Arguments() map[string]*pluginsdk.Schema {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Arguments() map[string]*pluginsdk.Schema {
 	return privilegedAccessGroupScheduleArguments()
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Attributes() map[string]*pluginsdk.Schema {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Attributes() map[string]*pluginsdk.Schema {
 	return privilegedAccessGroupScheduleAttributes()
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFunc {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			var model PrivilegedAccessGroupScheduleModel
 			if err := metadata.Decode(&model); err != nil {
@@ -57,7 +57,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 				return err
 			}
 
-			properties := msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
+			properties := msgraph.PrivilegedAccessGroupEligibilityScheduleRequest{
 				AccessId:      model.AssignmentType,
 				PrincipalId:   &model.PrincipalId,
 				GroupId:       &model.GroupId,
@@ -82,7 +82,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 				return fmt.Errorf("ID returned for assignment schedule request is nil/empty")
 			}
 
-			if req.Status == msgraph.PrivilegedAccessGroupAssignmentStatusFailed {
+			if req.Status == msgraph.PrivilegedAccessGroupEligibilityStatusFailed {
 				return fmt.Errorf("Assignment schedule request is in a failed state")
 			}
 
@@ -97,14 +97,14 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 	}
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Read() sdk.ResourceFunc {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			cSchedule := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleClient
-			cRequests := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			cSchedule := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleClient
+			cRequests := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
-			var request *msgraph.PrivilegedAccessGroupAssignmentScheduleRequest
+			var request *msgraph.PrivilegedAccessGroupEligibilityScheduleRequest
 
 			id, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -179,11 +179,11 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Read() sdk.ResourceFunc
 	}
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFunc {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			var model PrivilegedAccessGroupScheduleModel
 			if err := metadata.Decode(&model); err != nil {
@@ -195,7 +195,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 				return err
 			}
 
-			properties := msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
+			properties := msgraph.PrivilegedAccessGroupEligibilityScheduleRequest{
 				AccessId:      model.AssignmentType,
 				PrincipalId:   &model.PrincipalId,
 				GroupId:       &model.GroupId,
@@ -220,7 +220,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 				return fmt.Errorf("ID returned for assignment schedule request is nil/empty")
 			}
 
-			if req.Status == msgraph.PrivilegedAccessGroupAssignmentStatusFailed {
+			if req.Status == msgraph.PrivilegedAccessGroupEligibilityStatusFailed {
 				return fmt.Errorf("Assignment schedule request is in a failed state")
 			}
 
@@ -229,11 +229,11 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 	}
 }
 
-func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFunc {
+func (r PrivilegedAccessGroupEligibilityScheduleResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			id, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -246,27 +246,19 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFu
 			}
 
 			switch model.Status {
-			case msgraph.PrivilegedAccessGroupAssignmentStatusDenied:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusFailed:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusGranted:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingAdminDecision:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingApproval:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingProvisioning:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusPendingScheduledCreation:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusProvisioned:
-				return revokeAssignmentRequest(ctx, metadata, client, id, &model)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusScheduleCreated:
-				return revokeAssignmentRequest(ctx, metadata, client, id, &model)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusCanceled:
-				return metadata.MarkAsGone(id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusRevoked:
+			case msgraph.PrivilegedAccessGroupEligibilityStatusDenied,
+				msgraph.PrivilegedAccessGroupEligibilityStatusFailed,
+				msgraph.PrivilegedAccessGroupEligibilityStatusGranted,
+				msgraph.PrivilegedAccessGroupEligibilityStatusPendingAdminDecision,
+				msgraph.PrivilegedAccessGroupEligibilityStatusPendingApproval,
+				msgraph.PrivilegedAccessGroupEligibilityStatusPendingProvisioning,
+				msgraph.PrivilegedAccessGroupEligibilityStatusPendingScheduledCreation:
+				return cancelEligibilityRequest(ctx, metadata, client, id)
+			case msgraph.PrivilegedAccessGroupEligibilityStatusProvisioned,
+				msgraph.PrivilegedAccessGroupEligibilityStatusScheduleCreated:
+				return revokeEligibilityRequest(ctx, metadata, client, id, &model)
+			case msgraph.PrivilegedAccessGroupEligibilityStatusCanceled,
+				msgraph.PrivilegedAccessGroupEligibilityStatusRevoked:
 				return metadata.MarkAsGone(id)
 			}
 
@@ -275,7 +267,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFu
 	}
 }
 
-func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId) error {
+func cancelEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId) error {
 	status, err := client.Cancel(ctx, id.ID())
 	if err != nil {
 		if status == http.StatusNotFound {
@@ -283,11 +275,11 @@ func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData,
 		}
 		return fmt.Errorf("cancelling %s: %+v", id, err)
 	}
-	return metadata.MarkAsGone(id)
+	return nil
 }
 
-func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId, model *PrivilegedAccessGroupScheduleModel) error {
-	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
+func revokeEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId, model *PrivilegedAccessGroupScheduleModel) error {
+	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupEligibilityScheduleRequest{
 		ID:          pointer.To(id.ID()),
 		AccessId:    model.AssignmentType,
 		PrincipalId: &model.PrincipalId,
@@ -303,5 +295,5 @@ func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData,
 	if result == nil {
 		return fmt.Errorf("retrieving %s: API error, result was nil", id)
 	}
-	return metadata.MarkAsGone(id)
+	return nil
 }
