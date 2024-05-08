@@ -2,22 +2,22 @@ module github.com/hashicorp/terraform-provider-azuread
 
 require (
 	github.com/google/go-cmp v0.5.9
-	github.com/hashicorp/go-azure-helpers v0.62.0
-	github.com/hashicorp/go-azure-sdk v0.20231018.1171511
+	github.com/hashicorp/go-azure-helpers v0.66.2
+	github.com/hashicorp/go-azure-sdk/sdk v0.20240411.1104331
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
-	github.com/manicminer/hamilton v0.65.0
-	golang.org/x/text v0.13.0
+	github.com/manicminer/hamilton v0.67.0
+	golang.org/x/text v0.14.0
 )
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -25,7 +25,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-plugin v1.5.1 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.5 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hc-install v0.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.18.0 // indirect
@@ -49,17 +49,17 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/oauth2 v0.16.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230525234030-28d5490b6b19 // indirect
 	google.golang.org/grpc v1.57.1 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
-	software.sslmate.com/src/go-pkcs12 v0.2.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
+	software.sslmate.com/src/go-pkcs12 v0.4.0 // indirect
 )
 
 go 1.21.3

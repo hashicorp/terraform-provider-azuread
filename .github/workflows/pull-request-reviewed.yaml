@@ -32,7 +32,7 @@ jobs:
           echo ${{ github.event.pull_request.number }} > wr_actions/prnumber.txt
           echo "remove-waiting-response" > wr_actions/action.txt                
 
-      - uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392 # v4.0.0
+      - uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v4.3.3
         with:
           name: artifact
           path: wr_actions

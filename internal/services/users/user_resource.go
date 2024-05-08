@@ -149,7 +149,7 @@ func userResource() *pluginsdk.Resource {
 				Description:  "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Employee", "Contractor", "Consultant", "Vendor"}, false),
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 
 			"force_password_change": {

@@ -341,8 +341,10 @@ func applicationResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Elem: &pluginsdk.Schema{
-					Type:         pluginsdk.TypeString,
-					ValidateFunc: validation.IsAppUri,
+					Type: pluginsdk.TypeString,
+					// Extensive validation is intentionally avoided here, as the accepted values are undocumented, vary wildly and are
+					// different for each user depending on the tenant domain configuration, whether the application is used for SSO etc
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 

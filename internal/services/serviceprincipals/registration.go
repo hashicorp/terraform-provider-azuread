@@ -15,6 +15,11 @@ func (r Registration) Name() string {
 	return "Service Principals"
 }
 
+// AssociatedGitHubLabel is the issue/PR label which can be applied to PRs that include changes to this service package
+func (r Registration) AssociatedGitHubLabel() string {
+	return "feature/service-principals"
+}
+
 // WebsiteCategories returns a list of categories which can be used for the sidebar
 func (r Registration) WebsiteCategories() []string {
 	return []string{
@@ -39,8 +44,6 @@ func (r Registration) SupportedResources() map[string]*pluginsdk.Resource {
 		"azuread_service_principal_delegated_permission_grant":       servicePrincipalDelegatedPermissionGrantResource(),
 		"azuread_service_principal_password":                         servicePrincipalPasswordResource(),
 		"azuread_service_principal_token_signing_certificate":        servicePrincipalTokenSigningCertificateResource(),
-		"azuread_synchronization_job":                                synchronizationJobResource(),
-		"azuread_synchronization_secret":                             synchronizationSecretResource(),
 	}
 }
 

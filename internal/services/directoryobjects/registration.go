@@ -9,7 +9,12 @@ type Registration struct{}
 
 // Name is the name of this Service
 func (r Registration) Name() string {
-	return "DirectoryObjects"
+	return "Directory Objects"
+}
+
+// AssociatedGitHubLabel is the issue/PR label which can be applied to PRs that include changes to this service package
+func (r Registration) AssociatedGitHubLabel() string {
+	return "feature/directory-objects"
 }
 
 // WebsiteCategories returns a list of categories which can be used for the sidebar

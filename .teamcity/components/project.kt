@@ -8,23 +8,6 @@ import jetbrains.buildServer.configs.kotlin.Project
 
 const val providerName = "azuread"
 
-var services = mapOf(
-        "administrativeunits" to "Administrative Units",
-        "applications" to "Applications",
-        "approleassignments" to "App Role Assignments",
-        "conditionalaccess" to "Conditional Access",
-        "directoryobjects" to "Directory Objects",
-        "directoryroles" to "Directory Roles",
-        "domains" to "Domains",
-        "groups" to "Groups",
-        "identitygovernance" to "Identity Governance",
-        "invitations" to "Invitations",
-        "policies" to "Policies",
-        "serviceprincipals" to "Service Principals",
-        "userflows" to "User Flows",
-        "users" to "Users"
-)
-
 fun AzureAD(environment: String, config : ClientConfiguration) : Project {
     return Project{
         var pullRequestBuildConfig = pullRequestBuildConfiguration(environment, config)

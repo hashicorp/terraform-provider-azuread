@@ -35,6 +35,10 @@ fmt:
 fmtcheck:
 	@sh "$(CURDIR)/scripts/gofmtcheck.sh"
 
+generate:
+	go generate ./internal/services/...
+	go generate ./internal/provider/
+
 goimports:
 	@echo "==> Fixing imports code with goimports..."
 	goimports -local "github.com/hashicorp/terraform-provider-azuread" -w internal/
@@ -69,6 +73,12 @@ depscheck:
 	@git diff --compact-summary --exit-code -- vendor || \
 		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
 
+gencheck:
+	@echo "==> Generating..."
+	@make generate
+	@echo "==> Comparing generated code to committed code..."
+	@git diff --compact-summary --exit-code -- ./ || \
+    		(echo; echo "Unexpected difference in generated code. Run 'make generate' to update the generated code and commit."; exit 1)
 
 test: fmtcheck
 	@TEST=$(TEST) ./scripts/run-test.sh

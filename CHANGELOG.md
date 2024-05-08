@@ -1,3 +1,28 @@
+## 2.49.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `azuread_group_role_management_policy` [GH-1327]
+* **New Resource:** `azuread_group_role_management_policy` [GH-1327]
+* **New Resource:** `azuread_privileged_access_group_assignment_schedule` [GH-1327]
+* **New Resource:** `azuread_privileged_access_group_eligibility_schedule` [GH-1327]
+
+ENHANCEMENTS:
+
+* `azuread_application` - relax validation for the `identifier_uris` property to allow more values [GH-1351]
+* `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
+* `azuread_user` - relax validation for the `employee_type` property to allow more values [GH-1328]
+
+## 2.48.0 (April 11, 2024)
+
+ENHANCEMENTS:
+
+* dependencies: updating to `v0.20240411.1104331` of `github.com/hashicorp/go-azure-sdk/sdk` ([#1353](https://github.com/hashicorp/terraform-provider-azuread/issues/1353))
+
+BUG FIXES:
+
+* provider: fix an issue where the provider was not correctly configured when using a custom metadata host ([#1353](https://github.com/hashicorp/terraform-provider-azuread/issues/1353))
+
 ## 2.47.0 (December 14, 2023)
 
 BUG FIXES:
