@@ -25,16 +25,16 @@ feature/domains:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_domains((.|\n)*)###'
 
 feature/groups:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_group((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(group\W+|group_member\W+|groups\W+)((.|\n)*)###'
 
 feature/identity-governance:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_access_package((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(access_package|privileged_access_group_)((.|\n)*)###'
 
 feature/invitations:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_invitation((.|\n)*)###'
 
 feature/policies:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(authentication_strength_policy|claims_mapping_policy)((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(authentication_strength_policy|claims_mapping_policy|group_role_management_policy)((.|\n)*)###'
 
 feature/service-principals:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(client_config|service_principal|synchronization_)((.|\n)*)###'
