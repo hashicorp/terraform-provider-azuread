@@ -7,6 +7,11 @@ FEATURES:
 * **New Resource:** `azuread_privileged_access_group_assignment_schedule` [GH-1327]
 * **New Resource:** `azuread_privileged_access_group_eligibility_schedule` [GH-1327]
 
+ENHANCEMENTS:
+
+* `azuread_application` - relax validation for the `identifier_uris` property to allow more values [GH-1351]
+* `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
+
 ## 2.48.0 (April 11, 2024)
 
 ENHANCEMENTS:
