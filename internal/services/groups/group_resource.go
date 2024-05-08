@@ -96,6 +96,7 @@ func groupResource() *pluginsdk.Resource {
 						msgraph.GroupResourceBehaviorOptionCalendarMemberReadOnly,
 						msgraph.GroupResourceBehaviorOptionConnectorsDisabled,
 						msgraph.GroupResourceBehaviorOptionHideGroupInOutlook,
+						msgraph.GroupResourceBehaviorOptionSkipExchangeInstantOn,
 						msgraph.GroupResourceBehaviorOptionSubscribeMembersToCalendarEventsDisabled,
 						msgraph.GroupResourceBehaviorOptionSubscribeNewGroupMembers,
 						msgraph.GroupResourceBehaviorOptionWelcomeEmailDisabled,
