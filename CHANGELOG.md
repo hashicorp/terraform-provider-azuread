@@ -14,6 +14,10 @@ ENHANCEMENTS:
 * `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
 * `azuread_user` - relax validation for the `employee_type` property to allow more values [GH-1328]
 
+BUG FIXES:
+
+* `azuread_application_pre_authorized` - fix a destroy-time bug that could prevent deletion of the resource [GH-1299]
+
 ## 2.48.0 (April 11, 2024)
 
 ENHANCEMENTS:
