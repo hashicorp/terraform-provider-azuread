@@ -20,7 +20,7 @@ We recommend using either a Service Principal or Managed Identity when running T
 ## Important Notes about Authenticating using the Azure CLI
 
 * Terraform only supports authenticating using the `az` CLI (and this must be available on your PATH) - authenticating using the older `azure` CLI or PowerShell Az / AzureRM Cmdlets is not supported.
-* Authenticating via the Azure CLI is only supported when using a User Account. If you're using a Service Principal (for example via `az login --service-principal`) you should instead authenticate via the Service Principal directly, either using a [Client Certificate](service_principal_client_certificate.html) or a [Client Secret](service_principal_client_secret.html).
+* Prior to version 2.35, authenticating via the Azure CLI was only supported when using a User Account. For example `az login --service-principal` was not supported and it was necessary to use either a [Client Secret](service_principal_client_secret.html) or a [Client Certificate](service_principal_client_certificate.html). From 2.35 upwards, authenticating via the Azure CLI is supported when using a Service Principal or Managed Identity. However, we still recommend using native provider support for Service Principal or Managed Identity authentication wherever possible.
 
 ---
 
@@ -28,13 +28,60 @@ We recommend using either a Service Principal or Managed Identity when running T
 
 -> **Using other clouds** If you're using the **China**, **German** or **Government** Azure Clouds - you'll need to first configure the Azure CLI to work with that Cloud, so that the correct authentication service is used.  You can do this by running: <br><br>`$ az cloud set --name AzureChinaCloud|AzureGermanCloud|AzureUSGovernment`
 
-Firstly, login to the Azure CLI using:
+---
 
-```shell-session
-$ az login --allow-no-subscriptions
+Firstly, login to the Azure CLI using a User, Service Principal or Managed Identity.
+
+User Account:
+
+```shell
+az login --allow-no-subscriptions
+```
+
+Service Principal with a Secret:
+
+```shell
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --password "MyCl1eNtSeCr3t" \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
+```
+
+Service Principal with a Certificate:
+
+```shell
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --password /path/to/certificate \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
+```
+
+Service Principal with Open ID Connect (for use in CI / CD):
+
+```shell
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
+```
+
+Managed Identity:
+
+```shell
+az login --identity --allow-no-subscriptions
+
+or
+
+az login --identity \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --allow-no-subscriptions
 ```
 
 The `--allow-no-subscriptions` argument enables access to tenants that have no linked subscriptions, in addition to tenants that do.
+
+---
 
 Once logged in - it's possible to list the Subscriptions and Tenants associated with the account via:
 
