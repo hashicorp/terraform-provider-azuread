@@ -37,4 +37,6 @@ data "azuread_group_role_management_policy" "owners_policy" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` (String) The ID of this policy.
+* `description` - (String) The description of this policy.
+* `display_name` - (String) The display name of this policy.
+* `id` - (String) The ID of this policy.

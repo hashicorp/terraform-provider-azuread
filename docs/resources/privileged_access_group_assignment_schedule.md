@@ -57,9 +57,9 @@ At least one of `expiration_date`, `duration`, or `permanent_assignment` must be
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` (String) The ID of this request.
-- `status` (String) The provisioning status of this request.
-- `target_schedule_id` (String) The ID of this schedule created by this request.
+- `id` - (String) The ID of this request.
+- `status` - (String) The provisioning status of this request.
+- `target_schedule_id` - (String) The ID of this schedule created by this request.
 
 ## Import
 
