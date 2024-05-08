@@ -6,7 +6,9 @@ package policies
 import (
 	"context"
 	"errors"
+	"fmt"
 
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -15,6 +17,13 @@ import (
 )
 
 var _ sdk.DataSource = GroupRoleManagementPolicyDataSource{}
+
+type GroupRoleManagementPolicyDataSourceModel struct {
+	Description string                                   `tfschema:"description"`
+	DisplayName string                                   `tfschema:"display_name"`
+	GroupId     string                                   `tfschema:"group_id"`
+	RoleId      msgraph.UnifiedRoleManagementPolicyScope `tfschema:"role_id"`
+}
 
 type GroupRoleManagementPolicyDataSource struct{}
 
@@ -59,15 +68,22 @@ func (r GroupRoleManagementPolicyDataSource) Attributes() map[string]*schema.Sch
 }
 
 func (r GroupRoleManagementPolicyDataSource) ModelObject() interface{} {
-	return &GroupRoleManagementPolicyModel{}
+	return &GroupRoleManagementPolicyDataSourceModel{}
 }
 
 func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Groups.GroupsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			clientPolicy := metadata.Client.Policies.RoleManagementPolicyClient
+			clientAssignment := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
+
+			clientPolicy.BaseClient.DisableRetries = true
+			clientAssignment.BaseClient.DisableRetries = true
+
+			defer func() {
+				clientPolicy.BaseClient.DisableRetries = false
+				clientAssignment.BaseClient.DisableRetries = false
+			}()
 
 			groupID := metadata.ResourceData.Get("group_id").(string)
 			roleID := metadata.ResourceData.Get("role_id").(string)
@@ -75,8 +91,34 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 			if err != nil {
 				return errors.New("Bad API response")
 			}
+
+			result, _, err := clientPolicy.Get(ctx, id.ID())
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
+			if result == nil {
+				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+			}
+
+			assignments, _, err := clientAssignment.List(ctx, odata.Query{
+				Filter: fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", id.ScopeId, id.ID()),
+			})
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %+v", id, err)
+			}
+			if len(*assignments) != 1 {
+				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*assignments))
+			}
+
+			state := GroupRoleManagementPolicyDataSourceModel{
+				Description: *result.Description,
+				DisplayName: *result.DisplayName,
+				GroupId:     *result.ScopeId,
+				RoleId:      *(*assignments)[0].RoleDefinitionId,
+			}
+
 			metadata.ResourceData.SetId(id.ID())
-			return nil
+			return metadata.Encode(&state)
 		},
 	}
 }
