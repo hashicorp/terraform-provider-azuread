@@ -11,6 +11,7 @@ ENHANCEMENTS:
 
 * `azuread_application` - relax validation for the `identifier_uris` property to allow more values [GH-1351]
 * `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
+* `azuread_user` - relax validation for the `employee_type` property to allow more values [GH-1328]
 
 ## 2.48.0 (April 11, 2024)
 
