@@ -20,7 +20,7 @@ We recommend using either a Service Principal or Managed Identity when running T
 ## Important Notes about Authenticating using the Azure CLI
 
 * Terraform only supports authenticating using the `az` CLI (and this must be available on your PATH) - authenticating using the older `azure` CLI or PowerShell Az / AzureRM Cmdlets is not supported.
-* Prior to version 2.35, authenticating via the Azure CLI was only supported when using a User Account. For example `az login --service-principal` was not supported and you had to use either a [Client Secret](service_principal_client_secret.html) or a [Client Certificate](service_principal_client_certificate.html). From 2.35 upwards, authenticating via the Azure CLI is supported when using a Service Principal or Managed Identity.
+* Prior to version 2.35, authenticating via the Azure CLI was only supported when using a User Account. For example `az login --service-principal` was not supported and it was necessary to use either a [Client Secret](service_principal_client_secret.html) or a [Client Certificate](service_principal_client_certificate.html). From 2.35 upwards, authenticating via the Azure CLI is supported when using a Service Principal or Managed Identity. However, we still recommend using native provider support for Service Principal or Managed Identity authentication wherever possible.
 
 ---
 
@@ -41,19 +41,30 @@ az login --allow-no-subscriptions
 Service Principal with a Secret:
 
 ```shell
-az login --service-principal -u "CLIENT_ID" -p "CLIENT_SECRET" --tenant "TENANT_ID" --allow-no-subscriptions
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --password "MyCl1eNtSeCr3t" \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
 ```
 
 Service Principal with a Certificate:
 
 ```shell
-az login --service-principal -u "CLIENT_ID" -p "CERTIFICATE_PEM" --tenant "TENANT_ID" --allow-no-subscriptions
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --password /path/to/certificate \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
 ```
 
 Service Principal with Open ID Connect (for use in CI / CD):
 
 ```shell
-az login --service-principal -u "CLIENT_ID" --tenant "TENANT_ID" --allow-no-subscriptions
+az login --service-principal \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --tenant 10000000-2000-3000-4000-500000000000 \
+         --allow-no-subscriptions
 ```
 
 Managed Identity:
@@ -63,7 +74,9 @@ az login --identity --allow-no-subscriptions
 
 or
 
-az login --identity --username "CLIENT_ID" --allow-no-subscriptions
+az login --identity \
+         --username 00000000-0000-0000-0000-000000000000 \
+         --allow-no-subscriptions
 ```
 
 The `--allow-no-subscriptions` argument enables access to tenants that have no linked subscriptions, in addition to tenants that do.
