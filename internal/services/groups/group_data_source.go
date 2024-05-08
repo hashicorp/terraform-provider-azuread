@@ -68,6 +68,13 @@ func groupDataSource() *pluginsdk.Resource {
 				Computed:    true,
 			},
 
+			"include_transitive_members": {
+				Description: "Specifies whether to include transitive members (a flat list of all nested members).",
+				Type:        pluginsdk.TypeBool,
+				Optional:    true,
+				Default:     false,
+			},
+
 			"assignable_to_role": {
 				Description: "Indicates whether this group can be assigned to an Azure Active Directory role",
 				Type:        pluginsdk.TypeBool,
@@ -146,13 +153,6 @@ func groupDataSource() *pluginsdk.Resource {
 				Elem: &pluginsdk.Schema{
 					Type: pluginsdk.TypeString,
 				},
-			},
-
-			"include_transitive_members": {
-				Description: "Specifies whether to include transitive members (a flat list of all nested members).",
-				Type:        pluginsdk.TypeBool,
-				Optional:    true,
-				Default:     false,
 			},
 
 			"onpremises_domain_name": {
@@ -432,14 +432,13 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
 	var members *[]string
+	var err error
 	if includeTransitiveMembers {
-		var err error
 		members, _, err = client.ListTransitiveMembers(ctx, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve transitive group members for group with object ID: %q", d.Id())
 		}
 	} else {
-		var err error
 		members, _, err = client.ListMembers(ctx, d.Id())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
