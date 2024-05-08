@@ -51,10 +51,12 @@ func (r ApplicationIdentifierUriResource) Arguments() map[string]*pluginsdk.Sche
 		},
 
 		"identifier_uri": {
-			Description:  "The user-defined URI or URI-like string that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
-			Type:         pluginsdk.TypeString,
-			Required:     true,
-			ForceNew:     true,
+			Description: "The user-defined URI or URI-like string that uniquely identifies an application within its Azure AD tenant, or within a verified custom domain if the application is multi-tenant",
+			Type:        pluginsdk.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			// Extensive validation is intentionally avoided here, as the accepted values are undocumented, vary wildly and are
+			// different for each user depending on the tenant domain configuration, whether the application is used for SSO etc
 			ValidateFunc: validation.StringIsNotEmpty,
 		},
 	}
