@@ -82,6 +82,12 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 					},
 				},
 			},
+			"triggers": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
