@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -23,12 +22,12 @@ func TestAccSynchronizationJobProvisionOnDemand_basic(t *testing.T) {
 		{
 			// The provisioned app isn't actually integrated so this will never work
 			Config:      r.basic(data),
-			ExpectError: regexp.MustCompile("CredentialsMissing: Please configure provisioning by providing your admin credentials then retry the provision on-demand."),
+			ExpectError: regexp.MustCompile("CredentialsMissing: Please configure provisioning"),
 		},
 	})
 }
 
-func (r SynchronizationJobProvisionOnDemandResource) Exists(ctx context.Context, client *clients.Client, state *terraform.InstanceState) (*bool, error) {
+func (r SynchronizationJobProvisionOnDemandResource) Exists(_ context.Context, _ *clients.Client, _ *terraform.InstanceState) (*bool, error) {
 	return pointer.To(true), nil
 }
 
@@ -49,9 +48,9 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
-  owners         = [data.azuread_client_config.test.object_id]
-  use_existing   = true
+  client_id    = azuread_application.test.client_id
+  owners       = [data.azuread_client_config.test.object_id]
+  use_existing = true
 }
 
 resource "azuread_synchronization_job" "test" {
@@ -73,8 +72,10 @@ func (r SynchronizationJobProvisionOnDemandResource) basic(data acceptance.TestD
 resource "azuread_synchronization_job_provision_on_demand" "test" {
   service_principal_id   = azuread_service_principal.test.id
   synchronization_job_id = trimprefix(azuread_synchronization_job.test.id, "${azuread_service_principal.test.id}/job/")
+
   parameter {
-    rule_id = "03f7d90d-bf71-41b1-bda6-aaf0ddbee5d8" //no api to check this so assuming the rule id is the same globally :finger_crossed: 
+    rule_id = "03f7d90d-bf71-41b1-bda6-aaf0ddbee5d8" // appears to be a global value
+
     subject {
       object_id        = azuread_group.test.id
       object_type_name = "Group"

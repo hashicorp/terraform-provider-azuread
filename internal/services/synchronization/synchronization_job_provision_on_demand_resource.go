@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-
 	"github.com/hashicorp/go-uuid"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -26,8 +24,8 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
-			Read:   schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Read:   schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 		SchemaVersion: 0,
 
@@ -39,12 +37,14 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
+
 			"synchronization_job_id": {
 				Description: "The identifier for the synchronization jop.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
+
 			"parameter": {
 				Description: "Represents the objects that will be provisioned and the synchronization rules executed. The resource is primarily used for on-demand provisioning.",
 				Type:        schema.TypeList,
@@ -53,11 +53,12 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"rule_id": {
-							Description: "The identifier of the synchronizationRule to be applied. This rule ID is defined in the schema for a given synchronization job or template.",
+							Description: "The identifier of the synchronization rule to be applied. This rule ID is defined in the schema for a given synchronization job or template.",
 							Type:        schema.TypeString,
 							Required:    true,
 							ForceNew:    true,
 						},
+
 						"subject": {
 							Description: "The identifiers of one or more objects to which a synchronizationJob is to be applied.",
 							Type:        schema.TypeList,
@@ -66,12 +67,13 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"object_id": {
-										Description: "The identifier of an object to which a synchronization Job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.",
+										Description: "The identifier of an object to which a synchronization job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.",
 										Type:        schema.TypeString,
 										Required:    true,
 									},
+
 									"object_type_name": {
-										Description:  "The type of the object to which a synchronization Job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.",
+										Description:  "The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.",
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"Group", "user", "User", "Worker"}, false),
@@ -82,11 +84,14 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 					},
 				},
 			},
+
 			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -122,6 +127,7 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 	if job == nil || job.ID == nil {
 		return tf.ErrorDiagF(errors.New("nil job or job with nil ID was returned"), "API error retrieving job with object ID %q/%s", objectId, jobId)
 	}
+
 	// Create a new synchronization job
 	synchronizationProvisionOnDemand := &msgraph.SynchronizationJobProvisionOnDemand{
 		Parameters: expandSynchronizationJobApplicationParameters(d.Get("parameter").([]interface{})),
