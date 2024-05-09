@@ -6,6 +6,7 @@ FEATURES:
 * **New Resource:** `azuread_group_role_management_policy` [GH-1327]
 * **New Resource:** `azuread_privileged_access_group_assignment_schedule` [GH-1327]
 * **New Resource:** `azuread_privileged_access_group_eligibility_schedule` [GH-1327]
+* **New Resource:** `azuread_synchronization_job_provision_on_demand` [GH-1032]
 
 ENHANCEMENTS:
 
