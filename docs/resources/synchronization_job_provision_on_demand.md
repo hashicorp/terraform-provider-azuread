@@ -39,8 +39,8 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
-  use_existing   = true
+  client_id    = azuread_application.example.client_id
+  use_existing = true
 }
 
 resource "azuread_synchronization_secret" "example" {
@@ -91,15 +91,15 @@ The following arguments are supported:
 
 `parameter` block supports the following:
 
-* `rule_id` (Required) The identifier of the synchronizationRule to be applied. This rule ID is defined in the schema for a given synchronization job or template.
+* `rule_id` (Required) The identifier of the synchronization rule to be applied. This rule ID is defined in the schema for a given synchronization job or template.
 * `subject` (Required) One or more `subject` blocks as documented below.
 
 ---
 
 `subject` block supports the following:
 
-* `object_id` (String) The identifier of an object to which a synchronizationJob is to be applied.
-* `object_type_name` (String) The type of the object to which a synchronizationJob is to be applied.
+* `object_id` (String) The identifier of an object to which a synchronization job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.
+* `object_type_name` (String) The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.
 
 ## Attributes Reference
 

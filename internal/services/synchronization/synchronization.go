@@ -58,7 +58,7 @@ func expandSynchronizationJobApplicationParameters(in []interface{}) *[]msgraph.
 		item := raw.(map[string]interface{})
 
 		result = append(result, msgraph.SynchronizationJobApplicationParameters{
-			Subjects: expandSynchronizationJobSubject(item["subjects"].([]interface{})),
+			Subjects: expandSynchronizationJobSubject(item["subject"].([]interface{})),
 			RuleId:   pointer.To(item["rule_id"].(string)),
 		})
 	}
