@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * `data.azuread_group` - support for the `include_transitive_members` property [GH-1300]
 * `azuread_application` - relax validation for the `identifier_uris` property to allow more values [GH-1351]
 * `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
+* `azuread_group` - support the `SkipExchangeInstantOn` value for the `behaviors` property [GH-1370]
 * `azuread_user` - relax validation for the `employee_type` property to allow more values [GH-1328]
 
 BUG FIXES:
