@@ -80,6 +80,10 @@ feature/service-principals:
 - changed-files:
   - any-glob-to-any-file:
     - internal/services/serviceprincipals/**/*
+
+feature/synchronization:
+- changed-files:
+  - any-glob-to-any-file:
     - internal/services/synchronization/**/*
 
 feature/user-flows:

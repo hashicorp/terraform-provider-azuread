@@ -15,6 +15,7 @@ var services = mapOf(
         "invitations" to "Invitations",
         "policies" to "Policies",
         "serviceprincipals" to "Service Principals",
+        "synchronization" to "Synchronization",
         "userflows" to "User Flows",
         "users" to "Users"
 )

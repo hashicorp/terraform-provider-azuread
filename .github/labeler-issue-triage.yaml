@@ -37,7 +37,10 @@ feature/policies:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(authentication_strength_policy|claims_mapping_policy|group_role_management_policy)((.|\n)*)###'
 
 feature/service-principals:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(client_config|service_principal|synchronization_)((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(client_config|service_principal)((.|\n)*)###'
+
+feature/synchronization:
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_synchronization_((.|\n)*)###'
 
 feature/user-flows:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_user_flow_attribute((.|\n)*)###'
