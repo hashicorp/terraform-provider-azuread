@@ -1,24 +1,24 @@
-## 2.49.0 (Unreleased)
+## 2.49.0 (May 09, 2024)
 
 FEATURES:
 
-* **New Data Source:** `azuread_group_role_management_policy` [GH-1327]
-* **New Resource:** `azuread_group_role_management_policy` [GH-1327]
-* **New Resource:** `azuread_privileged_access_group_assignment_schedule` [GH-1327]
-* **New Resource:** `azuread_privileged_access_group_eligibility_schedule` [GH-1327]
-* **New Resource:** `azuread_synchronization_job_provision_on_demand` [GH-1032]
+* **New Data Source:** `azuread_group_role_management_policy` ([#1327](https://github.com/hashicorp/terraform-provider-azuread/issues/1327))
+* **New Resource:** `azuread_group_role_management_policy` ([#1327](https://github.com/hashicorp/terraform-provider-azuread/issues/1327))
+* **New Resource:** `azuread_privileged_access_group_assignment_schedule` ([#1327](https://github.com/hashicorp/terraform-provider-azuread/issues/1327))
+* **New Resource:** `azuread_privileged_access_group_eligibility_schedule` ([#1327](https://github.com/hashicorp/terraform-provider-azuread/issues/1327))
+* **New Resource:** `azuread_synchronization_job_provision_on_demand` ([#1032](https://github.com/hashicorp/terraform-provider-azuread/issues/1032))
 
 ENHANCEMENTS:
 
-* `data.azuread_group` - support for the `include_transitive_members` property [GH-1300]
-* `azuread_application` - relax validation for the `identifier_uris` property to allow more values [GH-1351]
-* `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values [GH-1351]
-* `azuread_group` - support the `SkipExchangeInstantOn` value for the `behaviors` property [GH-1370]
-* `azuread_user` - relax validation for the `employee_type` property to allow more values [GH-1328]
+* `data.azuread_group` - support for the `include_transitive_members` property ([#1300](https://github.com/hashicorp/terraform-provider-azuread/issues/1300))
+* `azuread_application` - relax validation for the `identifier_uris` property to allow more values ([#1351](https://github.com/hashicorp/terraform-provider-azuread/issues/1351))
+* `azuread_application_identifier_uri` - relax validation for the `identifier_uri` property to allow more values ([#1351](https://github.com/hashicorp/terraform-provider-azuread/issues/1351))
+* `azuread_group` - support the `SkipExchangeInstantOn` value for the `behaviors` property ([#1370](https://github.com/hashicorp/terraform-provider-azuread/issues/1370))
+* `azuread_user` - relax validation for the `employee_type` property to allow more values ([#1328](https://github.com/hashicorp/terraform-provider-azuread/issues/1328))
 
 BUG FIXES:
 
-* `azuread_application_pre_authorized` - fix a destroy-time bug that could prevent deletion of the resource [GH-1299]
+* `azuread_application_pre_authorized` - fix a destroy-time bug that could prevent deletion of the resource ([#1299](https://github.com/hashicorp/terraform-provider-azuread/issues/1299))
 
 ## 2.48.0 (April 11, 2024)
 
