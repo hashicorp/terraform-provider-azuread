@@ -30,8 +30,8 @@ resource "azuread_user" "member" {
 }
 
 resource "azuread_group_role_management_policy" "example" {
-  group_id        = azuread_group.example.id
-  assignment_type = "member"
+  group_id = azuread_group.example.id
+  role_id  = "member"
 
   active_assignment_rules {
     expire_after = "P365D"
@@ -70,12 +70,12 @@ resource "azuread_group_role_management_policy" "example" {
 An `activation_rules` block supports the following:
 
 - `approval_stage` - (Optional) An `approval_stage` block as defined below.
-- `maximum_duration` - (Optional) The maximum length of time an activated role can be valid, in an IS)8601 Duration format (e.g. `PT8H`). Valid range is `PT30M` to `PT23H30M`, in 30 minute increments, or `PT1D`.
+- `maximum_duration` - (Optional) The maximum length of time an activated role can be valid, in an ISO8601 Duration format (e.g. `PT8H`). Valid range is `PT30M` to `PT23H30M`, in 30 minute increments, or `PT1D`.
 - `require_approval` - (Optional) Is approval required for activation. If `true` an `approval_stage` block must be provided.
 - `require_justification` - (Optional) Is a justification required during activation of the role.
 - `require_multifactor_authentication` - (Optional) Is multi-factor authentication required to activate the role. Conflicts with `required_conditional_access_authentication_context`.
 - `require_ticket_info` - (Optional) Is ticket information requrired during activation of the role.
-- `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation. Conflicts with `require_multifactor_authentication`.
+- `required_conditional_access_authentication_context` - (Optional) The Entra ID Conditional Access context that must be present for activation (e.g `c1`). Conflicts with `require_multifactor_authentication`.
 
 ---
 
