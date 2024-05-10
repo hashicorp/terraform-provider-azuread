@@ -5,9 +5,9 @@ package policies
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
@@ -89,7 +89,7 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 			roleID := metadata.ResourceData.Get("role_id").(string)
 			id, err := getPolicyId(ctx, metadata, groupID, roleID)
 			if err != nil {
-				return errors.New("Bad API response")
+				return fmt.Errorf("determining Policy ID: %+v", err)
 			}
 
 			result, _, err := clientPolicy.Get(ctx, id.ID())
@@ -106,15 +106,18 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
+			if assignments == nil {
+				return fmt.Errorf("retrieving %s: expected 1 assignment, got nil result", id)
+			}
 			if len(*assignments) != 1 {
 				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*assignments))
 			}
 
 			state := GroupRoleManagementPolicyDataSourceModel{
-				Description: *result.Description,
-				DisplayName: *result.DisplayName,
-				GroupId:     *result.ScopeId,
-				RoleId:      *(*assignments)[0].RoleDefinitionId,
+				Description: pointer.From(result.Description),
+				DisplayName: pointer.From(result.DisplayName),
+				GroupId:     pointer.From(result.ScopeId),
+				RoleId:      pointer.From((*assignments)[0].RoleDefinitionId),
 			}
 
 			metadata.ResourceData.SetId(id.ID())

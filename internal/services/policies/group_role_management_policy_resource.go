@@ -397,7 +397,7 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
 			if err != nil {
-				return fmt.Errorf("Could not parse policy ID, %+v", err)
+				return fmt.Errorf("could not parse policy ID, %+v", err)
 			}
 
 			var model GroupRoleManagementPolicyModel
@@ -419,14 +419,17 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
+			if assignments == nil {
+				return fmt.Errorf("retrieving %s: expected 1 assignment, got nil result", id)
+			}
 			if len(*assignments) != 1 {
 				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*assignments))
 			}
 
-			model.Description = *result.Description
-			model.DisplayName = *result.DisplayName
-			model.GroupId = *result.ScopeId
-			model.RoleId = *(*assignments)[0].RoleDefinitionId
+			model.Description = pointer.From(result.Description)
+			model.DisplayName = pointer.From(result.DisplayName)
+			model.GroupId = pointer.From(result.ScopeId)
+			model.RoleId = pointer.From((*assignments)[0].RoleDefinitionId)
 
 			if len(model.EligibleAssignmentRules) == 0 {
 				model.EligibleAssignmentRules = make([]GroupRoleManagementPolicyEligibleAssignmentRules, 1)
@@ -450,116 +453,128 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				model.NotificationRules[0].EligibleAssignments = make([]GroupRoleManagementPolicyNotificationRule, 1)
 			}
 
-			for _, rule := range *result.Rules {
-				switch *rule.ID {
-				case "Approval_EndUser_Assignment":
-					model.ActivationRules[0].RequireApproval = *rule.Setting.IsApprovalRequired
+			if result.Rules != nil {
+				for _, rule := range *result.Rules {
+					switch pointer.From(rule.ID) {
+					case "Approval_EndUser_Assignment":
+						model.ActivationRules[0].RequireApproval = pointer.From(rule.Setting.IsApprovalRequired)
 
-					primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
-					for _, approver := range *(*rule.Setting.ApprovalStages)[0].PrimaryApprovers {
-						switch {
-						case *approver.ODataType == "#microsoft.graph.singleUser":
-							primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-								ID:   pointer.ToString(approver.UserID),
-								Type: "singleUser",
-							})
-						case *approver.ODataType == "#microsoft.graph.groupMembers":
-							primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-								ID:   pointer.ToString(approver.GroupID),
-								Type: "groupMembers",
-							})
-						default:
-							return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
+						primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
+
+						if approvers := (*rule.Setting.ApprovalStages)[0].PrimaryApprovers; approvers != nil {
+							for _, approver := range *approvers {
+								switch {
+								case pointer.From(approver.ODataType) == "#microsoft.graph.singleUser":
+									primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+										ID:   pointer.ToString(approver.UserID),
+										Type: "singleUser",
+									})
+								case pointer.From(approver.ODataType) == "#microsoft.graph.groupMembers":
+									primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+										ID:   pointer.ToString(approver.GroupID),
+										Type: "groupMembers",
+									})
+								default:
+									return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
+								}
+							}
 						}
-					}
-					model.ActivationRules[0].ApprovalStages = []GroupRoleManagementPolicyApprovalStage{{PrimaryApprovers: primaryApprovers}}
 
-				case "AuthenticationContext_EndUser_Assignment":
-					if rule.ClaimValue != nil && *rule.ClaimValue != "" {
-						model.ActivationRules[0].RequireConditionalAccessContext = *rule.ClaimValue
-					}
+						model.ActivationRules[0].ApprovalStages = []GroupRoleManagementPolicyApprovalStage{{PrimaryApprovers: primaryApprovers}}
 
-				case "Enablement_Admin_Assignment":
-					model.ActiveAssignmentRules[0].RequireMultiFactorAuth = false
-					model.ActiveAssignmentRules[0].RequireJustification = false
-					for _, enabledRule := range *rule.EnabledRules {
-						switch enabledRule {
-						case "MultiFactorAuthentication":
-							model.ActiveAssignmentRules[0].RequireMultiFactorAuth = true
-						case "Justification":
-							model.ActiveAssignmentRules[0].RequireJustification = true
+					case "AuthenticationContext_EndUser_Assignment":
+						if rule.ClaimValue != nil && *rule.ClaimValue != "" {
+							model.ActivationRules[0].RequireConditionalAccessContext = *rule.ClaimValue
 						}
-					}
 
-				case "Enablement_EndUser_Assignment":
-					model.ActivationRules[0].RequireMultiFactorAuth = false
-					model.ActivationRules[0].RequireJustification = false
-					model.ActivationRules[0].RequireTicketInfo = false
-					for _, enabledRule := range *rule.EnabledRules {
-						switch enabledRule {
-						case "MultiFactorAuthentication":
-							model.ActivationRules[0].RequireMultiFactorAuth = true
-						case "Justification":
-							model.ActivationRules[0].RequireJustification = true
-						case "Ticketing":
-							model.ActivationRules[0].RequireTicketInfo = true
+					case "Enablement_Admin_Assignment":
+						model.ActiveAssignmentRules[0].RequireMultiFactorAuth = false
+						model.ActiveAssignmentRules[0].RequireJustification = false
+
+						if enabledRules := rule.EnabledRules; enabledRules != nil {
+							for _, enabledRule := range *enabledRules {
+								switch enabledRule {
+								case "MultiFactorAuthentication":
+									model.ActiveAssignmentRules[0].RequireMultiFactorAuth = true
+								case "Justification":
+									model.ActiveAssignmentRules[0].RequireJustification = true
+								}
+							}
 						}
-					}
 
-				case "Expiration_Admin_Eligibility":
-					model.EligibleAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
-					model.EligibleAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
+					case "Enablement_EndUser_Assignment":
+						model.ActivationRules[0].RequireMultiFactorAuth = false
+						model.ActivationRules[0].RequireJustification = false
+						model.ActivationRules[0].RequireTicketInfo = false
 
-				case "Expiration_Admin_Assignment":
-					model.ActiveAssignmentRules[0].ExpirationRequired = *rule.IsExpirationRequired
-					model.ActiveAssignmentRules[0].ExpireAfter = *rule.MaximumDuration
+						if enabledRules := rule.EnabledRules; enabledRules != nil {
+							for _, enabledRule := range *enabledRules {
+								switch enabledRule {
+								case "MultiFactorAuthentication":
+									model.ActivationRules[0].RequireMultiFactorAuth = true
+								case "Justification":
+									model.ActivationRules[0].RequireJustification = true
+								case "Ticketing":
+									model.ActivationRules[0].RequireTicketInfo = true
+								}
+							}
+						}
 
-				case "Expiration_EndUser_Assignment":
-					model.ActivationRules[0].MaximumDuration = *rule.MaximumDuration
+					case "Expiration_Admin_Eligibility":
+						model.EligibleAssignmentRules[0].ExpirationRequired = pointer.From(rule.IsExpirationRequired)
+						model.EligibleAssignmentRules[0].ExpireAfter = pointer.From(rule.MaximumDuration)
 
-				case "Notification_Admin_Admin_Assignment":
-					model.NotificationRules[0].ActiveAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Expiration_Admin_Assignment":
+						model.ActiveAssignmentRules[0].ExpirationRequired = pointer.From(rule.IsExpirationRequired)
+						model.ActiveAssignmentRules[0].ExpireAfter = pointer.From(rule.MaximumDuration)
 
-				case "Notification_Admin_Admin_Eligibility":
-					model.NotificationRules[0].EligibleAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Expiration_EndUser_Assignment":
+						model.ActivationRules[0].MaximumDuration = pointer.From(rule.MaximumDuration)
 
-				case "Notification_Admin_EndUser_Assignment":
-					model.NotificationRules[0].EligibleActivations[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Admin_Admin_Assignment":
+						model.NotificationRules[0].ActiveAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Approver_Admin_Assignment":
-					model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Admin_Admin_Eligibility":
+						model.NotificationRules[0].EligibleAssignments[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Approver_Admin_Eligibility":
-					model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Admin_EndUser_Assignment":
+						model.NotificationRules[0].EligibleActivations[0].AdminNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Approver_EndUser_Assignment":
-					model.NotificationRules[0].EligibleActivations[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Approver_Admin_Assignment":
+						model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Requestor_Admin_Assignment":
-					model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Approver_Admin_Eligibility":
+						model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Requestor_Admin_Eligibility":
-					model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
-					}
+					case "Notification_Approver_EndUser_Assignment":
+						model.NotificationRules[0].EligibleActivations[0].ApproverNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 
-				case "Notification_Requestor_EndUser_Assignment":
-					model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
-						*flattenNotificationSettings(pointer.To(rule)),
+					case "Notification_Requestor_Admin_Assignment":
+						model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
+
+					case "Notification_Requestor_Admin_Eligibility":
+						model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
+
+					case "Notification_Requestor_EndUser_Assignment":
+						model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications = []GroupRoleManagementPolicyNotificationSettings{
+							flattenNotificationSettings(rule),
+						}
 					}
 				}
 			}
@@ -955,11 +970,11 @@ func expandNotificationSettings(rule msgraph.UnifiedRoleManagementPolicyRule, da
 	}
 }
 
-func flattenNotificationSettings(rule *msgraph.UnifiedRoleManagementPolicyRule) *GroupRoleManagementPolicyNotificationSettings {
-	return &GroupRoleManagementPolicyNotificationSettings{
+func flattenNotificationSettings(rule msgraph.UnifiedRoleManagementPolicyRule) GroupRoleManagementPolicyNotificationSettings {
+	return GroupRoleManagementPolicyNotificationSettings{
 		NotificationLevel:    rule.NotificationLevel,
-		DefaultRecipients:    *rule.IsDefaultRecipientsEnabled,
-		AdditionalRecipients: *rule.NotificationRecipients,
+		DefaultRecipients:    pointer.From(rule.IsDefaultRecipientsEnabled),
+		AdditionalRecipients: pointer.From(rule.NotificationRecipients),
 	}
 }
 
