@@ -461,21 +461,23 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 						primaryApprovers := make([]GroupRoleManagementPolicyApprover, 0)
 
-						if approvers := (*rule.Setting.ApprovalStages)[0].PrimaryApprovers; approvers != nil {
-							for _, approver := range *approvers {
-								switch {
-								case pointer.From(approver.ODataType) == "#microsoft.graph.singleUser":
-									primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-										ID:   pointer.ToString(approver.UserID),
-										Type: "singleUser",
-									})
-								case pointer.From(approver.ODataType) == "#microsoft.graph.groupMembers":
-									primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
-										ID:   pointer.ToString(approver.GroupID),
-										Type: "groupMembers",
-									})
-								default:
-									return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
+						if rule.Setting != nil && rule.Setting.ApprovalStages != nil {
+							if approvers := (*rule.Setting.ApprovalStages)[0].PrimaryApprovers; approvers != nil {
+								for _, approver := range *approvers {
+									switch {
+									case pointer.From(approver.ODataType) == "#microsoft.graph.singleUser":
+										primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+											ID:   pointer.ToString(approver.UserID),
+											Type: "singleUser",
+										})
+									case pointer.From(approver.ODataType) == "#microsoft.graph.groupMembers":
+										primaryApprovers = append(primaryApprovers, GroupRoleManagementPolicyApprover{
+											ID:   pointer.ToString(approver.GroupID),
+											Type: "groupMembers",
+										})
+									default:
+										return fmt.Errorf("unknown approver type: %s", *approver.ODataType)
+									}
 								}
 							}
 						}
