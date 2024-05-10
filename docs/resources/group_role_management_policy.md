@@ -30,8 +30,8 @@ resource "azuread_user" "member" {
 }
 
 resource "azuread_group_role_management_policy" "example" {
-  group_id        = azuread_group.example.id
-  assignment_type = "member"
+  group_id = azuread_group.example.id
+  role_id  = "member"
 
   active_assignment_rules {
     expire_after = "P365D"
