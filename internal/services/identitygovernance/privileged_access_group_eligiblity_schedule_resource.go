@@ -101,10 +101,8 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			cSchedule := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleClient
-			cRequests := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
-
-			var request *msgraph.PrivilegedAccessGroupEligibilityScheduleRequest
+			scheduleClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleClient
+			requestsClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupEligibilityScheduleRequestsClient
 
 			id, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -112,20 +110,22 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 			}
 
 			var model PrivilegedAccessGroupScheduleModel
-			if err := metadata.Decode(&model); err != nil {
+			if err = metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			schedule, status, err := cSchedule.Get(ctx, id.ID())
-			if err != nil && status != http.StatusNotFound {
+			schedule, scheduleStatus, err := scheduleClient.Get(ctx, id.ID())
+			if err != nil && scheduleStatus != http.StatusNotFound {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
+
+			var request *msgraph.PrivilegedAccessGroupEligibilityScheduleRequest
 
 			// Some details are only available on the request which is used for the create/update of the schedule.
 			// Schedule requests are never deleted. New ones are created when changes are made.
 			// Therefore on a read, we need to find the latest version of the request.
 			// This is to cater for changes being made outside of Terraform.
-			requests, _, err := cRequests.List(ctx, odata.Query{
+			requests, _, err := requestsClient.List(ctx, odata.Query{
 				Filter: fmt.Sprintf("groupId eq '%s' and targetScheduleId eq '%s'", id.GroupId, id.ID()),
 				OrderBy: odata.OrderBy{
 					Field:     "createdDateTime",
@@ -135,43 +135,55 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 			if err != nil {
 				return fmt.Errorf("listing requests: %+v", err)
 			}
-			if len(*requests) == 0 {
-				if status == http.StatusNotFound {
+			if requests == nil || len(*requests) == 0 {
+				if scheduleStatus == http.StatusNotFound {
+					// No request and no schedule was found
 					return metadata.MarkAsGone(id)
 				}
 			} else {
 				request = pointer.To((*requests)[0])
-
-				model.Justification = *request.Justification
-				if request.TicketInfo.TicketNumber != nil {
-					model.TicketNumber = *request.TicketInfo.TicketNumber
-				}
-				if request.TicketInfo.TicketSystem != nil {
-					model.TicketSystem = *request.TicketInfo.TicketSystem
-				}
-				if request.ScheduleInfo.Expiration.Duration != nil {
-					model.Duration = *request.ScheduleInfo.Expiration.Duration
-				}
 			}
 
-			// Typically this is because the request has expired
-			// So we populate the model with the schedule details
-			if status == http.StatusNotFound {
+			var scheduleInfo *msgraph.RequestSchedule
+
+			if request != nil {
+				// The request is still present, populate from the request
+				scheduleInfo = request.ScheduleInfo
+
 				model.AssignmentType = request.AccessId
-				model.ExpirationDate = request.ScheduleInfo.Expiration.EndDateTime.Format(time.RFC3339)
-				model.GroupId = *request.GroupId
-				model.PermanentAssignment = *request.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
-				model.PrincipalId = *request.PrincipalId
-				model.StartDate = request.ScheduleInfo.StartDateTime.Format(time.RFC3339)
+				model.GroupId = pointer.From(request.GroupId)
+				model.Justification = pointer.From(request.Justification)
+				model.PrincipalId = pointer.From(request.PrincipalId)
 				model.Status = request.Status
+
+				if ticketInfo := request.TicketInfo; ticketInfo != nil {
+					model.TicketNumber = pointer.From(ticketInfo.TicketNumber)
+					model.TicketSystem = pointer.From(ticketInfo.TicketSystem)
+				}
 			} else {
+				// The request has likely expired, so populate from the schedule
+				scheduleInfo = schedule.ScheduleInfo
+
 				model.AssignmentType = schedule.AccessId
-				model.ExpirationDate = schedule.ScheduleInfo.Expiration.EndDateTime.Format(time.RFC3339)
-				model.GroupId = *schedule.GroupId
-				model.PermanentAssignment = *schedule.ScheduleInfo.Expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
-				model.PrincipalId = *schedule.PrincipalId
-				model.StartDate = schedule.ScheduleInfo.StartDateTime.Format(time.RFC3339)
+				model.GroupId = pointer.From(schedule.GroupId)
+				model.PrincipalId = pointer.From(schedule.PrincipalId)
 				model.Status = schedule.Status
+			}
+
+			if scheduleInfo != nil {
+				if expiration := scheduleInfo.Expiration; expiration != nil {
+					model.Duration = pointer.From(expiration.Duration)
+
+					if expiration.EndDateTime != nil {
+						model.ExpirationDate = expiration.EndDateTime.Format(time.RFC3339)
+					}
+					if expiration.Type != nil {
+						model.PermanentAssignment = *expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
+					}
+				}
+				if scheduleInfo.StartDateTime != nil {
+					model.StartDate = scheduleInfo.StartDateTime.Format(time.RFC3339)
+				}
 			}
 
 			return metadata.Encode(&model)

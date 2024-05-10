@@ -143,9 +143,10 @@ func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *s
 	schedule := msgraph.RequestSchedule{}
 	schedule.Expiration = &msgraph.ExpirationPattern{}
 	var startDate, expiryDate time.Time
+	var err error
 
 	if model.StartDate != "" {
-		startDate, err := time.Parse(time.RFC3339, model.StartDate)
+		startDate, err = time.Parse(time.RFC3339, model.StartDate)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %+v", model.StartDate, err)
 		}
@@ -159,7 +160,7 @@ func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *s
 
 	switch {
 	case model.ExpirationDate != "":
-		expiryDate, err := time.Parse(time.RFC3339, model.ExpirationDate)
+		expiryDate, err = time.Parse(time.RFC3339, model.ExpirationDate)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %+v", model.ExpirationDate, err)
 		}
