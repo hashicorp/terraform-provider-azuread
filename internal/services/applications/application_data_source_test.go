@@ -61,13 +61,13 @@ func TestAccApplicationDataSource_byDisplayName(t *testing.T) {
 	})
 }
 
-func TestAccApplicationDataSource_byIdentifierUris(t *testing.T) {
+func TestAccApplicationDataSource_byIdentifierUri(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
 	r := ApplicationDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: r.identifierUris(data),
+			Config: r.identifierUri(data),
 			Check:  r.testCheck(data),
 		},
 	})
@@ -143,12 +143,12 @@ data "azuread_application" "test" {
 `, ApplicationResource{}.complete(data))
 }
 
-func (ApplicationDataSource) identifierUris(data acceptance.TestData) string {
+func (ApplicationDataSource) identifierUri(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 
 data "azuread_application" "test" {
-  identifier_uris = [tolist(azuread_application.test.identifier_uris)[0]]
+  identifier_uri = tolist(azuread_application.test.identifier_uris)[0]
 }
 `, ApplicationResource{}.complete(data))
 }
