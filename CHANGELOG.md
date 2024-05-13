@@ -1,3 +1,12 @@
+## 2.49.1 (Unreleased)
+
+BUG FIXES:
+
+* `data.azuread_group_role_management_policy` - resolve a potential crash [GH-1375]
+* `azuread_group_role_management_policy` - resolve a number of potential crashes [GH-1375]
+* `azuread_privileged_access_group_assignment_schedule` - resolve a number of potential crashes [GH-1375]
+* `azuread_privileged_access_group_eligibility_schedule` - resolve a number of potential crashes [GH-1375]
+
 ## 2.49.0 (May 09, 2024)
 
 FEATURES:
