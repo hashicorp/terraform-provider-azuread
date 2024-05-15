@@ -127,6 +127,34 @@ func TestAccUser_passwordOmitted(t *testing.T) {
 	})
 }
 
+func TestAccUser_passwordInvalid(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_user", "test")
+	r := UserResource{}
+	firstPassword := data.RandomPassword
+	secondPassword := "B"
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.setPassword(data, firstPassword),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		{
+			Config:      r.setPassword(data, secondPassword),
+			ExpectError: regexp.MustCompile("specified password does not comply"),
+		},
+		{
+			RefreshState:       true,
+			ExpectNonEmptyPlan: true,
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password").HasValue(firstPassword),
+			),
+		},
+	})
+}
+
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Users.UsersClient
 	client.BaseClient.DisableRetries = true
@@ -281,4 +309,20 @@ resource "azuread_user" "test" {
   display_name        = "acctestUser-%[1]d"
 }
 `, data.RandomInteger)
+}
+
+func (UserResource) setPassword(data acceptance.TestData, password string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_domains" "test" {
+  only_initial = true
+}
+
+resource "azuread_user" "test" {
+  user_principal_name = "acctestUser'%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
+  display_name        = "acctestUser-%[1]d"
+  password            = "%[2]s"
+}
+`, data.RandomInteger, password)
 }
