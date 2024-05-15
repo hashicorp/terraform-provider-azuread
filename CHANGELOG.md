@@ -1,3 +1,9 @@
+# 2.50.0 (Unreleased)
+
+ENHANCEMENTS
+
+* `data.azuread_application` - support looking up applications with the `identifier_uri` property [GH 1303]
+
 ## 2.49.1 (May 13, 2024)
 
 BUG FIXES:
