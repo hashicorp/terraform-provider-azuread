@@ -61,6 +61,18 @@ func TestAccApplicationDataSource_byDisplayName(t *testing.T) {
 	})
 }
 
+func TestAccApplicationDataSource_byIdentifierUri(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_application", "test")
+	r := ApplicationDataSource{}
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.identifierUri(data),
+			Check:  r.testCheck(data),
+		},
+	})
+}
+
 func (ApplicationDataSource) testCheck(data acceptance.TestData) acceptance.TestCheckFunc {
 	return acceptance.ComposeTestCheckFunc(
 		check.That(data.ResourceName).Key("application_id").IsUuid(),
@@ -127,6 +139,16 @@ func (ApplicationDataSource) displayName(data acceptance.TestData) string {
 
 data "azuread_application" "test" {
   display_name = upper(azuread_application.test.display_name)
+}
+`, ApplicationResource{}.complete(data))
+}
+
+func (ApplicationDataSource) identifierUri(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_application" "test" {
+  identifier_uri = tolist(azuread_application.test.identifier_uris)[0]
 }
 `, ApplicationResource{}.complete(data))
 }
