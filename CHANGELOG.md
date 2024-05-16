@@ -1,5 +1,9 @@
 # 2.50.0 (Unreleased)
 
+BUG FIXES
+
+* `data.azuread_service_principal` - treat the `display_name` property case-insensitively [GH-1381]
+
 ENHANCEMENTS
 
 * `data.azuread_application` - support looking up applications with the `identifier_uri` property [GH 1303]
