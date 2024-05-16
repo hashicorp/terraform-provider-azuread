@@ -703,11 +703,11 @@ type ConditionalAccessPolicy struct {
 }
 
 type ConditionalAccessSessionControls struct {
-	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions,omitempty"`
-	CloudAppSecurity                *CloudAppSecurityControl                       `json:"cloudAppSecurity,omitempty"`
+	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions"`
+	CloudAppSecurity                *CloudAppSecurityControl                       `json:"cloudAppSecurity"`
 	DisableResilienceDefaults       *bool                                          `json:"disableResilienceDefaults,omitempty"`
-	PersistentBrowser               *PersistentBrowserSessionControl               `json:"persistentBrowser,omitempty"`
-	SignInFrequency                 *SignInFrequencySessionControl                 `json:"signInFrequency,omitempty"`
+	PersistentBrowser               *PersistentBrowserSessionControl               `json:"persistentBrowser"`
+	SignInFrequency                 *SignInFrequencySessionControl                 `json:"signInFrequency"`
 }
 
 type ConditionalAccessUsers struct {
