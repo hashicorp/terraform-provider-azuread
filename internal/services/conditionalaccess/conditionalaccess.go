@@ -493,19 +493,24 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 		signInFrequency.IsEnabled = pointer.To(true)
 		signInFrequency.Type = pointer.To(config["sign_in_frequency_period"].(string))
 		signInFrequency.Value = pointer.To(int32(frequencyValue))
+
+		// AuthenticationType and FrequencyInterval must be set to default values here
+		signInFrequency.AuthenticationType = pointer.To(msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication)
+		signInFrequency.FrequencyInterval = pointer.To(msgraph.ConditionalAccessFrequencyIntervalTimeBased)
 	}
 
-	if authenticationType, ok := config["sign_in_frequency_authentication_type"]; ok {
+	if authenticationType, ok := config["sign_in_frequency_authentication_type"]; ok && authenticationType.(string) != "" {
 		signInFrequency.AuthenticationType = pointer.To(authenticationType.(string))
 	}
 
-	if interval, ok := config["sign_in_frequency_interval"]; ok {
+	if interval, ok := config["sign_in_frequency_interval"]; ok && interval.(string) != "" {
 		signInFrequency.FrequencyInterval = pointer.To(interval.(string))
 	}
 
 	// API returns 400 error if signInFrequency is set with all default/zero values
-	if pointer.From(signInFrequency.IsEnabled) || pointer.From(signInFrequency.FrequencyInterval) != msgraph.ConditionalAccessFrequencyIntervalTimeBased ||
-		pointer.From(signInFrequency.AuthenticationType) != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication {
+	if (signInFrequency.IsEnabled != nil && *signInFrequency.IsEnabled) ||
+		(signInFrequency.FrequencyInterval != nil && *signInFrequency.FrequencyInterval != msgraph.ConditionalAccessFrequencyIntervalTimeBased) ||
+		(signInFrequency.AuthenticationType != nil && *signInFrequency.AuthenticationType != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication) {
 		result.SignInFrequency = &signInFrequency
 	}
 
