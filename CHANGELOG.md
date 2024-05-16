@@ -3,6 +3,7 @@
 BUG FIXES
 
 * `data.azuread_service_principal` - treat the `display_name` property case-insensitively [GH-1381]
+* `azuread_user` - don't overwrite the existing password in state, when a password change fails [GH-1308]
 
 ENHANCEMENTS
 
