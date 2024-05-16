@@ -1,13 +1,16 @@
 # 2.50.0 (Unreleased)
 
-BUG FIXES
+ENHANCEMENTS:
+
+* dependencies: updating to `v0.68.0` of `github.com/manicminer/hamilton` [GH-1382]
+* `data.azuread_application` - support looking up applications with the `identifier_uri` property [GH 1303]
+* `azuread_conditional_access_policy` - improve handling of the `session_controls` block [GH-1382]
+
+BUG FIXES:
 
 * `data.azuread_service_principal` - treat the `display_name` property case-insensitively [GH-1381]
+* `azuread_conditional_access_policy` - fix a bug that could cause a persistent diff when setting certain properties in the `session_controls` block [GH-1382]
 * `azuread_user` - don't overwrite the existing password in state, when a password change fails [GH-1308]
-
-ENHANCEMENTS
-
-* `data.azuread_application` - support looking up applications with the `identifier_uri` property [GH 1303]
 
 ## 2.49.1 (May 13, 2024)
 
