@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
@@ -327,11 +328,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 		}
 
 		for _, sp := range *result {
-			if sp.DisplayName == nil {
-				continue
-			}
-
-			if *sp.DisplayName == displayName {
+			if strings.EqualFold(pointer.From(sp.DisplayName), displayName) {
 				servicePrincipal = &sp
 				break
 			}
@@ -361,11 +358,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 		}
 
 		for _, sp := range *result {
-			if sp.AppId == nil {
-				continue
-			}
-
-			if *sp.AppId == clientId {
+			if strings.EqualFold(pointer.From(sp.AppId), clientId) {
 				servicePrincipal = &sp
 				break
 			}
