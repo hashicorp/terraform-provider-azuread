@@ -607,7 +607,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						"sign_in_frequency_authentication_type": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
-							Default:  msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication,
 								msgraph.ConditionalAccessAuthenticationTypeSecondaryAuthentication,
@@ -617,7 +617,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 						"sign_in_frequency_interval": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
-							Default:  msgraph.ConditionalAccessFrequencyIntervalTimeBased,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								msgraph.ConditionalAccessFrequencyIntervalTimeBased,
 								msgraph.ConditionalAccessFrequencyIntervalEveryTime,
@@ -662,12 +662,14 @@ func conditionalAccessPolicyCustomizeDiff(_ context.Context, diff *pluginsdk.Res
 func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
 	suppress := false
 
+	// When ineffectual `session_controls` are specified, you must send `sessionControls: null`, and when policy has ineffectual
+	// `sessionControls`, the API condenses it to `sessionControls: null` in the response.
 	if k == "session_controls.#" && old == "0" && new == "1" {
-		// When an ineffectual `session_controls` block is configured, the API just ignores it and returns
-		// sessionControls: null
 		sessionControlsRaw := d.Get("session_controls").([]interface{})
 		if len(sessionControlsRaw) == 1 && sessionControlsRaw[0] != nil {
 			sessionControls := sessionControlsRaw[0].(map[string]interface{})
+
+			// Suppress by default, but only if all the block properties have a non-default value
 			suppress = true
 			if v, ok := sessionControls["application_enforced_restrictions_enabled"]; ok && v.(bool) {
 				suppress = false
@@ -684,10 +686,10 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.Resour
 			if v, ok := sessionControls["sign_in_frequency"]; ok && v.(int) > 0 {
 				suppress = false
 			}
-			if v, ok := sessionControls["sign_in_frequency_authentication_type"]; ok && v.(string) != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication {
+			if v, ok := sessionControls["sign_in_frequency_authentication_type"]; ok && v.(string) != "" {
 				suppress = false
 			}
-			if v, ok := sessionControls["sign_in_frequency_interval"]; ok && v.(string) != msgraph.ConditionalAccessFrequencyIntervalTimeBased {
+			if v, ok := sessionControls["sign_in_frequency_interval"]; ok && v.(string) != "" {
 				suppress = false
 			}
 			if v, ok := sessionControls["sign_in_frequency_period"]; ok && v.(string) != "" {
