@@ -75,6 +75,25 @@ func TestAccServicePrincipalDataSource_byObjectId(t *testing.T) {
 	})
 }
 
+func TestAccServicePrincipalDataSource_builtInByDisplayName(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
+	r := ServicePrincipalDataSource{}
+
+	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.builtInByDisplayName(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).Key("app_role_ids.%").MatchesRegex(regexp.MustCompile("[0-9]+")),
+				check.That(data.ResourceName).Key("app_roles.#").MatchesRegex(regexp.MustCompile("[0-9]+")),
+				check.That(data.ResourceName).Key("client_id").IsUuid(),
+				check.That(data.ResourceName).Key("display_name").Exists(),
+				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").MatchesRegex(regexp.MustCompile("[0-9]+")),
+				check.That(data.ResourceName).Key("oauth2_permission_scopes.#").MatchesRegex(regexp.MustCompile("[0-9]+")),
+			),
+		},
+	})
+}
+
 func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestCheckFunc {
 	tenantId := os.Getenv("ARM_TENANT_ID")
 	return acceptance.ComposeTestCheckFunc(
@@ -85,6 +104,7 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) accept
 		check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
 		check.That(data.ResourceName).Key("application_id").IsUuid(),
 		check.That(data.ResourceName).Key("application_tenant_id").HasValue(tenantId),
+		check.That(data.ResourceName).Key("client_id").IsUuid(),
 		check.That(data.ResourceName).Key("description").HasValue("An internal app for testing"),
 		check.That(data.ResourceName).Key("display_name").Exists(),
 		check.That(data.ResourceName).Key("feature_tags.#").HasValue("1"),
@@ -172,4 +192,14 @@ data "azuread_service_principal" "test" {
   object_id = azuread_service_principal.test.object_id
 }
 `, ServicePrincipalResource{}.complete(data))
+}
+
+func (ServicePrincipalDataSource) builtInByDisplayName(data acceptance.TestData) string {
+	return `
+provider "azuread" {}
+
+data "azuread_service_principal" "test" {
+  display_name = "MiCrOsOfT GrApH"
+}
+`
 }
