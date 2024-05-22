@@ -8,23 +8,30 @@ cd "${REPO_DIR}"
 
 TRUNK="main"
 
+# Uncomment to print commands instead of executing them
+#debug="echo "
+
 usage() {
-  echo "Usage: $0 -y [-C] [-T] [-f]" >&2
+  echo "Usage: $0 -y [-C] [-f]" >&2
   echo >&2
   echo " -y  Proceed with release. Must be specified." >&2
   echo " -C  Only prepare the changelog; do not commit, tag or push" >&2
+  echo " -t  Override trunk branch (default: ${TRUNK}), useful for patch releases"
   echo " -T  Skip tests before preparing release" >&2
   echo " -f  Force release prep when \`${TRUNK}\` branch is not checked out" >&2
   echo >&2
 }
 
-while getopts ':yCTfh' opt; do
+while getopts ':yCt:Tfh' opt; do
   case "$opt" in
     y)
       GOTIME=1
       ;;
     C)
       NOTAG=1
+      ;;
+    t)
+      TRUNK="${OPTARG}"
       ;;
     T)
       NOTEST=1
@@ -77,7 +84,7 @@ if [[ "${NOTEST}" == "1" ]]; then
   echo "Warning: Skipping tests"
 else
   echo "Running tests..."
-  ( set -x; TF_ACC= make test )
+  ( set -x; TF_ACC= scripts/run-test.sh )
 fi
 
 echo "Preparing changelog for release..."
@@ -95,15 +102,15 @@ if [[ "${RELEASE}" == "" ]]; then
 fi
 
 # Ensure latest changes are checked out
-( set -x; git pull --rebase origin "${TRUNK}" )
+( set -x; ${debug}git pull --rebase origin "${TRUNK}" )
 
 # Replace [GH-nnnn] references with issue links
-( set -x; $SED -i.bak "s/\[GH-([0-9]+)\]/\(\[#\1\]\(${PROVIDER_URL}\/\1\)\)/g" CHANGELOG.md )
+( set -x; ${debug}$SED -i.bak "s/\[GH-([0-9]+)\]/\(\[#\1\]\(${PROVIDER_URL}\/\1\)\)/g" CHANGELOG.md )
 
 # Set the date for the latest release
-( set -x; $SED -i.bak "s/^(## v?[0-9.]+) \(Unreleased\)/\1 (${DATE})/i" CHANGELOG.md )
+( set -x; ${debug}$SED -i.bak "s/^(## v?[0-9.]+) \(Unreleased\)/\1 (${DATE})/i" CHANGELOG.md )
 
-rm CHANGELOG.md.bak
+${debug}rm CHANGELOG.md.bak
 
 if [[ "${NOTAG}" == "1" ]]; then
   echo "Warning: Skipping commit, tag and push."
@@ -113,14 +120,15 @@ fi
 echo "Committing changelog..."
 (
   set -x
-  git commit CHANGELOG.md -m v"${RELEASE}"
-  git push origin "${BRANCH}"
+  ${debug}git commit CHANGELOG.md -m v"${RELEASE}"
+  ${debug}git push origin "${BRANCH}"
 )
+
 
 echo "Releasing v${RELEASE}..."
 
 (
   set -x
-  git tag v"${RELEASE}"
-  git push origin v"${RELEASE}"
+  ${debug}git tag v"${RELEASE}"
+  ${debug}git push origin v"${RELEASE}"
 )
