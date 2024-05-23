@@ -405,6 +405,78 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 	return
 }
 
+type CredentialError struct {
+	str  string
+	attr string
+}
+
+func (e CredentialError) Attr() string {
+	return e.attr
+}
+
+func (e CredentialError) Error() string {
+	return e.str
+}
+
+func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.PasswordCredential, error) {
+	result := make([]msgraph.PasswordCredential, 0)
+
+	if len(input) == 0 {
+		return &result, nil
+	}
+
+	for _, appPasswordRaw := range input {
+		if appPasswordRaw == nil {
+			continue
+		}
+
+		appPassword := appPasswordRaw.(map[string]interface{})
+
+		credential := msgraph.PasswordCredential{
+			DisplayName: pointer.To(appPassword["display_name"].(string)),
+		}
+
+		if v, ok := appPassword["start_date"]; ok && v.(string) != "" {
+			startDate, err := time.Parse(time.RFC3339, v.(string))
+			if err != nil {
+				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+			}
+			credential.StartDateTime = &startDate
+		}
+
+		var endDate *time.Time
+		if v, ok := appPassword["end_date"]; ok && v.(string) != "" {
+			var err error
+			expiry, err := time.Parse(time.RFC3339, v.(string))
+			if err != nil {
+				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+			}
+			endDate = &expiry
+		} else if v, ok := appPassword["end_date_relative"]; ok && v.(string) != "" {
+			d, err := time.ParseDuration(v.(string))
+			if err != nil {
+				return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+			}
+
+			if credential.StartDateTime == nil {
+				expiry := time.Now().Add(d)
+				endDate = &expiry
+			} else {
+				expiry := credential.StartDateTime.Add(d)
+				endDate = &expiry
+			}
+		}
+		if endDate != nil {
+			credential.EndDateTime = endDate
+		}
+
+		result = append(result, credential)
+	}
+
+	return &result, nil
+
+}
+
 func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 	result := make([]msgraph.AppRole, 0)
 
@@ -791,6 +863,83 @@ func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} 
 	return []map[string]interface{}{{
 		"redirect_uris": tf.FlattenStringSlicePtr(in.RedirectUris),
 	}}
+}
+
+func flattenApplicationPasswordCredentials(in *[]msgraph.PasswordCredential, d []interface{}) []map[string]interface{} {
+	result := []map[string]interface{}{}
+	if in == nil {
+		return result
+	}
+
+	for _, credential := range *in {
+		addKey := true
+
+		// skip credential, display name is required for inline app_password
+		if credential.DisplayName == nil {
+			continue
+		}
+
+		keyId := ""
+		if credential.KeyId != nil {
+			keyId = *credential.KeyId
+		}
+
+		startDate := ""
+		if v := credential.StartDateTime; v != nil {
+			startDate = v.Format(time.RFC3339)
+		}
+
+		endDate := ""
+		if v := credential.EndDateTime; v != nil {
+			endDate = v.Format(time.RFC3339)
+		}
+
+		credentialData := map[string]interface{}{
+			"display_name": credential.DisplayName,
+			"key_id":       &keyId,
+			"start_date":   &startDate,
+			"end_date":     &endDate,
+		}
+
+		if credential.SecretText != nil {
+			credentialData["value"] = credential.SecretText
+		}
+
+		for _, appPasswordState := range d {
+			if appPasswordState == nil {
+				continue
+			}
+
+			appPassword := appPasswordState.(map[string]interface{})
+
+			if v, ok := appPassword["value"]; ok {
+				if credentialData["value"] == nil {
+					credentialData["value"] = v.(string)
+				}
+			}
+
+			if v, ok := appPassword["rotate_when_changed"]; ok {
+				if d, ok := v.(map[string]interface{}); ok {
+					if r, ok := d["rotation"].(string); ok {
+						if len(r) > 0 {
+							credentialData["rotate_when_changed"] = appPassword["rotate_when_changed"]
+						}
+					}
+				}
+			}
+
+			// compare state key with secret that is readed.
+			if appPassword["display_name"].(string) != *credential.DisplayName {
+				addKey = false
+			}
+		}
+
+		if addKey {
+			result = append(result, credentialData)
+		}
+	}
+
+	return result
 }
 
 func flattenApplicationWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
