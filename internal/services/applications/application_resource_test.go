@@ -1605,7 +1605,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
   owners = [ data.azuread_client_config.current.object_id ]
 
-  app_password {
+  password {
     display_name = "acctest-APP-%[1]d"
   }
 }

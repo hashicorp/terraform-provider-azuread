@@ -266,11 +266,10 @@ func applicationResource() *pluginsdk.Resource {
 				},
 			},
 
-			"app_password": {
+			"password": {
 				Description: "App password definition",
 				Type:        pluginsdk.TypeList,
 				Optional:    true,
-				MaxItems:    1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"display_name": {
@@ -290,22 +289,20 @@ func applicationResource() *pluginsdk.Resource {
 						},
 
 						"end_date": {
-							Description:   "The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
-							Type:          pluginsdk.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"app_password.0.end_date_relative"},
-							ValidateFunc:  validation.IsRFC3339Time,
+							Description:  "The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`)",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsRFC3339Time,
 						},
 
 						"end_date_relative": {
-							Description:   "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
-							Type:          pluginsdk.TypeString,
-							Optional:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"app_password.0.end_date"},
-							ValidateFunc:  validation.StringIsNotEmpty,
+							Description:  "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
 						},
 						"rotate_when_changed": {
 							Description: "Arbitrary map of values that, when changed, will trigger rotation of the password",
@@ -1084,14 +1081,21 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("app_password"); ok {
-		credentials, err := expandApplicationPasswordCredentials(v.([]interface{}))
+	var additionalCreds *[]msgraph.PasswordCredential
+
+	// Create application passwords, the first is created within the application request, rest is added later.
+	if v, ok := d.GetOk("password"); ok {
+		credentials, addCreds, err := expandApplicationPasswordCredentials(v.([]interface{}))
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "app_password", "Parsing `app_password`")
+			return tf.ErrorDiagPathF(err, "password", "Parsing `password`")
 		}
 
 		if credentials != nil {
 			properties.PasswordCredentials = credentials
+		}
+
+		if addCreds != nil {
+			additionalCreds = addCreds
 		}
 	}
 
@@ -1158,8 +1162,8 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	// set the pw credentials to state
-	if v, ok := d.GetOk("app_password"); ok {
-		tf.Set(d, "app_password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.([]interface{})))
+	if v, ok := d.GetOk("password"); ok {
+		tf.Set(d, "password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.([]interface{})))
 	}
 
 	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
@@ -1203,6 +1207,24 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		app.Owners = &ownersExtra
 		if _, err := client.AddOwners(ctx, app); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
+		}
+	}
+
+	if additionalCreds != nil {
+		appCredentials := *app.PasswordCredentials
+
+		// Add remaining credentials after the application is created
+		for _, cred := range *additionalCreds {
+			newCredential, _, err := client.AddPassword(ctx, id.ApplicationId, cred)
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not add password credentials to application with object ID: %q", id.ApplicationId)
+			}
+
+			appCredentials = append(appCredentials, *newCredential)
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			tf.Set(d, "password", flattenApplicationPasswordCredentials(&appCredentials, v.([]interface{})))
 		}
 	}
 
@@ -1417,8 +1439,8 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	}
 
 	if app.PasswordCredentials != nil {
-		if v, ok := d.GetOk("app_password"); ok {
-			tf.Set(d, "app_password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.([]interface{})))
+		if v, ok := d.GetOk("password"); ok {
+			tf.Set(d, "password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.([]interface{})))
 		}
 	}
 

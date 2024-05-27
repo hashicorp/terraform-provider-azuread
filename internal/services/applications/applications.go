@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -418,12 +419,16 @@ func (e CredentialError) Error() string {
 	return e.str
 }
 
-func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.PasswordCredential, error) {
-	result := make([]msgraph.PasswordCredential, 0)
-
+func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.PasswordCredential, *[]msgraph.PasswordCredential, error) {
 	if len(input) == 0 {
-		return &result, nil
+		return nil, nil, nil
 	}
+
+	result := make([]msgraph.PasswordCredential, 0)
+	additionalCreds := make([]msgraph.PasswordCredential, 0)
+
+	credentialNames := make([]string, 0)
+	credentials := make(map[string]msgraph.PasswordCredential)
 
 	for _, appPasswordRaw := range input {
 		if appPasswordRaw == nil {
@@ -439,23 +444,27 @@ func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.Passw
 		if v, ok := appPassword["start_date"]; ok && v.(string) != "" {
 			startDate, err := time.Parse(time.RFC3339, v.(string))
 			if err != nil {
-				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+				return nil, nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 			}
 			credential.StartDateTime = &startDate
 		}
 
 		var endDate *time.Time
+		endDateDefined := false
+		endDataRelativeDefined := false
+
 		if v, ok := appPassword["end_date"]; ok && v.(string) != "" {
 			var err error
 			expiry, err := time.Parse(time.RFC3339, v.(string))
 			if err != nil {
-				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
+				return nil, nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 			}
+			endDateDefined = true
 			endDate = &expiry
 		} else if v, ok := appPassword["end_date_relative"]; ok && v.(string) != "" {
 			d, err := time.ParseDuration(v.(string))
 			if err != nil {
-				return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
+				return nil, nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 			}
 
 			if credential.StartDateTime == nil {
@@ -465,15 +474,35 @@ func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.Passw
 				expiry := credential.StartDateTime.Add(d)
 				endDate = &expiry
 			}
+
+			endDataRelativeDefined = true
 		}
+
+		// check constraint.
+		if endDateDefined && endDataRelativeDefined {
+			return nil, nil, CredentialError{str: "Only one of the properties end_date or end_date_relative can be used"}
+		}
+
 		if endDate != nil {
 			credential.EndDateTime = endDate
 		}
 
-		result = append(result, credential)
+		credentials[*credential.DisplayName] = credential
+		credentialNames = append(credentialNames, *credential.DisplayName)
 	}
 
-	return &result, nil
+	// order credentials to sure that we sort always
+	sort.Strings(credentialNames)
+
+	for cc, credName := range credentialNames {
+		if cc == 0 {
+			result = append(result, credentials[credName])
+		} else {
+			additionalCreds = append(additionalCreds, credentials[credName])
+		}
+	}
+
+	return &result, &additionalCreds, nil
 
 }
 
@@ -871,8 +900,10 @@ func flattenApplicationPasswordCredentials(in *[]msgraph.PasswordCredential, d [
 		return result
 	}
 
+	credentialName := make([]string, 0)
+	credentials := make(map[string]map[string]interface{}, 0)
+
 	for _, credential := range *in {
-		addKey := true
 
 		// skip credential, display name is required for inline app_password
 		if credential.DisplayName == nil {
@@ -896,9 +927,8 @@ func flattenApplicationPasswordCredentials(in *[]msgraph.PasswordCredential, d [
 
 		credentialData := map[string]interface{}{
 			"display_name": credential.DisplayName,
-			"key_id":       &keyId,
-			"start_date":   &startDate,
 			"end_date":     &endDate,
+			"key_id":       &keyId,
 		}
 
 		if credential.SecretText != nil {
@@ -912,9 +942,10 @@ func flattenApplicationPasswordCredentials(in *[]msgraph.PasswordCredential, d [
 
 			appPassword := appPasswordState.(map[string]interface{})
 
-			if v, ok := appPassword["value"]; ok {
-				if credentialData["value"] == nil {
-					credentialData["value"] = v.(string)
+			// check for matching display name
+			if v, ok := appPassword["display_name"]; ok {
+				if *credential.DisplayName != v.(string) {
+					continue
 				}
 			}
 
@@ -928,15 +959,29 @@ func flattenApplicationPasswordCredentials(in *[]msgraph.PasswordCredential, d [
 				}
 			}
 
-			// compare state key with secret that is readed.
-			if appPassword["display_name"].(string) != *credential.DisplayName {
-				addKey = false
+			credentialData["start_date"] = &startDate
+
+			if v, ok := appPassword["value"]; ok {
+				if credentialData["value"] == nil {
+					credentialData["value"] = v.(string)
+				}
+			}
+
+			if v, ok := appPassword["end_date_relative"]; ok {
+				if d, ok := v.(string); ok {
+					credentialData["end_date_relative"] = d
+				}
 			}
 		}
 
-		if addKey {
-			result = append(result, credentialData)
-		}
+		credentialName = append(credentialName, *credential.DisplayName)
+		credentials[*credential.DisplayName] = credentialData
+	}
+
+	sort.Strings(credentialName)
+
+	for _, credName := range credentialName {
+		result = append(result, credentials[credName])
 	}
 
 	return result
