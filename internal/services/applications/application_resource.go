@@ -1146,8 +1146,13 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// set the pw credentials to state
 	if app.PasswordCredentials != nil {
-		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, d); credentials != nil {
-			d.Set("password", credentials)
+		var cred map[string]interface{}
+		for _, password := range d.Get("password").(*pluginsdk.Set).List() {
+			cred = password.(map[string]interface{})
+		}
+
+		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, cred); credentials != nil {
+			tf.Set(d, "password", credentials)
 		}
 	}
 
@@ -1406,7 +1411,12 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	}
 
 	if app.PasswordCredentials != nil {
-		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, d); credentials != nil {
+		var cred map[string]interface{}
+		for _, password := range d.Get("password").(*pluginsdk.Set).List() {
+			cred = password.(map[string]interface{})
+		}
+
+		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, cred); credentials != nil {
 			tf.Set(d, "password", credentials)
 		}
 	}

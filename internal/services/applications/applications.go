@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
@@ -854,26 +853,24 @@ func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} 
 	}}
 }
 
-func flattenApplicationPasswordCredentials(passwordCredentials *[]msgraph.PasswordCredential, d *schema.ResourceData) []map[string]interface{} {
-	if v, ok := d.GetOk("password"); ok {
-		for _, cred := range v.(*pluginsdk.Set).List() {
-			keyId := cred.(map[string]interface{})["key_id"]
+func flattenApplicationPasswordCredentials(passwordCredentials *[]msgraph.PasswordCredential, d map[string]interface{}) []map[string]interface{} {
+	if d == nil {
+		return []map[string]interface{}{}
+	}
 
-			// update, read case
-			if keyId != nil {
-				if credRead := helpers.GetPasswordCredential(passwordCredentials, keyId.(string)); credRead != nil {
-					return helpers.FlattenCredential(credRead, cred.(map[string]interface{}))
-				}
-			}
-
-			// create case
-			for _, appCred := range *passwordCredentials {
-				return helpers.FlattenCredential(&appCred, cred.(map[string]interface{}))
-			}
+	// update, read case
+	if d["key_id"] != nil {
+		if credRead := helpers.GetPasswordCredential(passwordCredentials, d["key_id"].(string)); credRead != nil {
+			return helpers.FlattenCredential(credRead, d)
 		}
 	}
 
-	return nil
+	// create case
+	for _, appCred := range *passwordCredentials {
+		return helpers.FlattenCredential(&appCred, d)
+	}
+
+	return []map[string]interface{}{}
 }
 
 func flattenApplicationWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
