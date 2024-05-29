@@ -185,6 +185,35 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 	return &credential, nil
 }
 
+func FlattenCredential(in *msgraph.PasswordCredential, exist map[string]interface{}) []map[string]interface{} {
+	result := []map[string]interface{}{}
+	if in == nil {
+		return result
+	}
+
+	if in.StartDateTime != nil {
+		startDate := in.StartDateTime.Format(time.RFC3339)
+		exist["start_date"] = startDate
+	}
+
+	if in.EndDateTime != nil {
+		endDate := in.EndDateTime.Format(time.RFC3339)
+		exist["end_date"] = endDate
+	}
+
+	if in.SecretText != nil {
+		exist["value"] = *in.SecretText
+	}
+
+	if in.KeyId != nil {
+		exist["key_id"] = *in.KeyId
+	}
+
+	result = append(result, exist)
+
+	return result
+}
+
 func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, error) {
 	credential := msgraph.PasswordCredential{}
 
@@ -192,7 +221,7 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 		credential.DisplayName = pointer.To(v.(string))
 	}
 
-	if v, ok := d["start_date"]; ok {
+	if v, ok := d["start_date"]; ok && v.(string) != "" {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
@@ -210,11 +239,11 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 		credential.EndDateTime = &expiry
 	}
 
-	if v, ok := d["key_id"]; ok {
+	if v, ok := d["key_id"]; ok && v.(string) != "" {
 		credential.KeyId = pointer.To(v.(string))
 	}
 
-	if v, ok := d["value"]; ok {
+	if v, ok := d["value"]; ok && v.(string) != "" {
 		credential.SecretText = pointer.To(v.(string))
 	}
 

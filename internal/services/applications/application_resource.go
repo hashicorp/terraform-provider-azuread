@@ -1079,10 +1079,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 			}
 			credentials = append(credentials, *credential)
 		}
-
-		if credentials != nil {
-			properties.PasswordCredentials = &credentials
-		}
+		properties.PasswordCredentials = &credentials
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
@@ -1148,20 +1145,10 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	// set the pw credentials to state
-	if v, ok := d.GetOk("password"); ok {
-		var credential *msgraph.PasswordCredential
-		for _, cred := range v.(*pluginsdk.Set).List() {
-			if credential, err = helpers.PasswordCredential(cred.(map[string]interface{})); err != nil {
-				return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
-			}
+	if app.PasswordCredentials != nil {
+		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, d); credentials != nil {
+			d.Set("password", credentials)
 		}
-
-		credRead := helpers.GetPasswordCredential(app.PasswordCredentials, *credential.KeyId)
-		credentials, err := flattenApplicationPasswordCredentials(credRead, credential)
-		if err != nil {
-			return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
-		}
-		tf.Set(d, "password", credentials)
 	}
 
 	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
@@ -1419,19 +1406,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	}
 
 	if app.PasswordCredentials != nil {
-		if v, ok := d.GetOk("password"); ok {
-			var credential *msgraph.PasswordCredential
-			for _, cred := range v.(*pluginsdk.Set).List() {
-				if credential, err = helpers.PasswordCredential(cred.(map[string]interface{})); err != nil {
-					return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
-				}
-			}
-
-			credRead := helpers.GetPasswordCredential(app.PasswordCredentials, *credential.KeyId)
-			credentials, err := flattenApplicationPasswordCredentials(credRead, credential)
-			if err != nil {
-				return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
-			}
+		if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials, d); credentials != nil {
 			tf.Set(d, "password", credentials)
 		}
 	}
