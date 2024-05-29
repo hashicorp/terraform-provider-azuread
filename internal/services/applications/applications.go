@@ -874,32 +874,6 @@ func flattenApplicationPasswordCredentials(passwordCredentials *[]msgraph.Passwo
 	}
 
 	return nil
-	/*result := []map[string]interface{}{}
-	if in == nil {
-		return result
-	}
-
-	if in.StartDateTime != nil {
-		startDate := in.StartDateTime.Format(time.RFC3339)
-		exist["start_date"] = startDate
-	}
-
-	if in.EndDateTime != nil {
-		endDate := in.EndDateTime.Format(time.RFC3339)
-		exist["end_date"] = endDate
-	}
-
-	if in.SecretText != nil {
-		exist["value"] = *in.SecretText
-	}
-
-	if in.KeyId != nil {
-		exist["key_id"] = *in.KeyId
-	}
-
-	result = append(result, exist)
-
-	return result*/
 }
 
 func flattenApplicationWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
