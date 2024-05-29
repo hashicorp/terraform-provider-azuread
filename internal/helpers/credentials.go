@@ -186,32 +186,38 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 }
 
 func FlattenCredential(in *msgraph.PasswordCredential, exist map[string]interface{}) []map[string]interface{} {
-	result := []map[string]interface{}{}
 	if in == nil {
-		return result
+		return []map[string]interface{}{}
 	}
 
+	startDate := exist["start_date"]
 	if in.StartDateTime != nil {
-		startDate := in.StartDateTime.Format(time.RFC3339)
-		exist["start_date"] = startDate
+		startDate = in.StartDateTime.Format(time.RFC3339)
 	}
 
+	endDate := exist["start_date"]
 	if in.EndDateTime != nil {
-		endDate := in.EndDateTime.Format(time.RFC3339)
-		exist["end_date"] = endDate
+		endDate = in.EndDateTime.Format(time.RFC3339)
 	}
 
+	value := exist["value"]
 	if in.SecretText != nil {
-		exist["value"] = *in.SecretText
+		value = *in.SecretText
 	}
 
+	keyId := exist["key_id"]
 	if in.KeyId != nil {
-		exist["key_id"] = *in.KeyId
+		keyId = *in.KeyId
 	}
 
-	result = append(result, exist)
-
-	return result
+	return []map[string]interface{}{{
+		"display_name":      exist["display_name"],
+		"start_date":        startDate,
+		"end_date":          endDate,
+		"value":             value,
+		"key_id":            keyId,
+		"end_date_relative": exist["end_date_relative"],
+	}}
 }
 
 func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, error) {
