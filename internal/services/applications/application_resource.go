@@ -1071,13 +1071,17 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Create application passwords, the first is created within the application request, rest is added later.
 	if v, ok := d.GetOk("password"); ok {
-		credentials, err := expandApplicationPasswordCredentials(v.(*pluginsdk.Set).List())
-		if err != nil {
-			return tf.ErrorDiagPathF(err, "password", "Parsing `password`")
+		credentials := make([]msgraph.PasswordCredential, 0)
+		for _, cred := range v.(*pluginsdk.Set).List() {
+			credential, err := helpers.PasswordCredential(cred.(map[string]interface{}))
+			if err != nil {
+				return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
+			}
+			credentials = append(credentials, *credential)
 		}
 
 		if credentials != nil {
-			properties.PasswordCredentials = credentials
+			properties.PasswordCredentials = &credentials
 		}
 	}
 
@@ -1145,7 +1149,19 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// set the pw credentials to state
 	if v, ok := d.GetOk("password"); ok {
-		tf.Set(d, "password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.(*pluginsdk.Set).List()))
+		var credential *msgraph.PasswordCredential
+		for _, cred := range v.(*pluginsdk.Set).List() {
+			if credential, err = helpers.PasswordCredential(cred.(map[string]interface{})); err != nil {
+				return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
+			}
+		}
+
+		credRead := helpers.GetPasswordCredential(app.PasswordCredentials, *credential.KeyId)
+		credentials, err := flattenApplicationPasswordCredentials(credRead, credential)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
+		}
+		tf.Set(d, "password", credentials)
 	}
 
 	// Attempt to patch the newly created application and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
@@ -1404,7 +1420,19 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 
 	if app.PasswordCredentials != nil {
 		if v, ok := d.GetOk("password"); ok {
-			tf.Set(d, "password", flattenApplicationPasswordCredentials(app.PasswordCredentials, v.(*pluginsdk.Set).List()))
+			var credential *msgraph.PasswordCredential
+			for _, cred := range v.(*pluginsdk.Set).List() {
+				if credential, err = helpers.PasswordCredential(cred.(map[string]interface{})); err != nil {
+					return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
+				}
+			}
+
+			credRead := helpers.GetPasswordCredential(app.PasswordCredentials, *credential.KeyId)
+			credentials, err := flattenApplicationPasswordCredentials(credRead, credential)
+			if err != nil {
+				return tf.ErrorDiagPathF(err, "password", "Could not flatten application password credentials")
+			}
+			tf.Set(d, "password", credentials)
 		}
 	}
 
