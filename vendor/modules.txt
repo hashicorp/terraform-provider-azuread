@@ -209,7 +209,7 @@ github.com/hashicorp/terraform-svchost
 # github.com/hashicorp/yamux v0.1.1
 ## explicit; go 1.15
 github.com/hashicorp/yamux
-# github.com/manicminer/hamilton v0.68.0
+# github.com/manicminer/hamilton v0.69.0
 ## explicit; go 1.21
 github.com/manicminer/hamilton/errors
 github.com/manicminer/hamilton/internal/utils
