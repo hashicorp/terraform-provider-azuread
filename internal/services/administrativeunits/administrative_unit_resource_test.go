@@ -140,6 +140,9 @@ data "azuread_domains" "test" {
 resource "azuread_group" "member" {
   display_name     = "acctest-AdministrativeUnitMember-%[1]d"
   security_enabled = true
+  lifecycle {
+    ignore_changes = [administrative_unit_ids]
+  }
 }
 
 resource "azuread_user" "memberA" {
