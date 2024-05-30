@@ -64,7 +64,7 @@ type AccessPackageAssignmentRequest struct {
 
 type AccessPackageAssignmentPolicy struct {
 	AccessPackageId         *string                   `json:"accessPackageId,omitempty"`
-	AccessReviewSettings    *AssignmentReviewSettings `json:"accessReviewSettings,omitempty"`
+	AccessReviewSettings    *AssignmentReviewSettings `json:"accessReviewSettings"`
 	CanExtend               *bool                     `json:"canExtend,omitempty"`
 	CreatedBy               *string                   `json:"createdBy,omitempty"`
 	CreatedDateTime         *time.Time                `json:"createdDateTime,omitempty"`
@@ -2241,4 +2241,22 @@ type UserFlowAttribute struct {
 	DisplayName           *string                    `json:"displayName,omitempty"`
 	UserFlowAttributeType *string                    `json:"userFlowAttributeType,omitempty"`
 	DataType              *UserflowAttributeDataType `json:"dataType,omitempty"`
+}
+
+type AttributeSet struct {
+	ID                  *string `json:"id,omitempty"`
+	Description         *string `json:"description,omitempty"`
+	MaxAttributesPerSet *int32  `json:"maxAttributesPerSet,omitempty"`
+}
+
+type CustomSecurityAttributeDefinition struct {
+	AttributeSet            *string `json:"attributeSet,omitempty"`
+	Description             *string `json:"description,omitempty"`
+	ID                      *string `json:"id,omitempty"`
+	IsCollection            *bool   `json:"isCollection,omitempty"`
+	IsSearchable            *bool   `json:"isSearchable,omitempty"`
+	Name                    *string `json:"name,omitempty"`
+	Status                  *string `json:"status,omitempty"`
+	Type                    *string `json:"type,omitempty"`
+	UsePreDefinedValuesOnly *bool   `json:"usePreDefinedValuesOnly,omitempty"`
 }
