@@ -41,6 +41,8 @@ The following arguments are supported:
 * `administrative_unit_object_id` - (Required) The object ID of the administrative unit you want to add the member to. Changing this forces a new resource to be created.
 * `member_object_id` - (Required) The object ID of the user or group you want to add as a member of the administrative unit. Changing this forces a new resource to be created.
 
+~> **Caution** When using the [azuread_administrative_unit_member](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/administrative_unit_member) resource to manage Administrative Unit membership for a group, you will need to use an `ignore_changes = [administrative_unit_ids]` lifecycle meta argument for the `azuread_group` resource, in order to avoid a persistent diff.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
