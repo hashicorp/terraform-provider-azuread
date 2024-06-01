@@ -162,6 +162,9 @@ func (r AdministrativeUnitMemberResource) group(data acceptance.TestData) string
 resource "azuread_group" "member" {
   display_name     = "acctest-AdministrativeUnitMember-%[2]d"
   security_enabled = true
+  lifecycle {
+    ignore_changes = [administrative_unit_ids]
+  }
 }
 
 resource "azuread_administrative_unit_member" "test" {
