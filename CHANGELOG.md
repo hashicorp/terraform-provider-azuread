@@ -1,12 +1,12 @@
-## 2.51.0 (Unreleased)
+## 2.51.0 (June 06, 2024)
 
 ENHANCEMENTS:
 
-* `data.azuread_users` - support for the `mails` property [GH-1400]
+* `data.azuread_users` - support for the `mails` property ([#1400](https://github.com/hashicorp/terraform-provider-azuread/issues/1400))
 
 BUG FIXES:
 
-* `azuread_access_package_assignment_policy` - fix a bug preventing removal of the `assignment_review_settings` block [GH-1394]
+* `azuread_access_package_assignment_policy` - fix a bug preventing removal of the `assignment_review_settings` block ([#1394](https://github.com/hashicorp/terraform-provider-azuread/issues/1394))
 
 ## 2.50.0 (May 16, 2024)
 
