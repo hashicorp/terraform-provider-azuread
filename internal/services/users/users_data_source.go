@@ -35,7 +35,7 @@ func usersData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
 					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -47,7 +47,19 @@ func usersData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
+				Elem: &pluginsdk.Schema{
+					Type:             pluginsdk.TypeString,
+					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				},
+			},
+
+			"mails": {
+				Description:  "The SMTP address of the users",
+				Type:         pluginsdk.TypeList,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
 					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -59,7 +71,7 @@ func usersData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
 					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
@@ -71,7 +83,7 @@ func usersData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				ExactlyOneOf: []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:             pluginsdk.TypeString,
 					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -92,7 +104,7 @@ func usersData() *pluginsdk.Resource {
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
-				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "employee_ids", "return_all"},
+				ExactlyOneOf:  []string{"object_ids", "user_principal_names", "mail_nicknames", "mails", "employee_ids", "return_all"},
 			},
 
 			"users": {
@@ -263,6 +275,31 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				}
 				users = append(users, (*result)[0])
 			}
+		} else if mails, ok := d.Get("mails").([]interface{}); ok && len(mails) > 0 {
+			expectedCount = len(mails)
+			for _, v := range mails {
+				query := odata.Query{
+					Filter: fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(v.(string))),
+				}
+				result, _, err := client.List(ctx, query)
+				if err != nil {
+					return tf.ErrorDiagF(err, "Finding user with mail address: %q", v)
+				}
+				if result == nil {
+					return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
+				}
+
+				count := len(*result)
+				if count > 1 {
+					return tf.ErrorDiagPathF(nil, "mails", "More than one user found with mail address: %q", v)
+				} else if count == 0 {
+					if ignoreMissing {
+						continue
+					}
+					return tf.ErrorDiagPathF(err, "mails", "User not found with mail address: %q", v)
+				}
+				users = append(users, (*result)[0])
+			}
 		} else if employeeIds, ok := d.Get("employee_ids").([]interface{}); ok && len(employeeIds) > 0 {
 			expectedCount = len(employeeIds)
 			for _, v := range employeeIds {
@@ -299,6 +336,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	upns := make([]string, 0)
 	objectIds := make([]string, 0)
 	mailNicknames := make([]string, 0)
+	mails := make([]msgraph.StringNullWhenEmpty, 0)
 	employeeIds := make([]msgraph.StringNullWhenEmpty, 0)
 	userList := make([]map[string]interface{}, 0)
 	for _, u := range users {
@@ -310,6 +348,9 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		upns = append(upns, *u.UserPrincipalName)
 		if u.MailNickname != nil {
 			mailNicknames = append(mailNicknames, *u.MailNickname)
+		}
+		if u.Mail != nil {
+			mails = append(mails, *u.Mail)
 		}
 		if u.EmployeeId != nil {
 			employeeIds = append(employeeIds, *u.EmployeeId)
@@ -339,6 +380,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	d.SetId("users#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 	tf.Set(d, "employee_ids", employeeIds)
 	tf.Set(d, "mail_nicknames", mailNicknames)
+	tf.Set(d, "mails", mails)
 	tf.Set(d, "object_ids", objectIds)
 	tf.Set(d, "user_principal_names", upns)
 	tf.Set(d, "users", userList)
