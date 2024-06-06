@@ -95,8 +95,9 @@ func (c *ApplicationTemplatesClient) Instantiate(ctx context.Context, applicatio
 	}
 
 	resp, status, _, err := c.BaseClient.Post(ctx, PostHttpRequestInput{
-		Body:             body,
-		ValidStatusCodes: []int{http.StatusCreated},
+		Body:                   body,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ValidStatusCodes:       []int{http.StatusCreated},
 		Uri: Uri{
 			Entity: fmt.Sprintf("/applicationTemplates/%s/instantiate", *applicationTemplate.ID),
 		},

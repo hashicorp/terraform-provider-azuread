@@ -131,6 +131,17 @@ func expandAssignmentReviewSettings(input []interface{}) (*msgraph.AssignmentRev
 
 	result.Reviewers = expandUserSets(in["reviewer"].([]interface{}))
 
+	if result.AccessReviewTimeoutBehavior == "" &&
+		(result.DurationInDays == nil || *result.DurationInDays == 0) &&
+		(result.IsAccessRecommendationEnabled == nil || !*result.IsAccessRecommendationEnabled) &&
+		(result.IsApprovalJustificationRequired == nil || !*result.IsApprovalJustificationRequired) &&
+		(result.IsEnabled == nil || !*result.IsEnabled) &&
+		result.RecurrenceType == "" &&
+		result.ReviewerType == "" &&
+		(result.Reviewers == nil || len(*result.Reviewers) == 0) {
+		return nil, nil
+	}
+
 	return &result, nil
 }
 

@@ -424,3 +424,20 @@ func (c *UsersClient) DeleteManager(ctx context.Context, id string) (int, error)
 
 	return status, nil
 }
+
+// UploadThumbnailPhoto uploads a thumbnail photo for the specified user which should be a gif, jpeg or png image.
+func (c *UsersClient) UploadThumbnailPhoto(ctx context.Context, userId, contentType string, thumbnailData []byte) (int, error) {
+	_, status, _, err := c.BaseClient.Put(ctx, PutHttpRequestInput{
+		Body:                   thumbnailData,
+		ConsistencyFailureFunc: RetryOn404ConsistencyFailureFunc,
+		ContentType:            contentType,
+		ValidStatusCodes:       []int{http.StatusOK},
+		Uri: Uri{
+			Entity: fmt.Sprintf("/users/%s/photo/$value", userId),
+		},
+	})
+	if err != nil {
+		return status, fmt.Errorf("UsersClient.BaseClient.Put(): %v", err)
+	}
+	return status, nil
+}
