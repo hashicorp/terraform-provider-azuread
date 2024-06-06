@@ -103,6 +103,38 @@ func TestAccUsersDataSource_byMailNicknamesIgnoreMissing(t *testing.T) {
 	}})
 }
 
+func TestAccUsersDataSource_byMails(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: UsersDataSource{}.byMails(data),
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mails.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
+}
+
+func TestAccUsersDataSource_byMailsIgnoreMissing(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: UsersDataSource{}.byMailsIgnoreMissing(data),
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("user_principal_names.#").HasValue("2"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mail_nicknames.#").HasValue("2"),
+			check.That(data.ResourceName).Key("mails.#").HasValue("2"),
+			check.That(data.ResourceName).Key("employee_ids.#").HasValue("2"),
+			check.That(data.ResourceName).Key("users.#").HasValue("2"),
+		),
+	}})
+}
+
 func TestAccUsersDataSource_byEmployeeIds(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_users", "test")
 
@@ -237,6 +269,32 @@ data "azuread_users" "test" {
     azuread_user.testA.mail_nickname,
     "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
     azuread_user.testB.mail_nickname,
+  ]
+}
+`, UserResource{}.threeUsersABC(data), data.RandomInteger)
+}
+
+func (UsersDataSource) byMails(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  mails = [azuread_user.testA.mail, azuread_user.testB.mail]
+}
+`, UserResource{}.threeUsersABC(data))
+}
+
+func (UsersDataSource) byMailsIgnoreMissing(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_users" "test" {
+  ignore_missing = true
+
+  mails = [
+    azuread_user.testA.mail,
+    "not-a-real-user-%[2]d${data.azuread_domains.test.domains.0.domain_name}",
+    azuread_user.testB.mail,
   ]
 }
 `, UserResource{}.threeUsersABC(data), data.RandomInteger)
