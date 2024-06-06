@@ -1,5 +1,9 @@
 ## 2.51.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* `data.azuread_users` - support for the `mails` property [GH-1400]
+
 BUG FIXES:
 
 * `azuread_access_package_assignment_policy` - fix a bug preventing removal of the `assignment_review_settings` block [GH-1394]
