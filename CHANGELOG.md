@@ -1,3 +1,9 @@
+## 2.51.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_access_package_assignment_policy` - fix a bug preventing removal of the `assignment_review_settings` block [GH-1394]
+
 ## 2.50.0 (May 16, 2024)
 
 ENHANCEMENTS:
