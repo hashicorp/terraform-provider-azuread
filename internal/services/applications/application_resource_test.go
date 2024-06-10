@@ -648,6 +648,16 @@ resource "azuread_application" "test" {
       value                      = "user_impersonation"
     }
   }
+
+  app_role {
+    allowed_member_types = [
+      "User",
+    ]
+    description  = "msiam_access"
+    display_name = "msiam_access"
+    enabled      = true
+    id           = "dfd0e7dd-26fb-4b2c-98d2-e444486c1e37"
+  }
 }
 `, data.RandomInteger, testApplicationTemplateId, data.UUID())
 }
