@@ -1175,7 +1175,6 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	var imageContentType string
 	var imageData []byte
 	if v, ok := d.GetOk("logo_image"); ok && v != "" && d.HasChange("logo_image") {
-		var err error
 		imageContentType, imageData, err = applicationParseLogoImage(v.(string))
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "image", "Could not decode image data")
@@ -1193,12 +1192,9 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		DirectoryObject: msgraph.DirectoryObject{
 			Id: pointer.To(id.ApplicationId),
 		},
-		Api:                   expandApplicationApi(d.Get("api").([]interface{})),
-		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List()),
 		Description:           tf.NullableString(d.Get("description").(string)),
 		DisplayName:           pointer.To(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
-		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
 		Info: &msgraph.InformationalUrl{
 			MarketingUrl:        tf.NullableString(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: tf.NullableString(d.Get("privacy_statement_url").(string)),
@@ -1209,9 +1205,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		IsFallbackPublicClient:     pointer.To(d.Get("fallback_public_client_enabled").(bool)),
 		Notes:                      tf.NullableString(d.Get("notes").(string)),
 		Oauth2RequirePostResponse:  pointer.To(d.Get("oauth2_post_response_required").(bool)),
-		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
-		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
 		ServiceManagementReference: tf.NullableString(d.Get("service_management_reference").(string)),
 		SignInAudience:             pointer.To(d.Get("sign_in_audience").(string)),
 		Spa:                        expandApplicationSpa(d.Get("single_page_application").([]interface{})),
@@ -1219,15 +1213,39 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
-	if err := applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())); err != nil {
-		return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", id.ApplicationId)
+	api := expandApplicationApi(d.Get("api").([]interface{}))
+
+	if d.HasChange("app_role") {
+		if err = applicationDisableAppRoles(ctx, client, &properties, expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())); err != nil {
+			return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", id.ApplicationId)
+		}
+
+		properties.AppRoles = expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
 	}
 
-	if err := applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())); err != nil {
-		return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
+	if d.HasChange("api.0.oauth2_permission_scope") {
+		if err = applicationDisableOauth2PermissionScopes(ctx, client, &properties, expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())); err != nil {
+			return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
+		}
+	} else {
+		api.OAuth2PermissionScopes = nil
 	}
 
-	if _, err := client.Update(ctx, properties); err != nil {
+	if d.HasChange("identifier_uris") {
+		properties.IdentifierUris = tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List())
+	}
+
+	if d.HasChange("optional_claims") {
+		properties.OptionalClaims = expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{}))
+	}
+
+	if d.HasChange("required_resource_access") {
+		properties.RequiredResourceAccess = expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List())
+	}
+
+	properties.Api = api
+
+	if _, err = client.Update(ctx, properties); err != nil {
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
 	}
 
@@ -1253,7 +1271,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 			}
 
 			properties.Owners = &newOwners
-			if _, err := client.AddOwners(ctx, &properties); err != nil {
+			if _, err = client.AddOwners(ctx, &properties); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 			}
 		}
@@ -1267,8 +1285,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
-		_, err := client.UploadLogo(ctx, id.ApplicationId, imageContentType, imageData)
-		if err != nil {
+		if _, err = client.UploadLogo(ctx, id.ApplicationId, imageContentType, imageData); err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
 	}
