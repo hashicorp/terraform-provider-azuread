@@ -1106,7 +1106,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
 	if acceptMappedClaims != nil {
 		api.AcceptMappedClaims = acceptMappedClaims
-		if _, err := client.Update(ctx, msgraph.Application{
+		if _, err = client.Update(ctx, msgraph.Application{
 			DirectoryObject: msgraph.DirectoryObject{
 				Id: app.Id,
 			},
@@ -1119,7 +1119,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	if len(ownersExtra) > 0 {
 		// Add any remaining owners after the application is created
 		app.Owners = &ownersExtra
-		if _, err := client.AddOwners(ctx, app); err != nil {
+		if _, err = client.AddOwners(ctx, app); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 		}
 	}
@@ -1133,7 +1133,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
-		_, err := client.UploadLogo(ctx, id.ApplicationId, imageContentType, imageData)
+		_, err = client.UploadLogo(ctx, id.ApplicationId, imageContentType, imageData)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
@@ -1150,6 +1150,9 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
 	}
+
+	tf.LockByName(applicationResourceName, id.ApplicationId)
+	defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
 	displayName := d.Get("display_name").(string)
 

@@ -199,7 +199,7 @@ func (r ApplicationRedirectUrisResource) Update() sdk.ResourceFunc {
 			applicationId := parse.NewApplicationID(id.ApplicationId)
 
 			var model ApplicationRedirectUrisModel
-			if err := metadata.Decode(&model); err != nil {
+			if err = metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
