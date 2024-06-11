@@ -353,6 +353,9 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
+			tf.LockByName(applicationResourceName, id.ApplicationId)
+			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
+
 			properties := msgraph.Application{
 				DirectoryObject: msgraph.DirectoryObject{
 					Id: &id.ApplicationId,
