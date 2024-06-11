@@ -954,15 +954,97 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	if templateId != "" {
+		// Validate the template exists
+		if _, status, err := appTemplatesClient.Get(ctx, templateId, odata.Query{}); err != nil {
+			if status == http.StatusNotFound {
+				return tf.ErrorDiagPathF(err, "template_id", "Could not find application template with ID %q", templateId)
+			}
+			return tf.ErrorDiagF(err, "Could not retrieve application template with ID %q", templateId)
+		}
+
+		// Generate a temporary display name to assert uniqueness when handling buggy 404 when instantiating
+		uuid, err := uuid.GenerateUUID()
+		if err != nil {
+			return tf.ErrorDiagF(err, "Failed to generate a UUID")
+		}
+		tempDisplayName := fmt.Sprintf("TERRAFORM_INSTANTIATE_%s", uuid)
+
 		// Instantiate application from template gallery and return via the update function
 		properties := msgraph.ApplicationTemplate{
 			ID:          pointer.To(templateId),
-			DisplayName: pointer.To(displayName),
+			DisplayName: pointer.To(tempDisplayName),
 		}
 
-		result, _, err := appTemplatesClient.Instantiate(ctx, properties)
+		// When the /instantiate operation returns 404, it has probably created the application anyway. There is no way to tell this
+		// other than polling for the application object which is created out-of-band, so we create it with a quasi-unique temporary
+		// displayName and then poll for it.
+		result, status, err := appTemplatesClient.Instantiate(ctx, properties)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not instantiate application from template")
+			if status != http.StatusNotFound {
+				return tf.ErrorDiagF(err, "Could not instantiate application from template")
+			}
+
+			deadline, ok := ctx.Deadline()
+			if !ok {
+				return tf.ErrorDiagF(errors.New("context has no deadline"), "internal-error: context has no deadline")
+			}
+
+			// Since the API response can't be trusted, we'll have to take on responsibility for ensuring
+			// the application object and service principal objects were created as expected.
+			pollingResult, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+				Pending:    []string{"Waiting"},
+				Target:     []string{"Found"},
+				Timeout:    time.Until(deadline),
+				MinTimeout: 5 * time.Second,
+				Refresh: func() (interface{}, string, error) {
+					// List applications with matching applicationTemplateId and displayName (using the temporary display name we generated above)
+					filter := fmt.Sprintf("applicationTemplateId eq '%s' and displayName eq '%s'", odata.EscapeSingleQuote(templateId), odata.EscapeSingleQuote(tempDisplayName))
+					applicationsResult, _, err := client.List(ctx, odata.Query{Filter: filter})
+					if err != nil {
+						return nil, "Error", err
+					}
+					if applicationsResult == nil {
+						return nil, "Waiting", nil
+					}
+					for _, application := range *applicationsResult {
+						if id := application.ID(); id != nil && application.AppId != nil && application.ApplicationTemplateId != nil && *application.ApplicationTemplateId == templateId && application.DisplayName != nil && *application.DisplayName == tempDisplayName {
+							// We should ensure the service principal was also created
+							servicePrincipalsClient := meta.(*clients.Client).Applications.ServicePrincipalsClient
+
+							// List service principals for the created application
+							servicePrincipalsFilter := fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(*application.AppId))
+							servicePrincipalsResult, _, err := servicePrincipalsClient.List(ctx, odata.Query{Filter: servicePrincipalsFilter})
+							if err != nil {
+								return nil, "Error", err
+							}
+							if servicePrincipalsResult == nil {
+								return nil, "Waiting", nil
+							}
+							for _, servicePrincipal := range *servicePrincipalsResult {
+								// Validate the appId and applicationTemplateId match the application
+								if servicePrincipalId := servicePrincipal.ID(); servicePrincipalId != nil && servicePrincipal.AppId != nil && *servicePrincipal.AppId == *application.AppId && servicePrincipal.ApplicationTemplateId != nil && *servicePrincipal.ApplicationTemplateId == templateId {
+									return msgraph.ApplicationTemplate{
+										Application:      &application,
+										ServicePrincipal: &servicePrincipal,
+									}, "Found", nil
+								}
+							}
+						}
+					}
+					return nil, "Waiting", nil
+				},
+			}).WaitForStateContext(ctx)
+
+			if err != nil {
+				return tf.ErrorDiagF(err, "Could not instantiate application from template")
+			}
+			if pollingResult == nil {
+				return tf.ErrorDiagF(errors.New("attempted to poll for application and service principal but they were not found"), "Could not instantiate application from template")
+			}
+
+			if template, ok := pollingResult.(msgraph.ApplicationTemplate); ok {
+				result = &template
+			}
 		}
 
 		if result.Application == nil {
@@ -976,7 +1058,8 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		id := parse.NewApplicationID(*result.Application.ID())
 		d.SetId(id.ID())
 
-		// The application was created out of band, so we'll update it just as if it was imported
+		// The application was created out of band, so we'll update it just as if it was imported. This will also
+		// set the correct displayName for the application.
 		return applicationResourceUpdate(ctx, d, meta)
 	}
 

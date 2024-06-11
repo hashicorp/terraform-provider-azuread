@@ -13,6 +13,7 @@ type Client struct {
 	ApplicationsClientBeta     *msgraph.ApplicationsClient
 	ApplicationTemplatesClient *msgraph.ApplicationTemplatesClient
 	DirectoryObjectsClient     *msgraph.DirectoryObjectsClient
+	ServicePrincipalsClient    *msgraph.ServicePrincipalsClient
 }
 
 func NewClient(o *common.ClientOptions) *Client {
@@ -31,10 +32,14 @@ func NewClient(o *common.ClientOptions) *Client {
 	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
 	o.ConfigureClient(&directoryObjectsClient.BaseClient)
 
+	servicePrincipalsClient := msgraph.NewServicePrincipalsClient()
+	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
+
 	return &Client{
 		ApplicationsClient:         applicationsClient,
 		ApplicationsClientBeta:     applicationsClientBeta,
 		ApplicationTemplatesClient: applicationTemplatesClient,
 		DirectoryObjectsClient:     directoryObjectsClient,
+		ServicePrincipalsClient:    servicePrincipalsClient,
 	}
 }
