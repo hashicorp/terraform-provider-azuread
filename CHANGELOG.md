@@ -1,9 +1,9 @@
-## 2.52.0 (Unreleased)
+## 2.52.0 (June 13, 2024)
 
 BUG FIXES:
 
-* `azuread_application` - fix a bug that could prevent the `ignore_changes` lifecycle argument from working for the `app_role`, `oauth2_permission_scope`, `identifier_uris`, `optional_claims`, and `required_resource_access` properties [GH-1403]
-* `azuread_application` - add a workaround for an API bug when instantiating an application from template using the `template_id` property [GH-1406]
+* `azuread_application` - fix a bug that could prevent the `ignore_changes` lifecycle argument from working for the `app_role`, `oauth2_permission_scope`, `identifier_uris`, `optional_claims`, and `required_resource_access` properties ([#1403](https://github.com/hashicorp/terraform-provider-azuread/issues/1403))
+* `azuread_application` - add a workaround for an API bug when instantiating an application from template using the `template_id` property ([#1406](https://github.com/hashicorp/terraform-provider-azuread/issues/1406))
 
 ## 2.51.0 (June 06, 2024)
 
