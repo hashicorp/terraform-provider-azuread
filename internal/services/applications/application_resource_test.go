@@ -635,8 +635,31 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
   owners       = [data.azuread_client_config.test.object_id]
   template_id  = "%[2]s"
+
+  api {
+    oauth2_permission_scope {
+      admin_consent_description  = "Allow the application to access acctest-APP-%[1]d on behalf of the signed-in user."
+      admin_consent_display_name = "Access acctest-APP-%[1]d"
+      enabled                    = true
+      id                         = "%[3]s"
+      type                       = "User"
+      user_consent_description   = "Allow the application to access acctest-APP-%[1]d on your behalf."
+      user_consent_display_name  = "Access acctest-APP-%[1]d"
+      value                      = "user_impersonation"
+    }
+  }
+
+  app_role {
+    allowed_member_types = [
+      "User",
+    ]
+    description  = "msiam_access"
+    display_name = "msiam_access"
+    enabled      = true
+    id           = "dfd0e7dd-26fb-4b2c-98d2-e444486c1e37"
+  }
 }
-`, data.RandomInteger, testApplicationTemplateId)
+`, data.RandomInteger, testApplicationTemplateId, data.UUID())
 }
 
 func (ApplicationResource) withGroupMembershipClaims(data acceptance.TestData) string {
