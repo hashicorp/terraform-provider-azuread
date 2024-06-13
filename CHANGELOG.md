@@ -1,3 +1,9 @@
+## 2.52.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - fix a bug that could prevent the `ignore_changes` lifecycle argument from working for the `app_role`, `oauth2_permission_scope`, `identifier_uris`, `optional_claims`, and `required_resource_access` properties [GH-1403]
+
 ## 2.51.0 (June 06, 2024)
 
 ENHANCEMENTS:
