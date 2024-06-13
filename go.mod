@@ -63,3 +63,5 @@ require (
 )
 
 go 1.21.3
+
+replace github.com/manicminer/hamilton => github.com/MarkDordoy/hamilton v0.17.1-0.20240611151114-899c6ce169f6
