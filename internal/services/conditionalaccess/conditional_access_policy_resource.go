@@ -77,7 +77,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_applications": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
@@ -96,10 +96,35 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 									"included_user_actions": {
 										Type:         pluginsdk.TypeList,
 										Optional:     true,
-										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
 										Elem: &pluginsdk.Schema{
 											Type:             pluginsdk.TypeString,
 											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+										},
+									},
+
+									"filter": {
+										Type:         pluginsdk.TypeList,
+										Optional:     true,
+										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions", "conditions.0.applications.0.filter"},
+										MaxItems:     1,
+										Elem: &pluginsdk.Resource{
+											Schema: map[string]*pluginsdk.Schema{
+												"mode": {
+													Type:     pluginsdk.TypeString,
+													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														msgraph.ConditionalAccessFilterModeExclude,
+														msgraph.ConditionalAccessFilterModeInclude,
+													}, false),
+												},
+
+												"rule": {
+													Type:             pluginsdk.TypeString,
+													Required:         true,
+													ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+												},
+											},
 										},
 									},
 								},
