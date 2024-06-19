@@ -209,7 +209,7 @@ github.com/hashicorp/terraform-svchost
 # github.com/hashicorp/yamux v0.1.1
 ## explicit; go 1.15
 github.com/hashicorp/yamux
-# github.com/manicminer/hamilton v0.70.0 => github.com/MarkDordoy/hamilton v0.17.1-0.20240611151114-899c6ce169f6
+# github.com/manicminer/hamilton v0.71.0
 ## explicit; go 1.21
 github.com/manicminer/hamilton/errors
 github.com/manicminer/hamilton/internal/utils
@@ -428,4 +428,3 @@ google.golang.org/protobuf/types/known/timestamppb
 ## explicit; go 1.19
 software.sslmate.com/src/go-pkcs12
 software.sslmate.com/src/go-pkcs12/internal/rc2
-# github.com/manicminer/hamilton => github.com/MarkDordoy/hamilton v0.17.1-0.20240611151114-899c6ce169f6
