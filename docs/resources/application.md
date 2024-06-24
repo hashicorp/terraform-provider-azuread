@@ -184,6 +184,8 @@ The following arguments are supported:
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
+* `password` - (Optional) Single `password` block das decoumented below. The password is generated as part of the application and can be used instantaneous. By default, no password is generated.
+
 
 -> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
 
@@ -326,6 +328,18 @@ The following arguments are supported:
 * `access_token_issuance_enabled` - (Optional) Whether this web application can request an access token using OAuth 2.0 implicit flow.
 * `id_token_issuance_enabled` - (Optional) Whether this web application can request an ID token using OAuth 2.0 implicit flow.
 
+---
+
+`password` block supports the following:
+
+-> **Tip: Generating a `password` for the application inline** To inline generation of a password is usable instantaneously after the application is created. There should be no delay to use created resource instead of using the `azuread_application_password`
+
+* `display_name` - (Required) A display name for the password. Changing this field forces a new resource to be created.
+* `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
+* `start_date` - (Optional) The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.  Changing this field forces a new resource to be created.
+
+---
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -338,6 +352,9 @@ In addition to all arguments above, the following attributes are exported:
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
 * `publisher_domain` - The verified publisher domain for the application.
+* `publisher_domain` - The verified publisher domain for the application.
+* `password` - The password `value` and `key_id` of the application password that is created inline.
+
 
 ## Import
 
