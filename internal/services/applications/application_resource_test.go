@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -33,7 +34,7 @@ func TestAccApplication_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("app_password").DoesNotExist(),
+				check.That(data.ResourceName).Key("password").DoesNotExist(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
 		},
@@ -604,13 +605,47 @@ func TestAccApplication_password(t *testing.T) {
 			Config: r.password(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("app_password.#").HasValue("1"),
-				check.That(data.ResourceName).Key("app_password.0.key_id").Exists(),
-				check.That(data.ResourceName).Key("app_password.0.value").Exists(),
-				check.That(data.ResourceName).Key("app_password.0.start_date").Exists(),
-				check.That(data.ResourceName).Key("app_password.0.end_date").Exists(),
-				check.That(data.ResourceName).Key("app_password.0.end_data_relative").Exists(),
-				check.That(data.ResourceName).Key("app_password.0.display_name").HasValue(data.ResourceName),
+				check.That(data.ResourceName).Key("password.#").HasValue("1"),
+				check.That(data.ResourceName).Key("password.0.key_id").Exists(),
+				check.That(data.ResourceName).Key("password.0.value").Exists(),
+				check.That(data.ResourceName).Key("password.0.start_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.end_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.display_name").HasValue(fmt.Sprintf("acctest-appPassword-%d", data.RandomInteger)),
+			),
+		},
+	})
+}
+
+func TestAccApplication_passwordUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	updateEndDate := time.Now().AddDate(0, 11, 28).UTC().Format(time.RFC3339)
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.passwordComplete(data, startDate, endDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password.#").HasValue("1"),
+				check.That(data.ResourceName).Key("password.0.key_id").Exists(),
+				check.That(data.ResourceName).Key("password.0.value").Exists(),
+				check.That(data.ResourceName).Key("password.0.start_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.end_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.display_name").HasValue(fmt.Sprintf("acctest-appPasswordComplete-%d", data.RandomInteger)),
+			),
+		},
+		{
+			Config: r.passwordComplete(data, startDate, updateEndDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password.#").HasValue("1"),
+				check.That(data.ResourceName).Key("password.0.key_id").Exists(),
+				check.That(data.ResourceName).Key("password.0.value").Exists(),
+				check.That(data.ResourceName).Key("password.0.start_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.end_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.display_name").HasValue(fmt.Sprintf("acctest-appPasswordComplete-%d", data.RandomInteger)),
 			),
 		},
 	})
@@ -1602,12 +1637,31 @@ provider "azuread" {}
 data "azuread_client_config" "current" {}
 
 resource "azuread_application" "test" {
-  display_name = "acctest-APP-%[1]d"
-  owners = [ data.azuread_client_config.current.object_id ]
+  display_name = "acctest-appPassword-%[1]d"
+  owners       = [data.azuread_client_config.current.object_id]
 
   password {
-    display_name = "acctest-APP-%[1]d"
+    display_name = "acctest-appPassword-%[1]d"
   }
 }
 `, data.RandomInteger)
+}
+
+func (r ApplicationResource) passwordComplete(data acceptance.TestData, startDate, endDate string) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  owners       = [data.azuread_client_config.current.object_id]
+
+  password {
+    display_name = "acctest-appPasswordComplete-%[1]d"
+    start_date   = "%[2]s"
+    end_date     = "%[3]s"
+  }
+}
+`, data.RandomInteger, startDate, endDate)
 }

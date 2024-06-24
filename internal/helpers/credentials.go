@@ -185,41 +185,6 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 	return &credential, nil
 }
 
-func FlattenCredential(in *msgraph.PasswordCredential, exist map[string]interface{}) []map[string]interface{} {
-	if in == nil {
-		return []map[string]interface{}{}
-	}
-
-	startDate := exist["start_date"]
-	if in.StartDateTime != nil {
-		startDate = in.StartDateTime.Format(time.RFC3339)
-	}
-
-	endDate := exist["start_date"]
-	if in.EndDateTime != nil {
-		endDate = in.EndDateTime.Format(time.RFC3339)
-	}
-
-	value := exist["value"]
-	if in.SecretText != nil {
-		value = *in.SecretText
-	}
-
-	keyId := exist["key_id"]
-	if in.KeyId != nil {
-		keyId = *in.KeyId
-	}
-
-	return []map[string]interface{}{{
-		"display_name":      exist["display_name"],
-		"start_date":        startDate,
-		"end_date":          endDate,
-		"value":             value,
-		"key_id":            keyId,
-		"end_date_relative": exist["end_date_relative"],
-	}}
-}
-
 func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, error) {
 	credential := msgraph.PasswordCredential{}
 
@@ -257,46 +222,24 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 }
 
 func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.PasswordCredential, error) {
-	credential := msgraph.PasswordCredential{}
+
+	data := make(map[string]interface{}, 0)
 
 	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these
 	if v, ok := d.GetOk("display_name"); ok {
-		credential.DisplayName = pointer.To(v.(string))
+		data["display_name"] = v
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
-		startDate, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
-		}
-		credential.StartDateTime = &startDate
+		data["start_date"] = v
 	}
 
-	var endDate *time.Time
+	// var endDate *time.Time
 	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
-		var err error
-		expiry, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
-		}
-		endDate = &expiry
+		data["end_date"] = v
 	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
-		d, err := time.ParseDuration(v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
-		}
-
-		if credential.StartDateTime == nil {
-			expiry := time.Now().Add(d)
-			endDate = &expiry
-		} else {
-			expiry := credential.StartDateTime.Add(d)
-			endDate = &expiry
-		}
-	}
-	if endDate != nil {
-		credential.EndDateTime = endDate
+		data["end_date_relative"] = v
 	}
 
-	return &credential, nil
+	return PasswordCredential(data)
 }
