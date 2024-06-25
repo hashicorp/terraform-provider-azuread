@@ -1,3 +1,9 @@
+## 2.53.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* `azuread_application` - support for the `password` block [GH-1389]
+
 ## 2.52.0 (June 13, 2024)
 
 BUG FIXES:
