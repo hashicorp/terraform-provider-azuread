@@ -405,6 +405,28 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 	return
 }
 
+func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.PasswordCredential, error) {
+	if len(input) == 0 {
+		return nil, nil
+	}
+
+	result := make([]msgraph.PasswordCredential, 0)
+
+	for _, password := range input {
+		if password == nil {
+			continue
+		}
+
+		credential, err := helpers.PasswordCredential(password.(map[string]interface{}))
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, *credential)
+	}
+
+	return &result, nil
+}
+
 func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 	result := make([]msgraph.AppRole, 0)
 
@@ -791,6 +813,36 @@ func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} 
 	return []map[string]interface{}{{
 		"redirect_uris": tf.FlattenStringSlicePtr(in.RedirectUris),
 	}}
+}
+
+func flattenApplicationPasswordCredentials(input *[]msgraph.PasswordCredential) []map[string]interface{} {
+	output := make([]map[string]interface{}, 0)
+
+	if input == nil {
+		return output
+	}
+
+	for _, in := range *input {
+		var startDate, endDate string
+
+		if in.StartDateTime != nil {
+			startDate = in.StartDateTime.Format(time.RFC3339)
+		}
+
+		if in.EndDateTime != nil {
+			endDate = in.EndDateTime.Format(time.RFC3339)
+		}
+
+		output = append(output, map[string]interface{}{
+			"key_id":       pointer.From(in.KeyId),
+			"display_name": pointer.From(in.DisplayName),
+			"start_date":   startDate,
+			"end_date":     endDate,
+			"value":        pointer.From(in.SecretText),
+		})
+	}
+
+	return output
 }
 
 func flattenApplicationWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
