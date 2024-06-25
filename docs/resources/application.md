@@ -144,6 +144,33 @@ resource "azuread_application" "example" {
 }
 ```
 
+*Create application and generate a password*
+
+```terraform
+data "azuread_client_config" "current" {}
+
+resource "time_rotating" "example" {
+  rotation_days = 180
+}
+
+resource "azuread_application" "example" {
+  display_name = "example"
+  owners       = [data.azuread_client_config.current.object_id]
+
+  password {
+    display_name = "MySecret-1"
+    start_date   = time_rotating.example.id
+    end_date     = timeadd(time_rotating.example.id, "4320h")
+  }
+}
+
+output "example_password" {
+  sensitive = true
+  value     = tolist(azuread_application.example.password).0.value
+}
+
+```
+
 *Create application from a gallery template*
 
 ```terraform
@@ -157,8 +184,8 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
-  use_existing   = true
+  client_id    = azuread_application.example.client_id
+  use_existing = true
 }
 ```
 
@@ -184,10 +211,12 @@ The following arguments are supported:
 * `oauth2_post_response_required` - (Optional) Specifies whether, as part of OAuth 2.0 token requests, Azure AD allows POST requests, as opposed to GET requests. Defaults to `false`, which specifies that only GET requests are allowed.
 * `optional_claims` - (Optional) An `optional_claims` block as documented below.
 * `owners` - (Optional) A set of object IDs of principals that will be granted ownership of the application. Supported object types are users or service principals. By default, no owners are assigned.
-* `password` - (Optional) Single `password` block das decoumented below. The password is generated as part of the application and can be used instantaneous. By default, no password is generated.
-
 
 -> **Ownership of Applications** It's recommended to always specify one or more application owners, including the principal being used to execute Terraform, such as in the example above.
+
+* `password` - (Optional) A single `password` block as documented below. The password is generated during creation. By default, no password is generated.
+
+-> **Creating a Password** The `password` block supports a single password for the application, and is provided so that a password can be generated when a new application is created. This helps to make new applications available for authentication more quickly. To add additional passwords to an application, see the [azuread_application_password](application_password.html) resource.
 
 * `prevent_duplicate_names` - (Optional) If `true`, will return an error if an existing application is found with the same name. Defaults to `false`.
 * `privacy_statement_url` - (Optional) URL of the application's privacy statement.
@@ -286,6 +315,14 @@ The following arguments are supported:
 
 ---
 
+`password` block supports the following:
+
+* `display_name` - (Required) A display name for the password. Changing this field forces a new resource to be created.
+* `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
+* `start_date` - (Optional) The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.  Changing this field forces a new resource to be created.
+
+---
+
 `public_client` block supports the following:
 
 * `redirect_uris` - (Optional) A set of URLs where user tokens are sent for sign-in, or the redirect URIs where OAuth 2.0 authorization codes and access tokens are sent. Must be a valid `https` or `ms-appx-web` URL.
@@ -330,16 +367,6 @@ The following arguments are supported:
 
 ---
 
-`password` block supports the following:
-
--> **Tip: Generating a `password` for the application inline** To inline generation of a password is usable instantaneously after the application is created. There should be no delay to use created resource instead of using the `azuread_application_password`
-
-* `display_name` - (Required) A display name for the password. Changing this field forces a new resource to be created.
-* `end_date` - (Optional) The end date until which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
-* `start_date` - (Optional) The start date from which the password is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). If this isn't specified, the current date is used.  Changing this field forces a new resource to be created.
-
----
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -351,9 +378,16 @@ In addition to all arguments above, the following attributes are exported:
 * `logo_url` - CDN URL to the application's logo, as uploaded with the `logo_image` property.
 * `oauth2_permission_scope_ids` - A mapping of OAuth2.0 permission scope values to scope IDs, intended to be useful when referencing permission scopes in other resources in your configuration.
 * `object_id` - The application's object ID.
+* `password` - A `password` block as documented below. Note that this block is a set rather than a list, and you will need to convert or iterate it to address its attributes (see the usage example above).
 * `publisher_domain` - The verified publisher domain for the application.
 * `publisher_domain` - The verified publisher domain for the application.
-* `password` - The password `value` and `key_id` of the application password that is created inline.
+
+---
+
+`password` block exports the following:
+
+* `key_id` - (Required) The unique key ID for the generated password.
+* `value` - (Required) The generated password for the application.
 
 
 ## Import

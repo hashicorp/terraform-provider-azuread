@@ -185,14 +185,14 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 	return &credential, nil
 }
 
-func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, error) {
+func PasswordCredential(in map[string]interface{}) (*msgraph.PasswordCredential, error) {
 	credential := msgraph.PasswordCredential{}
 
-	if v, ok := d["display_name"]; ok {
+	if v, ok := in["display_name"]; ok {
 		credential.DisplayName = pointer.To(v.(string))
 	}
 
-	if v, ok := d["start_date"]; ok && v.(string) != "" {
+	if v, ok := in["start_date"]; ok && v.(string) != "" {
 		startDate, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
@@ -200,7 +200,7 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 		credential.StartDateTime = &startDate
 	}
 
-	if v, ok := d["end_date"]; ok && v.(string) != "" {
+	if v, ok := in["end_date"]; ok && v.(string) != "" {
 		var err error
 		expiry, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
@@ -210,11 +210,11 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 		credential.EndDateTime = &expiry
 	}
 
-	if v, ok := d["key_id"]; ok && v.(string) != "" {
+	if v, ok := in["key_id"]; ok && v.(string) != "" {
 		credential.KeyId = pointer.To(v.(string))
 	}
 
-	if v, ok := d["value"]; ok && v.(string) != "" {
+	if v, ok := in["value"]; ok && v.(string) != "" {
 		credential.SecretText = pointer.To(v.(string))
 	}
 
@@ -222,8 +222,7 @@ func PasswordCredential(d map[string]interface{}) (*msgraph.PasswordCredential, 
 }
 
 func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.PasswordCredential, error) {
-
-	data := make(map[string]interface{}, 0)
+	data := make(map[string]interface{})
 
 	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these
 	if v, ok := d.GetOk("display_name"); ok {
@@ -234,7 +233,6 @@ func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.Password
 		data["start_date"] = v
 	}
 
-	// var endDate *time.Time
 	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
 		data["end_date"] = v
 	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {

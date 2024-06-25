@@ -425,7 +425,6 @@ func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.Passw
 	}
 
 	return &result, nil
-
 }
 
 func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {

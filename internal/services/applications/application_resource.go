@@ -410,10 +410,12 @@ func applicationResource() *pluginsdk.Resource {
 				},
 			},
 
+			//lintignore:S018 // We are intentionally using TypeSet here to effect a replace-style representation in the diff for this block
 			"password": {
 				Description: "App password definition",
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				MaxItems:    1,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
@@ -1062,7 +1064,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		Web:                        expandApplicationWeb(d.Get("web").([]interface{})),
 	}
 
-	// Create application passwords, the first is created within the application request, rest is added later.
+	// Generate an application password, if specified
 	if v, ok := d.GetOk("password"); ok {
 		password := v.(*pluginsdk.Set).List()
 		if len(password) > 1 {
@@ -1139,12 +1141,9 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	id := parse.NewApplicationID(*app.ID())
 	d.SetId(id.ID())
 
-	// set the pw credentials to state
+	// Save the password key ID and generated value to state
 	if app.PasswordCredentials != nil {
-		password := d.Get("password").(*pluginsdk.Set).List()
-
-		// Save the password key ID and generated value to state
-		if len(password) == 1 {
+		if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
 			pw := password[0].(map[string]interface{})
 			if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(credentials) == 1 {
 				pw["key_id"] = credentials[0]["key_id"]
