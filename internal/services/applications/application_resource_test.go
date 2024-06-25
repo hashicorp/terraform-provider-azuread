@@ -34,7 +34,7 @@ func TestAccApplication_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
-				check.That(data.ResourceName).Key("password").DoesNotExist(),
+				check.That(data.ResourceName).Key("password.#").HasValue("0"),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
 			),
 		},
