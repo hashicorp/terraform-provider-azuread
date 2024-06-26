@@ -31,8 +31,8 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
-  use_existing   = true
+  client_id    = azuread_application.example.application_id
+  use_existing = true
 }
 
 resource "azuread_synchronization_secret" "example" {

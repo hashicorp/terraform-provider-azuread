@@ -22,8 +22,8 @@ When authenticated with a user principal, this resource requires one the followi
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_application" "example" {
@@ -45,7 +45,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
+  client_id = azuread_application.example.application_id
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "example" {
@@ -61,8 +61,8 @@ resource "azuread_service_principal_delegated_permission_grant" "example" {
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_application" "example" {
@@ -84,7 +84,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
+  client_id = azuread_application.example.application_id
 }
 
 resource "azuread_user" "example" {
