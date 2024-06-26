@@ -32,13 +32,13 @@ type OptionalClaim struct {
 	AdditionalProperties []string `tfschema:"additional_properties"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationOptionalClaimsResource{}
+
 type ApplicationOptionalClaimsResource struct{}
 
 func (r ApplicationOptionalClaimsResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateOptionalClaimsID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationOptionalClaimsResource{}
 
 func (r ApplicationOptionalClaimsResource) ResourceType() string {
 	return "azuread_application_optional_claims"

@@ -50,6 +50,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `credential_id` - A UUID used to uniquely identify this federated identity credential.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 15 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Federated Identity Credentials can be imported using the object ID of the associated application and the ID of the federated identity credential, e.g.

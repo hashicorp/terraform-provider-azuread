@@ -30,13 +30,13 @@ type ApplicationAppRoleModel struct {
 	Value              string   `tfschema:"value"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationAppRoleResource{}
+
 type ApplicationAppRoleResource struct{}
 
 func (r ApplicationAppRoleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateAppRoleID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationAppRoleResource{}
 
 func (r ApplicationAppRoleResource) ResourceType() string {
 	return "azuread_application_app_role"

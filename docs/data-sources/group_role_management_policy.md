@@ -40,3 +40,9 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - (String) The description of this policy.
 * `display_name` - (String) The display name of this policy.
 * `id` - (String) The ID of this policy.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

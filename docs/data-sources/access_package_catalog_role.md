@@ -47,3 +47,9 @@ The following attributes are exported:
 * `display_name` - The display name of the role.
 * `object_id` - The object ID of the role.
 * `template_id` - The object ID of the role.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

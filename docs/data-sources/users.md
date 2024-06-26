@@ -62,3 +62,9 @@ The following attributes are exported:
 * `onpremises_user_principal_name` - The on-premise user principal name of the user.
 * `usage_location` - The usage location of the user.
 * `user_principal_name` - The user principal name (UPN) of the user.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

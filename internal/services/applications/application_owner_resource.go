@@ -23,13 +23,13 @@ type ApplicationOwnerModel struct {
 	OwnerObjectId string `tfschema:"owner_object_id"`
 }
 
+var _ sdk.Resource = ApplicationOwnerResource{}
+
 type ApplicationOwnerResource struct{}
 
 func (r ApplicationOwnerResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateOwnerID
 }
-
-var _ sdk.Resource = ApplicationOwnerResource{}
 
 func (r ApplicationOwnerResource) ResourceType() string {
 	return "azuread_application_owner"

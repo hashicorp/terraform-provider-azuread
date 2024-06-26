@@ -78,13 +78,13 @@ type GroupRoleManagementPolicyNotificationSettings struct {
 	AdditionalRecipients []string                                                 `tfschema:"additional_recipients"`
 }
 
+var _ sdk.ResourceWithUpdate = GroupRoleManagementPolicyResource{}
+
 type GroupRoleManagementPolicyResource struct{}
 
 func (r GroupRoleManagementPolicyResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateRoleManagementPolicyID
 }
-
-var _ sdk.Resource = GroupRoleManagementPolicyResource{}
 
 func (r GroupRoleManagementPolicyResource) ResourceType() string {
 	return "azuread_group_role_management_policy"

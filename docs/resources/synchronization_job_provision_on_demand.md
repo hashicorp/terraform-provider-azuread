@@ -82,10 +82,10 @@ resource "azuread_synchronization_job_provision_on_demand" "example" {
 The following arguments are supported:
 
 
-- `synchronization_job_id` (Required) Identifier of the synchronization template this job is based on.
-- `parameter` (Required) One or more `parameter` blocks as documented below.
-- `service_principal_id` (Required) The object ID of the service principal for the synchronization job.
-- `triggers` (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html). 
+* `synchronization_job_id` (Required) Identifier of the synchronization template this job is based on.
+* `parameter` (Required) One or more `parameter` blocks as documented below.
+* `service_principal_id` (Required) The object ID of the service principal for the synchronization job.
+* `triggers` (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html). 
 
 ---
 
@@ -100,6 +100,12 @@ The following arguments are supported:
 
 * `object_id` (String) The identifier of an object to which a synchronization job is to be applied. Can be one of the following: (1) An onPremisesDistinguishedName for synchronization from Active Directory to Azure AD. (2) The user ID for synchronization from Azure AD to a third-party. (3) The Worker ID of the Workday worker for synchronization from Workday to either Active Directory or Azure AD.
 * `object_type_name` (String) The type of the object to which a synchronization job is to be applied. Can be one of the following: `user` for synchronizing between Active Directory and Azure AD, `User` for synchronizing a user between Azure AD and a third-party application, `Worker` for synchronization a user between Workday and either Active Directory or Azure AD, `Group` for synchronizing a group between Azure AD and a third-party application.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 15 minutes) Used when creating the resource.
 
 ## Attributes Reference
 

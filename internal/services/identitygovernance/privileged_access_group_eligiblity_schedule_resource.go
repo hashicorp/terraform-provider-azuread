@@ -17,13 +17,13 @@ import (
 	"github.com/manicminer/hamilton/msgraph"
 )
 
+var _ sdk.ResourceWithUpdate = PrivilegedAccessGroupEligibilityScheduleResource{}
+
 type PrivilegedAccessGroupEligibilityScheduleResource struct{}
 
 func (r PrivilegedAccessGroupEligibilityScheduleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidatePrivilegedAccessGroupScheduleID
 }
-
-var _ sdk.Resource = PrivilegedAccessGroupEligibilityScheduleResource{}
 
 func (r PrivilegedAccessGroupEligibilityScheduleResource) ResourceType() string {
 	return "azuread_privileged_access_group_eligibility_schedule"

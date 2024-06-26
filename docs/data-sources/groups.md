@@ -74,3 +74,9 @@ The following attributes are exported:
 
 * `display_names` - The display names of the groups.
 * `object_ids` - The object IDs of the groups.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

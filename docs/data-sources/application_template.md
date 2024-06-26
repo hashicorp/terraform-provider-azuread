@@ -43,3 +43,9 @@ The following attributes are exported:
 * `supported_provisioning_types` - List of provisioning modes supported by this templated application.
 * `supported_single_sign_on_modes` - List of single sign on modes supported by this templated application.
 * `template_id` - The ID of the templated application.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

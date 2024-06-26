@@ -26,13 +26,13 @@ type DirectoryRoleModel struct {
 	TemplateId  string `tfschema:"template_id"`
 }
 
+var _ sdk.Resource = DirectoryRoleResource{}
+
 type DirectoryRoleResource struct{}
 
 func (r DirectoryRoleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return validation.IsUUID
 }
-
-var _ sdk.Resource = DirectoryRoleResource{}
 
 func (r DirectoryRoleResource) ResourceType() string {
 	return "azuread_directory_role"

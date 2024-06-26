@@ -24,13 +24,13 @@ type ApplicationIdentifierUriModel struct {
 	IdentifierUri string `tfschema:"identifier_uri"`
 }
 
+var _ sdk.Resource = ApplicationIdentifierUriResource{}
+
 type ApplicationIdentifierUriResource struct{}
 
 func (r ApplicationIdentifierUriResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateIdentifierUriID
 }
-
-var _ sdk.Resource = ApplicationIdentifierUriResource{}
 
 func (r ApplicationIdentifierUriResource) ResourceType() string {
 	return "azuread_application_identifier_uri"

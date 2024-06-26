@@ -48,3 +48,9 @@ The following attributes are exported:
 * `members` - A list of object IDs of members who are present in this administrative unit.
 * `object_id` - The object ID of the administrative unit.
 * `visibility` - Whether the administrative unit _and_ its members are hidden or publicly viewable in the directory. One of: `Hiddenmembership` or `Public`.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

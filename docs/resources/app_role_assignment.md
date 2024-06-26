@@ -22,8 +22,8 @@ When authenticated with a user principal, this resource requires one of the foll
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_application" "example" {
@@ -45,7 +45,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
+  client_id = azuread_application.example.application_id
 }
 
 resource "azuread_app_role_assignment" "example" {
@@ -72,7 +72,7 @@ resource "azuread_application" "internal" {
 }
 
 resource "azuread_service_principal" "internal" {
-  application_id = azuread_application.internal.application_id
+  client_id = azuread_application.internal.application_id
 }
 
 resource "azuread_application" "example" {
@@ -89,7 +89,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
+  client_id = azuread_application.example.application_id
 }
 
 resource "azuread_app_role_assignment" "example" {
@@ -120,7 +120,7 @@ resource "azuread_application" "internal" {
 }
 
 resource "azuread_service_principal" "internal" {
-  application_id = azuread_application.internal.application_id
+  client_id = azuread_application.internal.application_id
 }
 
 resource "azuread_group" "example" {
@@ -155,7 +155,7 @@ resource "azuread_application" "internal" {
 }
 
 resource "azuread_service_principal" "internal" {
-  application_id = azuread_application.internal.application_id
+  client_id = azuread_application.internal.application_id
 }
 
 resource "azuread_group" "example" {
@@ -185,6 +185,14 @@ In addition to all arguments above, the following attributes are exported:
 * `principal_display_name` - The display name of the principal to which the app role is assigned.
 * `principal_type` - The object type of the principal to which the app role is assigned.
 * `resource_display_name` - The display name of the application representing the resource.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 

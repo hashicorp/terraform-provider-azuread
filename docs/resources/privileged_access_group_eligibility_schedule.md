@@ -40,16 +40,16 @@ resource "azuread_privileged_access_group_eligibility_schedule" "example" {
 
 ## Argument Reference
 
-- `group_id` (Required) The Object ID of the Azure AD group to which the principal will be assigned.
-- `principal_id` (Required) The Object ID of the principal to be assigned to the above group. Can be either a user or a group.
-- `assignment_type` (Required) The type of assignment to the group. Can be either `member` or `owner`.
-- `justification` (Optional) The justification for this assignment. May be required by the role policy.
-- `ticket_number` (Optional) The ticket number in the ticket system approving this assignment. May be required by the role policy.
-- `ticket_system` (Optional) The ticket system containing the ticket number approving this assignment. May be required by the role policy.
-- `start_date` (Optional) The date from which this assignment is valid, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z). If not provided, the assignment is immediately valid.
-- `expiration_date` (Optional) The date that this assignment expires, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z).
-- `duration` (Optional) The duration that this assignment is valid for, formatted as an ISO8601 duration (e.g. P30D for 30 days, PT3H for three hours).
-- `permanent_assignment` (Optional) Is this assigment permanently valid.
+* `group_id` (Required) The Object ID of the Azure AD group to which the principal will be assigned.
+* `principal_id` (Required) The Object ID of the principal to be assigned to the above group. Can be either a user or a group.
+* `assignment_type` (Required) The type of assignment to the group. Can be either `member` or `owner`.
+* `justification` (Optional) The justification for this assignment. May be required by the role policy.
+* `ticket_number` (Optional) The ticket number in the ticket system approving this assignment. May be required by the role policy.
+* `ticket_system` (Optional) The ticket system containing the ticket number approving this assignment. May be required by the role policy.
+* `start_date` (Optional) The date from which this assignment is valid, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z). If not provided, the assignment is immediately valid.
+* `expiration_date` (Optional) The date that this assignment expires, formatted as an RFC3339 date string (e.g. 2018-01-01T01:02:03Z).
+* `duration` (Optional) The duration that this assignment is valid for, formatted as an ISO8601 duration (e.g. P30D for 30 days, PT3H for three hours).
+* `permanent_assignment` (Optional) Is this assigment permanently valid.
 
 At least one of `expiration_date`, `duration`, or `permanent_assignment` must be supplied. The role policy may limit the maximum duration which can be supplied.
 
@@ -57,9 +57,18 @@ At least one of `expiration_date`, `duration`, or `permanent_assignment` must be
 
 In addition to all arguments above, the following attributes are exported:
 
-- `id` - (String) The ID of this request.
-- `status` - (String) The provisioning status of this request.
-- `target_schedule_id` - (String) The ID of this schedule created by this request.
+* `id` - (String) The ID of this request.
+* `status` - (String) The provisioning status of this request.
+* `target_schedule_id` - (String) The ID of this schedule created by this request.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 

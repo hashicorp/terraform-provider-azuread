@@ -31,3 +31,9 @@ The following attributes are exported:
 * `client_id` - The client ID (application ID) linked to the authenticated principal, or the application used for delegated authentication.
 * `object_id` - The object ID of the authenticated principal.
 * `tenant_id` - The tenant ID of the authenticated principal.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

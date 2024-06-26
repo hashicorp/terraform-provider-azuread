@@ -53,6 +53,15 @@ In addition to all arguments above, the following attributes are exported:
 * `service_principal_id` - The resource ID for the service principal.
 * `service_principal_object_id` - The object ID for the service principal.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 10 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Templated Applications can be imported using the template ID, the object ID of the application, and the object ID of the service principal, in the following format.
