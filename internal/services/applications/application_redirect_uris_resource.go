@@ -31,13 +31,13 @@ type ApplicationRedirectUrisModel struct {
 	RedirectUris  []string `tfschema:"redirect_uris"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationRedirectUrisResource{}
+
 type ApplicationRedirectUrisResource struct{}
 
 func (r ApplicationRedirectUrisResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateRedirectUrisID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationRedirectUrisResource{}
 
 func (r ApplicationRedirectUrisResource) ResourceType() string {
 	return "azuread_application_redirect_uris"

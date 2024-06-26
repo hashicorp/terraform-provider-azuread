@@ -30,13 +30,13 @@ type ApplicationFromTemplateModel struct {
 	ServicePrincipalObjectId string `tfschema:"service_principal_object_id"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationFromTemplateResource{}
+
 type ApplicationFromTemplateResource struct{}
 
 func (r ApplicationFromTemplateResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateFromTemplateID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationFromTemplateResource{}
 
 func (r ApplicationFromTemplateResource) ResourceType() string {
 	return "azuread_application_from_template"

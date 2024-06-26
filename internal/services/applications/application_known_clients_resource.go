@@ -24,13 +24,13 @@ type ApplicationKnownClientsModel struct {
 	KnownClientIds []string `tfschema:"known_client_ids"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationKnownClientsResource{}
+
 type ApplicationKnownClientsResource struct{}
 
 func (r ApplicationKnownClientsResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateKnownClientsID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationKnownClientsResource{}
 
 func (r ApplicationKnownClientsResource) ResourceType() string {
 	return "azuread_application_known_clients"

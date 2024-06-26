@@ -22,13 +22,13 @@ type ApplicationFallbackPublicClientModel struct {
 	Enabled       bool   `tfschema:"enabled"`
 }
 
+var _ sdk.Resource = ApplicationFallbackPublicClientResource{}
+
 type ApplicationFallbackPublicClientResource struct{}
 
 func (r ApplicationFallbackPublicClientResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateFallbackPublicClientID
 }
-
-var _ sdk.Resource = ApplicationFallbackPublicClientResource{}
 
 func (r ApplicationFallbackPublicClientResource) ResourceType() string {
 	return "azuread_application_fallback_public_client"

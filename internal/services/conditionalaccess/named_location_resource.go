@@ -45,7 +45,6 @@ func namedLocationResource() *pluginsdk.Resource {
 		}),
 
 		Schema: map[string]*pluginsdk.Schema{
-
 			"display_name": {
 				Type:             pluginsdk.TypeString,
 				Required:         true,

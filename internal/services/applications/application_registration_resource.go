@@ -42,13 +42,13 @@ type ApplicationRegistrationModel struct {
 	TermsOfServiceUrl                  string   `tfschema:"terms_of_service_url"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationRegistrationResource{}
+
 type ApplicationRegistrationResource struct{}
 
 func (r ApplicationRegistrationResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateApplicationID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationRegistrationResource{}
 
 func (r ApplicationRegistrationResource) ResourceType() string {
 	return "azuread_application_registration"

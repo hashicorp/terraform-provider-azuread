@@ -32,13 +32,13 @@ type ApplicationPermissionScopeModel struct {
 	Value                   string `tfschema:"value"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationPermissionScopeResource{}
+
 type ApplicationPermissionScopeResource struct{}
 
 func (r ApplicationPermissionScopeResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidatePermissionScopeID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationPermissionScopeResource{}
 
 func (r ApplicationPermissionScopeResource) ResourceType() string {
 	return "azuread_application_permission_scope"

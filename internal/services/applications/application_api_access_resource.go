@@ -27,13 +27,13 @@ type ApplicationApiAccessModel struct {
 	ScopeIds      []string `tfschema:"scope_ids"`
 }
 
+var _ sdk.ResourceWithUpdate = ApplicationApiAccessResource{}
+
 type ApplicationApiAccessResource struct{}
 
 func (r ApplicationApiAccessResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateApiAccessID
 }
-
-var _ sdk.ResourceWithUpdate = ApplicationApiAccessResource{}
 
 func (r ApplicationApiAccessResource) ResourceType() string {
 	return "azuread_application_api_access"
