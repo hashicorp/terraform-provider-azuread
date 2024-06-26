@@ -4,6 +4,12 @@ ENHANCEMENTS:
 
 * `azuread_application` - support for the `password` block [GH-1389]
 
+BUG FIXES:
+
+* `azuread_claims_mapping_policy` - set the correct timeouts for this resource [GH-1419]
+* `azuread_service_principal_claims_mapping_policy_assignment` - set the correct timeouts for this resource [GH-1419]
+* `azuread_synchronization_secret` - set the correct timeouts for this resource [GH-1419]
+
 ## 2.52.0 (June 13, 2024)
 
 BUG FIXES:
