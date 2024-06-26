@@ -36,6 +36,14 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Claims Mapping Policy Assignment.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Claims Mapping Policy can be imported using the `id`, in the form `service-principal-uuid/claimsMappingPolicy/claims-mapping-policy-uuid`, e.g:

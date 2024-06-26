@@ -174,6 +174,15 @@ In addition to all arguments above, the following attributes are exported:
 * `user_consent_display_name` - Display name for the delegated permission that appears in the end user consent experience.
 * `value` - The value that is used for the `scp` claim in OAuth 2.0 access tokens.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 10 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Service principals can be imported using their object ID, e.g.

@@ -174,3 +174,9 @@ The following attributes are exported:
 
 * `access_token_issuance_enabled` - Whether this web application can request an access token using OAuth 2.0 implicit flow.
 * `id_token_issuance_enabled` - Whether this web application can request an ID token using OAuth 2.0 implicit flow.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

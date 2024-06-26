@@ -72,6 +72,15 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Pre-authorized applications can be imported using the object ID of the authorizing application and the application ID of the application being authorized, e.g.

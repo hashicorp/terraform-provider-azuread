@@ -40,6 +40,15 @@ In addition to all arguments above, the following attributes are exported:
 * `attribute_type` - The type of the user flow attribute. Values include `builtIn`, `custom` or `required`.
 * `id` - An ID used to uniquely identify this user flow attribute.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 User flow attributes can be imported using the `id`, e.g.

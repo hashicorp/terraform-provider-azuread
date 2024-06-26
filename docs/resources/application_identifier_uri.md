@@ -64,6 +64,14 @@ The following arguments are supported:
 
 No additional attributes are exported.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Application Identifier URIs can be imported using the object ID of the application and the base64-encoded identifier URI, in the following format.

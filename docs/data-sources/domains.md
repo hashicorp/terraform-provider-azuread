@@ -55,3 +55,9 @@ In addition to all arguments above, the following attributes are exported:
 * `root` - Whether the domain is a verified root domain (not a subdomain).
 * `verified` - Whether the domain has completed domain ownership verification.
 * `supported_services` - A list of capabilities / services supported by the domain. Possible values include `Email`, `Sharepoint`, `EmailInternalRelayOnly`, `OfficeCommunicationsOnline`, `SharePointDefaultDomain`, `FullRedelegation`, `SharePointPublic`, `OrgIdAuthentication`, `Yammer` and `Intune`.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

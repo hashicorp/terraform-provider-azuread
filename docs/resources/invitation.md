@@ -71,13 +71,20 @@ The following arguments are supported:
 * `body` - (Optional) Customized message body you want to send if you don't want to send the default message. Cannot be specified with `language`.
 * `language` - (Optional) The language you want to send the default message in. The value specified must be in ISO 639 format. Defaults to `en-US`. Cannot be specified with `body`.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `redeem_url` - The URL the user can use to redeem their invitation.
 * `user_id` - Object ID of the invited user.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 

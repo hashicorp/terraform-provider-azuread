@@ -119,3 +119,9 @@ The following attributes are exported:
 `saml_single_sign_on` exports the following:
 
 * `relay_state` - The relative URI the service provider would redirect to after completion of the single sign-on flow.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

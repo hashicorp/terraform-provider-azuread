@@ -60,3 +60,9 @@ This data source does not have any arguments.
 The following attributes are exported:
 
 * `result` - A map of application names to application IDs.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

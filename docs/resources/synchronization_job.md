@@ -79,6 +79,15 @@ In addition to all arguments above, the following attributes are exported:
 * `interval` - The interval between synchronization iterations ISO8601. E.g. PT40M run every 40 minutes.
 * `state` - State of the job.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 15 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Synchronization jobs can be imported using the `id`, e.g.

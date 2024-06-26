@@ -42,3 +42,9 @@ The following attributes are exported:
 * `description` - The description of the directory role template.
 * `display_name` - The display name of the directory role template.
 * `object_id` - The object ID of the directory role template.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

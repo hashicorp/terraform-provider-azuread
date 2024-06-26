@@ -56,13 +56,11 @@ resource "azuread_service_principal_token_signing_certificate" "example" {
 
 The following arguments are supported:
 
-* `display_name` - (Optional) Specifies a friendly name for the certificate.
-  Must start with `CN=`. Changing this field forces a new resource to be created.
+* `display_name` - (Optional) Specifies a friendly name for the certificate. Must start with `CN=`. Changing this field forces a new resource to be created.
 
 ~> If not specified, it will default to `CN=Microsoft Azure Federated SSO Certificate`.
 
 * `end_date` - (Optional) The end date until which the token signing certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
-
 * `service_principal_id` - (Required) The object ID of the service principal for which this certificate should be created. Changing this field forces a new resource to be created.
 
 ## Attributes Reference
@@ -70,13 +68,17 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `key_id` - A UUID used to uniquely identify the verify certificate.
-
-* `thumbprint` - A SHA-1 generated thumbprint of the token signing certificate, which can be used to set the preferred signing certificate for a service principal.
-  
 * `start_date` - The start date from which the certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).
-  
-* `value` - The certificate data, which is PEM encoded but does not include the
-header `-----BEGIN CERTIFICATE-----\n` or the footer `\n-----END CERTIFICATE-----`.
+* `thumbprint` - A SHA-1 generated thumbprint of the token signing certificate, which can be used to set the preferred signing certificate for a service principal.
+* `value` - The certificate data, which is PEM encoded but does not include the header `-----BEGIN CERTIFICATE-----\n` or the footer `\n-----END CERTIFICATE-----`.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 

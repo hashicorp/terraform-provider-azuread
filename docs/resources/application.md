@@ -389,6 +389,14 @@ In addition to all arguments above, the following attributes are exported:
 * `key_id` - (Required) The unique key ID for the generated password.
 * `value` - (Required) The generated password for the application.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 10 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 10 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
 
 ## Import
 

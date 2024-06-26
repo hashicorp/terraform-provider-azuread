@@ -76,3 +76,9 @@ The following attributes are exported:
 
 * `enabled` - Whether rule processing is "On" (true) or "Paused" (false).
 * `rule` - The rule that determines membership of this group.
+
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.

@@ -85,6 +85,15 @@ In addition to all arguments above, the following attributes are exported:
 * `proxy_addresses` - List of email addresses for the user that direct to the same mailbox.
 * `user_type` - The user type in the directory. Possible values are `Guest` or `Member`.
 
+## Timeouts
+
+The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/language/resources/syntax#operation-timeouts) for certain actions:
+
+* `create` - (Defaults to 5 minutes) Used when creating the resource.
+* `read` - (Defaults to 5 minutes) Used when retrieving the resource.
+* `update` - (Defaults to 5 minutes) Used when updating the resource.
+* `delete` - (Defaults to 5 minutes) Used when deleting the resource.
+
 ## Import
 
 Users can be imported using their object ID, e.g.
