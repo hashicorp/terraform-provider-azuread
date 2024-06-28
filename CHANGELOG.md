@@ -1,8 +1,8 @@
-## 2.53.1 (Unreleased)
+## 2.53.1 (June 28, 2024)
 
 BUG FIXES:
 
-* `azuread_application` - export the `password` attribute only when it is set in configuration, to prevent marking existing resources as sensitive [GH-1422]
+* `azuread_application` - export the `password` attribute only when it is set in configuration, to prevent marking existing resources as sensitive ([#1422](https://github.com/hashicorp/terraform-provider-azuread/issues/1422))
 
 ## 2.53.0 (June 28, 2024)
 
