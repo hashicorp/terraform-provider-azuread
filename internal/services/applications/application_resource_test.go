@@ -651,6 +651,27 @@ func TestAccApplication_passwordUpdate(t *testing.T) {
 	})
 }
 
+func TestAccApplication_passwordNotSet(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: ApplicationPasswordResource{}.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		{
+			RefreshState: true,
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password.#").HasValue("0"),
+			),
+		},
+	})
+}
+
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true

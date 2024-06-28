@@ -1626,15 +1626,15 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		if len(currentPassword) == 1 {
 			keyIdToMatch = currentPassword[0].(map[string]interface{})["key_id"].(string)
 			existingValue = currentPassword[0].(map[string]interface{})["value"].(string)
-		}
 
-		for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
-			// Match against the known key ID, or select the first returned password if not present in state
-			if keyIdToMatch == "" || credential["key_id"] == keyIdToMatch {
-				// Retain the value from state, if known
-				credential["value"] = existingValue
-				passwordToSave = append(passwordToSave, credential)
-				break
+			for _, credential := range flattenApplicationPasswordCredentials(app.PasswordCredentials) {
+				// Match against the known key ID, or select the first returned password if not present in state
+				if credential["key_id"] == keyIdToMatch {
+					// Retain the value from state, if known
+					credential["value"] = existingValue
+					passwordToSave = append(passwordToSave, credential)
+					break
+				}
 			}
 		}
 
