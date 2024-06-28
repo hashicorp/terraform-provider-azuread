@@ -1,3 +1,9 @@
+## 2.53.1 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_application` - export the `password` attribute only when it is set in configuration, to prevent marking existing resources as sensitive [GH-1422]
+
 ## 2.53.0 (June 28, 2024)
 
 ENHANCEMENTS:
