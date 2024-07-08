@@ -155,27 +155,10 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 		credential.StartDateTime = &startDate
 	}
 
-	var endDate *time.Time
-	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
-		var err error
-		expiry, err := time.Parse(time.RFC3339, v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
-		}
-		endDate = &expiry
-	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
-		d, err := time.ParseDuration(v.(string))
-		if err != nil {
-			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
-		}
+	endDate, err := getEndDateFromResourceData(d)
 
-		if credential.StartDateTime == nil {
-			expiry := time.Now().Add(d)
-			endDate = &expiry
-		} else {
-			expiry := credential.StartDateTime.Add(d)
-			endDate = &expiry
-		}
+	if err != nil {
+		return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date: %+v", err), attr: "end_date"}
 	}
 
 	if endDate != nil {
@@ -233,11 +216,48 @@ func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.Password
 		data["start_date"] = v
 	}
 
-	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
-		data["end_date"] = v
-	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
-		data["end_date_relative"] = v
+	endDate, err := getEndDateFromResourceData(d)
+	if err != nil {
+		return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date: %+v", err), attr: "end_date"}
+	}
+
+	if endDate != nil {
+		data["end_date"] = endDate.Format(time.RFC3339)
 	}
 
 	return PasswordCredential(data)
+}
+
+func getEndDateFromResourceData(d *pluginsdk.ResourceData) (*time.Time, error) {
+	var startDate *time.Time
+	if v, ok := d.GetOk("start_date"); ok && v.(string) != "" {
+		start_date, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse the provided start date %q: %+v", v, err)
+		}
+		startDate = &start_date
+	}
+
+	var endDate *time.Time
+	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
+		expiry, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse the provided end date %q: %+v", v, err)
+		}
+		endDate = &expiry
+	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
+		d, err := time.ParseDuration(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse `end_date_relative` (%q) as a duration", v)
+		}
+
+		if startDate == nil {
+			expiry := time.Now().Add(d)
+			endDate = &expiry
+		} else {
+			expiry := startDate.Add(d)
+			endDate = &expiry
+		}
+	}
+	return endDate, nil
 }
