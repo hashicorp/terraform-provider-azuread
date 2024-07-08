@@ -245,16 +245,16 @@ func getEndDateFromResourceData(d *pluginsdk.ResourceData) (*time.Time, error) {
 		}
 		endDate = &expiry
 	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
-		d, err := time.ParseDuration(v.(string))
+		duration, err := time.ParseDuration(v.(string))
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 
 		if startDate == nil {
-			expiry := time.Now().Add(d)
+			expiry := time.Now().Add(duration)
 			endDate = &expiry
 		} else {
-			expiry := startDate.Add(d)
+			expiry := startDate.Add(duration)
 			endDate = &expiry
 		}
 	}
