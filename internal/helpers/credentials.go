@@ -156,9 +156,8 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 	}
 
 	endDate, err := getEndDateFromResourceData(d)
-
 	if err != nil {
-		return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date: %+v", err), attr: "end_date"}
+		return nil, err
 	}
 
 	if endDate != nil {
@@ -218,7 +217,7 @@ func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.Password
 
 	endDate, err := getEndDateFromResourceData(d)
 	if err != nil {
-		return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date: %+v", err), attr: "end_date"}
+		return nil, err
 	}
 
 	if endDate != nil {
@@ -233,7 +232,7 @@ func getEndDateFromResourceData(d *pluginsdk.ResourceData) (*time.Time, error) {
 	if v, ok := d.GetOk("start_date"); ok && v.(string) != "" {
 		start_date, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to parse the provided start date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
 		startDate = &start_date
 	}
@@ -242,13 +241,13 @@ func getEndDateFromResourceData(d *pluginsdk.ResourceData) (*time.Time, error) {
 	if v, ok := d.GetOk("end_date"); ok && v.(string) != "" {
 		expiry, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to parse the provided end date %q: %+v", v, err)
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 		endDate = &expiry
 	} else if v, ok := d.GetOk("end_date_relative"); ok && v.(string) != "" {
 		d, err := time.ParseDuration(v.(string))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to parse `end_date_relative` (%q) as a duration", v)
+			return nil, CredentialError{str: fmt.Sprintf("Unable to parse `end_date_relative` (%q) as a duration", v), attr: "end_date_relative"}
 		}
 
 		if startDate == nil {
