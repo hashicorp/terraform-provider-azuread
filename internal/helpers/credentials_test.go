@@ -32,15 +32,23 @@ lab0Ty/kRC13JgNhHtNFwYVwK6NDt46IRsjxqWQ6bVakrEROlfuoY8sxUjunj+hB
 0/0Ayfjh6JllWqW482dIIqMErl6s5DuK
 -----END CERTIFICATE-----`
 
-func getKeyCredentialSchema() map[string]*schema.Schema {
+func getSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"display_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"key_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"type": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
 		},
 		"value": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
 		},
 		"encoding": {
 			Type:     schema.TypeString,
@@ -62,16 +70,21 @@ func getKeyCredentialSchema() map[string]*schema.Schema {
 	}
 }
 
-func TestKeyCredentialForResource_withEndDate(t *testing.T) {
+func TestKeyCredentialForResource(t *testing.T) {
 
 	// Arrange
-	d := schema.TestResourceDataRaw(t, getKeyCredentialSchema(), nil)
-	d.Set("type", "AsymmetricX509Cert")
+	expectedType := "AsymmetricX509Cert"
+	expectedKeyId := "test_key_id"
+	expectStartDate := time.Now().Truncate(time.Second)
+	expectedEndDate := time.Now().Add(time.Hour * 984).Truncate(time.Second) // 41 days from now
+
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
+	d.Set("type", expectedType)
+	d.Set("key_id", expectedKeyId)
 	d.Set("value", applicationCertificatePem)
 	d.Set("encoding", "pem")
-
-	now := time.Now()
-	d.Set("end_date", now.Format(time.RFC3339))
+	d.Set("start_date", expectStartDate.Format(time.RFC3339))
+	d.Set("end_date", expectedEndDate.Format(time.RFC3339))
 
 	// Act
 	keyCredential, err := KeyCredentialForResource(d)
@@ -81,26 +94,37 @@ func TestKeyCredentialForResource_withEndDate(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	actual := keyCredential.EndDateTime
-	expected := now
+	if keyCredential.Type != expectedType {
+		t.Fatalf("expected type to be '%v', got %v", expectedType, keyCredential.Type)
+	}
 
-	// In order to compare the time.Time objects, we need to truncate the time.
-	// 3 minutes is a reasonable amount of time to allow for the time it takes to run the test.
-	trunc := 3 * time.Minute
-	if actual.Truncate(trunc).Equal(expected.Truncate(trunc)) == false {
-		t.Fatalf("expected end date to be %v, got %v", expected, actual)
+	if keyCredential.KeyId == nil || *keyCredential.KeyId != expectedKeyId {
+		t.Fatalf("expected key id to be '%v', got %v", expectedKeyId, keyCredential.KeyId)
+	}
+
+	if keyCredential.Key == nil {
+		t.Fatal("expected key to be set, got nil")
+	}
+
+	if keyCredential.StartDateTime == nil || keyCredential.StartDateTime.Equal(expectStartDate) == false {
+		t.Fatalf("expected start date to be %v, got %v", expectStartDate, keyCredential.StartDateTime)
+	}
+
+	if keyCredential.EndDateTime == nil || keyCredential.EndDateTime.Equal(expectedEndDate) == false {
+		t.Fatalf("expected end date to be %v, got %v", expectedEndDate, keyCredential.EndDateTime)
 	}
 }
 
 func TestKeyCredentialForResource_withEndDateRelative(t *testing.T) {
 
 	// Arrange
-	d := schema.TestResourceDataRaw(t, getKeyCredentialSchema(), nil)
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
 	d.Set("type", "AsymmetricX509Cert")
 	d.Set("value", applicationCertificatePem)
 	d.Set("encoding", "pem")
 
-	d.Set("end_date_relative", "240h") // 10 days
+	expectedEndDate := time.Now().Add(time.Hour * 240) // 10 days
+	d.Set("end_date_relative", "240h")                 // 10 days
 
 	// Act
 	keyCredential, err := KeyCredentialForResource(d)
@@ -110,28 +134,26 @@ func TestKeyCredentialForResource_withEndDateRelative(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	actual := keyCredential.EndDateTime
-	expected := time.Now().Add(time.Hour * 240) // 10 days
-
 	// In order to compare the time.Time objects, we need to truncate the time.
 	// 3 minutes is a reasonable amount of time to allow for the time it takes to run the test.
 	trunc := 3 * time.Minute
-	if actual.Truncate(trunc).Equal(expected.Truncate(trunc)) == false {
-		t.Fatalf("expected end date to be 10 days from now, got %v", actual)
+	if keyCredential.EndDateTime.Truncate(trunc).Equal(expectedEndDate.Truncate(trunc)) == false {
+		t.Fatalf("expected end date to be 10 days from now, got %v", keyCredential.EndDateTime)
 	}
 }
 
 func TestKeyCredentialForResource_withStartDateAndEndDateRelative(t *testing.T) {
 
 	// Arrange
-	d := schema.TestResourceDataRaw(t, getKeyCredentialSchema(), nil)
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
 	d.Set("type", "AsymmetricX509Cert")
 	d.Set("value", applicationCertificatePem)
 	d.Set("encoding", "pem")
 
 	start_date := time.Now().Add(time.Hour * 984)
-	d.Set("start_date", start_date.Format(time.RFC3339)) // 41 days
-	d.Set("end_date_relative", "240h")                   // 10 days
+	expectedEndDate := start_date.Add(time.Hour * 240).Truncate(time.Second) // 10 days
+	d.Set("start_date", start_date.Format(time.RFC3339))                     // 41 days
+	d.Set("end_date_relative", "240h")                                       // 10 days
 
 	// Act
 	keyCredential, err := KeyCredentialForResource(d)
@@ -141,14 +163,89 @@ func TestKeyCredentialForResource_withStartDateAndEndDateRelative(t *testing.T) 
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	actual := keyCredential.EndDateTime
-	expected := start_date.Add(time.Hour * 240) // 10 days
+	if keyCredential.EndDateTime.Equal(expectedEndDate) == false {
+		t.Fatalf("expected end date to be 10 days from %v, got %v", start_date, keyCredential.EndDateTime)
+	}
+}
+
+func TestPasswordCredentialForResource(t *testing.T) {
+
+	// Arrange
+	expectedDisplayName := "test_display_name"
+	expectStartDate := time.Now().Truncate(time.Second)
+	expectedEndDate := time.Now().Add(time.Hour * 984).Truncate(time.Second) // 41 days from now
+
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
+	d.Set("display_name", expectedDisplayName)
+	d.Set("start_date", expectStartDate.Format(time.RFC3339))
+	d.Set("end_date", expectedEndDate.Format(time.RFC3339))
+
+	// Act
+	passwordCredential, err := PasswordCredentialForResource(d)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if passwordCredential.DisplayName == nil || *passwordCredential.DisplayName != expectedDisplayName {
+		t.Fatalf("expected display name to be '%v', got %v", expectedDisplayName, passwordCredential.DisplayName)
+	}
+
+	if passwordCredential.StartDateTime == nil || passwordCredential.StartDateTime.Equal(expectStartDate) == false {
+		t.Fatalf("expected start date to be %v, got %v", expectStartDate, passwordCredential.StartDateTime)
+	}
+
+	if passwordCredential.EndDateTime == nil || passwordCredential.EndDateTime.Equal(expectedEndDate) == false {
+		t.Fatalf("expected end date to be %v, got %v", expectedEndDate, passwordCredential.EndDateTime)
+	}
+}
+
+func TestPasswordCredentialForResource_withEndDateRelative(t *testing.T) {
+
+	// Arrange
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
+	d.Set("display_name", "test_display_name")
+
+	expectedEndDate := time.Now().Add(time.Hour * 240) // 10 days
+	d.Set("end_date_relative", "240h")                 // 10 days
+
+	// Act
+	passwordCredential, err := PasswordCredentialForResource(d)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// In order to compare the time.Time objects, we need to truncate the time.
 	// 3 minutes is a reasonable amount of time to allow for the time it takes to run the test.
 	trunc := 3 * time.Minute
-	if actual.Truncate(trunc).Equal(expected.Truncate(trunc)) == false {
-		t.Fatalf("expected end date to be 10 days from %v, got %v", start_date, actual)
+	if passwordCredential.EndDateTime.Truncate(trunc).Equal(expectedEndDate.Truncate(trunc)) == false {
+		t.Fatalf("expected end date to be 10 days from now, got %v", passwordCredential.EndDateTime)
+	}
+}
+
+func TestPasswordCredentialForResource_withStartDateAndEndDateRelative(t *testing.T) {
+
+	// Arrange
+	d := schema.TestResourceDataRaw(t, getSchema(), nil)
+	d.Set("display_name", "test_display_name")
+
+	start_date := time.Now().Add(time.Hour * 984)
+	expectedEndDate := start_date.Add(time.Hour * 240).Truncate(time.Second) // 10 days
+	d.Set("start_date", start_date.Format(time.RFC3339))                     // 41 days
+	d.Set("end_date_relative", "240h")                                       // 10 days
+
+	// Act
+	passwordCredential, err := PasswordCredentialForResource(d)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
 	}
 
+	if passwordCredential.EndDateTime.Equal(expectedEndDate) == false {
+		t.Fatalf("expected end date to be 10 days from %v, got %v", start_date, passwordCredential.EndDateTime)
+	}
 }
