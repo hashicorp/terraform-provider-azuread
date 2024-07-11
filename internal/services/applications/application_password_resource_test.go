@@ -267,8 +267,9 @@ resource "azuread_application" "test" {
 
 resource "azuread_application_password" "test" {
   application_object_id = azuread_application.test.id
-  display_name = "acctest-application-password-%[2]s"
+  display_name          = "acctest-application-password-%[2]s"
 }
+
 
 `, data.RandomInteger, data.RandomString, r.applicationPassword(data.RandomString, renderPassword))
 }
