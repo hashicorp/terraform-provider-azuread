@@ -116,6 +116,50 @@ func TestAccApplicationPassword_deprecatedId2(t *testing.T) {
 	})
 }
 
+func TestAccApplicationPassword_with_ApplicationInlinePassword(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
+	application := "azuread_application.test"
+
+	r := ApplicationPasswordResource{}
+	aR := ApplicationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.passwordsCombined(data, true),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("application_object_id").Exists(),
+				check.That(data.ResourceName).Key("end_date").Exists(),
+				check.That(data.ResourceName).Key("key_id").Exists(),
+				check.That(data.ResourceName).Key("start_date").Exists(),
+				check.That(data.ResourceName).Key("value").Exists(),
+				/* azuread_application */
+				check.That(application).ExistsInAzure(aR),
+				check.That(application).Key("password.#").HasValue("1"),
+				check.That(application).Key("password.0.key_id").Exists(),
+				check.That(application).Key("password.0.value").Exists(),
+				check.That(application).Key("password.0.start_date").Exists(),
+				check.That(application).Key("password.0.end_date").Exists(),
+				check.That(application).Key("password.0.display_name").HasValue(fmt.Sprintf("acctest-appPassword-%s", data.RandomString)),
+			),
+		},
+		{
+			Config: r.passwordsCombined(data, false),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(application).ExistsInAzure(aR),
+			),
+		},
+		{
+			RefreshState: true,
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(application).ExistsInAzure(aR),
+				check.That(application).Key("password.#").HasValue("0"),
+			),
+		},
+	})
+}
+
 func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationsClientBeta
 	client.BaseClient.DisableRetries = true
@@ -206,4 +250,38 @@ resource "azuread_application_password" "test" {
   application_object_id = azuread_application.test.id
 }
 `, r.template(data))
+}
+
+func (r ApplicationPasswordResource) passwordsCombined(data acceptance.TestData, renderPassword bool) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-appPassword-%[1]d"
+  owners       = [data.azuread_client_config.current.object_id]
+
+  %[3]s
+}
+
+resource "azuread_application_password" "test" {
+  application_object_id = azuread_application.test.id
+  display_name = "acctest-application-password-%[2]s"
+}
+
+`, data.RandomInteger, data.RandomString, r.applicationPassword(data.RandomString, renderPassword))
+}
+
+func (r ApplicationPasswordResource) applicationPassword(randomString string, renderPassword bool) string {
+	if renderPassword {
+		return fmt.Sprintf(`
+  password {
+    display_name = "acctest-appPassword-%[1]s"
+  }
+`, randomString)
+	}
+
+	return ""
+
 }
