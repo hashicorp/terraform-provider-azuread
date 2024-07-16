@@ -138,6 +138,13 @@ func userResource() *pluginsdk.Resource {
 				Optional:    true,
 			},
 
+			"employee_hire_date": {
+				Description:  "The hire date of the user, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
 			"employee_id": {
 				Description:  "The employee identifier assigned to the user by the organisation",
 				Type:         pluginsdk.TypeString,
@@ -467,6 +474,11 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.OnPremisesImmutableId = pointer.To(v.(string))
 	}
 
+	if v, ok := d.GetOk("employee_hire_date"); ok {
+		employeeHireDate, _ := time.Parse(time.RFC3339, v.(string))
+		properties.EmployeeHireDate = &employeeHireDate
+	}
+
 	user, _, err := client.Create(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
@@ -575,6 +587,11 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.ShowInAddressList = pointer.To(d.Get("show_in_address_list").(bool))
 	}
 
+	if d.HasChange("employee_hire_date") {
+		employeeHireDate, _ := time.Parse(time.RFC3339, d.Get("employee_hire_date").(string))
+		properties.EmployeeHireDate = &employeeHireDate
+	}
+
 	if _, err := client.Update(ctx, properties); err != nil {
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
@@ -619,6 +636,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	tf.Set(d, "creation_type", user.CreationType)
 	tf.Set(d, "department", user.Department)
 	tf.Set(d, "display_name", user.DisplayName)
+	tf.Set(d, "employee_hire_date", user.EmployeeHireDate.Format(time.RFC3339))
 	tf.Set(d, "employee_id", user.EmployeeId)
 	tf.Set(d, "employee_type", user.EmployeeType)
 	tf.Set(d, "external_user_state", user.ExternalUserState)
