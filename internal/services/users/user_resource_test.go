@@ -228,6 +228,7 @@ resource "azuread_user" "test" {
   department                 = "acctestUser-%[1]d-Dept"
   display_name               = "acctestUser-%[1]d-DisplayName"
   division                   = "acctestUser-%[1]d-Division"
+  employee_hire_date         = "2018-01-01T01:02:03Z"
   employee_id                = "%[3]s%[3]s"
   employee_type              = "Contractor"
   fax_number                 = "(555) 555-5555"

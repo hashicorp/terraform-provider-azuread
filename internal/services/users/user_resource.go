@@ -147,6 +147,13 @@ func userResource() *pluginsdk.Resource {
 				Optional:    true,
 			},
 
+			"employee_hire_date": {
+				Description:  "The hire date of the user, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+
 			"employee_id": {
 				Description:  "The employee identifier assigned to the user by the organisation",
 				Type:         pluginsdk.TypeString,
@@ -475,6 +482,14 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.OnPremisesImmutableId = nullable.NoZero(v.(string))
 	}
 
+	if v, ok := d.GetOk("employee_hire_date"); ok {
+		_, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			tf.ErrorDiagF(err, "Unable to parse the provided employee_hire_date %q: %+v", v, err)
+		}
+		properties.EmployeeHireDate = nullable.NoZero(v.(string))
+	}
+
 	options := user.CreateUserOperationOptions{
 		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
 			if response.WasBadRequest(resp) && o != nil && o.Error != nil {
@@ -611,6 +626,14 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.ShowInAddressList = nullable.NoZero(d.Get("show_in_address_list").(bool))
 	}
 
+	if d.HasChange("employee_hire_date") {
+		_, err := time.Parse(time.RFC3339, d.Get("employee_hire_date").(string))
+		if err != nil {
+			tf.ErrorDiagF(err, "Unable to parse the provided employee_hire_date %q: %+v", d.Get("employee_hire_date"), err)
+		}
+		properties.EmployeeHireDate = nullable.NoZero(d.Get("employee_hire_date").(string))
+	}
+
 	if _, err = client.UpdateUser(ctx, *id, properties, user.DefaultUpdateUserOperationOptions()); err != nil {
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
@@ -707,6 +730,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 			"consentProvidedForMinor",
 			"country",
 			"department",
+			"employeeHireDate",
 			"employeeId",
 			"employeeOrgData",
 			"employeeType",
@@ -738,6 +762,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	tf.Set(d, "consent_provided_for_minor", uExtra.ConsentProvidedForMinor.GetOrZero())
 	tf.Set(d, "country", uExtra.Country.GetOrZero())
 	tf.Set(d, "department", uExtra.Department.GetOrZero())
+	tf.Set(d, "employee_hire_date", uExtra.EmployeeHireDate.GetOrZero())
 	tf.Set(d, "employee_id", uExtra.EmployeeId.GetOrZero())
 	tf.Set(d, "employee_type", uExtra.EmployeeType.GetOrZero())
 	tf.Set(d, "external_user_state", uExtra.ExternalUserState.GetOrZero())
