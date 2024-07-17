@@ -234,6 +234,20 @@ func AzureADProvider() *schema.Provider {
 				Description: "The path to a custom endpoint for Managed Identity - in most circumstances this should be detected automatically",
 			},
 
+			"use_pre_existing_token": {
+				Type:        pluginsdk.TypeBool,
+				Optional:    true,
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_USE_PRE_EXISTING_TOKEN", false),
+				Description: "Allow an existing bearer token to be used for Authentication",
+			},
+
+			"pre_existing_token": {
+				Type:        pluginsdk.TypeString,
+				Optional:    true,
+				DefaultFunc: pluginsdk.EnvDefaultFunc("ARM_PRE_EXISTING_TOKEN", ""),
+				Description: "The pre-existing bearer token to use for Authentication",
+			},
+
 			// Managed Tracking GUID for User-agent
 			"partner_id": {
 				Type:         pluginsdk.TypeString,
@@ -322,6 +336,11 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			enableOidc            = d.Get("use_oidc").(bool) || d.Get("use_aks_workload_identity").(bool)
 		)
 
+		var (
+			enablePreExistingToken = d.Get("use_pre_existing_token").(bool)
+			preExistingToken       = d.Get("pre_existing_token").(string)
+		)
+
 		authConfig := &auth.Credentials{
 			Environment: *env,
 			ClientID:    *clientId,
@@ -344,6 +363,8 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			EnableAuthenticatingUsingManagedIdentity:   enableManagedIdentity,
 			EnableAuthenticationUsingGitHubOIDC:        enableOidc,
 			EnableAuthenticationUsingOIDC:              enableOidc,
+			EnableAuthenticatingUsingPreExistingToken:  enablePreExistingToken,
+			PreExistingToken:                           preExistingToken,
 		}
 
 		// only one pid can be interpreted currently

@@ -52,4 +52,9 @@ type Credentials struct {
 	GitHubOIDCTokenRequestURL string
 	// GitHubOIDCTokenRequestToken specifies the bearer token for the request to GitHub's OIDC provider
 	GitHubOIDCTokenRequestToken string
+
+	// EnableAuthenticatingUsingPreExistingToken specifies whether to use a pre-existing token.
+	EnableAuthenticatingUsingPreExistingToken bool
+	// PreExistingToken specifies the pre-existing token to use.
+	PreExistingToken string
 }
