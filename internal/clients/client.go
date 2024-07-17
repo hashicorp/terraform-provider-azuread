@@ -28,7 +28,6 @@ import (
 	policies "github.com/hashicorp/terraform-provider-azuread/internal/services/policies/client"
 	serviceprincipals "github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/client"
 	synchronization "github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/client"
-	tenant "github.com/hashicorp/terraform-provider-azuread/internal/services/tenant/client"
 	userflows "github.com/hashicorp/terraform-provider-azuread/internal/services/userflows/client"
 	users "github.com/hashicorp/terraform-provider-azuread/internal/services/users/client"
 )
@@ -57,7 +56,6 @@ type Client struct {
 	Policies            *policies.Client
 	ServicePrincipals   *serviceprincipals.Client
 	Synchronization     *synchronization.Client
-	Tenant              *tenant.Client
 	UserFlows           *userflows.Client
 	Users               *users.Client
 }
@@ -77,7 +75,6 @@ func (client *Client) build(ctx context.Context, o *common.ClientOptions) error 
 	client.Policies = policies.NewClient(o)
 	client.ServicePrincipals = serviceprincipals.NewClient(o)
 	client.Synchronization = synchronization.NewClient(o)
-	client.Tenant = tenant.NewClient(o)
 	client.UserFlows = userflows.NewClient(o)
 	client.Users = users.NewClient(o)
 
