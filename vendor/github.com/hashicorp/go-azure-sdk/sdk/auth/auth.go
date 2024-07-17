@@ -35,6 +35,20 @@ import (
 // environment. If any authentication mechanism fails due to misconfiguration or some other error, the function
 // will return (nil, error) and later mechanisms will not be attempted.
 func NewAuthorizerFromCredentials(ctx context.Context, c Credentials, api environments.Api) (Authorizer, error) {
+	if c.EnableAuthenticatingUsingPreExistingToken {
+		opts := ExistingTokenAuthorizerOptions{
+			Api:   api,
+			Token: c.PreExistingToken,
+		}
+		a, err := NewExistingTokenAuthorizer(ctx, opts)
+		if err != nil {
+			return nil, fmt.Errorf("could not configure ExistingToken Authorizer: %s", err)
+		}
+		if a != nil {
+			return a, nil
+		}
+	}
+
 	if c.EnableAuthenticatingUsingClientCertificate && strings.TrimSpace(c.TenantID) != "" && strings.TrimSpace(c.ClientID) != "" && (len(c.ClientCertificateData) > 0 || strings.TrimSpace(c.ClientCertificatePath) != "") {
 		opts := ClientCertificateAuthorizerOptions{
 			Environment:  c.Environment,
@@ -134,20 +148,6 @@ func NewAuthorizerFromCredentials(ctx context.Context, c Credentials, api enviro
 		a, err := NewAzureCliAuthorizer(ctx, opts)
 		if err != nil {
 			return nil, fmt.Errorf("could not configure AzureCli Authorizer: %s", err)
-		}
-		if a != nil {
-			return a, nil
-		}
-	}
-
-	if c.EnableAuthenticatingUsingPreExistingToken {
-		opts := ExistingTokenAuthorizerOptions{
-			Api:   api,
-			Token: c.PreExistingToken,
-		}
-		a, err := NewExistingTokenAuthorizer(ctx, opts)
-		if err != nil {
-			return nil, fmt.Errorf("could not configure ExistingToken Authorizer: %s", err)
 		}
 		if a != nil {
 			return a, nil

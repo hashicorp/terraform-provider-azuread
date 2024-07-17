@@ -85,7 +85,7 @@ func (a *ExistingTokenAuthorizer) Token(ctx context.Context, _ *http.Request) (*
 		return nil, fmt.Errorf("could not get claims from token: %v", err)
 	}
 
-	if claims["exp"].(int64)-time.Now().UTC().Unix() < 60 {
+	if claims["exp"].(float64)-float64(time.Now().UTC().Unix()) < 60 {
 		return nil, fmt.Errorf("token has expired")
 	}
 
