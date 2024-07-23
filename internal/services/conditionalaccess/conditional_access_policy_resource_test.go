@@ -220,6 +220,16 @@ func TestAccConditionalAccessPolicy_sessionControls(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
+			Config: r.sessionControlsSignInFrequencyAlways(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+		{
 			Config: r.sessionControlsDisabled(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
@@ -676,6 +686,42 @@ resource "azuread_conditional_access_policy" "test" {
 
   session_controls {
     persistent_browser_mode = "always"
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) sessionControlsSignInFrequencyAlways(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+
+    applications {
+      included_applications = ["All"]
+    }
+
+    locations {
+      included_locations = ["All"]
+    }
+
+    platforms {
+      included_platforms = ["all"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  session_controls {
+    sign_in_frequency_interval = "everyTime"
   }
 }
 `, data.RandomInteger)
