@@ -380,7 +380,6 @@ In addition to all arguments above, the following attributes are exported:
 * `object_id` - The application's object ID.
 * `password` - A `password` block as documented below. Note that this block is a set rather than a list, and you will need to convert or iterate it to address its attributes (see the usage example above).
 * `publisher_domain` - The verified publisher domain for the application.
-* `publisher_domain` - The verified publisher domain for the application.
 
 ---
 
