@@ -199,6 +199,10 @@ resource "azuread_access_package_assignment_policy" "test" {
         object_id    = azuread_group.test.object_id
         subject_type = "groupMembers"
       }
+      alternative_approver{
+        subject_type = "requestorManager"
+        manager_level = 2
+      }
     }
   }
 
