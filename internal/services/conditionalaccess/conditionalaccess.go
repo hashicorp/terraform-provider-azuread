@@ -489,13 +489,8 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 	}
 
 	signInFrequency := msgraph.SignInFrequencySessionControl{}
-	frequencyValue := config["sign_in_frequency"].(int)
-	frequencyInterval := config["sign_in_frequency_interval"].(string)
-	if frequencyValue > 0 || frequencyInterval == msgraph.ConditionalAccessFrequencyIntervalEveryTime {
+	if frequencyValue := config["sign_in_frequency"].(int); frequencyValue > 0 {
 		signInFrequency.IsEnabled = pointer.To(true)
-	}
-
-	if frequencyValue > 0 {
 		signInFrequency.Type = pointer.To(config["sign_in_frequency_period"].(string))
 		signInFrequency.Value = pointer.To(int32(frequencyValue))
 
@@ -508,8 +503,8 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 		signInFrequency.AuthenticationType = pointer.To(authenticationType.(string))
 	}
 
-	if frequencyInterval != "" {
-		signInFrequency.FrequencyInterval = pointer.To(frequencyInterval)
+	if interval, ok := config["sign_in_frequency_interval"]; ok && interval.(string) != "" {
+		signInFrequency.FrequencyInterval = pointer.To(interval.(string))
 	}
 
 	// API returns 400 error if signInFrequency is set with all default/zero values
