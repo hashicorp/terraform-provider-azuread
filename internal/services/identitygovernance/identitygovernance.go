@@ -167,13 +167,16 @@ func expandUserSets(input []interface{}) *[]msgraph.UserSet {
 	userSets := make([]msgraph.UserSet, 0)
 	for _, v := range input {
 		v_map := v.(map[string]interface{})
-		oDataType, needId := userSetODataType(v_map["subject_type"].(string))
+		oDataType, needId, needManagerLevel := userSetODataType(v_map["subject_type"].(string))
 		userSet := msgraph.UserSet{
 			ODataType: oDataType,
 			IsBackup:  pointer.To(v_map["backup"].(bool)),
 		}
 		if needId {
 			userSet.ID = pointer.To(v_map["object_id"].(string))
+		}
+		if needManagerLevel {
+			userSet.ManagerLevel = pointer.To(v_map["manager_level"].(int32))
 		}
 
 		userSets = append(userSets, userSet)
@@ -201,9 +204,10 @@ func flattenUserSets(input *[]msgraph.UserSet) []interface{} {
 	return userSets
 }
 
-func userSetODataType(in string) (*string, bool) {
+func userSetODataType(in string) (*string, bool, bool) {
 	odataType := odata.TypeSingleUser
 	needId := true
+	needManagerLevel := false
 	switch in {
 	case odata.ShortTypeGroupMembers:
 		odataType = odata.TypeGroupMembers
@@ -212,6 +216,7 @@ func userSetODataType(in string) (*string, bool) {
 	case odata.ShortTypeRequestorManager:
 		odataType = odata.TypeRequestorManager
 		needId = false
+		needManagerLevel = true
 	case odata.ShortTypeInternalSponsors:
 		odataType = odata.TypeInternalSponsors
 		needId = false
@@ -220,7 +225,7 @@ func userSetODataType(in string) (*string, bool) {
 		needId = false
 	}
 
-	return &odataType, needId
+	return &odataType, needId, needManagerLevel
 }
 
 func userSetShortType(in string) *string {
