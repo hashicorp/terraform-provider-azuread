@@ -349,7 +349,8 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Policies.RoleManagementPolicyClient
+			clientPolicy := metadata.Client.Policies.RoleManagementPolicyClient
+			clientPolicyRule := metadata.Client.Policies.RoleManagementPolicyRuleClient
 
 			// Fetch the existing policy, as they already exist
 			id, err := getPolicyId(ctx, metadata, metadata.ResourceData.Get("group_id").(string), metadata.ResourceData.Get("role_id").(string))
@@ -358,7 +359,7 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 			}
 			metadata.SetID(id)
 
-			policy, _, err := client.Get(ctx, id.ID())
+			policy, _, err := clientPolicy.Get(ctx, id.ID())
 			if err != nil {
 				return fmt.Errorf("Could not retrieve existing policy, %+v", err)
 			}
@@ -371,9 +372,20 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("Could not build update request, %+v", err)
 			}
 
-			_, err = client.Update(ctx, *policyUpdate)
+			// In the case of the policy endpoint, it does not work as expected because the associated rules are changed.
+			// For this reason, the endpoints for rules are used.
+			if policyUpdate.Rules != nil {
+				for _, rule := range *policyUpdate.Rules {
+					_, err = clientPolicyRule.Update(ctx, *policyUpdate.ID, rule)
+					if err != nil {
+						return fmt.Errorf("Could not update existing policy rule request, %+v", err)
+					}
+				}
+			}
+			policyUpdate.Rules = nil
+			_, err = clientPolicy.Update(ctx, *policyUpdate)
 			if err != nil {
-				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+				return fmt.Errorf("Could not update existing policy request, %+v", err)
 			}
 
 			// Update the ID as it changes on modification
@@ -590,7 +602,8 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Policies.RoleManagementPolicyClient
+			clientPolicy := metadata.Client.Policies.RoleManagementPolicyClient
+			clientPolicyRule := metadata.Client.Policies.RoleManagementPolicyRuleClient
 
 			id, err := parse.ParseRoleManagementPolicyID(metadata.ResourceData.Id())
 			if err != nil {
@@ -598,7 +611,7 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 			}
 			metadata.SetID(id)
 
-			policy, _, err := client.Get(ctx, id.ID())
+			policy, _, err := clientPolicy.Get(ctx, id.ID())
 			if err != nil {
 				return fmt.Errorf("Could not retrieve existing policy, %+v", err)
 			}
@@ -611,9 +624,20 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("Could not build update request, %+v", err)
 			}
 
-			_, err = client.Update(ctx, *policyUpdate)
+			// In the case of the policy endpoint, it does not work as expected because the associated rules are changed.
+			// For this reason, the endpoints for rules are used.
+			if policyUpdate.Rules != nil {
+				for _, rule := range *policyUpdate.Rules {
+					_, err = clientPolicyRule.Update(ctx, *policyUpdate.ID, rule)
+					if err != nil {
+						return fmt.Errorf("Could not update existing policy rule request, %+v", err)
+					}
+				}
+			}
+			policyUpdate.Rules = nil
+			_, err = clientPolicy.Update(ctx, *policyUpdate)
 			if err != nil {
-				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+				return fmt.Errorf("Could not update existing policy request, %+v", err)
 			}
 
 			// Update the ID as it changes on modification
