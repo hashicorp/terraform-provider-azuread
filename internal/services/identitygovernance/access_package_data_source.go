@@ -5,15 +5,17 @@ package identitygovernance
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func accessPackageDataSource() *pluginsdk.Resource {
@@ -71,42 +73,43 @@ func accessPackageDataSource() *pluginsdk.Resource {
 func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
-	var err error
 	objectId := d.Get("object_id").(string)
 	displayName := d.Get("display_name").(string)
 	catalogId := d.Get("catalog_id").(string)
 
-	var accessPackage *msgraph.AccessPackage
+	var accessPackage *beta.AccessPackage
 	if objectId != "" {
-		accessPackage, _, err = client.Get(ctx, objectId, odata.Query{})
+		id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(objectId)
+		resp, err := client.GetEntitlementManagementAccessPackage(ctx, id, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
 		if err != nil {
-			return tf.ErrorDiagF(err, "Error retrieving access package with id %q", objectId)
+			return tf.ErrorDiagF(err, "Retrieving %s", id)
 		}
+
+		if resp.Model == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+		}
+		accessPackage = resp.Model
+
 	} else if displayName != "" && catalogId != "" {
-		query := odata.Query{
+		options := entitlementmanagementaccesspackage.ListEntitlementManagementAccessPackagesOperationOptions{
 			// Filter: fmt.Sprintf("displayName eq '%s' and catalogId eq '%s'", displayName, catalogId),
 			// Filter: fmt.Sprintf("catalogId eq '%s'", catalogId),
 		}
 
-		result, _, err := client.List(ctx, query)
+		resp, err := client.ListEntitlementManagementAccessPackages(ctx, options)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Error listing access package with filter %s", query.Filter)
+			return tf.ErrorDiagF(err, "Listing access packages")
 		}
-		if result == nil || len(*result) == 0 {
-			return tf.ErrorDiagF(fmt.Errorf("no access package matched with filter %s", query.Filter), "Access access package not found!")
+
+		if resp.Model == nil || len(*resp.Model) == 0 {
+			return tf.ErrorDiagF(errors.New("no matching results"), "Listing access packages")
 		}
 		// if len(*result) > 1 {
 		// return tf.ErrorDiagF(fmt.Errorf("Multiple access package matched with filter %s", query.Filter), "Multitple access package found!")
 		// }
 
-		for _, c := range *result {
-			name := c.DisplayName
-			catalog := c.CatalogId
-			if name == nil || catalog == nil {
-				continue
-			}
-
-			if *name == displayName && *c.CatalogId == catalogId {
+		for _, c := range *resp.Model {
+			if strings.EqualFold(c.DisplayName.GetOrZero(), displayName) && c.CatalogId.GetOrZero() == catalogId {
 				accessPackage = &c
 				break
 			}
@@ -114,16 +117,20 @@ func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta 
 	}
 
 	if accessPackage == nil {
-		return tf.ErrorDiagF(fmt.Errorf("no access package matched with specified parameters"), "Access access package not found!")
+		return tf.ErrorDiagF(fmt.Errorf("no access package matched with specified parameters"), "Access package not found")
+	}
+	if accessPackage.Id == nil {
+		return tf.ErrorDiagF(fmt.Errorf("model has nil ID"), "Access package not found")
 	}
 
-	d.SetId(*accessPackage.ID)
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(*accessPackage.Id)
+	d.SetId(id.AccessPackageId)
 
-	tf.Set(d, "object_id", accessPackage.ID)
-	tf.Set(d, "display_name", accessPackage.DisplayName)
-	tf.Set(d, "description", accessPackage.Description)
-	tf.Set(d, "hidden", accessPackage.IsHidden)
-	tf.Set(d, "catalog_id", accessPackage.CatalogId)
+	tf.Set(d, "object_id", id.AccessPackageId)
+	tf.Set(d, "catalog_id", accessPackage.CatalogId.GetOrZero())
+	tf.Set(d, "display_name", accessPackage.DisplayName.GetOrZero())
+	tf.Set(d, "description", accessPackage.Description.GetOrZero())
+	tf.Set(d, "hidden", accessPackage.IsHidden.GetOrZero())
 
 	return nil
 }

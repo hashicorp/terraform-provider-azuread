@@ -6,15 +6,16 @@ package conditionalaccess_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccesspolicy"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 type ConditionalAccessPolicyResource struct{}
@@ -332,23 +333,17 @@ func TestAccConditionalAccessPolicy_guestsOrExternalUsers(t *testing.T) {
 }
 
 func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
-	clients.ConditionalAccess.PoliciesClient.BaseClient.DisableRetries = true
-	defer func() {
-		clients.ConditionalAccess.PoliciesClient.BaseClient.DisableRetries = false
-	}()
+	id := stable.NewIdentityConditionalAccessPolicyID(state.ID)
 
-	var id *string
-
-	app, status, err := clients.ConditionalAccess.PoliciesClient.Get(ctx, state.ID, odata.Query{})
+	resp, err := clients.ConditionalAccess.PolicyClient.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Conditional Access Policy with ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Conditional Access Policy with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
-	id = app.ID
 
-	return pointer.To(id != nil && *id == state.ID), nil
+	return pointer.To(true), nil
 }
 
 func (ConditionalAccessPolicyResource) basic(data acceptance.TestData) string {
@@ -511,6 +506,8 @@ resource "azuread_conditional_access_policy" "test" {
     cloud_app_security_policy                 = "monitorOnly"
     persistent_browser_mode                   = "never"
     sign_in_frequency                         = 10
+    sign_in_frequency_authentication_type     = "primaryAndSecondaryAuthentication"
+    sign_in_frequency_interval                = "timeBased"
     sign_in_frequency_period                  = "hours"
   }
 }
@@ -549,10 +546,6 @@ resource "azuread_conditional_access_policy" "test" {
   grant_controls {
     operator          = "OR"
     built_in_controls = ["block"]
-  }
-
-  session_controls {
-    application_enforced_restrictions_enabled = false
   }
 }
 `, data.RandomInteger)

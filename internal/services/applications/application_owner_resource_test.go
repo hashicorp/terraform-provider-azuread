@@ -6,14 +6,15 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
@@ -76,24 +77,20 @@ func TestAccApplicationOwner_requiresImport(t *testing.T) {
 }
 
 func (r ApplicationOwnerResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationOwnerClient
 
 	id, err := parse.ParseOwnerID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
+	owner, err := applications.GetOwner(ctx, client, stable.NewApplicationIdOwnerID(id.ApplicationId, id.OwnerId))
 	if err != nil {
-		if status == http.StatusNotFound {
-			return pointer.To(false), nil
-		}
 		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
-	if result == nil {
-		return nil, fmt.Errorf("retrieving %s: result was nil", id)
+
+	if owner == nil {
+		return pointer.To(false), nil
 	}
 
 	return pointer.To(true), nil

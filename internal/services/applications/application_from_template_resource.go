@@ -6,18 +6,20 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationFromTemplateModel struct {
@@ -97,52 +99,49 @@ func (r ApplicationFromTemplateResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationTemplatesClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationTemplateClient
 
 			var model ApplicationFromTemplateModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			properties := msgraph.ApplicationTemplate{
-				DisplayName: pointer.To(model.DisplayName),
-				ID:          pointer.To(model.TemplateId),
+			templateId := stable.NewApplicationTemplateID(model.TemplateId)
+
+			request := applicationtemplate.InstantiateRequest{
+				DisplayName: nullable.Value(model.DisplayName),
 			}
 
-			result, _, err := client.Instantiate(ctx, properties)
+			resp, err := client.Instantiate(ctx, templateId, request)
 			if err != nil {
-				return fmt.Errorf("creating %s: %+v", parse.FromTemplateId{}, err)
+				return fmt.Errorf("creating %s: %+v", templateId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("creating %s: result was nil", parse.FromTemplateId{})
+			if resp.Model == nil {
+				return fmt.Errorf("creating %s: model was nil", templateId)
 			}
-			if result.Application == nil {
-				return fmt.Errorf("creating %s: application was nil", parse.FromTemplateId{})
+			if resp.Model.Application == nil {
+				return fmt.Errorf("creating %s: application was nil", templateId)
 			}
-			if result.ServicePrincipal == nil {
-				return fmt.Errorf("creating %s: servicePrincipal was nil", parse.FromTemplateId{})
+			if resp.Model.ServicePrincipal == nil {
+				return fmt.Errorf("creating %s: servicePrincipal was nil", templateId)
 			}
 
-			id := parse.NewFromTemplateID(model.TemplateId, *result.Application.ID(), *result.ServicePrincipal.ID())
+			id := parse.NewFromTemplateID(model.TemplateId, *resp.Model.Application.Id, *resp.Model.ServicePrincipal.Id)
 			metadata.SetID(id)
 
-			if err = helpers.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				client := metadata.Client.Applications.ApplicationsClient
-				client.BaseClient.DisableRetries = true
-				defer func() { client.BaseClient.DisableRetries = false }()
+			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+				client := metadata.Client.Applications.ApplicationClient
 
-				result, status, err := client.Get(ctx, *result.Application.ID(), odata.Query{})
+				resp, err := client.GetApplication(ctx, stable.NewApplicationID(id.ApplicationId), application.DefaultGetApplicationOperationOptions())
 				if err != nil {
-					if status == http.StatusNotFound {
+					if response.WasNotFound(resp.HttpResponse) {
 						return pointer.To(false), nil
 					}
 					return nil, err
 				}
-				return pointer.To(result != nil), nil
+				return pointer.To(resp.Model != nil), nil
 			}); err != nil {
-				return fmt.Errorf("creating %s: timed out waiting for replication of new application", parse.FromTemplateId{})
+				return fmt.Errorf("creating %s: timed out waiting for replication of new application", templateId)
 			}
 
 			return nil
@@ -154,33 +153,31 @@ func (r ApplicationFromTemplateResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseFromTemplateID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
+
 			// Check the application exists
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+			if resp.Model == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			servicePrincipalId := parse.NewServicePrincipalID(id.ServicePrincipalId)
-
 			state := ApplicationFromTemplateModel{
-				DisplayName:              pointer.From(result.DisplayName),
+				DisplayName:              resp.Model.DisplayName.GetOrZero(),
 				TemplateId:               id.TemplateId,
 				ApplicationId:            applicationId.ID(),
 				ApplicationObjectId:      applicationId.ApplicationId,
@@ -197,7 +194,7 @@ func (r ApplicationFromTemplateResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 			rd := metadata.ResourceData
 
 			id, err := parse.ParseFromTemplateID(metadata.ResourceData.Id())
@@ -210,15 +207,14 @@ func (r ApplicationFromTemplateResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+
 			if rd.HasChange("display_name") {
-				properties := msgraph.Application{
-					DirectoryObject: msgraph.DirectoryObject{
-						Id: &id.ApplicationId,
-					},
-					DisplayName: pointer.To(model.DisplayName),
+				properties := stable.Application{
+					DisplayName: nullable.Value(model.DisplayName),
 				}
 
-				if _, err = client.Update(ctx, properties); err != nil {
+				if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
 					return fmt.Errorf("updating %s: %+v", id, err)
 				}
 			}
@@ -232,9 +228,7 @@ func (r ApplicationFromTemplateResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseFromTemplateID(metadata.ResourceData.Id())
 			if err != nil {
@@ -244,8 +238,9 @@ func (r ApplicationFromTemplateResource) Delete() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			_, err = client.Delete(ctx, id.ApplicationId)
-			if err != nil {
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+
+			if _, err = client.DeleteApplication(ctx, applicationId, application.DefaultDeleteApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

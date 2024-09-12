@@ -13,11 +13,11 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/auth"
+	"github.com/hashicorp/go-azure-sdk/sdk/client/msgraph"
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 	"github.com/hashicorp/terraform-provider-azuread/version"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type contextKey string
@@ -30,31 +30,13 @@ type ClientOptions struct {
 	TerraformVersion string
 
 	Authorizer auth.Authorizer
-	ApiVersion msgraph.ApiVersion
 }
 
-func (o ClientOptions) ConfigureClient(c *msgraph.Client) {
-	// this should have already been checked during provider configuration
-	endpoint, _ := o.Environment.MicrosoftGraph.Endpoint()
-	c.Endpoint = *endpoint
-
-	c.Authorizer = o.Authorizer
-	c.UserAgent = o.userAgent(c.UserAgent)
-
-	if c.RequestMiddlewares == nil {
-		c.RequestMiddlewares = &[]msgraph.RequestMiddleware{}
-	}
-	if c.ResponseMiddlewares == nil {
-		c.ResponseMiddlewares = &[]msgraph.ResponseMiddleware{}
-	}
-	*c.RequestMiddlewares = append(*c.RequestMiddlewares, o.requestLogger)
-	*c.ResponseMiddlewares = append(*c.ResponseMiddlewares, o.responseLogger)
-
-	// Default retry limit, can be overridden from within a resource
-	c.RetryableClient.RetryMax = 9
-
-	// Explicitly set API version
-	c.ApiVersion = o.ApiVersion
+func (o ClientOptions) Configure(c *msgraph.Client) {
+	c.SetAuthorizer(o.Authorizer)
+	c.SetUserAgent(o.userAgent(c.UserAgent))
+	c.AppendRequestMiddleware(o.requestLogger)
+	c.AppendResponseMiddleware(o.responseLogger)
 }
 
 func (o ClientOptions) requestLogger(req *http.Request) (*http.Request, error) {

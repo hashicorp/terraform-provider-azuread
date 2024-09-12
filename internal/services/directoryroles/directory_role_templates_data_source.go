@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroletemplates/stable/directoryroletemplate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
@@ -65,12 +66,14 @@ func directoryRoleTemplatesDataSource() *pluginsdk.Resource {
 }
 
 func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplatesClient
+	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleTemplateClient
 
-	directoryRoleTemplates, _, err := client.List(ctx)
+	resp, err := client.ListDirectoryRoleTemplates(ctx, directoryroletemplate.DefaultListDirectoryRoleTemplatesOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve role templates")
 	}
+
+	directoryRoleTemplates := resp.Model
 	if directoryRoleTemplates == nil {
 		return tf.ErrorDiagF(errors.New("API error: nil directoryRoleTemplates were returned"), "Retrieving all directory role templates")
 	}
@@ -80,16 +83,17 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *pluginsdk.Reso
 
 	for _, r := range *directoryRoleTemplates {
 		// Skip the implicit "Users" role as it's non-assignable
-		if r.ID == nil || r.DisplayName == nil || *r.DisplayName == "User" {
+		if r.Id == nil || r.DisplayName == nil || r.DisplayName.GetOrZero() == "User" {
 			continue
 		}
 
-		objectIds = append(objectIds, *r.ID)
+		objectIds = append(objectIds, *r.Id)
 
 		template := make(map[string]interface{})
-		template["description"] = r.Description
-		template["display_name"] = r.DisplayName
-		template["object_id"] = r.ID
+		template["description"] = r.Description.GetOrZero()
+		template["display_name"] = r.DisplayName.GetOrZero()
+		template["object_id"] = r.Id
+
 		templateList = append(templateList, template)
 	}
 

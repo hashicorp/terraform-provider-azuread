@@ -5,28 +5,32 @@ package identitygovernance
 
 import (
 	"fmt"
-	"time"
-
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"strings"
 )
 
-func expandRequestorSettings(input []interface{}) *msgraph.RequestorSettings {
+func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, error) {
 	if len(input) == 0 {
-		return nil
+		return nil, nil
 	}
 	in := input[0].(map[string]interface{})
-	result := msgraph.RequestorSettings{
-		ScopeType:      in["scope_type"].(string),
-		AcceptRequests: pointer.To(in["requests_accepted"].(bool)),
+	result := beta.RequestorSettings{
+		ScopeType:      nullable.NoZero(in["scope_type"].(string)),
+		AcceptRequests: nullable.NoZero(in["requests_accepted"].(bool)),
 	}
-	result.AllowedRequestors = expandUserSets(in["requestor"].([]interface{}))
 
-	return &result
+	allowedRequestors, err := expandUserSets(in["requestor"].([]interface{}))
+	if err != nil {
+		return nil, fmt.Errorf("building `requestor`: %v", err)
+	}
+	result.AllowedRequestors = allowedRequestors
+
+	return &result, nil
 }
 
-func flattenRequestorSettings(input *msgraph.RequestorSettings) []map[string]interface{} {
+func flattenRequestorSettings(input *beta.RequestorSettings) []map[string]interface{} {
 	if input == nil {
 		return nil
 	}
@@ -38,161 +42,211 @@ func flattenRequestorSettings(input *msgraph.RequestorSettings) []map[string]int
 	}}
 }
 
-func expandApprovalSettings(input []interface{}) *msgraph.ApprovalSettings {
+func expandApprovalSettings(input []interface{}) (*beta.ApprovalSettings, error) {
 	if len(input) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	in := input[0].(map[string]interface{})
 
-	result := msgraph.ApprovalSettings{
-		IsApprovalRequired:               pointer.To(in["approval_required"].(bool)),
-		IsApprovalRequiredForExtension:   pointer.To(in["approval_required_for_extension"].(bool)),
-		IsRequestorJustificationRequired: pointer.To(in["requestor_justification_required"].(bool)),
+	result := beta.ApprovalSettings{
+		IsApprovalRequired:               nullable.Value(in["approval_required"].(bool)),
+		IsApprovalRequiredForExtension:   nullable.Value(in["approval_required_for_extension"].(bool)),
+		IsRequestorJustificationRequired: nullable.Value(in["requestor_justification_required"].(bool)),
 	}
 
-	approvalStages := make([]msgraph.ApprovalStage, 0)
-	for _, v := range in["approval_stage"].([]interface{}) {
-		v_map := v.(map[string]interface{})
+	approvalStages := make([]beta.ApprovalStage, 0)
+	for _, raw := range in["approval_stage"].([]interface{}) {
+		v := raw.(map[string]interface{})
 
-		stage := msgraph.ApprovalStage{
-			ApprovalStageTimeOutInDays:      pointer.To(int32(v_map["approval_timeout_in_days"].(int))),
-			EscalationTimeInMinutes:         pointer.To(int32(v_map["enable_alternative_approval_in_days"].(int) * 24 * 60)),
-			IsApproverJustificationRequired: pointer.To(v_map["approver_justification_required"].(bool)),
-			IsEscalationEnabled:             pointer.To(v_map["alternative_approval_enabled"].(bool)),
+		stage := beta.ApprovalStage{
+			ApprovalStageTimeOutInDays:      nullable.NoZero(int64(v["approval_timeout_in_days"].(int))),
+			EscalationTimeInMinutes:         nullable.NoZero(int64(v["enable_alternative_approval_in_days"].(int) * 24 * 60)),
+			IsApproverJustificationRequired: nullable.NoZero(v["approver_justification_required"].(bool)),
+			IsEscalationEnabled:             nullable.NoZero(v["alternative_approval_enabled"].(bool)),
 		}
 
-		stage.PrimaryApprovers = expandUserSets(v_map["primary_approver"].([]interface{}))
-		stage.EscalationApprovers = expandUserSets(v_map["alternative_approver"].([]interface{}))
+		primaryApprovers, err := expandUserSets(v["primary_approver"].([]interface{}))
+		if err != nil {
+			return nil, fmt.Errorf("building `primary_approver`: %v", err)
+		}
+		stage.PrimaryApprovers = primaryApprovers
+
+		escalationApprovers, err := expandUserSets(v["escalation_approver"].([]interface{}))
+		if err != nil {
+			return nil, fmt.Errorf("building `escalation_approver`: %v", err)
+		}
+		stage.EscalationApprovers = escalationApprovers
 
 		approvalStages = append(approvalStages, stage)
 	}
 
 	result.ApprovalStages = &approvalStages
 
-	return &result
+	return &result, nil
 }
 
-func flattenApprovalSettings(input *msgraph.ApprovalSettings) []map[string]interface{} {
+func flattenApprovalSettings(input *beta.ApprovalSettings) []map[string]interface{} {
 	if input == nil {
 		return nil
 	}
 
 	result := []map[string]interface{}{{
-		"approval_required":                input.IsApprovalRequired,
-		"approval_required_for_extension":  input.IsApprovalRequiredForExtension,
-		"requestor_justification_required": input.IsRequestorJustificationRequired,
+		"approval_required":                input.IsApprovalRequired.GetOrZero(),
+		"approval_required_for_extension":  input.IsApprovalRequiredForExtension.GetOrZero(),
+		"requestor_justification_required": input.IsRequestorJustificationRequired.GetOrZero(),
 	}}
 
 	approvalStages := make([]interface{}, 0)
 	for _, v := range *input.ApprovalStages {
+		var alternativeApprovalInDays int
+		if w := v.EscalationTimeInMinutes.GetOrZero(); w > 0 {
+			alternativeApprovalInDays = int(w) / 60 / 24
+		}
 		approvalStage := map[string]interface{}{
-			"approval_timeout_in_days":            v.ApprovalStageTimeOutInDays,
-			"approver_justification_required":     v.IsApproverJustificationRequired,
-			"alternative_approval_enabled":        v.IsEscalationEnabled,
-			"enable_alternative_approval_in_days": *v.EscalationTimeInMinutes / 60 / 24,
+			"approval_timeout_in_days":            int(v.ApprovalStageTimeOutInDays.GetOrZero()),
+			"approver_justification_required":     v.IsApproverJustificationRequired.GetOrZero(),
+			"alternative_approval_enabled":        v.IsEscalationEnabled.GetOrZero(),
+			"enable_alternative_approval_in_days": alternativeApprovalInDays,
 			"primary_approver":                    flattenUserSets(v.PrimaryApprovers),
 			"alternative_approver":                flattenUserSets(v.EscalationApprovers),
 		}
 
 		approvalStages = append(approvalStages, approvalStage)
 	}
+
 	result[0]["approval_stage"] = approvalStages
 
 	return result
 }
 
-func expandAssignmentReviewSettings(input []interface{}) (*msgraph.AssignmentReviewSettings, error) {
+func expandAssignmentReviewSettings(input []interface{}) (*beta.AssignmentReviewSettings, error) {
 	if len(input) == 0 {
 		return nil, nil
 	}
 
 	in := input[0].(map[string]interface{})
 
-	result := msgraph.AssignmentReviewSettings{
-		AccessReviewTimeoutBehavior:     in["access_review_timeout_behavior"].(string),
-		DurationInDays:                  pointer.To(int32(in["duration_in_days"].(int))),
-		IsAccessRecommendationEnabled:   pointer.To(in["access_recommendation_enabled"].(bool)),
-		IsApprovalJustificationRequired: pointer.To(in["approver_justification_required"].(bool)),
-		IsEnabled:                       pointer.To(in["enabled"].(bool)),
-		RecurrenceType:                  in["review_frequency"].(string),
-		ReviewerType:                    in["review_type"].(string),
+	result := beta.AssignmentReviewSettings{
+		AccessReviewTimeoutBehavior:     pointer.To(beta.AccessReviewTimeoutBehavior(in["access_review_timeout_behavior"].(string))),
+		DurationInDays:                  nullable.NoZero(int64(in["duration_in_days"].(int))),
+		IsAccessRecommendationEnabled:   nullable.Value(in["access_recommendation_enabled"].(bool)),
+		IsApprovalJustificationRequired: nullable.Value(in["approver_justification_required"].(bool)),
+		IsEnabled:                       nullable.Value(in["enabled"].(bool)),
+		RecurrenceType:                  nullable.NoZero(in["review_frequency"].(string)),
+		ReviewerType:                    nullable.NoZero(in["review_type"].(string)),
+		StartDateTime:                   nullable.NoZero(in["starting_on"].(string)),
 	}
 
-	startOnDate := in["starting_on"].(string)
-	if startOnDate != "" {
-		startOn, err := time.Parse(time.RFC3339, startOnDate)
-		if err != nil {
-			return nil, fmt.Errorf("converting starting date %q to a valid date: %q", in["starting_on"].(string), err)
-		}
-
-		result.StartDateTime = &startOn
+	reviewers, err := expandUserSets(in["reviewer"].([]interface{}))
+	if err != nil {
+		return nil, fmt.Errorf("building `reviewer`: %v", err)
 	}
+	result.Reviewers = reviewers
 
-	result.Reviewers = expandUserSets(in["reviewer"].([]interface{}))
-
-	if result.AccessReviewTimeoutBehavior == "" &&
-		(result.DurationInDays == nil || *result.DurationInDays == 0) &&
-		(result.IsAccessRecommendationEnabled == nil || !*result.IsAccessRecommendationEnabled) &&
-		(result.IsApprovalJustificationRequired == nil || !*result.IsApprovalJustificationRequired) &&
-		(result.IsEnabled == nil || !*result.IsEnabled) &&
-		result.RecurrenceType == "" &&
-		result.ReviewerType == "" &&
-		(result.Reviewers == nil || len(*result.Reviewers) == 0) {
+	if pointer.From(result.AccessReviewTimeoutBehavior) == "" && result.DurationInDays.GetOrZero() == 0 &&
+		!result.IsAccessRecommendationEnabled.GetOrZero() && !result.IsApprovalJustificationRequired.GetOrZero() &&
+		!result.IsEnabled.GetOrZero() && result.RecurrenceType.GetOrZero() == "" &&
+		result.ReviewerType.GetOrZero() == "" && len(pointer.From(result.Reviewers)) == 0 {
 		return nil, nil
 	}
 
 	return &result, nil
 }
 
-func flattenAssignmentReviewSettings(input *msgraph.AssignmentReviewSettings) []map[string]interface{} {
+func flattenAssignmentReviewSettings(input *beta.AssignmentReviewSettings) []map[string]interface{} {
 	if input == nil {
 		return nil
 	}
 
 	return []map[string]interface{}{{
-		"access_recommendation_enabled":   input.IsAccessRecommendationEnabled,
-		"access_review_timeout_behavior":  input.AccessReviewTimeoutBehavior,
-		"approver_justification_required": input.IsApprovalJustificationRequired,
-		"duration_in_days":                input.DurationInDays,
-		"enabled":                         input.IsEnabled,
-		"review_frequency":                input.RecurrenceType,
-		"review_type":                     input.ReviewerType,
+		"access_recommendation_enabled":   input.IsAccessRecommendationEnabled.GetOrZero(),
+		"access_review_timeout_behavior":  pointer.From(input.AccessReviewTimeoutBehavior),
+		"approver_justification_required": input.IsApprovalJustificationRequired.GetOrZero(),
+		"duration_in_days":                input.DurationInDays.GetOrZero(),
+		"enabled":                         input.IsEnabled.GetOrZero(),
+		"review_frequency":                input.RecurrenceType.GetOrZero(),
+		"review_type":                     input.ReviewerType.GetOrZero(),
 		"reviewer":                        flattenUserSets(input.Reviewers),
-		"starting_on":                     input.StartDateTime.Format(time.RFC3339),
+		"starting_on":                     input.StartDateTime.GetOrZero(),
 	}}
 }
 
-func expandUserSets(input []interface{}) *[]msgraph.UserSet {
-	userSets := make([]msgraph.UserSet, 0)
-	for _, v := range input {
-		v_map := v.(map[string]interface{})
-		oDataType, needId := userSetODataType(v_map["subject_type"].(string))
-		userSet := msgraph.UserSet{
-			ODataType: oDataType,
-			IsBackup:  pointer.To(v_map["backup"].(bool)),
-		}
-		if needId {
-			userSet.ID = pointer.To(v_map["object_id"].(string))
+func expandUserSets(input []interface{}) (*[]beta.UserSet, error) {
+	userSets := make([]beta.UserSet, 0)
+	for _, raw := range input {
+		v := raw.(map[string]interface{})
+
+		isBackup := v["backup"].(bool)
+		objectId := v["object_id"].(string)
+		odataType := v["subject_type"].(string)
+
+		var userSet beta.UserSet
+		switch odataType {
+		case "connectedOrganizationMembers":
+			userSet = beta.ConnectedOrganizationMembers{
+				Id:       nullable.Value(objectId),
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "externalSponsors":
+			userSet = beta.ExternalSponsors{
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "groupMembers":
+			userSet = beta.GroupMembers{
+				Id:       nullable.Value(objectId),
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "internalSponsors":
+			userSet = beta.InternalSponsors{
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "requestorManager":
+			userSet = beta.RequestorManager{
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "singleUser":
+			userSet = beta.SingleUser{
+				Id:       nullable.Value(objectId),
+				IsBackup: nullable.Value(isBackup),
+			}
+		case "targetUserSponsors":
+			userSet = beta.TargetUserSponsors{
+				IsBackup: nullable.Value(isBackup),
+			}
+		default:
+			return nil, fmt.Errorf("unknown `subject_type`: %s", odataType)
 		}
 
 		userSets = append(userSets, userSet)
 	}
 
-	return &userSets
+	return &userSets, nil
 }
 
-func flattenUserSets(input *[]msgraph.UserSet) []interface{} {
+func flattenUserSets(input *[]beta.UserSet) []map[string]interface{} {
 	if input == nil || len(*input) == 0 {
 		return nil
 	}
 
-	userSets := make([]interface{}, 0)
-	for _, v := range *input {
+	userSets := make([]map[string]interface{}, 0)
+	for _, raw := range *input {
+		v := raw.UserSet()
+		var id *string
+
+		switch impl := raw.(type) {
+		case beta.ConnectedOrganizationMembers:
+			id = pointer.To(impl.Id.GetOrZero())
+		case beta.GroupMembers:
+			id = pointer.To(impl.Id.GetOrZero())
+		case beta.SingleUser:
+			id = pointer.To(impl.Id.GetOrZero())
+		}
+
 		userSet := map[string]interface{}{
-			"subject_type": userSetShortType(*v.ODataType),
-			"backup":       v.IsBackup,
-			"object_id":    v.ID,
+			"subject_type": strings.TrimPrefix("#microsoft.graph.", pointer.From(v.ODataType)),
+			"backup":       v.IsBackup.GetOrZero(),
+			"object_id":    pointer.From(id),
 		}
 
 		userSets = append(userSets, userSet)
@@ -201,120 +255,81 @@ func flattenUserSets(input *[]msgraph.UserSet) []interface{} {
 	return userSets
 }
 
-func userSetODataType(in string) (*string, bool) {
-	odataType := odata.TypeSingleUser
-	needId := true
-	switch in {
-	case odata.ShortTypeGroupMembers:
-		odataType = odata.TypeGroupMembers
-	case odata.ShortTypeConnectedOrganizationMembers:
-		odataType = odata.TypeConnectedOrganizationMembers
-	case odata.ShortTypeRequestorManager:
-		odataType = odata.TypeRequestorManager
-		needId = false
-	case odata.ShortTypeInternalSponsors:
-		odataType = odata.TypeInternalSponsors
-		needId = false
-	case odata.ShortTypeExternalSponsors:
-		odataType = odata.TypeExternalSponsors
-		needId = false
-	}
+func expandAccessPackageQuestions(input []interface{}) *[]beta.AccessPackageQuestion {
+	result := make([]beta.AccessPackageQuestion, 0)
 
-	return &odataType, needId
-}
+	for _, raw := range input {
+		v := raw.(map[string]interface{})
 
-func userSetShortType(in string) *string {
-	shortType := odata.ShortTypeSingleUser
-	switch in {
-	case odata.TypeGroupMembers:
-		shortType = odata.ShortTypeGroupMembers
-	case odata.TypeConnectedOrganizationMembers:
-		shortType = odata.ShortTypeConnectedOrganizationMembers
-	case odata.TypeRequestorManager:
-		shortType = odata.ShortTypeRequestorManager
-	case odata.TypeInternalSponsors:
-		shortType = odata.ShortTypeInternalSponsors
-	case odata.TypeExternalSponsors:
-		shortType = odata.ShortTypeExternalSponsors
-	}
-
-	return &shortType
-}
-
-func expandAccessPackageQuestions(questions []interface{}) *[]msgraph.AccessPackageQuestion {
-	result := make([]msgraph.AccessPackageQuestion, 0)
-
-	for _, questionRaw := range questions {
-		question := questionRaw.(map[string]interface{})
-		textList := question["text"].([]interface{})
-
+		textList := v["text"].([]interface{})
 		if len(textList) == 0 {
 			continue
 		}
-
 		text := textList[0].(map[string]interface{})
 
-		resultQuestion := msgraph.AccessPackageQuestion{
-			ODataType:  pointer.To(odata.TypeAccessPackageTextInputQuestion),
-			IsRequired: pointer.To(question["required"].(bool)),
-			Sequence:   pointer.To(int32(question["sequence"].(int))),
-			Text:       expandAccessPackageLocalizedContent(text),
-		}
+		var question beta.AccessPackageQuestion
 
-		if choicesRaw := question["choice"].([]interface{}); len(choicesRaw) > 0 {
-			resultQuestion.ODataType = pointer.To(odata.TypeAccessPackageMultipleChoiceQuestion)
-			choices := make([]msgraph.AccessPackageMultipleChoiceQuestions, 0)
-
+		if choicesRaw := v["choice"].([]interface{}); len(choicesRaw) > 0 {
+			choices := make([]beta.AccessPackageAnswerChoice, 0)
 			for _, choiceRaw := range choicesRaw {
 				choice := choiceRaw.(map[string]interface{})
 				displayValue := make(map[string]interface{})
 				if v := choice["display_value"].([]interface{}); len(v) > 0 {
 					displayValue = v[0].(map[string]interface{})
 				}
-				choices = append(choices, msgraph.AccessPackageMultipleChoiceQuestions{
-					ActualValue:  pointer.To(choice["actual_value"].(string)),
-					DisplayValue: expandAccessPackageLocalizedContent(displayValue),
+
+				choices = append(choices, beta.AccessPackageAnswerChoice{
+					ActualValue:  nullable.NoZero(choice["actual_value"].(string)),
+					DisplayValue: pointer.From(expandAccessPackageLocalizedContent(displayValue)),
 				})
 			}
 
-			if len(choices) > 0 {
-				resultQuestion.Choices = pointer.To(choices)
+			question = beta.AccessPackageMultipleChoiceQuestion{
+				Choices:    &choices,
+				IsRequired: nullable.Value(v["required"].(bool)),
+				Sequence:   nullable.Value(int64(v["sequence"].(int))),
+				Text:       expandAccessPackageLocalizedContent(text),
+			}
+		} else {
+			question = beta.AccessPackageTextInputQuestion{
+				IsRequired: nullable.Value(v["required"].(bool)),
+				Sequence:   nullable.Value(int64(v["sequence"].(int))),
+				Text:       expandAccessPackageLocalizedContent(text),
 			}
 		}
 
-		result = append(result, resultQuestion)
+		result = append(result, question)
 	}
 
 	return &result
 }
 
-func flattenAccessPackageQuestions(input *[]msgraph.AccessPackageQuestion) []map[string]interface{} {
+func flattenAccessPackageQuestions(input *[]beta.AccessPackageQuestion) []map[string]interface{} {
 	if input == nil || len(*input) == 0 {
 		return nil
 	}
 
 	questions := make([]map[string]interface{}, 0)
 
-	for _, v := range *input {
+	for _, raw := range *input {
+		v := raw.AccessPackageQuestion()
+
 		question := map[string]interface{}{
-			"required": v.IsRequired,
-			"sequence": v.Sequence,
+			"required": v.IsRequired.GetOrZero(),
+			"sequence": int(v.Sequence.GetOrZero()),
 			"text":     flattenAccessPackageLocalizedContent(v.Text),
 		}
 
-		if c_array := v.Choices; c_array != nil && len(*c_array) > 0 {
+		switch impl := raw.(type) {
+		case beta.AccessPackageMultipleChoiceQuestion:
 			choices := make([]map[string]interface{}, 0)
-
-			for _, c := range *c_array {
-				choice := map[string]interface{}{
-					"actual_value":  c.ActualValue,
-					"display_value": flattenAccessPackageLocalizedContent(c.DisplayValue),
-				}
-
-				choices = append(choices, choice)
+			for _, choice := range pointer.From(impl.Choices) {
+				choices = append(choices, map[string]interface{}{
+					"actual_value":  choice.ActualValue.GetOrZero(),
+					"display_value": flattenAccessPackageLocalizedContent(&choice.DisplayValue),
+				})
 			}
-
-			question["choice"] = choices
+			question["choices"] = choices
 		}
 
 		questions = append(questions, question)
@@ -323,22 +338,23 @@ func flattenAccessPackageQuestions(input *[]msgraph.AccessPackageQuestion) []map
 	return questions
 }
 
-func expandAccessPackageLocalizedContent(input map[string]interface{}) *msgraph.AccessPackageLocalizedContent {
+func expandAccessPackageLocalizedContent(input map[string]interface{}) *beta.AccessPackageLocalizedContent {
 	if len(input) == 0 {
 		return nil
 	}
 
-	result := msgraph.AccessPackageLocalizedContent{
-		DefaultText: pointer.To(input["default_text"].(string)),
+	result := beta.AccessPackageLocalizedContent{
+		DefaultText: nullable.NoZero(input["default_text"].(string)),
 	}
 
-	texts := make([]msgraph.AccessPackageLocalizedTexts, 0)
+	texts := make([]beta.AccessPackageLocalizedText, 0)
 
-	for _, v := range input["localized_text"].([]interface{}) {
-		v_map := v.(map[string]interface{})
-		texts = append(texts, msgraph.AccessPackageLocalizedTexts{
-			LanguageCode: pointer.To(v_map["language_code"].(string)),
-			Text:         pointer.To(v_map["content"].(string)),
+	for _, raw := range input["localized_text"].([]interface{}) {
+		v := raw.(map[string]interface{})
+
+		texts = append(texts, beta.AccessPackageLocalizedText{
+			LanguageCode: nullable.NoZero(v["language_code"].(string)),
+			Text:         nullable.NoZero(v["content"].(string)),
 		})
 	}
 
@@ -347,17 +363,17 @@ func expandAccessPackageLocalizedContent(input map[string]interface{}) *msgraph.
 	return &result
 }
 
-func flattenAccessPackageLocalizedContent(input *msgraph.AccessPackageLocalizedContent) []map[string]interface{} {
+func flattenAccessPackageLocalizedContent(input *beta.AccessPackageLocalizedContent) []map[string]interface{} {
 	result := []map[string]interface{}{{
-		"default_text": input.DefaultText,
+		"default_text": input.DefaultText.GetOrZero(),
 	}}
 
 	texts := make([]map[string]interface{}, 0)
 
 	for _, v := range *input.LocalizedTexts {
 		text := map[string]interface{}{
-			"language_code": v.LanguageCode,
-			"content":       v.Text,
+			"language_code": v.LanguageCode.GetOrZero(),
+			"content":       v.Text.GetOrZero(),
 		}
 
 		texts = append(texts, text)

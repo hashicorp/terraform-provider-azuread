@@ -6,11 +6,12 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -124,16 +125,16 @@ func TestAccAccessPackageAssignmentPolicy_removeQuestion(t *testing.T) {
 
 func (AccessPackageAssignmentPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageAssignmentPolicyClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageAssignmentPolicyID(state.ID)
 
-	_, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, entitlementmanagementaccesspackageassignmentpolicy.DefaultGetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Access package assignment policy with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", id, err)
 	}
+
 	return pointer.To(true), nil
 }
 

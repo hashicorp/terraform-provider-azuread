@@ -5,19 +5,21 @@ package applications
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationRegistrationModel struct {
@@ -79,14 +81,8 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 			Type:        pluginsdk.TypeSet,
 			Optional:    true,
 			Elem: &pluginsdk.Schema{
-				Type: pluginsdk.TypeString,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.GroupMembershipClaimAll,
-					msgraph.GroupMembershipClaimNone,
-					msgraph.GroupMembershipClaimApplicationGroup,
-					msgraph.GroupMembershipClaimDirectoryRole,
-					msgraph.GroupMembershipClaimSecurityGroup,
-				}, false),
+				Type:         pluginsdk.TypeString,
+				ValidateFunc: validation.StringInSlice(possibleValuesForGroupMembershipClaim, false),
 			},
 		},
 
@@ -153,16 +149,11 @@ func (r ApplicationRegistrationResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"sign_in_audience": {
-			Description: "The Microsoft account types that are supported for the current application",
-			Type:        pluginsdk.TypeString,
-			Optional:    true,
-			Default:     msgraph.SignInAudienceAzureADMyOrg,
-			ValidateFunc: validation.StringInSlice([]string{
-				msgraph.SignInAudienceAzureADMyOrg,
-				msgraph.SignInAudienceAzureADMultipleOrgs,
-				msgraph.SignInAudienceAzureADandPersonalMicrosoftAccount,
-				msgraph.SignInAudiencePersonalMicrosoftAccount,
-			}, false),
+			Description:  "The Microsoft account types that are supported for the current application",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Default:      SignInAudienceAzureADMyOrg,
+			ValidateFunc: validation.StringInSlice(possibleValuesForSignInAudience, false),
 		},
 
 		"support_url": {
@@ -213,55 +204,54 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationRegistrationModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			properties := msgraph.Application{
-				DisplayName:                &model.DisplayName,
-				Description:                tf.NullableString(model.Description),
-				GroupMembershipClaims:      pointer.To(model.GroupMembershipClaims),
-				Notes:                      tf.NullableString(model.Notes),
-				ServiceManagementReference: tf.NullableString(model.ServiceManagementReference),
-				SignInAudience:             &model.SignInAudience,
+			properties := stable.Application{
+				DisplayName:                nullable.Value(model.DisplayName),
+				Description:                nullable.NoZero(model.Description),
+				GroupMembershipClaims:      expandApplicationGroupMembershipClaims(tf.FlattenStringSlice(model.GroupMembershipClaims)),
+				Notes:                      nullable.NoZero(model.Notes),
+				ServiceManagementReference: nullable.NoZero(model.ServiceManagementReference),
+				SignInAudience:             nullable.Value(model.SignInAudience),
 
-				Api: &msgraph.ApplicationApi{
-					RequestedAccessTokenVersion: pointer.To(int32(model.RequestedAccessTokenVersion)),
+				Api: &stable.ApiApplication{
+					RequestedAccessTokenVersion: nullable.Value(int64(model.RequestedAccessTokenVersion)),
 				},
 
-				Info: &msgraph.InformationalUrl{
-					MarketingUrl:        tf.NullableString(model.MarketingUrl),
-					PrivacyStatementUrl: tf.NullableString(model.PrivacyStatementUrl),
-					SupportUrl:          tf.NullableString(model.SupportUrl),
-					TermsOfServiceUrl:   tf.NullableString(model.TermsOfServiceUrl),
+				Info: &stable.InformationalUrl{
+					MarketingUrl:        nullable.NoZero(model.MarketingUrl),
+					PrivacyStatementUrl: nullable.NoZero(model.PrivacyStatementUrl),
+					SupportUrl:          nullable.NoZero(model.SupportUrl),
+					TermsOfServiceUrl:   nullable.NoZero(model.TermsOfServiceUrl),
 				},
 
-				Web: &msgraph.ApplicationWeb{
-					HomePageUrl: tf.NullableString(model.HomepageUrl),
-					LogoutUrl:   tf.NullableString(model.LogoutUrl),
+				Web: &stable.WebApplication{
+					HomePageUrl: nullable.NoZero(model.HomepageUrl),
+					LogoutUrl:   nullable.NoZero(model.LogoutUrl),
 
-					ImplicitGrantSettings: &msgraph.ImplicitGrantSettings{
-						EnableAccessTokenIssuance: pointer.To(model.ImplicitAccessTokenIssuanceEnabled),
-						EnableIdTokenIssuance:     pointer.To(model.ImplicitIdTokenIssuanceEnabled),
+					ImplicitGrantSettings: &stable.ImplicitGrantSettings{
+						EnableAccessTokenIssuance: nullable.Value(model.ImplicitAccessTokenIssuanceEnabled),
+						EnableIdTokenIssuance:     nullable.Value(model.ImplicitIdTokenIssuanceEnabled),
 					},
 				},
 			}
 
-			result, _, err := client.Create(ctx, properties)
+			resp, err := client.CreateApplication(ctx, properties)
 			if err != nil {
-				return fmt.Errorf("creating %s: %+v", parse.ApplicationId{}, err)
+				return fmt.Errorf("creating applicatoin: %+v", err)
 			}
 
-			if pointer.From(result.ID()) == "" {
-				return fmt.Errorf("creating %s: object ID returned for application is nil/empty", parse.ApplicationId{})
+			app := resp.Model
+			if app == nil || pointer.From(app.Id) == "" {
+				return errors.New("creating applicatoin: object ID returned for application is nil/empty")
 			}
 
-			id := parse.NewApplicationID(*result.ID())
+			id := stable.NewApplicationID(*app.Id)
 			metadata.SetID(id)
 
 			return nil
@@ -273,62 +263,61 @@ func (r ApplicationRegistrationResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
-			id, err := parse.ParseApplicationID(metadata.ResourceData.Id())
+			id, err := stable.ParseApplicationID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
 			}
 
 			state := ApplicationRegistrationModel{
-				ClientId:                   pointer.From(result.AppId),
-				Description:                string(pointer.From(result.Description)),
-				DisplayName:                pointer.From(result.DisplayName),
-				GroupMembershipClaims:      pointer.From(result.GroupMembershipClaims),
-				Notes:                      string(pointer.From(result.Notes)),
-				ObjectId:                   pointer.From(result.ID()),
-				PublisherDomain:            pointer.From(result.PublisherDomain),
-				ServiceManagementReference: string(pointer.From(result.ServiceManagementReference)),
-				SignInAudience:             pointer.From(result.SignInAudience),
+				ClientId:                   app.AppId.GetOrZero(),
+				Description:                app.Description.GetOrZero(),
+				DisplayName:                app.DisplayName.GetOrZero(),
+				GroupMembershipClaims:      tf.ExpandStringSlice(flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims)),
+				Notes:                      app.Notes.GetOrZero(),
+				ObjectId:                   pointer.From(app.Id),
+				PublisherDomain:            app.PublisherDomain.GetOrZero(),
+				ServiceManagementReference: app.ServiceManagementReference.GetOrZero(),
+				SignInAudience:             app.SignInAudience.GetOrZero(),
 			}
 
-			if api := result.Api; api != nil {
-				state.RequestedAccessTokenVersion = int(pointer.From(api.RequestedAccessTokenVersion))
+			if api := app.Api; api != nil {
+				state.RequestedAccessTokenVersion = int(api.RequestedAccessTokenVersion.GetOrZero())
 			}
 
-			if info := result.Info; info != nil {
-				state.MarketingUrl = string(pointer.From(info.MarketingUrl))
-				state.PrivacyStatementUrl = string(pointer.From(info.PrivacyStatementUrl))
-				state.SupportUrl = string(pointer.From(info.SupportUrl))
-				state.TermsOfServiceUrl = string(pointer.From(info.TermsOfServiceUrl))
+			if info := app.Info; info != nil {
+				state.MarketingUrl = info.MarketingUrl.GetOrZero()
+				state.PrivacyStatementUrl = info.PrivacyStatementUrl.GetOrZero()
+				state.SupportUrl = info.SupportUrl.GetOrZero()
+				state.TermsOfServiceUrl = info.TermsOfServiceUrl.GetOrZero()
 			}
 
-			if web := result.Web; web != nil {
-				state.HomepageUrl = string(pointer.From(web.HomePageUrl))
-				state.LogoutUrl = string(pointer.From(web.LogoutUrl))
+			if web := app.Web; web != nil {
+				state.HomepageUrl = web.HomePageUrl.GetOrZero()
+				state.LogoutUrl = web.LogoutUrl.GetOrZero()
 
 				if implicitGrant := web.ImplicitGrantSettings; implicitGrant != nil {
-					state.ImplicitAccessTokenIssuanceEnabled = pointer.From(implicitGrant.EnableAccessTokenIssuance)
-					state.ImplicitIdTokenIssuanceEnabled = pointer.From(implicitGrant.EnableIdTokenIssuance)
+					state.ImplicitAccessTokenIssuanceEnabled = implicitGrant.EnableAccessTokenIssuance.GetOrZero()
+					state.ImplicitIdTokenIssuanceEnabled = implicitGrant.EnableIdTokenIssuance.GetOrZero()
 				}
 			}
 
-			if result.DisabledByMicrosoftStatus != nil {
-				state.DisabledByMicrosoft = fmt.Sprintf("%v", result.DisabledByMicrosoftStatus)
+			if app.DisabledByMicrosoftStatus != nil {
+				state.DisabledByMicrosoft = fmt.Sprintf("%v", app.DisabledByMicrosoftStatus)
 			}
 
 			return metadata.Encode(&state)
@@ -340,10 +329,10 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 			rd := metadata.ResourceData
 
-			id, err := parse.ParseApplicationID(metadata.ResourceData.Id())
+			id, err := stable.ParseApplicationID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
@@ -356,88 +345,83 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
-			}
+			properties := stable.Application{}
 
 			if rd.HasChange("display_name") {
-				properties.DisplayName = &model.DisplayName
+				properties.DisplayName = nullable.Value(model.DisplayName)
 			}
 
 			if rd.HasChange("description") {
-				properties.Description = tf.NullableString(model.Description)
+				properties.Description = nullable.NoZero(model.Description)
 			}
 
 			if rd.HasChange("group_membership_claims") {
-				properties.GroupMembershipClaims = pointer.To(model.GroupMembershipClaims)
+				properties.GroupMembershipClaims = expandApplicationGroupMembershipClaims(tf.FlattenStringSlice(model.GroupMembershipClaims))
 			}
 
 			if rd.HasChange("notes") {
-				properties.Notes = tf.NullableString(model.Notes)
+				properties.Notes = nullable.NoZero(model.Notes)
 			}
 
 			if rd.HasChange("requested_access_token_version") {
-				properties.Api = &msgraph.ApplicationApi{
-					RequestedAccessTokenVersion: pointer.To(int32(model.RequestedAccessTokenVersion)),
+				properties.Api = &stable.ApiApplication{
+					RequestedAccessTokenVersion: nullable.Value(int64(model.RequestedAccessTokenVersion)),
 				}
 			}
 
 			if rd.HasChange("service_management_reference") {
-				properties.ServiceManagementReference = tf.NullableString(model.ServiceManagementReference)
+				properties.ServiceManagementReference = nullable.NoZero(model.ServiceManagementReference)
 			}
 
 			if rd.HasChange("sign_in_audience") {
-				properties.SignInAudience = &model.SignInAudience
+				properties.SignInAudience = nullable.Value(model.SignInAudience)
 			}
 
 			if rd.HasChange("marketing_url") || rd.HasChange("privacy_statement_url") || rd.HasChange("support_url") || rd.HasChange("terms_of_service_url") {
-				properties.Info = &msgraph.InformationalUrl{}
+				properties.Info = &stable.InformationalUrl{}
 
 				if rd.HasChange("marketing_url") {
-					properties.Info.MarketingUrl = tf.NullableString(model.MarketingUrl)
+					properties.Info.MarketingUrl = nullable.NoZero(model.MarketingUrl)
 				}
 
 				if rd.HasChange("privacy_statement_url") {
-					properties.Info.PrivacyStatementUrl = tf.NullableString(model.PrivacyStatementUrl)
+					properties.Info.PrivacyStatementUrl = nullable.NoZero(model.PrivacyStatementUrl)
 				}
 
 				if rd.HasChange("support_url") {
-					properties.Info.SupportUrl = tf.NullableString(model.SupportUrl)
+					properties.Info.SupportUrl = nullable.NoZero(model.SupportUrl)
 				}
 
 				if rd.HasChange("terms_of_service_url") {
-					properties.Info.TermsOfServiceUrl = tf.NullableString(model.TermsOfServiceUrl)
+					properties.Info.TermsOfServiceUrl = nullable.NoZero(model.TermsOfServiceUrl)
 				}
 			}
 
 			if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("homepage_url") || rd.HasChange("implicit_id_token_issuance_enabled") || rd.HasChange("logout_url") {
-				properties.Web = &msgraph.ApplicationWeb{}
+				properties.Web = &stable.WebApplication{}
 
 				if rd.HasChange("homepage_url") {
-					properties.Web.HomePageUrl = tf.NullableString(model.HomepageUrl)
+					properties.Web.HomePageUrl = nullable.NoZero(model.HomepageUrl)
 				}
 
 				if rd.HasChange("logout_url") {
-					properties.Web.LogoutUrl = tf.NullableString(model.LogoutUrl)
+					properties.Web.LogoutUrl = nullable.NoZero(model.LogoutUrl)
 				}
 
 				if rd.HasChange("implicit_access_token_issuance_enabled") || rd.HasChange("implicit_id_token_issuance_enabled") {
-					properties.Web.ImplicitGrantSettings = &msgraph.ImplicitGrantSettings{}
+					properties.Web.ImplicitGrantSettings = &stable.ImplicitGrantSettings{}
 
 					if rd.HasChange("implicit_access_token_issuance_enabled") {
-						properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = pointer.To(model.ImplicitAccessTokenIssuanceEnabled)
+						properties.Web.ImplicitGrantSettings.EnableAccessTokenIssuance = nullable.Value(model.ImplicitAccessTokenIssuanceEnabled)
 					}
 
 					if rd.HasChange("implicit_id_token_issuance_enabled") {
-						properties.Web.ImplicitGrantSettings.EnableIdTokenIssuance = pointer.To(model.ImplicitIdTokenIssuanceEnabled)
+						properties.Web.ImplicitGrantSettings.EnableIdTokenIssuance = nullable.Value(model.ImplicitIdTokenIssuanceEnabled)
 					}
 				}
 			}
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, *id, properties); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -450,25 +434,21 @@ func (r ApplicationRegistrationResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
-			id, err := parse.ParseApplicationID(metadata.ResourceData.Id())
+			id, err := stable.ParseApplicationID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			if _, err := client.Delete(ctx, id.ApplicationId); err != nil {
+			if _, err = client.DeleteApplication(ctx, *id, application.DefaultDeleteApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 
 			// Wait for application object to be deleted
-			if err = helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-				defer func() { client.BaseClient.DisableRetries = false }()
-				client.BaseClient.DisableRetries = true
-				if _, status, err := client.Get(ctx, id.ApplicationId, odata.Query{}); err != nil {
-					if status == http.StatusNotFound {
+			if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+				if resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions()); err != nil {
+					if response.WasNotFound(resp.HttpResponse) {
 						return pointer.To(false), nil
 					}
 					return nil, err

@@ -6,10 +6,12 @@ package synchronization_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationjob"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -64,21 +66,22 @@ func testAccSynchronizationJob_disabled(t *testing.T) {
 
 func (r SynchronizationJobResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.SynchronizationJobClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
 
-	id, err := parse.SynchronizationJobID(state.ID)
+	resourceId, err := parse.SynchronizationJobID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing synchronization job ID: %v", err)
 	}
 
-	_, status, err := client.Get(ctx, id.JobId, id.ServicePrincipalId)
+	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
+
+	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Synchronization job %q was not found for service principal %q", id.JobId, id.ServicePrincipalId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("Retrieving synchronization job with object ID %q", id.JobId)
+		return nil, fmt.Errorf("retrieving %s", id)
 	}
+
 	return pointer.To(true), nil
 }
 

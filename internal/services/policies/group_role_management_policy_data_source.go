@@ -8,21 +8,22 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicyassignment"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 var _ sdk.DataSource = GroupRoleManagementPolicyDataSource{}
 
 type GroupRoleManagementPolicyDataSourceModel struct {
-	Description string                                   `tfschema:"description"`
-	DisplayName string                                   `tfschema:"display_name"`
-	GroupId     string                                   `tfschema:"group_id"`
-	RoleId      msgraph.UnifiedRoleManagementPolicyScope `tfschema:"role_id"`
+	Description string `tfschema:"description"`
+	DisplayName string `tfschema:"display_name"`
+	GroupId     string `tfschema:"group_id"`
+	RoleId      string `tfschema:"role_id"`
 }
 
 type GroupRoleManagementPolicyDataSource struct{}
@@ -30,23 +31,17 @@ type GroupRoleManagementPolicyDataSource struct{}
 func (r GroupRoleManagementPolicyDataSource) Arguments() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"group_id": {
-			Description:      "ID of the group to which this policy is assigned",
-			Type:             pluginsdk.TypeString,
-			Required:         true,
-			ForceNew:         true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+			Description:  "ID of the group to which this policy is assigned",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.IsUUID,
 		},
 
 		"role_id": {
-			Description: "The ID of the role of this policy to the group",
-			Type:        pluginsdk.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-				msgraph.PrivilegedAccessGroupRelationshipMember,
-				msgraph.PrivilegedAccessGroupRelationshipOwner,
-				msgraph.PrivilegedAccessGroupRelationshipUnknown,
-			}, false)),
+			Description:  "The ID of the role of this policy to the group",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringInSlice(possibleValuesForRoleDefinitionId, false),
 		},
 	}
 }
@@ -74,50 +69,53 @@ func (r GroupRoleManagementPolicyDataSource) ModelObject() interface{} {
 func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			clientPolicy := metadata.Client.Policies.RoleManagementPolicyClient
-			clientAssignment := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
+			policyClient := metadata.Client.Policies.RoleManagementPolicyClient
+			assignmentClient := metadata.Client.Policies.RoleManagementPolicyAssignmentClient
 
-			clientPolicy.BaseClient.DisableRetries = true
-			clientAssignment.BaseClient.DisableRetries = true
+			var model GroupRoleManagementPolicyDataSourceModel
+			if err := metadata.Decode(&model); err != nil {
+				return fmt.Errorf("decoding: %+v", err)
+			}
 
-			defer func() {
-				clientPolicy.BaseClient.DisableRetries = false
-				clientAssignment.BaseClient.DisableRetries = false
-			}()
-
-			groupID := metadata.ResourceData.Get("group_id").(string)
-			roleID := metadata.ResourceData.Get("role_id").(string)
-			id, err := getPolicyId(ctx, metadata, groupID, roleID)
+			policyId, err := getPolicyId(ctx, metadata, model.GroupId, model.RoleId)
 			if err != nil {
-				return fmt.Errorf("determining Policy ID: %+v", err)
+				return fmt.Errorf("determining Policy ID: %v", err)
 			}
 
-			result, _, err := clientPolicy.Get(ctx, id.ID())
+			id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
+
+			policyResp, err := policyClient.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
 			if err != nil {
-				return fmt.Errorf("retrieving %s: %+v", id, err)
-			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: API error, result was nil", id)
+				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
 
-			assignments, _, err := clientAssignment.List(ctx, odata.Query{
-				Filter: fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", id.ScopeId, id.ID()),
-			})
-			if err != nil {
-				return fmt.Errorf("retrieving %s: %+v", id, err)
+			policy := policyResp.Model
+			if policy == nil {
+				return fmt.Errorf("retrieving %s: API error, model was nil", id)
 			}
-			if assignments == nil {
+
+			options := rolemanagementpolicyassignment.ListRoleManagementPolicyAssignmentsOperationOptions{
+				Filter: pointer.To(fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", policyId.ScopeId, id.UnifiedRoleManagementPolicyId)),
+			}
+			resp, err := assignmentClient.ListRoleManagementPolicyAssignments(ctx, options)
+			if err != nil {
+				return fmt.Errorf("retrieving %s: %v", id, err)
+			}
+
+			if resp.Model == nil {
 				return fmt.Errorf("retrieving %s: expected 1 assignment, got nil result", id)
 			}
-			if len(*assignments) != 1 {
-				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*assignments))
+			if len(*resp.Model) != 1 {
+				return fmt.Errorf("retrieving %s: expected 1 assignment, got %d", id, len(*resp.Model))
 			}
 
+			assignment := (*resp.Model)[0]
+
 			state := GroupRoleManagementPolicyDataSourceModel{
-				Description: pointer.From(result.Description),
-				DisplayName: pointer.From(result.DisplayName),
-				GroupId:     pointer.From(result.ScopeId),
-				RoleId:      pointer.From((*assignments)[0].RoleDefinitionId),
+				Description: pointer.From(policy.Description),
+				DisplayName: pointer.From(policy.DisplayName),
+				GroupId:     policy.ScopeId,
+				RoleId:      assignment.RoleDefinitionId.GetOrZero(),
 			}
 
 			metadata.ResourceData.SetId(id.ID())

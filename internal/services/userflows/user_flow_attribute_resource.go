@@ -8,18 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/userflowattribute"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func userFlowAttributeResource() *pluginsdk.Resource {
@@ -45,17 +46,11 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 			},
 
 			"data_type": {
-				Description: "The data type of the user flow attribute",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.UserflowAttributeDataTypeBoolean,
-					msgraph.UserflowAttributeDataTypeDateTime,
-					msgraph.UserflowAttributeDataTypeInt64,
-					msgraph.UserflowAttributeDataTypeString,
-					msgraph.UserflowAttributeDataTypeStringCollection,
-				}, false),
+				Description:  "The data type of the user flow attribute",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(stable.PossibleValuesForIdentityUserFlowAttributeDataType(), false),
 			},
 
 			"description": {
@@ -74,51 +69,59 @@ func userFlowAttributeResource() *pluginsdk.Resource {
 }
 
 func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
+	client := meta.(*clients.Client).UserFlows.UserFlowAttributeClient
 
 	displayName := d.Get("display_name").(string)
 
-	query := odata.Query{Filter: fmt.Sprintf("displayName eq '%s'", displayName)}
-	if result, _, err := client.List(ctx, query); err == nil {
-		for _, r := range *result {
-			if r.ID != nil && r.DisplayName != nil && strings.EqualFold(*r.DisplayName, displayName) {
-				return tf.ImportAsExistsDiag("azuread_user_flow_attribute", *r.ID)
+	options := userflowattribute.ListUserFlowAttributesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+	}
+	if resp, err := client.ListUserFlowAttributes(ctx, options); err != nil {
+		return tf.ErrorDiagF(err, "Checking for existing user flow attribute")
+	} else if resp.Model != nil {
+		for _, r := range *resp.Model {
+			model := r.IdentityUserFlowAttribute()
+			if model.Id != nil && strings.EqualFold(model.DisplayName.GetOrZero(), displayName) {
+				return tf.ImportAsExistsDiag("azuread_user_flow_attribute", *model.Id)
 			}
 		}
-	} else {
-		return tf.ErrorDiagF(err, "Checking for existing user flow attribute: %q", displayName)
 	}
 
-	attr := msgraph.UserFlowAttribute{
-		DataType:    pointer.To(d.Get("data_type").(string)),
-		Description: pointer.To(d.Get("description").(string)),
-		DisplayName: pointer.To(displayName),
+	attr := stable.BaseIdentityUserFlowAttributeImpl{
+		DataType:    pointer.To(stable.IdentityUserFlowAttributeDataType(d.Get("data_type").(string))),
+		Description: nullable.NoZero(d.Get("description").(string)),
+		DisplayName: nullable.NoZero(displayName),
 	}
 
-	userFlowAttr, _, err := client.Create(ctx, attr)
+	resp, err := client.CreateUserFlowAttribute(ctx, attr)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating user flow attribute %q", displayName)
+		return tf.ErrorDiagF(err, "Creating user flow attribute")
 	}
 
-	if userFlowAttr.ID == nil || *userFlowAttr.ID == "" {
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Creating user flow attribute")
+	}
+
+	userFlowAttr := resp.Model.IdentityUserFlowAttribute()
+
+	if userFlowAttr.Id == nil || *userFlowAttr.Id == "" {
 		return tf.ErrorDiagF(errors.New("API returned user flow attribute with nil ID"), "Bad API Response")
 	}
 
-	d.SetId(*userFlowAttr.ID)
+	d.SetId(*userFlowAttr.Id)
 
 	return userFlowAttributeResourceRead(ctx, d, meta)
 }
 
 func userFlowAttributeResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
-	id := d.Id()
+	client := meta.(*clients.Client).UserFlows.UserFlowAttributeClient
+	id := stable.NewIdentityUserFlowAttributeID(d.Id())
 
-	attr := msgraph.UserFlowAttribute{
-		ID:          pointer.To(id),
-		Description: pointer.To(d.Get("description").(string)),
+	attr := stable.BaseIdentityUserFlowAttributeImpl{
+		Description: nullable.NoZero(d.Get("description").(string)),
 	}
 
-	if _, err := client.Update(ctx, attr); err != nil {
+	if _, err := client.UpdateUserFlowAttribute(ctx, id, attr); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user flow attribute with ID: %q", id)
 	}
 
@@ -126,57 +129,51 @@ func userFlowAttributeResourceUpdate(ctx context.Context, d *pluginsdk.ResourceD
 }
 
 func userFlowAttributeResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
-	id := d.Id()
+	client := meta.(*clients.Client).UserFlows.UserFlowAttributeClient
+	id := stable.NewIdentityUserFlowAttributeID(d.Id())
 
-	userFlowAttr, status, err := client.Get(ctx, id, odata.Query{})
+	resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] User flow attribute with ID %q was not found - removing from state!", id)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving user flow attribute with ID: %q", id)
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
-	tf.Set(d, "attribute_type", userFlowAttr.UserFlowAttributeType)
-	tf.Set(d, "data_type", userFlowAttr.DataType)
-	tf.Set(d, "description", userFlowAttr.Description)
-	tf.Set(d, "display_name", userFlowAttr.DisplayName)
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Creating user flow attribute")
+	}
+
+	userFlowAttr := resp.Model.IdentityUserFlowAttribute()
+
+	tf.Set(d, "attribute_type", pointer.From(userFlowAttr.UserFlowAttributeType))
+	tf.Set(d, "data_type", pointer.From(userFlowAttr.DataType))
+	tf.Set(d, "description", userFlowAttr.Description.GetOrZero())
+	tf.Set(d, "display_name", userFlowAttr.DisplayName.GetOrZero())
 
 	return nil
 }
 
 func userFlowAttributeResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).UserFlows.UserFlowAttributesClient
-	id := d.Id()
+	client := meta.(*clients.Client).UserFlows.UserFlowAttributeClient
+	id := stable.NewIdentityUserFlowAttributeID(d.Id())
 
-	_, status, err := client.Get(ctx, id, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("user flow attribute was not found"), "id", "Retrieving user with ID %q", id)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving user flow attribute with ID %q", id)
+	if _, err := client.DeleteUserFlowAttribute(ctx, id, userflowattribute.DefaultDeleteUserFlowAttributeOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
-	status, err = client.Delete(ctx, id)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting user flow attribute with ID %q, got status %d", id, status)
-	}
-
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.Get(ctx, id, odata.Query{}); err != nil {
-			if status == http.StatusNotFound {
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions()); err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
 			return nil, err
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of user flow attribute with ID %q", id)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 	}
 
 	return nil

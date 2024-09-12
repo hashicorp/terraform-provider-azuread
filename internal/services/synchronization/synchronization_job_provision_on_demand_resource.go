@@ -6,17 +6,18 @@ package synchronization
 import (
 	"context"
 	"errors"
-	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationjob"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func synchronizationJobProvisionOnDemandResource() *schema.Resource {
@@ -102,43 +103,53 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 
 func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
-	spClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	objectId := d.Get("service_principal_id").(string)
-	jobId := d.Get("synchronization_job_id").(string)
+	servicePrincipalClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
-	tf.LockByName(servicePrincipalResourceName, objectId)
-	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
+	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
 
-	servicePrincipal, status, err := spClient.Get(ctx, objectId, odata.Query{})
+	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+
+	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", objectId)
+		if response.WasNotFound(servicePrincipalResp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
 		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
-	}
-	if servicePrincipal == nil || servicePrincipal.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
 
-	job, status, err := client.Get(ctx, jobId, objectId)
+	servicePrincipal := servicePrincipalResp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", servicePrincipalId)
+	}
+	if servicePrincipal.Id == nil {
+		return tf.ErrorDiagF(errors.New("model has nil ID"), "Retrieving %s", servicePrincipalId)
+	}
+
+	jobId := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, d.Get("synchronization_job_id").(string))
+
+	jobResp, err := client.GetSynchronizationJob(ctx, jobId, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "job_id", "Job with object ID %q was not found for service principle %q", jobId, objectId)
+		if response.WasNotFound(jobResp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "synchronization_job_id", "%s was not found", jobId)
 		}
-		return tf.ErrorDiagPathF(err, "job_id", "Retrieving job with object ID %q for service principle %q", jobId, objectId)
-	}
-	if job == nil || job.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil job or job with nil ID was returned"), "API error retrieving job with object ID %q/%s", objectId, jobId)
+		return tf.ErrorDiagPathF(err, "job_id", "Retrieving %s", jobId)
 	}
 
-	// Create a new synchronization job
-	synchronizationProvisionOnDemand := &msgraph.SynchronizationJobProvisionOnDemand{
+	job := jobResp.Model
+	if job == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", jobId)
+	}
+	if job.Id == nil {
+		return tf.ErrorDiagF(errors.New("model has nil ID"), "Retrieving %s", jobId)
+	}
+
+	properties := synchronizationjob.ProvisionSynchronizationJobOnDemandRequest{
 		Parameters: expandSynchronizationJobApplicationParameters(d.Get("parameter").([]interface{})),
 	}
 
-	_, err = client.ProvisionOnDemand(ctx, jobId, synchronizationProvisionOnDemand, *servicePrincipal.ID())
-	if err != nil {
-		return tf.ErrorDiagF(err, "Creating synchronization job for service principal ID %q", *servicePrincipal.ID())
+	if _, err = client.ProvisionSynchronizationJobOnDemand(ctx, jobId, properties); err != nil {
+		return tf.ErrorDiagF(err, "Provisioning %s", jobId)
 	}
 
 	id, _ := uuid.GenerateUUID()
@@ -147,10 +158,12 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 	return synchronizationProvisionOnDemandResourceRead(ctx, d, meta)
 }
 
-func synchronizationProvisionOnDemandResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationProvisionOnDemandResourceRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	// Nothing to read
 	return nil
 }
 
-func synchronizationProvisionOnDemandResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func synchronizationProvisionOnDemandResourceDelete(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	// Nothing to destroy
 	return nil
 }

@@ -9,7 +9,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -184,34 +185,35 @@ func testCheckHasOnlySecurityEnabledGroupsNotMailEnabledGroups() check.KeyValida
 
 func testCheckGroupsDataSource(hasMailGroupsOnly, hasSecurityGroupsOnly, hasNoMailGroups, hasNoSecurityGroups bool) check.KeyValidationFunc {
 	return func(ctx context.Context, clients *clients.Client, values []interface{}) error {
-		client := clients.Groups.GroupsClient
+		client := clients.Groups.GroupClientBeta
 
 		for _, v := range values {
-			oid := v.(string)
-			group, _, err := client.Get(ctx, oid, odata.Query{})
+			id := beta.NewGroupID(v.(string))
+			resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 			if err != nil {
-				return fmt.Errorf("retrieving group with object ID %q: %+oid", oid, err)
+				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
+			group := resp.Model
 			if group == nil {
-				return fmt.Errorf("retrieving group with object ID %q: group was nil", oid)
+				return fmt.Errorf("retrieving %s: group was nil", id)
 			}
-			if group.ID() == nil {
-				return fmt.Errorf("retrieving group with object ID %q: ID was nil", oid)
+			if group.Id == nil {
+				return fmt.Errorf("retrieving %s: ID was nil", id)
 			}
 			if group.DisplayName == nil {
-				return fmt.Errorf("retrieving group with object ID %q: DisplayName was nil", oid)
+				return fmt.Errorf("retrieving %s: DisplayName was nil", id)
 			}
-			if hasMailGroupsOnly && group.MailEnabled != nil && !*group.MailEnabled {
-				return fmt.Errorf("expected only mail-enabled groups, encountered group %q (object ID: %q) which is not mail-enabled", *group.DisplayName, *group.ID())
+			if hasMailGroupsOnly && !group.MailEnabled.GetOrZero() {
+				return fmt.Errorf("expected only mail-enabled groups, encountered %s which is not mail-enabled", id)
 			}
-			if hasSecurityGroupsOnly && group.SecurityEnabled != nil && !*group.SecurityEnabled {
-				return fmt.Errorf("expected only security-enabled groups, encountered group %q (object ID: %q) which is not security-enabled", *group.DisplayName, *group.ID())
+			if hasSecurityGroupsOnly && !group.SecurityEnabled.GetOrZero() {
+				return fmt.Errorf("expected only security-enabled groups, encountered %s which is not security-enabled", id)
 			}
-			if hasNoMailGroups && group.MailEnabled != nil && *group.MailEnabled {
-				return fmt.Errorf("expected no mail-enabled groups, encountered group %q (object ID: %q) which is mail-enabled", *group.DisplayName, *group.ID())
+			if hasNoMailGroups && group.MailEnabled.GetOrZero() {
+				return fmt.Errorf("expected no mail-enabled groups, encountered %s which is mail-enabled", id)
 			}
-			if hasNoSecurityGroups && group.SecurityEnabled != nil && *group.SecurityEnabled {
-				return fmt.Errorf("expected no security-enabled groups, encountered group %q (object ID: %q) which is security-enabled", *group.DisplayName, *group.ID())
+			if hasNoSecurityGroups && group.SecurityEnabled.GetOrZero() {
+				return fmt.Errorf("expected no security-enabled groups, encountered %s which is security-enabled", id)
 			}
 		}
 

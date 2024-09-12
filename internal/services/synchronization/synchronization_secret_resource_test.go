@@ -6,7 +6,9 @@ package synchronization_test
 import (
 	"context"
 	"fmt"
-	"net/http"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationsecret"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -67,22 +69,27 @@ func testAccSynchronizationSecret_withApplicationFromTemplateResource(t *testing
 }
 
 func (r SynchronizationSecretResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.ServicePrincipals.SynchronizationJobClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Synchronization.SynchronizationSecretClient
 
 	id, err := parse.SynchronizationSecretID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Parsing synchronization secret from service principal %v", err)
 	}
 
-	_, status, err := client.GetSecrets(ctx, id.ServicePrincipalId)
+	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
+
+	resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Synchronization secrets for service principal %q was not found ", id.ServicePrincipalId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("Retrieving synchronization secrets for service principal %q", id.ServicePrincipalId)
+		return nil, fmt.Errorf("retrieving synchronization secrets for %s", servicePrincipalId)
 	}
+
+	if resp.Model == nil {
+		return pointer.To(false), nil
+	}
+
 	return pointer.To(true), nil
 }
 

@@ -8,19 +8,21 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func userResource() *pluginsdk.Resource {
@@ -69,15 +71,10 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"age_group": {
-				Description: "The age group of the user",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.AgeGroupNone),
-					string(msgraph.AgeGroupAdult),
-					string(msgraph.AgeGroupMinor),
-					string(msgraph.AgeGroupNotAdult),
-				}, false),
+				Description:  "The age group of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(possibleValuesForAgeGroup, false),
 			},
 
 			"business_phones": {
@@ -103,15 +100,10 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"consent_provided_for_minor": {
-				Description: "Whether consent has been obtained for minors",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.ConsentProvidedForMinorNone),
-					string(msgraph.ConsentProvidedForMinorDenied),
-					string(msgraph.ConsentProvidedForMinorGranted),
-					string(msgraph.ConsentProvidedForMinorNotRequired),
-				}, false),
+				Description:  "Whether consent has been obtained for minors",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(possibleValuesForConsentProvidedForMinor, false),
 			},
 
 			"cost_center": {
@@ -378,21 +370,20 @@ func userResource() *pluginsdk.Resource {
 	}
 }
 
-func userResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
+func userResourceCustomizeDiff(_ context.Context, diff *pluginsdk.ResourceDiff, _ interface{}) error {
 	ageGroup := diff.Get("age_group").(string)
 	consentRequired := diff.Get("consent_provided_for_minor").(string)
 
-	if ageGroup != string(msgraph.AgeGroupMinor) && consentRequired != string(msgraph.ConsentProvidedForMinorNone) && consentRequired != string(msgraph.ConsentProvidedForMinorNotRequired) {
+	if ageGroup != AgeGroupMinor && consentRequired != "" && consentRequired != ConsentProvidedForMinorNotRequired {
 		return fmt.Errorf("`consent_provided_for_minor` can only be set to %q or %q when `age_group` is %q or %q",
-			msgraph.ConsentProvidedForMinorGranted, msgraph.ConsentProvidedForMinorDenied, msgraph.AgeGroupAdult, msgraph.AgeGroupNotAdult)
+			ConsentProvidedForMinorGranted, ConsentProvidedForMinorDenied, AgeGroupAdult, AgeGroupNotAdult)
 	}
 	return nil
 }
 
 func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Users.UsersClient
-	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
-	tenantId := meta.(*clients.Client).TenantID
+	client := meta.(*clients.Client).Users.UserClient
+	managerClient := meta.(*clients.Client).Users.ManagerClient
 
 	password := d.Get("password").(string)
 	if password == "" {
@@ -420,42 +411,42 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
 	}
 
-	properties := msgraph.User{
-		AccountEnabled:          pointer.To(d.Get("account_enabled").(bool)),
-		AgeGroup:                tf.NullableString(d.Get("age_group").(string)),
-		City:                    tf.NullableString(d.Get("city").(string)),
-		ConsentProvidedForMinor: tf.NullableString(d.Get("consent_provided_for_minor").(string)),
-		CompanyName:             tf.NullableString(d.Get("company_name").(string)),
-		Country:                 tf.NullableString(d.Get("country").(string)),
-		Department:              tf.NullableString(d.Get("department").(string)),
-		DisplayName:             pointer.To(d.Get("display_name").(string)),
-		EmployeeId:              tf.NullableString(d.Get("employee_id").(string)),
-		EmployeeOrgData: &msgraph.EmployeeOrgData{
-			CostCenter: pointer.To(d.Get("cost_center").(string)),
-			Division:   pointer.To(d.Get("division").(string)),
+	properties := stable.User{
+		AccountEnabled:          nullable.Value(d.Get("account_enabled").(bool)),
+		AgeGroup:                nullable.NoZero(d.Get("age_group").(string)),
+		City:                    nullable.NoZero(d.Get("city").(string)),
+		ConsentProvidedForMinor: nullable.NoZero(d.Get("consent_provided_for_minor").(string)),
+		CompanyName:             nullable.NoZero(d.Get("company_name").(string)),
+		Country:                 nullable.NoZero(d.Get("country").(string)),
+		Department:              nullable.NoZero(d.Get("department").(string)),
+		DisplayName:             nullable.NoZero(d.Get("display_name").(string)),
+		EmployeeId:              nullable.NoZero(d.Get("employee_id").(string)),
+		EmployeeOrgData: &stable.EmployeeOrgData{
+			CostCenter: nullable.NoZero(d.Get("cost_center").(string)),
+			Division:   nullable.NoZero(d.Get("division").(string)),
 		},
-		EmployeeType:      tf.NullableString(d.Get("employee_type").(string)),
-		FaxNumber:         tf.NullableString(d.Get("fax_number").(string)),
-		GivenName:         tf.NullableString(d.Get("given_name").(string)),
-		JobTitle:          tf.NullableString(d.Get("job_title").(string)),
-		Mail:              tf.NullableString(d.Get("mail").(string)),
-		MailNickname:      pointer.To(mailNickName),
-		MobilePhone:       tf.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:    tf.NullableString(d.Get("office_location").(string)),
+		EmployeeType:      nullable.NoZero(d.Get("employee_type").(string)),
+		FaxNumber:         nullable.NoZero(d.Get("fax_number").(string)),
+		GivenName:         nullable.NoZero(d.Get("given_name").(string)),
+		JobTitle:          nullable.NoZero(d.Get("job_title").(string)),
+		Mail:              nullable.NoZero(d.Get("mail").(string)),
+		MailNickname:      nullable.NoZero(mailNickName),
+		MobilePhone:       nullable.NoZero(d.Get("mobile_phone").(string)),
+		OfficeLocation:    nullable.NoZero(d.Get("office_location").(string)),
 		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*pluginsdk.Set).List()),
-		PasswordPolicies:  tf.NullableString(passwordPolicies),
-		PostalCode:        tf.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage: tf.NullableString(d.Get("preferred_language").(string)),
-		ShowInAddressList: pointer.To(d.Get("show_in_address_list").(bool)),
-		State:             tf.NullableString(d.Get("state").(string)),
-		StreetAddress:     tf.NullableString(d.Get("street_address").(string)),
-		Surname:           tf.NullableString(d.Get("surname").(string)),
-		UsageLocation:     tf.NullableString(d.Get("usage_location").(string)),
-		UserPrincipalName: pointer.To(upn),
+		PasswordPolicies:  nullable.NoZero(passwordPolicies),
+		PostalCode:        nullable.NoZero(d.Get("postal_code").(string)),
+		PreferredLanguage: nullable.NoZero(d.Get("preferred_language").(string)),
+		ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
+		State:             nullable.NoZero(d.Get("state").(string)),
+		StreetAddress:     nullable.NoZero(d.Get("street_address").(string)),
+		Surname:           nullable.NoZero(d.Get("surname").(string)),
+		UsageLocation:     nullable.NoZero(d.Get("usage_location").(string)),
+		UserPrincipalName: nullable.NoZero(upn),
 
-		PasswordProfile: &msgraph.UserPasswordProfile{
-			ForceChangePasswordNextSignIn: pointer.To(d.Get("force_password_change").(bool)),
-			Password:                      pointer.To(password),
+		PasswordProfile: &stable.PasswordProfile{
+			ForceChangePasswordNextSignIn: nullable.Value(d.Get("force_password_change").(bool)),
+			Password:                      nullable.NoZero(password),
 		},
 	}
 
@@ -464,33 +455,29 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("onpremises_immutable_id"); ok {
-		properties.OnPremisesImmutableId = pointer.To(v.(string))
+		properties.OnPremisesImmutableId = nullable.NoZero(v.(string))
 	}
 
-	user, _, err := client.Create(ctx, properties)
+	resp, err := client.CreateUser(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
 
-	if user.ID() == nil || *user.ID() == "" {
+	u := resp.Model
+	if u.Id == nil || *u.Id == "" {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID())
+	id := stable.NewUserID(*u.Id)
+	d.SetId(id.UserId)
 
-	// Wait until the user is updatable (the SDK handles retries for us)
-	_, err = client.Update(ctx, msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: user.ID(),
-		},
-	})
-	if err != nil {
-		return tf.ErrorDiagF(err, "Timed out whilst waiting for new user to be replicated in Azure AD")
-	}
+	if v := d.Get("manager_id").(string); v != "" {
+		managerRef := stable.ReferenceUpdate{
+			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(v).ID()),
+		}
 
-	if managerId := d.Get("manager_id").(string); managerId != "" {
-		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), managerId); err != nil {
-			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		if _, err = managerClient.SetManagerRef(ctx, id, managerRef); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 		}
 	}
 
@@ -498,62 +485,55 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 }
 
 func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Users.UsersClient
-	directoryObjectsClient := meta.(*clients.Client).Users.DirectoryObjectsClient
-	tenantId := meta.(*clients.Client).TenantID
+	client := meta.(*clients.Client).Users.UserClient
+	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	var passwordPolicies string
-	disableStrongPassword := d.Get("disable_strong_password").(bool)
-	disablePasswordExpiration := d.Get("disable_password_expiration").(bool)
+	id := stable.NewUserID(d.Id())
 
-	switch {
-	case disableStrongPassword && (!disablePasswordExpiration):
-		passwordPolicies = "DisableStrongPassword"
-	case (!disableStrongPassword) && disablePasswordExpiration:
-		passwordPolicies = "DisablePasswordExpiration"
-	case disableStrongPassword && disablePasswordExpiration:
-		passwordPolicies = "DisablePasswordExpiration, DisableStrongPassword"
+	var passwordPolicies []string
+	if d.Get("disable_strong_password").(bool) {
+		passwordPolicies = append(passwordPolicies, "DisableStrongPassword")
+	}
+	if d.Get("disable_password_expiration").(bool) {
+		passwordPolicies = append(passwordPolicies, "DisablePasswordExpiration")
 	}
 
-	properties := msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: pointer.To(d.Id()),
+	properties := stable.User{
+		AccountEnabled:          nullable.Value(d.Get("account_enabled").(bool)),
+		AgeGroup:                nullable.NoZero(d.Get("age_group").(string)),
+		City:                    nullable.NoZero(d.Get("city").(string)),
+		CompanyName:             nullable.NoZero(d.Get("company_name").(string)),
+		ConsentProvidedForMinor: nullable.NoZero(d.Get("consent_provided_for_minor").(string)),
+		Country:                 nullable.NoZero(d.Get("country").(string)),
+		Department:              nullable.NoZero(d.Get("department").(string)),
+		DisplayName:             nullable.Value(d.Get("display_name").(string)),
+		EmployeeId:              nullable.NoZero(d.Get("employee_id").(string)),
+		EmployeeOrgData: &stable.EmployeeOrgData{
+			CostCenter: nullable.NoZero(d.Get("cost_center").(string)),
+			Division:   nullable.NoZero(d.Get("division").(string)),
 		},
-		AccountEnabled:          pointer.To(d.Get("account_enabled").(bool)),
-		AgeGroup:                tf.NullableString(d.Get("age_group").(string)),
-		City:                    tf.NullableString(d.Get("city").(string)),
-		CompanyName:             tf.NullableString(d.Get("company_name").(string)),
-		ConsentProvidedForMinor: tf.NullableString(d.Get("consent_provided_for_minor").(string)),
-		Country:                 tf.NullableString(d.Get("country").(string)),
-		Department:              tf.NullableString(d.Get("department").(string)),
-		DisplayName:             pointer.To(d.Get("display_name").(string)),
-		EmployeeId:              tf.NullableString(d.Get("employee_id").(string)),
-		EmployeeOrgData: &msgraph.EmployeeOrgData{
-			CostCenter: pointer.To(d.Get("cost_center").(string)),
-			Division:   pointer.To(d.Get("division").(string)),
-		},
-		EmployeeType:      tf.NullableString(d.Get("employee_type").(string)),
-		FaxNumber:         tf.NullableString(d.Get("fax_number").(string)),
-		GivenName:         tf.NullableString(d.Get("given_name").(string)),
-		JobTitle:          tf.NullableString(d.Get("job_title").(string)),
-		MailNickname:      pointer.To(d.Get("mail_nickname").(string)),
-		MobilePhone:       tf.NullableString(d.Get("mobile_phone").(string)),
-		OfficeLocation:    tf.NullableString(d.Get("office_location").(string)),
+		EmployeeType:      nullable.NoZero(d.Get("employee_type").(string)),
+		FaxNumber:         nullable.NoZero(d.Get("fax_number").(string)),
+		GivenName:         nullable.NoZero(d.Get("given_name").(string)),
+		JobTitle:          nullable.NoZero(d.Get("job_title").(string)),
+		MailNickname:      nullable.NoZero(d.Get("mail_nickname").(string)),
+		MobilePhone:       nullable.NoZero(d.Get("mobile_phone").(string)),
+		OfficeLocation:    nullable.NoZero(d.Get("office_location").(string)),
 		OtherMails:        tf.ExpandStringSlicePtr(d.Get("other_mails").(*pluginsdk.Set).List()),
-		PasswordPolicies:  tf.NullableString(passwordPolicies),
-		PostalCode:        tf.NullableString(d.Get("postal_code").(string)),
-		PreferredLanguage: tf.NullableString(d.Get("preferred_language").(string)),
-		State:             tf.NullableString(d.Get("state").(string)),
-		StreetAddress:     tf.NullableString(d.Get("street_address").(string)),
-		Surname:           tf.NullableString(d.Get("surname").(string)),
-		UsageLocation:     tf.NullableString(d.Get("usage_location").(string)),
-		UserPrincipalName: pointer.To(d.Get("user_principal_name").(string)),
+		PasswordPolicies:  nullable.NoZero(strings.Join(passwordPolicies, ", ")),
+		PostalCode:        nullable.NoZero(d.Get("postal_code").(string)),
+		PreferredLanguage: nullable.NoZero(d.Get("preferred_language").(string)),
+		State:             nullable.NoZero(d.Get("state").(string)),
+		StreetAddress:     nullable.NoZero(d.Get("street_address").(string)),
+		Surname:           nullable.NoZero(d.Get("surname").(string)),
+		UsageLocation:     nullable.NoZero(d.Get("usage_location").(string)),
+		UserPrincipalName: nullable.NoZero(d.Get("user_principal_name").(string)),
 	}
 
 	if password := d.Get("password").(string); d.HasChange("password") && password != "" {
-		properties.PasswordProfile = &msgraph.UserPasswordProfile{
-			ForceChangePasswordNextSignIn: pointer.To(d.Get("force_password_change").(bool)),
-			Password:                      pointer.To(password),
+		properties.PasswordProfile = &stable.PasswordProfile{
+			ForceChangePasswordNextSignIn: nullable.Value(d.Get("force_password_change").(bool)),
+			Password:                      nullable.NoZero(password),
 		}
 	}
 
@@ -563,30 +543,34 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 	if d.HasChange("mail") {
 		if mail := d.Get("mail").(string); mail != "" {
-			properties.Mail = tf.NullableString(mail)
+			properties.Mail = nullable.NoZero(mail)
 		}
 	}
 
 	if d.HasChange("onpremises_immutable_id") {
-		properties.OnPremisesImmutableId = pointer.To(d.Get("onpremises_immutable_id").(string))
+		properties.OnPremisesImmutableId = nullable.NoZero(d.Get("onpremises_immutable_id").(string))
 	}
 
 	if d.HasChange("show_in_address_list") {
-		properties.ShowInAddressList = pointer.To(d.Get("show_in_address_list").(bool))
+		properties.ShowInAddressList = nullable.NoZero(d.Get("show_in_address_list").(bool))
 	}
 
-	if _, err := client.Update(ctx, properties); err != nil {
+	if _, err := client.UpdateUser(ctx, id, properties); err != nil {
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
 		// and Terraform will not offer a diff in the next plan.
 		d.Partial(true) //lintignore:R007
 
-		return tf.ErrorDiagF(err, "Could not update user with ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
 	if d.HasChange("manager_id") {
-		if err := assignManager(ctx, client, directoryObjectsClient, tenantId, d.Id(), d.Get("manager_id").(string)); err != nil {
-			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for user with object ID %q", d.Id())
+		managerRef := stable.ReferenceUpdate{
+			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(d.Get("manager_id").(string)).ID()),
+		}
+
+		if _, err := managerClient.SetManagerRef(ctx, id, managerRef); err != nil {
+			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 		}
 	}
 
@@ -594,67 +578,73 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 }
 
 func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Users.UsersClient
+	client := meta.(*clients.Client).Users.UserClient
+	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	objectId := d.Id()
+	id := stable.NewUserID(d.Id())
 
-	user, status, err := client.Get(ctx, objectId, odata.Query{})
+	resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] User with Object ID %q was not found - removing from state!", objectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", objectId)
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
-	tf.Set(d, "about_me", user.AboutMe)
-	tf.Set(d, "account_enabled", user.AccountEnabled)
-	tf.Set(d, "age_group", user.AgeGroup)
-	tf.Set(d, "business_phones", user.BusinessPhones)
-	tf.Set(d, "city", user.City)
-	tf.Set(d, "company_name", user.CompanyName)
-	tf.Set(d, "consent_provided_for_minor", user.ConsentProvidedForMinor)
-	tf.Set(d, "country", user.Country)
-	tf.Set(d, "creation_type", user.CreationType)
-	tf.Set(d, "department", user.Department)
-	tf.Set(d, "display_name", user.DisplayName)
-	tf.Set(d, "employee_id", user.EmployeeId)
-	tf.Set(d, "employee_type", user.EmployeeType)
-	tf.Set(d, "external_user_state", user.ExternalUserState)
-	tf.Set(d, "fax_number", user.FaxNumber)
-	tf.Set(d, "given_name", user.GivenName)
-	tf.Set(d, "im_addresses", user.ImAddresses)
-	tf.Set(d, "job_title", user.JobTitle)
-	tf.Set(d, "mail", user.Mail)
-	tf.Set(d, "mail_nickname", user.MailNickname)
-	tf.Set(d, "mobile_phone", user.MobilePhone)
-	tf.Set(d, "object_id", user.ID())
-	tf.Set(d, "office_location", user.OfficeLocation)
-	tf.Set(d, "onpremises_distinguished_name", user.OnPremisesDistinguishedName)
-	tf.Set(d, "onpremises_domain_name", user.OnPremisesDomainName)
-	tf.Set(d, "onpremises_immutable_id", user.OnPremisesImmutableId)
-	tf.Set(d, "onpremises_sam_account_name", user.OnPremisesSamAccountName)
-	tf.Set(d, "onpremises_security_identifier", user.OnPremisesSecurityIdentifier)
-	tf.Set(d, "onpremises_sync_enabled", user.OnPremisesSyncEnabled)
-	tf.Set(d, "onpremises_user_principal_name", user.OnPremisesUserPrincipalName)
-	tf.Set(d, "other_mails", user.OtherMails)
-	tf.Set(d, "postal_code", user.PostalCode)
-	tf.Set(d, "preferred_language", user.PreferredLanguage)
-	tf.Set(d, "proxy_addresses", user.ProxyAddresses)
-	tf.Set(d, "show_in_address_list", user.ShowInAddressList)
-	tf.Set(d, "state", user.State)
-	tf.Set(d, "street_address", user.StreetAddress)
-	tf.Set(d, "surname", user.Surname)
-	tf.Set(d, "usage_location", user.UsageLocation)
-	tf.Set(d, "user_principal_name", user.UserPrincipalName)
-	tf.Set(d, "user_type", user.UserType)
+	u := resp.Model
+	if u == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	tf.Set(d, "about_me", u.AboutMe.GetOrZero())
+	tf.Set(d, "account_enabled", u.AccountEnabled.GetOrZero())
+	tf.Set(d, "age_group", u.AgeGroup.GetOrZero())
+	tf.Set(d, "business_phones", tf.FlattenStringSlicePtr(u.BusinessPhones))
+	tf.Set(d, "city", u.City.GetOrZero())
+	tf.Set(d, "company_name", u.CompanyName.GetOrZero())
+	tf.Set(d, "consent_provided_for_minor", u.ConsentProvidedForMinor.GetOrZero())
+	tf.Set(d, "country", u.Country.GetOrZero())
+	tf.Set(d, "creation_type", u.CreationType.GetOrZero())
+	tf.Set(d, "department", u.Department.GetOrZero())
+	tf.Set(d, "display_name", u.DisplayName.GetOrZero())
+	tf.Set(d, "employee_id", u.EmployeeId.GetOrZero())
+	tf.Set(d, "employee_type", u.EmployeeType.GetOrZero())
+	tf.Set(d, "external_user_state", u.ExternalUserState.GetOrZero())
+	tf.Set(d, "fax_number", u.FaxNumber.GetOrZero())
+	tf.Set(d, "given_name", u.GivenName.GetOrZero())
+	tf.Set(d, "im_addresses", tf.FlattenStringSlicePtr(u.ImAddresses))
+	tf.Set(d, "job_title", u.JobTitle.GetOrZero())
+	tf.Set(d, "mail", u.Mail.GetOrZero())
+	tf.Set(d, "mail_nickname", u.MailNickname.GetOrZero())
+	tf.Set(d, "mobile_phone", u.MobilePhone.GetOrZero())
+	tf.Set(d, "object_id", pointer.From(u.Id))
+	tf.Set(d, "office_location", u.OfficeLocation.GetOrZero())
+	tf.Set(d, "onpremises_distinguished_name", u.OnPremisesDistinguishedName.GetOrZero())
+	tf.Set(d, "onpremises_domain_name", u.OnPremisesDomainName.GetOrZero())
+	tf.Set(d, "onpremises_immutable_id", u.OnPremisesImmutableId.GetOrZero())
+	tf.Set(d, "onpremises_sam_account_name", u.OnPremisesSamAccountName.GetOrZero())
+	tf.Set(d, "onpremises_security_identifier", u.OnPremisesSecurityIdentifier.GetOrZero())
+	tf.Set(d, "onpremises_sync_enabled", u.OnPremisesSyncEnabled.GetOrZero())
+	tf.Set(d, "onpremises_user_principal_name", u.OnPremisesUserPrincipalName.GetOrZero())
+	tf.Set(d, "other_mails", tf.FlattenStringSlicePtr(u.OtherMails))
+	tf.Set(d, "postal_code", u.PostalCode.GetOrZero())
+	tf.Set(d, "preferred_language", u.PreferredLanguage.GetOrZero())
+	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(u.ProxyAddresses))
+	tf.Set(d, "show_in_address_list", u.ShowInAddressList.GetOrZero())
+	tf.Set(d, "state", u.State.GetOrZero())
+	tf.Set(d, "street_address", u.StreetAddress.GetOrZero())
+	tf.Set(d, "surname", u.Surname.GetOrZero())
+	tf.Set(d, "usage_location", u.UsageLocation.GetOrZero())
+	tf.Set(d, "user_principal_name", u.UserPrincipalName.GetOrZero())
+	tf.Set(d, "user_type", u.UserType.GetOrZero())
 
 	disableStrongPassword := false
 	disablePasswordExpiration := false
 
-	if user.PasswordPolicies != nil {
-		policies := strings.Split(string(*user.PasswordPolicies), ",")
+	if u.PasswordPolicies != nil {
+		policies := strings.Split(u.PasswordPolicies.GetOrZero(), ",")
 		for _, p := range policies {
 			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
 				disableStrongPassword = true
@@ -667,19 +657,19 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	tf.Set(d, "disable_strong_password", disableStrongPassword)
 	tf.Set(d, "disable_password_expiration", disablePasswordExpiration)
 
-	if user.EmployeeOrgData != nil {
-		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
-		tf.Set(d, "division", user.EmployeeOrgData.Division)
+	if u.EmployeeOrgData != nil {
+		tf.Set(d, "cost_center", u.EmployeeOrgData.CostCenter.GetOrZero())
+		tf.Set(d, "division", u.EmployeeOrgData.Division.GetOrZero())
 	}
 
 	managerId := ""
-	manager, status, err := client.GetManager(ctx, objectId)
-	if status != http.StatusNotFound {
+	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
+	if response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", objectId)
+			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)
 		}
-		if manager != nil && manager.ID() != nil {
-			managerId = *manager.ID()
+		if managerResp.Model != nil {
+			managerId = pointer.From(managerResp.Model.DirectoryObject().Id)
 		}
 	}
 	tf.Set(d, "manager_id", managerId)
@@ -688,36 +678,24 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 }
 
 func userResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Users.UsersClient
-	userId := d.Id()
+	client := meta.(*clients.Client).Users.UserClient
+	id := stable.NewUserID(d.Id())
 
-	_, status, err := client.Get(ctx, userId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving user with object ID %q", userId)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving user with object ID %q", userId)
-	}
-
-	status, err = client.Delete(ctx, userId)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting user with object ID %q, got status %d", userId, status)
+	if _, err := client.DeleteUser(ctx, id, user.DefaultDeleteUserOperationOptions()); err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
 	// Wait for user object to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.Get(ctx, userId, odata.Query{}); err != nil {
-			if status == http.StatusNotFound {
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions()); err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
 			return nil, err
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of user with object ID %q", userId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 	}
 
 	return nil

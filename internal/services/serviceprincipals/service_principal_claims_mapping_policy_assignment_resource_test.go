@@ -6,10 +6,12 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/claimsmappingpolicy"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -34,6 +36,35 @@ func TestClaimsMappingPolicyAssignment_basic(t *testing.T) {
 	})
 }
 
+func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+	client := clients.ServicePrincipals.ClaimsMappingPolicyClient
+
+	id, err := parse.ClaimsMappingPolicyAssignmentID(state.ID)
+	if err != nil {
+		return nil, fmt.Errorf("parsing CLaims Mapping Policy Assignment ID: %v", err)
+	}
+
+	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
+
+	resp, err := client.ListClaimsMappingPolicies(ctx, servicePrincipalId, claimsmappingpolicy.DefaultListClaimsMappingPoliciesOperationOptions())
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, fmt.Errorf("%s does not exist", servicePrincipalId)
+		}
+		return nil, fmt.Errorf("failed to retrieve claims mapping policy assignments for %s: %+v", servicePrincipalId, err)
+	}
+
+	if resp.Model != nil {
+		for _, p := range *resp.Model {
+			if pointer.From(p.Id) == id.ClaimsMappingPolicyId {
+				return pointer.To(true), nil
+			}
+		}
+	}
+
+	return pointer.To(false), nil
+}
+
 func (ServicePrincipalClaimsMappingPolicyAssignmentResource) basicClaimsMappingPolicyAssignment(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 data "azuread_application_published_app_ids" "well_known" {}
@@ -55,32 +86,4 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "test" {
   service_principal_id     = azuread_service_principal.msgraph.id
 }
 `, data.RandomString)
-}
-
-func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.ServicePrincipals.ServicePrincipalsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
-
-	id, err := parse.ClaimsMappingPolicyAssignmentID(state.ID)
-	if err != nil {
-		return nil, fmt.Errorf("parsing CLaims Mapping Policy Assignment ID: %v", err)
-	}
-
-	policyList, status, err := client.ListClaimsMappingPolicy(ctx, id.ServicePrincipalId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			return pointer.To(false), fmt.Errorf("Service Policy with object ID %q does not exist", id.ServicePrincipalId)
-		}
-		return pointer.To(false), fmt.Errorf("failed to retrieve claims mapping policy assignments with service policy ID %q: %+v", id.ServicePrincipalId, err)
-	}
-
-	// Check the assignment is found in the currently assigned policies
-	for _, policy := range *policyList {
-		if policy.ID() != nil && *policy.ID() == id.ClaimsMappingPolicyId {
-			return pointer.To(true), nil
-		}
-	}
-
-	return pointer.To(false), nil
 }

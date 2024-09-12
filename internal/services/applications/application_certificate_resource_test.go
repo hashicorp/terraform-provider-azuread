@@ -6,12 +6,13 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -205,32 +206,37 @@ func TestAccApplicationCertificate_deprecatedId2(t *testing.T) {
 }
 
 func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClientBeta
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
 	id, err := parse.CertificateID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Application Certificate ID: %v", err)
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := stable.NewApplicationID(id.ObjectId)
+
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, fmt.Errorf("%s does not exist", applicationId)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", applicationId, err)
+	}
+
+	app := resp.Model
+	if app == nil {
+		return nil, fmt.Errorf("failed to retrieve %s: model was nil", applicationId)
 	}
 
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+			if cred.KeyId.GetOrZero() == id.KeyId {
 				return pointer.To(true), nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("Key Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
+	return nil, fmt.Errorf("key credential %q was not found for %s", id.KeyId, applicationId)
 }
 
 func (ApplicationCertificateResource) template(data acceptance.TestData) string {

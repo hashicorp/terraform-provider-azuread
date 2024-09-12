@@ -4,19 +4,22 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryobjects/stable/directoryobject"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	DirectoryObjectsClient *msgraph.DirectoryObjectsClient
+	DirectoryObjectClient *directoryobject.DirectoryObjectClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
-	o.ConfigureClient(&directoryObjectsClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	directoryObjectClient, err := directoryobject.NewDirectoryObjectClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(directoryObjectClient.Client)
 
 	return &Client{
-		DirectoryObjectsClient: directoryObjectsClient,
-	}
+		DirectoryObjectClient: directoryObjectClient,
+	}, nil
 }

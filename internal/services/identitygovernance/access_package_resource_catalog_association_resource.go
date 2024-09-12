@@ -5,18 +5,22 @@ package identitygovernance
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
@@ -61,106 +65,126 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
-	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
+	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogResourceClient
 
-	catalogId := d.Get("catalog_id").(string)
 	resourceOriginId := d.Get("resource_origin_id").(string)
 	resourceOriginSystem := d.Get("resource_origin_system").(string)
 
-	_, status, err := accessPackageCatalogClient.Get(ctx, catalogId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package catalog with Object ID %q was not found - removing from state!", catalogId)
-			return nil
-		}
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(d.Get("catalog_id").(string))
 
+	catalogResp, err := accessPackageCatalogClient.GetEntitlementManagementAccessPackageCatalog(ctx, catalogId, entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions())
+	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", catalogId)
 	}
 
-	if existing, _, err := resourceClient.Get(ctx, catalogId, resourceOriginId); err == nil && existing != nil {
-		id := parse.NewAccessPackageResourceCatalogAssociationID(catalogId, resourceOriginId)
-		return tf.ImportAsExistsDiag("azuread_access_package_resource_catalog_association", id.ID())
+	catalog := catalogResp.Model
+	if catalog == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", catalogId)
 	}
 
-	properties := msgraph.AccessPackageResourceRequest{
-		CatalogId:   &catalogId,
-		RequestType: pointer.To("AdminAdd"),
-		AccessPackageResource: &msgraph.AccessPackageResource{
-			OriginId:     &resourceOriginId,
-			OriginSystem: resourceOriginSystem,
+	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", resourceOriginId)),
+	}
+	existingResp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Checking for existing Access Package Resource Catalog Association")
+	}
+	if existingResp.Model != nil && len(*existingResp.Model) > 0 {
+		importId := parse.NewAccessPackageResourceCatalogAssociationID(resourceOriginId, resourceOriginId)
+		return tf.ImportAsExistsDiag("azuread_access_package_resource_catalog_association", importId.ID())
+	}
+
+	properties := beta.AccessPackageResourceRequest{
+		CatalogId:          nullable.Value(catalogId.AccessPackageCatalogId),
+		ExecuteImmediately: nullable.Value(true),
+		RequestType:        nullable.Value("AdminAdd"),
+		AccessPackageResource: &beta.AccessPackageResource{
+			OriginId:     nullable.Value(resourceOriginId),
+			OriginSystem: nullable.Value(resourceOriginSystem),
 		},
 	}
 
-	resourceCatalogAssociation, _, err := client.Create(ctx, properties, true)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to link resource %q@%q with access catalog %q.", resourceOriginId, resourceOriginSystem, catalogId)
+	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties); err != nil {
+		return tf.ErrorDiagF(err, "Failed to request Access Package Resource Catalog Association (Catalog ID: %q / Origin ID: %q)", catalogId, resourceOriginId)
 	}
 
-	id := parse.NewAccessPackageResourceCatalogAssociationID(*resourceCatalogAssociation.CatalogId, *resourceCatalogAssociation.AccessPackageResource.OriginId)
-	d.SetId(id.ID())
+	// Poll for processed request
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("startswith(originId, '%s')", resourceOriginId)),
+		}
+		resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
+		if err != nil {
+			return nil, err
+		}
+		if resp.Model == nil || len(*existingResp.Model) == 0 {
+			return pointer.To(false), nil
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for processing of Access Package Resource Request (Catalog ID: %q / Origin ID: %q)", catalogId, resourceOriginId)
+	}
+
+	resourceId := parse.NewAccessPackageResourceCatalogAssociationID(catalogId.AccessPackageCatalogId, resourceOriginId)
+	d.SetId(resourceId.ID())
 
 	return accessPackageResourceCatalogAssociationResourceRead(ctx, d, meta)
 }
 
 func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
+	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
 	}
 
-	accessPackageRes, status, err := resourceClient.Get(ctx, id.CatalogId, id.OriginId)
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(id.CatalogId)
+	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", id.OriginId)),
+	}
+	resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package resource and catalog association with resource origin ID %q and catalog ID %q was not found - removing from state!", id.OriginId, id.CatalogId)
-			d.SetId("")
-			return nil
-		}
+		return tf.ErrorDiagF(err, "Retrieving Access Package Resource Catalog Association")
+	}
 
-		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource origin id %q and catalog id %q.", id.OriginId, id.CatalogId)
+	var resource *beta.AccessPackageResource
+	if resp.Model != nil && len(*resp.Model) > 0 {
+		resource = pointer.To((*resp.Model)[0])
+	}
+
+	if resource == nil {
+		log.Printf("[DEBUG] Access Package Resource Catalog Associations was not found - removing from state!")
+		d.SetId("")
+		return nil
 	}
 
 	tf.Set(d, "catalog_id", id.CatalogId)
 	tf.Set(d, "resource_origin_id", id.OriginId)
-	tf.Set(d, "resource_origin_system", accessPackageRes.OriginSystem)
+	tf.Set(d, "resource_origin_system", resource.OriginSystem.GetOrZero())
 
 	return nil
 }
 
 func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
-	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
 	}
 
-	resource, status, err := resourceClient.Get(ctx, id.CatalogId, id.OriginId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package resource and catalog association with resource %q@%q and catalog id %q was not found - removing from state!", id.OriginId, resource.OriginSystem, id.CatalogId)
-			d.SetId("")
-			return nil
-		}
-
-		return tf.ErrorDiagF(err, "Retrieving access package resource and catalog association with resource %q@%q and catalog id %q.", id.OriginId, resource.OriginSystem, id.CatalogId)
+	properties := beta.AccessPackageResourceRequest{
+		CatalogId:          nullable.Value(id.CatalogId),
+		ExecuteImmediately: nullable.Value(true),
+		RequestType:        nullable.Value("AdminRemove"),
+		AccessPackageResource: &beta.AccessPackageResource{
+			OriginId: nullable.Value(id.OriginId),
+		},
 	}
 
-	if err != nil {
-		return tf.ErrorDiagF(err, "Error retrieving access package resource with origin ID %q in catalog %q.", id.OriginId, id.CatalogId)
-	}
-
-	resourceCatalogAssociation := msgraph.AccessPackageResourceRequest{
-		CatalogId:             &id.CatalogId,
-		AccessPackageResource: resource,
-	}
-
-	_, err = client.Delete(ctx, resourceCatalogAssociation)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting access package resource and catalog association with resource %q@%q and catalog id %q.",
-			*resourceCatalogAssociation.AccessPackageResource.OriginId, resourceCatalogAssociation.AccessPackageResource.OriginSystem, *resourceCatalogAssociation.CatalogId)
+	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties); err != nil {
+		return tf.ErrorDiagF(err, "Failed to request removal for Access Package Resource Catalog Association (Catalog ID: %q / Origin ID: %q)", id.CatalogId, id.OriginId)
 	}
 
 	return nil

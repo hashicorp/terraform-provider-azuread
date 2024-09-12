@@ -6,19 +6,20 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationAppRoleModel struct {
@@ -70,13 +71,8 @@ func (r ApplicationAppRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			Required:    true,
 			MinItems:    1,
 			Elem: &pluginsdk.Schema{
-				Type: pluginsdk.TypeString,
-				ValidateFunc: validation.StringInSlice(
-					[]string{
-						msgraph.AppRoleAllowedMemberTypeApplication,
-						msgraph.AppRoleAllowedMemberTypeUser,
-					}, false,
-				),
+				Type:         pluginsdk.TypeString,
+				ValidateFunc: validation.StringInSlice(possibleValuesForAppRoleAllowedMemberType, false),
 			},
 		},
 
@@ -111,16 +107,14 @@ func (r ApplicationAppRoleResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationAppRoleModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -130,45 +124,45 @@ func (r ApplicationAppRoleResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
-			newRoles := make([]msgraph.AppRole, 0)
+			newRoles := make([]stable.AppRole, 0)
 
 			// Don't forget any existing roles, since all roles must be updated together
-			if result.AppRoles != nil {
-				newRoles = *result.AppRoles
+			if app.AppRoles != nil {
+				newRoles = *app.AppRoles
 			}
 
 			// Check for existing role ID
 			for _, role := range newRoles {
-				if strings.EqualFold(*role.ID, id.RoleID) {
+				if strings.EqualFold(*role.Id, id.RoleID) {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
 			}
 
-			newRoles = append(newRoles, msgraph.AppRole{
-				ID:                 &model.RoleId,
+			newRoles = append(newRoles, stable.AppRole{
+				Id:                 &model.RoleId,
 				IsEnabled:          pointer.To(true),
 				AllowedMemberTypes: &model.AllowedMemberTypes,
-				Description:        &model.Description,
-				DisplayName:        &model.DisplayName,
-				Value:              &model.Value,
+				Description:        nullable.Value(model.Description),
+				DisplayName:        nullable.Value(model.DisplayName),
+				Value:              nullable.Value(model.Value),
 			})
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:       &id.ApplicationId,
 				AppRoles: &newRoles,
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -182,38 +176,39 @@ func (r ApplicationAppRoleResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseAppRoleID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
-				return fmt.Errorf("retrieving %s: %+v", id, err)
+				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
-			if result.AppRoles == nil {
+
+			if app.AppRoles == nil {
 				return metadata.MarkAsGone(id)
 			}
 
 			// Identify the role by ID
-			var role *msgraph.AppRole
-			for _, existingRole := range *result.AppRoles {
-				if strings.EqualFold(*existingRole.ID, id.RoleID) {
+			var role *stable.AppRole
+			for _, existingRole := range *app.AppRoles {
+				if strings.EqualFold(*existingRole.Id, id.RoleID) {
 					role = &existingRole
 					break
 				}
@@ -227,9 +222,9 @@ func (r ApplicationAppRoleResource) Read() sdk.ResourceFunc {
 				ApplicationId:      applicationId.ID(),
 				RoleId:             id.RoleID,
 				AllowedMemberTypes: pointer.From(role.AllowedMemberTypes),
-				Description:        pointer.From(role.Description),
-				DisplayName:        pointer.From(role.DisplayName),
-				Value:              pointer.From(role.Value),
+				Description:        role.Description.GetOrZero(),
+				DisplayName:        role.DisplayName.GetOrZero(),
+				Value:              role.Value.GetOrZero(),
 			}
 
 			return metadata.Encode(&state)
@@ -241,7 +236,7 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseAppRoleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -254,32 +249,35 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			}
 
 			// Prepare a new role to replace the existing one
-			role := msgraph.AppRole{
-				ID:                 &id.RoleID,
+			role := stable.AppRole{
+				Id:                 &id.RoleID,
 				IsEnabled:          pointer.To(true),
 				AllowedMemberTypes: &model.AllowedMemberTypes,
-				Description:        &model.Description,
-				DisplayName:        &model.DisplayName,
-				Value:              &model.Value,
+				Description:        nullable.Value(model.Description),
+				DisplayName:        nullable.Value(model.DisplayName),
+				Value:              nullable.Value(model.Value),
 			}
+
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.AppRoles == nil {
+
+			app := resp.Model
+			if app == nil || app.AppRoles == nil {
 				return fmt.Errorf("retrieving %s: appRoles was nil", applicationId)
 			}
 
 			// Look for a role to replace, matching by ID
-			newRoles := make([]msgraph.AppRole, 0)
+			newRoles := make([]stable.AppRole, 0)
 			found := false
-			for _, existingRole := range *result.AppRoles {
-				if strings.EqualFold(*existingRole.ID, id.RoleID) {
+			for _, existingRole := range *app.AppRoles {
+				if strings.EqualFold(*existingRole.Id, id.RoleID) {
 					newRoles = append(newRoles, role)
 					found = true
 				} else {
@@ -291,20 +289,17 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, result, &newRoles); err != nil {
+			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:       &applicationId.ApplicationId,
 				AppRoles: &newRoles,
 			}
 
 			// Patch the application with the new set of roles
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -317,9 +312,7 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseAppRoleID(metadata.ResourceData.Id())
 			if err != nil {
@@ -331,23 +324,26 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.AppRoles == nil {
-				return fmt.Errorf("retrieving %s: api.oauth2AppRoles was nil", applicationId)
+
+			app := resp.Model
+			if app == nil || app.AppRoles == nil {
+				return fmt.Errorf("retrieving %s: appRoles was nil", applicationId)
 			}
 
 			// Look for a role to remove, matching by ID
-			newRoles := make([]msgraph.AppRole, 0)
+			newRoles := make([]stable.AppRole, 0)
 			found := false
-			for _, existingRole := range *result.AppRoles {
-				if strings.EqualFold(*existingRole.ID, id.RoleID) {
+			for _, existingRole := range *app.AppRoles {
+				if strings.EqualFold(*existingRole.Id, id.RoleID) {
 					found = true
 				} else {
 					newRoles = append(newRoles, existingRole)
@@ -358,20 +354,17 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Disable the existing role prior to update
-			if err = applicationDisableAppRoles(ctx, client, result, &newRoles); err != nil {
+			if err = applicationDisableAppRoles(ctx, client, applicationId, &newRoles); err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:       &applicationId.ApplicationId,
 				AppRoles: &newRoles,
 			}
 
 			// Patch the application with the new set of roles
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

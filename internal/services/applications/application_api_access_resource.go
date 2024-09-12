@@ -6,18 +6,19 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationApiAccessModel struct {
@@ -93,16 +94,14 @@ func (r ApplicationApiAccessResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationApiAccessModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -112,19 +111,21 @@ func (r ApplicationApiAccessResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
-			newApis := make([]msgraph.RequiredResourceAccess, 0)
+			newApis := make([]stable.RequiredResourceAccess, 0)
 
 			// Don't forget any existing APIs, since they must all be updated together
-			if result.RequiredResourceAccess != nil {
-				newApis = *result.RequiredResourceAccess
+			if app.RequiredResourceAccess != nil {
+				newApis = *app.RequiredResourceAccess
 			}
 
 			// Check for existing API
@@ -134,33 +135,31 @@ func (r ApplicationApiAccessResource) Create() sdk.ResourceFunc {
 				}
 			}
 
-			permissions := make([]msgraph.ResourceAccess, 0)
+			permissions := make([]stable.ResourceAccess, 0)
 			for _, roleId := range model.RoleIds {
-				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(roleId),
-					Type: msgraph.ResourceAccessTypeRole,
+				permissions = append(permissions, stable.ResourceAccess{
+					Id:   pointer.To(roleId),
+					Type: nullable.Value(ResourceAccessTypeRole),
 				})
 			}
 			for _, scopeId := range model.ScopeIds {
-				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(scopeId),
-					Type: msgraph.ResourceAccessTypeScope,
+				permissions = append(permissions, stable.ResourceAccess{
+					Id:   pointer.To(scopeId),
+					Type: nullable.Value(ResourceAccessTypeScope),
 				})
 			}
 
-			newApis = append(newApis, msgraph.RequiredResourceAccess{
+			newApis = append(newApis, stable.RequiredResourceAccess{
 				ResourceAppId:  &model.ApiClientId,
 				ResourceAccess: &permissions,
 			})
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:                     &id.ApplicationId,
 				RequiredResourceAccess: &newApis,
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -174,37 +173,38 @@ func (r ApplicationApiAccessResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseApiAccessID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
-				return fmt.Errorf("retrieving %s: %+v", id, err)
+				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
-			if result.RequiredResourceAccess == nil {
+
+			if app.RequiredResourceAccess == nil {
 				return metadata.MarkAsGone(id)
 			}
 
 			// Identify the API
-			var api *msgraph.RequiredResourceAccess
-			for _, existingApi := range *result.RequiredResourceAccess {
+			var api *stable.RequiredResourceAccess
+			for _, existingApi := range *app.RequiredResourceAccess {
 				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
 					api = &existingApi
 					break
@@ -221,11 +221,11 @@ func (r ApplicationApiAccessResource) Read() sdk.ResourceFunc {
 			roleIds := make([]string, 0)
 			scopeIds := make([]string, 0)
 			for _, permission := range *api.ResourceAccess {
-				switch permission.Type {
-				case msgraph.ResourceAccessTypeRole:
-					roleIds = append(roleIds, pointer.From(permission.ID))
-				case msgraph.ResourceAccessTypeScope:
-					scopeIds = append(scopeIds, pointer.From(permission.ID))
+				switch permission.Type.GetOrZero() {
+				case ResourceAccessTypeRole:
+					roleIds = append(roleIds, pointer.From(permission.Id))
+				case ResourceAccessTypeScope:
+					scopeIds = append(scopeIds, pointer.From(permission.Id))
 				}
 			}
 
@@ -245,7 +245,7 @@ func (r ApplicationApiAccessResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseApiAccessID(metadata.ResourceData.Id())
 			if err != nil {
@@ -258,40 +258,43 @@ func (r ApplicationApiAccessResource) Update() sdk.ResourceFunc {
 			}
 
 			// Prepare a new API to replace the existing one
-			permissions := make([]msgraph.ResourceAccess, 0)
+			permissions := make([]stable.ResourceAccess, 0)
 			for _, roleId := range model.RoleIds {
-				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(roleId),
-					Type: msgraph.ResourceAccessTypeRole,
+				permissions = append(permissions, stable.ResourceAccess{
+					Id:   pointer.To(roleId),
+					Type: nullable.Value(ResourceAccessTypeRole),
 				})
 			}
 			for _, scopeId := range model.ScopeIds {
-				permissions = append(permissions, msgraph.ResourceAccess{
-					ID:   pointer.To(scopeId),
-					Type: msgraph.ResourceAccessTypeScope,
+				permissions = append(permissions, stable.ResourceAccess{
+					Id:   pointer.To(scopeId),
+					Type: nullable.Value(ResourceAccessTypeScope),
 				})
 			}
-			api := msgraph.RequiredResourceAccess{
+			api := stable.RequiredResourceAccess{
 				ResourceAppId:  &model.ApiClientId,
 				ResourceAccess: &permissions,
 			}
 
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.RequiredResourceAccess == nil {
+
+			app := resp.Model
+			if app == nil || app.RequiredResourceAccess == nil {
 				return fmt.Errorf("retrieving %s: requiredResourceAccess was nil", applicationId)
 			}
 
 			// Look for an API to replace
-			newApis := make([]msgraph.RequiredResourceAccess, 0)
+			newApis := make([]stable.RequiredResourceAccess, 0)
 			found := false
-			for _, existingApi := range *result.RequiredResourceAccess {
+			for _, existingApi := range *app.RequiredResourceAccess {
 				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
 					newApis = append(newApis, api)
 					found = true
@@ -303,16 +306,13 @@ func (r ApplicationApiAccessResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("updating %s: could not identify existing API", id)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:                     &applicationId.ApplicationId,
 				RequiredResourceAccess: &newApis,
 			}
 
 			// Patch the application with the new set of APIs
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -325,9 +325,7 @@ func (r ApplicationApiAccessResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseApiAccessID(metadata.ResourceData.Id())
 			if err != nil {
@@ -339,22 +337,25 @@ func (r ApplicationApiAccessResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.RequiredResourceAccess == nil {
+
+			app := resp.Model
+			if app == nil || app.RequiredResourceAccess == nil {
 				return fmt.Errorf("retrieving %s: requiredResourceAccess was nil", applicationId)
 			}
 
 			// Look for an API to remove
-			newApis := make([]msgraph.RequiredResourceAccess, 0)
+			newApis := make([]stable.RequiredResourceAccess, 0)
 			found := false
-			for _, existingApi := range *result.RequiredResourceAccess {
+			for _, existingApi := range *app.RequiredResourceAccess {
 				if strings.EqualFold(*existingApi.ResourceAppId, id.ApiClientId) {
 					found = true
 				} else {
@@ -365,16 +366,13 @@ func (r ApplicationApiAccessResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("deleting %s: could not identify existing API", id)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
+				Id:                     &applicationId.ApplicationId,
 				RequiredResourceAccess: &newApis,
 			}
 
 			// Patch the application with the new set of APIs
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

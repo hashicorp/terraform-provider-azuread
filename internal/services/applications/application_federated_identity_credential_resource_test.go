@@ -6,11 +6,12 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -119,24 +120,24 @@ func TestAccApplicationFederatedIdentityCredential_deprecatedId2(t *testing.T) {
 }
 
 func (r ApplicationFederatedIdentityCredentialResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClientBeta
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Application Federated Identity Credential ID: %v", err)
 	}
 
-	credential, status, err := client.GetFederatedIdentityCredential(ctx, id.ObjectId, id.KeyId, odata.Query{})
+	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
+
+	resp, err := client.GetFederatedIdentityCredential(ctx, credentialId, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Federated Identity Credential %q for Application with object ID %q does not exist", id.KeyId, id.ObjectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Federated Identity Credential %q for Application with object ID %q: %+v", id.KeyId, id.ObjectId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", credentialId, err)
 	}
 
-	return pointer.To(credential != nil), nil
+	return pointer.To(resp.Model != nil), nil
 }
 
 func (ApplicationFederatedIdentityCredentialResource) template(data acceptance.TestData) string {

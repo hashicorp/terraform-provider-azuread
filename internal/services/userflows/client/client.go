@@ -4,19 +4,22 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/userflowattribute"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	UserFlowAttributesClient *msgraph.UserFlowAttributesClient
+	UserFlowAttributeClient *userflowattribute.UserFlowAttributeClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	userFlowAttributeClient := msgraph.NewUserFlowAttributesClient()
-	o.ConfigureClient(&userFlowAttributeClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	userFlowAttributeClient, err := userflowattribute.NewUserFlowAttributeClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(userFlowAttributeClient.Client)
 
 	return &Client{
-		UserFlowAttributesClient: userFlowAttributeClient,
-	}
+		UserFlowAttributeClient: userFlowAttributeClient,
+	}, nil
 }

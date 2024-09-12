@@ -5,20 +5,24 @@ package identitygovernance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
@@ -68,7 +72,7 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 
 func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
-	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceClient
+	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogResourceClient
 
 	catalogResourceAssociationId, err := parse.AccessPackageResourceCatalogAssociationID(d.Get("catalog_resource_association_id").(string))
 	if err != nil {
@@ -76,38 +80,57 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	}
 
 	accessType := d.Get("access_type").(string)
-	accessPackageId := d.Get("access_package_id").(string)
+	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Get("access_package_id").(string))
 
-	resource, _, err := resourceClient.Get(ctx, catalogResourceAssociationId.CatalogId, catalogResourceAssociationId.OriginId)
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(catalogResourceAssociationId.CatalogId)
+	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", catalogResourceAssociationId.OriginId)),
+	}
+	resourceResp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Error retrieving access package resource and catalog association with resource ID %q and catalog ID %q.", catalogResourceAssociationId.CatalogId, catalogResourceAssociationId.OriginId)
+		return tf.ErrorDiagF(err, "Retrieving Access Package Resource Catalog Association")
 	}
 
-	properties := msgraph.AccessPackageResourceRoleScope{
-		AccessPackageId: &accessPackageId,
-		AccessPackageResourceRole: &msgraph.AccessPackageResourceRole{
-			DisplayName:  pointer.To(accessType),
-			OriginId:     pointer.To(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
+	if resourceResp.Model == nil || len(*resourceResp.Model) == 0 {
+		return tf.ErrorDiagF(errors.New("no matching resource found"), "Retrieving Access Package Resources for %s", catalogId)
+	}
+
+	resource := pointer.To((*resourceResp.Model)[0])
+
+	properties := beta.AccessPackageResourceRoleScope{
+		AccessPackageResourceRole: &beta.AccessPackageResourceRole{
+			DisplayName:  nullable.NoZero(accessType),
+			OriginId:     nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
 			OriginSystem: resource.OriginSystem,
-			AccessPackageResource: &msgraph.AccessPackageResource{
-				ID:           resource.ID,
+			AccessPackageResource: &beta.AccessPackageResource{
+				Id:           resource.Id,
 				ResourceType: resource.ResourceType,
 				OriginId:     resource.OriginId,
 			},
 		},
-		AccessPackageResourceScope: &msgraph.AccessPackageResourceScope{
+		AccessPackageResourceScope: &beta.AccessPackageResourceScope{
 			OriginSystem: resource.OriginSystem,
-			OriginId:     &catalogResourceAssociationId.OriginId,
+			OriginId:     nullable.Value(catalogResourceAssociationId.OriginId),
 		},
 	}
 
-	resourcePackageAssociation, _, err := client.Create(ctx, properties)
+	createMsg := fmt.Sprintf("Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem, accessPackageId)
+
+	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Error creating access package resource association from resource %q@%q to access package %q.", catalogResourceAssociationId.OriginId, resource.OriginSystem, accessPackageId)
+		return tf.ErrorDiagF(err, createMsg)
 	}
 
-	id := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId, *resourcePackageAssociation.ID, *resource.OriginId, accessType)
-	d.SetId(id.ID())
+	resourceRoleScope := resp.Model
+	if resourceRoleScope == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg)
+	}
+	if resourceRoleScope.Id == nil {
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg)
+	}
+
+	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	d.SetId(resourceId.ID())
 
 	return accessPackageResourcePackageAssociationResourceRead(ctx, d, meta)
 }
@@ -116,30 +139,39 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
-	id, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
+	resourceId, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
 	}
 
-	resourcePackage, status, err := client.Get(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
+
+	resp, err := client.GetEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultGetEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package resource association with ID %q was not found - removing from state!", d.Id())
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Error retrieving resource id %v in access package %v", id.ResourcePackageAssociationId, id.AccessPackageId)
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
-	accessPackage, _, err := accessPackageClient.Get(ctx, id.AccessPackageId, odata.Query{})
+	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(resourceId.AccessPackageId)
+
+	accessPackageResp, err := accessPackageClient.GetEntitlementManagementAccessPackage(ctx, accessPackageId, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Err retrieving access package with id %v", id.AccessPackageId)
+		return tf.ErrorDiagF(err, "Retrieving %s", accessPackageId)
 	}
 
-	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(*accessPackage.CatalogId, id.OriginId)
+	accessPackage := accessPackageResp.Model
+	if accessPackage == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", accessPackageId)
+	}
 
-	tf.Set(d, "access_package_id", resourcePackage.AccessPackageId)
-	tf.Set(d, "access_type", id.AccessType)
+	catalogResourceAssociationId := parse.NewAccessPackageResourceCatalogAssociationID(accessPackage.CatalogId.GetOrZero(), resourceId.OriginId)
+
+	tf.Set(d, "access_package_id", resourceId.AccessPackageId)
+	tf.Set(d, "access_type", resourceId.AccessType)
 	tf.Set(d, "catalog_resource_association_id", catalogResourceAssociationId.ID())
 
 	return nil
@@ -148,14 +180,15 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 func accessPackageResourcePackageAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 
-	id, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
+	resourceId, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
 	}
 
-	status, err := client.Delete(ctx, id.AccessPackageId, id.ResourcePackageAssociationId)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting access package resource association with object ID %q, got status %d", id.ResourcePackageAssociationId, status)
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
+
+	if _, err = client.DeleteEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultDeleteEntitlementManagementAccessPackageResourceRoleScopeOperationOptions()); err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
 	return nil

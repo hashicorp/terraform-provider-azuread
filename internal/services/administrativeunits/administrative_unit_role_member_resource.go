@@ -5,18 +5,20 @@ package administrativeunits
 
 import (
 	"context"
+	"errors"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitscopedrolemember"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
@@ -65,63 +67,70 @@ func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 }
 
 func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
-	memberID := pointer.To(d.Get("member_object_id").(string))
-	adminUnitID := pointer.To(d.Get("administrative_unit_object_id").(string))
+	memberId := d.Get("member_object_id").(string)
+	administrativeUnitId := d.Get("administrative_unit_object_id").(string)
 
-	properties := msgraph.ScopedRoleMembership{
-		AdministrativeUnitId: adminUnitID,
+	properties := stable.ScopedRoleMembership{
+		AdministrativeUnitId: &administrativeUnitId,
 		RoleId:               pointer.To(d.Get("role_object_id").(string)),
-		RoleMemberInfo: &msgraph.Identity{
-			Id: memberID,
+		RoleMemberInfo: stable.BaseIdentityImpl{
+			Id: nullable.Value(memberId),
 		},
 	}
 
-	membership, _, err := client.AddScopedRoleMember(ctx, *properties.AdministrativeUnitId, properties)
+	resp, err := client.CreateAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitID(administrativeUnitId), properties)
 	if err != nil {
-		return tf.ErrorDiagF(err, "Adding role member %q to administrative unit %q", *memberID, *adminUnitID)
+		return tf.ErrorDiagF(err, "Adding role member %q to administrative unit %q", memberId, administrativeUnitId)
+	}
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("response was nil"), "Adding role member %q to administrative unit %q", memberId, administrativeUnitId)
 	}
 
-	id := parse.NewAdministrativeUnitRoleMemberID(*membership.AdministrativeUnitId, *membership.Id)
-
+	id := parse.NewAdministrativeUnitRoleMemberID(*resp.Model.AdministrativeUnitId, *resp.Model.Id)
 	d.SetId(id.String())
 
 	return administrativeUnitRoleMemberResourceRead(ctx, d, meta)
 }
 
 func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
 	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Role Member ID %q", d.Id())
 	}
 
-	scopedRoleMembership, status, err := client.GetScopedRoleMember(ctx, id.AdministrativeUnitId, id.ScopedRoleMembershipId, odata.Query{})
+	resp, err := client.GetAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(id.AdministrativeUnitId, id.ScopedRoleMembershipId), administrativeunitscopedrolemember.DefaultGetAdministrativeUnitScopedRoleMemberOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Membership with ID %q was not found in administrative unit %q - removing from state", id.ScopedRoleMembershipId, id.AdministrativeUnitId)
 			d.SetId("")
 			return nil
 		}
 		return tf.ErrorDiagF(err, "Retrieving role membership %q for administrative unit ID: %q", id.ScopedRoleMembershipId, id.AdministrativeUnitId)
 	}
-	tf.Set(d, "administrative_unit_object_id", scopedRoleMembership.AdministrativeUnitId)
-	tf.Set(d, "role_object_id", scopedRoleMembership.RoleId)
-	tf.Set(d, "member_object_id", scopedRoleMembership.RoleMemberInfo.Id)
+
+	if membership := resp.Model; membership != nil {
+		tf.Set(d, "administrative_unit_object_id", membership.AdministrativeUnitId)
+		tf.Set(d, "role_object_id", membership.RoleId)
+		tf.Set(d, "member_object_id", membership.RoleMemberInfo.Identity().Id)
+	}
+
 	return nil
 }
 
 func administrativeUnitRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
 	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Role Member ID %q", d.Id())
 	}
-	if _, err := client.RemoveScopedRoleMembers(ctx, id.AdministrativeUnitId, id.ScopedRoleMembershipId); err != nil {
+	if _, err = client.DeleteAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(id.AdministrativeUnitId, id.ScopedRoleMembershipId), administrativeunitscopedrolemember.DefaultDeleteAdministrativeUnitScopedRoleMemberOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing membership %q from administrative unit ID: %q", id.ScopedRoleMembershipId, id.AdministrativeUnitId)
 	}
+
 	return nil
 }

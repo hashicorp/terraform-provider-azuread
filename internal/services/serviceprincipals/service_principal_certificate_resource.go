@@ -8,19 +8,20 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func servicePrincipalCertificateResource() *pluginsdk.Resource {
@@ -100,14 +101,11 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"type": {
-				Description: "The type of key/certificate",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.KeyCredentialTypeAsymmetricX509Cert,
-					msgraph.KeyCredentialTypeX509CertAndPassword,
-				}, false),
+				Description:  "The type of key/certificate",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(possibleValuesForKeyCredentialType, false),
 			},
 
 			"value": {
@@ -122,13 +120,13 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 }
 
 func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 	objectId := d.Get("service_principal_id").(string)
 
-	credential, err := helpers.KeyCredentialForResource(d)
+	credential, err := credentials.KeyCredentialForResource(d)
 	if err != nil {
 		attr := ""
-		if kerr, ok := err.(helpers.CredentialError); ok {
+		if kerr, ok := err.(credentials.CredentialError); ok {
 			attr = kerr.Attr()
 		}
 		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for service principal with object ID %q", objectId)
@@ -137,23 +135,30 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 	if credential.KeyId == nil {
 		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
 	}
-	id := parse.NewCredentialID(objectId, "certificate", *credential.KeyId)
+
+	id := parse.NewCredentialID(objectId, "certificate", credential.KeyId.GetOrZero())
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", id.ObjectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
 		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
 
-	newCredentials := make([]msgraph.KeyCredential, 0)
-	if app.KeyCredentials != nil {
-		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, *credential.KeyId) {
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", servicePrincipalId)
+	}
+
+	newCredentials := make([]stable.KeyCredential, 0)
+	if servicePrincipal.KeyCredentials != nil {
+		for _, cred := range *servicePrincipal.KeyCredentials {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), credential.KeyId.GetOrZero()) {
 				return tf.ImportAsExistsDiag("azuread_service_principal_certificate", id.String())
 			}
 			newCredentials = append(newCredentials, cred)
@@ -162,14 +167,11 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 
 	newCredentials = append(newCredentials, *credential)
 
-	properties := msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &id.ObjectId,
-		},
+	properties := stable.ServicePrincipal{
 		KeyCredentials: &newCredentials,
 	}
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Adding certificate for service principal with object ID %q", id.ObjectId)
+	if _, err = client.UpdateServicePrincipal(ctx, servicePrincipalId, properties); err != nil {
+		return tf.ErrorDiagF(err, "Adding certificate for %s", servicePrincipalId)
 	}
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
@@ -181,14 +183,13 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
-			if err != nil {
+			if _, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
 				return nil, "Error", err
 			}
 
 			if servicePrincipal.KeyCredentials != nil {
 				for _, cred := range *servicePrincipal.KeyCredentials {
-					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+					if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 						return &cred, "Done", nil
 					}
 				}
@@ -199,9 +200,9 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 	}).WaitForStateContext(ctx)
 
 	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for certificate credential for service principal with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for certificate credential for %s", servicePrincipalId)
 	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("certificate credential not found in service principal manifest"), "Waiting for certificate credential for service principal with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(errors.New("certificate credential not found in service principal manifest"), "Waiting for certificate credential for %s", servicePrincipalId)
 	}
 
 	d.SetId(id.String())
@@ -210,16 +211,18 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 }
 
 func servicePrincipalCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
+
+	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
 			d.SetId("")
 			return nil
@@ -227,7 +230,12 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *pluginsdk.R
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
 	}
 
-	credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", servicePrincipalId)
+	}
+
+	credential := credentials.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Certificate credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -236,25 +244,15 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *pluginsdk.R
 
 	tf.Set(d, "service_principal_id", id.ObjectId)
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "type", credential.Type)
-
-	startDate := ""
-	if v := credential.StartDateTime; v != nil {
-		startDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "start_date", startDate)
-
-	endDate := ""
-	if v := credential.EndDateTime; v != nil {
-		endDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "end_date", endDate)
+	tf.Set(d, "type", credential.Type.GetOrZero())
+	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
+	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 
 	return nil
 }
 
 func servicePrincipalCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {
@@ -264,51 +262,51 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *pluginsdk
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
+
+	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
 		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
 
-	newCredentials := make([]msgraph.KeyCredential, 0)
-	if app.KeyCredentials != nil {
-		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && !strings.EqualFold(*cred.KeyId, id.KeyId) {
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", servicePrincipalId)
+	}
+
+	newCredentials := make([]stable.KeyCredential, 0)
+	if servicePrincipal.KeyCredentials != nil {
+		for _, cred := range *servicePrincipal.KeyCredentials {
+			if !strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 				newCredentials = append(newCredentials, cred)
 			}
 		}
 	}
 
-	properties := msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &id.ObjectId,
-		},
+	properties := stable.ServicePrincipal{
 		KeyCredentials: &newCredentials,
 	}
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Removing certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
+	if _, err := client.UpdateServicePrincipal(ctx, servicePrincipalId, properties); err != nil {
+		return tf.ErrorDiagF(err, "Removing certificate credential %q from %s", id.KeyId, servicePrincipalId)
 	}
 
 	// Wait for service principal certificate to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-
-		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
-		if err != nil {
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if _, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
 			return nil, err
 		}
 
-		credential := helpers.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
+		credential := credentials.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
 		if credential == nil {
 			return pointer.To(false), nil
 		}
 
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from %s", id.KeyId, servicePrincipalId)
 	}
 
 	return nil

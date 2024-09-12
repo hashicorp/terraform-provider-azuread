@@ -31,6 +31,7 @@ func TestAccSynchronizationJobProvisionOnDemand_basic(t *testing.T) {
 }
 
 func (r SynchronizationJobProvisionOnDemandResource) Exists(_ context.Context, _ *clients.Client, _ *terraform.InstanceState) (*bool, error) {
+	// Nothing to read
 	return pointer.To(true), nil
 }
 

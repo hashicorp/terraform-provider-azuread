@@ -6,12 +6,13 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -247,7 +248,7 @@ func TestAccServicePrincipal_owners(t *testing.T) {
 	})
 }
 
-func TestAccApplication_createWithNoOwners(t *testing.T) {
+func TestAccServicePrincipal_createWithNoOwners(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_service_principal", "test")
 	r := ServicePrincipalResource{}
 
@@ -329,18 +330,18 @@ func TestAccServicePrincipal_deprecatedId(t *testing.T) {
 }
 
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.ServicePrincipals.ServicePrincipalsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.ServicePrincipals.ServicePrincipalClient
+	id := stable.NewServicePrincipalID(state.ID)
 
-	servicePrincipal, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
-	return pointer.To(servicePrincipal.ID() != nil && *servicePrincipal.ID() == state.ID), nil
+
+	return pointer.To(true), nil
 }
 
 func (ServicePrincipalResource) basic(data acceptance.TestData) string {

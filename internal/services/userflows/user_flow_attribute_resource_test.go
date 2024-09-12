@@ -6,22 +6,23 @@ package userflows_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/userflowattribute"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 )
 
-type UserflowAttributeResource struct{}
+type UserFlowAttributeResource struct{}
 
 func TestAccUserFlowAttribute_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
-	r := UserflowAttributeResource{}
+	r := UserFlowAttributeResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -35,7 +36,7 @@ func TestAccUserFlowAttribute_basic(t *testing.T) {
 
 func TestAccUserFlowAttribute_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
-	r := UserflowAttributeResource{}
+	r := UserFlowAttributeResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -55,7 +56,7 @@ func TestAccUserFlowAttribute_update(t *testing.T) {
 
 func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
-	r := UserflowAttributeResource{}
+	r := UserFlowAttributeResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
@@ -68,24 +69,23 @@ func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 	})
 }
 
-func (r UserflowAttributeResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.UserFlows.UserFlowAttributesClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+func (r UserFlowAttributeResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+	client := clients.UserFlows.UserFlowAttributeClient
+	id := stable.NewIdentityUserFlowAttributeID(state.ID)
 
-	userFlowAttr, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("user flow attribute with ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
 
-		return nil, fmt.Errorf("failed to retrieve User Flow attribute with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("retrieving %s: %v", id, err)
 	}
 
-	return pointer.To(userFlowAttr.ID != nil && *userFlowAttr.ID == state.ID), nil
+	return pointer.To(true), nil
 }
 
-func (r UserflowAttributeResource) basic(data acceptance.TestData) string {
+func (r UserFlowAttributeResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -97,7 +97,7 @@ resource "azuread_user_flow_attribute" "test" {
 `, data.RandomString)
 }
 
-func (r UserflowAttributeResource) update(data acceptance.TestData) string {
+func (r UserFlowAttributeResource) update(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -109,7 +109,7 @@ resource "azuread_user_flow_attribute" "test" {
 `, data.RandomString)
 }
 
-func (r UserflowAttributeResource) requiresImport(data acceptance.TestData) string {
+func (r UserFlowAttributeResource) requiresImport(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
 

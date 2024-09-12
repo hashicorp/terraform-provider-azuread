@@ -8,19 +8,24 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/owner"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -206,16 +211,10 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			},
 
 			"preferred_single_sign_on_mode": {
-				Description: "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ValidateFunc: validation.StringInSlice([]string{
-					string(msgraph.PreferredSingleSignOnModeNone),
-					string(msgraph.PreferredSingleSignOnModeNotSupported),
-					string(msgraph.PreferredSingleSignOnModeOidc),
-					string(msgraph.PreferredSingleSignOnModePassword),
-					string(msgraph.PreferredSingleSignOnModeSaml),
-				}, false),
+				Description:  "The single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(possibleValuesForPreferredSingleSignOnMode, false),
 			},
 
 			"tags": {
@@ -363,10 +362,9 @@ func servicePrincipalDiffSuppress(k, old, new string, d *pluginsdk.ResourceData)
 }
 
 func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	directoryObjectsClient := meta.(*clients.Client).ServicePrincipals.DirectoryObjectsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
 	callerId := meta.(*clients.Client).ObjectID
-	tenantId := meta.(*clients.Client).TenantID
 
 	var clientId string
 	if v := d.Get("client_id").(string); v != "" {
@@ -375,83 +373,75 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		clientId = d.Get("application_id").(string)
 	}
 
-	var servicePrincipal *msgraph.ServicePrincipal
-	var err error
-
-	if d.Get("use_existing").(bool) {
-		// Assume that a service principal already exists and try to look for it, whilst retrying to defeat eventual consistency
-		servicePrincipal, err = findByClientIdWithTimeout(ctx, 5*time.Minute, client, clientId)
-	} else {
-		// Otherwise perform a single List operation to check for an existing service principal
-		servicePrincipal, err = findByClientId(ctx, client, clientId)
+	options := serviceprincipal.ListServicePrincipalsOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", clientId)),
 	}
+	listResp, err := client.ListServicePrincipals(ctx, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not list existing service principals")
 	}
 
-	if servicePrincipal != nil {
-		if servicePrincipal.ID() == nil || *servicePrincipal.ID() == "" {
+	if listResp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Could not list existing service principals")
+	}
+	if len(*listResp.Model) > 1 {
+		return tf.ErrorDiagF(fmt.Errorf("unexpected number of service principals returned (expected: 1, received: %d", len(*listResp.Model)), "Could not list existing service principals")
+	}
+
+	if len(*listResp.Model) == 1 {
+		servicePrincipal := (*listResp.Model)[0]
+
+		if servicePrincipal.Id == nil || *servicePrincipal.Id == "" {
 			return tf.ErrorDiagF(fmt.Errorf("service principal returned with nil or empty object ID"), "API error")
 		}
-		if !d.Get("use_existing").(bool) {
-			return tf.ImportAsExistsDiag("azuread_service_principal", *servicePrincipal.ID())
+
+		if d.Get("use_existing").(bool) {
+			d.SetId(*servicePrincipal.Id)
+			return servicePrincipalResourceUpdate(ctx, d, meta)
 		}
 
-		d.SetId(*servicePrincipal.ID())
-		return servicePrincipalResourceUpdate(ctx, d, meta)
+		return tf.ImportAsExistsDiag("azuread_service_principal", *servicePrincipal.Id)
 	}
 
 	var tags []string
 	if v, ok := d.GetOk("feature_tags"); ok {
-		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+		tags = applications.ExpandFeatures(v.([]interface{}))
 	} else if v, ok := d.GetOk("features"); ok {
-		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+		tags = applications.ExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
 	// Set a temporary description as we'll attempt to patch the service principal with the correct description after creating it
-	uuid, err := uuid.GenerateUUID()
+	uid, err := uuid.GenerateUUID()
 	if err != nil {
 		return tf.ErrorDiagF(err, "Failed to generate a UUID")
 	}
-	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uuid)
+	tempDescription := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 
-	properties := msgraph.ServicePrincipal{
-		AccountEnabled:             pointer.To(d.Get("account_enabled").(bool)),
+	properties := stable.ServicePrincipal{
+		AccountEnabled:             nullable.Value(d.Get("account_enabled").(bool)),
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*pluginsdk.Set).List()),
-		AppId:                      pointer.To(clientId),
+		AppId:                      nullable.Value(clientId),
 		AppRoleAssignmentRequired:  pointer.To(d.Get("app_role_assignment_required").(bool)),
-		Description:                tf.NullableString(tempDescription),
-		LoginUrl:                   tf.NullableString(d.Get("login_url").(string)),
-		Notes:                      tf.NullableString(d.Get("notes").(string)),
+		Description:                nullable.NoZero(tempDescription),
+		LoginUrl:                   nullable.NoZero(d.Get("login_url").(string)),
+		Notes:                      nullable.NoZero(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*pluginsdk.Set).List()),
-		PreferredSingleSignOnMode:  tf.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		PreferredSingleSignOnMode:  nullable.NoZero(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       &tags,
 	}
 
 	// Sort the owners into two slices, the first containing up to 20 and the rest overflowing to the second slice
 	// The calling principal should always be in the first slice of owners
-	callerObject, _, err := directoryObjectsClient.Get(ctx, callerId, odata.Query{})
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not retrieve calling principal object %q", callerId)
-	}
-	if callerObject == nil {
-		return tf.ErrorDiagF(errors.New("returned callerObject was nil"), "Could not retrieve calling principal object %q", callerId)
-	}
-
-	// @odata.id returned by API cannot be relied upon, so construct our own
-	callerObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, tenantId, callerId)))
-
-	ownersFirst20 := msgraph.Owners{*callerObject}
-	var ownersExtra msgraph.Owners
+	ownersFirst20 := []string{fmt.Sprintf("%s%s", client.Client.BaseUri, stable.NewDirectoryObjectID(callerId).ID())}
+	var ownersExtra []stable.ReferenceCreate
 
 	// Track whether we need to remove the calling principal later on
 	removeCallerOwner := true
 
-	// Retrieve and set the initial owners, which can be up to 20 in total when creating the service principal
+	// Retrieve and set the initial owners, which can be up to 20 in total when creating the application
 	if v, ok := d.GetOk("owners"); ok {
 		ownerCount := 0
 		for _, ownerIdRaw := range v.(*pluginsdk.Set).List() {
@@ -463,15 +453,12 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 				continue
 			}
 
-			ownerObject := msgraph.DirectoryObject{
-				ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-					client.BaseClient.Endpoint, tenantId, ownerId))),
-				Id: &ownerId,
-			}
-
 			if ownerCount < 19 {
-				ownersFirst20 = append(ownersFirst20, ownerObject)
+				ownersFirst20 = append(ownersFirst20, client.Client.BaseUri+stable.NewDirectoryObjectID(ownerId).ID())
 			} else {
+				ownerObject := stable.ReferenceCreate{
+					ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(ownerId).ID()),
+				}
 				ownersExtra = append(ownersExtra, ownerObject)
 			}
 			ownerCount++
@@ -479,45 +466,48 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
-	properties.Owners = &ownersFirst20
+	properties.Owners_ODataBind = &ownersFirst20
 
-	servicePrincipal, _, err = client.Create(ctx, properties)
+	resp, err := client.CreateServicePrincipal(ctx, properties)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create service principal")
 	}
 
-	if servicePrincipal.ID() == nil || *servicePrincipal.ID() == "" {
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Could not create service principal")
+	}
+
+	if servicePrincipal.Id == nil || *servicePrincipal.Id == "" {
 		return tf.ErrorDiagF(errors.New("Object ID returned for service principal is nil"), "Bad API response")
 	}
-	d.SetId(*servicePrincipal.ID())
+
+	id := stable.NewServicePrincipalID(*servicePrincipal.Id)
+	d.SetId(id.ServicePrincipalId)
 
 	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	status, err := client.Update(ctx, msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: servicePrincipal.ID(),
-		},
-		Description: tf.NullableString(d.Get("description").(string)),
-	})
-	if err != nil {
-		if status == http.StatusNotFound {
+	if resp, err := client.UpdateServicePrincipal(ctx, id, stable.ServicePrincipal{
+		Description: nullable.NoZero(d.Get("description").(string)),
+	}); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
 		}
 		return tf.ErrorDiagF(err, "Failed to patch service principal after creating")
 	}
 
 	// Add any remaining owners after the service principal is created
-	if len(ownersExtra) > 0 {
-		servicePrincipal.Owners = &ownersExtra
-		if _, err := client.AddOwners(ctx, servicePrincipal); err != nil {
-			return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
+	for _, ref := range ownersExtra {
+		if _, err = ownerClient.AddOwnerRef(ctx, id, ref); err != nil {
+			return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 		}
 	}
 
 	// If the calling principal was not included in configuration, remove it now
 	if removeCallerOwner {
-		if _, err = client.RemoveOwners(ctx, d.Id(), &[]string{callerId}); err != nil {
-			return tf.ErrorDiagF(err, "Could not remove initial owner from service principal with object ID: %q", d.Id())
+		ownerId := stable.NewServicePrincipalIdOwnerID(id.ServicePrincipalId, callerId)
+		if _, err = ownerClient.RemoveOwnerRef(ctx, ownerId, owner.DefaultRemoveOwnerRefOperationOptions()); err != nil {
+			return tf.ErrorDiagF(err, "Could not remove initial owner from %s", id)
 		}
 	}
 
@@ -525,68 +515,65 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 }
 
 func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	tenantId := meta.(*clients.Client).TenantID
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
+	id := stable.NewServicePrincipalID(d.Id())
 
 	var tags []string
 	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
-		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+		tags = applications.ExpandFeatures(v.([]interface{}))
 	} else if v, ok := d.GetOk("features"); ok && len(v.([]interface{})) > 0 && d.HasChange("features") {
-		tags = helpers.ApplicationExpandFeatures(v.([]interface{}))
+		tags = applications.ExpandFeatures(v.([]interface{}))
 	} else {
 		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
-	properties := msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: pointer.To(d.Id()),
-		},
+	properties := stable.ServicePrincipal{
 		AlternativeNames:           tf.ExpandStringSlicePtr(d.Get("alternative_names").(*pluginsdk.Set).List()),
-		AccountEnabled:             pointer.To(d.Get("account_enabled").(bool)),
+		AccountEnabled:             nullable.Value(d.Get("account_enabled").(bool)),
 		AppRoleAssignmentRequired:  pointer.To(d.Get("app_role_assignment_required").(bool)),
-		Description:                tf.NullableString(d.Get("description").(string)),
-		LoginUrl:                   tf.NullableString(d.Get("login_url").(string)),
-		Notes:                      tf.NullableString(d.Get("notes").(string)),
+		Description:                nullable.NoZero(d.Get("description").(string)),
+		LoginUrl:                   nullable.NoZero(d.Get("login_url").(string)),
+		Notes:                      nullable.NoZero(d.Get("notes").(string)),
 		NotificationEmailAddresses: tf.ExpandStringSlicePtr(d.Get("notification_email_addresses").(*pluginsdk.Set).List()),
-		PreferredSingleSignOnMode:  tf.NullableString(d.Get("preferred_single_sign_on_mode").(string)),
+		PreferredSingleSignOnMode:  nullable.NoZero(d.Get("preferred_single_sign_on_mode").(string)),
 		SamlSingleSignOnSettings:   expandSamlSingleSignOn(d.Get("saml_single_sign_on").([]interface{})),
 		Tags:                       &tags,
 	}
 
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Updating service principal with object ID: %q", d.Id())
+	if _, err := client.UpdateServicePrincipal(ctx, id, properties); err != nil {
+		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
 	if d.HasChange("owners") {
-		owners, _, err := client.ListOwners(ctx, d.Id())
+		resp, err := ownerClient.ListOwners(ctx, id, owner.DefaultListOwnersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
 		}
 
-		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*pluginsdk.Set).List())
-		existingOwners := *owners
-		ownersForRemoval := tf.Difference(existingOwners, desiredOwners)
-		ownersToAdd := tf.Difference(desiredOwners, existingOwners)
-
-		if len(ownersToAdd) > 0 {
-			newOwners := make(msgraph.Owners, 0)
-			for _, ownerId := range ownersToAdd {
-				newOwners = append(newOwners, msgraph.DirectoryObject{
-					ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, tenantId, ownerId))),
-					Id: &ownerId,
-				})
-			}
-
-			properties.Owners = &newOwners
-			if _, err := client.AddOwners(ctx, &properties); err != nil {
-				return tf.ErrorDiagF(err, "Could not add owners to service principal with object ID: %q", d.Id())
+		existingOwners := make([]string, 0)
+		if resp.Model != nil {
+			for _, o := range *resp.Model {
+				existingOwners = append(existingOwners, pointer.From(o.DirectoryObject().Id))
 			}
 		}
 
-		if len(ownersForRemoval) > 0 {
-			if _, err = client.RemoveOwners(ctx, d.Id(), &ownersForRemoval); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove owners from service principal with object ID: %q", d.Id())
+		desiredOwners := *tf.ExpandStringSlicePtr(d.Get("owners").(*pluginsdk.Set).List())
+		ownersForRemoval := tf.Difference(existingOwners, desiredOwners)
+		ownersToAdd := tf.Difference(desiredOwners, existingOwners)
+
+		for _, o := range ownersToAdd {
+			request := stable.ReferenceCreate{
+				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(o).ID()),
+			}
+			if _, err = ownerClient.AddOwnerRef(ctx, id, request); err != nil {
+				return tf.ErrorDiagF(err, "Could not add owners to %s", id)
+			}
+		}
+
+		for _, o := range ownersForRemoval {
+			if _, err = ownerClient.RemoveOwnerRef(ctx, stable.NewServicePrincipalIdOwnerID(id.ServicePrincipalId, o), owner.DefaultRemoveOwnerRefOperationOptions()); err != nil {
+				return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 			}
 		}
 	}
@@ -595,62 +582,87 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 }
 
 func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	objectId := d.Id()
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	clientBeta := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClientBeta
+	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
+	id := stable.NewServicePrincipalID(d.Id())
 
-	servicePrincipal, status, err := client.Get(ctx, objectId, odata.Query{})
+	resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing from state!", objectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagF(err, "retrieving service principal with object ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
+
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	// Retrieve from beta API to get samlMetadataUrl field
+	options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
+		Select: pointer.To([]string{"samlMetadataUrl"}),
+	}
+	respBeta, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId), options)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s (beta API)", id)
+	}
+
+	servicePrincipalBeta := respBeta.Model
+	if servicePrincipalBeta == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s (beta API)", id)
 	}
 
 	servicePrincipalNames := make([]string, 0)
 	if servicePrincipal.ServicePrincipalNames != nil {
 		for _, name := range *servicePrincipal.ServicePrincipalNames {
 			// Exclude the app ID from the list of service principal names
-			if servicePrincipal.AppId == nil || name != *servicePrincipal.AppId {
+			if !strings.EqualFold(name, servicePrincipal.AppId.GetOrZero()) {
 				servicePrincipalNames = append(servicePrincipalNames, name)
 			}
 		}
 	}
 
-	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled)
+	tf.Set(d, "account_enabled", servicePrincipal.AccountEnabled.GetOrZero())
 	tf.Set(d, "alternative_names", tf.FlattenStringSlicePtr(servicePrincipal.AlternativeNames))
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
-	tf.Set(d, "app_role_ids", helpers.ApplicationFlattenAppRoleIDs(servicePrincipal.AppRoles))
-	tf.Set(d, "app_roles", helpers.ApplicationFlattenAppRoles(servicePrincipal.AppRoles))
-	tf.Set(d, "application_id", servicePrincipal.AppId)
-	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId)
-	tf.Set(d, "client_id", servicePrincipal.AppId)
-	tf.Set(d, "description", servicePrincipal.Description)
-	tf.Set(d, "display_name", servicePrincipal.DisplayName)
-	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, false))
-	tf.Set(d, "features", helpers.ApplicationFlattenFeatures(servicePrincipal.Tags, true))
-	tf.Set(d, "homepage_url", servicePrincipal.Homepage)
-	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl)
-	tf.Set(d, "login_url", servicePrincipal.LoginUrl)
-	tf.Set(d, "notes", servicePrincipal.Notes)
+	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(servicePrincipal.AppRoles))
+	tf.Set(d, "app_roles", applications.FlattenAppRoles(servicePrincipal.AppRoles))
+	tf.Set(d, "application_id", servicePrincipal.AppId.GetOrZero())
+	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId.GetOrZero())
+	tf.Set(d, "client_id", servicePrincipal.AppId.GetOrZero())
+	tf.Set(d, "description", servicePrincipal.Description.GetOrZero())
+	tf.Set(d, "display_name", servicePrincipal.DisplayName.GetOrZero())
+	tf.Set(d, "feature_tags", applications.FlattenFeatures(servicePrincipal.Tags, false))
+	tf.Set(d, "features", applications.FlattenFeatures(servicePrincipal.Tags, true))
+	tf.Set(d, "homepage_url", servicePrincipal.Homepage.GetOrZero())
+	tf.Set(d, "logout_url", servicePrincipal.LogoutUrl.GetOrZero())
+	tf.Set(d, "login_url", servicePrincipal.LoginUrl.GetOrZero())
+	tf.Set(d, "notes", servicePrincipal.Notes.GetOrZero())
 	tf.Set(d, "notification_email_addresses", tf.FlattenStringSlicePtr(servicePrincipal.NotificationEmailAddresses))
-	tf.Set(d, "oauth2_permission_scope_ids", helpers.ApplicationFlattenOAuth2PermissionScopeIDs(servicePrincipal.OAuth2PermissionScopes))
-	tf.Set(d, "oauth2_permission_scopes", helpers.ApplicationFlattenOAuth2PermissionScopes(servicePrincipal.OAuth2PermissionScopes))
-	tf.Set(d, "object_id", servicePrincipal.ID())
-	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode)
+	tf.Set(d, "oauth2_permission_scope_ids", applications.FlattenOAuth2PermissionScopeIDs(servicePrincipal.OAuth2PermissionScopes))
+	tf.Set(d, "oauth2_permission_scopes", applications.FlattenOAuth2PermissionScopes(servicePrincipal.OAuth2PermissionScopes))
+	tf.Set(d, "object_id", pointer.From(servicePrincipal.Id))
+	tf.Set(d, "preferred_single_sign_on_mode", servicePrincipal.PreferredSingleSignOnMode.GetOrZero())
 	tf.Set(d, "redirect_uris", tf.FlattenStringSlicePtr(servicePrincipal.ReplyUrls))
-	tf.Set(d, "saml_metadata_url", servicePrincipal.SamlMetadataUrl)
+	tf.Set(d, "saml_metadata_url", servicePrincipalBeta.SamlMetadataUrl.GetOrZero())
 	tf.Set(d, "saml_single_sign_on", flattenSamlSingleSignOn(servicePrincipal.SamlSingleSignOnSettings))
 	tf.Set(d, "service_principal_names", servicePrincipalNames)
-	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience)
-	tf.Set(d, "tags", servicePrincipal.Tags)
-	tf.Set(d, "type", servicePrincipal.ServicePrincipalType)
+	tf.Set(d, "sign_in_audience", servicePrincipal.SignInAudience.GetOrZero())
+	tf.Set(d, "tags", pointer.From(servicePrincipal.Tags))
+	tf.Set(d, "type", servicePrincipal.ServicePrincipalType.GetOrZero())
 
-	owners, _, err := client.ListOwners(ctx, *servicePrincipal.ID())
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for service principal with object ID %q", d.Id())
+	owners := make([]interface{}, 0)
+	if resp, err := ownerClient.ListOwners(ctx, id, owner.DefaultListOwnersOperationOptions()); err != nil {
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
+	} else if resp.Model != nil {
+		for _, obj := range *resp.Model {
+			owners = append(owners, pointer.From(obj.DirectoryObject().Id))
+		}
 	}
 	tf.Set(d, "owners", owners)
 
@@ -658,38 +670,28 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 }
 
 func servicePrincipalResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	servicePrincipalId := d.Id()
-
-	_, status, err := client.Get(ctx, servicePrincipalId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "id", "Retrieving service principal with object ID %q", servicePrincipalId)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving service principal with object ID %q", servicePrincipalId)
-	}
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	id := stable.NewServicePrincipalID(d.Id())
 
 	useExisting := d.Get("use_existing").(bool)
-	status, err = client.Delete(ctx, servicePrincipalId)
+
+	_, err := client.DeleteServicePrincipal(ctx, id, serviceprincipal.DefaultDeleteServicePrincipalOperationOptions())
 	if !useExisting {
-		if err != nil && !useExisting {
-			return tf.ErrorDiagPathF(err, "id", "Deleting service principal with object ID %q, got status %d", servicePrincipalId, status)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 		}
 
 		// Wait for service principal object to be deleted
-		if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-			defer func() { client.BaseClient.DisableRetries = false }()
-			client.BaseClient.DisableRetries = true
-			if _, status, err := client.Get(ctx, servicePrincipalId, odata.Query{}); err != nil {
-				if status == http.StatusNotFound {
+		if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+			if resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
 					return pointer.To(false), nil
 				}
 				return nil, err
 			}
 			return pointer.To(true), nil
 		}); err != nil {
-			return tf.ErrorDiagF(err, "Waiting for deletion of group with object ID %q", servicePrincipalId)
+			return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 		}
 	}
 

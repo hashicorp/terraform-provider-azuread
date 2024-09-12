@@ -6,11 +6,12 @@ package administrativeunits_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitscopedrolemember"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -99,16 +100,15 @@ func TestAccAdministrativeUnitRoleMember_servicePrincipal(t *testing.T) {
 }
 
 func (r AdministrativeUnitRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.AdministrativeUnits.AdministrativeUnitsClient
-	client.BaseClient.DisableRetries = false
+	client := clients.AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
 	id, err := parse.AdministrativeUnitRoleMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Directory Role Member ID: %v", err)
 	}
 
-	if _, status, err := client.GetScopedRoleMember(ctx, id.AdministrativeUnitId, id.ScopedRoleMembershipId, odata.Query{}); err != nil {
-		if status == http.StatusNotFound {
+	if resp, err := client.GetAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(id.AdministrativeUnitId, id.ScopedRoleMembershipId), administrativeunitscopedrolemember.DefaultGetAdministrativeUnitScopedRoleMemberOperationOptions()); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve administrative unit role membership %q (AU ID: %q): %+v", id.ScopedRoleMembershipId, id.AdministrativeUnitId, err)

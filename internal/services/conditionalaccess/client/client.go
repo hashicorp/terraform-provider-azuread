@@ -4,24 +4,31 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccesspolicy"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	NamedLocationsClient *msgraph.NamedLocationsClient
-	PoliciesClient       *msgraph.ConditionalAccessPoliciesClient
+	PolicyClient        *conditionalaccesspolicy.ConditionalAccessPolicyClient
+	NamedLocationClient *conditionalaccessnamedlocation.ConditionalAccessNamedLocationClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	namedLocationsClient := msgraph.NewNamedLocationsClient()
-	o.ConfigureClient(&namedLocationsClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	policyClient, err := conditionalaccesspolicy.NewConditionalAccessPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(policyClient.Client)
 
-	policiesClient := msgraph.NewConditionalAccessPoliciesClient()
-	o.ConfigureClient(&policiesClient.BaseClient)
+	namedLocationClient, err := conditionalaccessnamedlocation.NewConditionalAccessNamedLocationClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(namedLocationClient.Client)
 
 	return &Client{
-		NamedLocationsClient: namedLocationsClient,
-		PoliciesClient:       policiesClient,
-	}
+		PolicyClient:        policyClient,
+		NamedLocationClient: namedLocationClient,
+	}, nil
 }

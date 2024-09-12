@@ -6,11 +6,12 @@ package directoryroles_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -48,18 +49,18 @@ func TestAccRoleEligibilityScheduleRequest_custom(t *testing.T) {
 }
 
 func (r RoleEligibilityScheduleRequestResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.DirectoryRoles.RoleEligibilityScheduleRequestClient
+	client := clients.DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
+	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(state.ID)
 
-	resr, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
-		fmt.Printf("%s, %v\n", err.Error(), status)
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Role Eligibility Schedule Request with ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve Role Eligibility Schedule Request with object ID %q: %+v", state.ID, err)
 	}
 
-	return pointer.To(resr.ID != nil && *resr.ID == state.ID), nil
+	return pointer.To(true), nil
 }
 
 func (r RoleEligibilityScheduleRequestResource) builtin(data acceptance.TestData) string {

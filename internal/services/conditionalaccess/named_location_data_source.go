@@ -7,15 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func namedLocationDataSource() *pluginsdk.Resource {
@@ -79,44 +80,52 @@ func namedLocationDataSource() *pluginsdk.Resource {
 }
 
 func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ConditionalAccess.NamedLocationsClient
+	client := meta.(*clients.Client).ConditionalAccess.NamedLocationClient
 
 	displayName := d.Get("display_name").(string)
-	query := odata.Query{Filter: fmt.Sprintf("displayName eq '%s'", displayName)}
-	result, status, err := client.List(ctx, query)
+	options := conditionalaccessnamedlocation.ListConditionalAccessNamedLocationsOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+	}
+	resp, err := client.ListConditionalAccessNamedLocations(ctx, options)
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "display_name", "Named Location with display name %q was not found", displayName)
 		}
 	}
-	if result == nil {
-		return tf.ErrorDiagF(errors.New("Bad API response"), "Result is nil")
+
+	namedLocations := resp.Model
+	if namedLocations == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Bad API Response")
 	}
-	if len(*result) == 0 {
+	if len(*namedLocations) == 0 {
 		return tf.ErrorDiagPathF(nil, "display_name", "No Named Location was found with display name %q", displayName)
 	}
-	if len(*result) > 1 {
+	if len(*namedLocations) > 1 {
 		return tf.ErrorDiagPathF(nil, "display_name", "More than one Named Location was found with display name %q", displayName)
 	}
 
-	location := (*result)[0]
+	item := (*namedLocations)[0]
 
-	if ipnl, ok := location.(msgraph.IPNamedLocation); ok {
-		if ipnl.ID == nil {
-			return tf.ErrorDiagF(errors.New("Bad API response"), "ID is nil for returned IP Named Location")
-		}
-		d.SetId(*ipnl.ID)
-		tf.Set(d, "display_name", ipnl.DisplayName)
-		tf.Set(d, "ip", flattenIPNamedLocation(&ipnl))
+	if item == nil {
+		return tf.ErrorDiagF(errors.New("NamedLocation was nil"), "Bad API Response")
 	}
 
-	if cnl, ok := location.(msgraph.CountryNamedLocation); ok {
-		if cnl.ID == nil {
-			return tf.ErrorDiagF(errors.New("Bad API response"), "ID is nil for returned Country Named Location")
+	switch namedLocation := item.(type) {
+	case stable.IPNamedLocation:
+		if namedLocation.Id == nil {
+			return tf.ErrorDiagF(errors.New("ID is nil for returned IP Named Location"), "Bad API response")
 		}
-		d.SetId(*cnl.ID)
-		tf.Set(d, "display_name", cnl.DisplayName)
-		tf.Set(d, "country", flattenCountryNamedLocation(&cnl))
+		d.SetId(*namedLocation.Id)
+		tf.Set(d, "display_name", namedLocation.DisplayName)
+		tf.Set(d, "ip", flattenIPNamedLocation(&namedLocation))
+
+	case stable.CountryNamedLocation:
+		if namedLocation.Id == nil {
+			return tf.ErrorDiagF(errors.New("ID is nil for returned Country Named Location"), "Bad API response")
+		}
+		d.SetId(*namedLocation.Id)
+		tf.Set(d, "display_name", namedLocation.DisplayName)
+		tf.Set(d, "country", flattenCountryNamedLocation(&namedLocation))
 	}
 
 	return nil

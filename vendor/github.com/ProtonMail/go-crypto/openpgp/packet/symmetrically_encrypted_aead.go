@@ -8,6 +8,7 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"io"
+	"strconv"
 
 	"github.com/ProtonMail/go-crypto/openpgp/errors"
 	"golang.org/x/crypto/hkdf"
@@ -25,19 +26,19 @@ func (se *SymmetricallyEncrypted) parseAead(r io.Reader) error {
 	se.Cipher = CipherFunction(headerData[0])
 	// cipherFunc must have block size 16 to use AEAD
 	if se.Cipher.blockSize() != 16 {
-		return errors.UnsupportedError("invalid aead cipher: " + string(se.Cipher))
+		return errors.UnsupportedError("invalid aead cipher: " + strconv.Itoa(int(se.Cipher)))
 	}
 
 	// Mode
 	se.Mode = AEADMode(headerData[1])
 	if se.Mode.TagLength() == 0 {
-		return errors.UnsupportedError("unknown aead mode: " + string(se.Mode))
+		return errors.UnsupportedError("unknown aead mode: " + strconv.Itoa(int(se.Mode)))
 	}
 
 	// Chunk size
 	se.ChunkSizeByte = headerData[2]
 	if se.ChunkSizeByte > 16 {
-		return errors.UnsupportedError("invalid aead chunk size byte: " + string(se.ChunkSizeByte))
+		return errors.UnsupportedError("invalid aead chunk size byte: " + strconv.Itoa(int(se.ChunkSizeByte)))
 	}
 
 	// Salt
@@ -115,7 +116,7 @@ func serializeSymmetricallyEncryptedAead(ciphertext io.WriteCloser, cipherSuite 
 
 	// Random salt
 	salt := make([]byte, aeadSaltSize)
-	if _, err := rand.Read(salt); err != nil {
+	if _, err := io.ReadFull(rand, salt); err != nil {
 		return nil, err
 	}
 

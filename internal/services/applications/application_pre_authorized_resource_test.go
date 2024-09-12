@@ -6,12 +6,13 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -117,26 +118,27 @@ func TestAccApplicationPreAuthorized_multipleCreateDestroy(t *testing.T) {
 }
 
 func (ApplicationPreAuthorizedResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClientBeta
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
 	id, err := parse.ApplicationPreAuthorizedID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Pre-Authorized Application ID: %v", err)
 	}
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := stable.NewApplicationID(id.ObjectId)
+
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", applicationId, err)
 	}
 
-	if app.Api != nil && app.Api.PreAuthorizedApplications != nil {
+	app := resp.Model
+	if app != nil && app.Api != nil && app.Api.PreAuthorizedApplications != nil {
 		for _, a := range *app.Api.PreAuthorizedApplications {
-			if a.AppId != nil && strings.EqualFold(*a.AppId, id.AppId) {
+			if strings.EqualFold(a.AppId.GetOrZero(), id.AppId) {
 				return pointer.To(true), nil
 			}
 		}

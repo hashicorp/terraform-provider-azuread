@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
-// Microsoft’s Terraform Partner ID is this specific GUID
+// Terraform's Microsoft Partner ID is this specific GUID
 const terraformPartnerId = "222c6c49-1b0a-5959-a213-6608f9eb8820"
 
 type ServiceRegistration interface {

@@ -6,15 +6,18 @@ package identitygovernance
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedule"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedulerequest"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 var _ sdk.ResourceWithUpdate = PrivilegedAccessGroupAssignmentScheduleResource{}
@@ -45,7 +48,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestClient
 
 			var model PrivilegedAccessGroupScheduleModel
 			if err := metadata.Decode(&model); err != nil {
@@ -57,40 +60,45 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 				return err
 			}
 
-			properties := msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
-				AccessId:      model.AssignmentType,
-				PrincipalId:   &model.PrincipalId,
-				GroupId:       &model.GroupId,
-				Action:        msgraph.PrivilegedAccessGroupActionAdminAssign,
-				Justification: &model.Justification,
+			properties := stable.PrivilegedAccessGroupAssignmentScheduleRequest{
+				AccessId:      stable.PrivilegedAccessGroupRelationships(model.AssignmentType),
+				PrincipalId:   nullable.Value(model.PrincipalId),
+				GroupId:       nullable.Value(model.GroupId),
+				Action:        pointer.To(stable.ScheduleRequestActions_AdminAssign),
+				Justification: nullable.NoZero(model.Justification),
 				ScheduleInfo:  schedule,
 			}
 
 			if model.TicketNumber != "" || model.TicketSystem != "" {
-				properties.TicketInfo = &msgraph.TicketInfo{
-					TicketNumber: &model.TicketNumber,
-					TicketSystem: &model.TicketSystem,
+				properties.TicketInfo = &stable.TicketInfo{
+					TicketNumber: nullable.NoZero(model.TicketNumber),
+					TicketSystem: nullable.NoZero(model.TicketSystem),
 				}
 			}
 
-			req, _, err := client.Create(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties)
 			if err != nil {
-				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+				return fmt.Errorf("creating assignment schedule request: %v", err)
 			}
 
-			if req.ID == nil || *req.ID == "" {
-				return fmt.Errorf("ID returned for assignment schedule request is nil/empty")
+			request := resp.Model
+			if request == nil {
+				return fmt.Errorf("creating assignment schedule request: model was nil")
+			}
+			if request.Id == nil || *request.Id == "" {
+				return fmt.Errorf("creating assignment schedule request: ID returned for request is nil/empty")
 			}
 
-			if req.Status == msgraph.PrivilegedAccessGroupAssignmentStatusFailed {
-				return fmt.Errorf("Assignment schedule request is in a failed state")
+			if pointer.From(request.Status) == PrivilegedAccessGroupScheduleRequestStatusFailed {
+				return fmt.Errorf("creating assignment schedule request: request is in a failed state")
 			}
 
-			id, err := parse.ParsePrivilegedAccessGroupScheduleID(*req.TargetScheduleId)
+			resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(request.TargetScheduleId.GetOrZero())
 			if err != nil {
 				return err
 			}
-			metadata.SetID(id)
+
+			metadata.SetID(resourceId)
 
 			return nil
 		},
@@ -102,9 +110,9 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Read() sdk.ResourceFunc
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			scheduleClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleClient
-			requestsClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			requestsClient := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestClient
 
-			id, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
+			resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
@@ -114,75 +122,79 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Read() sdk.ResourceFunc
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			schedule, scheduleStatus, err := scheduleClient.Get(ctx, id.ID())
-			if err != nil && scheduleStatus != http.StatusNotFound {
+			id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(resourceId.ID())
+
+			scheduleResp, err := scheduleClient.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
+			if err != nil && !response.WasNotFound(scheduleResp.HttpResponse) {
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
 
-			var request *msgraph.PrivilegedAccessGroupAssignmentScheduleRequest
+			schedule := scheduleResp.Model
 
 			// Some details are only available on the request which is used for the create/update of the schedule.
 			// Schedule requests are never deleted. New ones are created when changes are made.
-			// Therefore on a read, we need to find the latest version of the request.
+			// Therefore, on read, we need to find the latest version of the request.
 			// This is to cater for changes being made outside of Terraform.
-			requests, _, err := requestsClient.List(ctx, odata.Query{
-				Filter: fmt.Sprintf("groupId eq '%s' and targetScheduleId eq '%s'", id.GroupId, id.ID()),
-				OrderBy: odata.OrderBy{
+			options := privilegedaccessgroupassignmentschedulerequest.ListPrivilegedAccessGroupAssignmentScheduleRequestsOperationOptions{
+				Filter: pointer.To(fmt.Sprintf("groupId eq '%s' and targetScheduleId eq '%s'", resourceId.GroupId, resourceId.ID())),
+				OrderBy: pointer.To(odata.OrderBy{
 					Field:     "createdDateTime",
 					Direction: odata.Descending,
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("listing requests: %+v", err)
+				}),
 			}
+			requestsResp, err := requestsClient.ListPrivilegedAccessGroupAssignmentScheduleRequests(ctx, options)
+			if err != nil {
+				return fmt.Errorf("listing requests: %v", err)
+			}
+
+			var request *stable.PrivilegedAccessGroupAssignmentScheduleRequest
+
+			requests := requestsResp.Model
 			if requests == nil || len(*requests) == 0 {
-				if scheduleStatus == http.StatusNotFound {
+				if response.WasNotFound(scheduleResp.HttpResponse) {
 					// No request and no schedule was found
-					return metadata.MarkAsGone(id)
+					return metadata.MarkAsGone(resourceId)
 				}
 			} else {
 				request = pointer.To((*requests)[0])
 			}
 
-			var scheduleInfo *msgraph.RequestSchedule
+			var scheduleInfo *stable.RequestSchedule
 
 			if request != nil {
 				// The request is still present, populate from the request
 				scheduleInfo = request.ScheduleInfo
 
-				model.AssignmentType = request.AccessId
-				model.GroupId = pointer.From(request.GroupId)
-				model.Justification = pointer.From(request.Justification)
-				model.PrincipalId = pointer.From(request.PrincipalId)
-				model.Status = request.Status
+				model.AssignmentType = string(request.AccessId)
+				model.GroupId = request.GroupId.GetOrZero()
+				model.Justification = request.Justification.GetOrZero()
+				model.PrincipalId = request.PrincipalId.GetOrZero()
+				model.Status = pointer.From(request.Status)
 
 				if ticketInfo := request.TicketInfo; ticketInfo != nil {
-					model.TicketNumber = pointer.From(ticketInfo.TicketNumber)
-					model.TicketSystem = pointer.From(ticketInfo.TicketSystem)
+					model.TicketNumber = ticketInfo.TicketNumber.GetOrZero()
+					model.TicketSystem = ticketInfo.TicketSystem.GetOrZero()
 				}
-			} else {
+			} else if schedule != nil {
 				// The request has likely expired, so populate from the schedule
-				scheduleInfo = schedule.ScheduleInfo
+				scheduleInfo = &schedule.ScheduleInfo
 
-				model.AssignmentType = schedule.AccessId
-				model.GroupId = pointer.From(schedule.GroupId)
-				model.PrincipalId = pointer.From(schedule.PrincipalId)
-				model.Status = schedule.Status
+				model.AssignmentType = string(schedule.AccessId)
+				model.GroupId = schedule.GroupId.GetOrZero()
+				model.PrincipalId = schedule.PrincipalId.GetOrZero()
+				model.Status = schedule.Status.GetOrZero()
 			}
 
 			if scheduleInfo != nil {
-				if expiration := scheduleInfo.Expiration; expiration != nil {
-					model.Duration = pointer.From(expiration.Duration)
+				model.StartDate = scheduleInfo.StartDateTime.GetOrZero()
 
-					if expiration.EndDateTime != nil {
-						model.ExpirationDate = expiration.EndDateTime.Format(time.RFC3339)
-					}
+				if expiration := scheduleInfo.Expiration; expiration != nil {
+					model.Duration = expiration.Duration.GetOrZero()
+					model.ExpirationDate = expiration.EndDateTime.GetOrZero()
+
 					if expiration.Type != nil {
-						model.PermanentAssignment = *expiration.Type == msgraph.ExpirationPatternTypeNoExpiration
+						model.PermanentAssignment = *expiration.Type == stable.ExpirationPatternType_NoExpiration
 					}
-				}
-				if scheduleInfo.StartDateTime != nil {
-					model.StartDate = scheduleInfo.StartDateTime.Format(time.RFC3339)
 				}
 			}
 
@@ -195,10 +207,15 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestClient
+
+			resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
 
 			var model PrivilegedAccessGroupScheduleModel
-			if err := metadata.Decode(&model); err != nil {
+			if err = metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
@@ -207,33 +224,37 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 				return err
 			}
 
-			properties := msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
-				AccessId:      model.AssignmentType,
-				PrincipalId:   &model.PrincipalId,
-				GroupId:       &model.GroupId,
-				Action:        msgraph.PrivilegedAccessGroupActionAdminAssign,
-				Justification: &model.Justification,
+			properties := stable.PrivilegedAccessGroupAssignmentScheduleRequest{
+				AccessId:      stable.PrivilegedAccessGroupRelationships(resourceId.Relationship),
+				PrincipalId:   nullable.Value(model.PrincipalId),
+				GroupId:       nullable.Value(resourceId.GroupId),
+				Action:        pointer.To(stable.ScheduleRequestActions_AdminAssign),
+				Justification: nullable.NoZero(model.Justification),
 				ScheduleInfo:  schedule,
 			}
 
 			if model.TicketNumber != "" || model.TicketSystem != "" {
-				properties.TicketInfo = &msgraph.TicketInfo{
-					TicketNumber: &model.TicketNumber,
-					TicketSystem: &model.TicketSystem,
+				properties.TicketInfo = &stable.TicketInfo{
+					TicketNumber: nullable.NoZero(model.TicketNumber),
+					TicketSystem: nullable.NoZero(model.TicketSystem),
 				}
 			}
 
-			req, _, err := client.Create(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties)
 			if err != nil {
-				return fmt.Errorf("Could not create assignment schedule request, %+v", err)
+				return fmt.Errorf("creating updated assignment schedule request: %v", err)
 			}
 
-			if req.ID == nil || *req.ID == "" {
-				return fmt.Errorf("ID returned for assignment schedule request is nil/empty")
+			request := resp.Model
+			if request == nil {
+				return fmt.Errorf("creating updated assignment schedule request: model was nil")
+			}
+			if request.Id == nil || *request.Id == "" {
+				return fmt.Errorf("creating updated assignment schedule request: ID returned for request is nil/empty")
 			}
 
-			if req.Status == msgraph.PrivilegedAccessGroupAssignmentStatusFailed {
-				return fmt.Errorf("Assignment schedule request is in a failed state")
+			if pointer.From(request.Status) == PrivilegedAccessGroupScheduleRequestStatusFailed {
+				return fmt.Errorf("creating updated assignment schedule request: request is in a failed state")
 			}
 
 			return nil
@@ -245,33 +266,33 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFu
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestsClient
+			client := metadata.Client.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleRequestClient
 
-			id, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
+			resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
 			var model PrivilegedAccessGroupScheduleModel
-			if err := metadata.Decode(&model); err != nil {
+			if err = metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
 			switch model.Status {
-			case msgraph.PrivilegedAccessGroupAssignmentStatusDenied,
-				msgraph.PrivilegedAccessGroupAssignmentStatusFailed,
-				msgraph.PrivilegedAccessGroupAssignmentStatusGranted,
-				msgraph.PrivilegedAccessGroupAssignmentStatusPendingAdminDecision,
-				msgraph.PrivilegedAccessGroupAssignmentStatusPendingApproval,
-				msgraph.PrivilegedAccessGroupAssignmentStatusPendingProvisioning,
-				msgraph.PrivilegedAccessGroupAssignmentStatusPendingScheduledCreation:
-				return cancelAssignmentRequest(ctx, metadata, client, id)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusProvisioned,
-				msgraph.PrivilegedAccessGroupAssignmentStatusScheduleCreated:
-				return revokeAssignmentRequest(ctx, metadata, client, id, &model)
-			case msgraph.PrivilegedAccessGroupAssignmentStatusCanceled,
-				msgraph.PrivilegedAccessGroupAssignmentStatusRevoked:
-				return metadata.MarkAsGone(id)
+			case PrivilegedAccessGroupScheduleRequestStatusDenied,
+				PrivilegedAccessGroupScheduleRequestStatusFailed,
+				PrivilegedAccessGroupScheduleRequestStatusGranted,
+				PrivilegedAccessGroupScheduleRequestStatusPendingAdminDecision,
+				PrivilegedAccessGroupScheduleRequestStatusPendingApproval,
+				PrivilegedAccessGroupScheduleRequestStatusPendingProvisioning,
+				PrivilegedAccessGroupScheduleRequestStatusPendingScheduleCreation:
+				return cancelAssignmentRequest(ctx, metadata, client, stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleRequestID(resourceId.ID()))
+			case PrivilegedAccessGroupScheduleRequestStatusProvisioned,
+				PrivilegedAccessGroupScheduleRequestStatusScheduleCreated:
+				return revokeAssignmentRequest(ctx, metadata, client, *resourceId, model)
+			case PrivilegedAccessGroupScheduleRequestStatusCanceled,
+				PrivilegedAccessGroupScheduleRequestStatusRevoked:
+				return metadata.MarkAsGone(resourceId)
 			}
 
 			return fmt.Errorf("unable to destroy due to unknown status: %s", model.Status)
@@ -279,33 +300,33 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFu
 	}
 }
 
-func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId) error {
-	status, err := client.Cancel(ctx, id.ID())
-	if err != nil {
-		if status == http.StatusNotFound {
+func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *privilegedaccessgroupassignmentschedulerequest.PrivilegedAccessGroupAssignmentScheduleRequestClient, id stable.IdentityGovernancePrivilegedAccessGroupAssignmentScheduleRequestId) error {
+	if resp, err := client.CancelPrivilegedAccessGroupAssignmentScheduleRequest(ctx, id); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
 			return metadata.MarkAsGone(id)
 		}
-		return fmt.Errorf("cancelling %s: %+v", id, err)
+
+		return fmt.Errorf("canceling %s: %v", id, err)
 	}
+
 	return nil
 }
 
-func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient, id *parse.PrivilegedAccessGroupScheduleId, model *PrivilegedAccessGroupScheduleModel) error {
-	result, status, err := client.Create(ctx, msgraph.PrivilegedAccessGroupAssignmentScheduleRequest{
-		ID:          pointer.To(id.ID()),
-		AccessId:    model.AssignmentType,
-		PrincipalId: &model.PrincipalId,
-		GroupId:     &model.GroupId,
-		Action:      msgraph.PrivilegedAccessGroupActionAdminRemove,
-	})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return metadata.MarkAsGone(id)
+func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *privilegedaccessgroupassignmentschedulerequest.PrivilegedAccessGroupAssignmentScheduleRequestClient, id parse.PrivilegedAccessGroupScheduleId, model PrivilegedAccessGroupScheduleModel) error {
+	request := stable.PrivilegedAccessGroupAssignmentScheduleRequest{
+		AccessId:    stable.PrivilegedAccessGroupRelationships(id.Relationship),
+		PrincipalId: nullable.Value(model.PrincipalId),
+		GroupId:     nullable.Value(id.GroupId),
+		Action:      pointer.To(stable.ScheduleRequestActions_AdminRemove),
+	}
+
+	if resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, request); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return metadata.MarkAsGone(&id)
 		}
-		return fmt.Errorf("retrieving %s: %+v", id, err)
+
+		return fmt.Errorf("creating schedule removal request: %v", err)
 	}
-	if result == nil {
-		return fmt.Errorf("retrieving %s: API error, result was nil", id)
-	}
+
 	return nil
 }

@@ -4,16 +4,15 @@
 package synchronization
 
 import (
-	"time"
-
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
 
-func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.SynchronizationSecretKeyStringValuePair {
-	result := make([]msgraph.SynchronizationSecretKeyStringValuePair, 0)
+func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]stable.SynchronizationSecretKeyStringValuePair {
+	result := make([]stable.SynchronizationSecretKeyStringValuePair, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -21,17 +20,17 @@ func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.S
 		}
 		item := raw.(map[string]interface{})
 
-		result = append(result, msgraph.SynchronizationSecretKeyStringValuePair{
-			Key:   pointer.To(item["key"].(string)),
-			Value: pointer.To(""),
+		result = append(result, stable.SynchronizationSecretKeyStringValuePair{
+			Key:   pointer.To(stable.SynchronizationSecret(item["key"].(string))),
+			Value: nullable.Value(""),
 		})
 	}
 
 	return &result
 }
 
-func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.SynchronizationSecretKeyStringValuePair {
-	result := make([]msgraph.SynchronizationSecretKeyStringValuePair, 0)
+func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]stable.SynchronizationSecretKeyStringValuePair {
+	result := make([]stable.SynchronizationSecretKeyStringValuePair, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -39,17 +38,17 @@ func expandSynchronizationSecretKeyStringValuePair(in []interface{}) *[]msgraph.
 		}
 		item := raw.(map[string]interface{})
 
-		result = append(result, msgraph.SynchronizationSecretKeyStringValuePair{
-			Key:   pointer.To(item["key"].(string)),
-			Value: pointer.To(item["value"].(string)),
+		result = append(result, stable.SynchronizationSecretKeyStringValuePair{
+			Key:   pointer.To(stable.SynchronizationSecret(item["key"].(string))),
+			Value: nullable.Value(item["value"].(string)),
 		})
 	}
 
 	return &result
 }
 
-func expandSynchronizationJobApplicationParameters(in []interface{}) *[]msgraph.SynchronizationJobApplicationParameters {
-	result := make([]msgraph.SynchronizationJobApplicationParameters, 0)
+func expandSynchronizationJobApplicationParameters(in []interface{}) *[]stable.SynchronizationJobApplicationParameters {
+	result := make([]stable.SynchronizationJobApplicationParameters, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -57,70 +56,66 @@ func expandSynchronizationJobApplicationParameters(in []interface{}) *[]msgraph.
 		}
 		item := raw.(map[string]interface{})
 
-		result = append(result, msgraph.SynchronizationJobApplicationParameters{
+		result = append(result, stable.SynchronizationJobApplicationParameters{
 			Subjects: expandSynchronizationJobSubject(item["subject"].([]interface{})),
-			RuleId:   pointer.To(item["rule_id"].(string)),
+			RuleId:   nullable.Value(item["rule_id"].(string)),
 		})
 	}
 
 	return &result
 }
 
-func expandSynchronizationJobSubject(in []interface{}) *[]msgraph.SynchronizationJobSubject {
-	result := make([]msgraph.SynchronizationJobSubject, 0)
+func expandSynchronizationJobSubject(in []interface{}) *[]stable.SynchronizationJobSubject {
+	result := make([]stable.SynchronizationJobSubject, 0)
 	for _, raw := range in {
 		if raw == nil {
 			continue
 		}
 		item := raw.(map[string]interface{})
 
-		result = append(result, msgraph.SynchronizationJobSubject{
-			ObjectId:       pointer.To(item["object_id"].(string)),
-			ObjectTypeName: pointer.To(item["object_type_name"].(string)),
+		result = append(result, stable.SynchronizationJobSubject{
+			ObjectId:       nullable.Value(item["object_id"].(string)),
+			ObjectTypeName: nullable.Value(item["object_type_name"].(string)),
 		})
 	}
 
 	return &result
 }
 
-func flattenSynchronizationSchedule(in *msgraph.SynchronizationSchedule) []map[string]interface{} {
+func flattenSynchronizationSchedule(in *stable.SynchronizationSchedule) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	expiration := ""
-	if v := in.Expiration; v != nil {
-		expiration = v.Format(time.RFC3339)
-	}
 	return []map[string]interface{}{{
-		"expiration": expiration,
-		"interval":   in.Interval,
-		"state":      in.State,
+		"expiration": in.Expiration.GetOrZero(),
+		"interval":   pointer.From(in.Interval),
+		"state":      pointer.From(in.State),
 	}}
 }
 
-func flattenSynchronizationSecretKeyStringValuePair(in *[]msgraph.SynchronizationSecretKeyStringValuePair, current []interface{}) []interface{} {
+func flattenSynchronizationSecretKeyStringValuePair(in *[]stable.SynchronizationSecretKeyStringValuePair, current []interface{}) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
 	credentials := make([]interface{}, 0)
 	for _, item := range *in {
-		value := item.Value
-		if *value == "*" && current != nil {
+		value := item.Value.GetOrZero()
+		if value == "*" && current != nil {
 			// Use value from state if API returns * indicating sensitive data
 			for _, raw := range current {
 				if raw == nil {
 					continue
 				}
 				currentItem := raw.(map[string]interface{})
-				if currentItem["key"].(string) == *item.Key {
-					value = pointer.To(currentItem["value"].(string))
+				if currentItem["key"].(string) == string(pointer.From(item.Key)) {
+					value = currentItem["value"].(string)
 				}
 			}
 		}
 		credential := map[string]interface{}{
-			"key":   item.Key,
+			"key":   pointer.From(item.Key),
 			"value": value,
 		}
 		credentials = append(credentials, credential)
@@ -129,13 +124,14 @@ func flattenSynchronizationSecretKeyStringValuePair(in *[]msgraph.Synchronizatio
 	return credentials
 }
 
-func allCredentialsRemoved(in []msgraph.SynchronizationSecretKeyStringValuePair, current []msgraph.SynchronizationSecretKeyStringValuePair) bool {
+func allCredentialsRemoved(in []stable.SynchronizationSecretKeyStringValuePair, current []stable.SynchronizationSecretKeyStringValuePair) bool {
 	for _, item := range in {
 		for _, itemCurrent := range current {
-			if *item.Key == *itemCurrent.Key {
+			if pointer.From(item.Key) == pointer.From(itemCurrent.Key) {
 				return false
 			}
 		}
 	}
+
 	return true
 }
