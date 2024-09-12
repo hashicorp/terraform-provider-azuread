@@ -92,7 +92,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
-	if _, err = client.AddMemberRef(ctx, directoryRoleId, addMemberProperties); err != nil {
+	if _, err = client.AddMemberRef(ctx, directoryRoleId, addMemberProperties, member.DefaultAddMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding member %q to directory role %q", id.MemberId, id.DirectoryRoleId)
 	}
 

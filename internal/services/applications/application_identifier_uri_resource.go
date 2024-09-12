@@ -117,7 +117,7 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 				IdentifierUris: &newIdentifierUris,
 			}
 
-			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -236,7 +236,7 @@ func (r ApplicationIdentifierUriResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Patch the application with the new set of identifier URIs
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

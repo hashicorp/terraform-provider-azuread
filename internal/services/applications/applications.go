@@ -114,7 +114,7 @@ func applicationDisableAppRoles(ctx context.Context, client *application.Applica
 			Id:       app.Id,
 			AppRoles: &existingRoles,
 		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return fmt.Errorf("disabling App Roles for %s: %v", applicationId, err)
 		}
 
@@ -230,7 +230,7 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 				OAuth2PermissionScopes: &existingScopes,
 			},
 		}
-		if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return fmt.Errorf("disabling OAuth2 Permission Scopes for %s: %+v", applicationId, err)
 		}
 

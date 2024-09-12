@@ -166,7 +166,7 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 				OptionalClaims: &optionalClaims,
 			}
 
-			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -332,7 +332,7 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 				OptionalClaims: &newOptionalClaims,
 			}
 
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -361,7 +361,7 @@ func (r ApplicationOptionalClaimsResource) Delete() sdk.ResourceFunc {
 				OptionalClaims: &stable.OptionalClaims{},
 			}
 
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

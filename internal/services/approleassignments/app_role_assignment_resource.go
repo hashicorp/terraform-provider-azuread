@@ -106,7 +106,7 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		ResourceId:  nullable.Value(resourceId),
 	}
 
-	resp, err := client.CreateAppRoleAssignedTo(ctx, stable.NewServicePrincipalID(resourceId), properties)
+	resp, err := client.CreateAppRoleAssignedTo(ctx, stable.NewServicePrincipalID(resourceId), properties, approleassignedto.DefaultCreateAppRoleAssignedToOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create app role assignment")
 	}

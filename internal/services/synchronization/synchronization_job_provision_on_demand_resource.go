@@ -148,7 +148,7 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 		Parameters: expandSynchronizationJobApplicationParameters(d.Get("parameter").([]interface{})),
 	}
 
-	if _, err = client.ProvisionSynchronizationJobOnDemand(ctx, jobId, properties); err != nil {
+	if _, err = client.ProvisionSynchronizationJobOnDemand(ctx, jobId, properties, synchronizationjob.DefaultProvisionSynchronizationJobOnDemandOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Provisioning %s", jobId)
 	}
 

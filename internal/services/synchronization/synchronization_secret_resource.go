@@ -79,7 +79,7 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 		Value: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization secret for %s", servicePrincipalId)
 	}
 
@@ -132,7 +132,7 @@ func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.Resou
 		Value: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating synchronization secret for %s", servicePrincipalId)
 	}
 
@@ -218,7 +218,7 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.Resou
 	synchronizationSecrets := synchronizationsecret.SetSynchronizationSecretRequest{
 		Value: credentials,
 	}
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing synchronization secrets for %s", servicePrincipalId)
 	}
 

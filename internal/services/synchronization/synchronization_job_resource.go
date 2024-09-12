@@ -123,7 +123,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 		TemplateId: nullable.Value(d.Get("template_id").(string)),
 	}
 
-	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob)
+	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob, synchronizationjob.DefaultCreateSynchronizationJobOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization job for %s", servicePrincipalId)
 	}
@@ -165,7 +165,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 
 	// Start job if desired
 	if d.Get("enabled").(bool) {
-		if _, err = client.StartSynchronizationJob(ctx, id); err != nil {
+		if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.DefaultStartSynchronizationJobOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Starting %s", id)
 		}
 	}
@@ -217,11 +217,11 @@ func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 
 	if d.HasChange("enabled") {
 		if d.Get("enabled").(bool) {
-			if _, err = client.StartSynchronizationJob(ctx, id); err != nil {
+			if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.DefaultStartSynchronizationJobOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Starting %s", id)
 			}
 		} else {
-			if _, err = client.PauseSynchronizationJob(ctx, id); err != nil {
+			if _, err = client.PauseSynchronizationJob(ctx, id, synchronizationjob.DefaultPauseSynchronizationJobOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Pausing %s", id)
 			}
 		}

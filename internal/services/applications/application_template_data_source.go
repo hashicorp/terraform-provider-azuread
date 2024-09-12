@@ -145,13 +145,13 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 	d.SetId(*template.Id)
 
 	tf.Set(d, "categories", tf.FlattenStringSlicePtr(template.Categories))
-	tf.Set(d, "display_name", template.DisplayName)
-	tf.Set(d, "homepage_url", template.HomePageUrl)
-	tf.Set(d, "logo_url", template.LogoUrl)
-	tf.Set(d, "publisher", template.Publisher)
+	tf.Set(d, "display_name", template.DisplayName.GetOrZero())
+	tf.Set(d, "homepage_url", template.HomePageUrl.GetOrZero())
+	tf.Set(d, "logo_url", template.LogoUrl.GetOrZero())
+	tf.Set(d, "publisher", template.Publisher.GetOrZero())
 	tf.Set(d, "supported_provisioning_types", tf.FlattenStringSlicePtr(template.SupportedProvisioningTypes))
 	tf.Set(d, "supported_single_sign_on_modes", tf.FlattenStringSlicePtr(template.SupportedSingleSignOnModes))
-	tf.Set(d, "template_id", template.Id)
+	tf.Set(d, "template_id", pointer.From(template.Id))
 
 	return nil
 }

@@ -117,7 +117,7 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 		properties.ConsentType = nullable.Value(DelegatedPermissionGrantConsentTypeAllPrincipals)
 	}
 
-	resp, err := client.CreateOAuth2PermissionGrant(ctx, properties)
+	resp, err := client.CreateOAuth2PermissionGrant(ctx, properties, oauth2permissiongrant.DefaultCreateOAuth2PermissionGrantOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create delegated permission grant")
 	}
@@ -144,7 +144,7 @@ func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context,
 		Scope: nullable.NoZero(strings.Join(tf.ExpandStringSlice(d.Get("claim_values").(*pluginsdk.Set).List()), " ")),
 	}
 
-	if _, err := client.UpdateOAuth2PermissionGrant(ctx, id, properties); err != nil {
+	if _, err := client.UpdateOAuth2PermissionGrant(ctx, id, properties, oauth2permissiongrant.DefaultUpdateOAuth2PermissionGrantOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 

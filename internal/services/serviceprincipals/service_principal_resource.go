@@ -468,7 +468,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
 	properties.Owners_ODataBind = &ownersFirst20
 
-	resp, err := client.CreateServicePrincipal(ctx, properties)
+	resp, err := client.CreateServicePrincipal(ctx, properties, serviceprincipal.DefaultCreateServicePrincipalOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create service principal")
 	}
@@ -489,7 +489,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
 	if resp, err := client.UpdateServicePrincipal(ctx, id, stable.ServicePrincipal{
 		Description: nullable.NoZero(d.Get("description").(string)),
-	}); err != nil {
+	}, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new service principal to be replicated in Azure AD")
 		}
@@ -498,7 +498,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 
 	// Add any remaining owners after the service principal is created
 	for _, ref := range ownersExtra {
-		if _, err = ownerClient.AddOwnerRef(ctx, id, ref); err != nil {
+		if _, err = ownerClient.AddOwnerRef(ctx, id, ref, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 		}
 	}
@@ -541,7 +541,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 		Tags:                       &tags,
 	}
 
-	if _, err := client.UpdateServicePrincipal(ctx, id, properties); err != nil {
+	if _, err := client.UpdateServicePrincipal(ctx, id, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
@@ -566,7 +566,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 			request := stable.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(o).ID()),
 			}
-			if _, err = ownerClient.AddOwnerRef(ctx, id, request); err != nil {
+			if _, err = ownerClient.AddOwnerRef(ctx, id, request, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 			}
 		}

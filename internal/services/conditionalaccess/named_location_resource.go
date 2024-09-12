@@ -111,7 +111,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		properties := expandIPNamedLocation(v.([]interface{}))
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
-		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties)
+		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not create named location")
 		}
@@ -136,7 +136,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		properties := expandCountryNamedLocation(v.([]interface{}))
 		properties.DisplayName = pointer.To(d.Get("display_name").(string))
 
-		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties)
+		resp, err := client.CreateConditionalAccessNamedLocation(ctx, *properties, conditionalaccessnamedlocation.DefaultCreateConditionalAccessNamedLocationOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not create named location")
 		}
@@ -177,7 +177,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
 		}
 
-		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties); err != nil {
+		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update named location with ID %q: %+v", d.Id(), err)
 		}
 
@@ -220,7 +220,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
 		}
 
-		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties); err != nil {
+		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update named location with ID %q: %+v", d.Id(), err)
 		}
 
@@ -321,7 +321,7 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 		properties := stable.IPNamedLocation{
 			IsTrusted: pointer.To(false),
 		}
-		if resp, err := client.UpdateConditionalAccessNamedLocation(ctx, id, properties); err != nil {
+		if resp, err := client.UpdateConditionalAccessNamedLocation(ctx, id, properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				log.Printf("[DEBUG] %s already deleted", id)
 				return nil

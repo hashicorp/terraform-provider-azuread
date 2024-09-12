@@ -97,7 +97,7 @@ func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
-	if _, err = memberClient.AddMemberRef(ctx, groupId, memberRef); err != nil {
+	if _, err = memberClient.AddMemberRef(ctx, groupId, memberRef, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding %s", id)
 	}
 

@@ -68,7 +68,7 @@ func claimsMappingPolicyResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		DisplayName: nullable.Value(d.Get("display_name").(string)),
 	}
 
-	resp, err := client.CreateClaimsMappingPolicy(ctx, properties)
+	resp, err := client.CreateClaimsMappingPolicy(ctx, properties, claimsmappingpolicy.DefaultCreateClaimsMappingPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create Claims Mapping Policy")
 	}
@@ -122,7 +122,7 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 		DisplayName: nullable.Value(d.Get("display_name").(string)),
 	}
 
-	if _, err := client.UpdateClaimsMappingPolicy(ctx, id, properties); err != nil {
+	if _, err := client.UpdateClaimsMappingPolicy(ctx, id, properties, claimsmappingpolicy.DefaultUpdateClaimsMappingPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 

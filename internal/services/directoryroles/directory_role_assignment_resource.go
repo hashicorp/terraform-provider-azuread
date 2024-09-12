@@ -134,7 +134,7 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 		properties.DirectoryScopeId = nullable.Value("/")
 	}
 
-	resp, err := client.CreateDirectoryRoleAssignment(ctx, properties)
+	resp, err := client.CreateDirectoryRoleAssignment(ctx, properties, directoryroleassignment.DefaultCreateDirectoryRoleAssignmentOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Assigning directory role %q to directory principal %q: %v", roleId, principalId, err)
 	}

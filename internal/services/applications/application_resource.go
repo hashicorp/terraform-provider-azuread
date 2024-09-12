@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
 	applicationStable "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
@@ -1008,7 +1009,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		// When the /instantiate operation returns 404, it has probably created the application anyway. There is no way to tell this
 		// other than polling for the application object which is created out-of-band, so we create it with a quasi-unique temporary
 		// displayName and then poll for it.
-		resp, err := appTemplateClient.Instantiate(ctx, templateId, properties)
+		resp, err := appTemplateClient.Instantiate(ctx, templateId, properties, applicationtemplate.DefaultInstantiateOperationOptions())
 		var applicationServicePrincipal *stable.ApplicationServicePrincipal
 		if resp.Model != nil {
 			applicationServicePrincipal = &stable.ApplicationServicePrincipal{
@@ -1194,7 +1195,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
 	properties.Owners_ODataBind = &ownersFirst20
 
-	resp, err := client.CreateApplication(ctx, properties)
+	resp, err := client.CreateApplication(ctx, properties, application.DefaultCreateApplicationOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create application")
 	}
@@ -1228,7 +1229,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
-		resp, err := client.UpdateApplication(ctx, betaId, beta.Application{DisplayName: nullable.Value(displayNameToSet)})
+		resp, err := client.UpdateApplication(ctx, betaId, beta.Application{DisplayName: nullable.Value(displayNameToSet)}, application.DefaultUpdateApplicationOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
@@ -1241,14 +1242,14 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
 	if !acceptMappedClaims.IsNull() && acceptMappedClaims.IsSet() {
 		api.AcceptMappedClaims = acceptMappedClaims
-		if _, err = client.UpdateApplication(ctx, betaId, beta.Application{Api: api}); err != nil {
+		if _, err = client.UpdateApplication(ctx, betaId, beta.Application{Api: api}, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
 		}
 	}
 
 	// Add any remaining owners after the application is created
 	for _, ref := range ownersExtra {
-		if _, err = ownerClient.AddOwnerRef(ctx, id, ref); err != nil {
+		if _, err = ownerClient.AddOwnerRef(ctx, id, ref, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 		}
 	}
@@ -1264,7 +1265,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
 		// TODO content type is probably required here but sdk doesn't support it
-		_, err = logoClient.SetLogo(ctx, id, imageData)
+		_, err = logoClient.SetLogo(ctx, id, imageData, logo.DefaultSetLogoOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
@@ -1332,7 +1333,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 			keyIdToRemove := oldPassword["key_id"].(string)
 			if _, err = client.RemovePassword(ctx, betaId, application.RemovePasswordRequest{
 				KeyId: pointer.To(keyIdToRemove),
-			}); err != nil {
+			}, application.DefaultRemovePasswordOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.ApplicationId, keyIdToRemove)
 			}
 
@@ -1379,7 +1380,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 			resp, err := client.AddPassword(ctx, betaId, application.AddPasswordRequest{
 				PasswordCredential: convertPasswordCredentialStableToBeta(credential),
-			})
+			}, application.DefaultAddPasswordOperationOptions())
 			if err != nil {
 				return tf.ErrorDiagF(err, "Adding password for application with object ID %q", id.ApplicationId)
 			}
@@ -1502,7 +1503,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	properties.Api = api
 
-	if _, err = client.UpdateApplication(ctx, betaId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, betaId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
 	}
 
@@ -1527,7 +1528,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 			request := stable.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(o).ID()),
 			}
-			if _, err = ownerClient.AddOwnerRef(ctx, *id, request); err != nil {
+			if _, err = ownerClient.AddOwnerRef(ctx, *id, request, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to application with object ID: %q", id.ApplicationId)
 			}
 		}
@@ -1542,7 +1543,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
 		// TODO content type likely required but sdk doesn't support it
-		if _, err = logoClient.SetLogo(ctx, *id, imageData); err != nil {
+		if _, err = logoClient.SetLogo(ctx, *id, imageData, logo.DefaultSetLogoOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
 	}

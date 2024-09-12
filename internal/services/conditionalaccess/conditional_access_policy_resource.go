@@ -590,7 +590,7 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
 	}
 
-	resp, err := client.CreateConditionalAccessPolicy(ctx, properties)
+	resp, err := client.CreateConditionalAccessPolicy(ctx, properties, conditionalaccesspolicy.DefaultCreateConditionalAccessPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create conditional access policy")
 	}
@@ -627,7 +627,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
 	}
 
-	if _, err := client.UpdateConditionalAccessPolicy(ctx, id, properties); err != nil {
+	if _, err := client.UpdateConditionalAccessPolicy(ctx, id, properties, conditionalaccesspolicy.DefaultUpdateConditionalAccessPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
 	}
 

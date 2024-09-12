@@ -89,7 +89,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
-	if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), addMemberProperties); err != nil {
+	if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding member %q to administrative unit %q", id.MemberId, id.AdministrativeUnitId)
 	}
 

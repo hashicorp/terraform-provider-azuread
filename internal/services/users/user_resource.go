@@ -13,7 +13,9 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	userBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/users/beta/user"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
@@ -383,6 +385,7 @@ func userResourceCustomizeDiff(_ context.Context, diff *pluginsdk.ResourceDiff, 
 
 func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UserClient
+	clientBeta := meta.(*clients.Client).Users.UserClientBeta
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
 	password := d.Get("password").(string)
@@ -437,7 +440,6 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		PasswordPolicies:  nullable.NoZero(passwordPolicies),
 		PostalCode:        nullable.NoZero(d.Get("postal_code").(string)),
 		PreferredLanguage: nullable.NoZero(d.Get("preferred_language").(string)),
-		ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
 		State:             nullable.NoZero(d.Get("state").(string)),
 		StreetAddress:     nullable.NoZero(d.Get("street_address").(string)),
 		Surname:           nullable.NoZero(d.Get("surname").(string)),
@@ -458,7 +460,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.OnPremisesImmutableId = nullable.NoZero(v.(string))
 	}
 
-	resp, err := client.CreateUser(ctx, properties)
+	resp, err := client.CreateUser(ctx, properties, user.DefaultCreateUserOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}
@@ -471,12 +473,20 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	id := stable.NewUserID(*u.Id)
 	d.SetId(id.UserId)
 
+	// Set the `showInAddressList` field using the beta API, see https://developer.microsoft.com/en-us/graph/known-issues/?search=14972
+	updateProperties := beta.User{
+		ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
+	}
+	if _, err = clientBeta.UpdateUser(ctx, beta.UserId(id), updateProperties, userBeta.DefaultUpdateUserOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Setting `showInAddressList` for %s", id)
+	}
+
 	if v := d.Get("manager_id").(string); v != "" {
 		managerRef := stable.ReferenceUpdate{
 			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(v).ID()),
 		}
 
-		if _, err = managerClient.SetManagerRef(ctx, id, managerRef); err != nil {
+		if _, err = managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 		}
 	}
@@ -486,6 +496,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UserClient
+	clientBeta := meta.(*clients.Client).Users.UserClientBeta
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
 	id := stable.NewUserID(d.Id())
@@ -555,7 +566,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.ShowInAddressList = nullable.NoZero(d.Get("show_in_address_list").(bool))
 	}
 
-	if _, err := client.UpdateUser(ctx, id, properties); err != nil {
+	if _, err := client.UpdateUser(ctx, id, properties, user.DefaultUpdateUserOperationOptions()); err != nil {
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
 		// and Terraform will not offer a diff in the next plan.
@@ -564,12 +575,22 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
+	if d.HasChange("show_in_address_list") {
+		// Set the `showInAddressList` field using the beta API, see https://developer.microsoft.com/en-us/graph/known-issues/?search=14972
+		updateProperties := beta.User{
+			ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
+		}
+		if _, err := clientBeta.UpdateUser(ctx, beta.UserId(id), updateProperties, userBeta.DefaultUpdateUserOperationOptions()); err != nil {
+			return tf.ErrorDiagF(err, "Setting `showInAddressList` for %s", id)
+		}
+	}
+
 	if d.HasChange("manager_id") {
 		managerRef := stable.ReferenceUpdate{
 			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(d.Get("manager_id").(string)).ID()),
 		}
 
-		if _, err := managerClient.SetManagerRef(ctx, id, managerRef); err != nil {
+		if _, err := managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 		}
 	}
@@ -579,6 +600,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 
 func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UserClient
+	clientBeta := meta.(*clients.Client).Users.UserClientBeta
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
 	id := stable.NewUserID(d.Id())
@@ -599,52 +621,91 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	}
 
 	tf.Set(d, "about_me", u.AboutMe.GetOrZero())
-	tf.Set(d, "account_enabled", u.AccountEnabled.GetOrZero())
-	tf.Set(d, "age_group", u.AgeGroup.GetOrZero())
 	tf.Set(d, "business_phones", tf.FlattenStringSlicePtr(u.BusinessPhones))
-	tf.Set(d, "city", u.City.GetOrZero())
-	tf.Set(d, "company_name", u.CompanyName.GetOrZero())
-	tf.Set(d, "consent_provided_for_minor", u.ConsentProvidedForMinor.GetOrZero())
-	tf.Set(d, "country", u.Country.GetOrZero())
 	tf.Set(d, "creation_type", u.CreationType.GetOrZero())
-	tf.Set(d, "department", u.Department.GetOrZero())
 	tf.Set(d, "display_name", u.DisplayName.GetOrZero())
-	tf.Set(d, "employee_id", u.EmployeeId.GetOrZero())
-	tf.Set(d, "employee_type", u.EmployeeType.GetOrZero())
-	tf.Set(d, "external_user_state", u.ExternalUserState.GetOrZero())
-	tf.Set(d, "fax_number", u.FaxNumber.GetOrZero())
 	tf.Set(d, "given_name", u.GivenName.GetOrZero())
 	tf.Set(d, "im_addresses", tf.FlattenStringSlicePtr(u.ImAddresses))
 	tf.Set(d, "job_title", u.JobTitle.GetOrZero())
 	tf.Set(d, "mail", u.Mail.GetOrZero())
-	tf.Set(d, "mail_nickname", u.MailNickname.GetOrZero())
 	tf.Set(d, "mobile_phone", u.MobilePhone.GetOrZero())
 	tf.Set(d, "object_id", pointer.From(u.Id))
 	tf.Set(d, "office_location", u.OfficeLocation.GetOrZero())
 	tf.Set(d, "onpremises_distinguished_name", u.OnPremisesDistinguishedName.GetOrZero())
 	tf.Set(d, "onpremises_domain_name", u.OnPremisesDomainName.GetOrZero())
-	tf.Set(d, "onpremises_immutable_id", u.OnPremisesImmutableId.GetOrZero())
 	tf.Set(d, "onpremises_sam_account_name", u.OnPremisesSamAccountName.GetOrZero())
 	tf.Set(d, "onpremises_security_identifier", u.OnPremisesSecurityIdentifier.GetOrZero())
 	tf.Set(d, "onpremises_sync_enabled", u.OnPremisesSyncEnabled.GetOrZero())
 	tf.Set(d, "onpremises_user_principal_name", u.OnPremisesUserPrincipalName.GetOrZero())
-	tf.Set(d, "other_mails", tf.FlattenStringSlicePtr(u.OtherMails))
-	tf.Set(d, "postal_code", u.PostalCode.GetOrZero())
 	tf.Set(d, "preferred_language", u.PreferredLanguage.GetOrZero())
 	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(u.ProxyAddresses))
-	tf.Set(d, "show_in_address_list", u.ShowInAddressList.GetOrZero())
-	tf.Set(d, "state", u.State.GetOrZero())
-	tf.Set(d, "street_address", u.StreetAddress.GetOrZero())
 	tf.Set(d, "surname", u.Surname.GetOrZero())
-	tf.Set(d, "usage_location", u.UsageLocation.GetOrZero())
 	tf.Set(d, "user_principal_name", u.UserPrincipalName.GetOrZero())
 	tf.Set(d, "user_type", u.UserType.GetOrZero())
+
+	// Retrieve additional fields
+	optionsExtra := user.GetUserOperationOptions{
+		Select: &[]string{
+			"accountEnabled",
+			"ageGroup",
+			"city",
+			"companyName",
+			"consentProvidedForMinor",
+			"country",
+			"department",
+			"employeeId",
+			"employeeOrgData",
+			"employeeType",
+			"faxNumber",
+			"mailNickname",
+			"onPremisesImmutableId",
+			"otherMails",
+			"passwordPolicies",
+			"postalCode",
+			"state",
+			"streetAddress",
+			"usageLocation",
+		},
+	}
+	respExtra, err := client.GetUser(ctx, id, optionsExtra)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving additional fields for %s", id)
+	}
+
+	uExtra := respExtra.Model
+	if uExtra == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving additional fields for %s", id)
+	}
+
+	tf.Set(d, "account_enabled", uExtra.AccountEnabled.GetOrZero())
+	tf.Set(d, "age_group", uExtra.AgeGroup.GetOrZero())
+	tf.Set(d, "city", uExtra.City.GetOrZero())
+	tf.Set(d, "company_name", uExtra.CompanyName.GetOrZero())
+	tf.Set(d, "consent_provided_for_minor", uExtra.ConsentProvidedForMinor.GetOrZero())
+	tf.Set(d, "country", uExtra.Country.GetOrZero())
+	tf.Set(d, "department", uExtra.Department.GetOrZero())
+	tf.Set(d, "employee_id", uExtra.EmployeeId.GetOrZero())
+	tf.Set(d, "employee_type", uExtra.EmployeeType.GetOrZero())
+	tf.Set(d, "external_user_state", uExtra.ExternalUserState.GetOrZero())
+	tf.Set(d, "fax_number", uExtra.FaxNumber.GetOrZero())
+	tf.Set(d, "mail_nickname", uExtra.MailNickname.GetOrZero())
+	tf.Set(d, "onpremises_immutable_id", uExtra.OnPremisesImmutableId.GetOrZero())
+	tf.Set(d, "other_mails", tf.FlattenStringSlicePtr(uExtra.OtherMails))
+	tf.Set(d, "postal_code", uExtra.PostalCode.GetOrZero())
+	tf.Set(d, "state", uExtra.State.GetOrZero())
+	tf.Set(d, "street_address", uExtra.StreetAddress.GetOrZero())
+	tf.Set(d, "usage_location", uExtra.UsageLocation.GetOrZero())
+
+	if orgData := uExtra.EmployeeOrgData; orgData != nil {
+		tf.Set(d, "cost_center", orgData.CostCenter.GetOrZero())
+		tf.Set(d, "division", orgData.Division.GetOrZero())
+	}
 
 	disableStrongPassword := false
 	disablePasswordExpiration := false
 
-	if u.PasswordPolicies != nil {
-		policies := strings.Split(u.PasswordPolicies.GetOrZero(), ",")
+	if passwordPolicies := uExtra.PasswordPolicies; passwordPolicies != nil {
+		policies := strings.Split(passwordPolicies.GetOrZero(), ",")
 		for _, p := range policies {
 			if strings.EqualFold(strings.TrimSpace(p), "DisableStrongPassword") {
 				disableStrongPassword = true
@@ -654,17 +715,30 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 			}
 		}
 	}
+
 	tf.Set(d, "disable_strong_password", disableStrongPassword)
 	tf.Set(d, "disable_password_expiration", disablePasswordExpiration)
 
-	if u.EmployeeOrgData != nil {
-		tf.Set(d, "cost_center", u.EmployeeOrgData.CostCenter.GetOrZero())
-		tf.Set(d, "division", u.EmployeeOrgData.Division.GetOrZero())
+	// Retrieve the `accountEnabled` and `showInAddressList` fields using the beta API, see https://developer.microsoft.com/en-us/graph/known-issues/?search=14972
+	optionsBeta := userBeta.GetUserOperationOptions{
+		Select: &[]string{"showInAddressList"},
+	}
+	respBeta, err := clientBeta.GetUser(ctx, beta.UserId(id), optionsBeta)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving additional fields for %s", id)
 	}
 
+	uBeta := respBeta.Model
+	if uBeta == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving additional fields for %s", id)
+	}
+
+	tf.Set(d, "show_in_address_list", uBeta.ShowInAddressList.GetOrZero())
+
+	// Retrieve the user's manager
 	managerId := ""
 	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
-	if response.WasNotFound(managerResp.HttpResponse) {
+	if !response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)
 		}
@@ -672,6 +746,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 			managerId = pointer.From(managerResp.Model.DirectoryObject().Id)
 		}
 	}
+
 	tf.Set(d, "manager_id", managerId)
 
 	return nil

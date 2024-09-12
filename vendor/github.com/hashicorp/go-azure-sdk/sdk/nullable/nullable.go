@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package nullable
 
 import (
@@ -74,7 +77,7 @@ func (t *Type[T]) SetUnspecified() {
 // IsNull indicates whether the value was set to `null`
 func (t Type[T]) IsNull() bool {
 	_, foundNull := t[false]
-	return t == nil || foundNull
+	return foundNull
 }
 
 // IsSet indicates whether a value is set

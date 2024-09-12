@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/invitations/stable/invitation"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
@@ -141,33 +142,33 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		properties.InvitedUserMessageInfo = expandInvitedUserMessageInfo(v.([]interface{}))
 	}
 
-	resp, err := client.CreateInvitation(ctx, properties)
+	resp, err := client.CreateInvitation(ctx, properties, invitation.DefaultCreateInvitationOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating invitation")
 	}
 
-	invitation := resp.Model
-	if invitation == nil {
+	invite := resp.Model
+	if invite == nil {
 		return tf.ErrorDiagF(errors.New("model was nil"), "Creating invitation")
 	}
 
-	if invitation.Id == nil || *invitation.Id == "" {
+	if invite.Id == nil || *invite.Id == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for invitation is nil/empty")
 	}
 
-	d.SetId(*invitation.Id)
+	d.SetId(*invite.Id)
 
-	if invitation.InvitedUser == nil || invitation.InvitedUser.Id == nil || *invitation.InvitedUser.Id == "" {
+	if invite.InvitedUser == nil || invite.InvitedUser.Id == nil || *invite.InvitedUser.Id == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Invited user object ID returned for invitation is nil/empty")
 	}
 
-	userId := stable.NewUserID(*invitation.InvitedUser.Id)
+	userId := stable.NewUserID(*invite.InvitedUser.Id)
 	d.Set("user_id", userId.UserId)
 
-	if invitation.InviteRedeemUrl.GetOrZero() == "" {
+	if invite.InviteRedeemUrl.GetOrZero() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Redeem URL returned for invitation is nil/empty")
 	}
-	d.Set("redeem_url", invitation.InviteRedeemUrl.GetOrZero())
+	d.Set("redeem_url", invite.InviteRedeemUrl.GetOrZero())
 
 	// Attempt to patch the newly created guest user, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
@@ -178,7 +179,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 	tempCompanyName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 	userResp, err := userClient.UpdateUser(ctx, userId, stable.User{
 		CompanyName: nullable.NoZero(tempCompanyName),
-	})
+	}, user.DefaultUpdateUserOperationOptions())
 	if err != nil {
 		if response.WasNotFound(userResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
@@ -188,7 +189,7 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 
 	userResp, err = userClient.UpdateUser(ctx, userId, stable.User{
 		CompanyName: nullable.NoZero(""),
-	})
+	}, user.DefaultUpdateUserOperationOptions())
 	if err != nil {
 		if response.WasNotFound(userResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")

@@ -162,7 +162,7 @@ func (r ApplicationAppRoleResource) Create() sdk.ResourceFunc {
 				AppRoles: &newRoles,
 			}
 
-			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -299,7 +299,7 @@ func (r ApplicationAppRoleResource) Update() sdk.ResourceFunc {
 			}
 
 			// Patch the application with the new set of roles
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -364,7 +364,7 @@ func (r ApplicationAppRoleResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Patch the application with the new set of roles
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

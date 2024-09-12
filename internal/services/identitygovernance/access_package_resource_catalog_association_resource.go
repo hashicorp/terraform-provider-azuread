@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageresourcerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -104,7 +105,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 		},
 	}
 
-	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties); err != nil {
+	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties, entitlementmanagementaccesspackageresourcerequest.DefaultCreateEntitlementManagementAccessPackageResourceRequestOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Failed to request Access Package Resource Catalog Association (Catalog ID: %q / Origin ID: %q)", catalogId, resourceOriginId)
 	}
 
@@ -183,7 +184,7 @@ func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, 
 		},
 	}
 
-	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties); err != nil {
+	if _, err = client.CreateEntitlementManagementAccessPackageResourceRequest(ctx, properties, entitlementmanagementaccesspackageresourcerequest.DefaultCreateEntitlementManagementAccessPackageResourceRequestOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Failed to request removal for Access Package Resource Catalog Association (Catalog ID: %q / Origin ID: %q)", id.CatalogId, id.OriginId)
 	}
 

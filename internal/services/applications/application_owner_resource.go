@@ -88,11 +88,11 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, applicationId.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
 
-			owner, err := applications.GetOwner(ctx, client, ownerId)
+			o, err := applications.GetOwner(ctx, client, ownerId)
 			if err != nil {
 				return fmt.Errorf("checking for presence of existing %s: %+v", ownerId, err)
 			}
-			if owner != nil {
+			if o != nil {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
@@ -100,7 +100,7 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 				ODataId: pointer.To(client.Client.BaseUri + ownerId.ID()),
 			}
 
-			if _, err = client.AddOwnerRef(ctx, *applicationId, properties); err != nil {
+			if _, err = client.AddOwnerRef(ctx, *applicationId, properties, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return fmt.Errorf("adding %s: %+v", ownerId, err)
 			}
 

@@ -94,7 +94,7 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *pluginsdk.Resour
 		IsExternallyVisible: nullable.NoZero(d.Get("externally_visible").(bool)),
 	}
 
-	resp, err := client.CreateEntitlementManagementAccessPackageCatalog(ctx, properties)
+	resp, err := client.CreateEntitlementManagementAccessPackageCatalog(ctx, properties, entitlementmanagementaccesspackagecatalog.DefaultCreateEntitlementManagementAccessPackageCatalogOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package catalog")
 	}
@@ -130,7 +130,7 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *pluginsdk.Resour
 		IsExternallyVisible: nullable.NoZero(d.Get("externally_visible").(bool)),
 	}
 
-	if _, err := client.UpdateEntitlementManagementAccessPackageCatalog(ctx, id, properties); err != nil {
+	if _, err := client.UpdateEntitlementManagementAccessPackageCatalog(ctx, id, properties, entitlementmanagementaccesspackagecatalog.DefaultUpdateEntitlementManagementAccessPackageCatalogOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 

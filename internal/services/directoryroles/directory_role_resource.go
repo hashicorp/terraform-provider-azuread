@@ -150,7 +150,7 @@ func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
 					properties := stable.DirectoryRole{
 						RoleTemplateId: nullable.Value(templateId),
 					}
-					if resp, err := client.CreateDirectoryRole(ctx, properties); err != nil {
+					if resp, err := client.CreateDirectoryRole(ctx, properties, directoryrole.DefaultCreateDirectoryRoleOperationOptions()); err != nil {
 						return fmt.Errorf("activating directory role for template ID %q: %v", templateId, err)
 					} else {
 						directoryRole = resp.Model

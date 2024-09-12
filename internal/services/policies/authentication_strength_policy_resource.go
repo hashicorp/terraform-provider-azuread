@@ -86,7 +86,7 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.Resour
 		AllowedCombinations: pointer.To(allowedCombinations),
 	}
 
-	resp, err := client.CreateAuthenticationStrengthPolicy(ctx, properties)
+	resp, err := client.CreateAuthenticationStrengthPolicy(ctx, properties, authenticationstrengthpolicy.DefaultCreateAuthenticationStrengthPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create authentication strength policy")
 	}
@@ -114,7 +114,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 		Description: nullable.NoZero(d.Get("description").(string)),
 	}
 
-	if _, err := client.UpdateAuthenticationStrengthPolicy(ctx, id, properties); err != nil {
+	if _, err := client.UpdateAuthenticationStrengthPolicy(ctx, id, properties, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
@@ -128,7 +128,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 			AllowedCombinations: pointer.To(allowedCombinations),
 		}
 
-		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombination(ctx, id, request); err != nil {
+		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombination(ctx, id, request, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyAllowedCombinationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update allowed combinations for %s", id)
 		}
 	}

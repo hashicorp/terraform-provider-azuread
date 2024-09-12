@@ -88,7 +88,7 @@ func (r ApplicationFallbackPublicClientResource) Create() sdk.ResourceFunc {
 				IsFallbackPublicClient: nullable.Value(model.Enabled),
 			}
 
-			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("setting %s: %+v", id, err)
 			}
 
@@ -162,7 +162,7 @@ func (r ApplicationFallbackPublicClientResource) Delete() sdk.ResourceFunc {
 			properties := stable.Application{}
 			properties.IsFallbackPublicClient.SetNull()
 
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("unsetting %s: %+v", id, err)
 			}
 

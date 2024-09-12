@@ -241,14 +241,14 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 				},
 			}
 
-			resp, err := client.CreateApplication(ctx, properties)
+			resp, err := client.CreateApplication(ctx, properties, application.DefaultCreateApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating applicatoin: %+v", err)
 			}
 
 			app := resp.Model
 			if app == nil || pointer.From(app.Id) == "" {
-				return errors.New("creating applicatoin: object ID returned for application is nil/empty")
+				return errors.New("creating application: object ID returned for application is nil/empty")
 			}
 
 			id := stable.NewApplicationID(*app.Id)
@@ -421,7 +421,7 @@ func (r ApplicationRegistrationResource) Update() sdk.ResourceFunc {
 				}
 			}
 
-			if _, err = client.UpdateApplication(ctx, *id, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 

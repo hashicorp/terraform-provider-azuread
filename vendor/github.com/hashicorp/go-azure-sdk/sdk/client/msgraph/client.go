@@ -6,6 +6,7 @@ package msgraph
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/internal/accept"
 	"net/url"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/client"
@@ -65,6 +66,15 @@ func (c *Client) NewRequest(ctx context.Context, input client.RequestOptions) (*
 	if input.ContentType == "" {
 		return nil, fmt.Errorf("pre-validating request payload: missing `ContentType`")
 	}
+
+	var err error
+
+	input.Accept, err = accept.FromString(input.ContentType)
+	if err != nil {
+		return nil, fmt.Errorf("parsing ContentType %q: %+v", input.ContentType, err)
+	}
+
+	input.Accept.Types[0].Parameters["odata.metadata"] = "full"
 
 	req, err := c.Client.NewRequest(ctx, input)
 	if err != nil {

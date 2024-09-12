@@ -76,7 +76,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Create() sdk.ResourceFu
 				}
 			}
 
-			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties, privilegedaccessgroupassignmentschedulerequest.DefaultCreatePrivilegedAccessGroupAssignmentScheduleRequestOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating assignment schedule request: %v", err)
 			}
@@ -240,7 +240,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Update() sdk.ResourceFu
 				}
 			}
 
-			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, properties, privilegedaccessgroupassignmentschedulerequest.DefaultCreatePrivilegedAccessGroupAssignmentScheduleRequestOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating updated assignment schedule request: %v", err)
 			}
@@ -301,7 +301,7 @@ func (r PrivilegedAccessGroupAssignmentScheduleResource) Delete() sdk.ResourceFu
 }
 
 func cancelAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *privilegedaccessgroupassignmentschedulerequest.PrivilegedAccessGroupAssignmentScheduleRequestClient, id stable.IdentityGovernancePrivilegedAccessGroupAssignmentScheduleRequestId) error {
-	if resp, err := client.CancelPrivilegedAccessGroupAssignmentScheduleRequest(ctx, id); err != nil {
+	if resp, err := client.CancelPrivilegedAccessGroupAssignmentScheduleRequest(ctx, id, privilegedaccessgroupassignmentschedulerequest.DefaultCancelPrivilegedAccessGroupAssignmentScheduleRequestOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return metadata.MarkAsGone(id)
 		}
@@ -320,7 +320,7 @@ func revokeAssignmentRequest(ctx context.Context, metadata sdk.ResourceMetaData,
 		Action:      pointer.To(stable.ScheduleRequestActions_AdminRemove),
 	}
 
-	if resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, request); err != nil {
+	if resp, err := client.CreatePrivilegedAccessGroupAssignmentScheduleRequest(ctx, request, privilegedaccessgroupassignmentschedulerequest.DefaultCreatePrivilegedAccessGroupAssignmentScheduleRequestOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return metadata.MarkAsGone(&id)
 		}

@@ -182,7 +182,7 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 		},
 	}
 
-	if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding pre-authorized application %q for %s", id.AppId, applicationId)
 	}
 
@@ -237,7 +237,7 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 		},
 	}
 
-	if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating pre-authorized application %q for %s", id.AppId, applicationId)
 	}
 
@@ -341,7 +341,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 		},
 	}
 
-	if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing pre-authorized application %q from %s", id.AppId, applicationId)
 	}
 

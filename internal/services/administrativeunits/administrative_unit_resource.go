@@ -160,7 +160,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 		properties.Visibility = nullable.Value(administrativeUnitVisibilityHiddenMembership)
 	}
 
-	resp, err := client.CreateAdministrativeUnit(ctx, properties)
+	resp, err := client.CreateAdministrativeUnit(ctx, properties, administrativeunit.DefaultCreateAdministrativeUnitOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating administrative unit %q", displayName)
 	}
@@ -188,7 +188,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	id := stable.NewDirectoryAdministrativeUnitID(*administrativeUnit.Id)
 	updateResp, err := client.UpdateAdministrativeUnit(ctx, id, stable.AdministrativeUnit{
 		DisplayName: nullable.Value(tempDisplayName),
-	})
+	}, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions())
 	if err != nil {
 		if response.WasNotFound(updateResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new administrative unit to be replicated in Azure AD")
@@ -199,7 +199,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	// Set correct original display name
 	updateResp, err = client.UpdateAdministrativeUnit(ctx, id, stable.AdministrativeUnit{
 		DisplayName: nullable.Value(displayName),
-	})
+	}, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions())
 	if err != nil {
 		if response.WasNotFound(updateResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new administrative unit to be replicated in Azure AD")
@@ -216,7 +216,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 				ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 			}
 
-			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties); err != nil {
+			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add member %q to administrative unit with object ID: %q", memberId, d.Id())
 			}
 		}
@@ -265,7 +265,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 		administrativeUnit.Visibility = nullable.Value(administrativeUnitVisibilityHiddenMembership)
 	}
 
-	if _, err := client.UpdateAdministrativeUnit(ctx, id, administrativeUnit); err != nil {
+	if _, err := client.UpdateAdministrativeUnit(ctx, id, administrativeUnit, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating administrative unit with ID: %q", d.Id())
 	}
 
@@ -296,7 +296,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 				ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 			}
 
-			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties); err != nil {
+			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add member %q to administrative unit with object ID: %q", memberId, d.Id())
 			}
 		}

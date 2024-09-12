@@ -561,7 +561,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	if len(ownersFirst20) == 0 {
-		// The calling principal is the default owner if no others are specified. This is the default API behaviour, so
+		// The calling principal is the default o if no others are specified. This is the default API behaviour, so
 		// we're being explicit about this in order to minimise confusion and avoid inconsistent API behaviours.
 		ownersFirst20 = []string{fmt.Sprintf("%s%s", client.Client.BaseUri, beta.NewDirectoryObjectID(callerId).ID())}
 	}
@@ -579,10 +579,10 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			// Create the group in the first administrative unit, as this requires fewer permissions than creating it at tenant level
 			if i == 0 {
-				resp, err := administrativeUnitMemberClient.CreateAdministrativeUnitMember(ctx, administrativeUnitId, &properties)
+				resp, err := administrativeUnitMemberClient.CreateAdministrativeUnitMember(ctx, administrativeUnitId, &properties, administrativeunitmemberBeta.DefaultCreateAdministrativeUnitMemberOperationOptions())
 				if err != nil {
 					if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
-						// Retry the request, without the calling principal as owner
+						// Retry the request, without the calling principal as o
 						newOwners := make([]string, 0)
 						for _, o := range *properties.Owners_ODataBind {
 							if o != callerODataId {
@@ -596,8 +596,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 							return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 						}
 
-						// If the API is refusing the calling principal as owner, it will typically automatically append the caller in the background,
-						// and subsequent GETs for the group will include the calling principal as owner, as if it were specified when creating.
+						// If the API is refusing the calling principal as o, it will typically automatically append the caller in the background,
+						// and subsequent GETs for the group will include the calling principal as o, as if it were specified when creating.
 						log.Printf("[DEBUG] Retrying group creation for %q within %s without calling principal as owner", displayName, administrativeUnitId)
 						if len(newOwners) == 0 {
 							properties.Owners_ODataBind = nil
@@ -605,7 +605,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 							properties.Owners_ODataBind = &newOwners
 						}
 
-						resp, err = administrativeUnitMemberClient.CreateAdministrativeUnitMember(ctx, administrativeUnitId, &properties)
+						resp, err = administrativeUnitMemberClient.CreateAdministrativeUnitMember(ctx, administrativeUnitId, &properties, administrativeunitmemberBeta.DefaultCreateAdministrativeUnitMemberOperationOptions())
 						if err != nil {
 							return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 						}
@@ -641,16 +641,16 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				ref := beta.ReferenceCreate{
 					ODataId: pointer.To(fmt.Sprintf("%s%s", client.Client.BaseUri, beta.NewDirectoryObjectID(groupObjectId).ID())),
 				}
-				if _, err := administrativeUnitMemberClient.AddAdministrativeUnitMemberRef(ctx, administrativeUnitId, ref); err != nil {
+				if _, err := administrativeUnitMemberClient.AddAdministrativeUnitMemberRef(ctx, administrativeUnitId, ref, administrativeunitmemberBeta.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 					return tf.ErrorDiagF(err, "Adding group %q to %s", groupObjectId, administrativeUnitId)
 				}
 			}
 		}
 	} else {
-		resp, err := client.CreateGroup(ctx, properties)
+		resp, err := client.CreateGroup(ctx, properties, groupBeta.DefaultCreateGroupOperationOptions())
 		if err != nil {
 			if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
-				// Retry the request, without the calling principal as owner
+				// Retry the request, without the calling principal as o
 				newOwners := make([]string, 0)
 				for _, o := range *properties.Owners_ODataBind {
 					if o != callerODataId {
@@ -664,8 +664,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
 
-				// If the API is refusing the calling principal as owner, it will typically automatically append the caller in the background,
-				// and subsequent GETs for the group will include the calling principal as owner, as if it were specified when creating.
+				// If the API is refusing the calling principal as o, it will typically automatically append the caller in the background,
+				// and subsequent GETs for the group will include the calling principal as o, as if it were specified when creating.
 				log.Printf("[DEBUG] Retrying group creation for %q without calling principal as owner", displayName)
 				if len(newOwners) == 0 {
 					properties.Owners_ODataBind = nil
@@ -673,7 +673,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					properties.Owners_ODataBind = &newOwners
 				}
 
-				resp, err := client.CreateGroup(ctx, properties)
+				resp, err := client.CreateGroup(ctx, properties, groupBeta.DefaultCreateGroupOperationOptions())
 				if err != nil {
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
@@ -712,7 +712,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
 		resp, err := client.UpdateGroup(ctx, id, beta.Group{
 			DisplayName: nullable.Value(displayNameToSet),
-		})
+		}, groupBeta.DefaultUpdateGroupOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
@@ -751,7 +751,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			}); updated {
 				resp, err := client.UpdateGroup(ctx, id, beta.Group{
 					Description: nullable.NoZero(""),
-				})
+				}, groupBeta.DefaultUpdateGroupOperationOptions())
 				if err != nil {
 					if response.WasNotFound(resp.HttpResponse) {
 						return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
@@ -782,7 +782,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if allowExternalSenders, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				AllowExternalSenders: nullable.Value(allowExternalSenders.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for %s", id)
 			}
 
@@ -802,7 +802,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if autoSubscribeNewMembers, ok := d.GetOkExists("auto_subscribe_new_members"); ok { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				AutoSubscribeNewMembers: nullable.Value(autoSubscribeNewMembers.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `auto_subscribe_new_members` for %s", id)
 			}
 
@@ -822,7 +822,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if hideFromAddressList, ok := d.GetOkExists("hide_from_address_lists"); ok { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				HideFromAddressLists: nullable.Value(hideFromAddressList.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_address_lists` for %s", id)
 			}
 
@@ -842,7 +842,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if hideFromOutlookClients, ok := d.GetOkExists("hide_from_outlook_clients"); ok { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				HideFromOutlookClients: nullable.Value(hideFromOutlookClients.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_outlook_clients` for %s", id)
 			}
 
@@ -860,8 +860,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	// Add any remaining owners after the group is created
-	for _, owner := range ownersExtra {
-		if _, err = ownerClient.AddOwnerRef(ctx, id, owner); err != nil {
+	for _, o := range ownersExtra {
+		if _, err = ownerClient.AddOwnerRef(ctx, id, o, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 		}
 	}
@@ -872,7 +872,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(memberId.(string)).ID()),
 			}
-			if _, err = memberClient.AddMemberRef(ctx, id, ref); err != nil {
+			if _, err = memberClient.AddMemberRef(ctx, id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add members to group with object ID: %q", d.Id())
 			}
 		}
@@ -959,7 +959,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		group.Visibility = nullable.Value(d.Get("visibility").(string))
 	}
 
-	if _, err := client.UpdateGroup(ctx, id, group); err != nil {
+	if _, err := client.UpdateGroup(ctx, id, group, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
@@ -983,7 +983,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if v, ok := d.GetOkExists("external_senders_allowed"); ok && (extra == nil || extra.AllowExternalSenders.GetOrZero() != v.(bool)) { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				AllowExternalSenders: nullable.Value(v.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `external_senders_allowed` for %s", id)
 			}
 
@@ -1003,7 +1003,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if v, ok := d.GetOkExists("auto_subscribe_new_members"); ok && (extra == nil || extra.AutoSubscribeNewMembers.GetOrZero() != v.(bool)) { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				AutoSubscribeNewMembers: nullable.Value(v.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `auto_subscribe_new_members` for %s", id)
 			}
 
@@ -1023,7 +1023,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if v, ok := d.GetOkExists("hide_from_address_lists"); ok && (extra == nil || extra.HideFromAddressLists.GetOrZero() != v.(bool)) { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				HideFromAddressLists: nullable.Value(v.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_address_lists` for %s", id)
 			}
 
@@ -1043,7 +1043,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		if v, ok := d.GetOkExists("hide_from_outlook_clients"); ok && (extra == nil || extra.HideFromOutlookClients.GetOrZero() != v.(bool)) { //nolint:staticcheck
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				HideFromOutlookClients: nullable.Value(v.(bool)),
-			}); err != nil {
+			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Failed to set `hide_from_outlook_clients` for %s", id)
 			}
 
@@ -1088,7 +1088,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(v).ID()),
 			}
-			if _, err = memberClient.AddMemberRef(ctx, id, ref); err != nil {
+			if _, err = memberClient.AddMemberRef(ctx, id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "removing %s", beta.NewGroupIdMemberID(id.GroupId, v))
 			}
 		}
@@ -1123,7 +1123,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(v).ID()),
 			}
-			if _, err = ownerClient.AddOwnerRef(ctx, id, ref); err != nil {
+			if _, err = ownerClient.AddOwnerRef(ctx, id, ref, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "removing %s", beta.NewGroupIdOwnerID(id.GroupId, v))
 			}
 		}
@@ -1163,7 +1163,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				ref := beta.ReferenceCreate{
 					ODataId: pointer.To(fmt.Sprintf("%s%s", client.Client.BaseUri, beta.NewDirectoryObjectID(id.GroupId).ID())),
 				}
-				if _, err = administrativeUnitMemberClient.AddAdministrativeUnitMemberRef(ctx, newAdministrativeUnitId, ref); err != nil {
+				if _, err = administrativeUnitMemberClient.AddAdministrativeUnitMemberRef(ctx, newAdministrativeUnitId, ref, administrativeunitmemberBeta.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 					return tf.ErrorDiagF(err, "Could not add %s as member of %s", id, newAdministrativeUnitId)
 				}
 			}

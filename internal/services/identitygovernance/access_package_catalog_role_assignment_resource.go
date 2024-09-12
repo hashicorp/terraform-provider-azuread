@@ -86,7 +86,7 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 	}
 
 	createMsg := fmt.Sprintf("Assigning catalog role %q to directory principal %q on catalog %q", roleId, principalId, catalogId)
-	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties)
+	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties, entitlementmanagementroleassignment.DefaultCreateEntitlementManagementRoleAssignmentOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, createMsg)
 	}

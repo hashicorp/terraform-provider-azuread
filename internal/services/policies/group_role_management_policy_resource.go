@@ -377,7 +377,7 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("building update request: %v", err)
 			}
 
-			if _, err = client.UpdateRoleManagementPolicy(ctx, id, *policyUpdate); err != nil {
+			if _, err = client.UpdateRoleManagementPolicy(ctx, id, *policyUpdate, rolemanagementpolicy.DefaultUpdateRoleManagementPolicyOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %v", id, err)
 			}
 
@@ -632,7 +632,7 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 				return fmt.Errorf("building update request: %v", err)
 			}
 
-			if _, err = client.UpdateRoleManagementPolicy(ctx, id, *policyUpdate); err != nil {
+			if _, err = client.UpdateRoleManagementPolicy(ctx, id, *policyUpdate, rolemanagementpolicy.DefaultUpdateRoleManagementPolicyOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %v", id, err)
 			}
 

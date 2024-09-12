@@ -335,7 +335,7 @@ func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *plugins
 		return tf.ErrorDiagF(err, "Building resource data from supplied parameters")
 	}
 
-	resp, err := client.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, *properties)
+	resp, err := client.CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultCreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package assignment policy %q", d.Get("display_name").(string))
 	}
@@ -363,7 +363,7 @@ func accessPackageAssignmentPolicyResourceUpdate(ctx context.Context, d *plugins
 	tf.LockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 	defer tf.UnlockByName(accessPackageAssignmentPolicyResourceName, id.AccessPackageAssignmentPolicyId)
 
-	if _, err = client.SetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties); err != nil {
+	if _, err = client.SetEntitlementManagementAccessPackageAssignmentPolicy(ctx, id, *properties, entitlementmanagementaccesspackageassignmentpolicy.DefaultSetEntitlementManagementAccessPackageAssignmentPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 

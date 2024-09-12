@@ -114,7 +114,7 @@ func (r ApplicationRedirectUrisResource) Create() sdk.ResourceFunc {
 			properties := stable.Application{}
 			r.setRedirectUrisByType(&properties, model)
 
-			if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -194,7 +194,7 @@ func (r ApplicationRedirectUrisResource) Update() sdk.ResourceFunc {
 			properties := stable.Application{}
 			r.setRedirectUrisByType(&properties, model)
 
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -222,7 +222,7 @@ func (r ApplicationRedirectUrisResource) Delete() sdk.ResourceFunc {
 			properties := stable.Application{}
 			r.deleteRedirectUrisByType(&properties, id.UriType)
 
-			if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

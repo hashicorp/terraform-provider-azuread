@@ -112,7 +112,7 @@ func (r ApplicationFromTemplateResource) Create() sdk.ResourceFunc {
 				DisplayName: nullable.Value(model.DisplayName),
 			}
 
-			resp, err := client.Instantiate(ctx, templateId, request)
+			resp, err := client.Instantiate(ctx, templateId, request, applicationtemplate.DefaultInstantiateOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating %s: %+v", templateId, err)
 			}
@@ -214,7 +214,7 @@ func (r ApplicationFromTemplateResource) Update() sdk.ResourceFunc {
 					DisplayName: nullable.Value(model.DisplayName),
 				}
 
-				if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+				if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 					return fmt.Errorf("updating %s: %+v", id, err)
 				}
 			}

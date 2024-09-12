@@ -123,7 +123,7 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		Version:         nullable.Value(d.Get("version").(string)),
 	}
 
-	resp, err := client.CreateDirectoryRoleDefinition(ctx, properties)
+	resp, err := client.CreateDirectoryRoleDefinition(ctx, properties, directoryroledefinition.DefaultCreateDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating custom directory role %q", displayName)
 	}
@@ -157,7 +157,7 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 		Version:         nullable.Value(d.Get("version").(string)),
 	}
 
-	_, err := client.UpdateDirectoryRoleDefinition(ctx, id, properties)
+	_, err := client.UpdateDirectoryRoleDefinition(ctx, id, properties, directoryroledefinition.DefaultUpdateDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Updating custom directory role %q", displayName)
 	}

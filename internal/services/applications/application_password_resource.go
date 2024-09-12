@@ -200,7 +200,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	request := application.AddPasswordRequest{
 		PasswordCredential: credential,
 	}
-	addPasswordResp, err := client.AddPassword(ctx, *applicationId, request)
+	addPasswordResp, err := client.AddPassword(ctx, *applicationId, request, application.DefaultAddPasswordOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Adding password for %s", applicationId)
 	}
@@ -331,7 +331,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 	request := application.RemovePasswordRequest{
 		KeyId: pointer.To(id.KeyId),
 	}
-	if _, err = client.RemovePassword(ctx, applicationId, request); err != nil {
+	if _, err = client.RemovePassword(ctx, applicationId, request, application.DefaultRemovePasswordOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 

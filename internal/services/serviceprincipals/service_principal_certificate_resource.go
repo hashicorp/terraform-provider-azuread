@@ -170,7 +170,7 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 	properties := stable.ServicePrincipal{
 		KeyCredentials: &newCredentials,
 	}
-	if _, err = client.UpdateServicePrincipal(ctx, servicePrincipalId, properties); err != nil {
+	if _, err = client.UpdateServicePrincipal(ctx, servicePrincipalId, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding certificate for %s", servicePrincipalId)
 	}
 
@@ -289,7 +289,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *pluginsdk
 	properties := stable.ServicePrincipal{
 		KeyCredentials: &newCredentials,
 	}
-	if _, err := client.UpdateServicePrincipal(ctx, servicePrincipalId, properties); err != nil {
+	if _, err := client.UpdateServicePrincipal(ctx, servicePrincipalId, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from %s", id.KeyId, servicePrincipalId)
 	}
 

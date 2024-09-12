@@ -76,7 +76,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Create() sdk.ResourceF
 				}
 			}
 
-			resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, properties, privilegedaccessgroupeligibilityschedulerequest.DefaultCreatePrivilegedAccessGroupEligibilityScheduleRequestOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating eligibility schedule request: %v", err)
 			}
@@ -240,7 +240,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Update() sdk.ResourceF
 				}
 			}
 
-			resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, properties)
+			resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, properties, privilegedaccessgroupeligibilityschedulerequest.DefaultCreatePrivilegedAccessGroupEligibilityScheduleRequestOperationOptions())
 			if err != nil {
 				return fmt.Errorf("creating updated eligibility schedule request: %v", err)
 			}
@@ -301,7 +301,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Delete() sdk.ResourceF
 }
 
 func cancelEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData, client *privilegedaccessgroupeligibilityschedulerequest.PrivilegedAccessGroupEligibilityScheduleRequestClient, id stable.IdentityGovernancePrivilegedAccessGroupEligibilityScheduleRequestId) error {
-	if resp, err := client.CancelPrivilegedAccessGroupEligibilityScheduleRequest(ctx, id); err != nil {
+	if resp, err := client.CancelPrivilegedAccessGroupEligibilityScheduleRequest(ctx, id, privilegedaccessgroupeligibilityschedulerequest.DefaultCancelPrivilegedAccessGroupEligibilityScheduleRequestOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return metadata.MarkAsGone(id)
 		}
@@ -320,7 +320,7 @@ func revokeEligibilityRequest(ctx context.Context, metadata sdk.ResourceMetaData
 		Action:      pointer.To(stable.ScheduleRequestActions_AdminRemove),
 	}
 
-	if resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, request); err != nil {
+	if resp, err := client.CreatePrivilegedAccessGroupEligibilityScheduleRequest(ctx, request, privilegedaccessgroupeligibilityschedulerequest.DefaultCreatePrivilegedAccessGroupEligibilityScheduleRequestOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return metadata.MarkAsGone(&id)
 		}

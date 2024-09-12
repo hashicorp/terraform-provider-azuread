@@ -215,7 +215,7 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 		Id:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}
-	if _, err = client.UpdateApplication(ctx, *applicationId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding certificate for %s", applicationId)
 	}
 
@@ -338,7 +338,7 @@ func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.Reso
 		Id:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}
-	if _, err = client.UpdateApplication(ctx, applicationId, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 

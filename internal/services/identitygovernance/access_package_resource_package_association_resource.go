@@ -116,7 +116,7 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	createMsg := fmt.Sprintf("Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem, accessPackageId)
 
-	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties)
+	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, createMsg)
 	}

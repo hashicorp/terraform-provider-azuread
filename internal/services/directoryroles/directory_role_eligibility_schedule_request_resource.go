@@ -100,7 +100,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 		},
 	}
 
-	resp, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties)
+	resp, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating eligibility schedule request for role %q to principal %q: %+v", roleDefinitionId, principalId, err)
 	}
@@ -173,7 +173,7 @@ func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, 
 	roleEligibilityScheduleRequest.Id = nil
 	roleEligibilityScheduleRequest.Action = pointer.To(stable.UnifiedRoleScheduleRequestActions_AdminRemove)
 
-	if _, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, *roleEligibilityScheduleRequest); err != nil {
+	if _, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, *roleEligibilityScheduleRequest, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Deleting role eligibility schedule request %q: %+v", d.Id(), err)
 	}
 

@@ -64,7 +64,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 		ODataId: pointer.To(client.Client.BaseUri + policyId.ID()),
 	}
 
-	if _, err := client.AddClaimsMappingPolicyRef(ctx, servicePrincipalId, ref); err != nil {
+	if _, err := client.AddClaimsMappingPolicyRef(ctx, servicePrincipalId, ref, claimsmappingpolicy.DefaultAddClaimsMappingPolicyRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Creating ClaimsMappingPolicyAssignment for %s", servicePrincipalId)
 	}
 

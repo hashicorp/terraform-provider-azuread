@@ -80,7 +80,7 @@ func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsd
 		},
 	}
 
-	resp, err := client.CreateAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitID(administrativeUnitId), properties)
+	resp, err := client.CreateAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitID(administrativeUnitId), properties, administrativeunitscopedrolemember.DefaultCreateAdministrativeUnitScopedRoleMemberOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Adding role member %q to administrative unit %q", memberId, administrativeUnitId)
 	}

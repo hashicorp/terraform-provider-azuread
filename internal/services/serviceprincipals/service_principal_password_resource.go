@@ -139,7 +139,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.Re
 	properties := serviceprincipal.AddPasswordRequest{
 		PasswordCredential: credential,
 	}
-	resp, err := client.AddPassword(ctx, servicePrincipalId, properties)
+	resp, err := client.AddPassword(ctx, servicePrincipalId, properties, serviceprincipal.DefaultAddPasswordOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Adding password for %s", servicePrincipalId)
 	}
@@ -266,7 +266,7 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *pluginsdk.Re
 	properties := serviceprincipal.RemovePasswordRequest{
 		KeyId: pointer.To(id.KeyId),
 	}
-	if _, err = client.RemovePassword(ctx, servicePrincipalId, properties); err != nil {
+	if _, err = client.RemovePassword(ctx, servicePrincipalId, properties, serviceprincipal.DefaultRemovePasswordOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing password credential %q from %s", id.KeyId, servicePrincipalId)
 	}
 

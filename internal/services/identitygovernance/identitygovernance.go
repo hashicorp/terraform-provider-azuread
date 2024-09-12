@@ -5,10 +5,11 @@ package identitygovernance
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"strings"
 )
 
 func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, error) {

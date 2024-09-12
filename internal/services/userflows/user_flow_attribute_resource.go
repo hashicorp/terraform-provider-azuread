@@ -93,7 +93,7 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		DisplayName: nullable.NoZero(displayName),
 	}
 
-	resp, err := client.CreateUserFlowAttribute(ctx, attr)
+	resp, err := client.CreateUserFlowAttribute(ctx, attr, userflowattribute.DefaultCreateUserFlowAttributeOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating user flow attribute")
 	}
@@ -121,7 +121,7 @@ func userFlowAttributeResourceUpdate(ctx context.Context, d *pluginsdk.ResourceD
 		Description: nullable.NoZero(d.Get("description").(string)),
 	}
 
-	if _, err := client.UpdateUserFlowAttribute(ctx, id, attr); err != nil {
+	if _, err := client.UpdateUserFlowAttribute(ctx, id, attr, userflowattribute.DefaultUpdateUserFlowAttributeOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update user flow attribute with ID: %q", id)
 	}
 

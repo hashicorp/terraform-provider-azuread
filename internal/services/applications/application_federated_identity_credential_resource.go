@@ -171,7 +171,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		Subject:     d.Get("subject").(string),
 	}
 
-	federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential)
+	federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Adding federated identity credential for %s", applicationId)
 	}
@@ -248,7 +248,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 
 	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
 
-	if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, credentialId, credential); err != nil {
+	if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, credentialId, credential, federatedidentitycredential.DefaultUpdateFederatedIdentityCredentialOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating federated identity credential with ID %q for application with object ID %q", id.KeyId, id.ObjectId)
 	}
 

@@ -105,7 +105,7 @@ func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		CatalogId:            nullable.Value(pointer.From(catalog.Id)),
 	}
 
-	resp, err := client.CreateEntitlementManagementAccessPackage(ctx, properties)
+	resp, err := client.CreateEntitlementManagementAccessPackage(ctx, properties, entitlementmanagementaccesspackage.DefaultCreateEntitlementManagementAccessPackageOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating access package")
 	}
@@ -149,7 +149,7 @@ func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 		CatalogId:            nullable.Value(pointer.From(catalog.Id)),
 	}
 
-	if _, err := client.UpdateEntitlementManagementAccessPackage(ctx, id, properties); err != nil {
+	if _, err := client.UpdateEntitlementManagementAccessPackage(ctx, id, properties, entitlementmanagementaccesspackage.DefaultUpdateEntitlementManagementAccessPackageOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 

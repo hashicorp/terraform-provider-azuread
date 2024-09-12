@@ -115,7 +115,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 
-	resp, err := client.AddTokenSigningCertificate(ctx, servicePrincipalId, properties)
+	resp, err := client.AddTokenSigningCertificate(ctx, servicePrincipalId, properties, serviceprincipal.DefaultAddTokenSigningCertificateOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not add token signing certificate to %s", servicePrincipalId)
 	}
@@ -296,7 +296,7 @@ func servicePrincipalTokenSigningCertificateResourceDelete(ctx context.Context, 
 		KeyCredentials:      &newKeyCredentials,
 		PasswordCredentials: &newPasswordCredentials,
 	}
-	if _, err := client.UpdateServicePrincipal(ctx, servicePrincipalId, properties); err != nil {
+	if _, err := client.UpdateServicePrincipal(ctx, servicePrincipalId, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing token signing certificate credentials %q from %s", id.KeyId, servicePrincipalId)
 	}
 
