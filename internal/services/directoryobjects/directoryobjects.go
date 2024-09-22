@@ -6,6 +6,6 @@ import (
 	"strings"
 )
 
-func odataType(in string) string {
+func formatODataType(in string) string {
 	return cases.Title(language.AmericanEnglish, cases.NoLower).String(strings.TrimPrefix(in, "#microsoft.graph."))
 }

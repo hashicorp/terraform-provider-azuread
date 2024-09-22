@@ -44,10 +44,10 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:      "The display name of the custom directory role",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the custom directory role",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"enabled": {
@@ -67,8 +67,8 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 							Type:        pluginsdk.TypeSet,
 							Required:    true,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 					},
@@ -76,10 +76,10 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"version": {
-				Description:      "The version of the role definition.",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringLenBetween(1, 128)),
+				Description:  "The version of the role definition.",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
 			"description": {
@@ -89,11 +89,11 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 			},
 
 			"template_id": {
-				Description:      "Custom template identifier that is typically used if one needs an identifier to be the same across different directories.",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "Custom template identifier that is typically used if one needs an identifier to be the same across different directories.",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsUUID,
 
 				// The template ID _can_ technically be changed but doing so mutates the role ID - essentially
 				// causing the equivalent of a ForceNew by the API :/

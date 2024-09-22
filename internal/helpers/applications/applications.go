@@ -9,24 +9,30 @@ import (
 	"strings"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 )
 
 func GetOwner(ctx context.Context, client *owner.OwnerClient, id stable.ApplicationIdOwnerId) (stable.DirectoryObject, error) {
 	applicationId := stable.NewApplicationID(id.ApplicationId)
+
 	options := owner.ListOwnersOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
 	}
+
 	resp, err := client.ListOwners(ctx, applicationId, options)
 	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("unable to list Owners with filter %q: %+v", *options.Filter, err)
 	}
 
 	if resp.Model != nil {
-		for _, owner := range *resp.Model {
-			if owner.DirectoryObject().Id != nil && strings.EqualFold(*owner.DirectoryObject().Id, id.DirectoryObjectId) {
-				return owner, nil
+		for _, o := range *resp.Model {
+			if o.DirectoryObject().Id != nil && strings.EqualFold(*o.DirectoryObject().Id, id.DirectoryObjectId) {
+				return o, nil
 			}
 		}
 	}
@@ -164,14 +170,11 @@ func FlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	for _, tag := range *tags {
 		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication") {
 			result["custom_single_sign_on"] = true
-		}
-		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
+		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
 			result["enterprise"] = true
-		}
-		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
+		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
 			result["gallery"] = true
-		}
-		if strings.EqualFold(tag, "HideApp") {
+		} else if strings.EqualFold(tag, "HideApp") {
 			result["hide"] = true
 		}
 	}

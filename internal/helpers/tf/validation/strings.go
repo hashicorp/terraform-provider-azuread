@@ -4,40 +4,25 @@
 package validation
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 )
 
 // StringIsEmailAddress validates that the given string is a valid email address (foo@bar.com)
-func StringIsEmailAddress(i interface{}, path cty.Path) (ret diag.Diagnostics) {
+func StringIsEmailAddress(i interface{}, k string) (warnings []string, errors []error) {
 	v, ok := i.(string)
 	if !ok {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Expected a string value",
-			AttributePath: path,
-		})
-		return
+		return nil, []error{fmt.Errorf("expected a string value for %q", k)}
 	}
 
 	if strings.TrimSpace(v) == "" {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Value must not be empty",
-			AttributePath: path,
-		})
+		return nil, []error{fmt.Errorf("value must not be empty for %q", k)}
 	}
 
 	regExIsEmailAddress := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	if !regExIsEmailAddress.MatchString(v) {
-		ret = append(ret, diag.Diagnostic{
-			Severity:      diag.Error,
-			Summary:       "Value must be a valid email address",
-			AttributePath: path,
-		})
+		return nil, []error{fmt.Errorf("value must be a valid email address for %q", k)}
 	}
 
 	return

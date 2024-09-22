@@ -289,9 +289,9 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 
 	tf.Set(d, "application_id", applicationId.ID())
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "type", credential.Type)
-	tf.Set(d, "start_date", credential.StartDateTime)
-	tf.Set(d, "end_date", credential.EndDateTime)
+	tf.Set(d, "type", credential.Type.GetOrZero())
+	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
+	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 
 	if v := d.Get("application_object_id").(string); v != "" {
 		tf.Set(d, "application_object_id", v)

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunit"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -87,7 +88,7 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 
 	if displayName != "" {
 		options := administrativeunit.ListAdministrativeUnitsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 		resp, err := client.ListAdministrativeUnits(ctx, options)
 		if err != nil || resp.Model == nil {
@@ -120,10 +121,10 @@ func administrativeUnitDataSourceRead(ctx context.Context, d *pluginsdk.Resource
 
 	d.SetId(*administrativeUnit.Id)
 
-	tf.Set(d, "description", administrativeUnit.Description)
-	tf.Set(d, "display_name", administrativeUnit.DisplayName)
-	tf.Set(d, "object_id", administrativeUnit.Id)
-	tf.Set(d, "visibility", administrativeUnit.Visibility)
+	tf.Set(d, "description", administrativeUnit.Description.GetOrZero())
+	tf.Set(d, "display_name", administrativeUnit.DisplayName.GetOrZero())
+	tf.Set(d, "object_id", pointer.From(administrativeUnit.Id))
+	tf.Set(d, "visibility", administrativeUnit.Visibility.GetOrZero())
 
 	membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(*administrativeUnit.Id), administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions())
 	if err != nil {

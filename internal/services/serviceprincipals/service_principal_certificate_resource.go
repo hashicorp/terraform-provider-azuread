@@ -6,7 +6,6 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -43,20 +42,20 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this certificate should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this certificate should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"key_id": {
-				Description:      "A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "A UUID used to uniquely identify this certificate. If not specified a UUID will be automatically generated",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"encoding": {
@@ -92,12 +91,12 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:      "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\"",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "A relative duration for which the certificate is valid until, for example `240h` (10 days) or `2400h30m`. Valid time units are \"ns\", \"us\" (or \"µs\"), \"ms\", \"s\", \"m\", \"h\"",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"type": {
@@ -175,34 +174,21 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 	}
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
-	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			if _, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
-				return nil, "Error", err
-			}
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			return pointer.To(false), err
+		}
 
-			if servicePrincipal.KeyCredentials != nil {
-				for _, cred := range *servicePrincipal.KeyCredentials {
-					if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
-						return &cred, "Done", nil
-					}
-				}
-			}
+		servicePrincipal := resp.Model
+		if servicePrincipal == nil {
+			return pointer.To(false), nil
+		}
 
-			return nil, "Waiting", nil
-		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
+		credential := credentials.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
+		return pointer.To(credential != nil), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for certificate credential for %s", servicePrincipalId)
-	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("certificate credential not found in service principal manifest"), "Waiting for certificate credential for %s", servicePrincipalId)
 	}
 
 	d.SetId(id.String())
@@ -267,7 +253,7 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *pluginsdk
 	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Service Principal was not found"), "service_principal_id", "Retrieving %s", servicePrincipalId)
+			return nil
 		}
 		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
@@ -295,16 +281,21 @@ func servicePrincipalCertificateResourceDelete(ctx context.Context, d *pluginsdk
 
 	// Wait for service principal certificate to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if _, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
+		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(true), nil
+			}
 			return nil, err
 		}
 
-		credential := credentials.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
-		if credential == nil {
+		servicePrincipal := resp.Model
+		if servicePrincipal == nil {
 			return pointer.To(false), nil
 		}
 
-		return pointer.To(true), nil
+		credential := credentials.GetKeyCredential(servicePrincipal.KeyCredentials, id.KeyId)
+		return pointer.To(credential != nil), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of certificate credential %q from %s", id.KeyId, servicePrincipalId)
 	}

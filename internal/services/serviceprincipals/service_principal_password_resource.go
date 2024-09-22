@@ -8,7 +8,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -48,11 +47,11 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this password should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this password should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
@@ -83,12 +82,12 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:      "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"rotate_when_changed": {
@@ -158,44 +157,25 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.Re
 	id := parse.NewCredentialID(servicePrincipalId.ServicePrincipalId, "password", newCredential.KeyId.GetOrZero())
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
-	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
-			if err != nil {
-				return nil, "Error", err
-			}
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			return pointer.To(false), err
+		}
 
-			servicePrincipal := resp.Model
-			if servicePrincipal == nil {
-				return nil, "Error", errors.New("model was nil")
-			}
+		servicePrincipal := resp.Model
+		if servicePrincipal == nil {
+			return pointer.To(false), nil
+		}
 
-			if servicePrincipal.PasswordCredentials != nil {
-				for _, cred := range *servicePrincipal.PasswordCredentials {
-					if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
-						return &cred, "Done", nil
-					}
-				}
-			}
-
-			return nil, "Waiting", nil
-		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
+		credential := credentials.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
+		return pointer.To(credential != nil), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for password credential for %s", servicePrincipalId)
-	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("password credential not found in service principal manifest"), "Waiting for password credential for %s", servicePrincipalId)
 	}
 
 	d.SetId(id.String())
-	tf.Set(d, "value", newCredential.SecretText)
+	tf.Set(d, "value", newCredential.SecretText.GetOrZero())
 
 	return servicePrincipalPasswordResourceRead(ctx, d, meta)
 }
@@ -274,12 +254,15 @@ func servicePrincipalPasswordResourceDelete(ctx context.Context, d *pluginsdk.Re
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(true), nil
+			}
 			return nil, err
 		}
 
 		servicePrincipal := resp.Model
 		if servicePrincipal == nil {
-			return nil, errors.New("model was nil")
+			return pointer.To(false), nil
 		}
 
 		credential := credentials.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)

@@ -209,7 +209,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	if newCredential == nil {
 		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for %s", applicationId)
 	}
-	if newCredential.KeyId == nil {
+	if newCredential.KeyId.IsNull() {
 		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for %s", applicationId)
 	}
 
@@ -218,7 +218,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for %s", applicationId)
 	}
 
-	id := parse.NewCredentialID(applicationId.ApplicationId, "password", password)
+	id := parse.NewCredentialID(applicationId.ApplicationId, "password", newCredential.KeyId.GetOrZero())
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
 	timeout, _ := ctx.Deadline()
@@ -253,7 +253,7 @@ func applicationPasswordResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	}
 
 	d.SetId(id.String())
-	d.Set("value", newCredential.SecretText)
+	d.Set("value", newCredential.SecretText.GetOrZero())
 
 	return applicationPasswordResourceRead(ctx, d, meta)
 }
@@ -271,7 +271,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
+			log.Printf("[DEBUG] %s for %s credential %q was not found - removing from state!", applicationId, id.KeyType, id.KeyId)
 			d.SetId("")
 			return nil
 		}
@@ -280,7 +280,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 	app := resp.Model
 	if app == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s: model was nil", applicationId)
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", applicationId)
 	}
 
 	credential := credentials.GetPasswordCredential(app.PasswordCredentials, id.KeyId)
@@ -293,7 +293,7 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	tf.Set(d, "application_id", applicationId.ID())
 
 	if credential.DisplayName != nil {
-		tf.Set(d, "display_name", credential.DisplayName)
+		tf.Set(d, "display_name", credential.DisplayName.GetOrZero())
 	} else if credential.CustomKeyIdentifier != nil {
 		displayName, err := base64.StdEncoding.DecodeString(credential.CustomKeyIdentifier.GetOrZero())
 		if err != nil {
@@ -303,8 +303,8 @@ func applicationPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "start_date", credential.StartDateTime)
-	tf.Set(d, "end_date", credential.EndDateTime)
+	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
+	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 
 	if v := d.Get("application_object_id").(string); v != "" {
 		tf.Set(d, "application_object_id", v)
@@ -332,7 +332,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 		KeyId: pointer.To(id.KeyId),
 	}
 	if _, err = client.RemovePassword(ctx, applicationId, request, application.DefaultRemovePasswordOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Removing password credential %q from %s", id.KeyId, applicationId)
 	}
 
 	// Wait for application password to be deleted
@@ -349,7 +349,7 @@ func applicationPasswordResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 
 		return pointer.To(credentials.GetPasswordCredential(app.PasswordCredentials, id.KeyId) != nil), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of password credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of password credential %q from %s", id.KeyId, applicationId)
 	}
 
 	return nil

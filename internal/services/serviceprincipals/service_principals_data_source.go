@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"strings"
 	"time"
 
@@ -229,7 +230,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		expectedCount = len(clientIdsToSearch)
 		for _, v := range clientIdsToSearch {
 			options := serviceprincipal.ListServicePrincipalsOperationOptions{
-				Filter: pointer.To(fmt.Sprintf("appId eq '%s'", v)),
+				Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(v))),
 			}
 			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {
@@ -254,9 +255,9 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 	} else if displayNames, ok := d.Get("display_names").([]interface{}); ok && len(displayNames) > 0 {
 		expectedCount = len(displayNames)
-		for _, v := range displayNames {
+		for _, v := range tf.ExpandStringSlice(displayNames) {
 			options := serviceprincipal.ListServicePrincipalsOperationOptions{
-				Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", v)),
+				Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(v))),
 			}
 			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {

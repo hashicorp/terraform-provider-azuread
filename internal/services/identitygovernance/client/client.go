@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageresourcerequest"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroleassignment"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroledefinition"
@@ -30,7 +30,7 @@ import (
 type Client struct {
 	AccessPackageAssignmentPolicyClient  *entitlementmanagementaccesspackageassignmentpolicy.EntitlementManagementAccessPackageAssignmentPolicyClient
 	AccessPackageCatalogClient           *entitlementmanagementaccesspackagecatalog.EntitlementManagementAccessPackageCatalogClient
-	AccessPackageCatalogResourceClient   *entitlementmanagementaccesspackagecatalogresource.EntitlementManagementAccessPackageCatalogResourceClient
+	AccessPackageCatalogResourceClient   *entitlementmanagementaccesspackagecatalogaccesspackageresource.EntitlementManagementAccessPackageCatalogAccessPackageResourceClient
 	AccessPackageClient                  *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient
 	AccessPackageResourceRequestClient   *entitlementmanagementaccesspackageresourcerequest.EntitlementManagementAccessPackageResourceRequestClient
 	AccessPackageResourceRoleScopeClient *entitlementmanagementaccesspackageaccesspackageresourcerolescope.EntitlementManagementAccessPackageAccessPackageResourceRoleScopeClient
@@ -58,7 +58,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(accessPackageCatalogClient.Client)
 
-	accessPackageCatalogResourceClient, err := entitlementmanagementaccesspackagecatalogresource.NewEntitlementManagementAccessPackageCatalogResourceClientWithBaseURI(o.Environment.MicrosoftGraph)
+	accessPackageCatalogResourceClient, err := entitlementmanagementaccesspackagecatalogaccesspackageresource.NewEntitlementManagementAccessPackageCatalogAccessPackageResourceClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,9 @@ package applications
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -97,10 +100,19 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 			}
 
 			properties := stable.ReferenceCreate{
-				ODataId: pointer.To(client.Client.BaseUri + ownerId.ID()),
+				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(ownerId.DirectoryObjectId).ID()),
 			}
 
-			if _, err = client.AddOwnerRef(ctx, *applicationId, properties, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
+			options := owner.AddOwnerRefOperationOptions{
+				RetryFunc: func(resp *http.Response, _ *odata.OData) (bool, error) {
+					if response.WasNotFound(resp) {
+						return true, nil
+					}
+					return false, nil
+				},
+			}
+
+			if _, err = client.AddOwnerRef(ctx, *applicationId, properties, options); err != nil {
 				return fmt.Errorf("adding %s: %+v", ownerId, err)
 			}
 

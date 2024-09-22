@@ -52,13 +52,13 @@ func TestAccGroup_basicUnified(t *testing.T) {
 	})
 }
 
-func TestAccGroup_complete(t *testing.T) {
+func TestAccGroup_completeUnified(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.completeUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -67,13 +67,13 @@ func TestAccGroup_complete(t *testing.T) {
 	})
 }
 
-func TestAccGroup_update(t *testing.T) {
+func TestAccGroup_updateUnified(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basicUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -87,7 +87,7 @@ func TestAccGroup_update(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.complete(data),
+			Config: r.completeUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -659,8 +659,9 @@ resource "azuread_group" "test" {
 func (r GroupResource) unifiedAsUser(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {
-  client_id = ""
-  use_cli   = true
+  client_id           = ""
+  client_id_file_path = ""
+  use_cli             = true
 }
 
 %[1]s
@@ -670,8 +671,9 @@ provider "azuread" {
 func (GroupResource) unifiedWithExtraSettings(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {
-  client_id = ""
-  use_cli   = true
+  client_id           = ""
+  client_id_file_path = ""
+  use_cli             = true
 }
 
 resource "azuread_group" "test" {
@@ -708,7 +710,7 @@ resource "azuread_group" "test" {
 `, data.RandomInteger, onPremisesGroupType)
 }
 
-func (GroupResource) complete(data acceptance.TestData) string {
+func (GroupResource) completeUnified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "test" {
   only_initial = true

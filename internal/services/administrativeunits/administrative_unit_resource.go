@@ -352,13 +352,6 @@ func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.Resource
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitClient
 	id := stable.NewDirectoryAdministrativeUnitID(d.Id())
 
-	if resp, err := client.GetAdministrativeUnit(ctx, id, administrativeunit.DefaultGetAdministrativeUnitOperationOptions()); err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("administrative unit was not found"), "id", "Retrieving administrative unit with object ID %q", id.AdministrativeUnitId)
-		}
-		return tf.ErrorDiagPathF(err, "id", "Retrieving administrative unit with object ID: %q", id.AdministrativeUnitId)
-	}
-
 	if _, err := client.DeleteAdministrativeUnit(ctx, id, administrativeunit.DefaultDeleteAdministrativeUnitOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Deleting administrative unit with object ID: %q", id.AdministrativeUnitId)
 	}

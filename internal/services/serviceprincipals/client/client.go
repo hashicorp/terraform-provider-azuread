@@ -69,6 +69,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(synchronizationJobClient.Client)
 
 	return &Client{
+		ClaimsMappingPolicyClient:   claimsMappingPolicyClient,
 		DirectoryObjectClient:       directoryObjectClient,
 		OAuth2PermissionGrantClient: oAuth2PermissionGrantClient,
 		ServicePrincipalClient:      servicePrincipalClient,

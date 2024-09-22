@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -44,35 +46,35 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_definition_id": {
-				Description:      "The object ID of the directory role for this role eligibility schedule request",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the directory role for this role eligibility schedule request",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"principal_id": {
-				Description:      "The object ID of the member principal",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the member principal",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"directory_scope_id": {
-				Description:      "Identifier of the directory object representing the scope of the role eligibility schedule request",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "Identifier of the directory object representing the scope of the role eligibility schedule request",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"justification": {
-				Description:      "Justification for why the role is assigned",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "Justification for why the role is assigned",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -100,7 +102,16 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 		},
 	}
 
-	resp, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions())
+	options := directoryroleeligibilityschedulerequest.CreateDirectoryRoleEligibilityScheduleRequestOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			if response.WasNotFound(resp) && o.Error != nil {
+				return o.Error.Match("RoleNotFound") || o.Error.Match("SubjectNotFound"), nil
+			}
+			return false, nil
+		},
+	}
+
+	resp, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating eligibility schedule request for role %q to principal %q: %+v", roleDefinitionId, principalId, err)
 	}
@@ -113,7 +124,7 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(*roleEligibilityScheduleRequest.Id)
 	d.SetId(id.UnifiedRoleEligibilityScheduleRequestId)
 
-	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 		resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
@@ -170,11 +181,16 @@ func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, 
 		return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
 	}
 
-	roleEligibilityScheduleRequest.Id = nil
-	roleEligibilityScheduleRequest.Action = pointer.To(stable.UnifiedRoleScheduleRequestActions_AdminRemove)
+	properties := stable.UnifiedRoleEligibilityScheduleRequest{
+		Action:           pointer.To(stable.UnifiedRoleScheduleRequestActions_AdminRemove),
+		RoleDefinitionId: roleEligibilityScheduleRequest.RoleDefinitionId,
+		PrincipalId:      roleEligibilityScheduleRequest.PrincipalId,
+		Justification:    roleEligibilityScheduleRequest.Justification,
+		DirectoryScopeId: roleEligibilityScheduleRequest.DirectoryScopeId,
+	}
 
-	if _, err := client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, *roleEligibilityScheduleRequest, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Deleting role eligibility schedule request %q: %+v", d.Id(), err)
+	if _, err = client.CreateDirectoryRoleEligibilityScheduleRequest(ctx, properties, directoryroleeligibilityschedulerequest.DefaultCreateDirectoryRoleEligibilityScheduleRequestOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing role eligibility schedule request %q: %+v", d.Id(), err)
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
 	"strings"
 	"time"
@@ -374,7 +375,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	options := serviceprincipal.ListServicePrincipalsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", clientId)),
+		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
 	}
 	listResp, err := client.ListServicePrincipals(ctx, options)
 	if err != nil {

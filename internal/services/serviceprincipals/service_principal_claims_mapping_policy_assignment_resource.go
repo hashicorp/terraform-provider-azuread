@@ -6,6 +6,7 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"log"
 	"time"
 
@@ -38,17 +39,19 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claims_mapping_policy_id": {
-				Description: "ID of the claims mapping policy to assign",
-				Type:        pluginsdk.TypeString,
-				ForceNew:    true,
-				Required:    true,
+				Description:  "ID of the claims mapping policy to assign",
+				Type:         pluginsdk.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"service_principal_id": {
-				Description: "Object ID of the service principal for which to assign the policy",
-				Type:        pluginsdk.TypeString,
-				ForceNew:    true,
-				Required:    true,
+				Description:  "Object ID of the service principal for which to assign the policy",
+				Type:         pluginsdk.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}

@@ -385,12 +385,6 @@ func (c *Client) NewRequest(ctx context.Context, input RequestOptions) (*Request
 		req.Header.Add("Content-Type", input.ContentType)
 	}
 
-	if input.Accept != nil {
-		req.Header.Add("Accept", fmt.Sprintf("%s", *input.Accept))
-	} else if input.ContentType != "" {
-		req.Header.Add("Accept", input.ContentType)
-	}
-
 	if c.UserAgent != "" {
 		req.Header.Add("User-Agent", c.UserAgent)
 	}

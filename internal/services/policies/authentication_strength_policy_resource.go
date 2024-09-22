@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -64,8 +66,20 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
-					Type:         pluginsdk.TypeString,
-					ValidateFunc: validation.StringInSlice(stable.PossibleValuesForAuthenticationMethodModes(), false),
+					Type: pluginsdk.TypeString,
+					ValidateFunc: func(in interface{}, k string) ([]string, []error) {
+						val, ok := in.(string)
+						if !ok {
+							return nil, []error{fmt.Errorf("expected a string value for %q", k)}
+						}
+						split := strings.Split(val, ",")
+						for _, s := range split {
+							if !slices.Contains(stable.PossibleValuesForAuthenticationMethodModes(), strings.TrimSpace(s)) {
+								return nil, []error{fmt.Errorf("unrecognized authentication method %q in %q", s, k)}
+							}
+						}
+						return nil, nil
+					},
 				},
 			},
 		},
@@ -124,11 +138,11 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 			allowedCombinations = append(allowedCombinations, stable.AuthenticationMethodModes(v.(string)))
 		}
 
-		request := authenticationstrengthpolicy.UpdateAuthenticationStrengthPolicyAllowedCombinationRequest{
+		request := authenticationstrengthpolicy.UpdateAuthenticationStrengthPolicyAllowedCombinationsRequest{
 			AllowedCombinations: pointer.To(allowedCombinations),
 		}
 
-		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombination(ctx, id, request, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyAllowedCombinationOperationOptions()); err != nil {
+		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombinations(ctx, id, request, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyAllowedCombinationsOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update allowed combinations for %s", id)
 		}
 	}

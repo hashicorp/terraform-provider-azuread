@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"strings"
 	"time"
 
@@ -314,7 +315,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	} else if _, ok := d.GetOk("display_name"); ok {
 		displayName := d.Get("display_name").(string)
 		options := serviceprincipal.ListServicePrincipalsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 
 		resp, err := client.ListServicePrincipals(ctx, options)
@@ -343,7 +344,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 		}
 
 		options := serviceprincipal.ListServicePrincipalsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("appId eq '%s'", clientId)),
+			Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
 		}
 
 		resp, err := client.ListServicePrincipals(ctx, options)
@@ -372,11 +373,11 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	id := stable.NewServicePrincipalID(*servicePrincipal.Id)
 	d.SetId(id.ID())
 
-	// Retrieve from beta API to get samlMetadataUrl field
+	// Retrieve `samlMetadataUrl` from beta API
 	options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
 		Select: pointer.To([]string{"samlMetadataUrl"}),
 	}
-	resp, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(id.ServicePrincipalId), options)
+	resp, err := clientBeta.GetServicePrincipal(ctx, beta.ServicePrincipalId(id), options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving %s (beta API)", id)
 	}

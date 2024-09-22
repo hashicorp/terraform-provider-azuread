@@ -37,11 +37,11 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this synchronization secret should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this synchronization secret should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"credential": {
@@ -84,28 +84,20 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 	}
 
 	// Wait for the secret to appear
-	timeout, _ := ctx.Deadline()
-	if _, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
-			if err != nil {
-				return nil, "Error", fmt.Errorf("retrieving synchronization secret")
-			}
-			newSynchronizationSecrets := resp.Model
-			if newSynchronizationSecrets == nil {
-				return "stub", "Waiting", nil
-			}
-			if len(pointer.From(synchronizationSecrets.Value)) == len(pointer.From(newSynchronizationSecrets)) {
-				return "stub", "Done", nil
-			}
-			return "stub", "Waiting", nil
-		},
-	}).WaitForStateContext(ctx); err != nil {
+	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+		if err != nil {
+			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
+		}
+		newSynchronizationSecrets := resp.Model
+		if newSynchronizationSecrets == nil {
+			return pointer.To(false), nil
+		}
+		if len(pointer.From(synchronizationSecrets.Value)) == len(pointer.From(newSynchronizationSecrets)) {
+			return pointer.To(true), nil
+		}
+		return pointer.To(false), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for synchronization secrets for %s", servicePrincipalId)
 	}
 
@@ -137,28 +129,20 @@ func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.Resou
 	}
 
 	// Wait for the secret to update
-	timeout, _ := ctx.Deadline()
-	if _, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
-			if err != nil {
-				return nil, "Error", fmt.Errorf("retrieving synchronization secret")
-			}
-			newSynchronizationSecrets := resp.Model
-			if newSynchronizationSecrets == nil {
-				return "stub", "Waiting", nil
-			}
-			if len(pointer.From(synchronizationSecrets.Value)) == len(pointer.From(newSynchronizationSecrets)) {
-				return "stub", "Done", nil
-			}
-			return "stub", "Waiting", nil
-		},
-	}).WaitForStateContext(ctx); err != nil {
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+		if err != nil {
+			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
+		}
+		newSynchronizationSecrets := resp.Model
+		if newSynchronizationSecrets == nil {
+			return pointer.To(false), nil
+		}
+		if len(pointer.From(synchronizationSecrets.Value)) == len(pointer.From(newSynchronizationSecrets)) {
+			return pointer.To(true), nil
+		}
+		return pointer.To(false), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for synchronization secrets for %s", servicePrincipalId)
 	}
 

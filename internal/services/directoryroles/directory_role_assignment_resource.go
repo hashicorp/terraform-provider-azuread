@@ -41,60 +41,60 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_id": {
-				Description:      "The object ID of the directory role for this assignment",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the directory role for this assignment",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"principal_object_id": {
-				Description:      "The object ID of the member principal",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the member principal",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"app_scope_id": {
-				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"app_scope_object_id": {
-				Deprecated:       "`app_scope_object_id` has been renamed to `app_scope_id` and will be removed in version 3.0 or the AzureAD Provider",
-				Description:      "Identifier of the app-specific scope when the assignment scope is app-specific",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"app_scope_id", "directory_scope_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Deprecated:    "`app_scope_object_id` has been renamed to `app_scope_id` and will be removed in version 3.0 or the AzureAD Provider",
+				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"app_scope_id", "directory_scope_id", "directory_scope_object_id"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"directory_scope_id": {
-				Description:      "Identifier of the directory object representing the scope of the assignment",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "Identifier of the directory object representing the scope of the assignment",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"directory_scope_object_id": {
-				Description:      "Identifier of the directory object representing the scope of the assignment",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"app_scope_id", "app_scope_object_id", "directory_scope_id"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "Identifier of the directory object representing the scope of the assignment",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"app_scope_id", "app_scope_object_id", "directory_scope_id"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -211,7 +211,7 @@ func directoryRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.Res
 	id := stable.NewRoleManagementDirectoryRoleAssignmentID(d.Id())
 
 	if _, err := client.DeleteDirectoryRoleAssignment(ctx, id, directoryroleassignment.DefaultDeleteDirectoryRoleAssignmentOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Deleting %s: %+v", id, err)
+		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
 	return nil

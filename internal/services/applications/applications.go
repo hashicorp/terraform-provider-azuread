@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"net/http"
 	"reflect"
 	"strings"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
@@ -455,11 +455,11 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	return nil
 }
 
-func expandApplicationApi(input []interface{}) (result *beta.ApiApplication) {
-	result = &beta.ApiApplication{
+func expandApplicationApi(input []interface{}) (result *stable.ApiApplication) {
+	result = &stable.ApiApplication{
 		AcceptMappedClaims:          nullable.Value(false),
 		KnownClientApplications:     &[]string{},
-		OAuth2PermissionScopes:      &[]beta.PermissionScope{},
+		OAuth2PermissionScopes:      &[]stable.PermissionScope{},
 		RequestedAccessTokenVersion: nullable.Value(int64(1)),
 	}
 
@@ -482,12 +482,12 @@ func expandApplicationApi(input []interface{}) (result *beta.ApiApplication) {
 	return
 }
 
-func expandApplicationPasswordCredentials(input []interface{}) (*[]beta.PasswordCredential, error) {
+func expandApplicationPasswordCredentials(input []interface{}) (*[]stable.PasswordCredential, error) {
 	if len(input) == 0 {
 		return nil, nil
 	}
 
-	result := make([]beta.PasswordCredential, 0)
+	result := make([]stable.PasswordCredential, 0)
 
 	for _, password := range input {
 		if password == nil {
@@ -498,15 +498,14 @@ func expandApplicationPasswordCredentials(input []interface{}) (*[]beta.Password
 		if err != nil {
 			return nil, err
 		}
-		converted := convertPasswordCredentialStableToBeta(credential)
-		result = append(result, *converted)
+		result = append(result, *credential)
 	}
 
 	return &result, nil
 }
 
-func expandApplicationAppRoles(input []interface{}) *[]beta.AppRole {
-	result := make([]beta.AppRole, 0)
+func expandApplicationAppRoles(input []interface{}) *[]stable.AppRole {
+	result := make([]stable.AppRole, 0)
 
 	if len(input) == 0 {
 		return &result
@@ -523,7 +522,7 @@ func expandApplicationAppRoles(input []interface{}) *[]beta.AppRole {
 			allowedMemberTypes = append(allowedMemberTypes, allowedMemberType.(string))
 		}
 
-		newAppRole := beta.AppRole{
+		newAppRole := stable.AppRole{
 			Id:                 pointer.To(appRole["id"].(string)),
 			AllowedMemberTypes: &allowedMemberTypes,
 			Description:        nullable.Value(appRole["description"].(string)),
@@ -554,7 +553,7 @@ func expandApplicationGroupMembershipClaims(in []interface{}) nullable.Type[stri
 	return nullable.NoZero(strings.Join(ret, ","))
 }
 
-func expandApplicationImplicitGrantSettings(input []interface{}) *beta.ImplicitGrantSettings {
+func expandApplicationImplicitGrantSettings(input []interface{}) *stable.ImplicitGrantSettings {
 	var enableAccessTokenIssuance, enableIdTokenIssuance bool
 
 	if len(input) > 0 && input[0] != nil {
@@ -563,14 +562,14 @@ func expandApplicationImplicitGrantSettings(input []interface{}) *beta.ImplicitG
 		enableIdTokenIssuance = in["id_token_issuance_enabled"].(bool)
 	}
 
-	return &beta.ImplicitGrantSettings{
+	return &stable.ImplicitGrantSettings{
 		EnableAccessTokenIssuance: nullable.Value(enableAccessTokenIssuance),
 		EnableIdTokenIssuance:     nullable.Value(enableIdTokenIssuance),
 	}
 }
 
-func expandApplicationOAuth2PermissionScope(in []interface{}) *[]beta.PermissionScope {
-	result := make([]beta.PermissionScope, 0)
+func expandApplicationOAuth2PermissionScope(in []interface{}) *[]stable.PermissionScope {
+	result := make([]stable.PermissionScope, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -578,7 +577,7 @@ func expandApplicationOAuth2PermissionScope(in []interface{}) *[]beta.Permission
 		}
 		oauth2Permissions := raw.(map[string]interface{})
 
-		result = append(result, beta.PermissionScope{
+		result = append(result, stable.PermissionScope{
 			AdminConsentDescription: nullable.Value(oauth2Permissions["admin_consent_description"].(string)),
 			AdminConsentDisplayName: nullable.Value(oauth2Permissions["admin_consent_display_name"].(string)),
 			Id:                      pointer.To(oauth2Permissions["id"].(string)),
@@ -593,8 +592,8 @@ func expandApplicationOAuth2PermissionScope(in []interface{}) *[]beta.Permission
 	return &result
 }
 
-func expandApplicationOptionalClaims(in []interface{}) *beta.OptionalClaims {
-	result := beta.OptionalClaims{}
+func expandApplicationOptionalClaims(in []interface{}) *stable.OptionalClaims {
+	result := stable.OptionalClaims{}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -609,8 +608,8 @@ func expandApplicationOptionalClaims(in []interface{}) *beta.OptionalClaims {
 	return &result
 }
 
-func expandApplicationOptionalClaim(in []interface{}) *[]beta.OptionalClaim {
-	result := make([]beta.OptionalClaim, 0)
+func expandApplicationOptionalClaim(in []interface{}) *[]stable.OptionalClaim {
+	result := make([]stable.OptionalClaim, 0)
 
 	for _, optionalClaimRaw := range in {
 		if optionalClaimRaw == nil {
@@ -625,7 +624,7 @@ func expandApplicationOptionalClaim(in []interface{}) *[]beta.OptionalClaim {
 			}
 		}
 
-		newClaim := beta.OptionalClaim{
+		newClaim := stable.OptionalClaim{
 			Name:                 pointer.To(optionalClaim["name"].(string)),
 			Essential:            pointer.To(optionalClaim["essential"].(bool)),
 			AdditionalProperties: &additionalProps,
@@ -641,8 +640,8 @@ func expandApplicationOptionalClaim(in []interface{}) *[]beta.OptionalClaim {
 	return &result
 }
 
-func expandApplicationPublicClient(input []interface{}) (result *beta.PublicClientApplication) {
-	result = &beta.PublicClientApplication{
+func expandApplicationPublicClient(input []interface{}) (result *stable.PublicClientApplication) {
+	result = &stable.PublicClientApplication{
 		RedirectUris: &[]string{},
 	}
 
@@ -656,8 +655,8 @@ func expandApplicationPublicClient(input []interface{}) (result *beta.PublicClie
 	return
 }
 
-func expandApplicationRequiredResourceAccess(in []interface{}) *[]beta.RequiredResourceAccess {
-	result := make([]beta.RequiredResourceAccess, 0)
+func expandApplicationRequiredResourceAccess(in []interface{}) *[]stable.RequiredResourceAccess {
+	result := make([]stable.RequiredResourceAccess, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -665,7 +664,7 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]beta.RequiredR
 		}
 		requiredResourceAccess := raw.(map[string]interface{})
 
-		result = append(result, beta.RequiredResourceAccess{
+		result = append(result, stable.RequiredResourceAccess{
 			ResourceAppId: pointer.To(requiredResourceAccess["resource_app_id"].(string)),
 			ResourceAccess: expandApplicationResourceAccess(
 				requiredResourceAccess["resource_access"].([]interface{}),
@@ -676,8 +675,8 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]beta.RequiredR
 	return &result
 }
 
-func expandApplicationResourceAccess(in []interface{}) *[]beta.ResourceAccess {
-	result := make([]beta.ResourceAccess, 0)
+func expandApplicationResourceAccess(in []interface{}) *[]stable.ResourceAccess {
+	result := make([]stable.ResourceAccess, 0)
 
 	for _, resourceAccessRaw := range in {
 		if resourceAccessRaw == nil {
@@ -685,7 +684,7 @@ func expandApplicationResourceAccess(in []interface{}) *[]beta.ResourceAccess {
 		}
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
 
-		result = append(result, beta.ResourceAccess{
+		result = append(result, stable.ResourceAccess{
 			Id:   pointer.To(resourceAccess["id"].(string)),
 			Type: nullable.Value(resourceAccess["type"].(string)),
 		})
@@ -694,8 +693,8 @@ func expandApplicationResourceAccess(in []interface{}) *[]beta.ResourceAccess {
 	return &result
 }
 
-func expandApplicationSpa(input []interface{}) (result *beta.SpaApplication) {
-	result = &beta.SpaApplication{
+func expandApplicationSpa(input []interface{}) (result *stable.SpaApplication) {
+	result = &stable.SpaApplication{
 		RedirectUris: &[]string{},
 	}
 
@@ -709,8 +708,8 @@ func expandApplicationSpa(input []interface{}) (result *beta.SpaApplication) {
 	return
 }
 
-func expandApplicationWeb(input []interface{}) (result *beta.WebApplication) {
-	result = &beta.WebApplication{
+func expandApplicationWeb(input []interface{}) (result *stable.WebApplication) {
+	result = &stable.WebApplication{
 		HomePageUrl:           nullable.NoZero(""),
 		ImplicitGrantSettings: expandApplicationImplicitGrantSettings(nil),
 		LogoutUrl:             nullable.NoZero(""),
@@ -722,15 +721,15 @@ func expandApplicationWeb(input []interface{}) (result *beta.WebApplication) {
 	}
 
 	in := input[0].(map[string]interface{})
-	result.HomePageUrl = nullable.Value(in["homepage_url"].(string))
-	result.LogoutUrl = nullable.Value(in["logout_url"].(string))
+	result.HomePageUrl = nullable.NoZero(in["homepage_url"].(string))
+	result.LogoutUrl = nullable.NoZero(in["logout_url"].(string))
 	result.ImplicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
 	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 
 	return
 }
 
-func flattenApplicationApi(in *beta.ApiApplication, dataSource bool) []map[string]interface{} {
+func flattenApplicationApi(in *stable.ApiApplication, dataSource bool) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -755,12 +754,12 @@ func flattenApplicationApi(in *beta.ApiApplication, dataSource bool) []map[strin
 	}}
 }
 
-func flattenApplicationAppRoleIDs(in *[]beta.AppRole) map[string]string {
-	return applications.FlattenAppRoleIDs(convertAppRolesBetaToStable(in))
+func flattenApplicationAppRoleIDs(in *[]stable.AppRole) map[string]string {
+	return applications.FlattenAppRoleIDs(in)
 }
 
-func flattenApplicationAppRoles(in *[]beta.AppRole) []map[string]interface{} {
-	return applications.FlattenAppRoles(convertAppRolesBetaToStable(in))
+func flattenApplicationAppRoles(in *[]stable.AppRole) []map[string]interface{} {
+	return applications.FlattenAppRoles(in)
 }
 
 func flattenApplicationGroupMembershipClaims(in nullable.Type[string]) []interface{} {
@@ -776,7 +775,7 @@ func flattenApplicationGroupMembershipClaims(in nullable.Type[string]) []interfa
 	return ret
 }
 
-func flattenApplicationImplicitGrant(in *beta.ImplicitGrantSettings) []map[string]interface{} {
+func flattenApplicationImplicitGrant(in *stable.ImplicitGrantSettings) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -787,15 +786,15 @@ func flattenApplicationImplicitGrant(in *beta.ImplicitGrantSettings) []map[strin
 	}}
 }
 
-func flattenApplicationOAuth2PermissionScopeIDs(in *[]beta.PermissionScope) map[string]string {
-	return applications.FlattenOAuth2PermissionScopeIDs(convertPermissionScopesBetaToStable(in))
+func flattenApplicationOAuth2PermissionScopeIDs(in *[]stable.PermissionScope) map[string]string {
+	return applications.FlattenOAuth2PermissionScopeIDs(in)
 }
 
-func flattenApplicationOAuth2PermissionScopes(in *[]beta.PermissionScope) []map[string]interface{} {
-	return applications.FlattenOAuth2PermissionScopes(convertPermissionScopesBetaToStable(in))
+func flattenApplicationOAuth2PermissionScopes(in *[]stable.PermissionScope) []map[string]interface{} {
+	return applications.FlattenOAuth2PermissionScopes(in)
 }
 
-func flattenApplicationOptionalClaims(in *beta.OptionalClaims) []map[string]interface{} {
+func flattenApplicationOptionalClaims(in *stable.OptionalClaims) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -807,7 +806,7 @@ func flattenApplicationOptionalClaims(in *beta.OptionalClaims) []map[string]inte
 	}}
 }
 
-func flattenApplicationOptionalClaim(in *[]beta.OptionalClaim) []interface{} {
+func flattenApplicationOptionalClaim(in *[]stable.OptionalClaim) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -835,7 +834,7 @@ func flattenApplicationOptionalClaim(in *[]beta.OptionalClaim) []interface{} {
 	return optionalClaims
 }
 
-func flattenApplicationPublicClient(in *beta.PublicClientApplication) []map[string]interface{} {
+func flattenApplicationPublicClient(in *stable.PublicClientApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -845,7 +844,7 @@ func flattenApplicationPublicClient(in *beta.PublicClientApplication) []map[stri
 	}}
 }
 
-func flattenApplicationRequiredResourceAccess(in *[]beta.RequiredResourceAccess) []map[string]interface{} {
+func flattenApplicationRequiredResourceAccess(in *[]stable.RequiredResourceAccess) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -866,7 +865,7 @@ func flattenApplicationRequiredResourceAccess(in *[]beta.RequiredResourceAccess)
 	return result
 }
 
-func flattenApplicationResourceAccess(in *[]beta.ResourceAccess) []interface{} {
+func flattenApplicationResourceAccess(in *[]stable.ResourceAccess) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -884,7 +883,7 @@ func flattenApplicationResourceAccess(in *[]beta.ResourceAccess) []interface{} {
 	return accesses
 }
 
-func flattenApplicationSpa(in *beta.SpaApplication) []map[string]interface{} {
+func flattenApplicationSpa(in *stable.SpaApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -894,7 +893,7 @@ func flattenApplicationSpa(in *beta.SpaApplication) []map[string]interface{} {
 	}}
 }
 
-func flattenApplicationPasswordCredentials(input *[]beta.PasswordCredential) []map[string]interface{} {
+func flattenApplicationPasswordCredentials(input *[]stable.PasswordCredential) []map[string]interface{} {
 	output := make([]map[string]interface{}, 0)
 
 	if input == nil {
@@ -914,7 +913,7 @@ func flattenApplicationPasswordCredentials(input *[]beta.PasswordCredential) []m
 	return output
 }
 
-func flattenApplicationWeb(in *beta.WebApplication) []map[string]interface{} {
+func flattenApplicationWeb(in *stable.WebApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}

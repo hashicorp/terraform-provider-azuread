@@ -25,6 +25,7 @@ import (
 // grep -v \\----- server.crt >server.b64
 // cat server.b64 | base64 -d | xxd -p
 
+// The following certificate(s) will expire on March 7, 2031
 const servicePrincipalCertificatePem string = `-----BEGIN CERTIFICATE-----
 MIIDFDCCAfwCCQCvHp+vopfOOTANBgkqhkiG9w0BAQsFADBMMRYwFAYDVQQDDA1o
 YXNoaWNvcnB0ZXN0MRgwFgYDVQQKDA9IYXNoaUNvcnAsIEluYy4xCzAJBgNVBAgM

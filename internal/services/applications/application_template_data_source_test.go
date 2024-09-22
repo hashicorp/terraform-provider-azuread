@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	testApplicationTemplateId          = "4601ed45-8ff3-4599-8377-b6649007e876" // Marketo
-	testApplicationTemplateAppRoleId   = "dfd0e7dd-26fb-4b2c-98d2-e444486c1e37" // The app role provided by the template
 	testApplicationTemplateDisplayName = "Marketo"                              // The display name of the template
+	testApplicationTemplateId          = "4601ed45-8ff3-4599-8377-b6649007e876" // The template ID for the Marketo app template
+	testApplicationTemplateAppRoleId   = "dfd0e7dd-26fb-4b2c-98d2-e444486c1e37" // The app role provided by the template
 )
 
 type ApplicationTemplateDataSource struct{}

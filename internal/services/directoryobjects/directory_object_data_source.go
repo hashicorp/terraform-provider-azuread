@@ -28,14 +28,14 @@ func directoryObjectDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"object_id": {
-				Description:      "The object ID of the principal",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the Directory Object",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"type": {
-				Description: "The OData type of the principal",
+				Description: "The OData type of the Directory Object",
 				Type:        pluginsdk.TypeString,
 				Computed:    true,
 			},
@@ -53,6 +53,7 @@ func directoryObjectDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDat
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "object_id", "%s was not found", id)
 		}
+
 		return tf.ErrorDiagF(nil, "retrieving %s: %v", id, err)
 	}
 
@@ -60,16 +61,17 @@ func directoryObjectDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDat
 		return tf.ErrorDiagF(fmt.Errorf("nil object returned for %s", id), "Bad API Response")
 	}
 
-	directoryObject := resp.Model
-	switch {
-	case directoryObject.DirectoryObject().Id == nil:
+	directoryObject := resp.Model.DirectoryObject()
+	if directoryObject.Id == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil object ID returned for %s", id), "Bad API Response")
-	case directoryObject.DirectoryObject().ODataType == nil:
+	}
+	if directoryObject.ODataType == nil {
 		return tf.ErrorDiagF(fmt.Errorf("nil OData Type returned for %s", id), "Bad API Response")
 	}
 
 	d.SetId(id.ID())
-	tf.Set(d, "type", odataType(string(pointer.From(directoryObject.DirectoryObject().ODataType))))
+
+	tf.Set(d, "type", formatODataType(pointer.From(directoryObject.ODataType)))
 
 	return nil
 }

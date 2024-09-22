@@ -130,9 +130,9 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return nil, fmt.Errorf("Application with object ID %q does not exist", id.ObjectId)
+			return nil, fmt.Errorf("%s does not exist", applicationId)
 		}
-		return nil, fmt.Errorf("failed to retrieve Application with object ID %q: %+v", id.ObjectId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", applicationId, err)
 	}
 
 	app := resp.Model
@@ -148,7 +148,7 @@ func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *client
 		}
 	}
 
-	return nil, fmt.Errorf("Password Credential %q was not found for Application %q", id.KeyId, id.ObjectId)
+	return pointer.To(false), nil
 }
 
 func (ApplicationPasswordResource) template(data acceptance.TestData) string {

@@ -45,20 +45,20 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this certificate should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this certificate should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
-				Description:      "A friendly name for the certificate",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), "")),
+				Description:  "A friendly name for the certificate",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^CN=.+$|^$"), ""),
 			},
 
 			"end_date": {

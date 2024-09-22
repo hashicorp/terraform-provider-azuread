@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -52,17 +54,17 @@ func userResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"user_principal_name": {
-				Description:      "The user principal name (UPN) of the user",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.StringIsEmailAddress,
+				Description:  "The user principal name (UPN) of the user",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsEmailAddress,
 			},
 
 			"display_name": {
-				Description:      "The name to display in the address book for the user",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The name to display in the address book for the user",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"account_enabled": {
@@ -248,10 +250,10 @@ func userResource() *pluginsdk.Resource {
 			},
 
 			"preferred_language": {
-				Description:      "The user's preferred language, in ISO 639-1 notation",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ISO639Language,
+				Description:  "The user's preferred language, in ISO 639-1 notation",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.ISO639Language,
 			},
 
 			"show_in_address_list": {
@@ -477,7 +479,12 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	updateProperties := beta.User{
 		ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
 	}
-	if _, err = clientBeta.UpdateUser(ctx, beta.UserId(id), updateProperties, userBeta.DefaultUpdateUserOperationOptions()); err != nil {
+	updateOptions := userBeta.UpdateUserOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp), nil
+		},
+	}
+	if _, err = clientBeta.UpdateUser(ctx, beta.UserId(id), updateProperties, updateOptions); err != nil {
 		return tf.ErrorDiagF(err, "Setting `showInAddressList` for %s", id)
 	}
 
@@ -485,10 +492,23 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		managerRef := stable.ReferenceUpdate{
 			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(v).ID()),
 		}
-
 		if _, err = managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 		}
+	}
+
+	// Now ensure we can retrieve the user consistently
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 
 	return userResourceRead(ctx, d, meta)
@@ -586,12 +606,18 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	if d.HasChange("manager_id") {
-		managerRef := stable.ReferenceUpdate{
-			ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(d.Get("manager_id").(string)).ID()),
-		}
+		if managerId := d.Get("manager_id").(string); managerId != "" {
+			managerRef := stable.ReferenceUpdate{
+				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(d.Get("manager_id").(string)).ID()),
+			}
 
-		if _, err := managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
-			return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
+			if _, err := managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
+				return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
+			}
+		} else {
+			if _, err := managerClient.RemoveManagerRef(ctx, id, manager.DefaultRemoveManagerRefOperationOptions()); err != nil {
+				return tf.ErrorDiagPathF(err, "manager_id", "Could not remove manager for %s", id)
+			}
 		}
 	}
 

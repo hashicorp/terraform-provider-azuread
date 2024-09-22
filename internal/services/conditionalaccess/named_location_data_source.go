@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -29,9 +30,9 @@ func namedLocationDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"ip": {
@@ -84,7 +85,7 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 
 	displayName := d.Get("display_name").(string)
 	options := conditionalaccessnamedlocation.ListConditionalAccessNamedLocationsOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 	}
 	resp, err := client.ListConditionalAccessNamedLocations(ctx, options)
 	if err != nil {
@@ -115,16 +116,20 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 		if namedLocation.Id == nil {
 			return tf.ErrorDiagF(errors.New("ID is nil for returned IP Named Location"), "Bad API response")
 		}
+
 		d.SetId(*namedLocation.Id)
-		tf.Set(d, "display_name", namedLocation.DisplayName)
+
+		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "ip", flattenIPNamedLocation(&namedLocation))
 
 	case stable.CountryNamedLocation:
 		if namedLocation.Id == nil {
 			return tf.ErrorDiagF(errors.New("ID is nil for returned Country Named Location"), "Bad API response")
 		}
+
 		d.SetId(*namedLocation.Id)
-		tf.Set(d, "display_name", namedLocation.DisplayName)
+
+		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "country", flattenCountryNamedLocation(&namedLocation))
 	}
 

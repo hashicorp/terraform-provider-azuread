@@ -5,16 +5,11 @@ package client
 
 import (
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/sdk/internal/accept"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 type RequestOptions struct {
-	// Accept specifies the preferred response content types for a request. When empty, this is set
-	// to the value of ContentType
-	Accept *accept.Header
-
 	// ContentType is the content type of the request and should include the charset
 	ContentType string
 

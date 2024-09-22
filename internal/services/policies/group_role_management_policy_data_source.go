@@ -6,6 +6,7 @@ package policies
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
@@ -95,7 +96,7 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 			}
 
 			options := rolemanagementpolicyassignment.ListRoleManagementPolicyAssignmentsOperationOptions{
-				Filter: pointer.To(fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", policyId.ScopeId, id.UnifiedRoleManagementPolicyId)),
+				Filter: pointer.To(fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", odata.EscapeSingleQuote(policyId.ScopeId), odata.EscapeSingleQuote(id.UnifiedRoleManagementPolicyId))),
 			}
 			resp, err := assignmentClient.ListRoleManagementPolicyAssignments(ctx, options)
 			if err != nil {

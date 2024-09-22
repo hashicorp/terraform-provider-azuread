@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"strings"
 	"time"
 
@@ -38,8 +39,8 @@ func groupsDataSource() *pluginsdk.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.IsUUID,
 				},
 			},
 
@@ -50,18 +51,18 @@ func groupsDataSource() *pluginsdk.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
-					Type:             pluginsdk.TypeString,
-					ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 
 			"display_name_prefix": {
-				Description:      "Common display name prefix of the groups",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "Common display name prefix of the groups",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_names", "display_name_prefix", "object_ids", "return_all"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"ignore_missing": {
@@ -140,7 +141,7 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 		groups = append(groups, *resp.Model...)
 	} else if displayNamePrefix != "" {
 		options := groupBeta.ListGroupsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("startsWith(displayName, '%s')", displayNamePrefix)),
+			Filter: pointer.To(strings.Join(append(filter, fmt.Sprintf("startsWith(displayName, '%s')", odata.EscapeSingleQuote(displayNamePrefix))), " and ")),
 		}
 		resp, err := client.ListGroups(ctx, options)
 		if err != nil {
@@ -159,7 +160,7 @@ func groupsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta i
 		for _, v := range displayNames {
 			displayName := v.(string)
 			options := groupBeta.ListGroupsOperationOptions{
-				Filter: pointer.To(strings.Join(append(filter, fmt.Sprintf("displayName eq '%s'", displayName)), " and ")),
+				Filter: pointer.To(strings.Join(append(filter, fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))), " and ")),
 			}
 			resp, err := client.ListGroups(ctx, options)
 			if err != nil {

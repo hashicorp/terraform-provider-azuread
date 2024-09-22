@@ -184,10 +184,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for %s", applicationId)
 	}
 
-	id, err := stable.ParseApplicationIdFederatedIdentityCredentialID(*newCredential.Id)
-	if err != nil {
-		return tf.ErrorDiagF(err, "parsing federated identity credential ID for %s: %q", applicationId, *newCredential.Id)
-	}
+	id := stable.NewApplicationIdFederatedIdentityCredentialID(applicationId.ApplicationId, *newCredential.Id)
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
@@ -198,7 +195,7 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, *id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
+			resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					return nil, "Waiting", nil
@@ -244,6 +241,9 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 		Description: nullable.Value(d.Get("description").(string)),
 		Issuer:      d.Get("issuer").(string),
 		Subject:     d.Get("subject").(string),
+
+		// Name is immutable but must be specified as it is a required field
+		Name: d.Get("display_name").(string),
 	}
 
 	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
@@ -285,7 +285,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	tf.Set(d, "credential_id", id.KeyId)
 
 	tf.Set(d, "audiences", tf.FlattenStringSlice(credential.Audiences))
-	tf.Set(d, "description", credential.Description)
+	tf.Set(d, "description", credential.Description.GetOrZero())
 	tf.Set(d, "display_name", credential.Name)
 	tf.Set(d, "issuer", credential.Issuer)
 	tf.Set(d, "subject", credential.Subject)

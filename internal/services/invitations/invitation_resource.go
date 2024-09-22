@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -46,19 +48,19 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"user_email_address": {
-				Description:      "The email address of the user being invited",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.StringIsEmailAddress,
+				Description:  "The email address of the user being invited",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsEmailAddress,
 			},
 
 			"user_display_name": {
-				Description:      "The display name of the user being invited",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the user being invited",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"message": {
@@ -75,25 +77,25 @@ func invitationResource() *pluginsdk.Resource {
 							Optional:    true,
 							MaxItems:    1,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.StringIsEmailAddress,
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 
 						"body": {
-							Description:      "Customized message body you want to send if you don't want to send the default message",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"message.0.language"},
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Description:   "Customized message body you want to send if you don't want to send the default message",
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"message.0.language"},
+							ValidateFunc:  validation.StringIsNotEmpty,
 						},
 
 						"language": {
-							Description:      "The language you want to send the default message in",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"message.0.body"},
-							ValidateDiagFunc: validation.ISO639Language,
+							Description:   "The language you want to send the default message in",
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"message.0.body"},
+							ValidateFunc:  validation.ISO639Language,
 						},
 					},
 				},
@@ -177,9 +179,14 @@ func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, me
 		return tf.ErrorDiagF(err, "Failed to generate a UUID")
 	}
 	tempCompanyName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
+
 	userResp, err := userClient.UpdateUser(ctx, userId, stable.User{
 		CompanyName: nullable.NoZero(tempCompanyName),
-	}, user.DefaultUpdateUserOperationOptions())
+	}, user.UpdateUserOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp) || response.WasStatusCode(resp, 500) || response.WasStatusCode(resp, 503), nil
+		},
+	})
 	if err != nil {
 		if response.WasNotFound(userResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")

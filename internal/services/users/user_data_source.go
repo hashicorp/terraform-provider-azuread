@@ -31,48 +31,48 @@ func userDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"employee_id": {
-				Description:      "The employee identifier assigned to the user by the organisation",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The employee identifier assigned to the user by the organisation",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"mail": {
-				Description:      "The SMTP address for the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The SMTP address for the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"mail_nickname": {
-				Description:      "The email alias of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The email alias of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"object_id": {
-				Description:      "The object ID of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"user_principal_name": {
-				Description:      "The user principal name (UPN) of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The user principal name (UPN) of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"account_enabled": {
@@ -322,7 +322,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	client := meta.(*clients.Client).Users.UserClient
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	var u stable.User
+	var foundObjectId *string
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
 		options := user.ListUsersOperationOptions{
@@ -345,7 +345,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			return tf.ErrorDiagPathF(err, "user_principal_name", "User with UPN %q was not found", upn)
 		}
 
-		u = (*resp.Model)[0]
+		foundObjectId = (*resp.Model)[0].Id
 
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
 		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), user.DefaultGetUserOperationOptions())
@@ -360,7 +360,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 		}
 
-		u = *resp.Model
+		foundObjectId = resp.Model.Id
 
 	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
 		options := user.ListUsersOperationOptions{
@@ -383,7 +383,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
 		}
 
-		u = (*resp.Model)[0]
+		foundObjectId = (*resp.Model)[0].Id
 
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
 		options := user.ListUsersOperationOptions{
@@ -406,7 +406,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
 
-		u = (*resp.Model)[0]
+		foundObjectId = (*resp.Model)[0].Id
 
 	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
 		options := user.ListUsersOperationOptions{
@@ -429,17 +429,73 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			return tf.ErrorDiagPathF(err, "employee_id", "User not found with employee ID: %q", employeeId)
 		}
 
-		u = (*resp.Model)[0]
+		foundObjectId = (*resp.Model)[0].Id
 
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}
 
-	if u.Id == nil {
+	if foundObjectId == nil {
 		return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 	}
 
-	id := stable.NewUserID(*u.Id)
+	// Users API changes which fields it sends by default, so we explicitly select the fields we want to guard against this
+	options := user.GetUserOperationOptions{
+		Select: pointer.To([]string{
+			"accountEnabled",
+			"ageGroup",
+			"businessPhones",
+			"city",
+			"companyName",
+			"consentProvidedForMinor",
+			"country",
+			"creationType",
+			"department",
+			"displayName",
+			"employeeId",
+			"employeeOrgData",
+			"employeeType",
+			"externalUserState",
+			"faxNumber",
+			"givenName",
+			"id",
+			"imAddresses",
+			"jobTitle",
+			"mail",
+			"mailNickname",
+			"mobilePhone",
+			"officeLocation",
+			"onPremisesDistinguishedName",
+			"onPremisesDomainName",
+			"onPremisesImmutableId",
+			"onPremisesSamAccountName",
+			"onPremisesSecurityIdentifier",
+			"onPremisesSyncEnabled",
+			"onPremisesUserPrincipalName",
+			"otherMails",
+			"postalCode",
+			"preferredLanguage",
+			"proxyAddresses",
+			"showInAddressList",
+			"state",
+			"streetAddress",
+			"surname",
+			"usageLocation",
+			"userPrincipalName",
+			"userType",
+		}),
+	}
+
+	id := stable.NewUserID(*foundObjectId)
+	resp, err := client.GetUser(ctx, id, options)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
+
+	u := resp.Model
+	if u == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
 
 	d.SetId(id.UserId)
 
@@ -490,13 +546,13 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	managerId := ""
-	resp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
-	if !response.WasNotFound(resp.HttpResponse) {
+	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
+	if !response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)
 		}
-		if resp.Model != nil {
-			managerId = pointer.From(resp.Model.DirectoryObject().Id)
+		if managerResp.Model != nil {
+			managerId = pointer.From(managerResp.Model.DirectoryObject().Id)
 		}
 	}
 	tf.Set(d, "manager_id", managerId)

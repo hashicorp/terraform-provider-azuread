@@ -5,8 +5,6 @@ package validation
 
 import (
 	"testing"
-
-	"github.com/hashicorp/go-cty/cty"
 )
 
 func TestISO639Language(t *testing.T) {
@@ -49,10 +47,10 @@ func TestISO639Language(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			diags := ISO639Language(tc.Value, cty.Path{})
+			_, errs := ISO639Language(tc.Value, "test")
 
-			if len(diags) != tc.ErrCount {
-				t.Fatalf("Expected ISO639Language to have %d not %d errors for %q", tc.ErrCount, len(diags), tc.TestName)
+			if len(errs) != tc.ErrCount {
+				t.Fatalf("Expected ISO639Language to have %d not %d errors for %q", tc.ErrCount, len(errs), tc.TestName)
 			}
 		})
 	}

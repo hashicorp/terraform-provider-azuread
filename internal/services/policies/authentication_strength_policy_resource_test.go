@@ -114,14 +114,13 @@ resource "azuread_authentication_strength_policy" "test" {
   display_name = "acctestASP-%[1]d"
   description  = "test"
   allowed_combinations = [
-    "fido2",
-    "password",
     "deviceBasedPush",
-    "temporaryAccessPassOneTime",
     "federatedMultiFactor",
     "federatedSingleFactor",
+    "fido2",
     "hardwareOath,federatedSingleFactor",
     "microsoftAuthenticatorPush,federatedSingleFactor",
+    "password",
     "password,hardwareOath",
     "password,microsoftAuthenticatorPush",
     "password,sms",
@@ -131,6 +130,7 @@ resource "azuread_authentication_strength_policy" "test" {
     "sms,federatedSingleFactor",
     "softwareOath,federatedSingleFactor",
     "temporaryAccessPassMultiUse",
+    "temporaryAccessPassOneTime",
     "voice,federatedSingleFactor",
     "windowsHelloForBusiness",
     "x509CertificateMultiFactor",

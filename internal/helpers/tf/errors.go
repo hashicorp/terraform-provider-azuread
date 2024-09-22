@@ -28,6 +28,11 @@ func ErrorDiagPathF(err error, attr string, summary string, a ...interface{}) di
 	return diag.Diagnostics{d}
 }
 
+func CheckDelegatedAuthDiagF(err error, format string, a ...interface{}) diag.Diagnostics {
+	err = fmt.Errorf("%v\n\n%s", err, "This error is known to occur when using an unsupported authentication mechanism. Please check that you are using delegated authentication, i.e. that you are authenticating as a user via Azure CLI, and try again.")
+	return ErrorDiagF(err, format, a...)
+}
+
 func ImportAsDuplicateError(resourceName, id, name string) error {
 	d := ImportAsDuplicateDiag(resourceName, id, name)
 	if len(d) > 0 {

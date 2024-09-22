@@ -13,19 +13,19 @@ import (
 // Header represents an HTTP Accept header value
 // See https://httpwg.org/specs/rfc9110.html#field.accept
 type Header struct {
-	Types []PreferredType
+	types []PreferredType
 }
 
 func (h Header) FirstChoice() *PreferredType {
-	if len(h.Types) == 0 {
+	if len(h.types) == 0 {
 		return nil
 	}
-	return &h.Types[0]
+	return &h.types[0]
 }
 
 func (h Header) String() string {
 	out := make([]string, 0)
-	for _, typ := range h.Types {
+	for _, typ := range h.types {
 		out = append(out, fmt.Sprintf("%s", typ))
 	}
 	return strings.Join(out, ", ")
@@ -62,10 +62,10 @@ func (q qValue) String() string {
 	return fmt.Sprintf("%d.%d", q/1000, q%1000)
 }
 
-func FromString(in string) (*Header, error) {
+func FromString(in string) (Header, error) {
 	contentTypes := strings.Split(in, ",")
 	if len(contentTypes) == 0 {
-		return nil, fmt.Errorf("empty header value provided")
+		return Header{}, fmt.Errorf("empty header value provided")
 	}
 
 	types := make([]PreferredType, 0)
@@ -88,12 +88,12 @@ func FromString(in string) (*Header, error) {
 				param = strings.TrimSpace(param)
 
 				if len(param) < 3 || strings.Index(param, "=") < 1 {
-					return nil, fmt.Errorf("invalid parameter for %q: %q", typ.ContentType, param)
+					return Header{}, fmt.Errorf("invalid parameter for %q: %q", typ.ContentType, param)
 				}
 
 				p := strings.Split(param, "=")
 				if len(p) > 2 {
-					return nil, fmt.Errorf("parameter contains multiple `=` for %q: %q", typ.ContentType, param)
+					return Header{}, fmt.Errorf("parameter contains multiple `=` for %q: %q", typ.ContentType, param)
 				}
 
 				for i, v := range p {
@@ -133,7 +133,7 @@ func FromString(in string) (*Header, error) {
 					// convert the thousandths value to an int
 					weight, err := strconv.Atoi(q)
 					if err != nil {
-						return nil, fmt.Errorf("invalid weight for %q: %q", typ.ContentType, q)
+						return Header{}, fmt.Errorf("invalid weight for %q: %q", typ.ContentType, q)
 					}
 
 					// if an integer was supplied, just multiply it for normalized value
@@ -156,5 +156,5 @@ func FromString(in string) (*Header, error) {
 		return types[i].Weight > types[j].Weight
 	})
 
-	return &Header{Types: types}, nil
+	return Header{types: types}, nil
 }

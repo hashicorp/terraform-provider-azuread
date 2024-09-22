@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroles/stable/directoryrole"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroletemplates/stable/directoryroletemplate"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -55,17 +56,17 @@ func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
 			ForceNew:         true,
 			ExactlyOneOf:     []string{"display_name", "template_id"},
 			DiffSuppressFunc: suppress.CaseDifference,
-			ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+			ValidateFunc:     validation.StringIsNotEmpty,
 		},
 
 		"template_id": {
-			Description:      "The object ID of the template associated with the directory role",
-			Type:             pluginsdk.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ForceNew:         true,
-			ExactlyOneOf:     []string{"display_name", "template_id"},
-			ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+			Description:  "The object ID of the template associated with the directory role",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ForceNew:     true,
+			ExactlyOneOf: []string{"display_name", "template_id"},
+			ValidateFunc: validation.IsUUID,
 		},
 	}
 }
@@ -141,7 +142,7 @@ func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
 
 			// Now look for the directory role created from that template
 			options := directoryrole.ListDirectoryRolesOperationOptions{
-				Filter: pointer.To(fmt.Sprintf("roleTemplateId eq '%s'", templateId)),
+				Filter: pointer.To(fmt.Sprintf("roleTemplateId eq '%s'", odata.EscapeSingleQuote(templateId))),
 			}
 
 			if resp, err := client.ListDirectoryRoles(ctx, options); err != nil {

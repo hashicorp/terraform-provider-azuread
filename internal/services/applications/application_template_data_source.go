@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -113,7 +114,7 @@ func applicationTemplateDataSourceRead(ctx context.Context, d *pluginsdk.Resourc
 		displayName := d.Get("display_name").(string)
 
 		options := applicationtemplate.ListApplicationTemplatesOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 
 		resp, err := client.ListApplicationTemplates(ctx, options)

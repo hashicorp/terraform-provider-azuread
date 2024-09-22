@@ -35,11 +35,11 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this synchronization job should be provisioned",
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this synchronization job should be provisioned",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"synchronization_job_id": {

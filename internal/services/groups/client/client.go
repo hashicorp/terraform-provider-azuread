@@ -14,6 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
 
+// Note: Whilst it is technically possible that we could use both the Stable and Beta APIs for groups (retaining use of
+// Beta APIs solely for those properties that require it), we are currently using the Beta APIs pretty much across the
+// board owing to the complexity of the azuread_group resource, and known bugs when retrieving members with the Stable API.
+
 type Client struct {
 	AdministrativeUnitMemberClientBeta *administrativeunitmemberBeta.AdministrativeUnitMemberClient
 	DirectoryObjectClient              *directoryobject.DirectoryObjectClient
@@ -25,11 +29,11 @@ type Client struct {
 }
 
 func NewClient(o *common.ClientOptions) (*Client, error) {
-	administrativeUnitMemberClient, err := administrativeunitmemberBeta.NewAdministrativeUnitMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
+	administrativeUnitMemberClientBeta, err := administrativeunitmemberBeta.NewAdministrativeUnitMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(administrativeUnitMemberClient.Client)
+	o.Configure(administrativeUnitMemberClientBeta.Client)
 
 	directoryObjectClient, err := directoryobject.NewDirectoryObjectClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
@@ -38,45 +42,45 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	o.Configure(directoryObjectClient.Client)
 
 	// resourceBehaviorOptions & resourceProvisioningOptions fields not supported in v1.0 API
-	groupClient, err := groupBeta.NewGroupClientWithBaseURI(o.Environment.MicrosoftGraph)
+	groupClientBeta, err := groupBeta.NewGroupClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(groupClient.Client)
+	o.Configure(groupClientBeta.Client)
 
 	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
-	memberClient, err := memberBeta.NewMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
+	memberClientBeta, err := memberBeta.NewMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(memberClient.Client)
+	o.Configure(memberClientBeta.Client)
 
-	memberOfClient, err := memberofBeta.NewMemberOfClientWithBaseURI(o.Environment.MicrosoftGraph)
+	memberOfClientBeta, err := memberofBeta.NewMemberOfClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(memberOfClient.Client)
+	o.Configure(memberOfClientBeta.Client)
 
-	ownerClient, err := ownerBeta.NewOwnerClientWithBaseURI(o.Environment.MicrosoftGraph)
+	ownerClientBeta, err := ownerBeta.NewOwnerClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(ownerClient.Client)
+	o.Configure(ownerClientBeta.Client)
 
 	// Group members not returned in full when using v1.0 API, see https://github.com/hashicorp/terraform-provider-azuread/issues/1018
-	transitiveMemberClient, err := transitivememberBeta.NewTransitiveMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
+	transitiveMemberClientBeta, err := transitivememberBeta.NewTransitiveMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
 	}
-	o.Configure(transitiveMemberClient.Client)
+	o.Configure(transitiveMemberClientBeta.Client)
 
 	return &Client{
-		AdministrativeUnitMemberClientBeta: administrativeUnitMemberClient,
+		AdministrativeUnitMemberClientBeta: administrativeUnitMemberClientBeta,
 		DirectoryObjectClient:              directoryObjectClient,
-		GroupClientBeta:                    groupClient,
-		GroupMemberClientBeta:              memberClient,
-		GroupMemberOfClientBeta:            memberOfClient,
-		GroupOwnerClientBeta:               ownerClient,
-		GroupTransitiveMemberClientBeta:    transitiveMemberClient,
+		GroupClientBeta:                    groupClientBeta,
+		GroupMemberClientBeta:              memberClientBeta,
+		GroupMemberOfClientBeta:            memberOfClientBeta,
+		GroupOwnerClientBeta:               ownerClientBeta,
+		GroupTransitiveMemberClientBeta:    transitiveMemberClientBeta,
 	}, nil
 }

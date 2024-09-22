@@ -25,6 +25,7 @@ import (
 // grep -v \\----- server.crt >server.b64
 // cat server.b64 | base64 -d | xxd -p
 
+// The following certificate(s) will expire on March 7, 2031
 const applicationCertificatePem string = `-----BEGIN CERTIFICATE-----
 MIIDFDCCAfwCCQCvHp+vopfOOTANBgkqhkiG9w0BAQsFADBMMRYwFAYDVQQDDA1o
 YXNoaWNvcnB0ZXN0MRgwFgYDVQQKDA9IYXNoaUNvcnAsIEluYy4xCzAJBgNVBAgM
@@ -236,7 +237,7 @@ func (ApplicationCertificateResource) Exists(ctx context.Context, clients *clien
 		}
 	}
 
-	return nil, fmt.Errorf("key credential %q was not found for %s", id.KeyId, applicationId)
+	return pointer.To(false), nil
 }
 
 func (ApplicationCertificateResource) template(data acceptance.TestData) string {

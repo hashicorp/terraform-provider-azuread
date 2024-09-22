@@ -5,7 +5,6 @@ package directoryroles
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -44,19 +43,19 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_object_id": {
-				Description:      "The object ID of the directory role",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the directory role",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"member_object_id": {
-				Description:      "The object ID of the member",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the member",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
@@ -97,27 +96,14 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	}
 
 	// Wait for role membership to reflect
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for role member %q to reflect for directory role %q", id.MemberId, id.DirectoryRoleId)
-	}
-	timeout := time.Until(deadline)
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   timeout,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 3,
-		Refresh: func() (interface{}, string, error) {
-			if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
-				return nil, "Error", fmt.Errorf("retrieving member")
-			} else if member == nil {
-				return "stub", "Waiting", nil
-			}
-			return "stub", "Done", nil
-		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
+			return nil, fmt.Errorf("retrieving member")
+		} else if member == nil {
+			return pointer.To(false), nil
+		}
+		return pointer.To(true), nil
+	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for role member %q to reflect for directory role %q", id.MemberId, id.DirectoryRoleId)
 	}
 
@@ -159,12 +145,12 @@ func directoryRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 	tf.LockByName(directoryRoleMemberResourceName, id.DirectoryRoleId)
 	defer tf.UnlockByName(directoryRoleMemberResourceName, id.DirectoryRoleId)
 
-	if _, err := client.RemoveMemberRef(ctx, stable.NewDirectoryRoleIdMemberID(id.DirectoryRoleId, id.MemberId), member.DefaultRemoveMemberRefOperationOptions()); err != nil {
+	if _, err = client.RemoveMemberRef(ctx, stable.NewDirectoryRoleIdMemberID(id.DirectoryRoleId, id.MemberId), member.DefaultRemoveMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing member %q from directory role with object ID: %q", id.MemberId, id.DirectoryRoleId)
 	}
 
 	// Wait for membership link to be deleted
-	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
 		if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
 			return nil, err
 		} else if member == nil {

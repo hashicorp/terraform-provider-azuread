@@ -25,10 +25,10 @@ func schemaLocalizedContent() *pluginsdk.Resource {
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"language_code": {
-							Description:      "The language code of this question content",
-							Type:             pluginsdk.TypeString,
-							Required:         true,
-							ValidateDiagFunc: validation.ISO639Language,
+							Description:  "The language code of this question content",
+							Type:         pluginsdk.TypeString,
+							Required:     true,
+							ValidateFunc: validation.ISO639Language,
 						},
 
 						"content": {

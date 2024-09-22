@@ -108,7 +108,22 @@ func userFlowAttributeResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		return tf.ErrorDiagF(errors.New("API returned user flow attribute with nil ID"), "Bad API Response")
 	}
 
-	d.SetId(*userFlowAttr.Id)
+	id := stable.NewIdentityUserFlowAttributeID(*userFlowAttr.Id)
+	d.SetId(id.IdentityUserFlowAttributeId)
+
+	// Now ensure we can retrieve the attribute consistently
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
+	}
 
 	return userFlowAttributeResourceRead(ctx, d, meta)
 }

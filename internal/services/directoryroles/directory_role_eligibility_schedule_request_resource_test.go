@@ -24,7 +24,7 @@ func TestAccRoleEligibilityScheduleRequest_builtin(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_eligibility_schedule_request", "test")
 	r := RoleEligibilityScheduleRequestResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.builtin(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -38,7 +38,7 @@ func TestAccRoleEligibilityScheduleRequest_custom(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_directory_role_eligibility_schedule_request", "test")
 	r := RoleEligibilityScheduleRequestResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
 			Config: r.custom(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -57,7 +57,7 @@ func (r RoleEligibilityScheduleRequestResource) Exists(ctx context.Context, clie
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Role Eligibility Schedule Request with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", id, err)
 	}
 
 	return pointer.To(true), nil

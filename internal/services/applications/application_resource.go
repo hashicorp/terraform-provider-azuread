@@ -14,8 +14,8 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
-	applicationStable "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/logo"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applicationtemplates/stable/applicationtemplate"
@@ -55,9 +55,9 @@ func applicationResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, errors := parse.ValidateApplicationID(id, "id"); len(errors) > 0 {
+			if _, errs := parse.ValidateApplicationID(id, "id"); len(errs) > 0 {
 				out := ""
-				for _, err := range errors {
+				for _, err := range errs {
 					out += err.Error()
 				}
 				return fmt.Errorf(out)
@@ -690,6 +690,10 @@ func applicationResource() *pluginsdk.Resource {
 }
 
 func applicationResourceCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+	defer cancel()
+
 	client := meta.(*clients.Client).Applications.ApplicationClient
 	oldDisplayName, newDisplayName := diff.GetChange("display_name")
 
@@ -944,17 +948,18 @@ func applicationDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool
 }
 
 func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClientBeta
-	stableClient := meta.(*clients.Client).Applications.ApplicationClient
+	client := meta.(*clients.Client).Applications.ApplicationClient
+	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
 	appTemplateClient := meta.(*clients.Client).Applications.ApplicationTemplateClient
 	logoClient := meta.(*clients.Client).Applications.ApplicationLogoClient
 	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
+	servicePrincipalsClient := meta.(*clients.Client).Applications.ServicePrincipalClient
 
 	displayName := d.Get("display_name").(string)
 
 	// Perform this check at apply time to catch any duplicate names created during the same apply
 	if d.Get("prevent_duplicate_names").(bool) {
-		result, err := applicationFindByName(ctx, stableClient, displayName)
+		result, err := applicationFindByName(ctx, client, displayName)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "name", "Could not check for existing application(s)")
 		}
@@ -1017,76 +1022,99 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 				ServicePrincipal: resp.Model.ServicePrincipal,
 			}
 		}
+
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
+				// Since a 404 response is misleading, we'll log that we got the error, but proceed to polling anyway
+				log.Printf("[WARN] Received a 404 error when instantiating application from template, but proceeding anyway by polling for the created application and service principal")
+			} else {
 				return tf.ErrorDiagF(err, "Could not instantiate application from template")
 			}
+		}
 
-			deadline, ok := ctx.Deadline()
-			if !ok {
-				return tf.ErrorDiagF(errors.New("context has no deadline"), "internal-error: context has no deadline")
-			}
+		deadline, ok := ctx.Deadline()
+		if !ok {
+			return tf.ErrorDiagF(errors.New("context has no deadline"), "internal-error: context has no deadline")
+		}
 
-			// Since the API response can't be trusted, we'll have to take on responsibility for ensuring
-			// the application object and service principal objects were created as expected.
-			pollingResult, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-				Pending:    []string{"Waiting"},
-				Target:     []string{"Found"},
-				Timeout:    time.Until(deadline),
-				MinTimeout: 5 * time.Second,
-				Refresh: func() (interface{}, string, error) {
-					// List applications with matching applicationTemplateId and displayName (using the temporary display name we generated above)
-					options := applicationStable.ListApplicationsOperationOptions{
-						Filter: pointer.To(fmt.Sprintf("applicationTemplateId eq '%s' and displayName eq '%s'", odata.EscapeSingleQuote(appTemplateId), odata.EscapeSingleQuote(tempDisplayName))),
-					}
-					resp, err := stableClient.ListApplications(ctx, options)
-					if err != nil {
-						return nil, "Error", err
-					}
-					if resp.Model == nil {
-						return nil, "Waiting", nil
-					}
-					for _, application := range *resp.Model {
-						if id := application.Id; id != nil && !application.AppId.IsNull() && application.ApplicationTemplateId.GetOrZero() == appTemplateId && application.DisplayName.GetOrZero() == tempDisplayName {
-							// We should ensure the service principal was also created
-							servicePrincipalsClient := meta.(*clients.Client).Applications.ServicePrincipalClient
+		// Since the API response can't be trusted, because we might have received a 404, or the response model might be missing,
+		// we'll proceed to poll for an application and service principal by listing them and looking for a match.
+		pollingResult, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+			Pending:    []string{"Waiting"},
+			Target:     []string{"Found"},
+			Timeout:    time.Until(deadline),
+			MinTimeout: 5 * time.Second,
+			Refresh: func() (interface{}, string, error) {
+				// List applications with matching applicationTemplateId and displayName (using the temporary display name we generated above)
+				options := application.ListApplicationsOperationOptions{
+					Filter: pointer.To(fmt.Sprintf("applicationTemplateId eq '%s' and displayName eq '%s'", odata.EscapeSingleQuote(appTemplateId), odata.EscapeSingleQuote(tempDisplayName))),
+				}
+				resp, err := client.ListApplications(ctx, options)
+				if err != nil {
+					return nil, "Error", err
+				}
+				if resp.Model == nil {
+					return nil, "Waiting", nil
+				}
 
-							// List service principals for the created application
-							servicePrincipalsOptions := serviceprincipal.ListServicePrincipalsOperationOptions{
-								Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(application.AppId.GetOrZero()))),
-							}
-							servicePrincipalsResp, err := servicePrincipalsClient.ListServicePrincipals(ctx, servicePrincipalsOptions)
+				for _, app := range *resp.Model {
+					if id := app.Id; id != nil && !app.AppId.IsNull() && app.ApplicationTemplateId.GetOrZero() == appTemplateId && app.DisplayName.GetOrZero() == tempDisplayName {
+						applicationId := stable.NewApplicationID(*id)
+
+						// Now ensure we can retrieve the application consistently
+						if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+							resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 							if err != nil {
-								return nil, "Error", err
-							}
-							if servicePrincipalsResp.Model == nil {
-								return nil, "Waiting", nil
-							}
-							for _, servicePrincipal := range *servicePrincipalsResp.Model {
-								// Validate the appId and applicationTemplateId match the application
-								if servicePrincipalId := servicePrincipal.Id; servicePrincipalId != nil && servicePrincipal.AppId.GetOrZero() == application.AppId.GetOrZero() && servicePrincipal.ApplicationTemplateId.GetOrZero() == appTemplateId {
-									return stable.ApplicationServicePrincipal{
-										Application:      &application,
-										ServicePrincipal: &servicePrincipal,
-									}, "Found", nil
+								if response.WasNotFound(resp.HttpResponse) {
+									return pointer.To(false), nil
 								}
+								return pointer.To(false), err
+							}
+							return pointer.To(resp.Model != nil), nil
+						}); err != nil {
+							return nil, "Error", fmt.Errorf("polling for %s", applicationId)
+						}
+
+						// We should ensure the service principal was also created, so list service principals for the created application
+						servicePrincipalsOptions := serviceprincipal.ListServicePrincipalsOperationOptions{
+							Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(app.AppId.GetOrZero()))),
+						}
+						servicePrincipalsResp, err := servicePrincipalsClient.ListServicePrincipals(ctx, servicePrincipalsOptions)
+						if err != nil {
+							return nil, "Error", err
+						}
+						if servicePrincipalsResp.Model == nil {
+							return nil, "Waiting", nil
+						}
+
+						for _, servicePrincipal := range *servicePrincipalsResp.Model {
+							// Validate the appId and applicationTemplateId match the application
+							if servicePrincipalId := servicePrincipal.Id; servicePrincipalId != nil && servicePrincipal.AppId.GetOrZero() == app.AppId.GetOrZero() && servicePrincipal.ApplicationTemplateId.GetOrZero() == appTemplateId {
+
+								// Now we have found the application and service principal construct an ApplicationServicePrincipal
+								// struct as we _should_ be getting from the Instantiate API.
+								return stable.ApplicationServicePrincipal{
+									Application:      &app,
+									ServicePrincipal: &servicePrincipal,
+								}, "Found", nil
 							}
 						}
 					}
-					return nil, "Waiting", nil
-				},
-			}).WaitForStateContext(ctx)
+				}
+				return nil, "Waiting", nil
+			},
+		}).WaitForStateContext(ctx)
 
-			if err != nil {
-				return tf.ErrorDiagF(err, "Could not instantiate application from template")
-			}
-			if pollingResult == nil {
-				return tf.ErrorDiagF(errors.New("attempted to poll for application and service principal but they were not found"), "Could not instantiate application from template")
-			}
+		if err != nil {
+			return tf.ErrorDiagF(err, "Could not instantiate application from template")
+		}
+		if pollingResult == nil {
+			return tf.ErrorDiagF(errors.New("attempted to poll for application and service principal but they were not found"), "Could not instantiate application from template")
+		}
 
-			if template, ok := pollingResult.(stable.ApplicationServicePrincipal); ok {
-				applicationServicePrincipal = &template
-			}
+		// Reassign result from the Instantiate operation using the application and service principal that we polled for
+		if template, ok := pollingResult.(stable.ApplicationServicePrincipal); ok {
+			applicationServicePrincipal = &template
 		}
 
 		if applicationServicePrincipal.Application == nil {
@@ -1116,14 +1144,14 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	// Create a new application
-	properties := beta.Application{
+	properties := stable.Application{
 		Api:                   api,
 		AppRoles:              expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List()),
 		Description:           nullable.NoZero(d.Get("description").(string)),
 		DisplayName:           nullable.Value(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
 		IdentifierUris:        tf.ExpandStringSlicePtr(d.Get("identifier_uris").(*pluginsdk.Set).List()),
-		Info: &beta.InformationalUrl{
+		Info: &stable.InformationalUrl{
 			MarketingUrl:        nullable.NoZero(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: nullable.NoZero(d.Get("privacy_statement_url").(string)),
 			SupportUrl:          nullable.NoZero(d.Get("support_url").(string)),
@@ -1132,7 +1160,6 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		IsDeviceOnlyAuthSupported:  nullable.Value(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:     nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
 		Notes:                      nullable.NoZero(d.Get("notes").(string)),
-		OAuth2RequirePostResponse:  pointer.To(d.Get("oauth2_post_response_required").(bool)),
 		OptionalClaims:             expandApplicationOptionalClaims(d.Get("optional_claims").([]interface{})),
 		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
 		RequiredResourceAccess:     expandApplicationRequiredResourceAccess(d.Get("required_resource_access").(*pluginsdk.Set).List()),
@@ -1213,9 +1240,9 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	if app.PasswordCredentials != nil {
 		if password := d.Get("password").(*pluginsdk.Set).List(); len(password) == 1 {
 			pw := password[0].(map[string]interface{})
-			if credentials := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(credentials) == 1 {
-				pw["key_id"] = credentials[0]["key_id"]
-				pw["value"] = credentials[0]["value"]
+			if creds := flattenApplicationPasswordCredentials(app.PasswordCredentials); len(creds) == 1 {
+				pw["key_id"] = creds[0]["key_id"]
+				pw["value"] = creds[0]["value"]
 				tf.Set(d, "password", []interface{}{pw})
 			}
 		}
@@ -1229,7 +1256,7 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
-		resp, err := client.UpdateApplication(ctx, betaId, beta.Application{DisplayName: nullable.Value(displayNameToSet)}, application.DefaultUpdateApplicationOperationOptions())
+		resp, err := client.UpdateApplication(ctx, id, stable.Application{DisplayName: nullable.Value(displayNameToSet)}, application.DefaultUpdateApplicationOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
@@ -1238,11 +1265,21 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 		}
 	}
 
+	// API bug: the v1.0 API does not recognize the `oauth2RequiredPostResponse` field, so set it using the beta API
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+	if oauth2PostResponseRequired, ok := d.GetOkExists("oauth2_post_response_required"); ok { //nolint:staticcheck
+		if _, err := clientBeta.UpdateApplication(ctx, betaId, beta.Application{
+			OAuth2RequirePostResponse: pointer.To(oauth2PostResponseRequired.(bool)),
+		}, applicationBeta.DefaultUpdateApplicationOperationOptions()); err != nil {
+			return tf.ErrorDiagF(err, "Failed to set `oauth2_post_response_required` for %s", id)
+		}
+	}
+
 	// API bug: cannot set `acceptMappedClaims` when holding the Application.ReadWrite.OwnedBy role
 	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
 	if !acceptMappedClaims.IsNull() && acceptMappedClaims.IsSet() {
 		api.AcceptMappedClaims = acceptMappedClaims
-		if _, err = client.UpdateApplication(ctx, betaId, beta.Application{Api: api}, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+		if _, err = client.UpdateApplication(ctx, id, stable.Application{Api: api}, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
 		}
 	}
@@ -1264,9 +1301,9 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
-		// TODO content type is probably required here but sdk doesn't support it
-		_, err = logoClient.SetLogo(ctx, id, imageData, logo.DefaultSetLogoOperationOptions())
-		if err != nil {
+		if _, err = logoClient.SetLogo(ctx, id, imageData, logo.SetLogoOperationOptions{
+			ContentType: imageContentType,
+		}); err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
 	}
@@ -1275,8 +1312,8 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClientBeta
-	stableClient := meta.(*clients.Client).Applications.ApplicationClient
+	client := meta.(*clients.Client).Applications.ApplicationClient
+	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
 	logoClient := meta.(*clients.Client).Applications.ApplicationLogoClient
 	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
 
@@ -1294,7 +1331,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Perform this check at apply time to catch any duplicate names created during the same apply
 	if d.Get("prevent_duplicate_names").(bool) {
-		result, err := applicationFindByName(ctx, stableClient, displayName)
+		result, err := applicationFindByName(ctx, client, displayName)
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "display_name", "Could not check for existing application(s)")
 		}
@@ -1331,7 +1368,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 		if oldPassword["key_id"] != nil {
 			keyIdToRemove := oldPassword["key_id"].(string)
-			if _, err = client.RemovePassword(ctx, betaId, application.RemovePasswordRequest{
+			if _, err = client.RemovePassword(ctx, *id, application.RemovePasswordRequest{
 				KeyId: pointer.To(keyIdToRemove),
 			}, application.DefaultRemovePasswordOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Removing password credential %q from application with object ID %q", id.ApplicationId, keyIdToRemove)
@@ -1339,7 +1376,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 			// Wait for application password to be deleted
 			if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-				resp, err := client.GetApplication(ctx, betaId, application.DefaultGetApplicationOperationOptions())
+				resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
 				if err != nil {
 					return nil, err
 				}
@@ -1349,7 +1386,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 					return nil, errors.New("model was nil")
 				}
 
-				credential := credentials.GetPasswordCredential(convertPasswordCredentialsBetaToStable(app.PasswordCredentials), keyIdToRemove)
+				credential := credentials.GetPasswordCredential(app.PasswordCredentials, keyIdToRemove)
 				if credential == nil {
 					return pointer.To(false), nil
 				}
@@ -1378,8 +1415,8 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 				return tf.ErrorDiagPathF(err, attr, "Generating password credential for %s", id.ApplicationId)
 			}
 
-			resp, err := client.AddPassword(ctx, betaId, application.AddPasswordRequest{
-				PasswordCredential: convertPasswordCredentialStableToBeta(credential),
+			resp, err := client.AddPassword(ctx, *id, application.AddPasswordRequest{
+				PasswordCredential: credential,
 			}, application.DefaultAddPasswordOperationOptions())
 			if err != nil {
 				return tf.ErrorDiagF(err, "Adding password for application with object ID %q", id.ApplicationId)
@@ -1405,7 +1442,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 				MinTimeout:                1 * time.Second,
 				ContinuousTargetOccurence: 5,
 				Refresh: func() (interface{}, string, error) {
-					resp, err := client.GetApplication(ctx, betaId, application.DefaultGetApplicationOperationOptions())
+					resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
 					if err != nil {
 						return nil, "Error", err
 					}
@@ -1447,11 +1484,11 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		tags = tf.ExpandStringSlice(d.Get("tags").(*pluginsdk.Set).List())
 	}
 
-	properties := beta.Application{
+	properties := stable.Application{
 		Description:           nullable.NoZero(d.Get("description").(string)),
 		DisplayName:           nullable.Value(displayName),
 		GroupMembershipClaims: expandApplicationGroupMembershipClaims(d.Get("group_membership_claims").(*pluginsdk.Set).List()),
-		Info: &beta.InformationalUrl{
+		Info: &stable.InformationalUrl{
 			MarketingUrl:        nullable.NoZero(d.Get("marketing_url").(string)),
 			PrivacyStatementUrl: nullable.NoZero(d.Get("privacy_statement_url").(string)),
 			SupportUrl:          nullable.NoZero(d.Get("support_url").(string)),
@@ -1460,7 +1497,6 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 		IsDeviceOnlyAuthSupported:  nullable.Value(d.Get("device_only_auth_enabled").(bool)),
 		IsFallbackPublicClient:     nullable.Value(d.Get("fallback_public_client_enabled").(bool)),
 		Notes:                      nullable.NoZero(d.Get("notes").(string)),
-		OAuth2RequirePostResponse:  pointer.To(d.Get("oauth2_post_response_required").(bool)),
 		PublicClient:               expandApplicationPublicClient(d.Get("public_client").([]interface{})),
 		ServiceManagementReference: nullable.NoZero(d.Get("service_management_reference").(string)),
 		SignInAudience:             nullable.Value(d.Get("sign_in_audience").(string)),
@@ -1473,7 +1509,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	if d.HasChange("app_role") {
 		appRoles := expandApplicationAppRoles(d.Get("app_role").(*pluginsdk.Set).List())
-		if err = applicationDisableAppRoles(ctx, stableClient, *id, convertAppRolesBetaToStable(appRoles)); err != nil {
+		if err = applicationDisableAppRoles(ctx, client, *id, appRoles); err != nil {
 			return tf.ErrorDiagPathF(err, "app_role", "Could not disable App Roles for application with object ID %q", id.ApplicationId)
 		}
 
@@ -1482,7 +1518,7 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	if d.HasChange("api.0.oauth2_permission_scope") {
 		scopes := expandApplicationOAuth2PermissionScope(d.Get("api.0.oauth2_permission_scope").(*pluginsdk.Set).List())
-		if err = applicationDisableOauth2PermissionScopes(ctx, stableClient, *id, convertPermissionScopesBetaToStable(scopes)); err != nil {
+		if err = applicationDisableOauth2PermissionScopes(ctx, client, *id, scopes); err != nil {
 			return tf.ErrorDiagPathF(err, "api.0.oauth2_permission_scope", "Could not disable OAuth2 Permission Scopes for application with object ID %q", id.ApplicationId)
 		}
 	} else {
@@ -1503,8 +1539,18 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	properties.Api = api
 
-	if _, err = client.UpdateApplication(ctx, betaId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+	if _, err = client.UpdateApplication(ctx, *id, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update application with object ID: %q", id.ApplicationId)
+	}
+
+	if d.HasChange("oauth2_post_response_required") {
+		// API bug: the v1.0 API does not recognize the `oauth2RequiredPostResponse` field, so set it using the beta API
+		// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+		if _, err := clientBeta.UpdateApplication(ctx, betaId, beta.Application{
+			OAuth2RequirePostResponse: pointer.To(d.Get("oauth2_post_response_required").(bool)),
+		}, applicationBeta.DefaultUpdateApplicationOperationOptions()); err != nil {
+			return tf.ErrorDiagF(err, "Failed to set `oauth2_post_response_required` for %s", id)
+		}
 	}
 
 	if d.HasChange("owners") {
@@ -1542,8 +1588,9 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	// Upload the application image
 	if imageContentType != "" && len(imageData) > 0 {
-		// TODO content type likely required but sdk doesn't support it
-		if _, err = logoClient.SetLogo(ctx, *id, imageData, logo.DefaultSetLogoOperationOptions()); err != nil {
+		if _, err = logoClient.SetLogo(ctx, *id, imageData, logo.SetLogoOperationOptions{
+			ContentType: imageContentType,
+		}); err != nil {
 			return tf.ErrorDiagF(err, "Could not upload logo image for application with object ID: %q", id.ApplicationId)
 		}
 	}
@@ -1552,7 +1599,8 @@ func applicationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
+	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
 	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
 
 	id, err := stable.ParseApplicationID(d.Id())
@@ -1560,17 +1608,15 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
 	}
 
-	betaId := beta.NewApplicationID(id.ApplicationId)
-
-	resp, err := client.GetApplication(ctx, betaId, application.DefaultGetApplicationOperationOptions())
+	resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] Application with Object ID %q was not found - removing from state", id.ApplicationId)
+			log.Printf("[DEBUG] %s was not found - removing from state", id)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving Application with object ID %q", id.ApplicationId)
+		return tf.ErrorDiagPathF(err, "id", "Retrieving %s", id)
 	}
 
 	app := resp.Model
@@ -1592,7 +1638,6 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
 	tf.Set(d, "notes", app.Notes.GetOrZero())
-	tf.Set(d, "oauth2_post_response_required", app.OAuth2RequirePostResponse)
 	tf.Set(d, "object_id", app.Id)
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
@@ -1601,7 +1646,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "service_management_reference", app.ServiceManagementReference.GetOrZero())
 	tf.Set(d, "sign_in_audience", app.SignInAudience.GetOrZero())
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
-	tf.Set(d, "tags", app.Tags)
+	tf.Set(d, "tags", tf.FlattenStringSlicePtr(app.Tags))
 	tf.Set(d, "template_id", app.ApplicationTemplateId.GetOrZero())
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
@@ -1641,6 +1686,22 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 		tf.Set(d, "password", passwordToSave)
 	}
 
+	// API bug: the v1.0 API does not return the `oauth2RequiredPostResponse` field, so retrieve it using the beta API
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+	respBeta, err := clientBeta.GetApplication(ctx, beta.ApplicationId(*id), applicationBeta.GetApplicationOperationOptions{
+		Select: pointer.To([]string{"oauth2RequirePostResponse"}),
+	})
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving additional properties for %s", id)
+	}
+
+	appBeta := respBeta.Model
+	if appBeta == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	tf.Set(d, "oauth2_post_response_required", pointer.From(appBeta.OAuth2RequirePostResponse))
+
 	logoImage := ""
 	if v := d.Get("logo_image").(string); v != "" {
 		logoImage = v
@@ -1667,31 +1728,20 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 }
 
 func applicationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	id, err := stable.ParseApplicationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
 	}
 
-	betaId := beta.NewApplicationID(id.ApplicationId)
-
-	resp, err := client.GetApplication(ctx, betaId, application.DefaultGetApplicationOperationOptions())
-	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "id", "Retrieving Application with object ID %q", id.ApplicationId)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving application with object ID %q", id.ApplicationId)
-	}
-
-	if _, err = client.DeleteApplication(ctx, betaId, application.DefaultDeleteApplicationOperationOptions()); err != nil {
+	if _, err = client.DeleteApplication(ctx, *id, application.DefaultDeleteApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "deleting %s: %v", id, err)
 	}
 
 	// Wait for application object to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetApplication(ctx, betaId, application.DefaultGetApplicationOperationOptions()); err != nil {
+		if resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}

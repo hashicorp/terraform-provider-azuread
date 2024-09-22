@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func claimsMappingPolicyResource() *pluginsdk.Resource {
@@ -47,14 +48,16 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeList,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
-					Type: pluginsdk.TypeString,
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 
 			"display_name": {
-				Description: "Display name for this policy",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
+				Description:  "Display name for this policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}

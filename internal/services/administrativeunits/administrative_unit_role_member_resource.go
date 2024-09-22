@@ -115,7 +115,10 @@ func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.
 	if membership := resp.Model; membership != nil {
 		tf.Set(d, "administrative_unit_object_id", membership.AdministrativeUnitId)
 		tf.Set(d, "role_object_id", membership.RoleId)
-		tf.Set(d, "member_object_id", membership.RoleMemberInfo.Identity().Id)
+
+		if membership.RoleMemberInfo != nil {
+			tf.Set(d, "member_object_id", membership.RoleMemberInfo.Identity().Id.GetOrZero())
+		}
 	}
 
 	return nil

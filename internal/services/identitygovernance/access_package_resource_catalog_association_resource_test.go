@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -59,7 +59,7 @@ func (r AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Cont
 	}
 
 	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(id.CatalogId)
-	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+	options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", id.OriginId)),
 	}
 

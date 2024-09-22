@@ -47,11 +47,11 @@ func synchronizationJobResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this synchronization job should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this synchronization job should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"template_id": {
@@ -137,27 +137,17 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	id := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, *resp.Model.Id)
 
 	// Wait for the job to appear, this can take several moments
-	timeout, _ := ctx.Deadline()
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
-			if err != nil {
-				if response.WasNotFound(resp.HttpResponse) {
-					return "stub", "Waiting", nil
-				}
-				return nil, "Error", fmt.Errorf("retrieving synchronization job")
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
 			}
-			return "stub", "Done", nil
-		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for %s", id)
+			return pointer.To(false), fmt.Errorf("retrieving synchronization job")
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 
 	resourceId := parse.NewSynchronizationJobID(id.ServicePrincipalId, id.SynchronizationJobId)

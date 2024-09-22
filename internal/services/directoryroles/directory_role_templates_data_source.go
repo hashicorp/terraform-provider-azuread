@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroletemplates/stable/directoryroletemplate"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
@@ -92,7 +93,7 @@ func directoryRoleTemplatesDataSourceRead(ctx context.Context, d *pluginsdk.Reso
 		template := make(map[string]interface{})
 		template["description"] = r.Description.GetOrZero()
 		template["display_name"] = r.DisplayName.GetOrZero()
-		template["object_id"] = r.Id
+		template["object_id"] = pointer.From(r.Id)
 
 		templateList = append(templateList, template)
 	}

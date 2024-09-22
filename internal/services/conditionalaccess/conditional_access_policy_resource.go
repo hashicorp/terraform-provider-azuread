@@ -47,9 +47,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"state": {
@@ -75,8 +75,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -84,8 +84,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -94,8 +94,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Optional:     true,
 										ExactlyOneOf: []string{"conditions.0.applications.0.included_applications", "conditions.0.applications.0.included_user_actions"},
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 								},
@@ -112,8 +112,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -121,8 +121,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 								},
@@ -140,8 +140,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -149,8 +149,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -159,8 +159,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -168,8 +168,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -178,8 +178,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Optional:     true,
 										AtLeastOneOf: []string{"conditions.0.users.0.included_groups", "conditions.0.users.0.included_roles", "conditions.0.users.0.included_users", "conditions.0.users.0.included_guests_or_external_users"},
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -187,8 +187,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -220,8 +220,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 																Type:     pluginsdk.TypeList,
 																Optional: true,
 																Elem: &pluginsdk.Schema{
-																	Type:             pluginsdk.TypeString,
-																	ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+																	Type:         pluginsdk.TypeString,
+																	ValidateFunc: validation.StringIsNotEmpty,
 																},
 															},
 														},
@@ -258,8 +258,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 																Type:     pluginsdk.TypeList,
 																Optional: true,
 																Elem: &pluginsdk.Schema{
-																	Type:             pluginsdk.TypeString,
-																	ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+																	Type:         pluginsdk.TypeString,
+																	ValidateFunc: validation.StringIsNotEmpty,
 																},
 															},
 														},
@@ -300,9 +300,9 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 												},
 
 												"rule": {
-													Type:             pluginsdk.TypeString,
-													Required:         true,
-													ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+													Type:         pluginsdk.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringIsNotEmpty,
 												},
 											},
 										},
@@ -321,8 +321,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Required: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 
@@ -330,8 +330,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 										Type:     pluginsdk.TypeList,
 										Optional: true,
 										Elem: &pluginsdk.Schema{
-											Type:             pluginsdk.TypeString,
-											ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+											Type:         pluginsdk.TypeString,
+											ValidateFunc: validation.StringIsNotEmpty,
 										},
 									},
 								},
@@ -429,8 +429,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeList,
 							Optional: true,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 
@@ -439,8 +439,8 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							Optional:     true,
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 					},
@@ -688,8 +688,8 @@ func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.Resou
 		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", id)
 	}
 
-	tf.Set(d, "display_name", policy.DisplayName)
-	tf.Set(d, "state", policy.State)
+	tf.Set(d, "display_name", pointer.From(policy.DisplayName))
+	tf.Set(d, "state", pointer.From(policy.State))
 	tf.Set(d, "conditions", flattenConditionalAccessConditionSet(policy.Conditions))
 	tf.Set(d, "grant_controls", flattenConditionalAccessGrantControls(policy.GrantControls))
 	tf.Set(d, "session_controls", flattenConditionalAccessSessionControls(policy.SessionControls))

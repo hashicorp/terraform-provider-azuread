@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageresourcerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -83,7 +83,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", catalogId)
 	}
 
-	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+	options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", resourceOriginId)),
 	}
 	existingResp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
@@ -111,7 +111,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 
 	// Poll for processed request
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("startswith(originId, '%s')", resourceOriginId)),
 		}
 		resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
@@ -141,7 +141,7 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 	}
 
 	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(id.CatalogId)
-	options := entitlementmanagementaccesspackagecatalogresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+	options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", id.OriginId)),
 	}
 	resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
