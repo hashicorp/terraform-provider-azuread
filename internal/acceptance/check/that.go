@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/types"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 type withTenantType struct {
