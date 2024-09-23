@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/domains/stable/domain"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 type DomainsId string
@@ -174,10 +174,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Domains.DomainsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
-
+			client := metadata.Client.Domains.DomainClient
 			tenantId := metadata.Client.TenantID
 
 			var state DomainsDataSourceModel
@@ -186,11 +183,12 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 			}
 
 			// OData filters are not supported for domains
-			result, _, err := client.List(ctx, odata.Query{})
+			resp, err := client.ListDomains(ctx, domain.DefaultListDomainsOperationOptions())
 			if err != nil {
 				return fmt.Errorf("listing domains: %+v", err)
 			}
 
+			result := resp.Model
 			if result == nil {
 				return fmt.Errorf("retrieving domains: result was nil")
 			}
@@ -228,8 +226,8 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 					}
 				}
 
-				if v.ID != nil {
-					domainNames = append(domainNames, *v.ID)
+				if v.Id != nil {
+					domainNames = append(domainNames, *v.Id)
 
 					var authenticationType string
 					if v.AuthenticationType != nil {
@@ -245,7 +243,7 @@ func (r DomainsDataSource) Read() sdk.ResourceFunc {
 						AdminManaged:       v.IsAdminManaged != nil && *v.IsAdminManaged,
 						AuthenticationType: authenticationType,
 						Default:            v.IsDefault != nil && *v.IsDefault,
-						DomainName:         *v.ID,
+						DomainName:         *v.Id,
 						Initial:            v.IsInitial != nil && *v.IsInitial,
 						Root:               v.IsRoot != nil && *v.IsRoot,
 						SupportedServices:  supportedServices,
