@@ -123,7 +123,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 		TemplateId: nullable.Value(d.Get("template_id").(string)),
 	}
 
-	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob, synchronizationjob.DefaultCreateSynchronizationJobOperationOptions())
+	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob, synchronizationjob.CreateSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization job for %s", servicePrincipalId)
 	}
@@ -155,7 +155,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 
 	// Start job if desired
 	if d.Get("enabled").(bool) {
-		if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.DefaultStartSynchronizationJobOperationOptions()); err != nil {
+		if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 			return tf.ErrorDiagF(err, "Starting %s", id)
 		}
 	}
@@ -173,7 +173,7 @@ func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 
 	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
 
-	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -207,11 +207,11 @@ func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 
 	if d.HasChange("enabled") {
 		if d.Get("enabled").(bool) {
-			if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.DefaultStartSynchronizationJobOperationOptions()); err != nil {
+			if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 				return tf.ErrorDiagF(err, "Starting %s", id)
 			}
 		} else {
-			if _, err = client.PauseSynchronizationJob(ctx, id, synchronizationjob.DefaultPauseSynchronizationJobOperationOptions()); err != nil {
+			if _, err = client.PauseSynchronizationJob(ctx, id, synchronizationjob.PauseSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 				return tf.ErrorDiagF(err, "Pausing %s", id)
 			}
 		}
@@ -233,7 +233,7 @@ func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.Resource
 	tf.LockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 
-	if _, err = client.DeleteSynchronizationJob(ctx, id, synchronizationjob.DefaultDeleteSynchronizationJobOperationOptions()); err != nil {
+	if _, err = client.DeleteSynchronizationJob(ctx, id, synchronizationjob.DeleteSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 

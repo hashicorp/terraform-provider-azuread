@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
 	"net/http"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -462,7 +462,16 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.OnPremisesImmutableId = nullable.NoZero(v.(string))
 	}
 
-	resp, err := client.CreateUser(ctx, properties, user.DefaultCreateUserOperationOptions())
+	options := user.CreateUserOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+				return o.Error.Match("One or more property values specified are invalid"), nil
+			}
+			return false, nil
+		},
+	}
+
+	resp, err := client.CreateUser(ctx, properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating user %q", upn)
 	}

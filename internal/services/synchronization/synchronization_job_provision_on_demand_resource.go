@@ -128,7 +128,7 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 
 	jobId := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, d.Get("synchronization_job_id").(string))
 
-	jobResp, err := client.GetSynchronizationJob(ctx, jobId, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+	jobResp, err := client.GetSynchronizationJob(ctx, jobId, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(jobResp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "synchronization_job_id", "%s was not found", jobId)

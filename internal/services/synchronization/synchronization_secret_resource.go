@@ -79,13 +79,13 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 		Value: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.SetSynchronizationSecretOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization secret for %s", servicePrincipalId)
 	}
 
 	// Wait for the secret to appear
 	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
 		}
@@ -124,13 +124,13 @@ func synchronizationSecretResourceUpdate(ctx context.Context, d *pluginsdk.Resou
 		Value: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
+	if _, err = client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.SetSynchronizationSecretOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Updating synchronization secret for %s", servicePrincipalId)
 	}
 
 	// Wait for the secret to update
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
 		}
@@ -161,7 +161,7 @@ func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.Resourc
 
 	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
 
-	resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+	resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Synchronization secrets for %s was not found - removing from state!", servicePrincipalId)
@@ -202,13 +202,13 @@ func synchronizationSecretResourceDelete(ctx context.Context, d *pluginsdk.Resou
 	synchronizationSecrets := synchronizationsecret.SetSynchronizationSecretRequest{
 		Value: credentials,
 	}
-	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.DefaultSetSynchronizationSecretOperationOptions()); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, servicePrincipalId, synchronizationSecrets, synchronizationsecret.SetSynchronizationSecretOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Removing synchronization secrets for %s", servicePrincipalId)
 	}
 
 	// Wait for synchronization secret to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+		resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil

@@ -6,7 +6,9 @@ package approleassignments
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -106,7 +108,18 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		ResourceId:  nullable.Value(resourceId),
 	}
 
-	resp, err := client.CreateAppRoleAssignedTo(ctx, stable.NewServicePrincipalID(resourceId), properties, approleassignedto.DefaultCreateAppRoleAssignedToOperationOptions())
+	options := approleassignedto.CreateAppRoleAssignedToOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			if response.WasNotFound(resp) {
+				return true, nil
+			} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+				return o.Error.Match("Not a valid reference update"), nil
+			}
+			return false, nil
+		},
+	}
+
+	resp, err := client.CreateAppRoleAssignedTo(ctx, stable.NewServicePrincipalID(resourceId), properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create app role assignment")
 	}

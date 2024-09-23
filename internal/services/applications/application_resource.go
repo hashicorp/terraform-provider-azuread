@@ -1256,7 +1256,11 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
 	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
-		resp, err := client.UpdateApplication(ctx, id, stable.Application{DisplayName: nullable.Value(displayNameToSet)}, application.DefaultUpdateApplicationOperationOptions())
+		resp, err := client.UpdateApplication(ctx, id, stable.Application{
+			DisplayName: nullable.Value(displayNameToSet),
+		}, application.UpdateApplicationOperationOptions{
+			RetryFunc: applicationUpdateRetryFunc(),
+		})
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagF(err, "Timed out whilst waiting for new application to be replicated in Azure AD")
@@ -1270,7 +1274,9 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	if oauth2PostResponseRequired, ok := d.GetOkExists("oauth2_post_response_required"); ok { //nolint:staticcheck
 		if _, err := clientBeta.UpdateApplication(ctx, betaId, beta.Application{
 			OAuth2RequirePostResponse: pointer.To(oauth2PostResponseRequired.(bool)),
-		}, applicationBeta.DefaultUpdateApplicationOperationOptions()); err != nil {
+		}, applicationBeta.UpdateApplicationOperationOptions{
+			RetryFunc: applicationUpdateRetryFunc(),
+		}); err != nil {
 			return tf.ErrorDiagF(err, "Failed to set `oauth2_post_response_required` for %s", id)
 		}
 	}
@@ -1279,7 +1285,9 @@ func applicationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 	// See https://github.com/hashicorp/terraform-provider-azuread/issues/914
 	if !acceptMappedClaims.IsNull() && acceptMappedClaims.IsSet() {
 		api.AcceptMappedClaims = acceptMappedClaims
-		if _, err = client.UpdateApplication(ctx, id, stable.Application{Api: api}, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+		if _, err = client.UpdateApplication(ctx, id, stable.Application{Api: api}, application.UpdateApplicationOperationOptions{
+			RetryFunc: applicationUpdateRetryFunc(),
+		}); err != nil {
 			return tf.ErrorDiagPathF(err, "api.0.mapped_claims_enabled", "Failed to patch application after creating to set `api.0.mapped_claims_enabled` property")
 		}
 	}

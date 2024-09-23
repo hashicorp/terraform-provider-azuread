@@ -7,7 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -117,7 +119,18 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 		properties.ConsentType = nullable.Value(DelegatedPermissionGrantConsentTypeAllPrincipals)
 	}
 
-	resp, err := client.CreateOAuth2PermissionGrant(ctx, properties, oauth2permissiongrant.DefaultCreateOAuth2PermissionGrantOperationOptions())
+	options := oauth2permissiongrant.CreateOAuth2PermissionGrantOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			if response.WasNotFound(resp) {
+				return true, nil
+			} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+				return o.Error.Match("does not exist or one of its queried reference-property objects are not present"), nil
+			}
+			return false, nil
+		},
+	}
+
+	resp, err := client.CreateOAuth2PermissionGrant(ctx, properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create delegated permission grant")
 	}

@@ -100,6 +100,8 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 		RoleDefinitionId: nullable.Value(roleId.UnifiedRoleDefinitionId),
 		//RoleDefinition: roleDefinition,
 		AppScopeId: nullable.Value(fmt.Sprintf("/AccessPackageCatalog/%s", catalogId)),
+
+		OmitDiscriminatedValue: true,
 	}
 
 	createMsg := fmt.Sprintf("Assigning catalog role %q to directory principal %q on catalog %q", roleId, principalId, catalogId)

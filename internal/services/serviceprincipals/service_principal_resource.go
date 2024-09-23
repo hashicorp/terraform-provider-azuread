@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -374,10 +375,10 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		clientId = d.Get("application_id").(string)
 	}
 
-	options := serviceprincipal.ListServicePrincipalsOperationOptions{
+	listOptions := serviceprincipal.ListServicePrincipalsOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
 	}
-	listResp, err := client.ListServicePrincipals(ctx, options)
+	listResp, err := client.ListServicePrincipals(ctx, listOptions)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not list existing service principals")
 	}
@@ -469,7 +470,21 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	// Set the initial owners, which should include the calling principal plus up to 19 of owners specified in configuration
 	properties.Owners_ODataBind = &ownersFirst20
 
-	resp, err := client.CreateServicePrincipal(ctx, properties, serviceprincipal.DefaultCreateServicePrincipalOperationOptions())
+	options := serviceprincipal.CreateServicePrincipalOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			if o != nil && o.Error != nil {
+				if response.WasBadRequest(resp) {
+					return o.Error.Match("The appId '.+' of the service principal does not reference a valid application object"), nil
+				} else if response.WasForbidden(resp) {
+					// This error is misleading and is usually due to the application object not being fully replicated
+					return o.Error.Match("When using this permission, the backing application of the service principal being created must in the local tenant"), nil
+				}
+			}
+			return false, nil
+		},
+	}
+
+	resp, err := client.CreateServicePrincipal(ctx, properties, options)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create service principal")
 	}

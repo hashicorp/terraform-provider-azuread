@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"net/http"
 	"reflect"
 	"strings"
@@ -17,12 +16,26 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
+
+func applicationUpdateRetryFunc() client.RequestRetryFunc {
+	return func(resp *http.Response, o *odata.OData) (bool, error) {
+		if response.WasNotFound(resp) {
+			return true, nil
+		} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+			return o.Error.Match("Permission (scope or role) cannot be deleted or updated unless disabled first"), nil
+		}
+
+		return false, nil
+	}
+}
 
 func applicationAppRoleChanged(existingRole stable.AppRole, newRole stable.AppRole) bool {
 	if !reflect.DeepEqual(existingRole.AllowedMemberTypes, newRole.AllowedMemberTypes) {
@@ -276,84 +289,6 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *appli
 	}
 
 	return nil
-}
-
-func convertAppRolesBetaToStable(in *[]beta.AppRole) *[]stable.AppRole {
-	if in == nil {
-		return nil
-	}
-	out := make([]stable.AppRole, 0, len(*in))
-	for _, role := range *in {
-		out = append(out, stable.AppRole{
-			AllowedMemberTypes: role.AllowedMemberTypes,
-			Description:        role.Description,
-			DisplayName:        role.DisplayName,
-			Id:                 role.Id,
-			IsEnabled:          role.IsEnabled,
-			ODataId:            role.ODataId,
-			Origin:             role.Origin,
-			Value:              role.Value,
-		})
-	}
-	return &out
-}
-
-func convertPasswordCredentialStableToBeta(in *stable.PasswordCredential) *beta.PasswordCredential {
-	if in == nil {
-		return nil
-	}
-	return &beta.PasswordCredential{
-		CustomKeyIdentifier: in.CustomKeyIdentifier,
-		DisplayName:         in.DisplayName,
-		EndDateTime:         in.EndDateTime,
-		Hint:                in.Hint,
-		KeyId:               in.KeyId,
-		ODataId:             in.ODataId,
-		SecretText:          in.SecretText,
-		StartDateTime:       in.StartDateTime,
-	}
-}
-
-func convertPasswordCredentialsBetaToStable(in *[]beta.PasswordCredential) *[]stable.PasswordCredential {
-	if in == nil {
-		return nil
-	}
-	out := make([]stable.PasswordCredential, 0, len(*in))
-	for _, credential := range *in {
-		out = append(out, stable.PasswordCredential{
-			CustomKeyIdentifier: credential.CustomKeyIdentifier,
-			DisplayName:         credential.DisplayName,
-			EndDateTime:         credential.EndDateTime,
-			Hint:                credential.Hint,
-			KeyId:               credential.KeyId,
-			ODataId:             credential.ODataId,
-			SecretText:          credential.SecretText,
-			StartDateTime:       credential.StartDateTime,
-		})
-	}
-	return &out
-}
-
-func convertPermissionScopesBetaToStable(in *[]beta.PermissionScope) *[]stable.PermissionScope {
-	if in == nil {
-		return nil
-	}
-	out := make([]stable.PermissionScope, 0, len(*in))
-	for _, scope := range *in {
-		out = append(out, stable.PermissionScope{
-			AdminConsentDescription: scope.AdminConsentDescription,
-			AdminConsentDisplayName: scope.AdminConsentDisplayName,
-			Id:                      scope.Id,
-			IsEnabled:               scope.IsEnabled,
-			ODataId:                 scope.ODataId,
-			Origin:                  scope.Origin,
-			Type:                    scope.Type,
-			UserConsentDescription:  scope.UserConsentDescription,
-			UserConsentDisplayName:  scope.UserConsentDisplayName,
-			Value:                   scope.Value,
-		})
-	}
-	return &out
 }
 
 func applicationFindByName(ctx context.Context, client *application.ApplicationClient, displayName string) (*[]stable.Application, error) {

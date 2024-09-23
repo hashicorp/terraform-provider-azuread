@@ -4,12 +4,23 @@
 package synchronization
 
 import (
+	"net/http"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
+
+func synchronizationRetryFunc() client.RequestRetryFunc {
+	return func(resp *http.Response, o *odata.OData) (bool, error) {
+		return response.WasConflict(resp) || response.WasStatusCode(resp, http.StatusForbidden), nil
+	}
+}
 
 func emptySynchronizationSecretKeyStringValuePair(in []interface{}) *[]stable.SynchronizationSecretKeyStringValuePair {
 	result := make([]stable.SynchronizationSecretKeyStringValuePair, 0)

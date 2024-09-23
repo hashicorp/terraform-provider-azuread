@@ -468,7 +468,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	var writebackConfiguration *beta.GroupWritebackConfiguration
 	if v := d.Get("writeback_enabled").(bool); v {
 		writebackConfiguration = &beta.GroupWritebackConfiguration{
-			IsEnabled: nullable.Value(d.Get("writeback_enabled").(bool)),
+			IsEnabled:              nullable.Value(d.Get("writeback_enabled").(bool)),
+			OmitDiscriminatedValue: true,
 		}
 		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
 			writebackConfiguration.OnPremisesGroupType = nullable.Value(onPremisesGroupType)
@@ -653,8 +654,20 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 	} else {
+		options := groupBeta.CreateGroupOperationOptions{
+			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+				if response.WasNotFound(resp) {
+					return true, nil
+				} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+					return o.Error.Match("One or more property values specified are invalid") ||
+						o.Error.Match("does not exist or one of its queried reference-property objects are not present"), nil
+				}
+				return false, nil
+			},
+		}
+
 		// Create the group at the tenant level
-		resp, err := client.CreateGroup(ctx, properties, groupBeta.DefaultCreateGroupOperationOptions())
+		resp, err := client.CreateGroup(ctx, properties, options)
 		if err != nil {
 			if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
 				// Retry the group creation, without the calling principal as owner
@@ -949,7 +962,8 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	if d.HasChange("writeback_enabled") || d.HasChange("onpremises_group_type") {
 		group.WritebackConfiguration = &beta.GroupWritebackConfiguration{
-			IsEnabled: nullable.Value(d.Get("writeback_enabled").(bool)),
+			IsEnabled:              nullable.Value(d.Get("writeback_enabled").(bool)),
+			OmitDiscriminatedValue: true,
 		}
 		if onPremisesGroupType := d.Get("onpremises_group_type").(string); onPremisesGroupType != "" {
 			group.WritebackConfiguration.OnPremisesGroupType = nullable.Value(onPremisesGroupType)
