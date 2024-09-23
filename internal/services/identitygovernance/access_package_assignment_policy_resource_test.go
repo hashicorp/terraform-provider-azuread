@@ -171,18 +171,18 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "TestAcc Access Package %[1]d for access assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "testacc-asscess-assignment-%[1]d"
+  display_name      = "testacc-access-assignment-%[1]d"
   description       = "TestAcc Access Package Assignnment Policy %[1]d"
   duration_in_days  = 90
   access_package_id = azuread_access_package.test.id
@@ -198,7 +198,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 
       primary_approver {
         object_id    = azuread_group.test.object_id
-        subject_type = "groupMembers"
+        subject_type = "GroupMembers"
       }
     }
   }
@@ -230,18 +230,18 @@ resource "azuread_group" "test" {
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "TestAcc Access Package %[1]d for access assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
 
 resource "azuread_access_package_assignment_policy" "test" {
-  display_name      = "testacc-asscess-assignment-%[1]d"
+  display_name      = "testacc-access-assignment-%[1]d"
   description       = "TestAcc Access Package Assignnment Policy %[1]d"
   duration_in_days  = 90
   access_package_id = azuread_access_package.test.id
@@ -257,7 +257,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 
       primary_approver {
         object_id    = azuread_group.test.object_id
-        subject_type = "groupMembers"
+        subject_type = "GroupMembers"
       }
     }
   }
@@ -293,15 +293,16 @@ resource "azuread_group" "second_approver" {
 }
 
 resource "azuread_access_package_catalog" "test_catalog" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "TestAcc Catalog %[1]d for access assignment policy"
 }
 
 resource "azuread_access_package" "test" {
-  display_name = "testacc-asscess-assignment-%[1]d"
+  display_name = "testacc-access-assignment-%[1]d"
   description  = "Test Access Package %[1]d for assignment policy"
   catalog_id   = azuread_access_package_catalog.test_catalog.id
 }
+
 resource "azuread_access_package_assignment_policy" "test" {
   display_name      = "access-package-assignment-policy-%[1]d"
   description       = "Test Access Package Assignnment Policy %[1]d"
@@ -315,7 +316,7 @@ resource "azuread_access_package_assignment_policy" "test" {
 
     requestor {
       object_id    = azuread_group.requestor.object_id
-      subject_type = "groupMembers"
+      subject_type = "GroupMembers"
     }
   }
 
@@ -331,12 +332,12 @@ resource "azuread_access_package_assignment_policy" "test" {
       enable_alternative_approval_in_days = 8
 
       primary_approver {
-        subject_type = "requestorManager"
+        subject_type = "RequestorManager"
       }
 
       alternative_approver {
         object_id    = azuread_group.second_approver.object_id
-        subject_type = "groupMembers"
+        subject_type = "GroupMembers"
       }
     }
 
@@ -345,12 +346,12 @@ resource "azuread_access_package_assignment_policy" "test" {
 
       primary_approver {
         object_id    = azuread_group.second_approver.object_id
-        subject_type = "groupMembers"
+        subject_type = "GroupMembers"
       }
 
       primary_approver {
         object_id    = azuread_group.first_approver.object_id
-        subject_type = "groupMembers"
+        subject_type = "GroupMembers"
         backup       = true
       }
     }
@@ -360,13 +361,13 @@ resource "azuread_access_package_assignment_policy" "test" {
     enabled                        = true
     review_frequency               = "annual"
     review_type                    = "Reviewers"
-    duration_in_days               = "10"
+    duration_in_days               = 10
     access_recommendation_enabled  = true
     access_review_timeout_behavior = "acceptAccessRecommendation"
 
     reviewer {
       object_id    = azuread_group.first_approver.object_id
-      subject_type = "groupMembers"
+      subject_type = "GroupMembers"
     }
   }
 

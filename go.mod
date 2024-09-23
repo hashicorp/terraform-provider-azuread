@@ -4,7 +4,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-azure-helpers v0.70.1
 	github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240731.1212841
-	github.com/hashicorp/go-azure-sdk/sdk v0.20240920.1081703
+	github.com/hashicorp/go-azure-sdk/sdk v0.20240920.1135249
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-uuid v1.0.3

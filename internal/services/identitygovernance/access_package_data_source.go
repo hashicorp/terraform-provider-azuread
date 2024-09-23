@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"strings"
 	"time"
 
@@ -41,6 +43,7 @@ func accessPackageDataSource() *pluginsdk.Resource {
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ValidateFunc:  validation.StringIsNotEmpty,
 				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
 				ConflictsWith: []string{"object_id"},
 				RequiredWith:  []string{"catalog_id"},
@@ -50,6 +53,7 @@ func accessPackageDataSource() *pluginsdk.Resource {
 				Description:   "The ID of the Catalog this access package is in",
 				Type:          pluginsdk.TypeString,
 				Optional:      true,
+				ValidateFunc:  validation.IsUUID,
 				AtLeastOneOf:  []string{"object_id", "display_name", "catalog_id"},
 				ConflictsWith: []string{"object_id"},
 				RequiredWith:  []string{"display_name"},
@@ -91,9 +95,9 @@ func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta 
 		accessPackage = resp.Model
 
 	} else if displayName != "" && catalogId != "" {
+		// We can only filter on displayName
 		options := entitlementmanagementaccesspackage.ListEntitlementManagementAccessPackagesOperationOptions{
-			// Filter: fmt.Sprintf("displayName eq '%s' and catalogId eq '%s'", displayName, catalogId),
-			// Filter: fmt.Sprintf("catalogId eq '%s'", catalogId),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 
 		resp, err := client.ListEntitlementManagementAccessPackages(ctx, options)
@@ -104,11 +108,12 @@ func accessPackageDataRead(ctx context.Context, d *pluginsdk.ResourceData, meta 
 		if resp.Model == nil || len(*resp.Model) == 0 {
 			return tf.ErrorDiagF(errors.New("no matching results"), "Listing access packages")
 		}
-		// if len(*result) > 1 {
-		// return tf.ErrorDiagF(fmt.Errorf("Multiple access package matched with filter %s", query.Filter), "Multitple access package found!")
-		// }
+		if len(*resp.Model) > 1 {
+			return tf.ErrorDiagF(fmt.Errorf("multiple access package matched with filter %s", *options.Filter), "Unexpected number of results")
+		}
 
 		for _, c := range *resp.Model {
+			// Check the displayName and catalogId
 			if strings.EqualFold(c.DisplayName.GetOrZero(), displayName) && c.CatalogId.GetOrZero() == catalogId {
 				accessPackage = &c
 				break

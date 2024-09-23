@@ -4,13 +4,48 @@
 package identitygovernance
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
+
+func GetAccessPackageResourcesRoleScope(ctx context.Context, client *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient, id beta.IdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeId) (*beta.AccessPackageResourceRoleScope, error) {
+	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(id.AccessPackageId)
+	options := entitlementmanagementaccesspackage.GetEntitlementManagementAccessPackageOperationOptions{
+		Expand: &odata.Expand{
+			Relationship: "accessPackageResourceRoleScopes($expand=accessPackageResourceRole,accessPackageResourceScope)",
+		},
+	}
+	resp, err := client.GetEntitlementManagementAccessPackage(ctx, accessPackageId, options)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving %s: %v", accessPackageId, err)
+	}
+
+	if resp.Model == nil {
+		return nil, fmt.Errorf("retrieving %s: model was nil", accessPackageId)
+	}
+
+	if resp.Model.AccessPackageResourceRoleScopes == nil {
+		return nil, fmt.Errorf("retrieving %s: AccessPackageResourceRoleScopes was nil", accessPackageId)
+	}
+
+	// There is only a select and expand method on this endpoint, we iterate the result to find the RoleScope
+	for _, roleScope := range *resp.Model.AccessPackageResourceRoleScopes {
+		if roleScope.Id != nil && *roleScope.Id == id.AccessPackageResourceRoleScopeId {
+			return &roleScope, nil
+		}
+	}
+
+	return nil, nil
+}
 
 func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, error) {
 	if len(input) == 0 {
@@ -22,11 +57,13 @@ func expandRequestorSettings(input []interface{}) (*beta.RequestorSettings, erro
 		AcceptRequests: nullable.NoZero(in["requests_accepted"].(bool)),
 	}
 
-	allowedRequestors, err := expandUserSets(in["requestor"].([]interface{}))
-	if err != nil {
-		return nil, fmt.Errorf("building `requestor`: %v", err)
+	if _, ok := in["requestor"]; ok {
+		allowedRequestors, err := expandUserSets(in["requestor"].([]interface{}))
+		if err != nil {
+			return nil, fmt.Errorf("building `requestor`: %v", err)
+		}
+		result.AllowedRequestors = allowedRequestors
 	}
-	result.AllowedRequestors = allowedRequestors
 
 	return &result, nil
 }
@@ -37,8 +74,8 @@ func flattenRequestorSettings(input *beta.RequestorSettings) []map[string]interf
 	}
 
 	return []map[string]interface{}{{
-		"requests_accepted": input.AcceptRequests,
-		"scope_type":        input.ScopeType,
+		"requests_accepted": input.AcceptRequests.GetOrZero(),
+		"scope_type":        input.ScopeType.GetOrZero(),
 		"requestor":         flattenUserSets(input.AllowedRequestors),
 	}}
 }
@@ -57,29 +94,35 @@ func expandApprovalSettings(input []interface{}) (*beta.ApprovalSettings, error)
 	}
 
 	approvalStages := make([]beta.ApprovalStage, 0)
-	for _, raw := range in["approval_stage"].([]interface{}) {
-		v := raw.(map[string]interface{})
+	if _, ok := in["approval_stage"]; ok {
+		for _, raw := range in["approval_stage"].([]interface{}) {
+			v := raw.(map[string]interface{})
 
-		stage := beta.ApprovalStage{
-			ApprovalStageTimeOutInDays:      nullable.NoZero(int64(v["approval_timeout_in_days"].(int))),
-			EscalationTimeInMinutes:         nullable.NoZero(int64(v["enable_alternative_approval_in_days"].(int) * 24 * 60)),
-			IsApproverJustificationRequired: nullable.NoZero(v["approver_justification_required"].(bool)),
-			IsEscalationEnabled:             nullable.NoZero(v["alternative_approval_enabled"].(bool)),
+			stage := beta.ApprovalStage{
+				ApprovalStageTimeOutInDays:      nullable.NoZero(int64(v["approval_timeout_in_days"].(int))),
+				EscalationTimeInMinutes:         nullable.NoZero(int64(v["enable_alternative_approval_in_days"].(int) * 24 * 60)),
+				IsApproverJustificationRequired: nullable.NoZero(v["approver_justification_required"].(bool)),
+				IsEscalationEnabled:             nullable.NoZero(v["alternative_approval_enabled"].(bool)),
+			}
+
+			if _, ok := v["primary_approver"]; ok {
+				primaryApprovers, err := expandUserSets(v["primary_approver"].([]interface{}))
+				if err != nil {
+					return nil, fmt.Errorf("building `primary_approver`: %v", err)
+				}
+				stage.PrimaryApprovers = primaryApprovers
+			}
+
+			if _, ok := v["escalation_approver"]; ok {
+				escalationApprovers, err := expandUserSets(v["escalation_approver"].([]interface{}))
+				if err != nil {
+					return nil, fmt.Errorf("building `escalation_approver`: %v", err)
+				}
+				stage.EscalationApprovers = escalationApprovers
+			}
+
+			approvalStages = append(approvalStages, stage)
 		}
-
-		primaryApprovers, err := expandUserSets(v["primary_approver"].([]interface{}))
-		if err != nil {
-			return nil, fmt.Errorf("building `primary_approver`: %v", err)
-		}
-		stage.PrimaryApprovers = primaryApprovers
-
-		escalationApprovers, err := expandUserSets(v["escalation_approver"].([]interface{}))
-		if err != nil {
-			return nil, fmt.Errorf("building `escalation_approver`: %v", err)
-		}
-		stage.EscalationApprovers = escalationApprovers
-
-		approvalStages = append(approvalStages, stage)
 	}
 
 	result.ApprovalStages = &approvalStages
@@ -130,7 +173,7 @@ func expandAssignmentReviewSettings(input []interface{}) (*beta.AssignmentReview
 
 	result := beta.AssignmentReviewSettings{
 		AccessReviewTimeoutBehavior:     pointer.To(beta.AccessReviewTimeoutBehavior(in["access_review_timeout_behavior"].(string))),
-		DurationInDays:                  nullable.NoZero(int64(in["duration_in_days"].(int))),
+		DurationInDays:                  nullable.Value(int64(in["duration_in_days"].(int))),
 		IsAccessRecommendationEnabled:   nullable.Value(in["access_recommendation_enabled"].(bool)),
 		IsApprovalJustificationRequired: nullable.Value(in["approver_justification_required"].(bool)),
 		IsEnabled:                       nullable.Value(in["enabled"].(bool)),
@@ -139,11 +182,13 @@ func expandAssignmentReviewSettings(input []interface{}) (*beta.AssignmentReview
 		StartDateTime:                   nullable.NoZero(in["starting_on"].(string)),
 	}
 
-	reviewers, err := expandUserSets(in["reviewer"].([]interface{}))
-	if err != nil {
-		return nil, fmt.Errorf("building `reviewer`: %v", err)
+	if _, ok := in["reviewer"]; ok {
+		reviewers, err := expandUserSets(in["reviewer"].([]interface{}))
+		if err != nil {
+			return nil, fmt.Errorf("building `reviewer`: %v", err)
+		}
+		result.Reviewers = reviewers
 	}
-	result.Reviewers = reviewers
 
 	if pointer.From(result.AccessReviewTimeoutBehavior) == "" && result.DurationInDays.GetOrZero() == 0 &&
 		!result.IsAccessRecommendationEnabled.GetOrZero() && !result.IsApprovalJustificationRequired.GetOrZero() &&
@@ -180,38 +225,38 @@ func expandUserSets(input []interface{}) (*[]beta.UserSet, error) {
 
 		isBackup := v["backup"].(bool)
 		objectId := v["object_id"].(string)
-		odataType := v["subject_type"].(string)
+		odataType := formatODataType(v["subject_type"].(string))
 
 		var userSet beta.UserSet
 		switch odataType {
-		case "connectedOrganizationMembers":
+		case "ConnectedOrganizationMembers":
 			userSet = beta.ConnectedOrganizationMembers{
 				Id:       nullable.Value(objectId),
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "externalSponsors":
+		case "ExternalSponsors":
 			userSet = beta.ExternalSponsors{
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "groupMembers":
+		case "GroupMembers":
 			userSet = beta.GroupMembers{
 				Id:       nullable.Value(objectId),
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "internalSponsors":
+		case "InternalSponsors":
 			userSet = beta.InternalSponsors{
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "requestorManager":
+		case "RequestorManager":
 			userSet = beta.RequestorManager{
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "singleUser":
+		case "SingleUser":
 			userSet = beta.SingleUser{
 				Id:       nullable.Value(objectId),
 				IsBackup: nullable.Value(isBackup),
 			}
-		case "targetUserSponsors":
+		case "TargetUserSponsors":
 			userSet = beta.TargetUserSponsors{
 				IsBackup: nullable.Value(isBackup),
 			}
@@ -237,15 +282,15 @@ func flattenUserSets(input *[]beta.UserSet) []map[string]interface{} {
 
 		switch impl := raw.(type) {
 		case beta.ConnectedOrganizationMembers:
-			id = pointer.To(impl.Id.GetOrZero())
+			id = impl.Id.Get()
 		case beta.GroupMembers:
-			id = pointer.To(impl.Id.GetOrZero())
+			id = impl.Id.Get()
 		case beta.SingleUser:
-			id = pointer.To(impl.Id.GetOrZero())
+			id = impl.Id.Get()
 		}
 
 		userSet := map[string]interface{}{
-			"subject_type": strings.TrimPrefix("#microsoft.graph.", pointer.From(v.ODataType)),
+			"subject_type": formatODataType(pointer.From(v.ODataType)),
 			"backup":       v.IsBackup.GetOrZero(),
 			"object_id":    pointer.From(id),
 		}
@@ -270,7 +315,7 @@ func expandAccessPackageQuestions(input []interface{}) *[]beta.AccessPackageQues
 
 		var question beta.AccessPackageQuestion
 
-		if choicesRaw := v["choice"].([]interface{}); len(choicesRaw) > 0 {
+		if choicesRaw, ok := v["choice"].([]interface{}); ok && len(choicesRaw) > 0 {
 			choices := make([]beta.AccessPackageAnswerChoice, 0)
 			for _, choiceRaw := range choicesRaw {
 				choice := choiceRaw.(map[string]interface{})
@@ -350,13 +395,15 @@ func expandAccessPackageLocalizedContent(input map[string]interface{}) *beta.Acc
 
 	texts := make([]beta.AccessPackageLocalizedText, 0)
 
-	for _, raw := range input["localized_text"].([]interface{}) {
-		v := raw.(map[string]interface{})
+	if _, ok := input["localized_text"]; ok {
+		for _, raw := range input["localized_text"].([]interface{}) {
+			v := raw.(map[string]interface{})
 
-		texts = append(texts, beta.AccessPackageLocalizedText{
-			LanguageCode: nullable.NoZero(v["language_code"].(string)),
-			Text:         nullable.NoZero(v["content"].(string)),
-		})
+			texts = append(texts, beta.AccessPackageLocalizedText{
+				LanguageCode: nullable.NoZero(v["language_code"].(string)),
+				Text:         nullable.NoZero(v["content"].(string)),
+			})
+		}
 	}
 
 	result.LocalizedTexts = &texts
@@ -383,4 +430,8 @@ func flattenAccessPackageLocalizedContent(input *beta.AccessPackageLocalizedCont
 	result[0]["localized_text"] = texts
 
 	return result
+}
+
+func formatODataType(in string) string {
+	return cases.Title(language.AmericanEnglish, cases.NoLower).String(strings.TrimPrefix(in, "#microsoft.graph."))
 }

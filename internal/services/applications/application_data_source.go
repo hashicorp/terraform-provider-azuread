@@ -538,27 +538,29 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		app = resp.Model
 
 	} else {
-		var fieldName, fieldValue string
-		filterOp := "%s eq '%s'"
-		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
+		var filter, fieldName, fieldValue string
+		if applicationId, ok := d.GetOk("application_id"); ok && applicationId.(string) != "" {
 			fieldName = "appId"
-			fieldValue = applicationId
-		} else if clientId, ok := d.Get("client_id").(string); ok && clientId != "" {
+			fieldValue = applicationId.(string)
+			filter = fmt.Sprintf("appId eq '%s'", applicationId)
+		} else if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {
 			fieldName = "appId"
-			fieldValue = clientId
-		} else if displayName, ok := d.Get("display_name").(string); ok && displayName != "" {
+			fieldValue = clientId.(string)
+			filter = fmt.Sprintf("appId eq '%s'", clientId)
+		} else if displayName, ok := d.GetOk("display_name"); ok && displayName.(string) != "" {
 			fieldName = "displayName"
-			fieldValue = displayName
-		} else if identifierUri, ok := d.Get("identifier_uri").(string); ok {
-			fieldName = "IdentifierUris"
-			fieldValue = identifierUri
-			filterOp = "%s/any(uri:uri eq '%s')"
+			fieldValue = displayName.(string)
+			filter = fmt.Sprintf("displayName eq '%s'", displayName)
+		} else if identifierUri, ok := d.GetOk("identifier_uri"); ok && identifierUri.(string) != "" {
+			fieldName = "identifierUri"
+			fieldValue = identifierUri.(string)
+			filter = fmt.Sprintf("identifierUris/any(uri:uri eq '%s')", identifierUri)
 		} else {
 			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, `displayName`, or `identifier_uri` must be specified")
 		}
 
 		options := application.ListApplicationsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf(filterOp, fieldName, fieldValue)),
+			Filter: pointer.To(filter),
 		}
 
 		resp, err := client.ListApplications(ctx, options)
@@ -577,11 +579,11 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		switch fieldName {
 		case "appId":
 			if appId := app.AppId.GetOrZero(); !strings.EqualFold(appId, fieldValue) {
-				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", appId, fieldValue, *options.Filter), "Bad API Response")
+				return tf.ErrorDiagF(fmt.Errorf("AppID does not match for applications matching filter: %q", *options.Filter), "Bad API Response")
 			}
 		case "displayName":
 			if displayName := app.DisplayName.GetOrZero(); !strings.EqualFold(displayName, fieldValue) {
-				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", displayName, fieldValue, *options.Filter), "Bad API Response")
+				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match for applications matching filter: %q", *options.Filter), "Bad API Response")
 			}
 		}
 	}
@@ -591,7 +593,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	if app.Id == nil {
-		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
+		return tf.ErrorDiagF(fmt.Errorf("nil object ID returned for application"), "Bad API Response")
 	}
 
 	id := stable.NewApplicationID(*app.Id)

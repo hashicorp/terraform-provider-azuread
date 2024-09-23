@@ -49,17 +49,17 @@ func accessPackageCatalogResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:      "The display name of the access package catalog",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the access package catalog",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description:      "The description of the access package catalog",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The description of the access package catalog",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"externally_visible": {
@@ -91,7 +91,7 @@ func accessPackageCatalogResourceCreate(ctx context.Context, d *pluginsdk.Resour
 		DisplayName:         nullable.NoZero(d.Get("display_name").(string)),
 		Description:         nullable.NoZero(d.Get("description").(string)),
 		CatalogStatus:       nullable.Value(status),
-		IsExternallyVisible: nullable.NoZero(d.Get("externally_visible").(bool)),
+		IsExternallyVisible: nullable.Value(d.Get("externally_visible").(bool)),
 	}
 
 	resp, err := client.CreateEntitlementManagementAccessPackageCatalog(ctx, properties, entitlementmanagementaccesspackagecatalog.DefaultCreateEntitlementManagementAccessPackageCatalogOperationOptions())
@@ -127,7 +127,7 @@ func accessPackageCatalogResourceUpdate(ctx context.Context, d *pluginsdk.Resour
 		DisplayName:         nullable.NoZero(d.Get("display_name").(string)),
 		Description:         nullable.NoZero(d.Get("description").(string)),
 		CatalogStatus:       nullable.Value(status),
-		IsExternallyVisible: nullable.NoZero(d.Get("externally_visible").(bool)),
+		IsExternallyVisible: nullable.Value(d.Get("externally_visible").(bool)),
 	}
 
 	if _, err := client.UpdateEntitlementManagementAccessPackageCatalog(ctx, id, properties, entitlementmanagementaccesspackagecatalog.DefaultUpdateEntitlementManagementAccessPackageCatalogOperationOptions()); err != nil {
@@ -155,7 +155,7 @@ func accessPackageCatalogResourceRead(ctx context.Context, d *pluginsdk.Resource
 
 	catalog := resp.Model
 	if catalog == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package catalog")
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
 	published := false

@@ -129,7 +129,7 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synch
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/beta/user
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user
-# github.com/hashicorp/go-azure-sdk/sdk v0.20240920.1081703 => /Users/tom/git/hashicorp/go-azure-sdk/sdk
+# github.com/hashicorp/go-azure-sdk/sdk v0.20240920.1135249 => /Users/tom/git/hashicorp/go-azure-sdk/sdk
 ## explicit; go 1.21
 github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims

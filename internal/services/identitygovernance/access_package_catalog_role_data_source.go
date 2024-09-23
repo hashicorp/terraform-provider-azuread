@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
@@ -33,6 +35,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"object_id": {
@@ -41,6 +44,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"description": {
@@ -70,7 +74,7 @@ func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *pluginsdk.Re
 
 	if displayName != "" {
 		options := entitlementmanagementroledefinition.ListEntitlementManagementRoleDefinitionsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 
 		resp, err := client.ListEntitlementManagementRoleDefinitions(ctx, options)

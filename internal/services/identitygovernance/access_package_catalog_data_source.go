@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -87,7 +88,7 @@ func accessPackageCatalogDataRead(ctx context.Context, d *pluginsdk.ResourceData
 
 	} else if displayName != "" {
 		options := entitlementmanagementaccesspackagecatalog.ListEntitlementManagementAccessPackageCatalogsOperationOptions{
-			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
 
 		resp, err := client.ListEntitlementManagementAccessPackageCatalogs(ctx, options)

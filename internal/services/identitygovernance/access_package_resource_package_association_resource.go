@@ -7,11 +7,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"log"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
@@ -43,16 +43,17 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			"access_package_id": {
 				Description:  "The ID of access package this resource association is configured to",
 				Type:         pluginsdk.TypeString,
-				ValidateFunc: validation.IsUUID,
 				Required:     true,
 				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"catalog_resource_association_id": {
-				Description: "The ID of the access package catalog association",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The ID of the access package catalog association",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"access_type": {
@@ -72,6 +73,7 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 
 func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
+	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogResourceClient
 
 	catalogResourceAssociationId, err := parse.AccessPackageResourceCatalogAssociationID(d.Get("catalog_resource_association_id").(string))
@@ -114,7 +116,7 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 		},
 	}
 
-	createMsg := fmt.Sprintf("Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem, accessPackageId)
+	createMsg := fmt.Sprintf("Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
@@ -130,13 +132,25 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 	}
 
 	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
+
+	// Poll for AccessPackageResourceRoleScope
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		roleScope, err := GetAccessPackageResourcesRoleScope(ctx, accessPackageClient, id)
+		if err != nil {
+			return nil, err
+		}
+		return pointer.To(roleScope != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
+	}
+
 	d.SetId(resourceId.ID())
 
 	return accessPackageResourcePackageAssociationResourceRead(ctx, d, meta)
 }
 
 func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRoleScopeClient
 	accessPackageClient := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
 	resourceId, err := parse.AccessPackageResourcePackageAssociationID(d.Id())
@@ -146,14 +160,15 @@ func accessPackageResourcePackageAssociationResourceRead(ctx context.Context, d 
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
-	resp, err := client.GetEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultGetEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
+	roleScope, err := GetAccessPackageResourcesRoleScope(ctx, accessPackageClient, id)
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] %s was not found - removing from state!", id)
-			d.SetId("")
-			return nil
-		}
 		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
+
+	if roleScope == nil {
+		log.Printf("[DEBUG] %s was not found - removing from state!", id)
+		d.SetId("")
+		return nil
 	}
 
 	accessPackageId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(resourceId.AccessPackageId)

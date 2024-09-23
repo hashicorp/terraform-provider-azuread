@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroleassignment"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroledefinition"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -45,27 +46,27 @@ func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"role_id": {
-				Description:      "The object ID of the catalog role for this assignment",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the catalog role for this assignment",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"principal_object_id": {
-				Description:      "The object ID of the member principal",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the member principal",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"catalog_id": {
-				Description:      "The unique ID of the access package catalog.",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The unique ID of the access package catalog.",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
@@ -73,16 +74,32 @@ func accessPackageCatalogRoleAssignmentResource() *pluginsdk.Resource {
 
 func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.RoleAssignmentClient
+	roleDefinitionClient := meta.(*clients.Client).IdentityGovernance.RoleDefinitionClient
 
 	catalogId := d.Get("catalog_id").(string)
 	principalId := d.Get("principal_object_id").(string)
-	roleId := d.Get("role_id").(string)
+
+	roleId := beta.NewRoleManagementEntitlementManagementRoleDefinitionID(d.Get("role_id").(string))
+
+	roleResp, err := roleDefinitionClient.GetEntitlementManagementRoleDefinition(ctx, roleId, entitlementmanagementroledefinition.DefaultGetEntitlementManagementRoleDefinitionOperationOptions())
+	if err != nil {
+		if response.WasNotFound(roleResp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "role_id", "%s was not found", roleId)
+		}
+		return tf.ErrorDiagF(err, "Retrieving %s", roleId)
+	}
+	if roleResp.Model == nil {
+		return tf.ErrorDiagPathF(errors.New("model was nil"), "role_id", "Retrieving %s", roleId)
+	}
+
+	//roleDefinition := roleResp.Model
 
 	properties := beta.UnifiedRoleAssignment{
 		DirectoryScopeId: nullable.Value("/"),
 		PrincipalId:      nullable.Value(principalId),
-		RoleDefinitionId: nullable.Value(roleId),
-		AppScopeId:       nullable.Value(fmt.Sprintf("/AccessPackageCatalog/%s", catalogId)),
+		RoleDefinitionId: nullable.Value(roleId.UnifiedRoleDefinitionId),
+		//RoleDefinition: roleDefinition,
+		AppScopeId: nullable.Value(fmt.Sprintf("/AccessPackageCatalog/%s", catalogId)),
 	}
 
 	createMsg := fmt.Sprintf("Assigning catalog role %q to directory principal %q on catalog %q", roleId, principalId, catalogId)

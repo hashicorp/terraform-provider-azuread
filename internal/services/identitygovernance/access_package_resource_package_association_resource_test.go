@@ -6,12 +6,11 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
-	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -38,7 +37,7 @@ func TestAccAccessPackageResourcePackageAssociation_complete(t *testing.T) {
 }
 
 func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.IdentityGovernance.AccessPackageResourceRoleScopeClient
+	client := clients.IdentityGovernance.AccessPackageClient
 
 	resourceId, err := parse.AccessPackageResourcePackageAssociationID(state.ID)
 	if err != nil {
@@ -47,16 +46,12 @@ func (AccessPackageResourcePackageAssociationResource) Exists(ctx context.Contex
 
 	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageIdAccessPackageResourceRoleScopeID(resourceId.AccessPackageId, resourceId.ResourceRoleScopeId)
 
-	resp, err := client.GetEntitlementManagementAccessPackageResourceRoleScope(ctx, id, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultGetEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
+	roleScope, err := identitygovernance.GetAccessPackageResourcesRoleScope(ctx, client, id)
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			return pointer.To(false), nil
-		}
-
 		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
 
-	return pointer.To(true), nil
+	return pointer.To(roleScope != nil), nil
 }
 
 func (AccessPackageResourcePackageAssociationResource) complete(data acceptance.TestData) string {

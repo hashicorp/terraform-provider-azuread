@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/validate"
 )
@@ -40,24 +41,27 @@ func accessPackageResourceCatalogAssociationResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"resource_origin_id": {
-				Description: "The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The unique identifier of the resource in the origin system. In the case of an Azure AD group, this is the identifier of the group",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"resource_origin_system": {
-				Description: "The type of the resource in the origin system, such as SharePointOnline, AadApplication or AadGroup",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The type of the resource in the origin system, such as SharePointOnline, AadApplication or AadGroup",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"catalog_id": {
-				Description: "The unique ID of the access package catalog",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The unique ID of the access package catalog",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
@@ -118,7 +122,7 @@ func accessPackageResourceCatalogAssociationResourceCreate(ctx context.Context, 
 		if err != nil {
 			return nil, err
 		}
-		if resp.Model == nil || len(*existingResp.Model) == 0 {
+		if resp.Model == nil || len(*resp.Model) == 0 {
 			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
@@ -169,10 +173,29 @@ func accessPackageResourceCatalogAssociationResourceRead(ctx context.Context, d 
 
 func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageResourceRequestClient
+	resourceClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Failed to parse resource ID %q", d.Id())
+	}
+
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(id.CatalogId)
+	options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", id.OriginId)),
+	}
+	resp, err := resourceClient.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving Access Package Resource Catalog Association")
+	}
+
+	var resource *beta.AccessPackageResource
+	if resp.Model != nil && len(*resp.Model) > 0 {
+		resource = pointer.To((*resp.Model)[0])
+	}
+
+	if resource == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving Access Package Resource Catalog Association")
 	}
 
 	properties := beta.AccessPackageResourceRequest{
@@ -180,7 +203,8 @@ func accessPackageResourceCatalogAssociationResourceDelete(ctx context.Context, 
 		ExecuteImmediately: nullable.Value(true),
 		RequestType:        nullable.Value("AdminRemove"),
 		AccessPackageResource: &beta.AccessPackageResource{
-			OriginId: nullable.Value(id.OriginId),
+			OriginId:     nullable.Value(id.OriginId),
+			OriginSystem: resource.OriginSystem,
 		},
 	}
 

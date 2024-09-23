@@ -33,7 +33,7 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 		UpdateContext: accessPackageAssignmentPolicyResourceUpdate,
 		DeleteContext: accessPackageAssignmentPolicyResourceDelete,
 
-		CustomizeDiff: assignmentPolicyCustomDiff,
+		CustomizeDiff: assignmentPolicyCustomizeDiff,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
 			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
@@ -51,24 +51,24 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"access_package_id": {
-				Description:      "The ID of the access package that will contain the policy",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The ID of the access package that will contain the policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
-				Description:      "The display name of the policy",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description:      "The description of the policy",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The description of the policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"duration_in_days": {
@@ -327,6 +327,48 @@ func accessPackageAssignmentPolicyResource() *pluginsdk.Resource {
 	}
 }
 
+func assignmentPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
+	if k == "approval_settings.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	if k == "requestor_settings.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	if k == "requestor_settings.0.scope_type" && old == RequestorScopeTypeNoSubjects && len(new) == 0 {
+		return true
+	}
+
+	if k == "assignment_review_settings.0.starting_on" && len(new) == 0 {
+		return true
+	}
+
+	if k == "assignment_review_settings.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	if k == "question.#" && old == "1" && new == "0" {
+		return true
+	}
+
+	return false
+}
+
+func assignmentPolicyCustomizeDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
+	if reviewSettings := diff.Get("assignment_review_settings").([]interface{}); len(reviewSettings) > 0 {
+		reviewSetting := reviewSettings[0].(map[string]interface{})
+		if reviewSetting["enabled"].(bool) &&
+			(reviewSetting["duration_in_days"] == 0 ||
+				len(reviewSetting["review_frequency"].(string)) == 0 ||
+				len(reviewSetting["access_review_timeout_behavior"].(string)) == 0) {
+			return fmt.Errorf("`duration_in_days`, `review_frequency`, `access_review_timeout_behavior` must be set when review is enabled")
+		}
+	}
+
+	return nil
+}
+
 func accessPackageAssignmentPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageAssignmentPolicyClient
 
@@ -445,10 +487,10 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.Resourc
 
 	properties := beta.AccessPackageAssignmentPolicy{
 		AccessPackageId:    nullable.NoZero(d.Get("access_package_id").(string)),
-		CanExtend:          nullable.NoZero(d.Get("extension_enabled").(bool)),
+		CanExtend:          nullable.Value(d.Get("extension_enabled").(bool)),
 		Description:        nullable.NoZero(d.Get("description").(string)),
 		DisplayName:        nullable.NoZero(d.Get("display_name").(string)),
-		DurationInDays:     nullable.NoZero(int64(d.Get("duration_in_days").(int))),
+		DurationInDays:     nullable.Value(int64(d.Get("duration_in_days").(int))),
 		ExpirationDateTime: nullable.NoZero(d.Get("expiration_date").(string)),
 		Questions:          expandAccessPackageQuestions(d.Get("question").([]interface{})),
 	}
@@ -472,46 +514,4 @@ func buildAssignmentPolicyResourceData(ctx context.Context, d *pluginsdk.Resourc
 	properties.AccessReviewSettings = reviewSettings
 
 	return &properties, nil
-}
-
-func assignmentPolicyDiffSuppress(k, old, new string, d *pluginsdk.ResourceData) bool {
-	if k == "approval_settings.#" && old == "1" && new == "0" {
-		return true
-	}
-
-	if k == "requestor_settings.#" && old == "1" && new == "0" {
-		return true
-	}
-
-	if k == "requestor_settings.0.scope_type" && old == RequestorScopeTypeNoSubjects && len(new) == 0 {
-		return true
-	}
-
-	if k == "assignment_review_settings.0.starting_on" && len(new) == 0 {
-		return true
-	}
-
-	if k == "assignment_review_settings.#" && old == "1" && new == "0" {
-		return true
-	}
-
-	if k == "question.#" && old == "1" && new == "0" {
-		return true
-	}
-
-	return false
-}
-
-func assignmentPolicyCustomDiff(ctx context.Context, diff *pluginsdk.ResourceDiff, meta interface{}) error {
-	if reviewSettings := diff.Get("assignment_review_settings").([]interface{}); len(reviewSettings) > 0 {
-		reviewSetting := reviewSettings[0].(map[string]interface{})
-		if reviewSetting["enabled"].(bool) &&
-			(reviewSetting["duration_in_days"] == 0 ||
-				len(reviewSetting["review_frequency"].(string)) == 0 ||
-				len(reviewSetting["access_review_timeout_behavior"].(string)) == 0) {
-			return fmt.Errorf("`duration_in_days`, `review_frequency`, `access_review_timeout_behavior` must be set when review is enabled")
-		}
-	}
-
-	return nil
 }

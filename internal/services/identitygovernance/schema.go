@@ -4,8 +4,8 @@
 package identitygovernance
 
 import (
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
@@ -47,16 +47,18 @@ func schemaUserSet() *pluginsdk.Resource {
 	return &pluginsdk.Resource{
 		Schema: map[string]*pluginsdk.Schema{
 			"subject_type": {
-				Description: "Type of users",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
+				Description:      "Type of users",
+				Type:             pluginsdk.TypeString,
+				Required:         true,
+				DiffSuppressFunc: suppress.CaseDifference,
 				ValidateFunc: validation.StringInSlice([]string{
-					odata.ShortTypeConnectedOrganizationMembers,
-					odata.ShortTypeExternalSponsors,
-					odata.ShortTypeGroupMembers,
-					odata.ShortTypeInternalSponsors,
-					odata.ShortTypeRequestorManager,
-					odata.ShortTypeSingleUser,
+					"ConnectedOrganizationMembers",
+					"ExternalSponsors",
+					"GroupMembers",
+					"InternalSponsors",
+					"RequestorManager",
+					"SingleUser",
+					"TargetUserSponsors",
 				}, true),
 			},
 
