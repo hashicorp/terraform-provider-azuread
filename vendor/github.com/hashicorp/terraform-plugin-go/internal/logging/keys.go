@@ -69,6 +69,9 @@ const (
 	// Whether the GetProviderSchemaOptional server capability is enabled
 	KeyServerCapabilityGetProviderSchemaOptional = "tf_server_capability_get_provider_schema_optional"
 
+	// Whether the MoveResourceState server capability is enabled
+	KeyServerCapabilityMoveResourceState = "tf_server_capability_move_resource_state"
+
 	// Whether the PlanDestroy server capability is enabled
 	KeyServerCapabilityPlanDestroy = "tf_server_capability_plan_destroy"
 
