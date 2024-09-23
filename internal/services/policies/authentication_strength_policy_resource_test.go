@@ -6,15 +6,16 @@ package policies_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 type AuthenticationStrengthPolicyResource struct{}
@@ -78,19 +79,19 @@ func TestAccAuthenticationStrengthPolicy_update(t *testing.T) {
 	})
 }
 
-func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, client *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
-	var id *string
+func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
+	client := clients.Policies.AuthenticationStrengthPolicyClient
+	id := stable.NewPolicyAuthenticationStrengthPolicyID(state.ID)
 
-	authstrengthpolicy, status, err := client.Policies.AuthenticationStrengthPoliciesClient.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Authentication Strength Policy with ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Authentication Strength Policy with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
-	id = authstrengthpolicy.ID
 
-	return pointer.To(id != nil && *id == state.ID), nil
+	return pointer.To(true), nil
 }
 
 func (AuthenticationStrengthPolicyResource) basic(data acceptance.TestData) string {
@@ -113,14 +114,13 @@ resource "azuread_authentication_strength_policy" "test" {
   display_name = "acctestASP-%[1]d"
   description  = "test"
   allowed_combinations = [
-    "fido2",
-    "password",
     "deviceBasedPush",
-    "temporaryAccessPassOneTime",
     "federatedMultiFactor",
     "federatedSingleFactor",
+    "fido2",
     "hardwareOath,federatedSingleFactor",
     "microsoftAuthenticatorPush,federatedSingleFactor",
+    "password",
     "password,hardwareOath",
     "password,microsoftAuthenticatorPush",
     "password,sms",
@@ -130,6 +130,7 @@ resource "azuread_authentication_strength_policy" "test" {
     "sms,federatedSingleFactor",
     "softwareOath,federatedSingleFactor",
     "temporaryAccessPassMultiUse",
+    "temporaryAccessPassOneTime",
     "voice,federatedSingleFactor",
     "windowsHelloForBusiness",
     "x509CertificateMultiFactor",

@@ -4,39 +4,49 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/claimsmappingpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicyassignment"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	AuthenticationStrengthPoliciesClient *msgraph.AuthenticationStrengthPoliciesClient
-	ClaimsMappingPolicyClient            *msgraph.ClaimsMappingPolicyClient
-	RoleManagementPolicyAssignmentClient *msgraph.RoleManagementPolicyAssignmentClient
-	RoleManagementPolicyClient           *msgraph.RoleManagementPolicyClient
-	RoleManagementPolicyRuleClient       *msgraph.RoleManagementPolicyRuleClient
+	AuthenticationStrengthPolicyClient   *authenticationstrengthpolicy.AuthenticationStrengthPolicyClient
+	ClaimsMappingPolicyClient            *claimsmappingpolicy.ClaimsMappingPolicyClient
+	RoleManagementPolicyAssignmentClient *rolemanagementpolicyassignment.RoleManagementPolicyAssignmentClient
+	RoleManagementPolicyClient           *rolemanagementpolicy.RoleManagementPolicyClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	authenticationStrengthpoliciesClient := msgraph.NewAuthenticationStrengthPoliciesClient()
-	o.ConfigureClient(&authenticationStrengthpoliciesClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	authenticationStrengthpolicyClient, err := authenticationstrengthpolicy.NewAuthenticationStrengthPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(authenticationStrengthpolicyClient.Client)
 
-	claimsMappingPolicyClient := msgraph.NewClaimsMappingPolicyClient()
-	o.ConfigureClient(&claimsMappingPolicyClient.BaseClient)
+	claimsMappingPolicyClient, err := claimsmappingpolicy.NewClaimsMappingPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(claimsMappingPolicyClient.Client)
 
-	roleManagementPolicyAssignmentClient := msgraph.NewRoleManagementPolicyAssignmentClient()
-	o.ConfigureClient(&roleManagementPolicyAssignmentClient.BaseClient)
+	roleManagementPolicyAssignmentClient, err := rolemanagementpolicyassignment.NewRoleManagementPolicyAssignmentClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(roleManagementPolicyAssignmentClient.Client)
 
-	roleManagementPolicyClient := msgraph.NewRoleManagementPolicyClient()
-	o.ConfigureClient(&roleManagementPolicyClient.BaseClient)
-
-	roleManagementPolicyRuleClient := msgraph.NewRoleManagementPolicyRuleClient()
-	o.ConfigureClient(&roleManagementPolicyRuleClient.BaseClient)
+	roleManagementPolicyClient, err := rolemanagementpolicy.NewRoleManagementPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(roleManagementPolicyClient.Client)
 
 	return &Client{
-		AuthenticationStrengthPoliciesClient: authenticationStrengthpoliciesClient,
+		AuthenticationStrengthPolicyClient:   authenticationStrengthpolicyClient,
 		ClaimsMappingPolicyClient:            claimsMappingPolicyClient,
 		RoleManagementPolicyAssignmentClient: roleManagementPolicyAssignmentClient,
 		RoleManagementPolicyClient:           roleManagementPolicyClient,
-		RoleManagementPolicyRuleClient:       roleManagementPolicyRuleClient,
-	}
+	}, nil
 }

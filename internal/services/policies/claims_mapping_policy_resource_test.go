@@ -6,10 +6,12 @@ package policies_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/claimsmappingpolicy"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -40,6 +42,21 @@ func TestClaimsMappingPolicy_basic(t *testing.T) {
 	})
 }
 
+func (r ClaimsMappingPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
+	client := clients.Policies.ClaimsMappingPolicyClient
+	id := stable.NewPolicyClaimsMappingPolicyID(state.ID)
+
+	resp, err := client.GetClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
+		}
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
+	}
+
+	return pointer.To(true), nil
+}
+
 func (ClaimsMappingPolicyResource) basic(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
@@ -64,22 +81,4 @@ resource "azuread_claims_mapping_policy" "test" {
   display_name = "acctest-%[1]s-updated"
 }
 `, data.RandomString)
-}
-
-func (r ClaimsMappingPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Policies.ClaimsMappingPolicyClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
-
-	exists := false
-	_, status, err := client.Get(ctx, state.ID, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Claims mapping policy with object ID %q does not exist", state.ID)
-		}
-		return &exists, fmt.Errorf("failed to retrieve claims mapping policy with object ID %q: %+v", state.ID, err)
-	}
-
-	exists = true
-	return &exists, nil
 }
