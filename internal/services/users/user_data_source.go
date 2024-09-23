@@ -7,15 +7,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func userDataSource() *pluginsdk.Resource {
@@ -28,48 +31,48 @@ func userDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"employee_id": {
-				Description:      "The employee identifier assigned to the user by the organisation",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The employee identifier assigned to the user by the organisation",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"mail": {
-				Description:      "The SMTP address for the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The SMTP address for the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"mail_nickname": {
-				Description:      "The email alias of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				Computed:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The email alias of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				Computed:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"object_id": {
-				Description:      "The object ID of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"user_principal_name": {
-				Description:      "The user principal name (UPN) of the user",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The user principal name (UPN) of the user",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"employee_id", "mail", "mail_nickname", "object_id", "user_principal_name"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"account_enabled": {
@@ -316,160 +319,240 @@ func userDataSource() *pluginsdk.Resource {
 }
 
 func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Users.UsersClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := meta.(*clients.Client).Users.UserClient
+	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	var user msgraph.User
+	var foundObjectId *string
 
 	if upn, ok := d.Get("user_principal_name").(string); ok && upn != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("userPrincipalName eq '%s'", odata.EscapeSingleQuote(upn)),
+		options := user.ListUsersOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("userPrincipalName eq '%s'", odata.EscapeSingleQuote(upn))),
 		}
-		users, _, err := client.List(ctx, query)
+
+		resp, err := client.ListUsers(ctx, options)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Finding user with UPN: %q", upn)
 		}
-		if users == nil {
+
+		if resp.Model == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		count := len(*users)
+
+		count := len(*resp.Model)
 		if count > 1 {
 			return tf.ErrorDiagPathF(nil, "user_principal_name", "More than one user found with UPN: %q", upn)
 		} else if count == 0 {
 			return tf.ErrorDiagPathF(err, "user_principal_name", "User with UPN %q was not found", upn)
 		}
-		user = (*users)[0]
+
+		foundObjectId = (*resp.Model)[0].Id
+
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		u, status, err := client.Get(ctx, objectId, odata.Query{})
+		resp, err := client.GetUser(ctx, stable.NewUserID(objectId), user.DefaultGetUserOperationOptions())
 		if err != nil {
-			if status == http.StatusNotFound {
+			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 			}
 			return tf.ErrorDiagF(err, "Retrieving user with object ID: %q", objectId)
 		}
-		if u == nil {
+
+		if resp.Model == nil {
 			return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", objectId)
 		}
-		user = *u
+
+		foundObjectId = resp.Model.Id
+
 	} else if mail, ok := d.Get("mail").(string); ok && mail != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(mail)),
+		options := user.ListUsersOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(mail))),
 		}
-		users, _, err := client.List(ctx, query)
+
+		resp, err := client.ListUsers(ctx, options)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Finding user with mail: %q", mail)
 		}
-		if users == nil {
+
+		if resp.Model == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		count := len(*users)
+
+		count := len(*resp.Model)
 		if count > 1 {
 			return tf.ErrorDiagPathF(nil, "mail", "More than one user found with mail: %q", upn)
 		} else if count == 0 {
 			return tf.ErrorDiagPathF(err, "mail", "User not found with mail: %q", upn)
 		}
-		user = (*users)[0]
+
+		foundObjectId = (*resp.Model)[0].Id
+
 	} else if mailNickname, ok := d.Get("mail_nickname").(string); ok && mailNickname != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(mailNickname)),
+		options := user.ListUsersOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(mailNickname))),
 		}
-		users, _, err := client.List(ctx, query)
+
+		resp, err := client.ListUsers(ctx, options)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Finding user with email alias: %q", mailNickname)
 		}
-		if users == nil {
+
+		if resp.Model == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		count := len(*users)
+
+		count := len(*resp.Model)
 		if count > 1 {
 			return tf.ErrorDiagPathF(nil, "mail_nickname", "More than one user found with email alias: %q", mailNickname)
 		} else if count == 0 {
 			return tf.ErrorDiagPathF(err, "mail_nickname", "User not found with email alias: %q", mailNickname)
 		}
-		user = (*users)[0]
+
+		foundObjectId = (*resp.Model)[0].Id
+
 	} else if employeeId, ok := d.Get("employee_id").(string); ok && employeeId != "" {
-		query := odata.Query{
-			Filter: fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(employeeId)),
+		options := user.ListUsersOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(employeeId))),
 		}
-		users, _, err := client.List(ctx, query)
+
+		resp, err := client.ListUsers(ctx, options)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Finding user with employee ID: %q", employeeId)
 		}
-		if users == nil {
+
+		if resp.Model == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		count := len(*users)
+
+		count := len(*resp.Model)
 		if count > 1 {
 			return tf.ErrorDiagPathF(nil, "employee_id", "More than one user found with employee ID: %q", employeeId)
 		} else if count == 0 {
 			return tf.ErrorDiagPathF(err, "employee_id", "User not found with employee ID: %q", employeeId)
 		}
-		user = (*users)[0]
+
+		foundObjectId = (*resp.Model)[0].Id
+
 	} else {
 		return tf.ErrorDiagF(nil, "One of `object_id`, `user_principal_name`, `mail_nickname` or `employee_id` must be supplied")
 	}
 
-	if user.ID() == nil {
+	if foundObjectId == nil {
 		return tf.ErrorDiagF(errors.New("API returned user with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*user.ID())
+	// Users API changes which fields it sends by default, so we explicitly select the fields we want to guard against this
+	options := user.GetUserOperationOptions{
+		Select: pointer.To([]string{
+			"accountEnabled",
+			"ageGroup",
+			"businessPhones",
+			"city",
+			"companyName",
+			"consentProvidedForMinor",
+			"country",
+			"creationType",
+			"department",
+			"displayName",
+			"employeeId",
+			"employeeOrgData",
+			"employeeType",
+			"externalUserState",
+			"faxNumber",
+			"givenName",
+			"id",
+			"imAddresses",
+			"jobTitle",
+			"mail",
+			"mailNickname",
+			"mobilePhone",
+			"officeLocation",
+			"onPremisesDistinguishedName",
+			"onPremisesDomainName",
+			"onPremisesImmutableId",
+			"onPremisesSamAccountName",
+			"onPremisesSecurityIdentifier",
+			"onPremisesSyncEnabled",
+			"onPremisesUserPrincipalName",
+			"otherMails",
+			"postalCode",
+			"preferredLanguage",
+			"proxyAddresses",
+			"showInAddressList",
+			"state",
+			"streetAddress",
+			"surname",
+			"usageLocation",
+			"userPrincipalName",
+			"userType",
+		}),
+	}
 
-	tf.Set(d, "account_enabled", user.AccountEnabled)
-	tf.Set(d, "age_group", user.AgeGroup)
-	tf.Set(d, "business_phones", user.BusinessPhones)
-	tf.Set(d, "city", user.City)
-	tf.Set(d, "company_name", user.CompanyName)
-	tf.Set(d, "consent_provided_for_minor", user.ConsentProvidedForMinor)
-	tf.Set(d, "country", user.Country)
-	tf.Set(d, "creation_type", user.CreationType)
-	tf.Set(d, "department", user.Department)
-	tf.Set(d, "display_name", user.DisplayName)
-	tf.Set(d, "employee_id", user.EmployeeId)
-	tf.Set(d, "employee_type", user.EmployeeType)
-	tf.Set(d, "external_user_state", user.ExternalUserState)
-	tf.Set(d, "fax_number", user.FaxNumber)
-	tf.Set(d, "given_name", user.GivenName)
-	tf.Set(d, "im_addresses", user.ImAddresses)
-	tf.Set(d, "job_title", user.JobTitle)
-	tf.Set(d, "mail", user.Mail)
-	tf.Set(d, "mail_nickname", user.MailNickname)
-	tf.Set(d, "mobile_phone", user.MobilePhone)
-	tf.Set(d, "object_id", user.ID())
-	tf.Set(d, "office_location", user.OfficeLocation)
-	tf.Set(d, "onpremises_distinguished_name", user.OnPremisesDistinguishedName)
-	tf.Set(d, "onpremises_domain_name", user.OnPremisesDomainName)
-	tf.Set(d, "onpremises_immutable_id", user.OnPremisesImmutableId)
-	tf.Set(d, "onpremises_sam_account_name", user.OnPremisesSamAccountName)
-	tf.Set(d, "onpremises_security_identifier", user.OnPremisesSecurityIdentifier)
-	tf.Set(d, "onpremises_sync_enabled", user.OnPremisesSyncEnabled)
-	tf.Set(d, "onpremises_user_principal_name", user.OnPremisesUserPrincipalName)
-	tf.Set(d, "other_mails", user.OtherMails)
-	tf.Set(d, "postal_code", user.PostalCode)
-	tf.Set(d, "preferred_language", user.PreferredLanguage)
-	tf.Set(d, "proxy_addresses", user.ProxyAddresses)
-	tf.Set(d, "show_in_address_list", user.ShowInAddressList)
-	tf.Set(d, "state", user.State)
-	tf.Set(d, "street_address", user.StreetAddress)
-	tf.Set(d, "surname", user.Surname)
-	tf.Set(d, "usage_location", user.UsageLocation)
-	tf.Set(d, "user_principal_name", user.UserPrincipalName)
-	tf.Set(d, "user_type", user.UserType)
+	id := stable.NewUserID(*foundObjectId)
+	resp, err := client.GetUser(ctx, id, options)
+	if err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
+	}
 
-	if user.EmployeeOrgData != nil {
-		tf.Set(d, "cost_center", user.EmployeeOrgData.CostCenter)
-		tf.Set(d, "division", user.EmployeeOrgData.Division)
+	u := resp.Model
+	if u == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	d.SetId(id.UserId)
+
+	tf.Set(d, "account_enabled", u.AccountEnabled.GetOrZero())
+	tf.Set(d, "age_group", u.AgeGroup.GetOrZero())
+	tf.Set(d, "business_phones", pointer.From(u.BusinessPhones))
+	tf.Set(d, "city", u.City.GetOrZero())
+	tf.Set(d, "company_name", u.CompanyName.GetOrZero())
+	tf.Set(d, "consent_provided_for_minor", u.ConsentProvidedForMinor.GetOrZero())
+	tf.Set(d, "country", u.Country.GetOrZero())
+	tf.Set(d, "creation_type", u.CreationType.GetOrZero())
+	tf.Set(d, "department", u.Department.GetOrZero())
+	tf.Set(d, "display_name", u.DisplayName.GetOrZero())
+	tf.Set(d, "employee_id", u.EmployeeId.GetOrZero())
+	tf.Set(d, "employee_type", u.EmployeeType.GetOrZero())
+	tf.Set(d, "external_user_state", u.ExternalUserState.GetOrZero())
+	tf.Set(d, "fax_number", u.FaxNumber.GetOrZero())
+	tf.Set(d, "given_name", u.GivenName.GetOrZero())
+	tf.Set(d, "im_addresses", pointer.From(u.ImAddresses))
+	tf.Set(d, "job_title", u.JobTitle.GetOrZero())
+	tf.Set(d, "mail", u.Mail.GetOrZero())
+	tf.Set(d, "mail_nickname", u.MailNickname.GetOrZero())
+	tf.Set(d, "mobile_phone", u.MobilePhone.GetOrZero())
+	tf.Set(d, "object_id", id.UserId)
+	tf.Set(d, "office_location", u.OfficeLocation.GetOrZero())
+	tf.Set(d, "onpremises_distinguished_name", u.OnPremisesDistinguishedName.GetOrZero())
+	tf.Set(d, "onpremises_domain_name", u.OnPremisesDomainName.GetOrZero())
+	tf.Set(d, "onpremises_immutable_id", u.OnPremisesImmutableId.GetOrZero())
+	tf.Set(d, "onpremises_sam_account_name", u.OnPremisesSamAccountName.GetOrZero())
+	tf.Set(d, "onpremises_security_identifier", u.OnPremisesSecurityIdentifier.GetOrZero())
+	tf.Set(d, "onpremises_sync_enabled", u.OnPremisesSyncEnabled.GetOrZero())
+	tf.Set(d, "onpremises_user_principal_name", u.OnPremisesUserPrincipalName.GetOrZero())
+	tf.Set(d, "other_mails", pointer.From(u.OtherMails))
+	tf.Set(d, "postal_code", u.PostalCode.GetOrZero())
+	tf.Set(d, "preferred_language", u.PreferredLanguage.GetOrZero())
+	tf.Set(d, "proxy_addresses", pointer.From(u.ProxyAddresses))
+	tf.Set(d, "show_in_address_list", u.ShowInAddressList.GetOrZero())
+	tf.Set(d, "state", u.State.GetOrZero())
+	tf.Set(d, "street_address", u.StreetAddress.GetOrZero())
+	tf.Set(d, "surname", u.Surname.GetOrZero())
+	tf.Set(d, "usage_location", u.UsageLocation.GetOrZero())
+	tf.Set(d, "user_principal_name", u.UserPrincipalName.GetOrZero())
+	tf.Set(d, "user_type", u.UserType.GetOrZero())
+
+	if u.EmployeeOrgData != nil {
+		tf.Set(d, "cost_center", u.EmployeeOrgData.CostCenter.GetOrZero())
+		tf.Set(d, "division", u.EmployeeOrgData.Division.GetOrZero())
 	}
 
 	managerId := ""
-	manager, status, err := client.GetManager(ctx, *user.ID())
-	if status != http.StatusNotFound {
+	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
+	if !response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve manager for user with object ID %q", *user.ID())
+			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)
 		}
-		if manager != nil && manager.ID() != nil {
-			managerId = *manager.ID()
+		if managerResp.Model != nil {
+			managerId = pointer.From(managerResp.Model.DirectoryObject().Id)
 		}
 	}
 	tf.Set(d, "manager_id", managerId)

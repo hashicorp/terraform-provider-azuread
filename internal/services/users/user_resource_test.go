@@ -6,12 +6,13 @@ package users_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -156,18 +157,17 @@ func TestAccUser_passwordInvalid(t *testing.T) {
 }
 
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Users.UsersClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Users.UserClient
+	id := stable.NewUserID(state.ID)
 
-	user, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("User with object ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve User with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", id, err)
 	}
-	return pointer.To(user.ID() != nil && *user.ID() == state.ID), nil
+	return pointer.To(true), nil
 }
 
 func (UserResource) basic(data acceptance.TestData) string {
