@@ -7,18 +7,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/invitations/stable/invitation"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func invitationResource() *pluginsdk.Resource {
@@ -43,19 +48,19 @@ func invitationResource() *pluginsdk.Resource {
 			},
 
 			"user_email_address": {
-				Description:      "The email address of the user being invited",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.StringIsEmailAddress,
+				Description:  "The email address of the user being invited",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsEmailAddress,
 			},
 
 			"user_display_name": {
-				Description:      "The display name of the user being invited",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the user being invited",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"message": {
@@ -72,40 +77,37 @@ func invitationResource() *pluginsdk.Resource {
 							Optional:    true,
 							MaxItems:    1,
 							Elem: &pluginsdk.Schema{
-								Type:             pluginsdk.TypeString,
-								ValidateDiagFunc: validation.StringIsEmailAddress,
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: validation.StringIsNotEmpty,
 							},
 						},
 
 						"body": {
-							Description:      "Customized message body you want to send if you don't want to send the default message",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"message.0.language"},
-							ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+							Description:   "Customized message body you want to send if you don't want to send the default message",
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"message.0.language"},
+							ValidateFunc:  validation.StringIsNotEmpty,
 						},
 
 						"language": {
-							Description:      "The language you want to send the default message in",
-							Type:             pluginsdk.TypeString,
-							Optional:         true,
-							ConflictsWith:    []string{"message.0.body"},
-							ValidateDiagFunc: validation.ISO639Language,
+							Description:   "The language you want to send the default message in",
+							Type:          pluginsdk.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"message.0.body"},
+							ValidateFunc:  validation.ISO639Language,
 						},
 					},
 				},
 			},
 
 			"user_type": {
-				Description: "The user type of the user being invited",
-				Type:        pluginsdk.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     "Guest",
-				ValidateFunc: validation.StringInSlice([]string{
-					msgraph.InvitedUserTypeGuest,
-					msgraph.InvitedUserTypeMember,
-				}, false),
+				Description:  "The user type of the user being invited",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "Guest",
+				ValidateFunc: validation.StringInSlice(possibleValuesForInvitedUserType, false),
 			},
 
 			"redeem_url": {
@@ -124,127 +126,130 @@ func invitationResource() *pluginsdk.Resource {
 }
 
 func invitationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Invitations.InvitationsClient
-	usersClient := meta.(*clients.Client).Invitations.UsersClient
+	client := meta.(*clients.Client).Invitations.InvitationClient
+	userClient := meta.(*clients.Client).Invitations.UserClient
 
-	properties := msgraph.Invitation{
-		InvitedUserEmailAddress: pointer.To(d.Get("user_email_address").(string)),
-		InviteRedirectURL:       pointer.To(d.Get("redirect_url").(string)),
-		InvitedUserType:         pointer.To(d.Get("user_type").(string)),
+	properties := stable.Invitation{
+		InvitedUserEmailAddress: d.Get("user_email_address").(string),
+		InviteRedirectUrl:       d.Get("redirect_url").(string),
+		InvitedUserType:         nullable.Value(d.Get("user_type").(string)),
 	}
 
 	if v, ok := d.GetOk("user_display_name"); ok {
-		properties.InvitedUserDisplayName = pointer.To(v.(string))
+		properties.InvitedUserDisplayName = nullable.Value(v.(string))
 	}
 
 	if v, ok := d.GetOk("message"); ok {
-		properties.SendInvitationMessage = pointer.To(true)
+		properties.SendInvitationMessage = nullable.Value(true)
 		properties.InvitedUserMessageInfo = expandInvitedUserMessageInfo(v.([]interface{}))
 	}
 
-	invitation, _, err := client.Create(ctx, properties)
+	resp, err := client.CreateInvitation(ctx, properties, invitation.DefaultCreateInvitationOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Could not create invitation")
+		return tf.ErrorDiagF(err, "Creating invitation")
 	}
 
-	if invitation.ID == nil || *invitation.ID == "" {
+	invite := resp.Model
+	if invite == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Creating invitation")
+	}
+
+	if invite.Id == nil || *invite.Id == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for invitation is nil/empty")
 	}
-	d.SetId(*invitation.ID)
 
-	if invitation.InvitedUser == nil || invitation.InvitedUser.ID() == nil || *invitation.InvitedUser.ID() == "" {
+	d.SetId(*invite.Id)
+
+	if invite.InvitedUser == nil || invite.InvitedUser.Id == nil || *invite.InvitedUser.Id == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Invited user object ID returned for invitation is nil/empty")
 	}
-	d.Set("user_id", invitation.InvitedUser.ID())
 
-	if invitation.InviteRedeemURL == nil || *invitation.InviteRedeemURL == "" {
+	userId := stable.NewUserID(*invite.InvitedUser.Id)
+	d.Set("user_id", userId.UserId)
+
+	if invite.InviteRedeemUrl.GetOrZero() == "" {
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Redeem URL returned for invitation is nil/empty")
 	}
-	d.Set("redeem_url", invitation.InviteRedeemURL)
+	d.Set("redeem_url", invite.InviteRedeemUrl.GetOrZero())
 
 	// Attempt to patch the newly created guest user, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
-	status, err := usersClient.Update(ctx, msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: invitation.InvitedUser.ID(),
-		},
-		CompanyName: tf.NullableString("TERRAFORM_UPDATE"),
-	})
+	uid, err := uuid.GenerateUUID()
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
-		}
-		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		return tf.ErrorDiagF(err, "Failed to generate a UUID")
 	}
-	status, err = usersClient.Update(ctx, msgraph.User{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: invitation.InvitedUser.ID(),
+	tempCompanyName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
+
+	userResp, err := userClient.UpdateUser(ctx, userId, stable.User{
+		CompanyName: nullable.NoZero(tempCompanyName),
+	}, user.UpdateUserOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp) || response.WasStatusCode(resp, 500) || response.WasStatusCode(resp, 503), nil
 		},
-		CompanyName: tf.NullableString(""),
 	})
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(userResp.HttpResponse) {
 			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
 		}
-		return tf.ErrorDiagF(err, "Failed to patch guest user after creating invitation")
+		return tf.ErrorDiagF(err, "Failed to patch guest user (1) after creating invitation")
+	}
+
+	userResp, err = userClient.UpdateUser(ctx, userId, stable.User{
+		CompanyName: nullable.NoZero(""),
+	}, user.DefaultUpdateUserOperationOptions())
+	if err != nil {
+		if response.WasNotFound(userResp.HttpResponse) {
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new guest user to be replicated in Azure AD")
+		}
+		return tf.ErrorDiagF(err, "Failed to patch guest user (2) after creating invitation")
 	}
 
 	return invitationResourceRead(ctx, d, meta)
 }
 
 func invitationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Invitations.UsersClient
+	client := meta.(*clients.Client).Invitations.UserClient
+	userId := stable.NewUserID(d.Get("user_id").(string))
 
-	userID := d.Get("user_id").(string)
-
-	user, status, err := client.Get(ctx, userID, odata.Query{})
+	resp, err := client.GetUser(ctx, userId, user.DefaultGetUserOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Invited user with Object ID %q was not found - removing from state!", userID)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] Invited %s was not found - removing from state!", userId)
 			d.Set("user_id", "")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving invited user with object ID: %q", userID)
+		return tf.ErrorDiagF(err, "Retrieving invited %s", userId)
 	}
 
-	tf.Set(d, "user_id", user.ID())
-	tf.Set(d, "user_email_address", user.Mail)
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving invited %s", userId)
+	}
+
+	tf.Set(d, "user_id", userId.UserId)
+	tf.Set(d, "user_email_address", resp.Model.Mail.GetOrZero())
 
 	return nil
 }
 
 func invitationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Invitations.UsersClient
+	client := meta.(*clients.Client).Invitations.UserClient
+	userId := stable.NewUserID(d.Get("user_id").(string))
 
-	userID := d.Get("user_id").(string)
-
-	_, status, err := client.Get(ctx, userID, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("User was not found"), "id", "Retrieving invited user with object ID %q", userID)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving invited user with object ID %q", userID)
-	}
-
-	status, err = client.Delete(ctx, userID)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting invited user with object ID %q, got status %d with error: %+v", userID, status, err)
+	if _, err := client.DeleteUser(ctx, userId, user.DefaultDeleteUserOperationOptions()); err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting invited %s", userId)
 	}
 
 	// Wait for user object to be deleted, this seems much slower for invited users
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.Get(ctx, userID, odata.Query{}); err != nil {
-			if status == http.StatusNotFound {
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if resp, err := client.GetUser(ctx, userId, user.DefaultGetUserOperationOptions()); err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
 			return nil, err
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of invited user with object ID %q", userID)
+		return tf.ErrorDiagF(err, "Waiting for deletion of invited %s", userId)
 	}
 
 	return nil
