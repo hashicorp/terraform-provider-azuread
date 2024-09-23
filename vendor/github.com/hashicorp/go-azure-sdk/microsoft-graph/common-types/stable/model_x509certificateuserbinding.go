@@ -1,0 +1,31 @@
+package stable
+
+import (
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+type X509CertificateUserBinding struct {
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// The priority of the binding. Microsoft Entra ID uses the binding with the highest priority. This value must be a
+	// non-negative integer and unique in the collection of objects in the certificateUserBindings property of an
+	// x509CertificateAuthenticationMethodConfiguration object. Required
+	Priority *int64 `json:"priority,omitempty"`
+
+	TrustAffinityLevel *X509CertificateAffinityLevel `json:"trustAffinityLevel,omitempty"`
+
+	// Defines the Microsoft Entra user property of the user object to use for the binding. The possible values are:
+	// userPrincipalName, onPremisesUserPrincipalName, certificateUserIds. Required.
+	UserProperty nullable.Type[string] `json:"userProperty,omitempty"`
+
+	// The field on the X.509 certificate to use for the binding. The possible values are: PrincipalName, RFC822Name,
+	// SubjectKeyIdentifier, SHA1PublicKey.
+	X509CertificateField nullable.Type[string] `json:"x509CertificateField,omitempty"`
+}

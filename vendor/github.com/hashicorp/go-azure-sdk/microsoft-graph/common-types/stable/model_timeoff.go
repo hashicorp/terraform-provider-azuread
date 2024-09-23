@@ -1,0 +1,141 @@
+package stable
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+var _ ChangeTrackedEntity = TimeOff{}
+
+type TimeOff struct {
+	// The draft version of this timeOff item that is viewable by managers. It must be shared before it is visible to team
+	// members. Required.
+	DraftTimeOff TimeOffItem `json:"draftTimeOff"`
+
+	// The shared version of this timeOff that is viewable by both employees and managers. Updates to the sharedTimeOff
+	// property send notifications to users in the Teams client. Required.
+	SharedTimeOff TimeOffItem `json:"sharedTimeOff"`
+
+	// ID of the user assigned to the timeOff. Required.
+	UserId nullable.Type[string] `json:"userId,omitempty"`
+
+	// Fields inherited from ChangeTrackedEntity
+
+	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
+	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
+	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
+
+	// Identity of the person who last modified the entity.
+	LastModifiedBy *IdentitySet `json:"lastModifiedBy,omitempty"`
+
+	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
+	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
+	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
+
+	// Fields inherited from Entity
+
+	// The unique identifier for an entity. Read-only.
+	Id *string `json:"id,omitempty"`
+
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// Model Behaviors
+	OmitDiscriminatedValue bool `json:"-"`
+}
+
+func (s TimeOff) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
+	return BaseChangeTrackedEntityImpl{
+		CreatedDateTime:      s.CreatedDateTime,
+		LastModifiedBy:       s.LastModifiedBy,
+		LastModifiedDateTime: s.LastModifiedDateTime,
+		Id:                   s.Id,
+		ODataId:              s.ODataId,
+		ODataType:            s.ODataType,
+	}
+}
+
+func (s TimeOff) Entity() BaseEntityImpl {
+	return BaseEntityImpl{
+		Id:        s.Id,
+		ODataId:   s.ODataId,
+		ODataType: s.ODataType,
+	}
+}
+
+var _ json.Marshaler = TimeOff{}
+
+func (s TimeOff) MarshalJSON() ([]byte, error) {
+	type wrapper TimeOff
+	wrapped := wrapper(s)
+	encoded, err := json.Marshal(wrapped)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling TimeOff: %+v", err)
+	}
+
+	var decoded map[string]interface{}
+	if err = json.Unmarshal(encoded, &decoded); err != nil {
+		return nil, fmt.Errorf("unmarshaling TimeOff: %+v", err)
+	}
+
+	if !s.OmitDiscriminatedValue {
+		decoded["@odata.type"] = "#microsoft.graph.timeOff"
+	}
+
+	encoded, err = json.Marshal(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("re-marshaling TimeOff: %+v", err)
+	}
+
+	return encoded, nil
+}
+
+var _ json.Unmarshaler = &TimeOff{}
+
+func (s *TimeOff) UnmarshalJSON(bytes []byte) error {
+	var decoded struct {
+		DraftTimeOff         TimeOffItem           `json:"draftTimeOff"`
+		SharedTimeOff        TimeOffItem           `json:"sharedTimeOff"`
+		UserId               nullable.Type[string] `json:"userId,omitempty"`
+		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
+		LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
+		Id                   *string               `json:"id,omitempty"`
+		ODataId              *string               `json:"@odata.id,omitempty"`
+		ODataType            *string               `json:"@odata.type,omitempty"`
+	}
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+
+	s.DraftTimeOff = decoded.DraftTimeOff
+	s.SharedTimeOff = decoded.SharedTimeOff
+	s.UserId = decoded.UserId
+	s.CreatedDateTime = decoded.CreatedDateTime
+	s.Id = decoded.Id
+	s.LastModifiedDateTime = decoded.LastModifiedDateTime
+	s.ODataId = decoded.ODataId
+	s.ODataType = decoded.ODataType
+
+	var temp map[string]json.RawMessage
+	if err := json.Unmarshal(bytes, &temp); err != nil {
+		return fmt.Errorf("unmarshaling TimeOff into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["lastModifiedBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'LastModifiedBy' for 'TimeOff': %+v", err)
+		}
+		s.LastModifiedBy = &impl
+	}
+
+	return nil
+}

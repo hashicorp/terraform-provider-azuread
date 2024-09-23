@@ -1,0 +1,71 @@
+package beta
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+var _ DeviceAndAppManagementAssignmentTarget = AndroidFotaDeploymentAssignmentTarget{}
+
+type AndroidFotaDeploymentAssignmentTarget struct {
+	// AAD Group Id.
+	GroupId *string `json:"groupId,omitempty"`
+
+	// Fields inherited from DeviceAndAppManagementAssignmentTarget
+
+	// The Id of the filter for the target assignment.
+	DeviceAndAppManagementAssignmentFilterId nullable.Type[string] `json:"deviceAndAppManagementAssignmentFilterId,omitempty"`
+
+	// Represents type of the assignment filter.
+	DeviceAndAppManagementAssignmentFilterType *DeviceAndAppManagementAssignmentFilterType `json:"deviceAndAppManagementAssignmentFilterType,omitempty"`
+
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// Model Behaviors
+	OmitDiscriminatedValue bool `json:"-"`
+}
+
+func (s AndroidFotaDeploymentAssignmentTarget) DeviceAndAppManagementAssignmentTarget() BaseDeviceAndAppManagementAssignmentTargetImpl {
+	return BaseDeviceAndAppManagementAssignmentTargetImpl{
+		DeviceAndAppManagementAssignmentFilterId:   s.DeviceAndAppManagementAssignmentFilterId,
+		DeviceAndAppManagementAssignmentFilterType: s.DeviceAndAppManagementAssignmentFilterType,
+		ODataId:   s.ODataId,
+		ODataType: s.ODataType,
+	}
+}
+
+var _ json.Marshaler = AndroidFotaDeploymentAssignmentTarget{}
+
+func (s AndroidFotaDeploymentAssignmentTarget) MarshalJSON() ([]byte, error) {
+	type wrapper AndroidFotaDeploymentAssignmentTarget
+	wrapped := wrapper(s)
+	encoded, err := json.Marshal(wrapped)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling AndroidFotaDeploymentAssignmentTarget: %+v", err)
+	}
+
+	var decoded map[string]interface{}
+	if err = json.Unmarshal(encoded, &decoded); err != nil {
+		return nil, fmt.Errorf("unmarshaling AndroidFotaDeploymentAssignmentTarget: %+v", err)
+	}
+
+	if !s.OmitDiscriminatedValue {
+		decoded["@odata.type"] = "#microsoft.graph.androidFotaDeploymentAssignmentTarget"
+	}
+
+	encoded, err = json.Marshal(decoded)
+	if err != nil {
+		return nil, fmt.Errorf("re-marshaling AndroidFotaDeploymentAssignmentTarget: %+v", err)
+	}
+
+	return encoded, nil
+}
