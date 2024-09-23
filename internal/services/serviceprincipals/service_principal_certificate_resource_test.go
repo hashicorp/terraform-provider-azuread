@@ -6,12 +6,13 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -24,6 +25,7 @@ import (
 // grep -v \\----- server.crt >server.b64
 // cat server.b64 | base64 -d | xxd -p
 
+// The following certificate(s) will expire on March 7, 2031
 const servicePrincipalCertificatePem string = `-----BEGIN CERTIFICATE-----
 MIIDFDCCAfwCCQCvHp+vopfOOTANBgkqhkiG9w0BAQsFADBMMRYwFAYDVQQDDA1o
 YXNoaWNvcnB0ZXN0MRgwFgYDVQQKDA9IYXNoaUNvcnAsIEluYy4xCzAJBgNVBAgM
@@ -171,32 +173,32 @@ func TestAccServicePrincipalCertificate_requiresImport(t *testing.T) {
 }
 
 func (r ServicePrincipalCertificateResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.ServicePrincipals.ServicePrincipalsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.ServicePrincipals.ServicePrincipalClient
 
 	id, err := parse.CertificateID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Service Principal Certificate ID: %v", err)
 	}
 
-	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
+
+	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Service Principal with object ID %q does not exist", id.ObjectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, fmt.Errorf("%s does not exist", servicePrincipalId)
 		}
-		return nil, fmt.Errorf("failed to retrieve Service Principal with object ID %q: %+v", id.ObjectId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", servicePrincipalId, err)
 	}
 
-	if servicePrincipal.KeyCredentials != nil {
-		for _, cred := range *servicePrincipal.KeyCredentials {
-			if cred.KeyId != nil && *cred.KeyId == id.KeyId {
+	if resp.Model != nil && resp.Model.KeyCredentials != nil {
+		for _, cred := range *resp.Model.KeyCredentials {
+			if cred.KeyId.GetOrZero() == id.KeyId {
 				return pointer.To(true), nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("Key Credential %q was not found for Service Principal %q", id.KeyId, id.ObjectId)
+	return pointer.To(false), nil
 }
 
 func (ServicePrincipalCertificateResource) template(data acceptance.TestData) string {

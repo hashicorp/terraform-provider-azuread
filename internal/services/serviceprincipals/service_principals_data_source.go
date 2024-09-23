@@ -9,16 +9,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/http"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	serviceprincipalBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/beta/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func servicePrincipalsDataSource() *pluginsdk.Resource {
@@ -194,11 +198,10 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 }
 
 func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	clientBeta := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClientBeta
 
-	var servicePrincipals []msgraph.ServicePrincipal
+	var servicePrincipals []stable.ServicePrincipal
 	var expectedCount int
 	ignoreMissing := d.Get("ignore_missing").(bool)
 	returnAll := d.Get("return_all").(bool)
@@ -210,33 +213,34 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		clientIdsToSearch = tf.ExpandStringSlice(v)
 	}
 	if returnAll {
-		result, _, err := client.List(ctx, odata.Query{})
+		resp, err := client.ListServicePrincipals(ctx, serviceprincipal.DefaultListServicePrincipalsOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve service principals")
 		}
-		if result == nil {
+		if resp.Model == nil {
 			return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 		}
-		if len(*result) == 0 {
+		if len(*resp.Model) == 0 {
 			return tf.ErrorDiagPathF(err, "return_all", "No service principals found")
 		}
 
-		servicePrincipals = append(servicePrincipals, *result...)
+		servicePrincipals = append(servicePrincipals, *resp.Model...)
+
 	} else if len(clientIdsToSearch) > 0 {
 		expectedCount = len(clientIdsToSearch)
 		for _, v := range clientIdsToSearch {
-			query := odata.Query{
-				Filter: fmt.Sprintf("appId eq '%s'", v),
+			options := serviceprincipal.ListServicePrincipalsOperationOptions{
+				Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(v))),
 			}
-			result, _, err := client.List(ctx, query)
+			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {
-				return tf.ErrorDiagF(err, "Finding service principal with application ID: %q", v)
+				return tf.ErrorDiagF(err, "Finding service principals with application ID: %q", v)
 			}
-			if result == nil {
+			if resp.Model == nil {
 				return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 			}
 
-			count := len(*result)
+			count := len(*resp.Model)
 			if count > 1 {
 				return tf.ErrorDiagPathF(nil, "mail_nicknames", "More than one service principal found with application ID: %q", v)
 			} else if count == 0 {
@@ -246,39 +250,40 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 				return tf.ErrorDiagPathF(err, "mail_nicknames", "Service principal not found with application ID: %q", v)
 			}
 
-			servicePrincipals = append(servicePrincipals, (*result)[0])
+			servicePrincipals = append(servicePrincipals, (*resp.Model)[0])
 		}
+
 	} else if displayNames, ok := d.Get("display_names").([]interface{}); ok && len(displayNames) > 0 {
 		expectedCount = len(displayNames)
-		for _, v := range displayNames {
-			query := odata.Query{
-				Filter: fmt.Sprintf("displayName eq '%s'", v),
+		for _, v := range tf.ExpandStringSlice(displayNames) {
+			options := serviceprincipal.ListServicePrincipalsOperationOptions{
+				Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(v))),
 			}
-			result, _, err := client.List(ctx, query)
+			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {
-				return tf.ErrorDiagF(err, "Finding service principal; with display name: %q", v)
+				return tf.ErrorDiagF(err, "Finding service principals with display name: %q", v)
 			}
-			if result == nil {
+			if resp.Model == nil {
 				return tf.ErrorDiagF(errors.New("API returned nil result"), "Bad API Response")
 			}
-			count := len(*result)
-			if count > 1 {
-				return tf.ErrorDiagPathF(nil, "display_names", "More than one service principal found with display name: %q", v)
-			} else if count == 0 {
+			if l := len(*resp.Model); l > 1 {
+				return tf.ErrorDiagF(errors.New("more than one service principal returned with this display name"), "Finding service principals with display name: %q", v)
+			} else if l == 0 {
 				if ignoreMissing {
 					continue
 				}
-				return tf.ErrorDiagPathF(err, "display_names", "Service principal with display name %q was not found", v)
+				return tf.ErrorDiagPathF(err, "display_names", "No service principals with display name %q were found", v)
 			}
 
-			servicePrincipals = append(servicePrincipals, (*result)[0])
+			servicePrincipals = append(servicePrincipals, (*resp.Model)[0])
 		}
+
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 		expectedCount = len(objectIds)
 		for _, v := range objectIds {
-			u, status, err := client.Get(ctx, v.(string), odata.Query{})
+			resp, err := client.GetServicePrincipal(ctx, stable.NewServicePrincipalID(v.(string)), serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					if ignoreMissing {
 						continue
 					}
@@ -286,17 +291,17 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 				}
 				return tf.ErrorDiagF(err, "Retrieving service principal with object ID: %q", v)
 			}
-			if u == nil {
+			if resp.Model == nil {
 				return tf.ErrorDiagPathF(nil, "object_id", "Service principal not found with object ID: %q", v)
 			}
 
-			servicePrincipals = append(servicePrincipals, *u)
+			servicePrincipals = append(servicePrincipals, *resp.Model)
 		}
 	}
 
 	// Check that the right number of service principals were returned
 	if !returnAll && !ignoreMissing && len(servicePrincipals) != expectedCount {
-		return tf.ErrorDiagF(fmt.Errorf("Expected: %d, Actual: %d", expectedCount, len(servicePrincipals)), "Unexpected number of service principals returned")
+		return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(servicePrincipals)), "Unexpected number of service principals returned")
 	}
 
 	clientIds := make([]string, 0)
@@ -304,40 +309,54 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	objectIds := make([]string, 0)
 	spList := make([]map[string]interface{}, 0)
 	for _, s := range servicePrincipals {
-		if s.ID() == nil || s.DisplayName == nil {
+		if s.Id == nil || s.DisplayName == nil {
 			return tf.ErrorDiagF(errors.New("API returned service principal with nil object ID or displayName"), "Bad API Response")
 		}
 
-		objectIds = append(objectIds, *s.ID())
-		displayNames = append(displayNames, *s.DisplayName)
+		objectIds = append(objectIds, *s.Id)
+		displayNames = append(displayNames, s.DisplayName.GetOrZero())
 		if s.AppId != nil {
-			clientIds = append(clientIds, *s.AppId)
+			clientIds = append(clientIds, s.AppId.GetOrZero())
 		}
 
 		servicePrincipalNames := make([]string, 0)
 		if s.ServicePrincipalNames != nil {
 			for _, name := range *s.ServicePrincipalNames {
 				// Exclude the app ID from the list of service principal names
-				if s.AppId == nil || !strings.EqualFold(name, *s.AppId) {
+				if !strings.EqualFold(name, s.AppId.GetOrZero()) {
 					servicePrincipalNames = append(servicePrincipalNames, name)
 				}
 			}
 		}
 
+		// Retrieve from beta API to get samlMetadataUrl field
+		options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
+			Select: pointer.To([]string{"samlMetadataUrl"}),
+		}
+		resp, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(*s.Id), options)
+		if err != nil {
+			return tf.ErrorDiagF(err, "Retrieving %s (beta API)", beta.NewServicePrincipalID(*s.Id))
+		}
+
+		servicePrincipalBeta := resp.Model
+		if servicePrincipalBeta == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s (beta API)", beta.NewServicePrincipalID(*s.Id))
+		}
+
 		sp := make(map[string]interface{})
-		sp["account_enabled"] = s.AccountEnabled
-		sp["display_name"] = s.DisplayName
-		sp["app_role_assignment_required"] = s.AppRoleAssignmentRequired
-		sp["application_id"] = s.AppId
-		sp["application_tenant_id"] = s.AppOwnerOrganizationId
-		sp["client_id"] = s.AppId
-		sp["object_id"] = s.ID()
-		sp["preferred_single_sign_on_mode"] = s.PreferredSingleSignOnMode
-		sp["saml_metadata_url"] = s.SamlMetadataUrl
+		sp["account_enabled"] = s.AccountEnabled.GetOrZero()
+		sp["display_name"] = s.DisplayName.GetOrZero()
+		sp["app_role_assignment_required"] = pointer.From(s.AppRoleAssignmentRequired)
+		sp["application_id"] = s.AppId.GetOrZero()
+		sp["application_tenant_id"] = s.AppOwnerOrganizationId.GetOrZero()
+		sp["client_id"] = s.AppId.GetOrZero()
+		sp["object_id"] = pointer.From(s.Id)
+		sp["preferred_single_sign_on_mode"] = s.PreferredSingleSignOnMode.GetOrZero()
+		sp["saml_metadata_url"] = servicePrincipalBeta.SamlMetadataUrl.GetOrZero()
 		sp["service_principal_names"] = servicePrincipalNames
-		sp["sign_in_audience"] = s.SignInAudience
-		sp["tags"] = s.Tags
-		sp["type"] = s.ServicePrincipalType
+		sp["sign_in_audience"] = s.SignInAudience.GetOrZero()
+		sp["tags"] = pointer.From(s.Tags)
+		sp["type"] = s.ServicePrincipalType.GetOrZero()
 		spList = append(spList, sp)
 	}
 

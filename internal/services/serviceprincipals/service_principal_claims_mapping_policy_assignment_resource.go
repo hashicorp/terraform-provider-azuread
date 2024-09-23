@@ -5,18 +5,19 @@ package serviceprincipals
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/claimsmappingpolicy"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource {
@@ -38,126 +39,102 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claims_mapping_policy_id": {
-				Description: "ID of the claims mapping policy to assign",
-				Type:        pluginsdk.TypeString,
-				ForceNew:    true,
-				Required:    true,
+				Description:  "ID of the claims mapping policy to assign",
+				Type:         pluginsdk.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"service_principal_id": {
-				Description: "Object ID of the service principal for which to assign the policy",
-				Type:        pluginsdk.TypeString,
-				ForceNew:    true,
-				Required:    true,
+				Description:  "Object ID of the service principal for which to assign the policy",
+				Type:         pluginsdk.TypeString,
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}
 }
 
 func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	tenantId := meta.(*clients.Client).TenantID
+	client := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
 
-	policyId := d.Get("claims_mapping_policy_id").(string)
+	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+	policyId := stable.NewDirectoryObjectID(d.Get("claims_mapping_policy_id").(string))
 
-	properties := msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: pointer.To(d.Get("service_principal_id").(string)),
-		},
-		ClaimsMappingPolicies: &[]msgraph.ClaimsMappingPolicy{
-			{
-				DirectoryObject: msgraph.DirectoryObject{
-					ODataId: (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-						client.BaseClient.Endpoint, tenantId, policyId))),
-					Id: &policyId,
-				},
-			},
-		},
+	ref := stable.ReferenceCreate{
+		ODataId: pointer.To(client.Client.BaseUri + policyId.ID()),
 	}
 
-	_, err := client.AssignClaimsMappingPolicy(ctx, &properties)
-	if err != nil {
-		return tf.ErrorDiagF(
-			err,
-			"Could not create ClaimsMappingPolicyAssignment, service_principal_id: %q, claims_mapping_policy_id: %q",
-			*properties.DirectoryObject.ID(),
-			*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID(),
-		)
+	if _, err := client.AddClaimsMappingPolicyRef(ctx, servicePrincipalId, ref, claimsmappingpolicy.DefaultAddClaimsMappingPolicyRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Creating ClaimsMappingPolicyAssignment for %s", servicePrincipalId)
 	}
 
-	id := parse.NewClaimsMappingPolicyAssignmentID(
-		*properties.DirectoryObject.ID(),
-		*(*properties.ClaimsMappingPolicies)[0].DirectoryObject.ID(),
-	)
-
+	id := parse.NewClaimsMappingPolicyAssignmentID(servicePrincipalId.ServicePrincipalId, policyId.DirectoryObjectId)
 	d.SetId(id.String())
 
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)
 }
 
 func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Claims Mapping Policy Assignment ID %q", d.Id())
 	}
 
-	spID := id.ServicePrincipalId
+	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
 
-	policyList, status, err := client.ListClaimsMappingPolicy(ctx, spID)
+	resp, err := client.ListClaimsMappingPolicies(ctx, servicePrincipalId, claimsmappingpolicy.DefaultListClaimsMappingPoliciesOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with Object ID %q was not found - removing claims mapping policy assignment from state!", spID)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing claims mapping policy assignment from state!", servicePrincipalId)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagF(err, "listing Claims Mapping Policy Assignments for Service Principal with object ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "listing Claims Mapping Policy Assignments for %s", servicePrincipalId)
 	}
 
-	policyID := id.ClaimsMappingPolicyId
-	var foundPolicy *msgraph.ClaimsMappingPolicy
+	policies := resp.Model
+	if policies == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "listing Claims Mapping Policy Assignments for %s", servicePrincipalId)
+	}
+
+	var policy *stable.ClaimsMappingPolicy
 
 	// Check the assignment is found in the currently assigned policies
-	for _, policy := range *policyList {
-		if *policy.ID() == policyID {
-			foundPolicy = &policy
+	for _, p := range *policies {
+		if pointer.From(p.Id) == id.ClaimsMappingPolicyId {
+			policy = &p
 			break
 		}
 	}
-	if foundPolicy == nil {
+	if policy == nil {
 		d.SetId("")
-		log.Printf("[DEBUG] Claims Mapping Policy with Object ID %q was not found - removing assignment from state!", policyID)
+		log.Printf("[DEBUG] Claims Mapping Policy with Object ID %q was not found - removing assignment from state!", id.ClaimsMappingPolicyId)
 		return nil
 	}
 
-	tf.Set(d, "service_principal_id", spID)
-	tf.Set(d, "claims_mapping_policy_id", policyID)
+	tf.Set(d, "service_principal_id", id.ServicePrincipalId)
+	tf.Set(d, "claims_mapping_policy_id", id.ClaimsMappingPolicyId)
 
 	return nil
 }
 
 func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
 
 	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Claims Mapping Policy Assignment ID %q", d.Id())
 	}
 
-	claimIDs := []string{id.ClaimsMappingPolicyId}
-
-	spID := id.ServicePrincipalId
-
-	sp := msgraph.ServicePrincipal{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &spID,
-		},
-	}
-	_, err = client.RemoveClaimsMappingPolicy(ctx, &sp, &claimIDs)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not Remove ClaimsMappingPolicyAssignment, service_principal_id: %q, claims_mapping_policy_ids: %q", spID, claimIDs)
+	refId := stable.NewServicePrincipalIdClaimsMappingPolicyID(id.ServicePrincipalId, id.ClaimsMappingPolicyId)
+	if _, err = client.RemoveClaimsMappingPolicyRef(ctx, refId, claimsmappingpolicy.DefaultRemoveClaimsMappingPolicyRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "removing %s", refId)
 	}
 
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)
