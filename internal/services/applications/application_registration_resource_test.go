@@ -6,16 +6,16 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationRegistrationResource struct{}
@@ -88,24 +88,24 @@ func TestAccApplicationRegistration_update(t *testing.T) {
 }
 
 func (r ApplicationRegistrationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
-	id, err := parse.ParseApplicationID(state.ID)
+	id, err := stable.ParseApplicationID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	app, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+	resp, err := client.GetApplication(ctx, *id, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
 
-	return pointer.To(app.ID() != nil && *app.ID() == id.ApplicationId), nil
+	app := resp.Model
+
+	return pointer.To(app != nil && app.Id != nil && *app.Id == id.ApplicationId), nil
 }
 
 func (ApplicationRegistrationResource) basic(data acceptance.TestData) string {

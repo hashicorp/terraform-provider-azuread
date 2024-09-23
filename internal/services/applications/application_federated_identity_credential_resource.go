@@ -7,20 +7,21 @@ import (
 	"context"
 	"errors"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
@@ -126,12 +127,13 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 }
 
 func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
+	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
-	var applicationId *parse.ApplicationId
+	var applicationId *stable.ApplicationId
 	var err error
 	if v := d.Get("application_id").(string); v != "" {
-		if applicationId, err = parse.ParseApplicationID(v); err != nil {
+		if applicationId, err = stable.ParseApplicationID(v); err != nil {
 			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
 		}
 	} else {
@@ -140,9 +142,9 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		// should be removed in version 3.0 along with the application_object_id property
 		v = d.Get("application_object_id").(string)
 		if _, err = uuid.ParseUUID(v); err == nil {
-			applicationId = parse.NewApplicationID(v)
+			applicationId = pointer.To(stable.NewApplicationID(v))
 		} else {
-			if applicationId, err = parse.ParseApplicationID(v); err != nil {
+			if applicationId, err = stable.ParseApplicationID(v); err != nil {
 				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
 			}
 		}
@@ -151,37 +153,38 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 	tf.LockByName(applicationResourceName, applicationId.ApplicationId)
 	defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
 
-	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+	resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", applicationId.ApplicationId)
-		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", applicationId.ApplicationId)
-	}
-	if app == nil || app.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil application or application with nil ID was returned"), "API error retrieving application with object ID %q", applicationId.ApplicationId)
+		return tf.ErrorDiagF(err, "retrieving %s: %+v", applicationId, err)
 	}
 
-	credential := msgraph.FederatedIdentityCredential{
-		Audiences:   tf.ExpandStringSlicePtr(d.Get("audiences").([]interface{})),
-		Description: tf.NullableString(d.Get("description").(string)),
-		Issuer:      pointer.To(d.Get("issuer").(string)),
-		Name:        pointer.To(d.Get("display_name").(string)),
-		Subject:     pointer.To(d.Get("subject").(string)),
+	app := resp.Model
+	if app == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", applicationId)
 	}
 
-	newCredential, _, err := client.CreateFederatedIdentityCredential(ctx, *app.ID(), credential)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Adding federated identity credential for application with object ID %q", *app.ID())
+	credential := stable.FederatedIdentityCredential{
+		Audiences:   tf.ExpandStringSlice(d.Get("audiences").([]interface{})),
+		Description: nullable.Value(d.Get("description").(string)),
+		Issuer:      d.Get("issuer").(string),
+		Name:        d.Get("display_name").(string),
+		Subject:     d.Get("subject").(string),
 	}
+
+	federatedIdentityCredentialResp, err := federatedIdentityCredentialClient.CreateFederatedIdentityCredential(ctx, *applicationId, credential, federatedidentitycredential.DefaultCreateFederatedIdentityCredentialOperationOptions())
+	if err != nil {
+		return tf.ErrorDiagF(err, "Adding federated identity credential for %s", applicationId)
+	}
+
+	newCredential := federatedIdentityCredentialResp.Model
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for application with object ID %q", *app.ID())
+		return tf.ErrorDiagF(errors.New("nil credential received when adding federated identity credential"), "API error adding federated identity credential for %s", applicationId)
 	}
-	if newCredential.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for application with object ID %q", *app.ID())
+	if newCredential.Id == nil {
+		return tf.ErrorDiagF(errors.New("nil or empty ID received"), "API error adding federated identity credential for %s", applicationId)
 	}
 
-	id := parse.NewCredentialID(applicationId.ApplicationId, "federatedIdentityCredential", *newCredential.ID)
+	id := stable.NewApplicationIdFederatedIdentityCredentialID(applicationId.ApplicationId, *newCredential.Id)
 
 	// Wait for the credential to replicate
 	timeout, _ := ctx.Deadline()
@@ -192,36 +195,37 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			credentials, _, err := client.ListFederatedIdentityCredentials(ctx, id.ObjectId, odata.Query{})
+			resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, id, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 			if err != nil {
+				if response.WasNotFound(resp.HttpResponse) {
+					return nil, "Waiting", nil
+				}
 				return nil, "Error", err
 			}
-
-			if credentials != nil {
-				for _, cred := range *credentials {
-					if cred.ID != nil && strings.EqualFold(*cred.ID, id.KeyId) {
-						return &cred, "Done", nil
-					}
-				}
+			credential := resp.Model
+			if credential == nil {
+				return nil, "Waiting", nil
 			}
 
-			return nil, "Waiting", nil
+			return credential, "Done", nil
 		},
 	}).WaitForStateContext(ctx)
 
 	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for federated identity credential for application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for %s", id)
 	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("federated identity credential not found in application manifest"), "Waiting for federated identity credential for application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(errors.New("federated identity credential not found in application manifest"), "Waiting for federated identity credential%s", id)
 	}
 
-	d.SetId(id.String())
+	// TODO: migrate this to a stable.ApplicationIdFederatedIdentityCredentialId
+	resourceId := parse.NewCredentialID(applicationId.ApplicationId, "federatedIdentityCredential", *newCredential.Id)
+	d.SetId(resourceId.String())
 
 	return applicationFederatedIdentityCredentialResourceRead(ctx, d, meta)
 }
 
 func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {
@@ -231,16 +235,20 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	credential := msgraph.FederatedIdentityCredential{
-		ID:          pointer.To(id.KeyId),
-		Audiences:   tf.ExpandStringSlicePtr(d.Get("audiences").([]interface{})),
-		Description: tf.NullableString(d.Get("description").(string)),
-		Issuer:      pointer.To(d.Get("issuer").(string)),
-		Subject:     pointer.To(d.Get("subject").(string)),
+	credential := stable.FederatedIdentityCredential{
+		Id:          pointer.To(id.KeyId),
+		Audiences:   tf.ExpandStringSlice(d.Get("audiences").([]interface{})),
+		Description: nullable.Value(d.Get("description").(string)),
+		Issuer:      d.Get("issuer").(string),
+		Subject:     d.Get("subject").(string),
+
+		// Name is immutable but must be specified as it is a required field
+		Name: d.Get("display_name").(string),
 	}
 
-	_, err = client.UpdateFederatedIdentityCredential(ctx, id.ObjectId, credential)
-	if err != nil {
+	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
+
+	if _, err = federatedIdentityCredentialClient.UpdateFederatedIdentityCredential(ctx, credentialId, credential, federatedidentitycredential.DefaultUpdateFederatedIdentityCredentialOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating federated identity credential with ID %q for application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
@@ -248,7 +256,7 @@ func applicationFederatedIdentityCredentialResourceUpdate(ctx context.Context, d
 }
 
 func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {
@@ -256,10 +264,11 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	}
 
 	applicationId := parse.NewApplicationID(id.ObjectId)
+	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
 
-	credential, status, err := client.GetFederatedIdentityCredential(ctx, id.ObjectId, id.KeyId, odata.Query{})
+	resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, credentialId, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Federated Identity Credential with ID %q for Application %s was not found - removing from state!", id.KeyId, id.ObjectId)
 			d.SetId("")
 			return nil
@@ -267,11 +276,16 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 		return tf.ErrorDiagPathF(err, "id", "Retrieving federated identity credential with ID %q for application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
+	credential := resp.Model
+	if credential == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", credentialId)
+	}
+
 	tf.Set(d, "application_id", applicationId.ID())
 	tf.Set(d, "credential_id", id.KeyId)
 
-	tf.Set(d, "audiences", tf.FlattenStringSlicePtr(credential.Audiences))
-	tf.Set(d, "description", credential.Description)
+	tf.Set(d, "audiences", tf.FlattenStringSlice(credential.Audiences))
+	tf.Set(d, "description", credential.Description.GetOrZero())
 	tf.Set(d, "display_name", credential.Name)
 	tf.Set(d, "issuer", credential.Issuer)
 	tf.Set(d, "subject", credential.Subject)
@@ -286,41 +300,39 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 }
 
 func applicationFederatedIdentityCredentialResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics { //nolint
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
 	id, err := parse.FederatedIdentityCredentialID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing federated identity credential with ID %q", d.Id())
 	}
 
+	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
+
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	if _, err := client.DeleteFederatedIdentityCredential(ctx, id.ObjectId, id.KeyId); err != nil {
-		return tf.ErrorDiagF(err, "Removing federated identity credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+	if _, err := federatedIdentityCredentialClient.DeleteFederatedIdentityCredential(ctx, credentialId, federatedidentitycredential.DefaultDeleteFederatedIdentityCredentialOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing %s", credentialId)
 	}
 
 	// Wait for credential to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-
-		credentials, _, err := client.ListFederatedIdentityCredentials(ctx, id.ObjectId, odata.Query{})
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, credentialId, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
 		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
 			return nil, err
 		}
-
-		if credentials != nil {
-			for _, cred := range *credentials {
-				if cred.ID != nil && strings.EqualFold(*cred.ID, id.KeyId) {
-					return pointer.To(true), nil
-				}
-			}
+		credential := resp.Model
+		if credential == nil {
+			return pointer.To(false), nil
 		}
 
-		return pointer.To(false), nil
+		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of federated identity credential %q from application with object ID %q", id.KeyId, id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", credentialId)
 	}
 
 	return nil

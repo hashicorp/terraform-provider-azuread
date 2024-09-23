@@ -6,16 +6,20 @@ package applications
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationOwnerModel struct {
@@ -67,48 +71,49 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationOwnerClient
 
 			var model ApplicationOwnerModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
 
+			ownerId := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, model.OwnerObjectId)
+
+			// TODO: migrate ID to use stable.ApplicationIdOwnerID
 			id := parse.NewOwnerID(applicationId.ApplicationId, model.OwnerObjectId)
 
-			tf.LockByName(applicationResourceName, id.ApplicationId)
-			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
+			tf.LockByName(applicationResourceName, applicationId.ApplicationId)
+			defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
 
-			_, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
-			if err != nil && status != http.StatusNotFound {
-				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
+			o, err := applications.GetOwner(ctx, client, ownerId)
+			if err != nil {
+				return fmt.Errorf("checking for presence of existing %s: %+v", ownerId, err)
 			}
-			if status != http.StatusNotFound {
+			if o != nil {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
-			// Construct an @odata.id for the $ref endpoint
-			odataId := (odata.Id)(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s", client.BaseClient.Endpoint, metadata.Client.TenantID, id.OwnerId))
-
-			properties := &msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
-				Owners: &msgraph.Owners{{
-					Id:      &id.OwnerId,
-					ODataId: &odataId,
-				}},
+			properties := stable.ReferenceCreate{
+				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(ownerId.DirectoryObjectId).ID()),
 			}
 
-			if _, err = client.AddOwners(ctx, properties); err != nil {
-				return fmt.Errorf("adding %s: %+v", id, err)
+			options := owner.AddOwnerRefOperationOptions{
+				RetryFunc: func(resp *http.Response, _ *odata.OData) (bool, error) {
+					if response.WasNotFound(resp) {
+						return true, nil
+					}
+					return false, nil
+				},
+			}
+
+			if _, err = client.AddOwnerRef(ctx, *applicationId, properties, options); err != nil {
+				return fmt.Errorf("adding %s: %+v", ownerId, err)
 			}
 
 			metadata.SetID(id)
@@ -121,9 +126,7 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationOwnerClient
 
 			id, err := parse.ParseOwnerID(metadata.ResourceData.Id())
 			if err != nil {
@@ -131,19 +134,17 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 			}
 
 			applicationId := parse.NewApplicationID(id.ApplicationId)
+			ownerId := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, id.OwnerId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.GetOwner(ctx, id.ApplicationId, id.OwnerId)
+			owner, err := applications.GetOwner(ctx, client, ownerId)
 			if err != nil {
-				if status == http.StatusNotFound {
-					return metadata.MarkAsGone(id)
-				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+			if owner == nil {
+				return metadata.MarkAsGone(id)
 			}
 
 			state := ApplicationOwnerModel{
@@ -160,20 +161,19 @@ func (r ApplicationOwnerResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationOwnerClient
 
 			id, err := parse.ParseOwnerID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
+			ownerId := stable.NewApplicationIdOwnerID(id.ApplicationId, id.OwnerId)
+
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			_, err = client.RemoveOwners(ctx, id.ApplicationId, &[]string{id.OwnerId})
-			if err != nil {
+			if _, err = client.RemoveOwnerRef(ctx, ownerId, owner.DefaultRemoveOwnerRefOperationOptions()); err != nil {
 				return fmt.Errorf("removing %s: %+v", id, err)
 			}
 

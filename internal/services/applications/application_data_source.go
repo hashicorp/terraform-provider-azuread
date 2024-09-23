@@ -5,19 +5,23 @@ package applications
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	applicationBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func applicationDataSource() *pluginsdk.Resource {
@@ -515,72 +519,71 @@ func applicationDataSource() *pluginsdk.Resource {
 }
 
 func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := meta.(*clients.Client).Applications.ApplicationClient
+	clientBeta := meta.(*clients.Client).Applications.ApplicationClientBeta
+	ownerClient := meta.(*clients.Client).Applications.ApplicationOwnerClient
 
-	var app *msgraph.Application
+	var app *stable.Application
 
 	if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		var status int
-		var err error
-		app, status, err = client.Get(ctx, objectId, odata.Query{})
+		resp, err := client.GetApplication(ctx, stable.NewApplicationID(objectId), application.DefaultGetApplicationOperationOptions())
 		if err != nil {
-			if status == http.StatusNotFound {
+			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "Application with object ID %q was not found", objectId)
 			}
 
 			return tf.ErrorDiagPathF(err, "object_id", "Retrieving Application with object ID %q", objectId)
 		}
+
+		app = resp.Model
+
 	} else {
-		var fieldName, fieldValue string
-		filterOp := "%s eq '%s'"
-		if applicationId, ok := d.Get("application_id").(string); ok && applicationId != "" {
+		var filter, fieldName, fieldValue string
+		if applicationId, ok := d.GetOk("application_id"); ok && applicationId.(string) != "" {
 			fieldName = "appId"
-			fieldValue = applicationId
-		} else if clientId, ok := d.Get("client_id").(string); ok && clientId != "" {
+			fieldValue = applicationId.(string)
+			filter = fmt.Sprintf("appId eq '%s'", applicationId)
+		} else if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {
 			fieldName = "appId"
-			fieldValue = clientId
-		} else if displayName, ok := d.Get("display_name").(string); ok && displayName != "" {
+			fieldValue = clientId.(string)
+			filter = fmt.Sprintf("appId eq '%s'", clientId)
+		} else if displayName, ok := d.GetOk("display_name"); ok && displayName.(string) != "" {
 			fieldName = "displayName"
-			fieldValue = displayName
-		} else if identifierUri, ok := d.Get("identifier_uri").(string); ok {
-			fieldName = "IdentifierUris"
-			fieldValue = identifierUri
-			filterOp = "%s/any(uri:uri eq '%s')"
+			fieldValue = displayName.(string)
+			filter = fmt.Sprintf("displayName eq '%s'", displayName)
+		} else if identifierUri, ok := d.GetOk("identifier_uri"); ok && identifierUri.(string) != "" {
+			fieldName = "identifierUri"
+			fieldValue = identifierUri.(string)
+			filter = fmt.Sprintf("identifierUris/any(uri:uri eq '%s')", identifierUri)
 		} else {
 			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, `displayName`, or `identifier_uri` must be specified")
 		}
 
-		filter := fmt.Sprintf(filterOp, fieldName, fieldValue)
+		options := application.ListApplicationsOperationOptions{
+			Filter: pointer.To(filter),
+		}
 
-		result, _, err := client.List(ctx, odata.Query{Filter: filter})
+		resp, err := client.ListApplications(ctx, options)
 		if err != nil {
-			return tf.ErrorDiagF(err, "Listing applications for filter %q", filter)
+			return tf.ErrorDiagF(err, "Listing applications for filter %q", *options.Filter)
 		}
 
 		switch {
-		case result == nil || len(*result) == 0:
-			return tf.ErrorDiagF(fmt.Errorf("No applications found matching filter: %q", filter), "Application not found")
-		case len(*result) > 1:
-			return tf.ErrorDiagF(fmt.Errorf("Found multiple applications matching filter: %q", filter), "Multiple applications found")
+		case resp.Model == nil || len(*resp.Model) == 0:
+			return tf.ErrorDiagF(fmt.Errorf("no applications found matching filter: %q", *options.Filter), "Application not found")
+		case len(*resp.Model) > 1:
+			return tf.ErrorDiagF(fmt.Errorf("dound multiple applications matching filter: %q", *options.Filter), "Multiple applications found")
 		}
 
-		app = &(*result)[0]
+		app = &(*resp.Model)[0]
 		switch fieldName {
 		case "appId":
-			if app.AppId == nil {
-				return tf.ErrorDiagF(fmt.Errorf("nil AppID for applications matching filter: %q", filter), "Bad API Response")
-			}
-			if !strings.EqualFold(*app.AppId, fieldValue) {
-				return tf.ErrorDiagF(fmt.Errorf("AppID does not match (%q != %q) for applications matching filter: %q", *app.AppId, fieldValue, filter), "Bad API Response")
+			if appId := app.AppId.GetOrZero(); !strings.EqualFold(appId, fieldValue) {
+				return tf.ErrorDiagF(fmt.Errorf("AppID does not match for applications matching filter: %q", *options.Filter), "Bad API Response")
 			}
 		case "displayName":
-			if app.DisplayName == nil {
-				return tf.ErrorDiagF(fmt.Errorf("nil displayName for applications matching filter: %q", filter), "Bad API Response")
-			}
-			if !strings.EqualFold(*app.DisplayName, fieldValue) {
-				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match (%q != %q) for applications matching filter: %q", *app.DisplayName, fieldValue, filter), "Bad API Response")
+			if displayName := app.DisplayName.GetOrZero(); !strings.EqualFold(displayName, fieldValue) {
+				return tf.ErrorDiagF(fmt.Errorf("DisplayName does not match for applications matching filter: %q", *options.Filter), "Bad API Response")
 			}
 		}
 	}
@@ -589,36 +592,35 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		return tf.ErrorDiagF(fmt.Errorf("app was unexpectedly nil"), "Application not found")
 	}
 
-	if app.ID() == nil {
-		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for application is nil"), "Bad API Response")
+	if app.Id == nil {
+		return tf.ErrorDiagF(fmt.Errorf("nil object ID returned for application"), "Bad API Response")
 	}
 
-	id := parse.NewApplicationID(*app.ID())
+	id := stable.NewApplicationID(*app.Id)
 	d.SetId(id.ID())
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
 	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
-	tf.Set(d, "application_id", app.AppId)
-	tf.Set(d, "client_id", app.AppId)
-	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported)
-	tf.Set(d, "disabled_by_microsoft", fmt.Sprintf("%v", app.DisabledByMicrosoftStatus))
-	tf.Set(d, "display_name", app.DisplayName)
-	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient)
-	tf.Set(d, "feature_tags", helpers.ApplicationFlattenFeatures(app.Tags, false))
-	tf.Set(d, "group_membership_claims", tf.FlattenStringSlicePtr(app.GroupMembershipClaims))
+	tf.Set(d, "application_id", app.AppId.GetOrZero())
+	tf.Set(d, "client_id", app.AppId.GetOrZero())
+	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported.GetOrZero())
+	tf.Set(d, "disabled_by_microsoft", app.DisabledByMicrosoftStatus.GetOrZero())
+	tf.Set(d, "display_name", app.DisplayName.GetOrZero())
+	tf.Set(d, "fallback_public_client_enabled", app.IsFallbackPublicClient.GetOrZero())
+	tf.Set(d, "feature_tags", applications.FlattenFeatures(app.Tags, false))
+	tf.Set(d, "group_membership_claims", flattenApplicationGroupMembershipClaims(app.GroupMembershipClaims))
 	tf.Set(d, "identifier_uris", tf.FlattenStringSlicePtr(app.IdentifierUris))
-	tf.Set(d, "notes", app.Notes)
-	tf.Set(d, "oauth2_post_response_required", app.Oauth2RequirePostResponse)
-	tf.Set(d, "object_id", app.ID())
+	tf.Set(d, "notes", app.Notes.GetOrZero())
+	tf.Set(d, "object_id", pointer.From(app.Id))
 	tf.Set(d, "optional_claims", flattenApplicationOptionalClaims(app.OptionalClaims))
 	tf.Set(d, "public_client", flattenApplicationPublicClient(app.PublicClient))
-	tf.Set(d, "publisher_domain", app.PublisherDomain)
+	tf.Set(d, "publisher_domain", app.PublisherDomain.GetOrZero())
 	tf.Set(d, "required_resource_access", flattenApplicationRequiredResourceAccess(app.RequiredResourceAccess))
-	tf.Set(d, "service_management_reference", app.ServiceManagementReference)
-	tf.Set(d, "sign_in_audience", app.SignInAudience)
+	tf.Set(d, "service_management_reference", app.ServiceManagementReference.GetOrZero())
+	tf.Set(d, "sign_in_audience", app.SignInAudience.GetOrZero())
 	tf.Set(d, "single_page_application", flattenApplicationSpa(app.Spa))
-	tf.Set(d, "tags", app.Tags)
+	tf.Set(d, "tags", tf.FlattenStringSlicePtr(app.Tags))
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
 	if app.Api != nil {
@@ -626,16 +628,38 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	if app.Info != nil {
-		tf.Set(d, "logo_url", app.Info.LogoUrl)
-		tf.Set(d, "marketing_url", app.Info.MarketingUrl)
-		tf.Set(d, "privacy_statement_url", app.Info.PrivacyStatementUrl)
-		tf.Set(d, "support_url", app.Info.SupportUrl)
-		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl)
+		tf.Set(d, "logo_url", app.Info.LogoUrl.GetOrZero())
+		tf.Set(d, "marketing_url", app.Info.MarketingUrl.GetOrZero())
+		tf.Set(d, "privacy_statement_url", app.Info.PrivacyStatementUrl.GetOrZero())
+		tf.Set(d, "support_url", app.Info.SupportUrl.GetOrZero())
+		tf.Set(d, "terms_of_service_url", app.Info.TermsOfServiceUrl.GetOrZero())
 	}
 
-	owners, _, err := client.ListOwners(ctx, *app.ID())
+	// API bug: the v1.0 API does not return the `oauth2RequiredPostResponse` field, so retrieve it using the beta API
+	// See https://github.com/microsoftgraph/msgraph-metadata/issues/273
+	respBeta, err := clientBeta.GetApplication(ctx, beta.ApplicationId(id), applicationBeta.GetApplicationOperationOptions{
+		Select: pointer.To([]string{"oauth2RequirePostResponse"}),
+	})
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for application with object ID %q", *app.ID())
+		return tf.ErrorDiagF(err, "Retrieving additional properties for %s", id)
+	}
+
+	appBeta := respBeta.Model
+	if appBeta == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	tf.Set(d, "oauth2_post_response_required", pointer.From(appBeta.OAuth2RequirePostResponse))
+
+	ownersResp, err := ownerClient.ListOwners(ctx, id, owner.DefaultListOwnersOperationOptions())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
+	}
+	owners := make([]string, 0)
+	if ownersResp.Model != nil {
+		for _, o := range *ownersResp.Model {
+			owners = append(owners, pointer.From(o.DirectoryObject().Id))
+		}
 	}
 	tf.Set(d, "owners", owners)
 

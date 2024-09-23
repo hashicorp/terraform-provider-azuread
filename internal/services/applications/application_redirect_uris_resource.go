@@ -6,23 +6,17 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
-)
-
-const (
-	RedirectUriTypePublicClient = "PublicClient"
-	RedirectUriTypeSPA          = "SPA"
-	RedirectUriTypeWeb          = "Web"
 )
 
 type ApplicationRedirectUrisModel struct {
@@ -58,15 +52,11 @@ func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schem
 		},
 
 		"type": {
-			Description: "The type of redirect URIs to assign to the application",
-			Type:        pluginsdk.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			ValidateFunc: validation.StringInSlice([]string{
-				RedirectUriTypePublicClient,
-				RedirectUriTypeSPA,
-				RedirectUriTypeWeb,
-			}, false),
+			Description:  "The type of redirect URIs to assign to the application",
+			Type:         pluginsdk.TypeString,
+			Required:     true,
+			ForceNew:     true,
+			ValidateFunc: validation.StringInSlice(possibleValuesForRedirectUriType, false),
 		},
 
 		"redirect_uris": {
@@ -89,16 +79,14 @@ func (r ApplicationRedirectUrisResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationRedirectUrisModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -108,28 +96,25 @@ func (r ApplicationRedirectUrisResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: app was nil", applicationId)
 			}
 
 			// Check for existing redirect URIs
-			if existingUris := r.getRedirectUrisByType(*result, model.UriType); len(existingUris) > 0 {
+			if existingUris := r.getRedirectUrisByType(*app, model.UriType); len(existingUris) > 0 {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
-			}
-
+			properties := stable.Application{}
 			r.setRedirectUrisByType(&properties, model)
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -143,32 +128,32 @@ func (r ApplicationRedirectUrisResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseRedirectUrisID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: app was nil", id)
 			}
 
-			redirectUris := r.getRedirectUrisByType(*result, id.UriType)
+			redirectUris := r.getRedirectUrisByType(*app, id.UriType)
 
 			if len(redirectUris) == 0 {
 				return metadata.MarkAsGone(id)
@@ -189,14 +174,14 @@ func (r ApplicationRedirectUrisResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseRedirectUrisID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			var model ApplicationRedirectUrisModel
 			if err = metadata.Decode(&model); err != nil {
@@ -206,16 +191,10 @@ func (r ApplicationRedirectUrisResource) Update() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-			}
-
+			properties := stable.Application{}
 			r.setRedirectUrisByType(&properties, model)
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -228,30 +207,22 @@ func (r ApplicationRedirectUrisResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseRedirectUrisID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-			}
-
+			properties := stable.Application{}
 			r.deleteRedirectUrisByType(&properties, id.UriType)
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 
@@ -260,7 +231,7 @@ func (r ApplicationRedirectUrisResource) Delete() sdk.ResourceFunc {
 	}
 }
 
-func (r ApplicationRedirectUrisResource) getRedirectUrisByType(application msgraph.Application, uriType string) []string {
+func (r ApplicationRedirectUrisResource) getRedirectUrisByType(application stable.Application, uriType string) []string {
 	switch uriType {
 	case RedirectUriTypePublicClient:
 		if application.PublicClient != nil {
@@ -279,34 +250,34 @@ func (r ApplicationRedirectUrisResource) getRedirectUrisByType(application msgra
 	return nil
 }
 
-func (r ApplicationRedirectUrisResource) setRedirectUrisByType(application *msgraph.Application, model ApplicationRedirectUrisModel) {
+func (r ApplicationRedirectUrisResource) setRedirectUrisByType(application *stable.Application, model ApplicationRedirectUrisModel) {
 	switch model.UriType {
 	case RedirectUriTypePublicClient:
-		application.PublicClient = &msgraph.PublicClient{
+		application.PublicClient = &stable.PublicClientApplication{
 			RedirectUris: pointer.To(model.RedirectUris),
 		}
 	case RedirectUriTypeSPA:
-		application.Spa = &msgraph.ApplicationSpa{
+		application.Spa = &stable.SpaApplication{
 			RedirectUris: pointer.To(model.RedirectUris),
 		}
 	case RedirectUriTypeWeb:
-		application.Web = &msgraph.ApplicationWeb{
+		application.Web = &stable.WebApplication{
 			RedirectUris: pointer.To(model.RedirectUris),
 		}
 	}
 }
-func (r ApplicationRedirectUrisResource) deleteRedirectUrisByType(application *msgraph.Application, uriType string) {
+func (r ApplicationRedirectUrisResource) deleteRedirectUrisByType(application *stable.Application, uriType string) {
 	switch uriType {
 	case RedirectUriTypePublicClient:
-		application.PublicClient = &msgraph.PublicClient{
+		application.PublicClient = &stable.PublicClientApplication{
 			RedirectUris: &[]string{},
 		}
 	case RedirectUriTypeSPA:
-		application.Spa = &msgraph.ApplicationSpa{
+		application.Spa = &stable.SpaApplication{
 			RedirectUris: &[]string{},
 		}
 	case RedirectUriTypeWeb:
-		application.Web = &msgraph.ApplicationWeb{
+		application.Web = &stable.WebApplication{
 			RedirectUris: &[]string{},
 		}
 	}

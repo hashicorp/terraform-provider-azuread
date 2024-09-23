@@ -6,11 +6,12 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -110,37 +111,39 @@ func TestAccApplicationRedirectUris_requiresImport(t *testing.T) {
 }
 
 func (r ApplicationRedirectUrisResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
 	id, err := parse.ParseRedirectUrisID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+	applicationId := stable.NewApplicationID(id.ApplicationId)
+
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
-	if result == nil {
-		return nil, fmt.Errorf("retrieving %s: result was nil", id)
+
+	app := resp.Model
+	if app == nil {
+		return nil, fmt.Errorf("retrieving %s: app was nil", id)
 	}
 
 	switch id.UriType {
 	case applications.RedirectUriTypePublicClient:
-		if result.PublicClient != nil && result.PublicClient.RedirectUris != nil && len(*result.PublicClient.RedirectUris) > 0 {
+		if app.PublicClient != nil && app.PublicClient.RedirectUris != nil && len(*app.PublicClient.RedirectUris) > 0 {
 			return pointer.To(true), nil
 		}
 	case applications.RedirectUriTypeSPA:
-		if result.Spa != nil && result.Spa.RedirectUris != nil && len(*result.Spa.RedirectUris) > 0 {
+		if app.Spa != nil && app.Spa.RedirectUris != nil && len(*app.Spa.RedirectUris) > 0 {
 			return pointer.To(true), nil
 		}
 	case applications.RedirectUriTypeWeb:
-		if result.Web != nil && result.Web.RedirectUris != nil && len(*result.Web.RedirectUris) > 0 {
+		if app.Web != nil && app.Web.RedirectUris != nil && len(*app.Web.RedirectUris) > 0 {
 			return pointer.To(true), nil
 		}
 	}

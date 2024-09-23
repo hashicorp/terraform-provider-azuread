@@ -7,11 +7,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -78,36 +79,38 @@ func TestAccApplicationIdentifierUri_requiresImport(t *testing.T) {
 }
 
 func (r ApplicationIdentifierUriResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
 	id, err := parse.ParseIdentifierUriID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
+	applicationId := stable.NewApplicationID(id.ApplicationId)
+
 	uriFromIdSegment, err := base64.StdEncoding.DecodeString(id.IdentifierUri)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode identifierUri from resource ID: %+v", err)
 	}
 
-	result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
-	if result == nil {
-		return nil, fmt.Errorf("retrieving %s: result was nil", id)
+
+	app := resp.Model
+	if app == nil {
+		return nil, fmt.Errorf("retrieving %s: model was nil", id)
 	}
 
-	if result.IdentifierUris == nil {
+	if app.IdentifierUris == nil {
 		return pointer.To(false), nil
 	}
 
-	for _, existingUri := range *result.IdentifierUris {
+	for _, existingUri := range *app.IdentifierUris {
 		if existingUri == string(uriFromIdSegment) {
 			return pointer.To(true), nil
 		}

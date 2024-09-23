@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package helpers
+package credentials
 
 import (
 	"bytes"
@@ -14,29 +14,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
-type CredentialError struct {
-	str  string
-	attr string
-}
-
-func (e CredentialError) Attr() string {
-	return e.attr
-}
-
-func (e CredentialError) Error() string {
-	return e.str
-}
-
-func GetKeyCredential(keyCredentials *[]msgraph.KeyCredential, id string) (credential *msgraph.KeyCredential) {
+func GetKeyCredential(keyCredentials *[]stable.KeyCredential, id string) (credential *stable.KeyCredential) {
 	if keyCredentials != nil {
 		for _, cred := range *keyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id) {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), id) {
 				credential = &cred
 				break
 			}
@@ -45,10 +32,10 @@ func GetKeyCredential(keyCredentials *[]msgraph.KeyCredential, id string) (crede
 	return
 }
 
-func GetVerifyKeyCredentialFromCustomKeyId(keyCredentials *[]msgraph.KeyCredential, id string) (credential *msgraph.KeyCredential) {
+func GetVerifyKeyCredentialFromCustomKeyId(keyCredentials *[]stable.KeyCredential, id string) (credential *stable.KeyCredential) {
 	if keyCredentials != nil {
 		for _, cred := range *keyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.CustomKeyIdentifier, id) && strings.EqualFold(cred.Usage, msgraph.KeyCredentialUsageVerify) {
+			if !cred.KeyId.IsNull() && strings.EqualFold(cred.CustomKeyIdentifier.GetOrZero(), id) && strings.EqualFold(cred.Usage.GetOrZero(), KeyCredentialUsageVerify) {
 				credential = &cred
 				break
 			}
@@ -57,10 +44,10 @@ func GetVerifyKeyCredentialFromCustomKeyId(keyCredentials *[]msgraph.KeyCredenti
 	return
 }
 
-func GetPasswordCredential(passwordCredentials *[]msgraph.PasswordCredential, id string) (credential *msgraph.PasswordCredential) {
+func GetPasswordCredential(passwordCredentials *[]stable.PasswordCredential, id string) (credential *stable.PasswordCredential) {
 	if passwordCredentials != nil {
 		for _, cred := range *passwordCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id) {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), id) {
 				credential = &cred
 				break
 			}
@@ -87,7 +74,7 @@ func GetTokenSigningCertificateThumbprint(certByte []byte) (string, error) {
 	return buf.String(), nil
 }
 
-func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential, error) {
+func KeyCredentialForResource(d *pluginsdk.ResourceData) (*stable.KeyCredential, error) {
 	keyType := d.Get("type").(string)
 	value := d.Get("value").(string)
 
@@ -140,11 +127,11 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 		keyId = kid
 	}
 
-	credential := msgraph.KeyCredential{
-		KeyId: pointer.To(keyId),
-		Type:  keyType,
-		Usage: msgraph.KeyCredentialUsageVerify,
-		Key:   pointer.To(encodedValue),
+	credential := stable.KeyCredential{
+		KeyId: nullable.Value(keyId),
+		Type:  nullable.Value(keyType),
+		Usage: nullable.Value(KeyCredentialUsageVerify),
+		Key:   nullable.Value(encodedValue),
 	}
 
 	if v, ok := d.GetOk("start_date"); ok {
@@ -152,7 +139,7 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
-		credential.StartDateTime = &startDate
+		credential.StartDateTime = nullable.Value(startDate.Format(time.RFC3339))
 	}
 
 	var endDate *time.Time
@@ -173,23 +160,27 @@ func KeyCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.KeyCredential
 			expiry := time.Now().Add(d)
 			endDate = &expiry
 		} else {
-			expiry := credential.StartDateTime.Add(d)
+			startDateTime, err := time.Parse(time.RFC3339, v.(string))
+			if err != nil {
+				return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
+			}
+			expiry := startDateTime.Add(d)
 			endDate = &expiry
 		}
 	}
 
 	if endDate != nil {
-		credential.EndDateTime = endDate
+		credential.EndDateTime = nullable.Value(endDate.Format(time.RFC3339))
 	}
 
 	return &credential, nil
 }
 
-func PasswordCredential(in map[string]interface{}) (*msgraph.PasswordCredential, error) {
-	credential := msgraph.PasswordCredential{}
+func PasswordCredential(in map[string]interface{}) (*stable.PasswordCredential, error) {
+	credential := stable.PasswordCredential{}
 
 	if v, ok := in["display_name"]; ok {
-		credential.DisplayName = pointer.To(v.(string))
+		credential.DisplayName = nullable.Value(v.(string))
 	}
 
 	if v, ok := in["start_date"]; ok && v.(string) != "" {
@@ -197,7 +188,7 @@ func PasswordCredential(in map[string]interface{}) (*msgraph.PasswordCredential,
 		if err != nil {
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided start date %q: %+v", v, err), attr: "start_date"}
 		}
-		credential.StartDateTime = &startDate
+		credential.StartDateTime = nullable.Value(startDate.Format(time.RFC3339))
 	}
 
 	if v, ok := in["end_date"]; ok && v.(string) != "" {
@@ -207,21 +198,21 @@ func PasswordCredential(in map[string]interface{}) (*msgraph.PasswordCredential,
 			return nil, CredentialError{str: fmt.Sprintf("Unable to parse the provided end date %q: %+v", v, err), attr: "end_date"}
 		}
 
-		credential.EndDateTime = &expiry
+		credential.EndDateTime = nullable.Value(expiry.Format(time.RFC3339))
 	}
 
 	if v, ok := in["key_id"]; ok && v.(string) != "" {
-		credential.KeyId = pointer.To(v.(string))
+		credential.KeyId = nullable.Value(v.(string))
 	}
 
 	if v, ok := in["value"]; ok && v.(string) != "" {
-		credential.SecretText = pointer.To(v.(string))
+		credential.SecretText = nullable.Value(v.(string))
 	}
 
 	return &credential, nil
 }
 
-func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*msgraph.PasswordCredential, error) {
+func PasswordCredentialForResource(d *pluginsdk.ResourceData) (*stable.PasswordCredential, error) {
 	data := make(map[string]interface{})
 
 	// display_name, start_date and end_date support intentionally remains for if/when the API supports user-specified values for these
