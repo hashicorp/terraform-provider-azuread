@@ -4,27 +4,40 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationjob"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationsecret"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	ServicePrincipalsClient  *msgraph.ServicePrincipalsClient
-	SynchronizationJobClient *msgraph.SynchronizationJobClient
+	ServicePrincipalClient      *serviceprincipal.ServicePrincipalClient
+	SynchronizationJobClient    *synchronizationjob.SynchronizationJobClient
+	SynchronizationSecretClient *synchronizationsecret.SynchronizationSecretClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	servicePrincipalsClient := msgraph.NewServicePrincipalsClient()
-	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	servicePrincipalClient, err := serviceprincipal.NewServicePrincipalClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(servicePrincipalClient.Client)
 
-	synchronizationJobClient := msgraph.NewSynchronizationJobClient()
-	o.ConfigureClient(&synchronizationJobClient.BaseClient)
+	synchronizationJobClient, err := synchronizationjob.NewSynchronizationJobClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(synchronizationJobClient.Client)
 
-	// Synchronization doesn't yet exist in v1.0
-	synchronizationJobClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	synchronizationSecretClient, err := synchronizationsecret.NewSynchronizationSecretClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(synchronizationSecretClient.Client)
 
 	return &Client{
-		ServicePrincipalsClient:  servicePrincipalsClient,
-		SynchronizationJobClient: synchronizationJobClient,
-	}
+		ServicePrincipalClient:      servicePrincipalClient,
+		SynchronizationJobClient:    synchronizationJobClient,
+		SynchronizationSecretClient: synchronizationSecretClient,
+	}, nil
 }

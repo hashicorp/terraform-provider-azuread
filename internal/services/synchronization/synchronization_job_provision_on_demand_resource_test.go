@@ -31,6 +31,7 @@ func TestAccSynchronizationJobProvisionOnDemand_basic(t *testing.T) {
 }
 
 func (r SynchronizationJobProvisionOnDemandResource) Exists(_ context.Context, _ *clients.Client, _ *terraform.InstanceState) (*bool, error) {
+	// Nothing to read
 	return pointer.To(true), nil
 }
 
@@ -44,20 +45,13 @@ data "azuread_application_template" "test" {
   display_name = "Azure Databricks SCIM Provisioning Connector"
 }
 
-resource "azuread_application" "test" {
+resource "azuread_application_from_template" "test" {
   display_name = "acctestSynchronizationJob-%[1]d"
-  owners       = [data.azuread_client_config.test.object_id]
   template_id  = data.azuread_application_template.test.template_id
 }
 
-resource "azuread_service_principal" "test" {
-  client_id    = azuread_application.test.client_id
-  owners       = [data.azuread_client_config.test.object_id]
-  use_existing = true
-}
-
 resource "azuread_synchronization_job" "test" {
-  service_principal_id = azuread_service_principal.test.id
+  service_principal_id = azuread_application_from_template.test.service_principal_object_id
   template_id          = "dataBricks"
 }
 
@@ -73,8 +67,8 @@ func (r SynchronizationJobProvisionOnDemandResource) basic(data acceptance.TestD
 %[1]s
 
 resource "azuread_synchronization_job_provision_on_demand" "test" {
-  service_principal_id   = azuread_service_principal.test.id
-  synchronization_job_id = trimprefix(azuread_synchronization_job.test.id, "${azuread_service_principal.test.id}/job/")
+  service_principal_id   = azuread_application_from_template.test.service_principal_object_id
+  synchronization_job_id = trimprefix(azuread_synchronization_job.test.id, "${azuread_application_from_template.test.service_principal_object_id}/job/")
 
   parameter {
     rule_id = "03f7d90d-bf71-41b1-bda6-aaf0ddbee5d8" // appears to be a global value

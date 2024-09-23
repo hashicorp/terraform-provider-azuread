@@ -4,8 +4,8 @@
 package synchronization
 
 import (
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 type Registration struct{}
