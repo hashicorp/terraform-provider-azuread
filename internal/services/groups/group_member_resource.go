@@ -5,22 +5,21 @@ package groups
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
+	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func groupMemberResource() *pluginsdk.Resource {
@@ -61,125 +60,101 @@ func groupMemberResource() *pluginsdk.Resource {
 }
 
 func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Groups.GroupsClient
-	directoryObjectsClient := meta.(*clients.Client).Groups.DirectoryObjectsClient
-	tenantId := meta.(*clients.Client).TenantID
-	groupId := d.Get("group_object_id").(string)
-	memberId := d.Get("member_object_id").(string)
+	client := meta.(*clients.Client).Groups.GroupClientBeta
+	memberClient := meta.(*clients.Client).Groups.GroupMemberClientBeta
 
-	id := parse.NewGroupMemberID(groupId, memberId)
+	id := beta.NewGroupIdMemberID(d.Get("group_object_id").(string), d.Get("member_object_id").(string))
+	groupId := beta.NewGroupID(id.GroupId)
+	resourceId := parse.NewGroupMemberID(id.GroupId, id.DirectoryObjectId)
 
 	tf.LockByName(groupResourceName, id.GroupId)
 	defer tf.UnlockByName(groupResourceName, id.GroupId)
 
-	group, status, err := client.Get(ctx, groupId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "object_id", "Group with object ID %q was not found", groupId)
+	if resp, err := client.GetGroup(ctx, groupId, groupBeta.DefaultGetGroupOperationOptions()); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "object_id", "%s was not found", groupId)
 		}
-		return tf.ErrorDiagPathF(err, "object_id", "Retrieving group with object ID: %q", groupId)
+		return tf.ErrorDiagPathF(err, "object_id", "Retrieving %s", groupId)
 	}
 
-	existingMembers, _, err := client.ListMembers(ctx, id.GroupId)
+	resp, err := memberClient.ListMembers(ctx, groupId, memberBeta.DefaultListMembersOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Listing existing members for group with object ID: %q", id.GroupId)
+		return tf.ErrorDiagF(err, "Listing existing members for %s", groupId)
 	}
+
+	existingMembers := resp.Model
 	if existingMembers != nil {
 		for _, v := range *existingMembers {
-			if strings.EqualFold(v, memberId) {
-				return tf.ImportAsExistsDiag("azuread_group_member", id.String())
+			if strings.EqualFold(pointer.From(v.DirectoryObject().Id), id.DirectoryObjectId) {
+				return tf.ImportAsExistsDiag("azuread_group_member", resourceId.String())
 			}
 		}
 	}
 
-	memberObject, _, err := directoryObjectsClient.Get(ctx, memberId, odata.Query{})
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not retrieve principal object %q", memberId)
-	}
-	if memberObject == nil {
-		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", memberId)
-	}
-	memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, tenantId, memberId)))
+	memberId := beta.NewDirectoryObjectID(id.DirectoryObjectId)
 
-	group.Members = &msgraph.Members{*memberObject}
-
-	if _, err := client.AddMembers(ctx, group); err != nil {
-		return tf.ErrorDiagF(err, "Adding group member %q to group %q", memberId, groupId)
+	memberRef := beta.ReferenceCreate{
+		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
-	d.SetId(id.String())
+	if _, err = memberClient.AddMemberRef(ctx, groupId, memberRef, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Adding %s", id)
+	}
+
+	d.SetId(resourceId.String())
+
 	return groupMemberResourceRead(ctx, d, meta)
 }
 
 func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Groups.GroupsClient
+	client := meta.(*clients.Client).Groups.GroupMemberClientBeta
 
-	id, err := parse.GroupMemberID(d.Id())
+	resourceId, err := parse.GroupMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
+	id := beta.NewGroupIdMemberID(resourceId.GroupId, resourceId.MemberId)
 
-	members, status, err := client.ListMembers(ctx, id.GroupId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Group with ID %q was not found - removing group member with ID %q from state", id.GroupId, d.Id())
-			d.SetId("")
-			return nil
-		}
-		return tf.ErrorDiagF(err, "Retrieving members for group with object ID: %q", id.GroupId)
-	}
-
-	var memberObjectId string
-	if members != nil {
-		for _, objectId := range *members {
-			if strings.EqualFold(objectId, id.MemberId) {
-				memberObjectId = objectId
-				break
-			}
-		}
-	}
-
-	if memberObjectId == "" {
-		log.Printf("[DEBUG] Member with ID %q was not found in Group %q - removing from state", id.MemberId, id.GroupId)
+	if member, err := groupGetMember(ctx, client, id); err != nil {
+		return tf.ErrorDiagF(err, "Retrieving member %q for group with object ID: %q", id.DirectoryObjectId, id.GroupId)
+	} else if member == nil {
+		log.Printf("[DEBUG] %s - removing from state", id)
 		d.SetId("")
 		return nil
 	}
 
 	tf.Set(d, "group_object_id", id.GroupId)
-	tf.Set(d, "member_object_id", memberObjectId)
+	tf.Set(d, "member_object_id", id.DirectoryObjectId)
 
 	return nil
 }
 
 func groupMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Groups.GroupsClient
+	client := meta.(*clients.Client).Groups.GroupMemberClientBeta
 
-	id, err := parse.GroupMemberID(d.Id())
+	resourceId, err := parse.GroupMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Group Member ID %q", d.Id())
 	}
+	id := beta.NewGroupIdMemberID(resourceId.GroupId, resourceId.MemberId)
 
 	tf.LockByName(groupResourceName, id.GroupId)
 	defer tf.UnlockByName(groupResourceName, id.GroupId)
 
-	if _, err := client.RemoveMembers(ctx, id.GroupId, &[]string{id.MemberId}); err != nil {
-		return tf.ErrorDiagF(err, "Removing member %q from group with object ID: %q", id.MemberId, id.GroupId)
+	if _, err := client.RemoveMemberRef(ctx, id, memberBeta.DefaultRemoveMemberRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 
 	// Wait for membership link to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.GetMember(ctx, id.GroupId, id.MemberId); err != nil {
-			if status == http.StatusNotFound {
-				return pointer.To(false), nil
-			}
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if member, err := groupGetMember(ctx, client, id); err != nil {
 			return nil, err
+		} else if member == nil {
+			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for removal of member %q from group with object ID %q", id.MemberId, id.GroupId)
+		return tf.ErrorDiagF(err, "Waiting for removal of %s", id)
 	}
 
 	return nil

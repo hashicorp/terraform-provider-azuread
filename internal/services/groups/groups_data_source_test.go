@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
@@ -22,6 +24,9 @@ func TestAccGroupsDataSource_byDisplayNames(t *testing.T) {
 	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.template(data),
+		},
 		{
 			Config: r.byDisplayNames(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
@@ -37,6 +42,9 @@ func TestAccGroupsDataSource_byDisplayNamesIgnoreMissing(t *testing.T) {
 	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.template(data),
+		},
 		{
 			Config: r.byDisplayNamesIgnoreMissing(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
@@ -54,6 +62,9 @@ func TestAccGroupsDataSource_byDisplayNamePrefix(t *testing.T) {
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
+			Config: r.template(data),
+		},
+		{
 			Config: r.byDisplayNamePrefix(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").MatchesRegex(moreThanZero),
@@ -68,6 +79,9 @@ func TestAccGroupsDataSource_byObjectIds(t *testing.T) {
 	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
+		{
+			Config: r.template(data),
+		},
 		{
 			Config: r.byObjectIds(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
@@ -94,10 +108,14 @@ func TestAccGroupsDataSource_noNames(t *testing.T) {
 
 func TestAccGroupsDataSource_returnAll(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: GroupsDataSource{}.returnAll(),
+			Config: r.template(data),
+		},
+		{
+			Config: r.returnAll(),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -108,10 +126,14 @@ func TestAccGroupsDataSource_returnAll(t *testing.T) {
 
 func TestAccGroupsDataSource_returnAllMailEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: GroupsDataSource{}.returnAllMailEnabled(data),
+			Config: r.template(data),
+		},
+		{
+			Config: r.returnAllMailEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -123,10 +145,14 @@ func TestAccGroupsDataSource_returnAllMailEnabled(t *testing.T) {
 
 func TestAccGroupsDataSource_returnAllSecurityEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: GroupsDataSource{}.returnAllSecurityEnabled(data),
+			Config: r.template(data),
+		},
+		{
+			Config: r.returnAllSecurityEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -138,10 +164,14 @@ func TestAccGroupsDataSource_returnAllSecurityEnabled(t *testing.T) {
 
 func TestAccGroupsDataSource_returnAllMailNotSecurityEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: GroupsDataSource{}.returnAllMailNotSecurityEnabled(data),
+			Config: r.template(data),
+		},
+		{
+			Config: r.returnAllMailNotSecurityEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -153,10 +183,14 @@ func TestAccGroupsDataSource_returnAllMailNotSecurityEnabled(t *testing.T) {
 
 func TestAccGroupsDataSource_returnAllSecurityNotMailEnabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_groups", "test")
+	r := GroupsDataSource{}
 
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
-			Config: GroupsDataSource{}.returnAllSecurityNotMailEnabled(data),
+			Config: r.template(data),
+		},
+		{
+			Config: r.returnAllSecurityNotMailEnabled(data),
 			Check: acceptance.ComposeAggregateTestCheckFunc(
 				check.That(data.ResourceName).Key("display_names.#").Exists(),
 				check.That(data.ResourceName).Key("object_ids.#").Exists(),
@@ -184,34 +218,36 @@ func testCheckHasOnlySecurityEnabledGroupsNotMailEnabledGroups() check.KeyValida
 
 func testCheckGroupsDataSource(hasMailGroupsOnly, hasSecurityGroupsOnly, hasNoMailGroups, hasNoSecurityGroups bool) check.KeyValidationFunc {
 	return func(ctx context.Context, clients *clients.Client, values []interface{}) error {
-		client := clients.Groups.GroupsClient
+		ctx, _ = context.WithTimeout(ctx, 5*time.Minute)
+		client := clients.Groups.GroupClientBeta
 
 		for _, v := range values {
-			oid := v.(string)
-			group, _, err := client.Get(ctx, oid, odata.Query{})
+			id := beta.NewGroupID(v.(string))
+			resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 			if err != nil {
-				return fmt.Errorf("retrieving group with object ID %q: %+oid", oid, err)
+				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
+			group := resp.Model
 			if group == nil {
-				return fmt.Errorf("retrieving group with object ID %q: group was nil", oid)
+				return fmt.Errorf("retrieving %s: group was nil", id)
 			}
-			if group.ID() == nil {
-				return fmt.Errorf("retrieving group with object ID %q: ID was nil", oid)
+			if group.Id == nil {
+				return fmt.Errorf("retrieving %s: ID was nil", id)
 			}
 			if group.DisplayName == nil {
-				return fmt.Errorf("retrieving group with object ID %q: DisplayName was nil", oid)
+				return fmt.Errorf("retrieving %s: DisplayName was nil", id)
 			}
-			if hasMailGroupsOnly && group.MailEnabled != nil && !*group.MailEnabled {
-				return fmt.Errorf("expected only mail-enabled groups, encountered group %q (object ID: %q) which is not mail-enabled", *group.DisplayName, *group.ID())
+			if hasMailGroupsOnly && !group.MailEnabled.GetOrZero() {
+				return fmt.Errorf("expected only mail-enabled groups, encountered %s which is not mail-enabled", id)
 			}
-			if hasSecurityGroupsOnly && group.SecurityEnabled != nil && !*group.SecurityEnabled {
-				return fmt.Errorf("expected only security-enabled groups, encountered group %q (object ID: %q) which is not security-enabled", *group.DisplayName, *group.ID())
+			if hasSecurityGroupsOnly && !group.SecurityEnabled.GetOrZero() {
+				return fmt.Errorf("expected only security-enabled groups, encountered %s which is not security-enabled", id)
 			}
-			if hasNoMailGroups && group.MailEnabled != nil && *group.MailEnabled {
-				return fmt.Errorf("expected no mail-enabled groups, encountered group %q (object ID: %q) which is mail-enabled", *group.DisplayName, *group.ID())
+			if hasNoMailGroups && group.MailEnabled.GetOrZero() {
+				return fmt.Errorf("expected no mail-enabled groups, encountered %s which is mail-enabled", id)
 			}
-			if hasNoSecurityGroups && group.SecurityEnabled != nil && *group.SecurityEnabled {
-				return fmt.Errorf("expected no security-enabled groups, encountered group %q (object ID: %q) which is security-enabled", *group.DisplayName, *group.ID())
+			if hasNoSecurityGroups && group.SecurityEnabled.GetOrZero() {
+				return fmt.Errorf("expected no security-enabled groups, encountered %s which is security-enabled", id)
 			}
 		}
 

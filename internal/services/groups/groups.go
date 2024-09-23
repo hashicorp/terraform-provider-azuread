@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"net/http"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
+	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
 )
 
 func groupDefaultMailNickname() string {
@@ -23,19 +25,20 @@ func groupDefaultMailNickname() string {
 	return resultString[:8] + "-" + resultString[8:]
 }
 
-func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayName string) (*[]msgraph.Group, error) {
-	query := odata.Query{
-		Filter: fmt.Sprintf("displayName eq '%s'", displayName),
-	}
-	groups, _, err := client.List(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("unable to list Groups with filter %q: %+v", query.Filter, err)
+func groupFindByName(ctx context.Context, client *groupBeta.GroupClient, displayName string) (*[]beta.Group, error) {
+	options := groupBeta.ListGroupsOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
 	}
 
-	result := make([]msgraph.Group, 0)
-	if groups != nil {
-		for _, group := range *groups {
-			if group.DisplayName != nil && *group.DisplayName == displayName {
+	resp, err := client.ListGroups(ctx, options)
+	if err != nil {
+		return nil, fmt.Errorf("unable to list Groups with filter %q: %v", *options.Filter, err)
+	}
+
+	result := make([]beta.Group, 0)
+	if resp.Model != nil {
+		for _, group := range *resp.Model {
+			if group.DisplayName != nil && group.DisplayName.GetOrZero() == displayName {
 				result = append(result, group)
 			}
 		}
@@ -44,26 +47,52 @@ func groupFindByName(ctx context.Context, client *msgraph.GroupsClient, displayN
 	return &result, nil
 }
 
-func groupGetAdditional(ctx context.Context, client *msgraph.GroupsClient, id string) (*msgraph.Group, error) {
-	query := odata.Query{Select: []string{"allowExternalSenders", "autoSubscribeNewMembers", "hideFromAddressLists", "hideFromOutlookClients"}}
-	groupExtra, status, err := client.Get(ctx, id, query)
+func groupGetAdditional(ctx context.Context, client *groupBeta.GroupClient, id beta.GroupId) (*beta.Group, error) {
+	options := groupBeta.GetGroupOperationOptions{
+		Select: &[]string{
+			"allowExternalSenders",
+			"autoSubscribeNewMembers",
+			"hideFromAddressLists",
+			"hideFromOutlookClients",
+		},
+	}
+
+	resp, err := client.GetGroup(ctx, id, options)
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			// API returns 404 when these M365-only fields are requested for a group in a non-M365 tenant, so we
 			// don't raise an error in this case and proceed as if they are not set.
 			// See https://github.com/microsoftgraph/msgraph-metadata/issues/333
 			return nil, nil
 		}
+
 		return nil, fmt.Errorf("retrieving additional fields: %+v", err)
 	}
-	return groupExtra, nil
+
+	return resp.Model, nil
 }
 
-func hasGroupType(groupTypes []msgraph.GroupType, value msgraph.GroupType) bool {
-	for _, v := range groupTypes {
-		if value == v {
-			return true
+func groupGetMember(ctx context.Context, client *memberBeta.MemberClient, id beta.GroupIdMemberId) (*beta.DirectoryObject, error) {
+	options := memberBeta.ListMembersOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
+	}
+
+	resp, err := client.ListMembers(ctx, beta.NewGroupID(id.GroupId), options)
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, nil
+		} else {
+			return nil, err
 		}
 	}
-	return false
+
+	if resp.Model != nil {
+		for _, member := range *resp.Model {
+			if member.DirectoryObject().Id != nil && *member.DirectoryObject().Id == id.DirectoryObjectId {
+				return &member, nil
+			}
+		}
+	}
+
+	return nil, nil
 }

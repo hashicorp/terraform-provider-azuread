@@ -6,10 +6,12 @@ package groups_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -138,29 +140,33 @@ func TestAccGroupMember_requiresImport(t *testing.T) {
 }
 
 func (r GroupMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Groups.GroupsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Groups.GroupMemberClientBeta
 
 	id, err := parse.GroupMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Group Member ID: %v", err)
 	}
 
-	members, _, err := client.ListMembers(ctx, id.GroupId)
+	options := memberBeta.ListMembersOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.MemberId)),
+	}
+	resp, err := client.ListMembers(ctx, beta.NewGroupID(id.GroupId), options)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve Group members (groupId: %q): %+v", id.GroupId, err)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
+		}
+		return nil, fmt.Errorf("failed to retrieve group member %q (group ID: %q): %+v", id.MemberId, id.GroupId, err)
 	}
 
-	if members != nil {
-		for _, objectId := range *members {
-			if strings.EqualFold(objectId, id.MemberId) {
+	if resp.Model != nil {
+		for _, member := range *resp.Model {
+			if pointer.From(member.DirectoryObject().Id) == id.MemberId {
 				return pointer.To(true), nil
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("Member %q was not found in Group %q", id.MemberId, id.GroupId)
+	return pointer.To(false), nil
 }
 
 func (GroupMemberResource) template(data acceptance.TestData) string {

@@ -6,11 +6,12 @@ package groups_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -51,13 +52,13 @@ func TestAccGroup_basicUnified(t *testing.T) {
 	})
 }
 
-func TestAccGroup_complete(t *testing.T) {
+func TestAccGroup_completeUnified(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.complete(data),
+			Config: r.completeUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -66,13 +67,13 @@ func TestAccGroup_complete(t *testing.T) {
 	})
 }
 
-func TestAccGroup_update(t *testing.T) {
+func TestAccGroup_updateUnified(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.basicUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -86,7 +87,7 @@ func TestAccGroup_update(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.complete(data),
+			Config: r.completeUnified(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -553,18 +554,17 @@ func TestAccGroup_writebackUnified(t *testing.T) {
 }
 
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Groups.GroupsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Groups.GroupClientBeta
+	id := beta.NewGroupID(state.ID)
 
-	group, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Group with object ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Group with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
-	return pointer.To(group.ID() != nil && *group.ID() == state.ID), nil
+	return pointer.To(true), nil
 }
 
 func (GroupResource) templateDiverseDirectoryObjects(data acceptance.TestData) string {
@@ -659,8 +659,9 @@ resource "azuread_group" "test" {
 func (r GroupResource) unifiedAsUser(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {
-  client_id = ""
-  use_cli   = true
+  client_id           = ""
+  client_id_file_path = ""
+  use_cli             = true
 }
 
 %[1]s
@@ -670,8 +671,9 @@ provider "azuread" {
 func (GroupResource) unifiedWithExtraSettings(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {
-  client_id = ""
-  use_cli   = true
+  client_id           = ""
+  client_id_file_path = ""
+  use_cli             = true
 }
 
 resource "azuread_group" "test" {
@@ -708,7 +710,7 @@ resource "azuread_group" "test" {
 `, data.RandomInteger, onPremisesGroupType)
 }
 
-func (GroupResource) complete(data acceptance.TestData) string {
+func (GroupResource) completeUnified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 data "azuread_domains" "test" {
   only_initial = true
