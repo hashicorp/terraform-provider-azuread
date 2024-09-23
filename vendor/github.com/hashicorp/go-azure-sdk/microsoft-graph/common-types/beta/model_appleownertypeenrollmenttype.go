@@ -1,0 +1,17 @@
+package beta
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+type AppleOwnerTypeEnrollmentType struct {
+	EnrollmentType *AppleUserInitiatedEnrollmentType `json:"enrollmentType,omitempty"`
+
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// Owner type of device.
+	OwnerType *ManagedDeviceOwnerType `json:"ownerType,omitempty"`
+}

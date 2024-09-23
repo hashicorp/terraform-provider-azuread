@@ -1,0 +1,46 @@
+package stable
+
+import (
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+)
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+type KeyCredential struct {
+	// A 40-character binary type that can be used to identify the credential. Optional. When not provided in the payload,
+	// defaults to the thumbprint of the certificate.
+	CustomKeyIdentifier nullable.Type[string] `json:"customKeyIdentifier,omitempty"`
+
+	// Friendly name for the key. Optional.
+	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The date and time at which the credential expires. The DateTimeOffset type represents date and time information using
+	// ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	EndDateTime nullable.Type[string] `json:"endDateTime,omitempty"`
+
+	// The certificate's raw data in byte array converted to Base64 string. Returned only on $select for a single object,
+	// that is, GET applications/{applicationId}?$select=keyCredentials or GET
+	// servicePrincipals/{servicePrincipalId}?$select=keyCredentials; otherwise, it is always null. From a .cer certificate,
+	// you can read the key using the Convert.ToBase64String() method. For more information, see Get the certificate key.
+	Key nullable.Type[string] `json:"key,omitempty"`
+
+	// The unique identifier (GUID) for the key.
+	KeyId nullable.Type[string] `json:"keyId,omitempty"`
+
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// The date and time at which the credential becomes valid.The Timestamp type represents date and time information using
+	// ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	StartDateTime nullable.Type[string] `json:"startDateTime,omitempty"`
+
+	// The type of key credential; for example, Symmetric, AsymmetricX509Cert.
+	Type nullable.Type[string] `json:"type,omitempty"`
+
+	// A string that describes the purpose for which the key can be used; for example, Verify.
+	Usage nullable.Type[string] `json:"usage,omitempty"`
+}

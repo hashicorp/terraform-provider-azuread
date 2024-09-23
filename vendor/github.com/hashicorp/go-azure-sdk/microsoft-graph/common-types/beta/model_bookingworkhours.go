@@ -1,0 +1,17 @@
+package beta
+
+// Copyright (c) HashiCorp Inc. All rights reserved.
+// Licensed under the MIT License. See NOTICE.txt in the project root for license information.
+
+type BookingWorkHours struct {
+	Day *DayOfWeek `json:"day,omitempty"`
+
+	// The OData ID of this entity
+	ODataId *string `json:"@odata.id,omitempty"`
+
+	// The OData Type of this entity
+	ODataType *string `json:"@odata.type,omitempty"`
+
+	// A list of start/end times during a day.
+	TimeSlots *[]BookingWorkTimeSlot `json:"timeSlots,omitempty"`
+}
