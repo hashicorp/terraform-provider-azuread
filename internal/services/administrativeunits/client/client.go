@@ -4,27 +4,40 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunit"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitscopedrolemember"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	AdministrativeUnitsClient *msgraph.AdministrativeUnitsClient
-	DirectoryObjectsClient    *msgraph.DirectoryObjectsClient
+	AdministrativeUnitClient                 *administrativeunit.AdministrativeUnitClient
+	AdministrativeUnitMemberClient           *administrativeunitmember.AdministrativeUnitMemberClient
+	AdministrativeUnitScopedRoleMemberClient *administrativeunitscopedrolemember.AdministrativeUnitScopedRoleMemberClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	administrativeUnitsClient := msgraph.NewAdministrativeUnitsClient()
-	o.ConfigureClient(&administrativeUnitsClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	administrativeUnitClient, err := administrativeunit.NewAdministrativeUnitClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(administrativeUnitClient.Client)
 
-	// SDK uses wrong endpoint for v1.0 API, see https://github.com/manicminer/hamilton/issues/222
-	administrativeUnitsClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	memberClient, err := administrativeunitmember.NewAdministrativeUnitMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(memberClient.Client)
 
-	directoryObjectsClient := msgraph.NewDirectoryObjectsClient()
-	o.ConfigureClient(&directoryObjectsClient.BaseClient)
+	scopedRoleMemberClient, err := administrativeunitscopedrolemember.NewAdministrativeUnitScopedRoleMemberClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(scopedRoleMemberClient.Client)
 
 	return &Client{
-		AdministrativeUnitsClient: administrativeUnitsClient,
-		DirectoryObjectsClient:    directoryObjectsClient,
-	}
+		AdministrativeUnitClient:                 administrativeUnitClient,
+		AdministrativeUnitMemberClient:           memberClient,
+		AdministrativeUnitScopedRoleMemberClient: scopedRoleMemberClient,
+	}, nil
 }
