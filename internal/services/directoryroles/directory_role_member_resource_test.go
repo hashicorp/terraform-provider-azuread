@@ -6,10 +6,12 @@ package directoryroles_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroles/stable/member"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -109,23 +111,33 @@ func TestAccDirectoryRoleMember_requiresImport(t *testing.T) {
 }
 
 func (r DirectoryRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.DirectoryRoles.DirectoryRolesClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.DirectoryRoles.DirectoryRoleMemberClient
 
 	id, err := parse.DirectoryRoleMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Directory Role Member ID: %v", err)
 	}
 
-	if _, status, err := client.GetMember(ctx, id.DirectoryRoleId, id.MemberId); err != nil {
-		if status == http.StatusNotFound {
+	options := member.ListMembersOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.MemberId)),
+	}
+	resp, err := client.ListMembers(ctx, stable.NewDirectoryRoleID(id.DirectoryRoleId), options)
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve directory role member %q (role ID: %q): %+v", id.MemberId, id.DirectoryRoleId, err)
 	}
 
-	return pointer.To(true), nil
+	if resp.Model != nil {
+		for _, member := range *resp.Model {
+			if pointer.From(member.DirectoryObject().Id) == id.MemberId {
+				return pointer.To(true), nil
+			}
+		}
+	}
+
+	return pointer.To(false), nil
 }
 
 func (DirectoryRoleMemberResource) templateThreeUsers(data acceptance.TestData) string {

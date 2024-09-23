@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroles/stable/directoryrole"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func directoryRolesDataSource() *pluginsdk.Resource {
@@ -80,12 +82,14 @@ func directoryRolesDataSource() *pluginsdk.Resource {
 }
 
 func directoryRolesDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).DirectoryRoles.DirectoryRolesClient
+	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleClient
 
-	directoryRoles, _, err := client.List(ctx)
+	resp, err := client.ListDirectoryRoles(ctx, directoryrole.DefaultListDirectoryRolesOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve roles")
 	}
+
+	directoryRoles := resp.Model
 	if directoryRoles == nil {
 		return tf.ErrorDiagF(errors.New("API error: nil directoryRoles were returned"), "Retrieving all directory roles")
 	}
@@ -95,14 +99,15 @@ func directoryRolesDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	roleList := make([]map[string]interface{}, 0)
 
 	for _, r := range *directoryRoles {
-		objectIds = append(objectIds, *r.ID())
-		templateIds = append(templateIds, *r.RoleTemplateId)
+		objectIds = append(objectIds, pointer.From(r.Id))
+		templateIds = append(templateIds, r.RoleTemplateId.GetOrZero())
 
 		role := make(map[string]interface{})
-		role["description"] = r.Description
-		role["display_name"] = r.DisplayName
-		role["object_id"] = r.ID()
-		role["template_id"] = r.RoleTemplateId
+		role["description"] = r.Description.GetOrZero()
+		role["display_name"] = r.DisplayName.GetOrZero()
+		role["object_id"] = pointer.From(r.Id)
+		role["template_id"] = r.RoleTemplateId.GetOrZero()
+
 		roleList = append(roleList, role)
 	}
 

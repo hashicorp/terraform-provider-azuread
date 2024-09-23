@@ -6,17 +6,17 @@ package parse
 import "fmt"
 
 type DirectoryRoleId struct {
-	val string
+	DirectoryRoleId string
 }
 
 func NewDirectoryRoleID(input string) DirectoryRoleId {
-	return DirectoryRoleId{val: input}
+	return DirectoryRoleId{DirectoryRoleId: input}
 }
 
 func (id DirectoryRoleId) ID() string {
-	return id.val
+	return id.DirectoryRoleId
 }
 
 func (id DirectoryRoleId) String() string {
-	return fmt.Sprintf("Directory Role (Object ID: %q)", id.val)
+	return fmt.Sprintf("Directory Role (Object ID: %q)", id.DirectoryRoleId)
 }
