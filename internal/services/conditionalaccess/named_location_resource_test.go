@@ -6,16 +6,16 @@ package conditionalaccess_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type NamedLocationResource struct{}
@@ -139,22 +139,18 @@ func TestAccNamedLocation_updateCountry(t *testing.T) {
 }
 
 func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	namedLocation, status, err := clients.ConditionalAccess.NamedLocationsClient.Get(ctx, state.ID, odata.Query{})
+	client := clients.ConditionalAccess.NamedLocationClient
+	id := stable.NewIdentityConditionalAccessNamedLocationID(state.ID)
+
+	resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Named Location with object ID %q does not exist", state.ID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve Named Location with object ID %q: %+v", state.ID, err)
 	}
-	ipnl, ok1 := (*namedLocation).(msgraph.IPNamedLocation)
-	cnl, ok2 := (*namedLocation).(msgraph.CountryNamedLocation)
-	if ok1 {
-		return pointer.To(ipnl.ID != nil && *ipnl.ID == state.ID), nil
-	}
-	if ok2 {
-		return pointer.To(cnl.ID != nil && *cnl.ID == state.ID), nil
-	}
-	return nil, fmt.Errorf("Unable to match object ID %q to a known type", state.ID)
+
+	return pointer.To(true), nil
 }
 
 func (NamedLocationResource) basicIP(data acceptance.TestData) string {

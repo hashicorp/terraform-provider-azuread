@@ -4,14 +4,37 @@
 package conditionalaccess
 
 import (
+	"strings"
+
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 )
 
-func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessConditionSet) []interface{} {
+func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionSet) []interface{} {
 	if in == nil {
 		return []interface{}{}
+	}
+
+	clientAppTypes := make([]string, 0)
+	for _, v := range in.ClientAppTypes {
+		clientAppTypes = append(clientAppTypes, string(v))
+	}
+
+	servicePrincipalRiskLevels := make([]string, 0)
+	for _, v := range pointer.From(in.ServicePrincipalRiskLevels) {
+		servicePrincipalRiskLevels = append(servicePrincipalRiskLevels, string(v))
+	}
+
+	signInRiskLevels := make([]string, 0)
+	for _, v := range in.SignInRiskLevels {
+		signInRiskLevels = append(signInRiskLevels, string(v))
+	}
+
+	userRiskLevels := make([]string, 0)
+	for _, v := range in.UserRiskLevels {
+		userRiskLevels = append(userRiskLevels, string(v))
 	}
 
 	return []interface{}{
@@ -19,22 +42,18 @@ func flattenConditionalAccessConditionSet(in *msgraph.ConditionalAccessCondition
 			"applications":                  flattenConditionalAccessApplications(in.Applications),
 			"client_applications":           flattenConditionalAccessClientApplications(in.ClientApplications),
 			"users":                         flattenConditionalAccessUsers(in.Users),
-			"client_app_types":              tf.FlattenStringSlicePtr(in.ClientAppTypes),
+			"client_app_types":              clientAppTypes,
 			"devices":                       flattenConditionalAccessDevices(in.Devices),
 			"locations":                     flattenConditionalAccessLocations(in.Locations),
 			"platforms":                     flattenConditionalAccessPlatforms(in.Platforms),
-			"service_principal_risk_levels": tf.FlattenStringSlicePtr(in.ServicePrincipalRiskLevels),
-			"sign_in_risk_levels":           tf.FlattenStringSlicePtr(in.SignInRiskLevels),
-			"user_risk_levels":              tf.FlattenStringSlicePtr(in.UserRiskLevels),
+			"service_principal_risk_levels": servicePrincipalRiskLevels,
+			"sign_in_risk_levels":           signInRiskLevels,
+			"user_risk_levels":              userRiskLevels,
 		},
 	}
 }
 
-func flattenConditionalAccessApplications(in *msgraph.ConditionalAccessApplications) []interface{} {
-	if in == nil {
-		return []interface{}{}
-	}
-
+func flattenConditionalAccessApplications(in stable.ConditionalAccessApplications) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
@@ -44,7 +63,7 @@ func flattenConditionalAccessApplications(in *msgraph.ConditionalAccessApplicati
 	}
 }
 
-func flattenConditionalAccessClientApplications(in *msgraph.ConditionalAccessClientApplications) []interface{} {
+func flattenConditionalAccessClientApplications(in *stable.ConditionalAccessClientApplications) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -57,7 +76,7 @@ func flattenConditionalAccessClientApplications(in *msgraph.ConditionalAccessCli
 	}
 }
 
-func flattenConditionalAccessUsers(in *msgraph.ConditionalAccessUsers) []interface{} {
+func flattenConditionalAccessUsers(in *stable.ConditionalAccessUsers) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -76,7 +95,7 @@ func flattenConditionalAccessUsers(in *msgraph.ConditionalAccessUsers) []interfa
 	}
 }
 
-func flattenConditionalAccessDevices(in *msgraph.ConditionalAccessDevices) []interface{} {
+func flattenConditionalAccessDevices(in *stable.ConditionalAccessDevices) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -88,7 +107,7 @@ func flattenConditionalAccessDevices(in *msgraph.ConditionalAccessDevices) []int
 	}
 }
 
-func flattenConditionalAccessLocations(in *msgraph.ConditionalAccessLocations) []interface{} {
+func flattenConditionalAccessLocations(in *stable.ConditionalAccessLocations) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -101,33 +120,48 @@ func flattenConditionalAccessLocations(in *msgraph.ConditionalAccessLocations) [
 	}
 }
 
-func flattenConditionalAccessPlatforms(in *msgraph.ConditionalAccessPlatforms) []interface{} {
+func flattenConditionalAccessPlatforms(in *stable.ConditionalAccessPlatforms) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
+	includePlatforms := make([]string, 0)
+	for _, v := range pointer.From(in.IncludePlatforms) {
+		includePlatforms = append(includePlatforms, string(v))
+	}
+
+	excludePlatforms := make([]string, 0)
+	for _, v := range pointer.From(in.ExcludePlatforms) {
+		excludePlatforms = append(excludePlatforms, string(v))
+	}
+
 	return []interface{}{
 		map[string]interface{}{
-			"included_platforms": tf.FlattenStringSlicePtr(in.IncludePlatforms),
-			"excluded_platforms": tf.FlattenStringSlicePtr(in.ExcludePlatforms),
+			"included_platforms": includePlatforms,
+			"excluded_platforms": excludePlatforms,
 		},
 	}
 }
 
-func flattenConditionalAccessGrantControls(in *msgraph.ConditionalAccessGrantControls) []interface{} {
+func flattenConditionalAccessGrantControls(in *stable.ConditionalAccessGrantControls) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
 	var authenticationStrengthPolicyId string
 	if in.AuthenticationStrength != nil {
-		authenticationStrengthPolicyId = pointer.From(in.AuthenticationStrength.ID)
+		authenticationStrengthPolicyId = pointer.From(in.AuthenticationStrength.Id)
+	}
+
+	builtInControls := make([]string, 0)
+	for _, v := range pointer.From(in.BuiltInControls) {
+		builtInControls = append(builtInControls, string(v))
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"operator":                          in.Operator,
-			"built_in_controls":                 tf.FlattenStringSlicePtr(in.BuiltInControls),
+			"operator":                          in.Operator.GetOrZero(),
+			"built_in_controls":                 builtInControls,
 			"authentication_strength_policy_id": authenticationStrengthPolicyId,
 			"custom_authentication_factors":     tf.FlattenStringSlicePtr(in.CustomAuthenticationFactors),
 			"terms_of_use":                      tf.FlattenStringSlicePtr(in.TermsOfUse),
@@ -135,24 +169,24 @@ func flattenConditionalAccessGrantControls(in *msgraph.ConditionalAccessGrantCon
 	}
 }
 
-func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessionControls) []interface{} {
+func flattenConditionalAccessSessionControls(in *stable.ConditionalAccessSessionControls) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
 	applicationEnforceRestrictions := false
 	if in.ApplicationEnforcedRestrictions != nil {
-		applicationEnforceRestrictions = pointer.From(in.ApplicationEnforcedRestrictions.IsEnabled)
+		applicationEnforceRestrictions = in.ApplicationEnforcedRestrictions.IsEnabled.GetOrZero()
 	}
 
 	cloudAppSecurity := ""
 	if in.CloudAppSecurity != nil {
-		cloudAppSecurity = pointer.From(in.CloudAppSecurity.CloudAppSecurityType)
+		cloudAppSecurity = string(pointer.From(in.CloudAppSecurity.CloudAppSecurityType))
 	}
 
 	disableResilienceDefaults := false
 	if in.DisableResilienceDefaults != nil {
-		disableResilienceDefaults = *in.DisableResilienceDefaults
+		disableResilienceDefaults = in.DisableResilienceDefaults.GetOrZero()
 	}
 
 	signInFrequency := 0
@@ -160,18 +194,18 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 	signInFrequencyInterval := ""
 	signInFrequencyPeriod := ""
 	if in.SignInFrequency != nil {
-		if in.SignInFrequency.Value != nil && in.SignInFrequency.Type != nil {
-			signInFrequency = int(*in.SignInFrequency.Value)
-			signInFrequencyPeriod = *in.SignInFrequency.Type
+		if !in.SignInFrequency.Value.IsNull() && in.SignInFrequency.Type != nil {
+			signInFrequency = int(in.SignInFrequency.Value.GetOrZero())
+			signInFrequencyPeriod = string(*in.SignInFrequency.Type)
 		}
 
-		signInFrequencyAuthenticationType = pointer.From(in.SignInFrequency.AuthenticationType)
-		signInFrequencyInterval = pointer.From(in.SignInFrequency.FrequencyInterval)
+		signInFrequencyAuthenticationType = string(pointer.From(in.SignInFrequency.AuthenticationType))
+		signInFrequencyInterval = string(pointer.From(in.SignInFrequency.FrequencyInterval))
 	}
 
 	persistentBrowserMode := ""
 	if in.PersistentBrowser != nil {
-		persistentBrowserMode = pointer.From(in.PersistentBrowser.Mode)
+		persistentBrowserMode = string(pointer.From(in.PersistentBrowser.Mode))
 	}
 
 	return []interface{}{
@@ -188,7 +222,7 @@ func flattenConditionalAccessSessionControls(in *msgraph.ConditionalAccessSessio
 	}
 }
 
-func flattenConditionalAccessDeviceFilter(in *msgraph.ConditionalAccessFilter) []interface{} {
+func flattenConditionalAccessDeviceFilter(in *stable.ConditionalAccessFilter) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -201,33 +235,40 @@ func flattenConditionalAccessDeviceFilter(in *msgraph.ConditionalAccessFilter) [
 	}
 }
 
-func flattenGuestsOrExternalUsers(in *msgraph.ConditionalAccessGuestsOrExternalUsers) []interface{} {
+func flattenGuestsOrExternalUsers(in *stable.ConditionalAccessGuestsOrExternalUsers) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
+	guestOrExternalUserTypes := make([]string, 0)
+	for _, v := range strings.Split(string(pointer.From(in.GuestOrExternalUserTypes)), ",") {
+		guestOrExternalUserTypes = append(guestOrExternalUserTypes, strings.TrimSpace(v))
+	}
+
 	return []interface{}{
 		map[string]interface{}{
-			"guest_or_external_user_types": tf.FlattenStringSlicePtr(in.GuestOrExternalUserTypes),
+			"guest_or_external_user_types": guestOrExternalUserTypes,
 			"external_tenants":             flattenExternalTenants(in.ExternalTenants),
 		},
 	}
 }
 
-func flattenExternalTenants(in *msgraph.ConditionalAccessExternalTenants) []interface{} {
+func flattenExternalTenants(in stable.ConditionalAccessExternalTenants) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
 
+	externalTenants := in.ConditionalAccessExternalTenants()
+
 	return []interface{}{
 		map[string]interface{}{
-			"membership_kind": in.MembershipKind,
-			"members":         tf.FlattenStringSlicePtr(in.Members),
+			"membership_kind": externalTenants.MembershipKind,
+			"members":         tf.FlattenStringSlicePtr(externalTenants.Members),
 		},
 	}
 }
 
-func flattenCountryNamedLocation(in *msgraph.CountryNamedLocation) []interface{} {
+func flattenCountryNamedLocation(in *stable.CountryNamedLocation) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -239,13 +280,13 @@ func flattenCountryNamedLocation(in *msgraph.CountryNamedLocation) []interface{}
 
 	return []interface{}{
 		map[string]interface{}{
-			"countries_and_regions":                 tf.FlattenStringSlicePtr(in.CountriesAndRegions),
+			"countries_and_regions":                 tf.FlattenStringSlice(in.CountriesAndRegions),
 			"include_unknown_countries_and_regions": includeUnknown,
 		},
 	}
 }
 
-func flattenIPNamedLocation(in *msgraph.IPNamedLocation) []interface{} {
+func flattenIPNamedLocation(in *stable.IPNamedLocation) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -263,60 +304,83 @@ func flattenIPNamedLocation(in *msgraph.IPNamedLocation) []interface{} {
 	}
 }
 
-func flattenIPNamedLocationIPRange(in *[]msgraph.IPNamedLocationIPRange) []interface{} {
-	if in == nil || len(*in) == 0 {
+func flattenIPNamedLocationIPRange(in []stable.IPRange) []interface{} {
+	if len(in) == 0 {
 		return []interface{}{}
 	}
 
 	result := make([]string, 0)
-	for _, cidr := range *in {
-		if cidr.CIDRAddress != nil {
-			result = append(result, *cidr.CIDRAddress)
+	for _, i := range in {
+		switch model := i.(type) {
+		case stable.IPv4CIDRRange:
+			if model.CIDRAddress != nil {
+				result = append(result, *model.CIDRAddress)
+			}
+		case stable.IPv6CIDRRange:
+			if model.CIDRAddress != nil {
+				result = append(result, *model.CIDRAddress)
+			}
 		}
 	}
 
 	return tf.FlattenStringSlice(result)
 }
 
-func expandConditionalAccessConditionSet(in []interface{}) *msgraph.ConditionalAccessConditionSet {
+func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAccessConditionSet {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessConditionSet{}
+	result := stable.ConditionalAccessConditionSet{}
 	config := in[0].(map[string]interface{})
 
 	applications := config["applications"].([]interface{})
-	users := config["users"].([]interface{})
-	clientAppTypes := config["client_app_types"].([]interface{})
+	clientApplications := config["client_applications"].([]interface{})
 	devices := config["devices"].([]interface{})
 	locations := config["locations"].([]interface{})
 	platforms := config["platforms"].([]interface{})
-	servicePrincipalRiskLevels := config["service_principal_risk_levels"].([]interface{})
-	signInRiskLevels := config["sign_in_risk_levels"].([]interface{})
-	userRiskLevels := config["user_risk_levels"].([]interface{})
-	clientApplications := config["client_applications"].([]interface{})
+	users := config["users"].([]interface{})
+
+	clientAppTypes := make([]stable.ConditionalAccessClientApp, 0)
+	for _, elem := range config["client_app_types"].([]interface{}) {
+		clientAppTypes = append(clientAppTypes, stable.ConditionalAccessClientApp(elem.(string)))
+	}
+
+	servicePrincipalRiskLevels := make([]stable.RiskLevel, 0)
+	for _, elem := range config["service_principal_risk_levels"].([]interface{}) {
+		servicePrincipalRiskLevels = append(servicePrincipalRiskLevels, stable.RiskLevel(elem.(string)))
+	}
+
+	signInRiskLevels := make([]stable.RiskLevel, 0)
+	for _, elem := range config["sign_in_risk_levels"].([]interface{}) {
+		signInRiskLevels = append(signInRiskLevels, stable.RiskLevel(elem.(string)))
+	}
+
+	userRiskLevels := make([]stable.RiskLevel, 0)
+	for _, elem := range config["user_risk_levels"].([]interface{}) {
+		userRiskLevels = append(userRiskLevels, stable.RiskLevel(elem.(string)))
+	}
 
 	result.Applications = expandConditionalAccessApplications(applications)
-	result.Users = expandConditionalAccessUsers(users)
-	result.ClientAppTypes = tf.ExpandStringSlicePtr(clientAppTypes)
+	result.ClientAppTypes = clientAppTypes
+	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
 	result.Devices = expandConditionalAccessDevices(devices)
 	result.Locations = expandConditionalAccessLocations(locations)
 	result.Platforms = expandConditionalAccessPlatforms(platforms)
-	result.ServicePrincipalRiskLevels = tf.ExpandStringSlicePtr(servicePrincipalRiskLevels)
-	result.SignInRiskLevels = tf.ExpandStringSlicePtr(signInRiskLevels)
-	result.UserRiskLevels = tf.ExpandStringSlicePtr(userRiskLevels)
-	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
+	result.ServicePrincipalRiskLevels = &servicePrincipalRiskLevels
+	result.SignInRiskLevels = signInRiskLevels
+	result.UserRiskLevels = userRiskLevels
+	result.Users = expandConditionalAccessUsers(users)
 
 	return &result
 }
 
-func expandConditionalAccessClientApplications(in []interface{}) *msgraph.ConditionalAccessClientApplications {
+func expandConditionalAccessClientApplications(in []interface{}) *stable.ConditionalAccessClientApplications {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessClientApplications{}
+	result := stable.ConditionalAccessClientApplications{}
 	config := in[0].(map[string]interface{})
 
 	includeServicePrincipals := config["included_service_principals"].([]interface{})
@@ -328,12 +392,8 @@ func expandConditionalAccessClientApplications(in []interface{}) *msgraph.Condit
 	return &result
 }
 
-func expandConditionalAccessApplications(in []interface{}) *msgraph.ConditionalAccessApplications {
-	if len(in) == 0 || in[0] == nil {
-		return nil
-	}
-
-	result := msgraph.ConditionalAccessApplications{}
+func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAccessApplications {
+	result := stable.ConditionalAccessApplications{}
 	config := in[0].(map[string]interface{})
 
 	includeApplications := config["included_applications"].([]interface{})
@@ -344,15 +404,15 @@ func expandConditionalAccessApplications(in []interface{}) *msgraph.ConditionalA
 	result.ExcludeApplications = tf.ExpandStringSlicePtr(excludeApplications)
 	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
 
-	return &result
+	return result
 }
 
-func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUsers {
+func expandConditionalAccessUsers(in []interface{}) *stable.ConditionalAccessUsers {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessUsers{}
+	result := stable.ConditionalAccessUsers{}
 	config := in[0].(map[string]interface{})
 
 	includeUsers := config["included_users"].([]interface{})
@@ -375,36 +435,15 @@ func expandConditionalAccessUsers(in []interface{}) *msgraph.ConditionalAccessUs
 	return &result
 }
 
-func expandConditionalAccessPlatforms(in []interface{}) *msgraph.ConditionalAccessPlatforms {
-	result := msgraph.ConditionalAccessPlatforms{}
+func expandConditionalAccessDevices(in []interface{}) *stable.ConditionalAccessDevices {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	config := in[0].(map[string]interface{})
-
-	includePlatforms := config["included_platforms"].([]interface{})
-	excludePlatforms := config["excluded_platforms"].([]interface{})
-
-	result.IncludePlatforms = tf.ExpandStringSlicePtr(includePlatforms)
-	result.ExcludePlatforms = tf.ExpandStringSlicePtr(excludePlatforms)
-
-	return &result
-}
-
-func expandConditionalAccessDevices(in []interface{}) *msgraph.ConditionalAccessDevices {
-	result := msgraph.ConditionalAccessDevices{}
-
-	if len(in) == 0 || in[0] == nil {
-		// The devices field cannot be empty on POST, and is currently totally ignored when empty on PATCH,
-		// so for now we'll just return nil here and revisit later.
-		return nil
-	}
-
+	result := stable.ConditionalAccessDevices{}
 	config := in[0].(map[string]interface{})
 
 	deviceFilter := config["filter"].([]interface{})
-
 	if len(deviceFilter) > 0 {
 		result.DeviceFilter = expandConditionalAccessFilter(deviceFilter)
 	}
@@ -412,12 +451,12 @@ func expandConditionalAccessDevices(in []interface{}) *msgraph.ConditionalAccess
 	return &result
 }
 
-func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAccessLocations {
+func expandConditionalAccessLocations(in []interface{}) *stable.ConditionalAccessLocations {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessLocations{}
+	result := stable.ConditionalAccessLocations{}
 	config := in[0].(map[string]interface{})
 
 	includeLocations := config["included_locations"].([]interface{})
@@ -429,37 +468,59 @@ func expandConditionalAccessLocations(in []interface{}) *msgraph.ConditionalAcce
 	return &result
 }
 
-func expandConditionalAccessGrantControls(in []interface{}) *msgraph.ConditionalAccessGrantControls {
+func expandConditionalAccessPlatforms(in []interface{}) *stable.ConditionalAccessPlatforms {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessGrantControls{}
+	result := stable.ConditionalAccessPlatforms{}
 	config := in[0].(map[string]interface{})
 
-	operator := config["operator"].(string)
-	authenticationStrengthId := config["authentication_strength_policy_id"].(string)
-	builtInControls := config["built_in_controls"].([]interface{})
-	customAuthenticationFactors := config["custom_authentication_factors"].([]interface{})
-	termsOfUse := config["terms_of_use"].([]interface{})
-
-	result.Operator = &operator
-
-	if authenticationStrengthId != "" {
-		result.AuthenticationStrength = &msgraph.AuthenticationStrengthPolicy{
-			ID: &authenticationStrengthId,
-		}
+	includePlatforms := make([]stable.ConditionalAccessDevicePlatform, 0)
+	for _, elem := range config["included_platforms"].([]interface{}) {
+		includePlatforms = append(includePlatforms, stable.ConditionalAccessDevicePlatform(elem.(string)))
 	}
 
-	result.BuiltInControls = tf.ExpandStringSlicePtr(builtInControls)
-	result.CustomAuthenticationFactors = tf.ExpandStringSlicePtr(customAuthenticationFactors)
-	result.TermsOfUse = tf.ExpandStringSlicePtr(termsOfUse)
+	excludePlatforms := make([]stable.ConditionalAccessDevicePlatform, 0)
+	for _, elem := range config["excluded_platforms"].([]interface{}) {
+		excludePlatforms = append(excludePlatforms, stable.ConditionalAccessDevicePlatform(elem.(string)))
+	}
+
+	result.IncludePlatforms = &includePlatforms
+	result.ExcludePlatforms = &excludePlatforms
 
 	return &result
 }
 
-func expandConditionalAccessSessionControls(in []interface{}) *msgraph.ConditionalAccessSessionControls {
-	result := msgraph.ConditionalAccessSessionControls{}
+func expandConditionalAccessGrantControls(in []interface{}) *stable.ConditionalAccessGrantControls {
+	if len(in) == 0 || in[0] == nil {
+		return nil
+	}
+
+	result := stable.ConditionalAccessGrantControls{}
+	config := in[0].(map[string]interface{})
+
+	if id := config["authentication_strength_policy_id"].(string); id != "" {
+		result.AuthenticationStrength = &stable.AuthenticationStrengthPolicy{
+			Id: &id,
+		}
+	}
+
+	builtInControls := make([]stable.ConditionalAccessGrantControl, 0)
+	for _, elem := range config["built_in_controls"].([]interface{}) {
+		builtInControls = append(builtInControls, stable.ConditionalAccessGrantControl(elem.(string)))
+	}
+
+	result.BuiltInControls = &builtInControls
+	result.CustomAuthenticationFactors = tf.ExpandStringSlicePtr(config["custom_authentication_factors"].([]interface{}))
+	result.Operator = nullable.Value(config["operator"].(string))
+	result.TermsOfUse = tf.ExpandStringSlicePtr(config["terms_of_use"].([]interface{}))
+
+	return &result
+}
+
+func expandConditionalAccessSessionControls(in []interface{}) *stable.ConditionalAccessSessionControls {
+	result := stable.ConditionalAccessSessionControls{}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -467,56 +528,56 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 
 	config := in[0].(map[string]interface{})
 
-	result.ApplicationEnforcedRestrictions = &msgraph.ApplicationEnforcedRestrictionsSessionControl{
-		IsEnabled: pointer.To(config["application_enforced_restrictions_enabled"].(bool)),
+	result.ApplicationEnforcedRestrictions = &stable.ApplicationEnforcedRestrictionsSessionControl{
+		IsEnabled: nullable.Value(config["application_enforced_restrictions_enabled"].(bool)),
 	}
 
-	if cloudAppSecurity := config["cloud_app_security_policy"].(string); cloudAppSecurity != "" {
-		result.CloudAppSecurity = &msgraph.CloudAppSecurityControl{
-			IsEnabled:            pointer.To(true),
-			CloudAppSecurityType: pointer.To(cloudAppSecurity),
+	if cloudAppSecurity := config["cloud_app_security_policy"]; cloudAppSecurity.(string) != "" {
+		result.CloudAppSecurity = &stable.CloudAppSecuritySessionControl{
+			IsEnabled:            nullable.Value(true),
+			CloudAppSecurityType: pointer.To(stable.CloudAppSecuritySessionControlType(cloudAppSecurity.(string))),
 		}
 	}
 
 	DisableResilienceDefaults := config["disable_resilience_defaults"]
-	result.DisableResilienceDefaults = pointer.To(DisableResilienceDefaults.(bool))
+	result.DisableResilienceDefaults = nullable.Value(DisableResilienceDefaults.(bool))
 
-	if persistentBrowserMode := config["persistent_browser_mode"].(string); persistentBrowserMode != "" {
-		result.PersistentBrowser = &msgraph.PersistentBrowserSessionControl{
-			IsEnabled: pointer.To(true),
-			Mode:      pointer.To(persistentBrowserMode),
+	if persistentBrowserMode := config["persistent_browser_mode"]; persistentBrowserMode.(string) != "" {
+		result.PersistentBrowser = &stable.PersistentBrowserSessionControl{
+			IsEnabled: nullable.Value(true),
+			Mode:      pointer.To(stable.PersistentBrowserSessionMode(persistentBrowserMode.(string))),
 		}
 	}
 
-	signInFrequency := msgraph.SignInFrequencySessionControl{}
+	signInFrequency := stable.SignInFrequencySessionControl{}
 	if frequencyValue := config["sign_in_frequency"].(int); frequencyValue > 0 {
-		signInFrequency.IsEnabled = pointer.To(true)
-		signInFrequency.Type = pointer.To(config["sign_in_frequency_period"].(string))
-		signInFrequency.Value = pointer.To(int32(frequencyValue))
+		signInFrequency.IsEnabled = nullable.Value(true)
+		signInFrequency.Type = pointer.To(stable.SigninFrequencyType(config["sign_in_frequency_period"].(string)))
+		signInFrequency.Value = nullable.Value(int64(frequencyValue))
 
 		// AuthenticationType and FrequencyInterval must be set to default values here
-		signInFrequency.AuthenticationType = pointer.To(msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication)
-		signInFrequency.FrequencyInterval = pointer.To(msgraph.ConditionalAccessFrequencyIntervalTimeBased)
+		signInFrequency.AuthenticationType = pointer.To(stable.SignInFrequencyAuthenticationType_PrimaryAndSecondaryAuthentication)
+		signInFrequency.FrequencyInterval = pointer.To(stable.SignInFrequencyInterval_TimeBased)
 	}
 
 	if authenticationType, ok := config["sign_in_frequency_authentication_type"]; ok && authenticationType.(string) != "" {
-		signInFrequency.AuthenticationType = pointer.To(authenticationType.(string))
+		signInFrequency.AuthenticationType = pointer.To(stable.SignInFrequencyAuthenticationType(authenticationType.(string)))
 	}
 
 	if interval, ok := config["sign_in_frequency_interval"]; ok && interval.(string) != "" {
-		signInFrequency.FrequencyInterval = pointer.To(interval.(string))
+		signInFrequency.FrequencyInterval = pointer.To(stable.SignInFrequencyInterval(interval.(string)))
 	}
 
 	// API returns 400 error if signInFrequency is set with all default/zero values
-	if (signInFrequency.IsEnabled != nil && *signInFrequency.IsEnabled) ||
-		(signInFrequency.FrequencyInterval != nil && *signInFrequency.FrequencyInterval != msgraph.ConditionalAccessFrequencyIntervalTimeBased) ||
-		(signInFrequency.AuthenticationType != nil && *signInFrequency.AuthenticationType != msgraph.ConditionalAccessAuthenticationTypePrimaryAndSecondaryAuthentication) {
+	if (signInFrequency.IsEnabled.GetOrZero()) ||
+		(signInFrequency.FrequencyInterval != nil && *signInFrequency.FrequencyInterval != stable.SignInFrequencyInterval_TimeBased) ||
+		(signInFrequency.AuthenticationType != nil && *signInFrequency.AuthenticationType != stable.SignInFrequencyAuthenticationType_PrimaryAndSecondaryAuthentication) {
 		result.SignInFrequency = &signInFrequency
 	}
 
 	// API does not accept ineffectual and sessionControls object, and it will not remove any existing sessionControls unless the entire object is set to null
-	if (result.ApplicationEnforcedRestrictions == nil || !pointer.From(result.ApplicationEnforcedRestrictions.IsEnabled)) &&
-		result.CloudAppSecurity == nil && !pointer.From(result.DisableResilienceDefaults) &&
+	if (result.ApplicationEnforcedRestrictions == nil || !result.ApplicationEnforcedRestrictions.IsEnabled.GetOrZero()) &&
+		result.CloudAppSecurity == nil && !result.DisableResilienceDefaults.GetOrZero() &&
 		result.PersistentBrowser == nil && result.SignInFrequency == nil {
 		return nil
 	}
@@ -524,8 +585,8 @@ func expandConditionalAccessSessionControls(in []interface{}) *msgraph.Condition
 	return &result
 }
 
-func expandConditionalAccessFilter(in []interface{}) *msgraph.ConditionalAccessFilter {
-	result := msgraph.ConditionalAccessFilter{}
+func expandConditionalAccessFilter(in []interface{}) *stable.ConditionalAccessFilter {
+	result := stable.ConditionalAccessFilter{}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -533,44 +594,46 @@ func expandConditionalAccessFilter(in []interface{}) *msgraph.ConditionalAccessF
 
 	config := in[0].(map[string]interface{})
 
-	result.Mode = pointer.To(config["mode"].(string))
+	result.Mode = pointer.To(stable.FilterMode(config["mode"].(string)))
 	result.Rule = pointer.To(config["rule"].(string))
 
 	return &result
 }
 
-func expandGuestsOrExternalUsers(in []interface{}) *msgraph.ConditionalAccessGuestsOrExternalUsers {
+func expandGuestsOrExternalUsers(in []interface{}) *stable.ConditionalAccessGuestsOrExternalUsers {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessGuestsOrExternalUsers{}
-
 	config := in[0].(map[string]interface{})
+	result := stable.ConditionalAccessGuestsOrExternalUsers{}
 
-	types := config["guest_or_external_user_types"].([]interface{})
+	var guestOrExternalUserTypes *stable.ConditionalAccessGuestOrExternalUserTypes
+	if len(config["guest_or_external_user_types"].([]interface{})) > 0 {
+		values := strings.Join(tf.ExpandStringSlice(config["guest_or_external_user_types"].([]interface{})), ",")
+		guestOrExternalUserTypes = pointer.To(stable.ConditionalAccessGuestOrExternalUserTypes(values))
+	}
 
-	result.GuestOrExternalUserTypes = tf.ExpandStringSlicePtr(types)
+	result.GuestOrExternalUserTypes = guestOrExternalUserTypes
 	result.ExternalTenants = expandExternalTenants(config["external_tenants"].([]interface{}))
 
 	return &result
 }
 
-func expandExternalTenants(in []interface{}) *msgraph.ConditionalAccessExternalTenants {
+func expandExternalTenants(in []interface{}) stable.ConditionalAccessExternalTenants {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.ConditionalAccessExternalTenants{}
+	result := stable.BaseConditionalAccessExternalTenantsImpl{}
 
 	config := in[0].(map[string]interface{})
 
 	members := config["members"].([]interface{})
 
-	result.MembershipKind = pointer.To(config["membership_kind"].(string))
+	result.MembershipKind = pointer.To(stable.ConditionalAccessExternalTenantsMembershipKind(config["membership_kind"].(string)))
 
-	// only membership_kind enumerated is allowed to have members field set
-	// so we omit setting an empty array when no members configured
+	// only membership_kind enumerated is allowed to have members field set, so we omit setting an empty array when no members configured
 	if len(members) > 0 {
 		result.Members = tf.ExpandStringSlicePtr(members)
 	}
@@ -578,29 +641,29 @@ func expandExternalTenants(in []interface{}) *msgraph.ConditionalAccessExternalT
 	return &result
 }
 
-func expandCountryNamedLocation(in []interface{}) *msgraph.CountryNamedLocation {
+func expandCountryNamedLocation(in []interface{}) *stable.CountryNamedLocation {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.CountryNamedLocation{}
+	result := stable.CountryNamedLocation{}
 	config := in[0].(map[string]interface{})
 
 	countriesAndRegions := config["countries_and_regions"].([]interface{})
 	includeUnknown := config["include_unknown_countries_and_regions"]
 
-	result.CountriesAndRegions = tf.ExpandStringSlicePtr(countriesAndRegions)
+	result.CountriesAndRegions = tf.ExpandStringSlice(countriesAndRegions)
 	result.IncludeUnknownCountriesAndRegions = pointer.To(includeUnknown.(bool))
 
 	return &result
 }
 
-func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
+func expandIPNamedLocation(in []interface{}) *stable.IPNamedLocation {
 	if len(in) == 0 || in[0] == nil {
 		return nil
 	}
 
-	result := msgraph.IPNamedLocation{}
+	result := stable.IPNamedLocation{}
 	config := in[0].(map[string]interface{})
 
 	ipRanges := config["ip_ranges"].([]interface{})
@@ -612,17 +675,13 @@ func expandIPNamedLocation(in []interface{}) *msgraph.IPNamedLocation {
 	return &result
 }
 
-func expandIPNamedLocationIPRange(in []interface{}) *[]msgraph.IPNamedLocationIPRange {
-	if len(in) == 0 {
-		return nil
-	}
-
-	result := make([]msgraph.IPNamedLocationIPRange, 0)
+func expandIPNamedLocationIPRange(in []interface{}) []stable.IPRange {
+	result := make([]stable.IPRange, 0)
 	for _, cidr := range in {
-		result = append(result, msgraph.IPNamedLocationIPRange{
+		result = append(result, stable.IPv4CIDRRange{
 			CIDRAddress: pointer.To(cidr.(string)),
 		})
 	}
 
-	return &result
+	return result
 }
