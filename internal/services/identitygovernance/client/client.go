@@ -5,93 +5,146 @@ package client
 
 import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
+)
+
+import (
+	// Beta clients
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageaccesspackageresourcerolescope"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageassignmentpolicy"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackageresourcerequest"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroleassignment"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroledefinition"
+
+	// Stable clients
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedule"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentscheduleinstance"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedulerequest"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupeligibilityschedule"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupeligibilityscheduleinstance"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupeligibilityschedulerequest"
 )
 
 type Client struct {
-	AccessPackageAssignmentPolicyClient                     *msgraph.AccessPackageAssignmentPolicyClient
-	AccessPackageCatalogClient                              *msgraph.AccessPackageCatalogClient
-	AccessPackageCatalogRoleAssignmentsClient               *msgraph.EntitlementRoleAssignmentsClient
-	AccessPackageCatalogRoleClient                          *msgraph.EntitlementRoleDefinitionsClient
-	AccessPackageClient                                     *msgraph.AccessPackageClient
-	AccessPackageResourceClient                             *msgraph.AccessPackageResourceClient
-	AccessPackageResourceRequestClient                      *msgraph.AccessPackageResourceRequestClient
-	AccessPackageResourceRoleScopeClient                    *msgraph.AccessPackageResourceRoleScopeClient
-	PrivilegedAccessGroupAssignmentScheduleClient           *msgraph.PrivilegedAccessGroupAssignmentScheduleClient
-	PrivilegedAccessGroupAssignmentScheduleInstancesClient  *msgraph.PrivilegedAccessGroupAssignmentScheduleInstancesClient
-	PrivilegedAccessGroupAssignmentScheduleRequestsClient   *msgraph.PrivilegedAccessGroupAssignmentScheduleRequestsClient
-	PrivilegedAccessGroupEligibilityScheduleClient          *msgraph.PrivilegedAccessGroupEligibilityScheduleClient
-	PrivilegedAccessGroupEligibilityScheduleInstancesClient *msgraph.PrivilegedAccessGroupEligibilityScheduleInstancesClient
-	PrivilegedAccessGroupEligibilityScheduleRequestsClient  *msgraph.PrivilegedAccessGroupEligibilityScheduleRequestsClient
+	AccessPackageAssignmentPolicyClient  *entitlementmanagementaccesspackageassignmentpolicy.EntitlementManagementAccessPackageAssignmentPolicyClient
+	AccessPackageCatalogClient           *entitlementmanagementaccesspackagecatalog.EntitlementManagementAccessPackageCatalogClient
+	AccessPackageCatalogResourceClient   *entitlementmanagementaccesspackagecatalogaccesspackageresource.EntitlementManagementAccessPackageCatalogAccessPackageResourceClient
+	AccessPackageClient                  *entitlementmanagementaccesspackage.EntitlementManagementAccessPackageClient
+	AccessPackageResourceRequestClient   *entitlementmanagementaccesspackageresourcerequest.EntitlementManagementAccessPackageResourceRequestClient
+	AccessPackageResourceRoleScopeClient *entitlementmanagementaccesspackageaccesspackageresourcerolescope.EntitlementManagementAccessPackageAccessPackageResourceRoleScopeClient
+	RoleAssignmentClient                 *entitlementmanagementroleassignment.EntitlementManagementRoleAssignmentClient
+	RoleDefinitionClient                 *entitlementmanagementroledefinition.EntitlementManagementRoleDefinitionClient
+
+	PrivilegedAccessGroupAssignmentScheduleClient          *privilegedaccessgroupassignmentschedule.PrivilegedAccessGroupAssignmentScheduleClient
+	PrivilegedAccessGroupAssignmentScheduleInstanceClient  *privilegedaccessgroupassignmentscheduleinstance.PrivilegedAccessGroupAssignmentScheduleInstanceClient
+	PrivilegedAccessGroupAssignmentScheduleRequestClient   *privilegedaccessgroupassignmentschedulerequest.PrivilegedAccessGroupAssignmentScheduleRequestClient
+	PrivilegedAccessGroupEligibilityScheduleClient         *privilegedaccessgroupeligibilityschedule.PrivilegedAccessGroupEligibilityScheduleClient
+	PrivilegedAccessGroupEligibilityScheduleInstanceClient *privilegedaccessgroupeligibilityscheduleinstance.PrivilegedAccessGroupEligibilityScheduleInstanceClient
+	PrivilegedAccessGroupEligibilityScheduleRequestClient  *privilegedaccessgroupeligibilityschedulerequest.PrivilegedAccessGroupEligibilityScheduleRequestClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	// Resource only available in beta API
-	accessPackageAssignmentPolicyClient := msgraph.NewAccessPackageAssignmentPolicyClient()
-	o.ConfigureClient(&accessPackageAssignmentPolicyClient.BaseClient)
-	accessPackageAssignmentPolicyClient.BaseClient.ApiVersion = msgraph.VersionBeta
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	accessPackageAssignmentPolicyClient, err := entitlementmanagementaccesspackageassignmentpolicy.NewEntitlementManagementAccessPackageAssignmentPolicyClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageAssignmentPolicyClient.Client)
 
-	accessPackageCatalogClient := msgraph.NewAccessPackageCatalogClient()
-	o.ConfigureClient(&accessPackageCatalogClient.BaseClient)
+	accessPackageCatalogClient, err := entitlementmanagementaccesspackagecatalog.NewEntitlementManagementAccessPackageCatalogClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageCatalogClient.Client)
 
-	accessPackageCatalogRoleAssignmentsClient := msgraph.NewEntitlementRoleAssignmentsClient()
-	o.ConfigureClient(&accessPackageCatalogRoleAssignmentsClient.BaseClient)
+	accessPackageCatalogResourceClient, err := entitlementmanagementaccesspackagecatalogaccesspackageresource.NewEntitlementManagementAccessPackageCatalogAccessPackageResourceClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageCatalogResourceClient.Client)
 
-	accessPackageCatalogRoleClient := msgraph.NewEntitlementRoleDefinitionsClient()
-	o.ConfigureClient(&accessPackageCatalogRoleClient.BaseClient)
+	accessPackageClient, err := entitlementmanagementaccesspackage.NewEntitlementManagementAccessPackageClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageClient.Client)
 
-	// Use beta version because it replies more info than v1.0
-	accessPackageClient := msgraph.NewAccessPackageClient()
-	o.ConfigureClient(&accessPackageClient.BaseClient)
-	accessPackageClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	accessPackageResourceRequestClient, err := entitlementmanagementaccesspackageresourcerequest.NewEntitlementManagementAccessPackageResourceRequestClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageResourceRequestClient.Client)
 
-	// Use beta version because it replies more info than v1.0 and the URL is different
-	accessPackageResourceClient := msgraph.NewAccessPackageResourceClient()
-	o.ConfigureClient(&accessPackageResourceClient.BaseClient)
-	accessPackageResourceClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	accessPackageResourceRoleScopeClient, err := entitlementmanagementaccesspackageaccesspackageresourcerolescope.NewEntitlementManagementAccessPackageAccessPackageResourceRoleScopeClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(accessPackageResourceRoleScopeClient.Client)
 
-	// Resource only available in beta API
-	accessPackageResourceRequestClient := msgraph.NewAccessPackageResourceRequestClient()
-	o.ConfigureClient(&accessPackageResourceRequestClient.BaseClient)
-	accessPackageResourceRequestClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	roleAssignmentClient, err := entitlementmanagementroleassignment.NewEntitlementManagementRoleAssignmentClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(roleAssignmentClient.Client)
 
-	// Resource only available in beta API
-	accessPackageResourceRoleScopeClient := msgraph.NewAccessPackageResourceRoleScopeClient()
-	o.ConfigureClient(&accessPackageResourceRoleScopeClient.BaseClient)
-	accessPackageResourceRoleScopeClient.BaseClient.ApiVersion = msgraph.VersionBeta
+	roleDefinitionClient, err := entitlementmanagementroledefinition.NewEntitlementManagementRoleDefinitionClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(roleDefinitionClient.Client)
 
-	privilegedAccessGroupAssignmentScheduleClient := msgraph.NewPrivilegedAccessGroupAssignmentScheduleClient()
-	o.ConfigureClient(&privilegedAccessGroupAssignmentScheduleClient.BaseClient)
+	privilegedAccessGroupAssignmentScheduleClient, err := privilegedaccessgroupassignmentschedule.NewPrivilegedAccessGroupAssignmentScheduleClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupAssignmentScheduleClient.Client)
 
-	privilegedAccessGroupAssignmentScheduleInstancesClient := msgraph.NewPrivilegedAccessGroupAssignmentScheduleInstancesClient()
-	o.ConfigureClient(&privilegedAccessGroupAssignmentScheduleInstancesClient.BaseClient)
+	privilegedAccessGroupAssignmentScheduleInstanceClient, err := privilegedaccessgroupassignmentscheduleinstance.NewPrivilegedAccessGroupAssignmentScheduleInstanceClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupAssignmentScheduleInstanceClient.Client)
 
-	privilegedAccessGroupAssignmentScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupAssignmentScheduleRequestsClient()
-	o.ConfigureClient(&privilegedAccessGroupAssignmentScheduleRequestsClient.BaseClient)
+	privilegedAccessGroupAssignmentScheduleRequestClient, err := privilegedaccessgroupassignmentschedulerequest.NewPrivilegedAccessGroupAssignmentScheduleRequestClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupAssignmentScheduleRequestClient.Client)
 
-	privilegedAccessGroupEligibilityScheduleClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleClient()
-	o.ConfigureClient(&privilegedAccessGroupEligibilityScheduleClient.BaseClient)
+	privilegedAccessGroupEligibilityScheduleClient, err := privilegedaccessgroupeligibilityschedule.NewPrivilegedAccessGroupEligibilityScheduleClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupEligibilityScheduleClient.Client)
 
-	privilegedAccessGroupEligibilityScheduleInstancesClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleInstancesClient()
-	o.ConfigureClient(&privilegedAccessGroupEligibilityScheduleInstancesClient.BaseClient)
+	privilegedAccessGroupEligibilityScheduleInstanceClient, err := privilegedaccessgroupeligibilityscheduleinstance.NewPrivilegedAccessGroupEligibilityScheduleInstanceClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupEligibilityScheduleInstanceClient.Client)
 
-	privilegedAccessGroupEligibilityScheduleRequestsClient := msgraph.NewPrivilegedAccessGroupEligibilityScheduleRequestsClient()
-	o.ConfigureClient(&privilegedAccessGroupEligibilityScheduleRequestsClient.BaseClient)
+	privilegedAccessGroupEligibilityScheduleRequestClient, err := privilegedaccessgroupeligibilityschedulerequest.NewPrivilegedAccessGroupEligibilityScheduleRequestClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(privilegedAccessGroupEligibilityScheduleRequestClient.Client)
 
 	return &Client{
-		AccessPackageAssignmentPolicyClient:                     accessPackageAssignmentPolicyClient,
-		AccessPackageCatalogClient:                              accessPackageCatalogClient,
-		AccessPackageCatalogRoleAssignmentsClient:               accessPackageCatalogRoleAssignmentsClient,
-		AccessPackageCatalogRoleClient:                          accessPackageCatalogRoleClient,
-		AccessPackageClient:                                     accessPackageClient,
-		AccessPackageResourceClient:                             accessPackageResourceClient,
-		AccessPackageResourceRequestClient:                      accessPackageResourceRequestClient,
-		AccessPackageResourceRoleScopeClient:                    accessPackageResourceRoleScopeClient,
-		PrivilegedAccessGroupAssignmentScheduleClient:           privilegedAccessGroupAssignmentScheduleClient,
-		PrivilegedAccessGroupAssignmentScheduleInstancesClient:  privilegedAccessGroupAssignmentScheduleInstancesClient,
-		PrivilegedAccessGroupAssignmentScheduleRequestsClient:   privilegedAccessGroupAssignmentScheduleRequestsClient,
-		PrivilegedAccessGroupEligibilityScheduleClient:          privilegedAccessGroupEligibilityScheduleClient,
-		PrivilegedAccessGroupEligibilityScheduleInstancesClient: privilegedAccessGroupEligibilityScheduleInstancesClient,
-		PrivilegedAccessGroupEligibilityScheduleRequestsClient:  privilegedAccessGroupEligibilityScheduleRequestsClient,
-	}
+		AccessPackageAssignmentPolicyClient:  accessPackageAssignmentPolicyClient,
+		AccessPackageCatalogClient:           accessPackageCatalogClient,
+		AccessPackageCatalogResourceClient:   accessPackageCatalogResourceClient,
+		AccessPackageClient:                  accessPackageClient,
+		AccessPackageResourceRequestClient:   accessPackageResourceRequestClient,
+		AccessPackageResourceRoleScopeClient: accessPackageResourceRoleScopeClient,
+		RoleAssignmentClient:                 roleAssignmentClient,
+		RoleDefinitionClient:                 roleDefinitionClient,
+
+		PrivilegedAccessGroupAssignmentScheduleClient:          privilegedAccessGroupAssignmentScheduleClient,
+		PrivilegedAccessGroupAssignmentScheduleInstanceClient:  privilegedAccessGroupAssignmentScheduleInstanceClient,
+		PrivilegedAccessGroupAssignmentScheduleRequestClient:   privilegedAccessGroupAssignmentScheduleRequestClient,
+		PrivilegedAccessGroupEligibilityScheduleClient:         privilegedAccessGroupEligibilityScheduleClient,
+		PrivilegedAccessGroupEligibilityScheduleInstanceClient: privilegedAccessGroupEligibilityScheduleInstanceClient,
+		PrivilegedAccessGroupEligibilityScheduleRequestClient:  privilegedAccessGroupEligibilityScheduleRequestClient,
+	}, nil
 }

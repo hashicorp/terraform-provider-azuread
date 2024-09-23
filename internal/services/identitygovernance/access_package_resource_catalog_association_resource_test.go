@@ -6,10 +6,11 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalogaccesspackageresource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -50,22 +51,25 @@ func TestAccAccessPackageResourceCatalogAssociation_requiresImport(t *testing.T)
 }
 
 func (r AccessPackageResourceCatalogAssociationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.IdentityGovernance.AccessPackageResourceClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.IdentityGovernance.AccessPackageCatalogResourceClient
 
 	id, err := parse.AccessPackageResourceCatalogAssociationID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	_, status, err := client.Get(ctx, id.CatalogId, id.OriginId)
-	if err != nil {
-		if status == http.StatusNotFound {
-			return pointer.To(false), nil
-		}
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(id.CatalogId)
+	options := entitlementmanagementaccesspackagecatalogaccesspackageresource.ListEntitlementManagementAccessPackageCatalogResourcesOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("originId eq '%s'", id.OriginId)),
+	}
 
-		return nil, fmt.Errorf("failed to retrieve access package catalog association with ID %q: %+v", id.ID(), err)
+	resp, err := client.ListEntitlementManagementAccessPackageCatalogResources(ctx, catalogId, options)
+	if err != nil {
+		return nil, fmt.Errorf("retrieving Access Package Resource Catalog Association: %v", err)
+	}
+
+	if resp.Model == nil || len(*resp.Model) == 0 {
+		return pointer.To(false), nil
 	}
 
 	return pointer.To(true), nil

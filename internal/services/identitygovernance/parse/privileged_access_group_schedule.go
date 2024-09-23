@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 type PrivilegedAccessGroupScheduleId struct {
@@ -37,8 +37,8 @@ func ParsePrivilegedAccessGroupScheduleID(idString string) (*PrivilegedAccessGro
 		return nil, fmt.Errorf("parsing GroupScheduleId: %+v", err)
 	}
 
-	if parts[1] != msgraph.PrivilegedAccessGroupRelationshipOwner &&
-		parts[1] != msgraph.PrivilegedAccessGroupRelationshipMember {
+	if parts[1] != string(stable.PrivilegedAccessGroupRelationships_Member) &&
+		parts[1] != string(stable.PrivilegedAccessGroupRelationships_Owner) {
 		return nil, fmt.Errorf("parsing GroupScheduleId: invalid Relationship")
 	}
 

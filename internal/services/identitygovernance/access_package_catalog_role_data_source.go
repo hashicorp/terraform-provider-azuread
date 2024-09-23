@@ -7,14 +7,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/beta/entitlementmanagementroledefinition"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
@@ -32,6 +35,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"object_id": {
@@ -40,6 +44,7 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: []string{"display_name", "object_id"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"description": {
@@ -58,9 +63,9 @@ func accessPackageCatalogRoleDataSource() *pluginsdk.Resource {
 }
 
 func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogRoleClient
+	client := meta.(*clients.Client).IdentityGovernance.RoleDefinitionClient
 
-	var role msgraph.UnifiedRoleDefinition
+	var role *beta.UnifiedRoleDefinition
 	var displayName string
 
 	if v, ok := d.GetOk("display_name"); ok {
@@ -68,47 +73,55 @@ func accessPackageCatalogRoleDataSourceRead(ctx context.Context, d *pluginsdk.Re
 	}
 
 	if displayName != "" {
-		filter := fmt.Sprintf("displayName eq '%s'", displayName)
-
-		roles, _, err := client.List(ctx, odata.Query{Filter: filter})
-		if err != nil {
-			return tf.ErrorDiagPathF(err, "display_name", "No role found matching specified filter (%s)", filter)
+		options := entitlementmanagementroledefinition.ListEntitlementManagementRoleDefinitionsOperationOptions{
+			Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(displayName))),
 		}
-		count := len(*roles)
 
+		resp, err := client.ListEntitlementManagementRoleDefinitions(ctx, options)
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "display_name", "No role found matching specified filter: %s", *options.Filter)
+		}
+		if resp.Model == nil {
+			return tf.ErrorDiagPathF(errors.New("model was nil"), "display_name", "No role found matching specified filter: %s", *options.Filter)
+		}
+
+		count := len(*resp.Model)
 		if count > 1 {
-			return tf.ErrorDiagPathF(err, "display_name", "More than one role found matching specified filter (%s)", filter)
+			return tf.ErrorDiagPathF(err, "display_name", "More than one role found matching specified filter: %s", *options.Filter)
 		} else if count == 0 {
-			return tf.ErrorDiagPathF(err, "display_name", "No role found matching specified filter (%s)", filter)
+			return tf.ErrorDiagPathF(err, "display_name", "No role found matching specified filter: %s", *options.Filter)
 		}
 
-		role = (*roles)[0]
+		role = &(*resp.Model)[0]
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		r, status, err := client.Get(ctx, objectId, odata.Query{})
+		resp, err := client.GetEntitlementManagementRoleDefinition(ctx, beta.NewRoleManagementEntitlementManagementRoleDefinitionID(objectId), entitlementmanagementroledefinition.DefaultGetEntitlementManagementRoleDefinitionOperationOptions())
 		if err != nil {
-			if status == http.StatusNotFound {
+			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "No role found with object ID: %q", objectId)
 			}
 			return tf.ErrorDiagF(err, "Retrieving role with object ID: %q", objectId)
 		}
-		if r == nil {
+		if resp.Model == nil {
 			return tf.ErrorDiagPathF(nil, "object_id", "Role not found with object ID: %q", objectId)
 		}
 
-		role = *r
+		role = resp.Model
 	}
-	if role.ID() == nil {
+
+	if role == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "No role found")
+	}
+	if role.Id == nil {
 		return tf.ErrorDiagF(errors.New("API returned role with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*role.ID())
+	id := beta.NewRoleManagementEntitlementManagementRoleDefinitionID(*role.Id)
+	d.SetId(id.UnifiedRoleDefinitionId)
 
-	tf.Set(d, "object_id", role.ID())
-	tf.Set(d, "display_name", role.DisplayName)
-	tf.Set(d, "description", role.Description)
-	tf.Set(d, "template_id", role.TemplateId)
+	tf.Set(d, "object_id", id.UnifiedRoleDefinitionId)
+	tf.Set(d, "display_name", role.DisplayName.GetOrZero())
+	tf.Set(d, "description", role.Description.GetOrZero())
+	tf.Set(d, "template_id", role.TemplateId.GetOrZero())
 
 	return nil
 }
-
-// TODO replace role

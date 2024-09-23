@@ -6,11 +6,13 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/stable/privilegedaccessgroupassignmentschedule"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -64,21 +66,22 @@ func TestPrivilegedAccessGroupAssignmentSchedule_owner(t *testing.T) {
 
 func (PrivilegedAccessGroupAssignmentScheduleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.PrivilegedAccessGroupAssignmentScheduleClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
 
-	id, err := parse.ParsePrivilegedAccessGroupScheduleID(state.ID)
+	resourceId, err := parse.ParsePrivilegedAccessGroupScheduleID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse privileged group assignment schedule ID %q: %+v", state.ID, err)
 	}
 
-	_, status, err := client.Get(ctx, id.ID())
+	id := stable.NewIdentityGovernancePrivilegedAccessGroupAssignmentScheduleID(resourceId.ID())
+
+	resp, err := client.GetPrivilegedAccessGroupAssignmentSchedule(ctx, id, privilegedaccessgroupassignmentschedule.DefaultGetPrivilegedAccessGroupAssignmentScheduleOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve privileged group assignment schedule with ID %q: %+v", id.ID(), err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
+
 	return pointer.To(true), nil
 }
 
