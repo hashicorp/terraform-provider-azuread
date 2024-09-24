@@ -168,13 +168,14 @@ func FlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	}
 
 	for _, tag := range *tags {
-		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication") {
+		switch {
+		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication"):
 			result["custom_single_sign_on"] = true
-		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
+		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp"):
 			result["enterprise"] = true
-		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
+		case strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1"):
 			result["gallery"] = true
-		} else if strings.EqualFold(tag, "HideApp") {
+		case strings.EqualFold(tag, "HideApp"):
 			result["hide"] = true
 		}
 	}

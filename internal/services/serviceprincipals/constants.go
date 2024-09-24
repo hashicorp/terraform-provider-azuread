@@ -5,8 +5,6 @@ const (
 	DelegatedPermissionGrantConsentTypePrincipal     = "Principal"
 )
 
-var possibleValuesForDelegatedPermissionGrantConsentType = []string{DelegatedPermissionGrantConsentTypeAllPrincipals, DelegatedPermissionGrantConsentTypePrincipal}
-
 const (
 	KeyCredentialTypeAsymmetricX509Cert  = "AsymmetricX509Cert"
 	KeyCredentialTypeX509CertAndPassword = "X509CertAndPassword"

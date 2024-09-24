@@ -218,7 +218,9 @@ func testCheckHasOnlySecurityEnabledGroupsNotMailEnabledGroups() check.KeyValida
 
 func testCheckGroupsDataSource(hasMailGroupsOnly, hasSecurityGroupsOnly, hasNoMailGroups, hasNoSecurityGroups bool) check.KeyValidationFunc {
 	return func(ctx context.Context, clients *clients.Client, values []interface{}) error {
-		ctx, _ = context.WithTimeout(ctx, 5*time.Minute)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
 		client := clients.Groups.GroupClientBeta
 
 		for _, v := range values {

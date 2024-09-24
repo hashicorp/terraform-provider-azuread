@@ -175,7 +175,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Read() sdk.ResourceFun
 					model.TicketNumber = ticketInfo.TicketNumber.GetOrZero()
 					model.TicketSystem = ticketInfo.TicketSystem.GetOrZero()
 				}
-			} else if request != nil {
+			} else if schedule != nil {
 				// The request has likely expired, so populate from the schedule
 				scheduleInfo = &schedule.ScheduleInfo
 

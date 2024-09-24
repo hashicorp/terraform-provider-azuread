@@ -366,8 +366,7 @@ func flattenAccessPackageQuestions(input *[]beta.AccessPackageQuestion) []map[st
 			"text":     flattenAccessPackageLocalizedContent(v.Text),
 		}
 
-		switch impl := raw.(type) {
-		case beta.AccessPackageMultipleChoiceQuestion:
+		if impl, ok := raw.(beta.AccessPackageMultipleChoiceQuestion); ok {
 			choices := make([]map[string]interface{}, 0)
 			for _, choice := range pointer.From(impl.Choices) {
 				choices = append(choices, map[string]interface{}{

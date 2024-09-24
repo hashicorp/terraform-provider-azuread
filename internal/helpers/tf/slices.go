@@ -25,7 +25,7 @@ func FromCommaSeparated(in string) []string {
 	out := make([]string, 0)
 	for _, v := range strings.Split(in, ",") {
 		if v = strings.TrimSpace(v); v != "" {
-			out = append(out)
+			out = append(out, v)
 		}
 	}
 	return out
@@ -36,7 +36,7 @@ func FromSpaceSeparated(in string) []string {
 	out := make([]string, 0)
 	for _, v := range strings.Split(in, " ") {
 		if v = strings.TrimSpace(v); v != "" {
-			out = append(out)
+			out = append(out, v)
 		}
 	}
 	return out

@@ -6,7 +6,6 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/identitygovernance/parse"
 )
 

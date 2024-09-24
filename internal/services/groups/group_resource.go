@@ -615,18 +615,6 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 						if err != nil {
 							return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 						}
-
-						if resp.Model == nil {
-							return tf.ErrorDiagF(errors.New("returned model was nil"), "Creating group in %s", administrativeUnitId)
-						}
-
-						// Obtain the new group ID
-						newGroup, ok := resp.Model.(beta.Group)
-						if !ok {
-							return tf.ErrorDiagF(errors.New("returned model was not a group"), "Creating group in %s", administrativeUnitId)
-						}
-						groupObjectId = pointer.From(newGroup.Id)
-
 					} else {
 						return tf.ErrorDiagF(err, "Creating group in %s", administrativeUnitId)
 					}
@@ -693,16 +681,10 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					properties.Owners_ODataBind = &ownersWithoutCallingPrincipal
 				}
 
-				resp, err := client.CreateGroup(ctx, properties, groupBeta.DefaultCreateGroupOperationOptions())
+				resp, err = client.CreateGroup(ctx, properties, groupBeta.DefaultCreateGroupOperationOptions())
 				if err != nil {
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
-
-				if resp.Model == nil {
-					return tf.ErrorDiagF(errors.New("returned model was nil"), "Creating group %q", displayName)
-				}
-
-				groupObjectId = pointer.From(resp.Model.Id)
 			} else {
 				return tf.ErrorDiagF(err, "Creating group %q", displayName)
 			}
@@ -1228,7 +1210,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 			// Keep retrying on 404 for up to 12 minutes to defeat extended replication delays
 			startTimeForRetries := time.Now()
 			options.RetryFunc = func(resp *http.Response, o *odata.OData) (bool, error) {
-				if response.WasNotFound(resp) && time.Now().Sub(startTimeForRetries).Minutes() < 12 {
+				if response.WasNotFound(resp) && time.Since(startTimeForRetries).Minutes() < 12 {
 					return true, nil
 				}
 				return false, nil
