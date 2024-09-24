@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func IsAppUri(i interface{}, k string) (warnings []string, errors []error) {

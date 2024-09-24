@@ -24,6 +24,13 @@ type (
 )
 
 type (
+	CreateContextFunc = schema.CreateContextFunc
+	DeleteContextFunc = schema.DeleteContextFunc
+	ReadContextFunc   = schema.ReadContextFunc
+	UpdateContextFunc = schema.UpdateContextFunc
+)
+
+type (
 	StateChangeConf  = retry.StateChangeConf
 	StateRefreshFunc = retry.StateRefreshFunc
 )

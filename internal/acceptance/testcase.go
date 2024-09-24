@@ -141,7 +141,7 @@ func (td TestData) providers() map[string]func() (*schema.Provider, error) {
 func (td TestData) externalProviders() map[string]resource.ExternalProvider {
 	return map[string]resource.ExternalProvider{
 		"random": {
-			VersionConstraint: "=3.5.1",
+			VersionConstraint: "=3.6.2",
 			Source:            "registry.terraform.io/hashicorp/random",
 		},
 	}

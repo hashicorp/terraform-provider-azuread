@@ -5,8 +5,6 @@ package validation
 
 import (
 	"testing"
-
-	"github.com/hashicorp/go-cty/cty"
 )
 
 func TestStringIsEmailAddress(t *testing.T) {
@@ -34,10 +32,10 @@ func TestStringIsEmailAddress(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.TestName, func(t *testing.T) {
-			diags := StringIsEmailAddress(tc.Value, cty.Path{})
+			_, errs := StringIsEmailAddress(tc.Value, "test")
 
-			if len(diags) != tc.ErrCount {
-				t.Fatalf("Expected StringIsEmailAddress to have %d not %d errors for %q", tc.ErrCount, len(diags), tc.TestName)
+			if len(errs) != tc.ErrCount {
+				t.Fatalf("Expected StringIsEmailAddress to have %d not %d errors for %q", tc.ErrCount, len(errs), tc.TestName)
 			}
 		})
 	}

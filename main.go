@@ -7,6 +7,7 @@ import (
 	"flag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/hashicorp/terraform-provider-azuread/internal/provider"
 )
 
 func main() {
@@ -16,9 +17,9 @@ func main() {
 	flag.Parse()
 
 	opts := &plugin.ServeOpts{
-		Debug:        debug,
+		Debug:        false,
 		ProviderAddr: "registry.terraform.io/hashicorp/azuread",
-		ProviderFunc: Provider,
+		ProviderFunc: provider.AzureADProvider,
 	}
 
 	plugin.Serve(opts)
