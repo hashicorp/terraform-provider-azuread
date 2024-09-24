@@ -7,16 +7,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
+	"slices"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
+	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
+	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
+	transitivememberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/transitivemember"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func groupDataSource() *pluginsdk.Resource {
@@ -255,11 +259,12 @@ func groupDataSource() *pluginsdk.Resource {
 }
 
 func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Groups.GroupsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := meta.(*clients.Client).Groups.GroupClientBeta
+	memberClient := meta.(*clients.Client).Groups.GroupMemberClientBeta
+	ownerClient := meta.(*clients.Client).Groups.GroupOwnerClientBeta
+	transitiveMemberClient := meta.(*clients.Client).Groups.GroupTransitiveMemberClientBeta
 
-	var group msgraph.Group
+	var foundGroup beta.Group
 	var displayName string
 
 	if v, ok := d.GetOk("display_name"); ok {
@@ -288,9 +293,17 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			filter = fmt.Sprintf("%s and securityEnabled eq %t", filter, *securityEnabled)
 		}
 
-		groups, _, err := client.List(ctx, odata.Query{Filter: filter})
+		resp, err := client.ListGroups(ctx, groupBeta.ListGroupsOperationOptions{Filter: &filter})
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "display_name", "No group found matching specified filter (%s)", filter)
+			if response.WasNotFound(resp.HttpResponse) {
+				return tf.ErrorDiagF(err, "No group found matching specified filter (%s)", filter)
+			}
+			return tf.ErrorDiagF(err, "Retrieving groups for filter (%s)", filter)
+		}
+
+		groups := resp.Model
+		if groups == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving groups for filter (%s)", filter)
 		}
 
 		count := len(*groups)
@@ -300,7 +313,8 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			return tf.ErrorDiagPathF(err, "display_name", "No group found matching specified filter (%s)", filter)
 		}
 
-		group = (*groups)[0]
+		foundGroup = (*groups)[0]
+
 	} else if mailNickname != "" {
 		filter := fmt.Sprintf("mailNickname eq '%s'", mailNickname)
 		if mailEnabled != nil {
@@ -310,9 +324,17 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			filter = fmt.Sprintf("%s and securityEnabled eq %t", filter, *securityEnabled)
 		}
 
-		groups, _, err := client.List(ctx, odata.Query{Filter: filter})
+		resp, err := client.ListGroups(ctx, groupBeta.ListGroupsOperationOptions{Filter: &filter})
 		if err != nil {
-			return tf.ErrorDiagPathF(err, "mail_nickname", "No group found matching specified filter (%s)", filter)
+			if response.WasNotFound(resp.HttpResponse) {
+				return tf.ErrorDiagF(err, "No group found matching specified filter (%s)", filter)
+			}
+			return tf.ErrorDiagF(err, "Retrieving groups for filter (%s)", filter)
+		}
+
+		groups := resp.Model
+		if groups == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving groups for filter (%s)", filter)
 		}
 
 		count := len(*groups)
@@ -322,105 +344,108 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			return tf.ErrorDiagPathF(err, "mail_nickname", "No group found matching specified filter (%s)", filter)
 		}
 
-		group = (*groups)[0]
+		foundGroup = (*groups)[0]
+
 	} else if objectId, ok := d.Get("object_id").(string); ok && objectId != "" {
-		g, status, err := client.Get(ctx, objectId, odata.Query{})
+		resp, err := client.GetGroup(ctx, beta.NewGroupID(objectId), groupBeta.DefaultGetGroupOperationOptions())
 		if err != nil {
-			if status == http.StatusNotFound {
+			if response.WasNotFound(resp.HttpResponse) {
 				return tf.ErrorDiagPathF(nil, "object_id", "No group found with object ID: %q", objectId)
 			}
 			return tf.ErrorDiagF(err, "Retrieving group with object ID: %q", objectId)
 		}
-		if g == nil {
+
+		groupResult := resp.Model
+		if groupResult == nil {
 			return tf.ErrorDiagPathF(nil, "object_id", "Group not found with object ID: %q", objectId)
 		}
 
-		if mailEnabled != nil && (g.MailEnabled == nil || *g.MailEnabled != *mailEnabled) {
+		if mailEnabled != nil && groupResult.MailEnabled.GetOrZero() != *mailEnabled {
 			var actual string
-			if g.MailEnabled == nil {
+			if groupResult.MailEnabled == nil {
 				actual = "nil"
 			} else {
-				actual = fmt.Sprintf("%t", *g.MailEnabled)
+				actual = fmt.Sprintf("%t", groupResult.MailEnabled.GetOrZero())
 			}
 			return tf.ErrorDiagPathF(nil, "mail_enabled", "Group with object ID %q does not have the specified mail_enabled setting (expected: %t, actual: %s)", objectId, *mailEnabled, actual)
 		}
 
-		if securityEnabled != nil && (g.SecurityEnabled == nil || *g.SecurityEnabled != *securityEnabled) {
+		if securityEnabled != nil && groupResult.SecurityEnabled.GetOrZero() != *securityEnabled {
 			var actual string
-			if g.SecurityEnabled == nil {
+			if groupResult.SecurityEnabled == nil {
 				actual = "nil"
 			} else {
-				actual = fmt.Sprintf("%t", *g.SecurityEnabled)
+				actual = fmt.Sprintf("%t", groupResult.SecurityEnabled.GetOrZero())
 			}
 			return tf.ErrorDiagPathF(nil, "security_enabled", "Group with object ID %q does not have the specified security_enabled setting (expected: %t, actual: %s)", objectId, *securityEnabled, actual)
 		}
 
-		group = *g
+		foundGroup = *groupResult
 	}
 
-	if group.ID() == nil {
+	if foundGroup.Id == nil {
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*group.ID())
+	d.SetId(*foundGroup.Id)
 
-	tf.Set(d, "assignable_to_role", group.IsAssignableToRole)
-	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(group.ResourceBehaviorOptions))
-	tf.Set(d, "description", group.Description)
-	tf.Set(d, "display_name", group.DisplayName)
-	tf.Set(d, "mail", group.Mail)
-	tf.Set(d, "mail_enabled", group.MailEnabled)
-	tf.Set(d, "mail_nickname", group.MailNickname)
-	tf.Set(d, "object_id", group.ID())
-	tf.Set(d, "onpremises_domain_name", group.OnPremisesDomainName)
-	tf.Set(d, "onpremises_netbios_name", group.OnPremisesNetBiosName)
-	tf.Set(d, "onpremises_sam_account_name", group.OnPremisesSamAccountName)
-	tf.Set(d, "onpremises_security_identifier", group.OnPremisesSecurityIdentifier)
-	tf.Set(d, "onpremises_sync_enabled", group.OnPremisesSyncEnabled)
-	tf.Set(d, "preferred_language", group.PreferredLanguage)
-	tf.Set(d, "provisioning_options", tf.FlattenStringSlicePtr(group.ResourceProvisioningOptions))
-	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(group.ProxyAddresses))
-	tf.Set(d, "security_enabled", group.SecurityEnabled)
-	tf.Set(d, "theme", group.Theme)
-	tf.Set(d, "types", group.GroupTypes)
-	tf.Set(d, "visibility", group.Visibility)
+	tf.Set(d, "assignable_to_role", foundGroup.IsAssignableToRole.GetOrZero())
+	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(foundGroup.ResourceBehaviorOptions))
+	tf.Set(d, "description", foundGroup.Description.GetOrZero())
+	tf.Set(d, "display_name", foundGroup.DisplayName.GetOrZero())
+	tf.Set(d, "mail", foundGroup.Mail.GetOrZero())
+	tf.Set(d, "mail_enabled", foundGroup.MailEnabled.GetOrZero())
+	tf.Set(d, "mail_nickname", foundGroup.MailNickname.GetOrZero())
+	tf.Set(d, "object_id", foundGroup.Id)
+	tf.Set(d, "onpremises_domain_name", foundGroup.OnPremisesDomainName.GetOrZero())
+	tf.Set(d, "onpremises_netbios_name", foundGroup.OnPremisesNetBiosName.GetOrZero())
+	tf.Set(d, "onpremises_sam_account_name", foundGroup.OnPremisesSamAccountName.GetOrZero())
+	tf.Set(d, "onpremises_security_identifier", foundGroup.OnPremisesSecurityIdentifier.GetOrZero())
+	tf.Set(d, "onpremises_sync_enabled", foundGroup.OnPremisesSyncEnabled.GetOrZero())
+	tf.Set(d, "preferred_language", foundGroup.PreferredLanguage.GetOrZero())
+	tf.Set(d, "provisioning_options", tf.FlattenStringSlicePtr(foundGroup.ResourceProvisioningOptions))
+	tf.Set(d, "proxy_addresses", tf.FlattenStringSlicePtr(foundGroup.ProxyAddresses))
+	tf.Set(d, "security_enabled", foundGroup.SecurityEnabled.GetOrZero())
+	tf.Set(d, "theme", foundGroup.Theme.GetOrZero())
+	tf.Set(d, "types", pointer.From(foundGroup.GroupTypes))
+	tf.Set(d, "visibility", foundGroup.Visibility.GetOrZero())
 
 	dynamicMembership := make([]interface{}, 0)
-	if group.MembershipRule != nil {
+	if foundGroup.MembershipRule != nil {
 		enabled := true
-		if group.MembershipRuleProcessingState != nil && *group.MembershipRuleProcessingState == "Paused" {
+		if foundGroup.MembershipRuleProcessingState != nil && foundGroup.MembershipRuleProcessingState.GetOrZero() == "Paused" {
 			enabled = false
 		}
 		dynamicMembership = append(dynamicMembership, map[string]interface{}{
 			"enabled": enabled,
-			"rule":    group.MembershipRule,
+			"rule":    foundGroup.MembershipRule,
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
-	if group.WritebackConfiguration != nil {
-		tf.Set(d, "writeback_enabled", group.WritebackConfiguration.IsEnabled)
-		tf.Set(d, "onpremises_group_type", group.WritebackConfiguration.OnPremisesGroupType)
+	if foundGroup.WritebackConfiguration != nil {
+		tf.Set(d, "writeback_enabled", foundGroup.WritebackConfiguration.IsEnabled)
+		tf.Set(d, "onpremises_group_type", foundGroup.WritebackConfiguration.OnPremisesGroupType)
 	}
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
-	if group.GroupTypes != nil && hasGroupType(*group.GroupTypes, msgraph.GroupTypeUnified) {
-		groupExtra, err := groupGetAdditional(ctx, client, d.Id())
+	if foundGroup.GroupTypes != nil && slices.Contains(*foundGroup.GroupTypes, GroupTypeUnified) {
+		groupExtra, err := groupGetAdditional(ctx, client, beta.NewGroupID(d.Id()))
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
 		}
 		if groupExtra != nil {
 			if groupExtra.AllowExternalSenders != nil {
-				allowExternalSenders = *groupExtra.AllowExternalSenders
+				allowExternalSenders = groupExtra.AllowExternalSenders.GetOrZero()
 			}
 			if groupExtra.AutoSubscribeNewMembers != nil {
-				autoSubscribeNewMembers = *groupExtra.AutoSubscribeNewMembers
+				autoSubscribeNewMembers = groupExtra.AutoSubscribeNewMembers.GetOrZero()
 			}
 			if groupExtra.HideFromAddressLists != nil {
-				hideFromAddressLists = *groupExtra.HideFromAddressLists
+				hideFromAddressLists = groupExtra.HideFromAddressLists.GetOrZero()
 			}
 			if groupExtra.HideFromOutlookClients != nil {
-				hideFromOutlookClients = *groupExtra.HideFromOutlookClients
+				hideFromOutlookClients = groupExtra.HideFromOutlookClients.GetOrZero()
 			}
 		}
 	}
@@ -432,23 +457,40 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
 	var members *[]string
-	var err error
 	if includeTransitiveMembers {
-		members, _, err = client.ListTransitiveMembers(ctx, d.Id())
+		resp, err := transitiveMemberClient.ListTransitiveMembers(ctx, beta.NewGroupID(d.Id()), transitivememberBeta.DefaultListTransitiveMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve transitive group members for group with object ID: %q", d.Id())
 		}
+		if resp.Model != nil {
+			transitiveMembers := make([]string, 0)
+			for _, object := range *resp.Model {
+				transitiveMembers = append(transitiveMembers, pointer.From(object.DirectoryObject().Id))
+			}
+			members = &transitiveMembers
+		}
 	} else {
-		members, _, err = client.ListMembers(ctx, d.Id())
+		resp, err := memberClient.ListMembers(ctx, beta.NewGroupID(d.Id()), memberBeta.DefaultListMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
+		}
+		if resp.Model != nil {
+			directMembers := make([]string, 0)
+			for _, object := range *resp.Model {
+				directMembers = append(directMembers, pointer.From(object.DirectoryObject().Id))
+			}
+			members = &directMembers
 		}
 	}
 	tf.Set(d, "members", members)
 
-	owners, _, err := client.ListOwners(ctx, d.Id())
+	resp, err := ownerClient.ListOwners(ctx, beta.NewGroupID(d.Id()), ownerBeta.DefaultListOwnersOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve group owners for group with object ID: %q", d.Id())
+	}
+	owners := make([]string, 0)
+	for _, object := range *resp.Model {
+		owners = append(owners, pointer.From(object.DirectoryObject().Id))
 	}
 	tf.Set(d, "owners", owners)
 
