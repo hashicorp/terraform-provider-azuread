@@ -8,18 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunit"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func administrativeUnitMemberResource() *pluginsdk.Resource {
@@ -60,44 +61,35 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 }
 
 func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
-	directoryObjectsClient := meta.(*clients.Client).AdministrativeUnits.DirectoryObjectsClient
-	tenantId := meta.(*clients.Client).TenantID
+	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitClient
+	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
 	id := parse.NewAdministrativeUnitMemberID(d.Get("administrative_unit_object_id").(string), d.Get("member_object_id").(string))
 
 	tf.LockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 	defer tf.UnlockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 
-	administrativeUnit, status, err := client.Get(ctx, id.AdministrativeUnitId, odata.Query{})
+	resp, err := client.GetAdministrativeUnit(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), administrativeunit.DefaultGetAdministrativeUnitOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "object_id", "Administrative unit with object ID %q was not found", id.AdministrativeUnitId)
 		}
 		return tf.ErrorDiagPathF(err, "object_id", "Retrieving administrative unit with object ID: %q", id.AdministrativeUnitId)
 	}
 
-	client.BaseClient.DisableRetries = true
-	if _, status, err = client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err == nil {
-		return tf.ImportAsExistsDiag("azuread_administrative_unit_member", id.String())
-	} else if status != http.StatusNotFound {
+	if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
 		return tf.ErrorDiagF(err, "Checking for existing membership of member %q for administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
+	} else if member != nil {
+		return tf.ImportAsExistsDiag("azuread_administrative_unit_member", id.String())
 	}
-	client.BaseClient.DisableRetries = false
 
-	memberObject, _, err := directoryObjectsClient.Get(ctx, id.MemberId, odata.Query{})
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not retrieve member principal object %q", id.MemberId)
+	memberId := stable.NewDirectoryObjectID(id.MemberId)
+
+	addMemberProperties := stable.ReferenceCreate{
+		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
-	if memberObject == nil {
-		return tf.ErrorDiagF(errors.New("returned memberObject was nil"), "Could not retrieve member principal object %q", id.MemberId)
-	}
-	memberObject.ODataId = (*odata.Id)(pointer.To(fmt.Sprintf("%s/v1.0/%s/directoryObjects/%s",
-		client.BaseClient.Endpoint, tenantId, id.MemberId)))
 
-	members := &msgraph.Members{*memberObject}
-
-	if _, err := client.AddMembers(ctx, *administrativeUnit.ID, members); err != nil {
+	if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding member %q to administrative unit %q", id.MemberId, id.AdministrativeUnitId)
 	}
 
@@ -114,12 +106,10 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 3,
 		Refresh: func() (interface{}, string, error) {
-			_, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId)
-			if err != nil {
-				if status == http.StatusNotFound {
-					return "stub", "Waiting", nil
-				}
+			if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
 				return nil, "Error", fmt.Errorf("retrieving member")
+			} else if member == nil {
+				return "stub", "Waiting", nil
 			}
 			return "stub", "Done", nil
 		},
@@ -134,20 +124,19 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 }
 
 func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Member ID %q", d.Id())
 	}
 
-	if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Member with ID %q was not found in administrative unit %q - removing from state", id.MemberId, id.AdministrativeUnitId)
-			d.SetId("")
-			return nil
-		}
+	if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
 		return tf.ErrorDiagF(err, "Retrieving member %q for administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
+	} else if member == nil {
+		log.Printf("[DEBUG] Member with ID %q was not found in administrative unit %q - removing from state", id.MemberId, id.AdministrativeUnitId)
+		d.SetId("")
+		return nil
 	}
 
 	tf.Set(d, "administrative_unit_object_id", id.AdministrativeUnitId)
@@ -157,7 +146,7 @@ func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.Reso
 }
 
 func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitsClient
+	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
 	id, err := parse.AdministrativeUnitMemberID(d.Id())
 	if err != nil {
@@ -167,19 +156,16 @@ func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.Re
 	tf.LockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 	defer tf.UnlockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 
-	if _, err := client.RemoveMembers(ctx, id.AdministrativeUnitId, &[]string{id.MemberId}); err != nil {
+	if _, err := memberClient.RemoveAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitIdMemberID(id.AdministrativeUnitId, id.MemberId), administrativeunitmember.DefaultRemoveAdministrativeUnitMemberRefOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing member %q from administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
 	}
 
 	// Wait for membership link to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
-			if status == http.StatusNotFound {
-				return pointer.To(false), nil
-			}
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
 			return nil, err
+		} else if member == nil {
+			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
 	}); err != nil {

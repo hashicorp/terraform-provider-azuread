@@ -6,10 +6,12 @@ package administrativeunits_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -109,23 +111,33 @@ func TestAccAdministrativeUnitMember_requiresImport(t *testing.T) {
 }
 
 func (r AdministrativeUnitMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.AdministrativeUnits.AdministrativeUnitsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.AdministrativeUnits.AdministrativeUnitMemberClient
 
 	id, err := parse.AdministrativeUnitMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Administrative Unit Member ID: %v", err)
 	}
 
-	if _, status, err := client.GetMember(ctx, id.AdministrativeUnitId, id.MemberId); err != nil {
-		if status == http.StatusNotFound {
+	options := administrativeunitmember.ListAdministrativeUnitMembersOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.MemberId)),
+	}
+	resp, err := client.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), options)
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve administrative unit member %q (administrative unit ID: %q): %+v", id.MemberId, id.AdministrativeUnitId, err)
 	}
 
-	return pointer.To(true), nil
+	if resp.Model != nil {
+		for _, member := range *resp.Model {
+			if pointer.From(member.DirectoryObject().Id) == id.MemberId {
+				return pointer.To(true), nil
+			}
+		}
+	}
+
+	return pointer.To(false), nil
 }
 
 func (AdministrativeUnitMemberResource) templateThreeUsers(data acceptance.TestData) string {
