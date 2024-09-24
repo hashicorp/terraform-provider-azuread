@@ -8,18 +8,20 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synchronizationjob"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func synchronizationJobResource() *pluginsdk.Resource {
@@ -45,24 +47,27 @@ func synchronizationJobResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this synchronization job should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this synchronization job should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
+
 			"template_id": {
 				Description: "Identifier of the synchronization template this job is based on.",
 				Type:        pluginsdk.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
+
 			"enabled": {
 				Description: "Whether or not the synchronization job is enabled",
 				Type:        pluginsdk.TypeBool,
 				Default:     true,
 				Optional:    true,
 			},
+
 			"schedule": {
 				Type:     pluginsdk.TypeList,
 				Computed: true,
@@ -73,11 +78,13 @@ func synchronizationJobResource() *pluginsdk.Resource {
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
+
 						"interval": {
 							Description: "The interval between synchronization iterations ISO8601. E.g. PT40M run every 40 minutes.",
 							Type:        pluginsdk.TypeString,
 							Computed:    true,
 						},
+
 						"state": {
 							Description: "State.",
 							Type:        pluginsdk.TypeString,
@@ -92,72 +99,64 @@ func synchronizationJobResource() *pluginsdk.Resource {
 
 func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
-	spClient := meta.(*clients.Client).Synchronization.ServicePrincipalsClient
-	objectId := d.Get("service_principal_id").(string)
+	servicePrincipalClient := meta.(*clients.Client).Synchronization.ServicePrincipalClient
 
-	tf.LockByName(servicePrincipalResourceName, objectId)
-	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
+	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
 
-	servicePrincipal, status, err := spClient.Get(ctx, objectId, odata.Query{})
+	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+
+	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", objectId)
+		if response.WasNotFound(servicePrincipalResp.HttpResponse) {
+			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
 		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
-	}
-	if servicePrincipal == nil || servicePrincipal.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
 
-	// Create a new synchronization job
-	synchronizationJob := msgraph.SynchronizationJob{
-		TemplateId: pointer.To(d.Get("template_id").(string)),
+	servicePrincipal := servicePrincipalResp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", servicePrincipalId)
 	}
 
-	newJob, _, err := client.Create(ctx, synchronizationJob, *servicePrincipal.ID())
+	synchronizationJob := stable.SynchronizationJob{
+		TemplateId: nullable.Value(d.Get("template_id").(string)),
+	}
+
+	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob, synchronizationjob.CreateSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating synchronization job for service principal ID %q", *servicePrincipal.ID())
+		return tf.ErrorDiagF(err, "Creating synchronization job for %s", servicePrincipalId)
 	}
-	if newJob == nil {
-		return tf.ErrorDiagF(errors.New("nil received when creating synchronization Job"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID())
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "API error creating synchronization job for %s", servicePrincipalId)
 	}
-	if newJob.ID == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty id received"), "API error creating synchronization job for service principal ID %q", *servicePrincipal.ID())
+	if resp.Model.Id == nil {
+		return tf.ErrorDiagF(errors.New("nil or empty id received"), "API error creating synchronization job for %s", servicePrincipalId)
 	}
 
-	id := parse.NewSynchronizationJobID(*servicePrincipal.ID(), *newJob.ID)
+	id := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, *resp.Model.Id)
 
 	// Wait for the job to appear, this can take several moments
-	timeout, _ := ctx.Deadline()
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			_, status, err := client.Get(ctx, id.JobId, id.ServicePrincipalId)
-			if err != nil {
-				if status == http.StatusNotFound {
-					return "stub", "Waiting", nil
-				}
-				return nil, "Error", fmt.Errorf("retrieving synchronization job")
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
 			}
-			return "stub", "Done", nil
-		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for synchronization job %q", id.JobId)
+			return pointer.To(false), fmt.Errorf("retrieving synchronization job")
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 
-	d.SetId(id.String())
+	resourceId := parse.NewSynchronizationJobID(id.ServicePrincipalId, id.SynchronizationJobId)
+	d.SetId(resourceId.String())
 
 	// Start job if desired
 	if d.Get("enabled").(bool) {
-		_, err := client.Start(ctx, id.JobId, id.ServicePrincipalId)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Starting synchronization job %q", id.JobId)
+		if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+			return tf.ErrorDiagF(err, "Starting %s", id)
 		}
 	}
 
@@ -167,77 +166,89 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
-	id, err := parse.SynchronizationJobID(d.Id())
+	resourceId, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job with ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job ID %q", d.Id())
 	}
 
-	job, status, err := client.Get(ctx, id.JobId, id.ServicePrincipalId)
+	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
+
+	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Synchronization job with ID %q for service principal %q was not found - removing from state!", id.JobId, id.ServicePrincipalId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving synchronization job with object ID %q", id.JobId)
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
+
+	synchronizationJob := resp.Model
+	if synchronizationJob == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
 	tf.Set(d, "service_principal_id", id.ServicePrincipalId)
-	tf.Set(d, "schedule", flattenSynchronizationSchedule(job.Schedule))
-	tf.Set(d, "template_id", job.TemplateId)
-	tf.Set(d, "enabled", *job.Schedule.State == "Active")
+	tf.Set(d, "schedule", flattenSynchronizationSchedule(synchronizationJob.Schedule))
+	tf.Set(d, "template_id", synchronizationJob.TemplateId.GetOrZero())
+	tf.Set(d, "enabled", pointer.From(synchronizationJob.Schedule.State) == stable.SynchronizationScheduleState_Active)
 	return nil
 }
 
 func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
-	id, err := parse.SynchronizationJobID(d.Id())
+
+	resourceId, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job with ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job ID %q", d.Id())
 	}
+
+	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
+
 	if d.HasChange("enabled") {
 		if d.Get("enabled").(bool) {
-			_, err := client.Start(ctx, id.JobId, id.ServicePrincipalId)
-			if err != nil {
-				return tf.ErrorDiagF(err, "Starting synchronization job %q", id.JobId)
+			if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+				return tf.ErrorDiagF(err, "Starting %s", id)
 			}
 		} else {
-			_, err := client.Pause(ctx, id.JobId, id.ServicePrincipalId)
-			if err != nil {
-				return tf.ErrorDiagF(err, "Pausing synchronization job %q", id.JobId)
+			if _, err = client.PauseSynchronizationJob(ctx, id, synchronizationjob.PauseSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+				return tf.ErrorDiagF(err, "Pausing %s", id)
 			}
 		}
 	}
+
 	return synchronizationJobResourceRead(ctx, d, meta)
 }
 
 func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
-	id, err := parse.SynchronizationJobID(d.Id())
+	resourceId, err := parse.SynchronizationJobID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job with ID %q", d.Id())
 	}
 
+	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
+
 	tf.LockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 
-	if _, err := client.Delete(ctx, id.JobId, id.ServicePrincipalId); err != nil {
-		return tf.ErrorDiagF(err, "Removing job %q from service principal with object ID %q", id.JobId, id.ServicePrincipalId)
+	if _, err = client.DeleteSynchronizationJob(ctx, id, synchronizationjob.DeleteSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 
 	// Wait for synchronization job to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-
-		job, _, _ := client.Get(ctx, id.JobId, id.ServicePrincipalId)
-		if job == nil {
-			return pointer.To(false), nil
+	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return nil, err
 		}
-
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of synchronization job %q from service principal with object ID %q", id.JobId, id.ServicePrincipalId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 	}
 
 	return nil
