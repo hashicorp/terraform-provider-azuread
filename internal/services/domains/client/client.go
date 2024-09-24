@@ -4,19 +4,22 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/domains/stable/domain"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	DomainsClient *msgraph.DomainsClient
+	DomainClient *domain.DomainClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	msClient := msgraph.NewDomainsClient()
-	o.ConfigureClient(&msClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	domainClient, err := domain.NewDomainClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(domainClient.Client)
 
 	return &Client{
-		DomainsClient: msClient,
-	}
+		DomainClient: domainClient,
+	}, nil
 }
