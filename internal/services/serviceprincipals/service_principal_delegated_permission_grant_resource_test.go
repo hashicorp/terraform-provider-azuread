@@ -6,11 +6,12 @@ package serviceprincipals_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/oauth2permissiongrants/stable/oauth2permissiongrant"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -50,15 +51,14 @@ func TestAccServicePrincipalDelegatedPermissionGrant_singleUser(t *testing.T) {
 }
 
 func (r ServicePrincipalDelegatedPermissionGrantResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.ServicePrincipals.DelegatedPermissionGrantsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.ServicePrincipals.OAuth2PermissionGrantClient
+	id := stable.NewOAuth2PermissionGrantID(state.ID)
 
-	if _, status, err := client.Get(ctx, state.ID, odata.Query{}); err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Delegated Permission Grant with ID %q does not exist", state.ID)
+	if resp, err := client.GetOAuth2PermissionGrant(ctx, id, oauth2permissiongrant.DefaultGetOAuth2PermissionGrantOperationOptions()); err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Delegated Permission Grant with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", id, err)
 	}
 
 	return pointer.To(true), nil

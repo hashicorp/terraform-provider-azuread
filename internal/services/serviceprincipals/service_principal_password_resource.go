@@ -8,19 +8,20 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
-	"net/http"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
 )
 
 func servicePrincipalPasswordResource() *pluginsdk.Resource {
@@ -46,11 +47,11 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:      "The object ID of the service principal for which this password should be created",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal for which this password should be created",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
@@ -81,12 +82,12 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 			},
 
 			"end_date_relative": {
-				Description:      "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"end_date"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:   "A relative duration for which the password is valid until, for example `240h` (10 days) or `2400h30m`. Changing this field forces a new resource to be created",
+				Type:          pluginsdk.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"end_date"},
+				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
 			"rotate_when_changed": {
@@ -116,108 +117,95 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 }
 
 func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
-	objectId := d.Get("service_principal_id").(string)
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
+	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
 
-	credential, err := helpers.PasswordCredentialForResource(d)
+	credential, err := credentials.PasswordCredentialForResource(d)
 	if err != nil {
 		attr := ""
-		if kerr, ok := err.(helpers.CredentialError); ok {
+		if kerr, ok := err.(credentials.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for service principal with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, attr, "Generating password credentials for %s", servicePrincipalId)
 	}
 	if credential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential was returned"), "Generating password credentials for service principal with object ID %q", objectId)
+		return tf.ErrorDiagF(errors.New("nil credential was returned"), "Generating password credentials for %s", servicePrincipalId)
 	}
 
-	tf.LockByName(servicePrincipalResourceName, objectId)
-	defer tf.UnlockByName(servicePrincipalResourceName, objectId)
+	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 
-	sp, status, err := client.Get(ctx, objectId, odata.Query{})
+	properties := serviceprincipal.AddPasswordRequest{
+		PasswordCredential: credential,
+	}
+	resp, err := client.AddPassword(ctx, servicePrincipalId, properties, serviceprincipal.DefaultAddPasswordOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "service_principal_id", "Service principal with object ID %q was not found", objectId)
-		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", objectId)
-	}
-	if sp == nil || sp.ID() == nil {
-		return tf.ErrorDiagF(errors.New("nil service principal or service principal with nil ID was returned"), "API error retrieving service principal with object ID %q", objectId)
+		return tf.ErrorDiagF(err, "Adding password for %s", servicePrincipalId)
 	}
 
-	newCredential, _, err := client.AddPassword(ctx, *sp.ID(), *credential)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Adding password for service principal with object ID %q", *sp.ID())
-	}
+	newCredential := resp.Model
 	if newCredential == nil {
-		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for service principal with object ID %q", *sp.ID())
+		return tf.ErrorDiagF(errors.New("nil credential received when adding password"), "API error adding password for %s", servicePrincipalId)
 	}
-	if newCredential.KeyId == nil {
-		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for service principal with object ID %q", *sp.ID())
+	if newCredential.KeyId.GetOrZero() == "" {
+		return tf.ErrorDiagF(errors.New("nil or empty keyId received"), "API error adding password for %s", servicePrincipalId)
 	}
-	if newCredential.SecretText == nil || len(*newCredential.SecretText) == 0 {
-		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for service principal with object ID %q", *sp.ID())
+	if newCredential.SecretText.GetOrZero() == "" {
+		return tf.ErrorDiagF(errors.New("nil or empty password received"), "API error adding password for %s", servicePrincipalId)
 	}
 
-	id := parse.NewCredentialID(*sp.ID(), "password", *newCredential.KeyId)
+	id := parse.NewCredentialID(servicePrincipalId.ServicePrincipalId, "password", newCredential.KeyId.GetOrZero())
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
-	timeout, _ := ctx.Deadline()
-	polledForCredential, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   time.Until(timeout),
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 5,
-		Refresh: func() (interface{}, string, error) {
-			servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
-			if err != nil {
-				return nil, "Error", err
-			}
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		if err != nil {
+			return pointer.To(false), err
+		}
 
-			if servicePrincipal.PasswordCredentials != nil {
-				for _, cred := range *servicePrincipal.PasswordCredentials {
-					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
-						return &cred, "Done", nil
-					}
-				}
-			}
+		servicePrincipal := resp.Model
+		if servicePrincipal == nil {
+			return pointer.To(false), nil
+		}
 
-			return nil, "Waiting", nil
-		},
-	}).WaitForStateContext(ctx)
-
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for password credential for service principal with object ID %q", id.ObjectId)
-	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("password credential not found in service principal manifest"), "Waiting for password credential for service principal with object ID %q", id.ObjectId)
+		credential := credentials.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
+		return pointer.To(credential != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for password credential for %s", servicePrincipalId)
 	}
 
 	d.SetId(id.String())
-	d.Set("value", newCredential.SecretText)
+	tf.Set(d, "value", newCredential.SecretText.GetOrZero())
 
 	return servicePrincipalPasswordResourceRead(ctx, d, meta)
 }
 
 func servicePrincipalPasswordResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
 	id, err := parse.PasswordID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	servicePrincipal, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
+
+	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Service Principal with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", servicePrincipalId)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving service principal with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Retrieving %s", servicePrincipalId)
 	}
 
-	credential := helpers.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
+	servicePrincipal := resp.Model
+	if servicePrincipal == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", servicePrincipalId)
+	}
+
+	credential := credentials.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Password credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -225,9 +213,9 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *pluginsdk.Reso
 	}
 
 	if credential.DisplayName != nil {
-		tf.Set(d, "display_name", credential.DisplayName)
-	} else if credential.CustomKeyIdentifier != nil {
-		displayName, err := base64.StdEncoding.DecodeString(*credential.CustomKeyIdentifier)
+		tf.Set(d, "display_name", credential.DisplayName.GetOrZero())
+	} else if !credential.CustomKeyIdentifier.IsNull() {
+		displayName, err := base64.StdEncoding.DecodeString(credential.CustomKeyIdentifier.GetOrZero())
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "display_name", "Parsing CustomKeyIdentifier")
 		}
@@ -236,53 +224,49 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *pluginsdk.Reso
 
 	tf.Set(d, "key_id", id.KeyId)
 	tf.Set(d, "service_principal_id", id.ObjectId)
-
-	startDate := ""
-	if v := credential.StartDateTime; v != nil {
-		startDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "start_date", startDate)
-
-	endDate := ""
-	if v := credential.EndDateTime; v != nil {
-		endDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "end_date", endDate)
+	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
+	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 
 	return nil
 }
 
 func servicePrincipalPasswordResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalsClient
+	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
 	id, err := parse.PasswordID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing password credential with ID %q", d.Id())
 	}
 
-	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
-	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
+	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
 
-	if _, err := client.RemovePassword(ctx, id.ObjectId, id.KeyId); err != nil {
-		return tf.ErrorDiagF(err, "Removing password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
+	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
+
+	properties := serviceprincipal.RemovePasswordRequest{
+		KeyId: pointer.To(id.KeyId),
+	}
+	if _, err = client.RemovePassword(ctx, servicePrincipalId, properties, serviceprincipal.DefaultRemovePasswordOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing password credential %q from %s", id.KeyId, servicePrincipalId)
 	}
 
 	// Wait for service principal password to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-
-		servicePrincipal, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(true), nil
+			}
 			return nil, err
 		}
 
-		credential := helpers.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
-		if credential == nil {
+		servicePrincipal := resp.Model
+		if servicePrincipal == nil {
 			return pointer.To(false), nil
 		}
 
-		return pointer.To(true), nil
+		credential := credentials.GetPasswordCredential(servicePrincipal.PasswordCredentials, id.KeyId)
+		return pointer.To(credential != nil), nil
 	}); err != nil {
 		return tf.ErrorDiagF(err, "Waiting for deletion of password credential %q from service principal with object ID %q", id.KeyId, id.ObjectId)
 	}
