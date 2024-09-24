@@ -11,22 +11,22 @@ import (
 )
 
 type AccessPackageResourcePackageAssociationId struct {
-	AccessPackageId              string
-	ResourcePackageAssociationId string
-	OriginId                     string
-	AccessType                   string
+	AccessPackageId     string
+	ResourceRoleScopeId string
+	OriginId            string
+	AccessType          string
 }
 
 func (id AccessPackageResourcePackageAssociationId) ID() string {
-	return fmt.Sprintf("%s/%s/%s/%s", id.AccessPackageId, id.ResourcePackageAssociationId, id.OriginId, id.AccessType)
+	return fmt.Sprintf("%s/%s/%s/%s", id.AccessPackageId, id.ResourceRoleScopeId, id.OriginId, id.AccessType)
 }
 
-func NewAccessPackageResourcePackageAssociationID(catalogId, resourcePackageAssociationId, originId, accessType string) AccessPackageResourcePackageAssociationId {
+func NewAccessPackageResourcePackageAssociationID(catalogId, resourceRoleScopeId, originId, accessType string) AccessPackageResourcePackageAssociationId {
 	return AccessPackageResourcePackageAssociationId{
-		AccessPackageId:              catalogId,
-		ResourcePackageAssociationId: resourcePackageAssociationId,
-		OriginId:                     originId,
-		AccessType:                   accessType,
+		AccessPackageId:     catalogId,
+		ResourceRoleScopeId: resourceRoleScopeId,
+		OriginId:            originId,
+		AccessType:          accessType,
 	}
 }
 
@@ -45,9 +45,9 @@ func AccessPackageResourcePackageAssociationID(idString string) (*AccessPackageR
 	}
 
 	return &AccessPackageResourcePackageAssociationId{
-		AccessPackageId:              parts[0],
-		ResourcePackageAssociationId: parts[1],
-		OriginId:                     parts[2],
-		AccessType:                   parts[3],
+		AccessPackageId:     parts[0],
+		ResourceRoleScopeId: parts[1],
+		OriginId:            parts[2],
+		AccessType:          parts[3],
 	}, nil
 }

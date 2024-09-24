@@ -5,20 +5,23 @@ package identitygovernance
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackage"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 const accessPackageResourceName = "azuread_access_package"
@@ -46,25 +49,25 @@ func accessPackageResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"catalog_id": {
-				Description:      "The ID of the Catalog this access package will be created in",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The ID of the Catalog this access package will be created in",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"display_name": {
-				Description:      "The display name of the access package",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name of the access package",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"description": {
-				Description:      "The description of the access package",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The description of the access package",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"hidden": {
@@ -81,28 +84,38 @@ func accessPackageResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
-	displayName := d.Get("display_name").(string)
-	catalogId := d.Get("catalog_id").(string)
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(d.Get("catalog_id").(string))
 
-	accessPackageCatalog, _, err := accessPackageCatalogClient.Get(ctx, catalogId, odata.Query{})
+	catalogResp, err := accessPackageCatalogClient.GetEntitlementManagementAccessPackageCatalog(ctx, catalogId, entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", catalogId)
 	}
 
-	properties := msgraph.AccessPackage{
-		DisplayName: pointer.To(displayName),
-		Description: pointer.To(d.Get("description").(string)),
-		IsHidden:    pointer.To(d.Get("hidden").(bool)),
-		Catalog:     accessPackageCatalog,
-		CatalogId:   accessPackageCatalog.ID,
+	catalog := catalogResp.Model
+	if catalog == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", catalogId)
 	}
 
-	accessPackage, _, err := client.Create(ctx, properties)
+	properties := beta.AccessPackage{
+		DisplayName: nullable.Value(d.Get("display_name").(string)),
+		Description: nullable.NoZero(d.Get("description").(string)),
+		IsHidden:    nullable.Value(d.Get("hidden").(bool)),
+
+		AccessPackageCatalog: catalog,
+		CatalogId:            nullable.Value(pointer.From(catalog.Id)),
+	}
+
+	resp, err := client.CreateEntitlementManagementAccessPackage(ctx, properties, entitlementmanagementaccesspackage.DefaultCreateEntitlementManagementAccessPackageOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Creating access package %q", displayName)
+		return tf.ErrorDiagF(err, "Creating access package")
 	}
 
-	d.SetId(*accessPackage.ID)
+	if resp.Model == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Creating access package")
+	}
+
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(pointer.From(resp.Model.Id))
+	d.SetId(id.AccessPackageId)
 
 	return accessPackageResourceRead(ctx, d, meta)
 }
@@ -111,28 +124,33 @@ func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 	accessPackageCatalogClient := meta.(*clients.Client).IdentityGovernance.AccessPackageCatalogClient
 
-	objectId := d.Id()
-	catalogId := d.Get("catalog_id").(string)
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Id())
+	catalogId := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(d.Get("catalog_id").(string))
 
-	accessPackageCatalog, _, err := accessPackageCatalogClient.Get(ctx, catalogId, odata.Query{})
+	catalogResp, err := accessPackageCatalogClient.GetEntitlementManagementAccessPackageCatalog(ctx, catalogId, entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Retrieving access package catalog with ID: %q", catalogId)
+		return tf.ErrorDiagF(err, "Retrieving access package catalog with object ID: %q", catalogId)
 	}
 
-	tf.LockByName(accessPackageResourceName, objectId)
-	defer tf.UnlockByName(accessPackageResourceName, objectId)
-
-	properties := msgraph.AccessPackage{
-		ID:          pointer.To(objectId),
-		DisplayName: pointer.To(d.Get("display_name").(string)),
-		Description: pointer.To(d.Get("description").(string)),
-		IsHidden:    pointer.To(d.Get("hidden").(bool)),
-		Catalog:     accessPackageCatalog,
-		CatalogId:   accessPackageCatalog.ID,
+	catalog := catalogResp.Model
+	if catalog == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", catalogId)
 	}
 
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Could not update access package with ID: %q", objectId)
+	tf.LockByName(accessPackageResourceName, id.AccessPackageId)
+	defer tf.UnlockByName(accessPackageResourceName, id.AccessPackageId)
+
+	properties := beta.AccessPackage{
+		DisplayName: nullable.Value(d.Get("display_name").(string)),
+		Description: nullable.NoZero(d.Get("description").(string)),
+		IsHidden:    nullable.Value(d.Get("hidden").(bool)),
+
+		AccessPackageCatalog: catalog,
+		CatalogId:            nullable.Value(pointer.From(catalog.Id)),
+	}
+
+	if _, err := client.UpdateEntitlementManagementAccessPackage(ctx, id, properties, entitlementmanagementaccesspackage.DefaultUpdateEntitlementManagementAccessPackageOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
 	return accessPackageResourceRead(ctx, d, meta)
@@ -141,58 +159,51 @@ func accessPackageResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 func accessPackageResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
 
-	objectId := d.Id()
-	accessPackage, status, err := client.Get(ctx, objectId, odata.Query{})
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Id())
+
+	resp, err := client.GetEntitlementManagementAccessPackage(ctx, id, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Access package with Object ID %q was not found - removing from state!", objectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s was not found - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagF(err, "Retrieving access package with object ID: %q", objectId)
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
-	tf.Set(d, "display_name", accessPackage.DisplayName)
-	tf.Set(d, "description", accessPackage.Description)
-	tf.Set(d, "hidden", accessPackage.IsHidden)
-	// v1.0 graph API doesn't contain this info however beta contains
-	tf.Set(d, "catalog_id", accessPackage.CatalogId)
+	accessPackage := resp.Model
+	if accessPackage == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	tf.Set(d, "catalog_id", accessPackage.CatalogId.GetOrZero()) // only beta API returns this field
+	tf.Set(d, "description", accessPackage.Description.GetOrZero())
+	tf.Set(d, "display_name", accessPackage.DisplayName.GetOrZero())
+	tf.Set(d, "hidden", accessPackage.IsHidden.GetOrZero())
 
 	return nil
 }
 
 func accessPackageResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).IdentityGovernance.AccessPackageClient
-	accessPackageId := d.Id()
 
-	_, status, err := client.Get(ctx, accessPackageId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Access package was not found"), "id", "Retrieving user with object ID %q", accessPackageId)
-		}
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageID(d.Id())
 
-		return tf.ErrorDiagPathF(err, "id", "Retrieving access package with object ID %q", accessPackageId)
+	if _, err := client.DeleteEntitlementManagementAccessPackage(ctx, id, entitlementmanagementaccesspackage.DefaultDeleteEntitlementManagementAccessPackageOperationOptions()); err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
-	status, err = client.Delete(ctx, accessPackageId)
-	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Deleting access package with object ID %q, got status %d", accessPackageId, status)
-	}
-
-	// Wait for object to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-		if _, status, err := client.Get(ctx, accessPackageId, odata.Query{}); err != nil {
-			if status == http.StatusNotFound {
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if resp, err := client.GetEntitlementManagementAccessPackage(ctx, id, entitlementmanagementaccesspackage.DefaultGetEntitlementManagementAccessPackageOperationOptions()); err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
 			return nil, err
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of access package with object ID %q", accessPackageId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 	}
 
 	return nil

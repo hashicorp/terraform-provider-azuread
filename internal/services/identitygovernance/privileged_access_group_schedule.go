@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type PrivilegedAccessGroupScheduleModel struct {
@@ -47,14 +48,11 @@ func privilegedAccessGroupScheduleArguments() map[string]*pluginsdk.Schema {
 		},
 
 		"assignment_type": {
-			Description: "The ID of the assignment to the group",
-			Type:        pluginsdk.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice([]string{
-				msgraph.PrivilegedAccessGroupRelationshipMember,
-				msgraph.PrivilegedAccessGroupRelationshipOwner,
-			}, false)),
+			Description:      "The ID of the assignment to the group",
+			Type:             pluginsdk.TypeString,
+			Required:         true,
+			ForceNew:         true,
+			ValidateDiagFunc: validation.ValidateDiag(validation.StringInSlice(stable.PossibleValuesForPrivilegedAccessGroupRelationships(), false)),
 		},
 
 		"start_date": {
@@ -139,51 +137,49 @@ func privilegedAccessGroupScheduleAttributes() map[string]*pluginsdk.Schema {
 	}
 }
 
-func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *sdk.ResourceMetaData) (*msgraph.RequestSchedule, error) {
-	schedule := msgraph.RequestSchedule{}
-	schedule.Expiration = &msgraph.ExpirationPattern{}
+func buildScheduleRequest(model *PrivilegedAccessGroupScheduleModel, metadata *sdk.ResourceMetaData) (*stable.RequestSchedule, error) {
+	schedule := stable.RequestSchedule{
+		Expiration:    &stable.ExpirationPattern{},
+		StartDateTime: nullable.NoZero(model.StartDate),
+	}
 	var startDate, expiryDate time.Time
-	var err error
 
 	if model.StartDate != "" {
+		var err error
 		startDate, err = time.Parse(time.RFC3339, model.StartDate)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %+v", model.StartDate, err)
 		}
-		if metadata.ResourceData.HasChange("start_date") {
-			if startDate.Before(time.Now()) {
-				return nil, fmt.Errorf("start_date must be in the future")
-			}
-		}
-		schedule.StartDateTime = &startDate
 	}
 
 	switch {
 	case model.ExpirationDate != "":
+		var err error
 		expiryDate, err = time.Parse(time.RFC3339, model.ExpirationDate)
 		if err != nil {
 			return nil, fmt.Errorf("parsing %s: %+v", model.ExpirationDate, err)
 		}
-		if metadata.ResourceData.HasChange("expiry_date") {
-			if expiryDate.Before(time.Now().Add(5 * time.Minute)) {
-				return nil, fmt.Errorf("expiry_date must be at least 5 minutes in the future")
-			}
-		}
-		schedule.Expiration.EndDateTime = &expiryDate
-		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDateTime)
-	case model.Duration != "":
-		schedule.Expiration.Duration = &model.Duration
-		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeAfterDuration)
-	case model.PermanentAssignment:
-		schedule.Expiration.Type = pointer.To(msgraph.ExpirationPatternTypeNoExpiration)
-	default:
-		return nil, fmt.Errorf("either expiration_date or duration must be set, or permanent_assignment must be true")
-	}
 
-	if model.StartDate != "" && model.ExpirationDate != "" {
-		if expiryDate.Before(startDate.Add(5 * time.Minute)) {
-			return nil, fmt.Errorf("expiration_date must be at least 5 minutes after start_date")
+		if model.StartDate != "" && expiryDate.Before(startDate.Add(5*time.Minute)) {
+			return nil, fmt.Errorf("`expiration_date` must be at least 5 minutes after `start_date`")
 		}
+
+		if metadata.ResourceData.HasChange("expiry_date") && expiryDate.Before(time.Now().Add(5*time.Minute)) {
+			return nil, fmt.Errorf("`expiration_date` must be at least 5 minutes in the future")
+		}
+
+		schedule.Expiration.EndDateTime = nullable.Value(model.ExpirationDate)
+		schedule.Expiration.Type = pointer.To(stable.ExpirationPatternType_AfterDateTime)
+
+	case model.Duration != "":
+		schedule.Expiration.Duration = nullable.Value(model.Duration)
+		schedule.Expiration.Type = pointer.To(stable.ExpirationPatternType_AfterDuration)
+
+	case model.PermanentAssignment:
+		schedule.Expiration.Type = pointer.To(stable.ExpirationPatternType_NoExpiration)
+
+	default:
+		return nil, fmt.Errorf("either `expiration_date` or `duration` must be set, or `permanent_assignment` must be true")
 	}
 
 	return &schedule, nil

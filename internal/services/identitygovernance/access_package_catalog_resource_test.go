@@ -6,11 +6,12 @@ package identitygovernance_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identitygovernance/beta/entitlementmanagementaccesspackagecatalog"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -80,17 +81,16 @@ func TestAccAccessPackageCatalog_update(t *testing.T) {
 
 func (AccessPackageCatalogResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.IdentityGovernance.AccessPackageCatalogClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	id := beta.NewIdentityGovernanceEntitlementManagementAccessPackageCatalogID(state.ID)
 
-	_, status, err := client.Get(ctx, state.ID, odata.Query{})
+	resp, err := client.GetEntitlementManagementAccessPackageCatalog(ctx, id, entitlementmanagementaccesspackagecatalog.DefaultGetEntitlementManagementAccessPackageCatalogOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-
-		return nil, fmt.Errorf("failed to retrieve access package catalog with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
+
 	return pointer.To(true), nil
 }
 

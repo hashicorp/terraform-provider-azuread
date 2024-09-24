@@ -1,9 +1,10 @@
 package directoryobjects
 
 import (
+	"strings"
+
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"strings"
 )
 
 func formatODataType(in string) string {

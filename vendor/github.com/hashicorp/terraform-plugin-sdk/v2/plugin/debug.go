@@ -49,7 +49,7 @@ func DebugServe(ctx context.Context, opts *ServeOpts) (ReattachConfig, <-chan st
 	var config *plugin.ReattachConfig
 	select {
 	case config = <-reattachCh:
-	case <-time.After(12 * time.Second):
+	case <-time.After(2 * time.Second):
 		return ReattachConfig{}, closeCh, errors.New("timeout waiting on reattach config")
 	}
 
