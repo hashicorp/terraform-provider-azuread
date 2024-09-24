@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 type RoleManagementPolicyAssignmentId struct {
@@ -49,13 +48,13 @@ func ParseRoleManagementPolicyAssignmentID(input string) (*RoleManagementPolicyA
 	}
 
 	switch id.ScopeType {
-	case msgraph.UnifiedRoleManagementPolicyScopeDirectory, msgraph.UnifiedRoleManagementPolicyScopeDirectoryRole:
+	case scopeTypeDirectory, scopeTypeDirectoryRole:
 		if _, err := validation.IsUUID(id.RoleDefinitionId, "RoleDefinitionId"); len(err) > 0 {
 			return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: %+v", err)
 		}
-	case msgraph.UnifiedRoleManagementPolicyScopeGroup:
-		if id.RoleDefinitionId != msgraph.PrivilegedAccessGroupRelationshipMember &&
-			id.RoleDefinitionId != msgraph.PrivilegedAccessGroupRelationshipOwner {
+	case scopeTypeGroup:
+		if id.RoleDefinitionId != roleDefinitionIdMember &&
+			id.RoleDefinitionId != roleDefinitionIdOwner {
 			return nil, fmt.Errorf("parsing RoleManagementPolicyAssignmentId: invalid RoleDefinitionId")
 		}
 	default:

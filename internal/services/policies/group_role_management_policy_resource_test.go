@@ -6,14 +6,16 @@ package policies_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies/parse"
 )
 
 type GroupRoleManagementPolicyResource struct{}
@@ -57,15 +59,21 @@ func TestGroupRoleManagementPolicy_owner(t *testing.T) {
 
 func (GroupRoleManagementPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Policies.RoleManagementPolicyClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
-
-	_, status, err := client.Get(ctx, state.ID)
+	policyId, err := parse.ParseRoleManagementPolicyID(state.ID)
 	if err != nil {
-		if status == http.StatusNotFound {
-			return pointer.To(false), nil
-		}
-		return nil, fmt.Errorf("failed to retrieve role management policy with ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("could not parse policy ID: %v", err)
+	}
+
+	id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
+
+	policyResp, err := client.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+	if err != nil {
+		return nil, fmt.Errorf("retrieving %s: %v", id, err)
+	}
+
+	policy := policyResp.Model
+	if policy == nil {
+		return nil, fmt.Errorf("retrieving %s: API error, model was nil", id)
 	}
 
 	return pointer.To(true), nil

@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 type RoleManagementPolicyId struct {
@@ -45,9 +44,9 @@ func ParseRoleManagementPolicyID(input string) (*RoleManagementPolicyId, error) 
 		return nil, fmt.Errorf("parsing RoleManagementPolicyId PolicyId: %+v", err)
 	}
 
-	if id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeDirectory &&
-		id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeDirectoryRole &&
-		id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeGroup {
+	if id.ScopeType != scopeTypeDirectory &&
+		id.ScopeType != scopeTypeDirectoryRole &&
+		id.ScopeType != scopeTypeGroup {
 		return nil, fmt.Errorf("parsing RoleManagementPolicyId: invalid ScopeType")
 	}
 
@@ -81,7 +80,7 @@ func ValidateDirectoryRoleManagementPolicyID(input interface{}, key string) (war
 		errors = append(errors, err)
 	}
 
-	if id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeDirectory {
+	if id.ScopeType != scopeTypeDirectory {
 		errors = append(errors, fmt.Errorf("expected %q to be a Directory role management policy", key))
 	}
 
@@ -100,7 +99,7 @@ func ValidateDirectoryRoleRoleManagementPolicyID(input interface{}, key string) 
 		errors = append(errors, err)
 	}
 
-	if id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeDirectoryRole {
+	if id.ScopeType != scopeTypeDirectoryRole {
 		errors = append(errors, fmt.Errorf("expected %q to be a DirectoryRole role management policy", key))
 	}
 
@@ -119,7 +118,7 @@ func ValidateGroupRoleManagementPolicyID(input interface{}, key string) (warning
 		errors = append(errors, err)
 	}
 
-	if id.ScopeType != msgraph.UnifiedRoleManagementPolicyScopeGroup {
+	if id.ScopeType != scopeTypeGroup {
 		errors = append(errors, fmt.Errorf("expected %q to be a Group role management policy", key))
 	}
 

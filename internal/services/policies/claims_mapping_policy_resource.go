@@ -5,18 +5,20 @@ package policies
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/claimsmappingpolicy"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 )
 
 func claimsMappingPolicyResource() *pluginsdk.Resource {
@@ -46,14 +48,16 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeList,
 				Required:    true,
 				Elem: &pluginsdk.Schema{
-					Type: pluginsdk.TypeString,
+					Type:         pluginsdk.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
 				},
 			},
 
 			"display_name": {
-				Description: "Display name for this policy",
-				Type:        pluginsdk.TypeString,
-				Required:    true,
+				Description:  "Display name for this policy",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 		},
 	}
@@ -62,59 +66,67 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 func claimsMappingPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
 
-	claimsMappingPolicy := msgraph.ClaimsMappingPolicy{
-		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: pointer.To(d.Get("display_name").(string)),
+	properties := stable.ClaimsMappingPolicy{
+		Definition:  tf.ExpandStringSlice(d.Get("definition").([]interface{})),
+		DisplayName: nullable.Value(d.Get("display_name").(string)),
 	}
-	policy, _, err := client.Create(ctx, claimsMappingPolicy)
+
+	resp, err := client.CreateClaimsMappingPolicy(ctx, properties, claimsmappingpolicy.DefaultCreateClaimsMappingPolicyOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not create Claims Mapping Policy")
 	}
 
-	if policy.ID() == nil || *policy.ID() == "" {
-		return tf.ErrorDiagF(fmt.Errorf("Object ID returned for Claims Mapping Policy is nil"), "Bad API response")
+	claimsMappingPolicy := resp.Model
+	if claimsMappingPolicy == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Could not create Claims Mapping Policy")
+	}
+	if claimsMappingPolicy.Id == nil {
+		return tf.ErrorDiagF(errors.New("model return with nil ID"), "Could not create Claims Mapping Policy")
 	}
 
-	d.SetId(*policy.ID())
+	id := stable.NewPolicyClaimsMappingPolicyID(*claimsMappingPolicy.Id)
+	d.SetId(id.ClaimsMappingPolicyId)
 
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
 }
 
 func claimsMappingPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	objectId := d.Id()
+	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
 
-	policy, status, err := client.Get(ctx, objectId, odata.Query{})
+	resp, err := client.GetClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Claims Mapping Policy with Object ID %q was not found - removing from state!", objectId)
+		if response.WasNotFound(resp.HttpResponse) {
+			log.Printf("[DEBUG] %s - removing from state!", id)
 			d.SetId("")
 			return nil
 		}
 
-		return tf.ErrorDiagF(err, "retrieving Claims Mapping Policy with object ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "retrieving %s", id)
 	}
 
-	tf.Set(d, "definition", policy.Definition)
-	tf.Set(d, "display_name", policy.DisplayName)
+	claimsMappingPolicy := resp.Model
+	if claimsMappingPolicy == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
+	}
+
+	tf.Set(d, "definition", tf.FlattenStringSlice(claimsMappingPolicy.Definition))
+	tf.Set(d, "display_name", claimsMappingPolicy.DisplayName.GetOrZero())
 
 	return nil
 }
 
 func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	objectId := d.Id()
+	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
 
-	claimsMappingPolicy := msgraph.ClaimsMappingPolicy{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &objectId,
-		},
-		Definition:  tf.ExpandStringSlicePtr(d.Get("definition").([]interface{})),
-		DisplayName: pointer.To(d.Get("display_name").(string)),
+	properties := stable.ClaimsMappingPolicy{
+		Definition:  tf.ExpandStringSlice(d.Get("definition").([]interface{})),
+		DisplayName: nullable.Value(d.Get("display_name").(string)),
 	}
-	_, err := client.Update(ctx, claimsMappingPolicy)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Could not update Claims Mapping Policy with object ID %q", objectId)
+
+	if _, err := client.UpdateClaimsMappingPolicy(ctx, id, properties, claimsmappingpolicy.DefaultUpdateClaimsMappingPolicyOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
@@ -122,20 +134,10 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 
 func claimsMappingPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	objectId := d.Id()
+	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
 
-	_, status, err := client.Get(ctx, objectId, odata.Query{})
-	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Claims Mapping Policy was not found"), "id", "Retrieving Claims Mapping Policy with object ID %q", objectId)
-		}
-
-		return tf.ErrorDiagPathF(err, "id", "Retrieving Claims Mapping Policy with object ID %q", objectId)
-	}
-
-	status, err = client.Delete(ctx, objectId)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Deleting Claims Mapping Policy with object ID %q, received status %d", objectId, status)
+	if _, err := client.DeleteClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultDeleteClaimsMappingPolicyOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
 	return nil
