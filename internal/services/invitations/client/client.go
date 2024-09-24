@@ -4,24 +4,31 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/invitations/stable/invitation"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	InvitationsClient *msgraph.InvitationsClient
-	UsersClient       *msgraph.UsersClient
+	InvitationClient *invitation.InvitationClient
+	UserClient       *user.UserClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	invitationsClient := msgraph.NewInvitationsClient()
-	o.ConfigureClient(&invitationsClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	invitationClient, err := invitation.NewInvitationClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(invitationClient.Client)
 
-	usersClient := msgraph.NewUsersClient()
-	o.ConfigureClient(&usersClient.BaseClient)
+	userClient, err := user.NewUserClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(userClient.Client)
 
 	return &Client{
-		InvitationsClient: invitationsClient,
-		UsersClient:       usersClient,
-	}
+		InvitationClient: invitationClient,
+		UserClient:       userClient,
+	}, nil
 }

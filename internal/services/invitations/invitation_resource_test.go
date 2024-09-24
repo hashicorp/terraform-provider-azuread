@@ -6,11 +6,12 @@ package invitations_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -19,7 +20,7 @@ import (
 
 type InvitationResource struct{}
 
-func TestAccInvitation_basic(t *testing.T) {
+func TestAccInvitation_guest(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_invitation", "test")
 	r := InvitationResource{}
 
@@ -140,21 +141,18 @@ func TestAccInvitation_withGroupMembership(t *testing.T) {
 }
 
 func (r InvitationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Invitations.UsersClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Invitations.UserClient
+	userId := stable.NewUserID(state.Attributes["user_id"])
 
-	userID := state.Attributes["user_id"]
-
-	user, status, err := client.Get(ctx, userID, odata.Query{})
+	resp, err := client.GetUser(ctx, userId, user.DefaultGetUserOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Invited user with object ID %q does not exist", userID)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve invited user with object ID %q: %+v", userID, err)
+		return nil, fmt.Errorf("failed to retrieve invited %s: %+v", userId, err)
 	}
 
-	return pointer.To(user.ID() != nil && *user.ID() == userID), nil
+	return pointer.To(true), nil
 }
 
 func (InvitationResource) basic(data acceptance.TestData) string {
