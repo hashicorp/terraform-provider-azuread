@@ -6,22 +6,21 @@ package applications
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func applicationCertificateResource() *pluginsdk.Resource {
@@ -151,12 +150,12 @@ func applicationCertificateResource() *pluginsdk.Resource {
 }
 
 func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
 
-	var applicationId *parse.ApplicationId
+	var applicationId *stable.ApplicationId
 	var err error
 	if v := d.Get("application_id").(string); v != "" {
-		if applicationId, err = parse.ParseApplicationID(v); err != nil {
+		if applicationId, err = stable.ParseApplicationID(v); err != nil {
 			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
 		}
 	} else {
@@ -165,18 +164,18 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 		// should be removed in version 3.0 along with the application_object_id property
 		v = d.Get("application_object_id").(string)
 		if _, err = uuid.ParseUUID(v); err == nil {
-			applicationId = parse.NewApplicationID(v)
+			applicationId = pointer.To(stable.NewApplicationID(v))
 		} else {
-			if applicationId, err = parse.ParseApplicationID(v); err != nil {
+			if applicationId, err = stable.ParseApplicationID(v); err != nil {
 				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
 			}
 		}
 	}
 
-	credential, err := helpers.KeyCredentialForResource(d)
+	credential, err := credentials.KeyCredentialForResource(d)
 	if err != nil {
 		attr := ""
-		if kerr, ok := err.(helpers.CredentialError); ok {
+		if kerr, ok := err.(credentials.CredentialError); ok {
 			attr = kerr.Attr()
 		}
 		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for %s", applicationId)
@@ -185,23 +184,25 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 	if credential.KeyId == nil {
 		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
 	}
-	id := parse.NewCredentialID(applicationId.ApplicationId, "certificate", *credential.KeyId)
+	id := parse.NewCredentialID(applicationId.ApplicationId, "certificate", credential.KeyId.GetOrZero())
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "Application with object ID %q was not found", id.ObjectId)
-		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
 	}
 
-	newCredentials := make([]msgraph.KeyCredential, 0)
+	app := resp.Model
+	if app == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", applicationId)
+	}
+
+	newCredentials := make([]stable.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, *credential.KeyId) {
+			if strings.EqualFold(cred.KeyId.GetOrZero(), credential.KeyId.GetOrZero()) {
 				return tf.ImportAsExistsDiag("azuread_application_certificate", id.String())
 			}
 			newCredentials = append(newCredentials, cred)
@@ -210,14 +211,12 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 
 	newCredentials = append(newCredentials, *credential)
 
-	properties := msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &id.ObjectId,
-		},
+	properties := stable.Application{
+		Id:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}
-	if _, err := client.Update(ctx, properties); err != nil {
-		return tf.ErrorDiagF(err, "Adding certificate for application with object ID %q", id.ObjectId)
+	if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Adding certificate for %s", applicationId)
 	}
 
 	// Wait for the credential to appear in the application manifest, this can take several minutes
@@ -229,14 +228,18 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return nil, "Error", err
+			}
+			app := resp.Model
+			if app == nil {
+				return nil, "Error", errors.New("model was nil")
 			}
 
 			if app.KeyCredentials != nil {
 				for _, cred := range *app.KeyCredentials {
-					if cred.KeyId != nil && strings.EqualFold(*cred.KeyId, id.KeyId) {
+					if strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 						return &cred, "Done", nil
 					}
 				}
@@ -247,9 +250,9 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 	}).WaitForStateContext(ctx)
 
 	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for certificate credential for application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(err, "Waiting for certificate credential for %s", applicationId)
 	} else if polledForCredential == nil {
-		return tf.ErrorDiagF(errors.New("certificate credential not found in application manifest"), "Waiting for certificate credential for application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagF(errors.New("certificate credential not found in application manifest"), "Waiting for certificate credential for %s", applicationId)
 	}
 
 	d.SetId(id.String())
@@ -258,26 +261,26 @@ func applicationCertificateResourceCreate(ctx context.Context, d *pluginsdk.Reso
 }
 
 func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing certificate credential with ID %q", d.Id())
 	}
 
-	applicationId := parse.NewApplicationID(id.ObjectId)
+	applicationId := stable.NewApplicationID(id.ObjectId)
 
-	app, status, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			log.Printf("[DEBUG] Application with ID %q for %s credential %q was not found - removing from state!", id.ObjectId, id.KeyType, id.KeyId)
-			d.SetId("")
-			return nil
-		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving Application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
 	}
 
-	credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
+	app := resp.Model
+	if app == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", applicationId)
+	}
+
+	credential := credentials.GetKeyCredential(app.KeyCredentials, id.KeyId)
 	if credential == nil {
 		log.Printf("[DEBUG] Certificate credential %q (ID %q) was not found - removing from state!", id.KeyId, id.ObjectId)
 		d.SetId("")
@@ -286,19 +289,9 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 
 	tf.Set(d, "application_id", applicationId.ID())
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "type", credential.Type)
-
-	startDate := ""
-	if v := credential.StartDateTime; v != nil {
-		startDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "start_date", startDate)
-
-	endDate := ""
-	if v := credential.EndDateTime; v != nil {
-		endDate = v.Format(time.RFC3339)
-	}
-	tf.Set(d, "end_date", endDate)
+	tf.Set(d, "type", credential.Type.GetOrZero())
+	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
+	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 
 	if v := d.Get("application_object_id").(string); v != "" {
 		tf.Set(d, "application_object_id", v)
@@ -310,7 +303,7 @@ func applicationCertificateResourceRead(ctx context.Context, d *pluginsdk.Resour
 }
 
 func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Applications.ApplicationsClientBeta
+	client := meta.(*clients.Client).Applications.ApplicationClient
 
 	id, err := parse.CertificateID(d.Id())
 	if err != nil {
@@ -320,44 +313,47 @@ func applicationCertificateResourceDelete(ctx context.Context, d *pluginsdk.Reso
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
 
-	app, status, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	applicationId := stable.NewApplicationID(id.ObjectId)
+
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return tf.ErrorDiagPathF(fmt.Errorf("Application was not found"), "application_object_id", "Retrieving Application with ID %q", id.ObjectId)
-		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving application with object ID %q", id.ObjectId)
+		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
 	}
 
-	newCredentials := make([]msgraph.KeyCredential, 0)
+	app := resp.Model
+	if app == nil {
+		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", applicationId)
+	}
+
+	newCredentials := make([]stable.KeyCredential, 0)
 	if app.KeyCredentials != nil {
 		for _, cred := range *app.KeyCredentials {
-			if cred.KeyId != nil && !strings.EqualFold(*cred.KeyId, id.KeyId) {
+			if !strings.EqualFold(cred.KeyId.GetOrZero(), id.KeyId) {
 				newCredentials = append(newCredentials, cred)
 			}
 		}
 	}
 
-	properties := msgraph.Application{
-		DirectoryObject: msgraph.DirectoryObject{
-			Id: &id.ObjectId,
-		},
+	properties := stable.Application{
+		Id:             &id.ObjectId,
 		KeyCredentials: &newCredentials,
 	}
-	if _, err := client.Update(ctx, properties); err != nil {
+	if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing certificate credential %q from application with object ID %q", id.KeyId, id.ObjectId)
 	}
 
 	// Wait for application certificate to be deleted
-	if err := helpers.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		defer func() { client.BaseClient.DisableRetries = false }()
-		client.BaseClient.DisableRetries = true
-
-		app, _, err := client.Get(ctx, id.ObjectId, odata.Query{})
+	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 		if err != nil {
 			return nil, err
 		}
+		app := resp.Model
+		if app == nil {
+			return nil, errors.New("model was nil")
+		}
 
-		credential := helpers.GetKeyCredential(app.KeyCredentials, id.KeyId)
+		credential := credentials.GetKeyCredential(app.KeyCredentials, id.KeyId)
 		if credential == nil {
 			return pointer.To(false), nil
 		}

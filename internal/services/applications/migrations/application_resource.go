@@ -9,9 +9,8 @@ import (
 	"log"
 
 	"github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
@@ -67,7 +66,7 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 									"type": {
 										Type:     pluginsdk.TypeString,
 										Optional: true,
-										Default:  msgraph.PermissionScopeTypeUser,
+										Default:  "User",
 									},
 
 									"user_consent_description": {
@@ -533,7 +532,7 @@ func ResourceApplicationInstanceResourceV1() *pluginsdk.Resource {
 									"type": {
 										Type:     pluginsdk.TypeString,
 										Optional: true,
-										Default:  msgraph.PermissionScopeTypeUser,
+										Default:  "User",
 									},
 
 									"user_consent_description": {
@@ -878,7 +877,7 @@ func ResourceApplicationInstanceResourceV1() *pluginsdk.Resource {
 			"sign_in_audience": {
 				Type:     pluginsdk.TypeString,
 				Optional: true,
-				Default:  msgraph.SignInAudienceAzureADMyOrg,
+				Default:  "AzureADMyOrg",
 			},
 
 			"single_page_application": {

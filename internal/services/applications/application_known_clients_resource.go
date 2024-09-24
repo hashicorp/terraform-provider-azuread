@@ -6,17 +6,17 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationKnownClientsModel struct {
@@ -70,16 +70,14 @@ func (r ApplicationKnownClientsResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationKnownClientsModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -89,29 +87,28 @@ func (r ApplicationKnownClientsResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
 			// Check for existing known clients
-			if result.Api != nil && result.Api.KnownClientApplications != nil && len(*result.Api.KnownClientApplications) > 0 {
+			if app.Api != nil && app.Api.KnownClientApplications != nil && len(*app.Api.KnownClientApplications) > 0 {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					KnownClientApplications: pointer.To(model.KnownClientIds),
 				},
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -125,37 +122,37 @@ func (r ApplicationKnownClientsResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseKnownClientsID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
 			}
-			if result.Api == nil || result.Api.KnownClientApplications == nil {
+			if app.Api == nil || app.Api.KnownClientApplications == nil {
 				return metadata.MarkAsGone(id)
 			}
 
 			state := ApplicationKnownClientsModel{
 				ApplicationId:  applicationId.ID(),
-				KnownClientIds: pointer.From(result.Api.KnownClientApplications),
+				KnownClientIds: pointer.From(app.Api.KnownClientApplications),
 			}
 
 			return metadata.Encode(&state)
@@ -167,14 +164,14 @@ func (r ApplicationKnownClientsResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseKnownClientsID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			var model ApplicationKnownClientsModel
 			if err := metadata.Decode(&model); err != nil {
@@ -184,17 +181,13 @@ func (r ApplicationKnownClientsResource) Update() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					KnownClientApplications: pointer.To(model.KnownClientIds),
 				},
 			}
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -207,31 +200,25 @@ func (r ApplicationKnownClientsResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseKnownClientsID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					KnownClientApplications: &[]string{},
 				},
 			}
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

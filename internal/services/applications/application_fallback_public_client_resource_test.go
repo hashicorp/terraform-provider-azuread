@@ -6,11 +6,12 @@ package applications_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -73,27 +74,29 @@ func TestAccApplicationFallbackPublicClient_update(t *testing.T) {
 }
 
 func (r ApplicationFallbackPublicClientResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	client := clients.Applications.ApplicationsClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
+	client := clients.Applications.ApplicationClient
 
 	id, err := parse.ParseFallbackPublicClientID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+	applicationId := stable.NewApplicationID(id.ApplicationId)
+
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
+		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
-	}
-	if result == nil {
-		return nil, fmt.Errorf("retrieving %s: result was nil", id)
+		return nil, fmt.Errorf("retrieving %s: %+v", applicationId, err)
 	}
 
-	if result.IsFallbackPublicClient == nil {
+	app := resp.Model
+	if app == nil {
+		return nil, fmt.Errorf("retrieving %s: model was nil", applicationId)
+	}
+
+	if app.IsFallbackPublicClient == nil {
 		return pointer.To(false), nil
 	}
 

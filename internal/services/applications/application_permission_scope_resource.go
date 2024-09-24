@@ -6,19 +6,20 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationPermissionScopeModel struct {
@@ -88,14 +89,11 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 		},
 
 		"type": {
-			Description: "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions",
-			Type:        pluginsdk.TypeString,
-			Optional:    true,
-			Default:     msgraph.PermissionScopeTypeUser,
-			ValidateFunc: validation.StringInSlice([]string{
-				msgraph.PermissionScopeTypeAdmin,
-				msgraph.PermissionScopeTypeUser,
-			}, false),
+			Description:  "Whether this delegated permission should be considered safe for non-admin users to consent to on behalf of themselves, or whether an administrator should be required for consent to the permissions",
+			Type:         pluginsdk.TypeString,
+			Optional:     true,
+			Default:      PermissionScopeTypeUser,
+			ValidateFunc: validation.StringInSlice(possibleValuesForPermissionScopeType, false),
 		},
 
 		"user_consent_description": {
@@ -122,16 +120,14 @@ func (r ApplicationPermissionScopeResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationPermissionScopeModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -141,49 +137,48 @@ func (r ApplicationPermissionScopeResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
-			newScopes := make([]msgraph.PermissionScope, 0)
+			newScopes := make([]stable.PermissionScope, 0)
 
 			// Don't forget any existing scopes, since all scopes must be updated together
-			if result.Api != nil && result.Api.OAuth2PermissionScopes != nil {
-				newScopes = *result.Api.OAuth2PermissionScopes
+			if app.Api != nil && app.Api.OAuth2PermissionScopes != nil {
+				newScopes = *app.Api.OAuth2PermissionScopes
 			}
 
 			// Check for existing scope ID
 			for _, scope := range newScopes {
-				if strings.EqualFold(*scope.ID, id.ScopeID) {
+				if strings.EqualFold(*scope.Id, id.ScopeID) {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
 			}
 
-			newScopes = append(newScopes, msgraph.PermissionScope{
-				ID:                      &model.ScopeId,
+			newScopes = append(newScopes, stable.PermissionScope{
+				Id:                      &model.ScopeId,
 				IsEnabled:               pointer.To(true),
-				AdminConsentDescription: &model.AdminConsentDescription,
-				AdminConsentDisplayName: &model.AdminConsentDisplayName,
-				Type:                    model.Type,
-				UserConsentDescription:  &model.UserConsentDescription,
-				UserConsentDisplayName:  &model.UserConsentDisplayName,
-				Value:                   &model.Value,
+				AdminConsentDescription: nullable.Value(model.AdminConsentDescription),
+				AdminConsentDisplayName: nullable.Value(model.AdminConsentDisplayName),
+				Type:                    nullable.Value(model.Type),
+				UserConsentDescription:  nullable.Value(model.UserConsentDescription),
+				UserConsentDisplayName:  nullable.Value(model.UserConsentDisplayName),
+				Value:                   nullable.Value(model.Value),
 			})
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					OAuth2PermissionScopes: &newScopes,
 				},
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -197,38 +192,38 @@ func (r ApplicationPermissionScopeResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParsePermissionScopeID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
 			}
-			if result.Api == nil || result.Api.OAuth2PermissionScopes == nil {
+			if app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
 				return metadata.MarkAsGone(id)
 			}
 
 			// Identify the scope by ID
-			var scope *msgraph.PermissionScope
-			for _, existingScope := range *result.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.ID, id.ScopeID) {
+			var scope *stable.PermissionScope
+			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
+				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
 					scope = &existingScope
 					break
 				}
@@ -241,12 +236,12 @@ func (r ApplicationPermissionScopeResource) Read() sdk.ResourceFunc {
 			state := ApplicationPermissionScopeModel{
 				ApplicationId:           applicationId.ID(),
 				ScopeId:                 id.ScopeID,
-				AdminConsentDescription: pointer.From(scope.AdminConsentDescription),
-				AdminConsentDisplayName: pointer.From(scope.AdminConsentDisplayName),
-				Type:                    scope.Type,
-				UserConsentDescription:  pointer.From(scope.UserConsentDescription),
-				UserConsentDisplayName:  pointer.From(scope.UserConsentDisplayName),
-				Value:                   pointer.From(scope.Value),
+				AdminConsentDescription: scope.AdminConsentDescription.GetOrZero(),
+				AdminConsentDisplayName: scope.AdminConsentDisplayName.GetOrZero(),
+				Type:                    scope.Type.GetOrZero(),
+				UserConsentDescription:  scope.UserConsentDescription.GetOrZero(),
+				UserConsentDisplayName:  scope.UserConsentDisplayName.GetOrZero(),
+				Value:                   scope.Value.GetOrZero(),
 			}
 
 			return metadata.Encode(&state)
@@ -258,7 +253,7 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParsePermissionScopeID(metadata.ResourceData.Id())
 			if err != nil {
@@ -266,39 +261,41 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 			}
 
 			var model ApplicationPermissionScopeModel
-			if err := metadata.Decode(&model); err != nil {
+			if err = metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
 			// Prepare a new scope to replace the existing one
-			scope := msgraph.PermissionScope{
-				ID:                      &id.ScopeID,
+			scope := stable.PermissionScope{
+				Id:                      &id.ScopeID,
 				IsEnabled:               pointer.To(true),
-				AdminConsentDescription: &model.AdminConsentDescription,
-				AdminConsentDisplayName: &model.AdminConsentDisplayName,
-				Type:                    model.Type,
-				UserConsentDescription:  &model.UserConsentDescription,
-				UserConsentDisplayName:  &model.UserConsentDisplayName,
-				Value:                   &model.Value,
+				AdminConsentDescription: nullable.Value(model.AdminConsentDescription),
+				AdminConsentDisplayName: nullable.Value(model.AdminConsentDisplayName),
+				Type:                    nullable.Value(model.Type),
+				UserConsentDescription:  nullable.Value(model.UserConsentDescription),
+				UserConsentDisplayName:  nullable.Value(model.UserConsentDisplayName),
+				Value:                   nullable.Value(model.Value),
 			}
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.Api == nil || result.Api.OAuth2PermissionScopes == nil {
+
+			app := resp.Model
+			if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
 				return fmt.Errorf("retrieving %s: api.oauth2PermissionScopes was nil", applicationId)
 			}
 
 			// Look for a scope to replace, matching by ID
-			newScopes := make([]msgraph.PermissionScope, 0)
+			newScopes := make([]stable.PermissionScope, 0)
 			found := false
-			for _, existingScope := range *result.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.ID, id.ScopeID) {
+			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
+				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
 					newScopes = append(newScopes, scope)
 					found = true
 				} else {
@@ -310,22 +307,18 @@ func (r ApplicationPermissionScopeResource) Update() sdk.ResourceFunc {
 			}
 
 			// Disable the existing scope prior to update
-			if err = applicationDisableOauth2PermissionScopes(ctx, client, result, &newScopes); err != nil {
+			if err = applicationDisableOauth2PermissionScopes(ctx, client, applicationId, &newScopes); err != nil {
 				return fmt.Errorf("disabling %s in preparation for update: %+v", id, err)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					OAuth2PermissionScopes: &newScopes,
 				},
 			}
 
 			// Patch the application with the new set of scopes
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -338,9 +331,7 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParsePermissionScopeID(metadata.ResourceData.Id())
 			if err != nil {
@@ -355,20 +346,22 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.Api == nil || result.Api.OAuth2PermissionScopes == nil {
+
+			app := resp.Model
+			if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
 				return fmt.Errorf("retrieving %s: api.oauth2PermissionScopes was nil", applicationId)
 			}
 
 			// Look for a scope to remove, matching by ID
-			newScopes := make([]msgraph.PermissionScope, 0)
+			newScopes := make([]stable.PermissionScope, 0)
 			found := false
-			for _, existingScope := range *result.Api.OAuth2PermissionScopes {
-				if strings.EqualFold(*existingScope.ID, id.ScopeID) {
+			for _, existingScope := range *app.Api.OAuth2PermissionScopes {
+				if strings.EqualFold(*existingScope.Id, id.ScopeID) {
 					found = true
 				} else {
 					newScopes = append(newScopes, existingScope)
@@ -379,22 +372,18 @@ func (r ApplicationPermissionScopeResource) Delete() sdk.ResourceFunc {
 			}
 
 			// Disable the existing scope prior to update
-			if err = applicationDisableOauth2PermissionScopes(ctx, client, result, &newScopes); err != nil {
+			if err = applicationDisableOauth2PermissionScopes(ctx, client, applicationId, &newScopes); err != nil {
 				return fmt.Errorf("disabling %s in preparation for deletion: %+v", id, err)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-				Api: &msgraph.ApplicationApi{
+			properties := stable.Application{
+				Api: &stable.ApiApplication{
 					OAuth2PermissionScopes: &newScopes,
 				},
 			}
 
 			// Patch the application with the new set of scopes
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

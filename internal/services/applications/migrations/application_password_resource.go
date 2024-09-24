@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
 )
 
 func ResourceApplicationPasswordInstanceResourceV0() *pluginsdk.Resource {

@@ -7,16 +7,16 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/validation"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationIdentifierUriModel struct {
@@ -70,16 +70,14 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationIdentifierUriModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -90,19 +88,20 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
 			newIdentifierUris := make([]string, 0)
 
 			// Don't forget any existing identifier URIs, since they must be updated together
-			if result.IdentifierUris != nil {
-				newIdentifierUris = *result.IdentifierUris
+			if app.IdentifierUris != nil {
+				newIdentifierUris = *app.IdentifierUris
 			}
 
 			// Check for existing identifier URI
@@ -114,14 +113,11 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 
 			newIdentifierUris = append(newIdentifierUris, model.IdentifierUri)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
+			properties := stable.Application{
 				IdentifierUris: &newIdentifierUris,
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -135,9 +131,7 @@ func (r ApplicationIdentifierUriResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseIdentifierUriID(metadata.ResourceData.Id())
 			if err != nil {
@@ -149,28 +143,30 @@ func (r ApplicationIdentifierUriResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("failed to decode identifierUri from resource ID: %+v", err)
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
 			}
-			if result.IdentifierUris == nil {
+			if app.IdentifierUris == nil {
 				return metadata.MarkAsGone(id)
 			}
 
 			// Match the identifier URI
 			var identifierUri *string
-			for _, existingUri := range *result.IdentifierUris {
+			for _, existingUri := range *app.IdentifierUris {
 				if existingUri == string(uriFromIdSegment) {
 					identifierUri = &existingUri
 					break
@@ -195,9 +191,7 @@ func (r ApplicationIdentifierUriResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseIdentifierUriID(metadata.ResourceData.Id())
 			if err != nil {
@@ -212,19 +206,21 @@ func (r ApplicationIdentifierUriResource) Delete() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.IdentifierUris == nil {
+
+			app := resp.Model
+			if app == nil || app.IdentifierUris == nil {
 				return fmt.Errorf("retrieving %s: identifierUris was nil", applicationId)
 			}
 
 			// Look for the identifier URI to remove
 			newIdentifierUris := make([]string, 0)
 			found := false
-			for _, existingUri := range *result.IdentifierUris {
+			for _, existingUri := range *app.IdentifierUris {
 				if existingUri == model.IdentifierUri {
 					found = true
 				} else {
@@ -235,16 +231,12 @@ func (r ApplicationIdentifierUriResource) Delete() sdk.ResourceFunc {
 				return fmt.Errorf("deleting %s: could not identify existing identifier URI", id)
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
 				IdentifierUris: &newIdentifierUris,
 			}
 
 			// Patch the application with the new set of identifier URIs
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

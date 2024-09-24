@@ -1,15 +1,46 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package helpers
+package applications
 
 import (
+	"context"
+	"fmt"
 	"strings"
 
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/owner"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 )
 
-func ApplicationExpandFeatures(in []interface{}) []string {
+func GetOwner(ctx context.Context, client *owner.OwnerClient, id stable.ApplicationIdOwnerId) (stable.DirectoryObject, error) {
+	applicationId := stable.NewApplicationID(id.ApplicationId)
+
+	options := owner.ListOwnersOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
+	}
+
+	resp, err := client.ListOwners(ctx, applicationId, options)
+	if err != nil {
+		if response.WasNotFound(resp.HttpResponse) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("unable to list Owners with filter %q: %+v", *options.Filter, err)
+	}
+
+	if resp.Model != nil {
+		for _, o := range *resp.Model {
+			if o.DirectoryObject().Id != nil && strings.EqualFold(*o.DirectoryObject().Id, id.DirectoryObjectId) {
+				return o, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
+func ExpandFeatures(in []interface{}) []string {
 	out := make([]string, 0)
 
 	if len(in) == 0 || in[0] == nil {
@@ -45,64 +76,55 @@ func ApplicationExpandFeatures(in []interface{}) []string {
 	return out
 }
 
-func ApplicationFlattenAppRoleIDs(in *[]msgraph.AppRole) map[string]string {
+func FlattenAppRoleIDs(in *[]stable.AppRole) map[string]string {
 	result := make(map[string]string)
 	if in != nil {
 		for _, role := range *in {
-			if role.Value != nil && *role.Value != "" && role.ID != nil {
-				result[*role.Value] = *role.ID
+			if value := role.Value.GetOrZero(); value != "" && role.Id != nil {
+				result[value] = *role.Id
 			}
 		}
 	}
 	return result
 }
 
-func ApplicationFlattenAppRoles(in *[]msgraph.AppRole) (result []map[string]interface{}) {
+func FlattenAppRoles(in *[]stable.AppRole) (result []map[string]interface{}) {
 	if in == nil {
 		return //nolint:nakedret
 	}
 
 	for _, role := range *in {
 		roleId := ""
-		if role.ID != nil {
-			roleId = *role.ID
+		if role.Id != nil {
+			roleId = *role.Id
 		}
+
 		allowedMemberTypes := make([]interface{}, 0)
 		if v := role.AllowedMemberTypes; v != nil {
 			for _, m := range *v {
 				allowedMemberTypes = append(allowedMemberTypes, m)
 			}
 		}
-		description := ""
-		if role.Description != nil {
-			description = *role.Description
-		}
-		displayName := ""
-		if role.DisplayName != nil {
-			displayName = *role.DisplayName
-		}
+
 		enabled := false
 		if role.IsEnabled != nil && *role.IsEnabled {
 			enabled = true
 		}
-		value := ""
-		if role.Value != nil {
-			value = *role.Value
-		}
+
 		result = append(result, map[string]interface{}{
 			"id":                   roleId,
 			"allowed_member_types": allowedMemberTypes,
-			"description":          description,
-			"display_name":         displayName,
+			"description":          role.Description.GetOrZero(),
+			"display_name":         role.DisplayName.GetOrZero(),
 			"enabled":              enabled,
-			"value":                value,
+			"value":                role.Value.GetOrZero(),
 		})
 	}
 
 	return //nolint:nakedret
 }
 
-func ApplicationFlattenFeatures(tags *[]string, deprecated bool) []interface{} {
+func FlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	// TODO: remove this in v3.0
 	if deprecated {
 		result := map[string]bool{
@@ -148,14 +170,11 @@ func ApplicationFlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	for _, tag := range *tags {
 		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryCustomSingleSignOnApplication") {
 			result["custom_single_sign_on"] = true
-		}
-		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
+		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryIntegratedApp") {
 			result["enterprise"] = true
-		}
-		if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
+		} else if strings.EqualFold(tag, "WindowsAzureActiveDirectoryGalleryApplicationNonPrimaryV1") {
 			result["gallery"] = true
-		}
-		if strings.EqualFold(tag, "HideApp") {
+		} else if strings.EqualFold(tag, "HideApp") {
 			result["hide"] = true
 		}
 	}
@@ -163,65 +182,33 @@ func ApplicationFlattenFeatures(tags *[]string, deprecated bool) []interface{} {
 	return []interface{}{result}
 }
 
-func ApplicationFlattenOAuth2PermissionScopeIDs(in *[]msgraph.PermissionScope) map[string]string {
+func FlattenOAuth2PermissionScopeIDs(in *[]stable.PermissionScope) map[string]string {
 	result := make(map[string]string)
 	if in != nil {
 		for _, scope := range *in {
-			if scope.Value != nil && *scope.Value != "" && scope.ID != nil {
-				result[*scope.Value] = *scope.ID
+			if value := scope.Value.GetOrZero(); value != "" && scope.Id != nil {
+				result[value] = *scope.Id
 			}
 		}
 	}
 	return result
 }
 
-func ApplicationFlattenOAuth2PermissionScopes(in *[]msgraph.PermissionScope) (result []map[string]interface{}) {
+func FlattenOAuth2PermissionScopes(in *[]stable.PermissionScope) (result []map[string]interface{}) {
 	if in == nil {
 		return //nolint:nakedret
 	}
 
 	for _, p := range *in {
-		adminConsentDescription := ""
-		if v := p.AdminConsentDescription; v != nil {
-			adminConsentDescription = *v
-		}
-
-		adminConsentDisplayName := ""
-		if v := p.AdminConsentDisplayName; v != nil {
-			adminConsentDisplayName = *v
-		}
-
-		id := ""
-		if v := p.ID; v != nil {
-			id = *v
-		}
-
-		userConsentDescription := ""
-		if v := p.UserConsentDescription; v != nil {
-			userConsentDescription = *v
-		}
-
-		userConsentDisplayName := ""
-		if v := p.UserConsentDisplayName; v != nil {
-			userConsentDisplayName = *v
-		}
-
-		value := ""
-		if v := p.Value; v != nil {
-			value = *v
-		}
-
-		enabled := p.IsEnabled != nil && *p.IsEnabled
-
 		result = append(result, map[string]interface{}{
-			"admin_consent_description":  adminConsentDescription,
-			"admin_consent_display_name": adminConsentDisplayName,
-			"id":                         id,
-			"enabled":                    enabled,
-			"type":                       p.Type,
-			"user_consent_description":   userConsentDescription,
-			"user_consent_display_name":  userConsentDisplayName,
-			"value":                      value,
+			"admin_consent_description":  p.AdminConsentDescription.GetOrZero(),
+			"admin_consent_display_name": p.AdminConsentDisplayName.GetOrZero(),
+			"id":                         pointer.From(p.Id),
+			"enabled":                    pointer.From(p.IsEnabled),
+			"type":                       p.Type.GetOrZero(),
+			"user_consent_description":   p.UserConsentDescription.GetOrZero(),
+			"user_consent_display_name":  p.UserConsentDisplayName.GetOrZero(),
+			"value":                      p.Value.GetOrZero(),
 		})
 	}
 

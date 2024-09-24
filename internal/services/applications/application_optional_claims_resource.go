@@ -6,16 +6,17 @@ package applications
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type ApplicationOptionalClaimsModel struct {
@@ -79,16 +80,14 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			var model ApplicationOptionalClaimsModel
 			if err := metadata.Decode(&model); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			applicationId, err := parse.ParseApplicationID(model.ApplicationId)
+			applicationId, err := stable.ParseApplicationID(model.ApplicationId)
 			if err != nil {
 				return err
 			}
@@ -98,16 +97,18 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", applicationId)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", applicationId)
 			}
 
 			// Check for existing optional claims
-			if claims := result.OptionalClaims; claims != nil {
+			if claims := app.OptionalClaims; claims != nil {
 				if claims.AccessToken != nil && len(*claims.AccessToken) > 0 {
 					return metadata.ResourceRequiresImport(r.ResourceType(), id)
 				}
@@ -120,14 +121,14 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 			}
 
 			// Assemble the optional claims
-			optionalClaims := msgraph.OptionalClaims{}
+			optionalClaims := stable.OptionalClaims{}
 
 			if len(model.AccessTokens) > 0 {
-				accessTokenClaims := make([]msgraph.OptionalClaim, 0)
+				accessTokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.AccessTokens {
-					accessTokenClaims = append(accessTokenClaims, msgraph.OptionalClaim{
+					accessTokenClaims = append(accessTokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -136,11 +137,11 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 			}
 
 			if len(model.IdTokens) > 0 {
-				idTokenClaims := make([]msgraph.OptionalClaim, 0)
+				idTokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.IdTokens {
-					idTokenClaims = append(idTokenClaims, msgraph.OptionalClaim{
+					idTokenClaims = append(idTokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -149,11 +150,11 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 			}
 
 			if len(model.Saml2Tokens) > 0 {
-				saml2TokenClaims := make([]msgraph.OptionalClaim, 0)
+				saml2TokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.Saml2Tokens {
-					saml2TokenClaims = append(saml2TokenClaims, msgraph.OptionalClaim{
+					saml2TokenClaims = append(saml2TokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -161,14 +162,11 @@ func (r ApplicationOptionalClaimsResource) Create() sdk.ResourceFunc {
 				optionalClaims.Saml2Token = &saml2TokenClaims
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &id.ApplicationId,
-				},
+			properties := stable.Application{
 				OptionalClaims: &optionalClaims,
 			}
 
-			if _, err = client.Update(ctx, properties); err != nil {
+			if _, err = client.UpdateApplication(ctx, *applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("creating %s: %+v", id, err)
 			}
 
@@ -182,32 +180,32 @@ func (r ApplicationOptionalClaimsResource) Read() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseOptionalClaimsID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			result, status, err := client.Get(ctx, id.ApplicationId, odata.Query{})
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
-				if status == http.StatusNotFound {
+				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)
 				}
 				return fmt.Errorf("retrieving %s: %+v", id, err)
 			}
-			if result == nil {
-				return fmt.Errorf("retrieving %s: result was nil", id)
+
+			app := resp.Model
+			if app == nil {
+				return fmt.Errorf("retrieving %s: model was nil", id)
 			}
 
-			if claims := result.OptionalClaims; claims == nil {
+			if claims := app.OptionalClaims; claims == nil {
 				return metadata.MarkAsGone(id)
 			} else if (claims.AccessToken == nil || len(*claims.AccessToken) == 0) &&
 				(claims.IdToken == nil || len(*claims.IdToken) == 0) &&
@@ -219,33 +217,33 @@ func (r ApplicationOptionalClaimsResource) Read() sdk.ResourceFunc {
 				ApplicationId: applicationId.ID(),
 			}
 
-			if accessTokenClaims := result.OptionalClaims.AccessToken; accessTokenClaims != nil {
+			if accessTokenClaims := app.OptionalClaims.AccessToken; accessTokenClaims != nil {
 				for _, claim := range *accessTokenClaims {
 					state.AccessTokens = append(state.AccessTokens, OptionalClaim{
 						Name:                 pointer.From(claim.Name),
-						Source:               pointer.From(claim.Source),
+						Source:               claim.Source.GetOrZero(),
 						Essential:            pointer.From(claim.Essential),
 						AdditionalProperties: pointer.From(claim.AdditionalProperties),
 					})
 				}
 			}
 
-			if idTokenClaims := result.OptionalClaims.IdToken; idTokenClaims != nil {
+			if idTokenClaims := app.OptionalClaims.IdToken; idTokenClaims != nil {
 				for _, claim := range *idTokenClaims {
 					state.IdTokens = append(state.IdTokens, OptionalClaim{
 						Name:                 pointer.From(claim.Name),
-						Source:               pointer.From(claim.Source),
+						Source:               claim.Source.GetOrZero(),
 						Essential:            pointer.From(claim.Essential),
 						AdditionalProperties: pointer.From(claim.AdditionalProperties),
 					})
 				}
 			}
 
-			if idTokenClaims := result.OptionalClaims.Saml2Token; idTokenClaims != nil {
+			if idTokenClaims := app.OptionalClaims.Saml2Token; idTokenClaims != nil {
 				for _, claim := range *idTokenClaims {
 					state.Saml2Tokens = append(state.Saml2Tokens, OptionalClaim{
 						Name:                 pointer.From(claim.Name),
-						Source:               pointer.From(claim.Source),
+						Source:               claim.Source.GetOrZero(),
 						Essential:            pointer.From(claim.Essential),
 						AdditionalProperties: pointer.From(claim.AdditionalProperties),
 					})
@@ -261,7 +259,7 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 10 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
+			client := metadata.Client.Applications.ApplicationClient
 			rd := metadata.ResourceData
 
 			id, err := parse.ParseOptionalClaimsID(metadata.ResourceData.Id())
@@ -277,24 +275,26 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			result, _, err := client.Get(ctx, applicationId.ApplicationId, odata.Query{})
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %+v", applicationId, err)
 			}
-			if result == nil || result.OptionalClaims == nil {
+
+			app := resp.Model
+			if app == nil || app.OptionalClaims == nil {
 				return fmt.Errorf("retrieving %s: optionalClaims was nil", applicationId)
 			}
 
 			// Start with the existing claims, as they must be updated together, then update each type in turn as needed
-			newOptionalClaims := *result.OptionalClaims
+			newOptionalClaims := *app.OptionalClaims
 
 			if rd.HasChange("access_token") {
-				newAccessTokenClaims := make([]msgraph.OptionalClaim, 0)
+				newAccessTokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.AccessTokens {
-					newAccessTokenClaims = append(newAccessTokenClaims, msgraph.OptionalClaim{
+					newAccessTokenClaims = append(newAccessTokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -303,11 +303,11 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 			}
 
 			if rd.HasChange("id_token") {
-				newIdTokenClaims := make([]msgraph.OptionalClaim, 0)
+				newIdTokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.IdTokens {
-					newIdTokenClaims = append(newIdTokenClaims, msgraph.OptionalClaim{
+					newIdTokenClaims = append(newIdTokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -316,11 +316,11 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 			}
 
 			if rd.HasChange("saml2_token") {
-				newSaml2TokenClaims := make([]msgraph.OptionalClaim, 0)
+				newSaml2TokenClaims := make([]stable.OptionalClaim, 0)
 				for _, claim := range model.Saml2Tokens {
-					newSaml2TokenClaims = append(newSaml2TokenClaims, msgraph.OptionalClaim{
+					newSaml2TokenClaims = append(newSaml2TokenClaims, stable.OptionalClaim{
 						Name:                 pointer.To(claim.Name),
-						Source:               pointer.To(claim.Source),
+						Source:               nullable.Value(claim.Source),
 						Essential:            pointer.To(claim.Essential),
 						AdditionalProperties: pointer.To(claim.AdditionalProperties),
 					})
@@ -328,15 +328,11 @@ func (r ApplicationOptionalClaimsResource) Update() sdk.ResourceFunc {
 				newOptionalClaims.Saml2Token = &newSaml2TokenClaims
 			}
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
+			properties := stable.Application{
 				OptionalClaims: &newOptionalClaims,
 			}
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("updating %s: %+v", id, err)
 			}
 
@@ -349,29 +345,23 @@ func (r ApplicationOptionalClaimsResource) Delete() sdk.ResourceFunc {
 	return sdk.ResourceFunc{
 		Timeout: 5 * time.Minute,
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
-			client := metadata.Client.Applications.ApplicationsClient
-			client.BaseClient.DisableRetries = true
-			defer func() { client.BaseClient.DisableRetries = false }()
+			client := metadata.Client.Applications.ApplicationClient
 
 			id, err := parse.ParseOptionalClaimsID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
 
-			properties := msgraph.Application{
-				DirectoryObject: msgraph.DirectoryObject{
-					Id: &applicationId.ApplicationId,
-				},
-				OptionalClaims: &msgraph.OptionalClaims{},
+			properties := stable.Application{
+				OptionalClaims: &stable.OptionalClaims{},
 			}
 
-			_, err = client.Update(ctx, properties)
-			if err != nil {
+			if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
 				return fmt.Errorf("deleting %s: %+v", id, err)
 			}
 

@@ -13,59 +13,73 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/sdk/client"
+	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
-	"github.com/manicminer/hamilton/msgraph"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/credentials"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
-const applicationResourceName = "azuread_application"
+func applicationUpdateRetryFunc() client.RequestRetryFunc {
+	return func(resp *http.Response, o *odata.OData) (bool, error) {
+		if response.WasNotFound(resp) {
+			return true, nil
+		} else if response.WasBadRequest(resp) && o != nil && o.Error != nil {
+			return o.Error.Match("Permission (scope or role) cannot be deleted or updated unless disabled first"), nil
+		}
 
-func applicationAppRoleChanged(existing msgraph.AppRole, new msgraph.AppRole) bool {
-	if !reflect.DeepEqual(existing.AllowedMemberTypes, new.AllowedMemberTypes) {
+		return false, nil
+	}
+}
+
+func applicationAppRoleChanged(existingRole stable.AppRole, newRole stable.AppRole) bool {
+	if !reflect.DeepEqual(existingRole.AllowedMemberTypes, newRole.AllowedMemberTypes) {
 		return true
 	}
-	if !reflect.DeepEqual(existing.Description, new.Description) {
+	if !reflect.DeepEqual(existingRole.Description, newRole.Description) {
 		return true
 	}
-	if !reflect.DeepEqual(existing.DisplayName, new.DisplayName) {
+	if !reflect.DeepEqual(existingRole.DisplayName, newRole.DisplayName) {
 		return true
 	}
 
-	// The following order is important; we must check for nil, and we consider nil and "" to be equivalent Values
-	if reflect.DeepEqual(existing.Value, new.Value) {
+	if reflect.DeepEqual(existingRole.Value, newRole.Value) {
 		return false
 	}
-	if existing.Value == nil && new.Value != nil && *new.Value == "" {
-		return false
-	}
-	if existing.Value != nil && *existing.Value == "" && new.Value == nil {
+
+	// We consider unset/null to be equivalent to the zero value
+	if existingRole.Value.GetOrZero() == newRole.Value.GetOrZero() {
 		return false
 	}
 
 	return true
 }
 
-func applicationDisableAppRoles(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newRoles *[]msgraph.AppRole) error {
-	if application.ID() == nil {
-		return fmt.Errorf("cannot use Application model with nil ID")
-	}
-
+func applicationDisableAppRoles(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newRoles *[]stable.AppRole) error {
 	if newRoles == nil {
-		newRoles = &[]msgraph.AppRole{}
+		newRoles = &[]stable.AppRole{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID())
+		if response.WasNotFound(resp.HttpResponse) {
+			return fmt.Errorf("%s was not found", applicationId)
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
+		return fmt.Errorf("retrieving %s: %v", applicationId, err)
 	}
 
-	var existingRoles []msgraph.AppRole
+	app := resp.Model
+	if app == nil {
+		return fmt.Errorf("retrieving %s: model was nil", applicationId)
+	}
+
+	var existingRoles []stable.AppRole
 	if app.AppRoles != nil {
 		existingRoles = *app.AppRoles
 	}
@@ -77,13 +91,13 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 
 	// Identify any roles to be changed
 	var disable bool
-	for _, new := range *newRoles {
-		if new.ID == nil || *new.ID == "" {
+	for _, newRole := range *newRoles {
+		if newRole.Id == nil || *newRole.Id == "" {
 			return fmt.Errorf("new role provided with nil or empty ID")
 		}
 		for i, existing := range existingRoles {
-			if existing.ID != nil && *existing.ID == *new.ID {
-				if existing.IsEnabled != nil && *existing.IsEnabled && applicationAppRoleChanged(existing, new) {
+			if existing.Id != nil && *existing.Id == *newRole.Id {
+				if existing.IsEnabled != nil && *existing.IsEnabled && applicationAppRoleChanged(existing, newRole) {
 					*existingRoles[i].IsEnabled = false
 					disable = true
 				}
@@ -95,8 +109,8 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 	// Identify any roles to be removed
 	for i, existing := range existingRoles {
 		found := false
-		for _, new := range *newRoles {
-			if existing.ID != nil && *new.ID == *existing.ID {
+		for _, newRole := range *newRoles {
+			if existing.Id != nil && *newRole.Id == *existing.Id {
 				found = true
 				break
 			}
@@ -109,14 +123,12 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 
 	if disable {
 		// Disable any changed or removed roles
-		properties := msgraph.Application{
-			DirectoryObject: msgraph.DirectoryObject{
-				Id: application.ID(),
-			},
+		properties := stable.Application{
+			Id:       app.Id,
 			AppRoles: &existingRoles,
 		}
-		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling App Roles for Application with object ID %q: %+v", *application.ID(), err)
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+			return fmt.Errorf("disabling App Roles for %s: %v", applicationId, err)
 		}
 
 		// Wait for application manifest to reflect the disabled roles
@@ -131,18 +143,19 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
+				resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
+					return nil, "Error", fmt.Errorf("retrieving %s: %v", applicationId, err)
 				}
+				app := resp.Model
 				if app == nil || app.AppRoles == nil {
-					return nil, "Error", fmt.Errorf("reading roles for Application with object ID %q: %+v", *application.ID(), err)
+					return nil, "Error", fmt.Errorf("reading roles for %s: %v", applicationId, err)
 				}
 				actualRoles := *app.AppRoles
 				for _, expectedRole := range existingRoles {
 					if expectedRole.IsEnabled != nil && !*expectedRole.IsEnabled {
 						for _, actualRole := range actualRoles {
-							if expectedRole.ID != nil && actualRole.ID != nil && *expectedRole.ID == *actualRole.ID {
+							if expectedRole.Id != nil && actualRole.Id != nil && *expectedRole.Id == *actualRole.Id {
 								if actualRole.IsEnabled != nil && *actualRole.IsEnabled {
 									return actualRoles, "Waiting", nil
 								}
@@ -155,32 +168,33 @@ func applicationDisableAppRoles(ctx context.Context, client *msgraph.Application
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for App Roles to be disabled for Application with object ID %q: %+v", *application.ID(), err)
+			return fmt.Errorf("waiting for App Roles to be disabled for %s: %v", applicationId, err)
 		}
 	}
 
 	return nil
 }
 
-func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgraph.ApplicationsClient, application *msgraph.Application, newScopes *[]msgraph.PermissionScope) error {
-	if application.ID() == nil {
-		return fmt.Errorf("cannot use Application model with nil ID")
-	}
-
+func applicationDisableOauth2PermissionScopes(ctx context.Context, client *application.ApplicationClient, applicationId stable.ApplicationId, newScopes *[]stable.PermissionScope) error {
 	if newScopes == nil {
-		newScopes = &[]msgraph.PermissionScope{}
+		newScopes = &[]stable.PermissionScope{}
 	}
 
-	app, status, err := client.Get(ctx, *application.ID(), odata.Query{})
+	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return fmt.Errorf("application with ID %q was not found", *application.ID())
+		if response.WasNotFound(resp.HttpResponse) {
+			return fmt.Errorf("%s was not found", applicationId)
 		}
 
-		return fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
+		return fmt.Errorf("retrieving %s: %v", applicationId, err)
 	}
 
-	var existingScopes []msgraph.PermissionScope
+	app := resp.Model
+	if app == nil {
+		return fmt.Errorf("retrieving %s: model was nil", applicationId)
+	}
+
+	var existingScopes []stable.PermissionScope
 	if app.Api != nil && app.Api.OAuth2PermissionScopes != nil {
 		existingScopes = *app.Api.OAuth2PermissionScopes
 	}
@@ -192,13 +206,13 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 
 	// Identify any scopes to be changed
 	var disable bool
-	for _, new := range *newScopes {
-		if new.ID == nil || *new.ID == "" {
+	for _, newScope := range *newScopes {
+		if newScope.Id == nil || *newScope.Id == "" {
 			return fmt.Errorf("new scope provided with nil or empty ID")
 		}
 		for i, existing := range existingScopes {
-			if existing.ID != nil && *existing.ID == *new.ID {
-				if existing.IsEnabled != nil && *existing.IsEnabled && !reflect.DeepEqual(existing, new) {
+			if existing.Id != nil && *existing.Id == *newScope.Id {
+				if existing.IsEnabled != nil && *existing.IsEnabled && !reflect.DeepEqual(existing, newScope) {
 					*existingScopes[i].IsEnabled = false
 					disable = true
 				}
@@ -210,8 +224,8 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 	// Identify any scopes to be removed
 	for i, existing := range existingScopes {
 		found := false
-		for _, new := range *newScopes {
-			if existing.ID != nil && *new.ID == *existing.ID {
+		for _, newScope := range *newScopes {
+			if existing.Id != nil && *newScope.Id == *existing.Id {
 				found = true
 				break
 			}
@@ -224,16 +238,13 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 
 	if disable {
 		// Disable any changed or removed scopes
-		properties := msgraph.Application{
-			DirectoryObject: msgraph.DirectoryObject{
-				Id: application.ID(),
-			},
-			Api: &msgraph.ApplicationApi{
+		properties := stable.Application{
+			Api: &stable.ApiApplication{
 				OAuth2PermissionScopes: &existingScopes,
 			},
 		}
-		if _, err := client.Update(ctx, properties); err != nil {
-			return fmt.Errorf("disabling OAuth2 Permission Scopes for Application with object ID %q: %+v", *application.ID(), err)
+		if _, err = client.UpdateApplication(ctx, applicationId, properties, application.DefaultUpdateApplicationOperationOptions()); err != nil {
+			return fmt.Errorf("disabling OAuth2 Permission Scopes for %s: %+v", applicationId, err)
 		}
 
 		// Wait for application manifest to reflect the disabled scopes
@@ -248,18 +259,19 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			Timeout:    timeout,
 			MinTimeout: 1 * time.Second,
 			Refresh: func() (interface{}, string, error) {
-				app, _, err := client.Get(ctx, *application.ID(), odata.Query{})
+				resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 				if err != nil {
-					return nil, "Error", fmt.Errorf("retrieving Application with object ID %q: %+v", *application.ID(), err)
+					return nil, "Error", fmt.Errorf("retrieving %s: %+v", applicationId, err)
 				}
+				app := resp.Model
 				if app == nil || app.Api == nil || app.Api.OAuth2PermissionScopes == nil {
-					return nil, "Error", fmt.Errorf("reading scopes for Application with object ID %q: %+v", *application.ID(), err)
+					return nil, "Error", fmt.Errorf("reading scopes for %s: %+v", applicationId, err)
 				}
 				actualScopes := *app.Api.OAuth2PermissionScopes
 				for _, expectedScope := range existingScopes {
 					if expectedScope.IsEnabled != nil && !*expectedScope.IsEnabled {
 						for _, actualScope := range actualScopes {
-							if expectedScope.ID != nil && actualScope.ID != nil && *expectedScope.ID == *actualScope.ID {
+							if expectedScope.Id != nil && actualScope.Id != nil && *expectedScope.Id == *actualScope.Id {
 								if actualScope.IsEnabled != nil && *actualScope.IsEnabled {
 									return actualScopes, "Waiting", nil
 								}
@@ -272,26 +284,26 @@ func applicationDisableOauth2PermissionScopes(ctx context.Context, client *msgra
 			},
 		}).WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for Application with object ID %q: %+v", *application.ID(), err)
+			return fmt.Errorf("waiting for OAuth2 Permission Scopes to be disabled for %s: %+v", applicationId, err)
 		}
 	}
 
 	return nil
 }
 
-func applicationFindByName(ctx context.Context, client *msgraph.ApplicationsClient, displayName string) (*[]msgraph.Application, error) {
-	query := odata.Query{
-		Filter: fmt.Sprintf("displayName eq '%s'", displayName),
+func applicationFindByName(ctx context.Context, client *application.ApplicationClient, displayName string) (*[]stable.Application, error) {
+	options := application.ListApplicationsOperationOptions{
+		Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", displayName)),
 	}
-	apps, _, err := client.List(ctx, query)
+	resp, err := client.ListApplications(ctx, options)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", query.Filter, err)
+		return nil, fmt.Errorf("unable to list Applications with filter %q: %+v", *options.Filter, err)
 	}
 
-	result := make([]msgraph.Application, 0)
-	if apps != nil {
+	result := make([]stable.Application, 0)
+	if apps := resp.Model; apps != nil {
 		for _, app := range *apps {
-			if app.DisplayName != nil && *app.DisplayName == displayName {
+			if app.DisplayName.GetOrZero() == displayName {
 				result = append(result, app)
 			}
 		}
@@ -378,12 +390,12 @@ func applicationValidateRolesScopes(appRoles, oauth2Permissions []interface{}) e
 	return nil
 }
 
-func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) {
-	result = &msgraph.ApplicationApi{
-		AcceptMappedClaims:          pointer.To(false),
+func expandApplicationApi(input []interface{}) (result *stable.ApiApplication) {
+	result = &stable.ApiApplication{
+		AcceptMappedClaims:          nullable.Value(false),
 		KnownClientApplications:     &[]string{},
-		OAuth2PermissionScopes:      &[]msgraph.PermissionScope{},
-		RequestedAccessTokenVersion: pointer.To(int32(1)),
+		OAuth2PermissionScopes:      &[]stable.PermissionScope{},
+		RequestedAccessTokenVersion: nullable.Value(int64(1)),
 	}
 
 	if len(input) == 0 || input[0] == nil {
@@ -392,32 +404,32 @@ func expandApplicationApi(input []interface{}) (result *msgraph.ApplicationApi) 
 
 	in := input[0].(map[string]interface{})
 	if v, ok := in["mapped_claims_enabled"]; ok {
-		result.AcceptMappedClaims = pointer.To(v.(bool))
+		result.AcceptMappedClaims.Set(v.(bool))
 	}
 	if v, ok := in["known_client_applications"]; ok {
 		result.KnownClientApplications = tf.ExpandStringSlicePtr(v.(*pluginsdk.Set).List())
 	}
 	result.OAuth2PermissionScopes = expandApplicationOAuth2PermissionScope(in["oauth2_permission_scope"].(*pluginsdk.Set).List())
 	if v, ok := in["requested_access_token_version"]; ok {
-		result.RequestedAccessTokenVersion = pointer.To(int32(v.(int)))
+		result.RequestedAccessTokenVersion.Set(int64(v.(int)))
 	}
 
 	return
 }
 
-func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.PasswordCredential, error) {
+func expandApplicationPasswordCredentials(input []interface{}) (*[]stable.PasswordCredential, error) {
 	if len(input) == 0 {
 		return nil, nil
 	}
 
-	result := make([]msgraph.PasswordCredential, 0)
+	result := make([]stable.PasswordCredential, 0)
 
 	for _, password := range input {
 		if password == nil {
 			continue
 		}
 
-		credential, err := helpers.PasswordCredential(password.(map[string]interface{}))
+		credential, err := credentials.PasswordCredential(password.(map[string]interface{}))
 		if err != nil {
 			return nil, err
 		}
@@ -427,8 +439,8 @@ func expandApplicationPasswordCredentials(input []interface{}) (*[]msgraph.Passw
 	return &result, nil
 }
 
-func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
-	result := make([]msgraph.AppRole, 0)
+func expandApplicationAppRoles(input []interface{}) *[]stable.AppRole {
+	result := make([]stable.AppRole, 0)
 
 	if len(input) == 0 {
 		return &result
@@ -440,21 +452,21 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 		}
 		appRole := appRoleRaw.(map[string]interface{})
 
-		var allowedMemberTypes []msgraph.AppRoleAllowedMemberType
+		allowedMemberTypes := make([]string, 0)
 		for _, allowedMemberType := range appRole["allowed_member_types"].(*pluginsdk.Set).List() {
 			allowedMemberTypes = append(allowedMemberTypes, allowedMemberType.(string))
 		}
 
-		newAppRole := msgraph.AppRole{
-			ID:                 pointer.To(appRole["id"].(string)),
+		newAppRole := stable.AppRole{
+			Id:                 pointer.To(appRole["id"].(string)),
 			AllowedMemberTypes: &allowedMemberTypes,
-			Description:        pointer.To(appRole["description"].(string)),
-			DisplayName:        pointer.To(appRole["display_name"].(string)),
+			Description:        nullable.Value(appRole["description"].(string)),
+			DisplayName:        nullable.Value(appRole["display_name"].(string)),
 			IsEnabled:          pointer.To(appRole["enabled"].(bool)),
 		}
 
 		if v, ok := appRole["value"]; ok {
-			newAppRole.Value = pointer.To(v.(string))
+			newAppRole.Value = nullable.Value(v.(string))
 		}
 
 		result = append(result, newAppRole)
@@ -463,18 +475,20 @@ func expandApplicationAppRoles(input []interface{}) *[]msgraph.AppRole {
 	return &result
 }
 
-func expandApplicationGroupMembershipClaims(in []interface{}) *[]msgraph.GroupMembershipClaim {
-	result := make([]msgraph.GroupMembershipClaim, 0)
+func expandApplicationGroupMembershipClaims(in []interface{}) nullable.Type[string] {
 	if len(in) == 0 {
-		return &result
+		return nullable.NoZero("")
 	}
+
+	ret := make([]string, 0)
 	for _, claimRaw := range in {
-		result = append(result, claimRaw.(string))
+		ret = append(ret, strings.TrimSpace(claimRaw.(string)))
 	}
-	return &result
+
+	return nullable.NoZero(strings.Join(ret, ","))
 }
 
-func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.ImplicitGrantSettings {
+func expandApplicationImplicitGrantSettings(input []interface{}) *stable.ImplicitGrantSettings {
 	var enableAccessTokenIssuance, enableIdTokenIssuance bool
 
 	if len(input) > 0 && input[0] != nil {
@@ -483,14 +497,14 @@ func expandApplicationImplicitGrantSettings(input []interface{}) *msgraph.Implic
 		enableIdTokenIssuance = in["id_token_issuance_enabled"].(bool)
 	}
 
-	return &msgraph.ImplicitGrantSettings{
-		EnableAccessTokenIssuance: pointer.To(enableAccessTokenIssuance),
-		EnableIdTokenIssuance:     pointer.To(enableIdTokenIssuance),
+	return &stable.ImplicitGrantSettings{
+		EnableAccessTokenIssuance: nullable.Value(enableAccessTokenIssuance),
+		EnableIdTokenIssuance:     nullable.Value(enableIdTokenIssuance),
 	}
 }
 
-func expandApplicationOAuth2PermissionScope(in []interface{}) *[]msgraph.PermissionScope {
-	result := make([]msgraph.PermissionScope, 0)
+func expandApplicationOAuth2PermissionScope(in []interface{}) *[]stable.PermissionScope {
+	result := make([]stable.PermissionScope, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -498,25 +512,23 @@ func expandApplicationOAuth2PermissionScope(in []interface{}) *[]msgraph.Permiss
 		}
 		oauth2Permissions := raw.(map[string]interface{})
 
-		result = append(result,
-			msgraph.PermissionScope{
-				AdminConsentDescription: pointer.To(oauth2Permissions["admin_consent_description"].(string)),
-				AdminConsentDisplayName: pointer.To(oauth2Permissions["admin_consent_display_name"].(string)),
-				ID:                      pointer.To(oauth2Permissions["id"].(string)),
-				IsEnabled:               pointer.To(oauth2Permissions["enabled"].(bool)),
-				Type:                    oauth2Permissions["type"].(string),
-				UserConsentDescription:  pointer.To(oauth2Permissions["user_consent_description"].(string)),
-				UserConsentDisplayName:  pointer.To(oauth2Permissions["user_consent_display_name"].(string)),
-				Value:                   pointer.To(oauth2Permissions["value"].(string)),
-			},
-		)
+		result = append(result, stable.PermissionScope{
+			AdminConsentDescription: nullable.Value(oauth2Permissions["admin_consent_description"].(string)),
+			AdminConsentDisplayName: nullable.Value(oauth2Permissions["admin_consent_display_name"].(string)),
+			Id:                      pointer.To(oauth2Permissions["id"].(string)),
+			IsEnabled:               pointer.To(oauth2Permissions["enabled"].(bool)),
+			Type:                    nullable.Value(oauth2Permissions["type"].(string)),
+			UserConsentDescription:  nullable.Value(oauth2Permissions["user_consent_description"].(string)),
+			UserConsentDisplayName:  nullable.Value(oauth2Permissions["user_consent_display_name"].(string)),
+			Value:                   nullable.Value(oauth2Permissions["value"].(string)),
+		})
 	}
 
 	return &result
 }
 
-func expandApplicationOptionalClaims(in []interface{}) *msgraph.OptionalClaims {
-	result := msgraph.OptionalClaims{}
+func expandApplicationOptionalClaims(in []interface{}) *stable.OptionalClaims {
+	result := stable.OptionalClaims{}
 
 	if len(in) == 0 || in[0] == nil {
 		return &result
@@ -531,8 +543,8 @@ func expandApplicationOptionalClaims(in []interface{}) *msgraph.OptionalClaims {
 	return &result
 }
 
-func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
-	result := make([]msgraph.OptionalClaim, 0)
+func expandApplicationOptionalClaim(in []interface{}) *[]stable.OptionalClaim {
+	result := make([]stable.OptionalClaim, 0)
 
 	for _, optionalClaimRaw := range in {
 		if optionalClaimRaw == nil {
@@ -547,14 +559,14 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 			}
 		}
 
-		newClaim := msgraph.OptionalClaim{
+		newClaim := stable.OptionalClaim{
 			Name:                 pointer.To(optionalClaim["name"].(string)),
 			Essential:            pointer.To(optionalClaim["essential"].(bool)),
 			AdditionalProperties: &additionalProps,
 		}
 
 		if source, ok := optionalClaim["source"].(string); ok && source != "" {
-			newClaim.Source = &source
+			newClaim.Source = nullable.Value(source)
 		}
 
 		result = append(result, newClaim)
@@ -563,8 +575,8 @@ func expandApplicationOptionalClaim(in []interface{}) *[]msgraph.OptionalClaim {
 	return &result
 }
 
-func expandApplicationPublicClient(input []interface{}) (result *msgraph.PublicClient) {
-	result = &msgraph.PublicClient{
+func expandApplicationPublicClient(input []interface{}) (result *stable.PublicClientApplication) {
+	result = &stable.PublicClientApplication{
 		RedirectUris: &[]string{},
 	}
 
@@ -578,8 +590,8 @@ func expandApplicationPublicClient(input []interface{}) (result *msgraph.PublicC
 	return
 }
 
-func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.RequiredResourceAccess {
-	result := make([]msgraph.RequiredResourceAccess, 0)
+func expandApplicationRequiredResourceAccess(in []interface{}) *[]stable.RequiredResourceAccess {
+	result := make([]stable.RequiredResourceAccess, 0)
 
 	for _, raw := range in {
 		if raw == nil {
@@ -587,7 +599,7 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.Requir
 		}
 		requiredResourceAccess := raw.(map[string]interface{})
 
-		result = append(result, msgraph.RequiredResourceAccess{
+		result = append(result, stable.RequiredResourceAccess{
 			ResourceAppId: pointer.To(requiredResourceAccess["resource_app_id"].(string)),
 			ResourceAccess: expandApplicationResourceAccess(
 				requiredResourceAccess["resource_access"].([]interface{}),
@@ -598,8 +610,8 @@ func expandApplicationRequiredResourceAccess(in []interface{}) *[]msgraph.Requir
 	return &result
 }
 
-func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess {
-	result := make([]msgraph.ResourceAccess, 0)
+func expandApplicationResourceAccess(in []interface{}) *[]stable.ResourceAccess {
+	result := make([]stable.ResourceAccess, 0)
 
 	for _, resourceAccessRaw := range in {
 		if resourceAccessRaw == nil {
@@ -607,17 +619,17 @@ func expandApplicationResourceAccess(in []interface{}) *[]msgraph.ResourceAccess
 		}
 		resourceAccess := resourceAccessRaw.(map[string]interface{})
 
-		result = append(result, msgraph.ResourceAccess{
-			ID:   pointer.To(resourceAccess["id"].(string)),
-			Type: resourceAccess["type"].(string),
+		result = append(result, stable.ResourceAccess{
+			Id:   pointer.To(resourceAccess["id"].(string)),
+			Type: nullable.Value(resourceAccess["type"].(string)),
 		})
 	}
 
 	return &result
 }
 
-func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) {
-	result = &msgraph.ApplicationSpa{
+func expandApplicationSpa(input []interface{}) (result *stable.SpaApplication) {
+	result = &stable.SpaApplication{
 		RedirectUris: &[]string{},
 	}
 
@@ -631,11 +643,11 @@ func expandApplicationSpa(input []interface{}) (result *msgraph.ApplicationSpa) 
 	return
 }
 
-func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) {
-	result = &msgraph.ApplicationWeb{
-		HomePageUrl:           tf.NullableString(""),
+func expandApplicationWeb(input []interface{}) (result *stable.WebApplication) {
+	result = &stable.WebApplication{
+		HomePageUrl:           nullable.NoZero(""),
 		ImplicitGrantSettings: expandApplicationImplicitGrantSettings(nil),
-		LogoutUrl:             tf.NullableString(""),
+		LogoutUrl:             nullable.NoZero(""),
 		RedirectUris:          &[]string{},
 	}
 
@@ -644,23 +656,20 @@ func expandApplicationWeb(input []interface{}) (result *msgraph.ApplicationWeb) 
 	}
 
 	in := input[0].(map[string]interface{})
-	result.HomePageUrl = tf.NullableString(in["homepage_url"].(string))
-	result.LogoutUrl = tf.NullableString(in["logout_url"].(string))
+	result.HomePageUrl = nullable.NoZero(in["homepage_url"].(string))
+	result.LogoutUrl = nullable.NoZero(in["logout_url"].(string))
 	result.ImplicitGrantSettings = expandApplicationImplicitGrantSettings(in["implicit_grant"].([]interface{}))
 	result.RedirectUris = tf.ExpandStringSlicePtr(in["redirect_uris"].(*pluginsdk.Set).List())
 
 	return
 }
 
-func flattenApplicationApi(in *msgraph.ApplicationApi, dataSource bool) []map[string]interface{} {
+func flattenApplicationApi(in *stable.ApiApplication, dataSource bool) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	mappedClaims := false
-	if in.AcceptMappedClaims != nil {
-		mappedClaims = *in.AcceptMappedClaims
-	}
+	mappedClaims := in.AcceptMappedClaims.GetOrZero()
 
 	scopesKey := "oauth2_permission_scope"
 	if dataSource {
@@ -668,8 +677,8 @@ func flattenApplicationApi(in *msgraph.ApplicationApi, dataSource bool) []map[st
 	}
 
 	accessTokenVersion := 1
-	if in.RequestedAccessTokenVersion != nil {
-		accessTokenVersion = int(*in.RequestedAccessTokenVersion)
+	if !in.RequestedAccessTokenVersion.IsNull() {
+		accessTokenVersion = int(in.RequestedAccessTokenVersion.GetOrZero())
 	}
 
 	return []map[string]interface{}{{
@@ -680,43 +689,47 @@ func flattenApplicationApi(in *msgraph.ApplicationApi, dataSource bool) []map[st
 	}}
 }
 
-func flattenApplicationAppRoleIDs(in *[]msgraph.AppRole) map[string]string {
-	return helpers.ApplicationFlattenAppRoleIDs(in)
+func flattenApplicationAppRoleIDs(in *[]stable.AppRole) map[string]string {
+	return applications.FlattenAppRoleIDs(in)
 }
 
-func flattenApplicationAppRoles(in *[]msgraph.AppRole) []map[string]interface{} {
-	return helpers.ApplicationFlattenAppRoles(in)
+func flattenApplicationAppRoles(in *[]stable.AppRole) []map[string]interface{} {
+	return applications.FlattenAppRoles(in)
 }
 
-func flattenApplicationImplicitGrant(in *msgraph.ImplicitGrantSettings) []map[string]interface{} {
+func flattenApplicationGroupMembershipClaims(in nullable.Type[string]) []interface{} {
+	if in.IsNull() {
+		return []interface{}{}
+	}
+
+	ret := make([]interface{}, 0)
+	for _, claim := range strings.Split(in.GetOrZero(), ",") {
+		ret = append(ret, strings.TrimSpace(claim))
+	}
+
+	return ret
+}
+
+func flattenApplicationImplicitGrant(in *stable.ImplicitGrantSettings) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	accessToken := false
-	if in.EnableAccessTokenIssuance != nil {
-		accessToken = *in.EnableAccessTokenIssuance
-	}
-	idToken := false
-	if in.EnableIdTokenIssuance != nil {
-		idToken = *in.EnableIdTokenIssuance
-	}
-
 	return []map[string]interface{}{{
-		"access_token_issuance_enabled": accessToken,
-		"id_token_issuance_enabled":     idToken,
+		"access_token_issuance_enabled": in.EnableAccessTokenIssuance.GetOrZero(),
+		"id_token_issuance_enabled":     in.EnableIdTokenIssuance.GetOrZero(),
 	}}
 }
 
-func flattenApplicationOAuth2PermissionScopeIDs(in *[]msgraph.PermissionScope) map[string]string {
-	return helpers.ApplicationFlattenOAuth2PermissionScopeIDs(in)
+func flattenApplicationOAuth2PermissionScopeIDs(in *[]stable.PermissionScope) map[string]string {
+	return applications.FlattenOAuth2PermissionScopeIDs(in)
 }
 
-func flattenApplicationOAuth2PermissionScopes(in *[]msgraph.PermissionScope) []map[string]interface{} {
-	return helpers.ApplicationFlattenOAuth2PermissionScopes(in)
+func flattenApplicationOAuth2PermissionScopes(in *[]stable.PermissionScope) []map[string]interface{} {
+	return applications.FlattenOAuth2PermissionScopes(in)
 }
 
-func flattenApplicationOptionalClaims(in *msgraph.OptionalClaims) []map[string]interface{} {
+func flattenApplicationOptionalClaims(in *stable.OptionalClaims) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -728,7 +741,7 @@ func flattenApplicationOptionalClaims(in *msgraph.OptionalClaims) []map[string]i
 	}}
 }
 
-func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} {
+func flattenApplicationOptionalClaim(in *[]stable.OptionalClaim) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -742,8 +755,8 @@ func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} 
 			"additional_properties": []string{},
 		}
 
-		if claim.Source != nil {
-			optionalClaim["source"] = *claim.Source
+		if !claim.Source.IsNull() {
+			optionalClaim["source"] = claim.Source.GetOrZero()
 		}
 
 		if claim.AdditionalProperties != nil && len(*claim.AdditionalProperties) > 0 {
@@ -756,7 +769,7 @@ func flattenApplicationOptionalClaim(in *[]msgraph.OptionalClaim) []interface{} 
 	return optionalClaims
 }
 
-func flattenApplicationPublicClient(in *msgraph.PublicClient) []map[string]interface{} {
+func flattenApplicationPublicClient(in *stable.PublicClientApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -766,7 +779,7 @@ func flattenApplicationPublicClient(in *msgraph.PublicClient) []map[string]inter
 	}}
 }
 
-func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAccess) []map[string]interface{} {
+func flattenApplicationRequiredResourceAccess(in *[]stable.RequiredResourceAccess) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -787,7 +800,7 @@ func flattenApplicationRequiredResourceAccess(in *[]msgraph.RequiredResourceAcce
 	return result
 }
 
-func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{} {
+func flattenApplicationResourceAccess(in *[]stable.ResourceAccess) []interface{} {
 	if in == nil {
 		return []interface{}{}
 	}
@@ -795,17 +808,17 @@ func flattenApplicationResourceAccess(in *[]msgraph.ResourceAccess) []interface{
 	accesses := make([]interface{}, 0)
 	for _, resourceAccess := range *in {
 		access := make(map[string]interface{})
-		if resourceAccess.ID != nil {
-			access["id"] = *resourceAccess.ID
+		if resourceAccess.Id != nil {
+			access["id"] = *resourceAccess.Id
 		}
-		access["type"] = resourceAccess.Type
+		access["type"] = resourceAccess.Type.GetOrZero()
 		accesses = append(accesses, access)
 	}
 
 	return accesses
 }
 
-func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} {
+func flattenApplicationSpa(in *stable.SpaApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
@@ -815,7 +828,7 @@ func flattenApplicationSpa(in *msgraph.ApplicationSpa) []map[string]interface{} 
 	}}
 }
 
-func flattenApplicationPasswordCredentials(input *[]msgraph.PasswordCredential) []map[string]interface{} {
+func flattenApplicationPasswordCredentials(input *[]stable.PasswordCredential) []map[string]interface{} {
 	output := make([]map[string]interface{}, 0)
 
 	if input == nil {
@@ -823,45 +836,26 @@ func flattenApplicationPasswordCredentials(input *[]msgraph.PasswordCredential) 
 	}
 
 	for _, in := range *input {
-		var startDate, endDate string
-
-		if in.StartDateTime != nil {
-			startDate = in.StartDateTime.Format(time.RFC3339)
-		}
-
-		if in.EndDateTime != nil {
-			endDate = in.EndDateTime.Format(time.RFC3339)
-		}
-
 		output = append(output, map[string]interface{}{
-			"key_id":       pointer.From(in.KeyId),
-			"display_name": pointer.From(in.DisplayName),
-			"start_date":   startDate,
-			"end_date":     endDate,
-			"value":        pointer.From(in.SecretText),
+			"key_id":       in.KeyId.GetOrZero(),
+			"display_name": in.DisplayName.GetOrZero(),
+			"start_date":   in.StartDateTime.GetOrZero(),
+			"end_date":     in.EndDateTime.GetOrZero(),
+			"value":        in.SecretText.GetOrZero(),
 		})
 	}
 
 	return output
 }
 
-func flattenApplicationWeb(in *msgraph.ApplicationWeb) []map[string]interface{} {
+func flattenApplicationWeb(in *stable.WebApplication) []map[string]interface{} {
 	if in == nil {
 		return []map[string]interface{}{}
 	}
 
-	homepageUrl := ""
-	if in.HomePageUrl != nil {
-		homepageUrl = string(*in.HomePageUrl)
-	}
-	logoutUrl := ""
-	if in.LogoutUrl != nil {
-		logoutUrl = string(*in.LogoutUrl)
-	}
-
 	return []map[string]interface{}{{
-		"homepage_url":   homepageUrl,
-		"logout_url":     logoutUrl,
+		"homepage_url":   in.HomePageUrl.GetOrZero(),
+		"logout_url":     in.LogoutUrl.GetOrZero(),
 		"redirect_uris":  tf.FlattenStringSlicePtr(in.RedirectUris),
 		"implicit_grant": flattenApplicationImplicitGrant(in.ImplicitGrantSettings),
 	}}

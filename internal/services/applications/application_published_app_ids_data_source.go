@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/environments"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf"
-	"github.com/hashicorp/terraform-provider-azuread/internal/tf/pluginsdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
+	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
 func applicationPublishedAppIdsDataSource() *pluginsdk.Resource {
