@@ -6,11 +6,12 @@ package approleassignments_test
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
-	"github.com/hashicorp/go-azure-sdk/sdk/odata"
+	"github.com/hashicorp/go-azure-helpers/lang/response"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/approleassignedto"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -98,34 +99,28 @@ func TestAccAppRoleAssignment_userForTenantApp(t *testing.T) {
 
 func (r AppRoleAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AppRoleAssignments.AppRoleAssignedToClient
-	client.BaseClient.DisableRetries = true
-	defer func() { client.BaseClient.DisableRetries = false }()
 
-	id, err := parse.AppRoleAssignmentID(state.ID)
+	resourceId, err := parse.AppRoleAssignmentID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing App Role Assignment ID: %v", err)
 	}
 
-	query := odata.Query{Filter: fmt.Sprintf("id eq '%s'", id.AssignmentId)}
-	appRoleAssignments, status, err := client.List(ctx, id.ResourceId, query)
+	id := stable.NewServicePrincipalIdAppRoleAssignedToID(resourceId.ResourceId, resourceId.AssignmentId)
+
+	resp, err := client.GetAppRoleAssignedTo(ctx, id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
 	if err != nil {
-		if status == http.StatusNotFound {
-			return nil, fmt.Errorf("Resource Service Principal with ID %q does not exist", id.ResourceId)
+		if response.WasNotFound(resp.HttpResponse) {
+			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve Resource Service Principal with ID %q: %+v", id.ResourceId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %+v", id, err)
 	}
 
-	if appRoleAssignments == nil {
-		return nil, fmt.Errorf("failed to retrieve App Role Assignments for Resource with ID %q: appRoleAssignments was nil", id.ResourceId)
+	appRoleAssignment := resp.Model
+	if appRoleAssignment == nil {
+		return nil, fmt.Errorf("retrieving %s: model was nil", id)
 	}
 
-	for _, assignment := range *appRoleAssignments {
-		if assignment.Id != nil && *assignment.Id == id.AssignmentId {
-			return pointer.To(true), nil
-		}
-	}
-
-	return pointer.To(false), nil
+	return pointer.To(true), nil
 }
 
 func (AppRoleAssignmentResource) servicePrincipalForMsGraph(data acceptance.TestData) string {

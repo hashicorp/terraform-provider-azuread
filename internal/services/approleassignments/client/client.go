@@ -4,24 +4,31 @@
 package client
 
 import (
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/approleassignedto"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
-	"github.com/manicminer/hamilton/msgraph"
 )
 
 type Client struct {
-	AppRoleAssignedToClient *msgraph.AppRoleAssignedToClient
-	ServicePrincipalsClient *msgraph.ServicePrincipalsClient
+	AppRoleAssignedToClient *approleassignedto.AppRoleAssignedToClient
+	ServicePrincipalClient  *serviceprincipal.ServicePrincipalClient
 }
 
-func NewClient(o *common.ClientOptions) *Client {
-	appRoleAssignedToClient := msgraph.NewAppRoleAssignedToClient()
-	o.ConfigureClient(&appRoleAssignedToClient.BaseClient)
+func NewClient(o *common.ClientOptions) (*Client, error) {
+	appRoleAssignedToClient, err := approleassignedto.NewAppRoleAssignedToClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(appRoleAssignedToClient.Client)
 
-	servicePrincipalsClient := msgraph.NewServicePrincipalsClient()
-	o.ConfigureClient(&servicePrincipalsClient.BaseClient)
+	servicePrincipalClient, err := serviceprincipal.NewServicePrincipalClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(servicePrincipalClient.Client)
 
 	return &Client{
 		AppRoleAssignedToClient: appRoleAssignedToClient,
-		ServicePrincipalsClient: servicePrincipalsClient,
-	}
+		ServicePrincipalClient:  servicePrincipalClient,
+	}, nil
 }
