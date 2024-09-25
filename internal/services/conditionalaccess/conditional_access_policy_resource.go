@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccesspolicy"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/migrations"
 )
 
 func conditionalAccessPolicyResource() *pluginsdk.Resource {
@@ -39,11 +39,24 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidateIdentityConditionalAccessPolicyID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceConditionalAccessPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceConditionalAccessPolicyInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
@@ -206,6 +219,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 														ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessGuestOrExternalUserTypes(), false),
 													},
 												},
+
 												"external_tenants": {
 													Type:     pluginsdk.TypeList,
 													Optional: true,
@@ -216,6 +230,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessExternalTenantsMembershipKind(), false),
 															},
+
 															"members": {
 																Type:     pluginsdk.TypeList,
 																Optional: true,
@@ -244,6 +259,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 														ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessGuestOrExternalUserTypes(), false),
 													},
 												},
+
 												"external_tenants": {
 													Type:     pluginsdk.TypeList,
 													Optional: true,
@@ -254,6 +270,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessExternalTenantsMembershipKind(), false),
 															},
+
 															"members": {
 																Type:     pluginsdk.TypeList,
 																Optional: true,
@@ -448,11 +465,10 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 			},
 
 			"session_controls": {
-				Type:         pluginsdk.TypeList,
-				Optional:     true,
-				AtLeastOneOf: []string{"grant_controls", "session_controls"},
-				MaxItems:     1,
-				//ConfigMode:       pluginsdk.SchemaConfigModeAttr,
+				Type:             pluginsdk.TypeList,
+				Optional:         true,
+				AtLeastOneOf:     []string{"grant_controls", "session_controls"},
+				MaxItems:         1,
 				DiffSuppressFunc: conditionalAccessPolicyDiffSuppress,
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
@@ -604,14 +620,19 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 		return tf.ErrorDiagF(errors.New("Bad API response"), "Object ID returned for conditional access policy is nil/empty")
 	}
 
-	d.SetId(*policy.Id)
+	id := stable.NewIdentityConditionalAccessPolicyID(pointer.From(policy.Id))
+	d.SetId(id.ID())
 
 	return conditionalAccessPolicyResourceRead(ctx, d, meta)
 }
 
 func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PolicyClient
-	id := stable.NewIdentityConditionalAccessPolicyID(d.Id())
+
+	id, err := stable.ParseIdentityConditionalAccessPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Conditional Access Policy ID")
+	}
 
 	properties := stable.ConditionalAccessPolicy{
 		DisplayName: pointer.To(d.Get("display_name").(string)),
@@ -627,7 +648,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
 	}
 
-	if _, err := client.UpdateConditionalAccessPolicy(ctx, id, properties, conditionalaccesspolicy.DefaultUpdateConditionalAccessPolicyOperationOptions()); err != nil {
+	if _, err := client.UpdateConditionalAccessPolicy(ctx, *id, properties, conditionalaccesspolicy.DefaultUpdateConditionalAccessPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update conditional access policy with ID: %q", d.Id())
 	}
 
@@ -642,7 +663,7 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+			resp, err := client.GetConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
 			if err != nil {
 				return nil, "Error", err
 			}
@@ -670,9 +691,13 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 
 func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PolicyClient
-	id := stable.NewIdentityConditionalAccessPolicyID(d.Id())
 
-	resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+	id, err := stable.ParseIdentityConditionalAccessPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Conditional Access Policy ID")
+	}
+
+	resp, err := client.GetConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s not found - removing from state", id)
@@ -699,9 +724,13 @@ func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.Resou
 
 func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PolicyClient
-	id := stable.NewIdentityConditionalAccessPolicyID(d.Id())
 
-	resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+	id, err := stable.ParseIdentityConditionalAccessPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Conditional Access Policy ID")
+	}
+
+	resp, err := client.GetConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s already deleted", id)
@@ -711,12 +740,12 @@ func conditionalAccessPolicyResourceDelete(ctx context.Context, d *pluginsdk.Res
 		return tf.ErrorDiagPathF(err, "id", "retrieving %s", id)
 	}
 
-	if _, err = client.DeleteConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultDeleteConditionalAccessPolicyOperationOptions()); err != nil {
+	if _, err = client.DeleteConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultDeleteConditionalAccessPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions()); err != nil {
+		if resp, err := client.GetConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}

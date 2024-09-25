@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/identity/stable/conditionalaccessnamedlocation"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/conditionalaccess/migrations"
 )
 
 func namedLocationResource() *pluginsdk.Resource {
@@ -38,11 +38,24 @@ func namedLocationResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidateIdentityConditionalAccessNamedLocationID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceNamedLocationInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceNamedLocationInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
@@ -129,7 +142,8 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(errors.New("nil/empty object ID returned for named location"), "Bad API response")
 		}
 
-		d.SetId(*namedLocation.Id)
+		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
+		d.SetId(id.ID())
 
 	} else if v, ok = d.GetOk("country"); ok {
 		properties := expandCountryNamedLocation(v.([]interface{}))
@@ -153,7 +167,8 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(errors.New("nil/empty object ID returned for named location"), "Bad API response")
 		}
 
-		d.SetId(*namedLocation.Id)
+		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
+		d.SetId(id.ID())
 
 	} else {
 		return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
@@ -164,7 +179,11 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationClient
-	id := stable.NewIdentityConditionalAccessNamedLocationID(d.Id())
+
+	id, err := stable.ParseIdentityConditionalAccessNamedLocationID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Named Location ID")
+	}
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
@@ -173,12 +192,12 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
 		}
 
-		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
+		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, *id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
 		if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-			resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+			resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 			if err != nil {
 				return nil, err
 			}
@@ -217,12 +236,12 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			properties.DisplayName = pointer.To(d.Get("display_name").(string))
 		}
 
-		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
+		if _, err := client.UpdateConditionalAccessNamedLocation(ctx, *id, *properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
 		if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-			resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+			resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 			if err != nil {
 				return nil, err
 			}
@@ -260,9 +279,13 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 
 func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationClient
-	id := stable.NewIdentityConditionalAccessNamedLocationID(d.Id())
 
-	resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+	id, err := stable.ParseIdentityConditionalAccessNamedLocationID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Named Location ID")
+	}
+
+	resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state", id)
@@ -281,8 +304,6 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 			return tf.ErrorDiagF(errors.New("ID is nil for returned IP Named Location"), "Bad API response")
 		}
 
-		d.SetId(*namedLocation.Id)
-
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "ip", flattenIPNamedLocation(&namedLocation))
 
@@ -290,8 +311,6 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 		if namedLocation.Id == nil {
 			return tf.ErrorDiagF(errors.New("ID is nil for returned Country Named Location"), "Bad API response")
 		}
-
-		d.SetId(*namedLocation.Id)
 
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "country", flattenCountryNamedLocation(&namedLocation))
@@ -302,13 +321,17 @@ func namedLocationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 
 func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.NamedLocationClient
-	id := stable.NewIdentityConditionalAccessNamedLocationID(d.Id())
+
+	id, err := stable.ParseIdentityConditionalAccessNamedLocationID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing Named Location ID")
+	}
 
 	if v, ok := d.GetOk("ip"); ok {
 		properties := expandIPNamedLocation(v.([]interface{}))
 		properties.IsTrusted = pointer.To(false)
 
-		if resp, err := client.UpdateConditionalAccessNamedLocation(ctx, id, properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
+		if resp, err := client.UpdateConditionalAccessNamedLocation(ctx, *id, properties, conditionalaccessnamedlocation.DefaultUpdateConditionalAccessNamedLocationOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				log.Printf("[DEBUG] %s already deleted", id)
 				return nil
@@ -318,7 +341,7 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 	}
 
-	resp, err := client.DeleteConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultDeleteConditionalAccessNamedLocationOperationOptions())
+	resp, err := client.DeleteConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultDeleteConditionalAccessNamedLocationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s already deleted", id)
@@ -329,7 +352,7 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 	}
 
 	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+		resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil

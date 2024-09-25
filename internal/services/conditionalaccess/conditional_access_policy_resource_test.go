@@ -333,9 +333,12 @@ func TestAccConditionalAccessPolicy_guestsOrExternalUsers(t *testing.T) {
 }
 
 func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
-	id := stable.NewIdentityConditionalAccessPolicyID(state.ID)
+	id, err := stable.ParseIdentityConditionalAccessPolicyID(state.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	resp, err := clients.ConditionalAccess.PolicyClient.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+	resp, err := clients.ConditionalAccess.PolicyClient.GetConditionalAccessPolicy(ctx, *id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
