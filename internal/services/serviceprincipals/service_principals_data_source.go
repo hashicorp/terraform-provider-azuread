@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -331,6 +332,12 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 		// Retrieve from beta API to get samlMetadataUrl field
 		options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
+			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+				if resp == nil || response.WasNotFound(resp) {
+					return true, nil
+				}
+				return false, nil
+			},
 			Select: pointer.To([]string{"samlMetadataUrl"}),
 		}
 		resp, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(*s.Id), options)
