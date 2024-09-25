@@ -32,7 +32,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 		DeleteContext: directoryRoleEligibilityScheduleRequestResourceDelete,
 
 		Timeouts: &pluginsdk.ResourceTimeout{
-			Create: pluginsdk.DefaultTimeout(5 * time.Minute),
+			Create: pluginsdk.DefaultTimeout(10 * time.Minute),
 			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
 			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
