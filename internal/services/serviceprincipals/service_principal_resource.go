@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 )
 
 const servicePrincipalResourceName = "azuread_service_principal"
@@ -47,11 +48,24 @@ func servicePrincipalResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidateServicePrincipalID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceServicePrincipalInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceServicePrincipalInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"client_id": {
@@ -380,7 +394,8 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 		}
 
 		if d.Get("use_existing").(bool) {
-			d.SetId(*servicePrincipal.Id)
+			id := stable.NewServicePrincipalID(*servicePrincipal.Id)
+			d.SetId(id.ID())
 			return servicePrincipalResourceUpdate(ctx, d, meta)
 		}
 
@@ -481,7 +496,7 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 	}
 
 	id := stable.NewServicePrincipalID(*servicePrincipal.Id)
-	d.SetId(id.ServicePrincipalId)
+	d.SetId(id.ID())
 
 	// Attempt to patch the newly created service principal with the correct description, which will tell us whether it exists yet
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up
@@ -515,7 +530,11 @@ func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceDa
 func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
-	id := stable.NewServicePrincipalID(d.Id())
+
+	id, err := stable.ParseServicePrincipalID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	var tags []string
 	if v, ok := d.GetOk("feature_tags"); ok && len(v.([]interface{})) > 0 && d.HasChange("feature_tags") {
@@ -539,12 +558,12 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 		Tags:                       &tags,
 	}
 
-	if _, err := client.UpdateServicePrincipal(ctx, id, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
+	if _, err := client.UpdateServicePrincipal(ctx, *id, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
 	if d.HasChange("owners") {
-		resp, err := ownerClient.ListOwners(ctx, id, owner.DefaultListOwnersOperationOptions())
+		resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve owners for service principal with object ID: %q", d.Id())
 		}
@@ -564,7 +583,7 @@ func servicePrincipalResourceUpdate(ctx context.Context, d *pluginsdk.ResourceDa
 			request := stable.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(o).ID()),
 			}
-			if _, err = ownerClient.AddOwnerRef(ctx, id, request, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
+			if _, err = ownerClient.AddOwnerRef(ctx, *id, request, owner.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 			}
 		}
@@ -583,9 +602,13 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 	clientBeta := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClientBeta
 	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
-	id := stable.NewServicePrincipalID(d.Id())
 
-	resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	id, err := stable.ParseServicePrincipalID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetServicePrincipal(ctx, *id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -654,7 +677,7 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "type", servicePrincipal.ServicePrincipalType.GetOrZero())
 
 	owners := make([]interface{}, 0)
-	if resp, err := ownerClient.ListOwners(ctx, id, owner.DefaultListOwnersOperationOptions()); err != nil {
+	if resp, err := ownerClient.ListOwners(ctx, *id, owner.DefaultListOwnersOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 	} else if resp.Model != nil {
 		for _, obj := range *resp.Model {
@@ -668,19 +691,22 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 
 func servicePrincipalResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
-	id := stable.NewServicePrincipalID(d.Id())
+
+	id, err := stable.ParseServicePrincipalID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	useExisting := d.Get("use_existing").(bool)
 
-	_, err := client.DeleteServicePrincipal(ctx, id, serviceprincipal.DefaultDeleteServicePrincipalOperationOptions())
-	if !useExisting {
+	if _, err = client.DeleteServicePrincipal(ctx, *id, serviceprincipal.DefaultDeleteServicePrincipalOperationOptions()); !useExisting {
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 		}
 
 		// Wait for service principal object to be deleted
-		if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-			if resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
+		if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+			if resp, err := client.GetServicePrincipal(ctx, *id, serviceprincipal.DefaultGetServicePrincipalOperationOptions()); err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					return pointer.To(false), nil
 				}

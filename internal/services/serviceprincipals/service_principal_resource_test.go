@@ -316,9 +316,13 @@ func TestAccServicePrincipal_fromApplicationTemplate(t *testing.T) {
 
 func (r ServicePrincipalResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ServicePrincipalClient
-	id := stable.NewServicePrincipalID(state.ID)
 
-	resp, err := client.GetServicePrincipal(ctx, id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	id, err := stable.ParseServicePrincipalID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetServicePrincipal(ctx, *id, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
 )
 
 type ServicePrincipalClaimsMappingPolicyAssignmentResource struct{}
@@ -39,9 +38,9 @@ func TestClaimsMappingPolicyAssignment_basic(t *testing.T) {
 func (r ServicePrincipalClaimsMappingPolicyAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.ClaimsMappingPolicyClient
 
-	id, err := parse.ClaimsMappingPolicyAssignmentID(state.ID)
+	id, err := stable.ParseServicePrincipalIdClaimsMappingPolicyID(state.ID)
 	if err != nil {
-		return nil, fmt.Errorf("parsing CLaims Mapping Policy Assignment ID: %v", err)
+		return nil, fmt.Errorf("parsing Claims Mapping Policy Assignment ID: %v", err)
 	}
 
 	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
@@ -77,8 +76,8 @@ resource "azuread_claims_mapping_policy" "test" {
 }
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_service_principal_claims_mapping_policy_assignment" "test" {

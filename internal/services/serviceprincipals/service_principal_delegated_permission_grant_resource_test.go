@@ -52,9 +52,13 @@ func TestAccServicePrincipalDelegatedPermissionGrant_singleUser(t *testing.T) {
 
 func (r ServicePrincipalDelegatedPermissionGrantResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.OAuth2PermissionGrantClient
-	id := stable.NewOAuth2PermissionGrantID(state.ID)
 
-	if resp, err := client.GetOAuth2PermissionGrant(ctx, id, oauth2permissiongrant.DefaultGetOAuth2PermissionGrantOperationOptions()); err != nil {
+	id, err := stable.ParseOAuth2PermissionGrantID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp, err := client.GetOAuth2PermissionGrant(ctx, *id, oauth2permissiongrant.DefaultGetOAuth2PermissionGrantOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
@@ -71,8 +75,8 @@ provider "azuread" {}
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_application" "test" {
@@ -94,7 +98,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 `, data.RandomInteger)
 }
