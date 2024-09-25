@@ -17,13 +17,13 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/authenticationstrengthpolicy"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies/migrations"
 )
 
 func authenticationStrengthPolicyResource() *pluginsdk.Resource {
@@ -41,11 +41,24 @@ func authenticationStrengthPolicyResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidatePolicyAuthenticationStrengthPolicyID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceAuthenticationStrengthPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceAuthenticationStrengthPolicyInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
@@ -129,21 +142,25 @@ func authenticationStrengthPolicyCreate(ctx context.Context, d *pluginsdk.Resour
 		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 
-	d.SetId(id.AuthenticationStrengthPolicyId)
+	d.SetId(id.ID())
 
 	return authenticationStrengthPolicyRead(ctx, d, meta)
 }
 
 func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Policies.AuthenticationStrengthPolicyClient
-	id := stable.NewPolicyAuthenticationStrengthPolicyID(d.Id())
+
+	id, err := stable.ParsePolicyAuthenticationStrengthPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	properties := stable.AuthenticationStrengthPolicy{
 		DisplayName: pointer.To(d.Get("display_name").(string)),
 		Description: nullable.NoZero(d.Get("description").(string)),
 	}
 
-	if _, err := client.UpdateAuthenticationStrengthPolicy(ctx, id, properties, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyOperationOptions()); err != nil {
+	if _, err := client.UpdateAuthenticationStrengthPolicy(ctx, *id, properties, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
@@ -157,7 +174,7 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 			AllowedCombinations: pointer.To(allowedCombinations),
 		}
 
-		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombinations(ctx, id, request, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyAllowedCombinationsOperationOptions()); err != nil {
+		if _, err := client.UpdateAuthenticationStrengthPolicyAllowedCombinations(ctx, *id, request, authenticationstrengthpolicy.DefaultUpdateAuthenticationStrengthPolicyAllowedCombinationsOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not update allowed combinations for %s", id)
 		}
 	}
@@ -167,9 +184,13 @@ func authenticationStrengthPolicyUpdate(ctx context.Context, d *pluginsdk.Resour
 
 func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Policies.AuthenticationStrengthPolicyClient
-	id := stable.NewPolicyAuthenticationStrengthPolicyID(d.Id())
 
-	resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
+	id, err := stable.ParsePolicyAuthenticationStrengthPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetAuthenticationStrengthPolicy(ctx, *id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Authentication Strength Policy with Object ID %q was not found - removing from state", d.Id())
@@ -196,14 +217,18 @@ func authenticationStrengthPolicyRead(ctx context.Context, d *pluginsdk.Resource
 
 func authenticationStrengthPolicyDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*clients.Client).Policies.AuthenticationStrengthPolicyClient
-	id := stable.NewPolicyAuthenticationStrengthPolicyID(d.Id())
 
-	if _, err := client.DeleteAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultDeleteAuthenticationStrengthPolicyOperationOptions()); err != nil {
+	id, err := stable.ParsePolicyAuthenticationStrengthPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	if _, err := client.DeleteAuthenticationStrengthPolicy(ctx, *id, authenticationstrengthpolicy.DefaultDeleteAuthenticationStrengthPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions()); err != nil {
+		if resp, err := client.GetAuthenticationStrengthPolicy(ctx, *id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}

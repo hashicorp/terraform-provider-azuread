@@ -44,9 +44,13 @@ func TestClaimsMappingPolicy_basic(t *testing.T) {
 
 func (r ClaimsMappingPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Policies.ClaimsMappingPolicyClient
-	id := stable.NewPolicyClaimsMappingPolicyID(state.ID)
 
-	resp, err := client.GetClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
+	id, err := stable.ParsePolicyClaimsMappingPolicyID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetClaimsMappingPolicy(ctx, *id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

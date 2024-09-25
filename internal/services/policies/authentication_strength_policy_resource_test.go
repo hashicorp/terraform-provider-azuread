@@ -81,9 +81,13 @@ func TestAccAuthenticationStrengthPolicy_update(t *testing.T) {
 
 func (r AuthenticationStrengthPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	client := clients.Policies.AuthenticationStrengthPolicyClient
-	id := stable.NewPolicyAuthenticationStrengthPolicyID(state.ID)
 
-	resp, err := client.GetAuthenticationStrengthPolicy(ctx, id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
+	id, err := stable.ParsePolicyAuthenticationStrengthPolicyID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetAuthenticationStrengthPolicy(ctx, *id, authenticationstrengthpolicy.DefaultGetAuthenticationStrengthPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

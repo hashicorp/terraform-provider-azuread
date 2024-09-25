@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/claimsmappingpolicy"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/policies/migrations"
 )
 
 func claimsMappingPolicyResource() *pluginsdk.Resource {
@@ -36,11 +36,24 @@ func claimsMappingPolicyResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidatePolicyClaimsMappingPolicyID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceClaimsMappingPolicyInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceClaimsMappingPolicyInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"definition": {
@@ -85,16 +98,20 @@ func claimsMappingPolicyResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	}
 
 	id := stable.NewPolicyClaimsMappingPolicyID(*claimsMappingPolicy.Id)
-	d.SetId(id.ClaimsMappingPolicyId)
+	d.SetId(id.ID())
 
 	return claimsMappingPolicyResourceRead(ctx, d, meta)
 }
 
 func claimsMappingPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
 
-	resp, err := client.GetClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
+	id, err := stable.ParsePolicyClaimsMappingPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetClaimsMappingPolicy(ctx, *id, claimsmappingpolicy.DefaultGetClaimsMappingPolicyOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s - removing from state!", id)
@@ -118,14 +135,18 @@ func claimsMappingPolicyResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
+
+	id, err := stable.ParsePolicyClaimsMappingPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	properties := stable.ClaimsMappingPolicy{
 		Definition:  tf.ExpandStringSlice(d.Get("definition").([]interface{})),
 		DisplayName: nullable.Value(d.Get("display_name").(string)),
 	}
 
-	if _, err := client.UpdateClaimsMappingPolicy(ctx, id, properties, claimsmappingpolicy.DefaultUpdateClaimsMappingPolicyOperationOptions()); err != nil {
+	if _, err := client.UpdateClaimsMappingPolicy(ctx, *id, properties, claimsmappingpolicy.DefaultUpdateClaimsMappingPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}
 
@@ -134,9 +155,13 @@ func claimsMappingPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 
 func claimsMappingPolicyResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Policies.ClaimsMappingPolicyClient
-	id := stable.NewPolicyClaimsMappingPolicyID(d.Id())
 
-	if _, err := client.DeleteClaimsMappingPolicy(ctx, id, claimsmappingpolicy.DefaultDeleteClaimsMappingPolicyOperationOptions()); err != nil {
+	id, err := stable.ParsePolicyClaimsMappingPolicyID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	if _, err := client.DeleteClaimsMappingPolicy(ctx, *id, claimsmappingpolicy.DefaultDeleteClaimsMappingPolicyOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
