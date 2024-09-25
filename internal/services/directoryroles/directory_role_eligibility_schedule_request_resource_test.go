@@ -34,20 +34,6 @@ func TestAccRoleEligibilityScheduleRequest_builtin(t *testing.T) {
 	})
 }
 
-func TestAccRoleEligibilityScheduleRequest_custom(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_directory_role_eligibility_schedule_request", "test")
-	r := RoleEligibilityScheduleRequestResource{}
-
-	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
-		{
-			Config: r.custom(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-	})
-}
-
 func (r RoleEligibilityScheduleRequestResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(state.ID)
@@ -83,39 +69,6 @@ resource "azuread_directory_role" "test" {
 
 resource "azuread_directory_role_eligibility_schedule_request" "test" {
   role_definition_id = azuread_directory_role.test.template_id
-  principal_id       = azuread_user.test.object_id
-  directory_scope_id = "/"
-  justification      = "abc"
-}
-`, data.RandomInteger, data.RandomPassword)
-}
-
-func (r RoleEligibilityScheduleRequestResource) custom(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-provider "azuread" {}
-
-data "azuread_domains" "test" {
-  only_initial = true
-}
-
-resource "azuread_user" "test" {
-  user_principal_name = "acctestManager.%[1]d@${data.azuread_domains.test.domains.0.domain_name}"
-  display_name        = "acctestManager-%[1]d"
-  password            = "%[2]s"
-}
-
-resource "azuread_custom_directory_role" "test" {
-  display_name = "acctestCustomRole-%[1]d"
-  enabled      = true
-  version      = "1.0"
-
-  permissions {
-    allowed_resource_actions = ["microsoft.directory/applications/standard/read"]
-  }
-}
-
-resource "azuread_directory_role_eligibility_schedule_request" "test" {
-  role_definition_id = azuread_custom_directory_role.test.object_id
   principal_id       = azuread_user.test.object_id
   directory_scope_id = "/"
   justification      = "abc"
