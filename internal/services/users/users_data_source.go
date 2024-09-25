@@ -190,13 +190,29 @@ func usersData() *pluginsdk.Resource {
 func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UserClient
 
-	foundObjectIds := make([]string, 0)
+	foundUsers := make([]stable.User, 0)
 	var expectedCount int
 	ignoreMissing := d.Get("ignore_missing").(bool)
 	returnAll := d.Get("return_all").(bool)
 
+	// Users API changes which fields it sends by default, so we explicitly select the fields we want, to guard against this
+	fieldsToSelect := []string{
+		"accountEnabled",
+		"displayName",
+		"employeeId",
+		"id",
+		"mail",
+		"mailNickname",
+		"onPremisesImmutableId",
+		"onPremisesSamAccountName",
+		"onPremisesUserPrincipalName",
+		"usageLocation",
+		"userPrincipalName",
+		"userType",
+	}
+
 	if returnAll {
-		resp, err := client.ListUsers(ctx, user.ListUsersOperationOptions{Select: pointer.To([]string{"id"})})
+		resp, err := client.ListUsers(ctx, user.ListUsersOperationOptions{Select: &fieldsToSelect})
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve users")
 		}
@@ -208,7 +224,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		for _, u := range *resp.Model {
-			foundObjectIds = append(foundObjectIds, pointer.From(u.Id))
+			foundUsers = append(foundUsers, u)
 		}
 
 	} else if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
@@ -216,7 +232,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		for _, v := range upns {
 			options := user.ListUsersOperationOptions{
 				Filter: pointer.To(fmt.Sprintf("userPrincipalName eq '%s'", odata.EscapeSingleQuote(v.(string)))),
-				Select: pointer.To([]string{"id"}),
+				Select: &fieldsToSelect,
 			}
 			resp, err := client.ListUsers(ctx, options)
 			if err != nil {
@@ -235,14 +251,14 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				return tf.ErrorDiagPathF(err, "user_principal_names", "User with UPN %q was not found", v)
 			}
 
-			foundObjectIds = append(foundObjectIds, pointer.From((*resp.Model)[0].Id))
+			foundUsers = append(foundUsers, (*resp.Model)[0])
 		}
 
 	} else {
 		if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 			expectedCount = len(objectIds)
 			for _, v := range objectIds {
-				resp, err := client.GetUser(ctx, stable.NewUserID(v.(string)), user.GetUserOperationOptions{Select: pointer.To([]string{"id"})})
+				resp, err := client.GetUser(ctx, stable.NewUserID(v.(string)), user.GetUserOperationOptions{Select: &fieldsToSelect})
 				if err != nil {
 					if response.WasNotFound(resp.HttpResponse) {
 						if ignoreMissing {
@@ -256,7 +272,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					return tf.ErrorDiagPathF(nil, "object_id", "User not found with object ID: %q", v)
 				}
 
-				foundObjectIds = append(foundObjectIds, pointer.From(resp.Model.Id))
+				foundUsers = append(foundUsers, *resp.Model)
 			}
 
 		} else if mailNicknames, ok := d.Get("mail_nicknames").([]interface{}); ok && len(mailNicknames) > 0 {
@@ -264,7 +280,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			for _, v := range mailNicknames {
 				options := user.ListUsersOperationOptions{
 					Filter: pointer.To(fmt.Sprintf("mailNickname eq '%s'", odata.EscapeSingleQuote(v.(string)))),
-					Select: pointer.To([]string{"id"}),
+					Select: &fieldsToSelect,
 				}
 				resp, err := client.ListUsers(ctx, options)
 				if err != nil {
@@ -284,7 +300,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					return tf.ErrorDiagPathF(err, "mail_nicknames", "User not found with email alias: %q", v)
 				}
 
-				foundObjectIds = append(foundObjectIds, pointer.From((*resp.Model)[0].Id))
+				foundUsers = append(foundUsers, (*resp.Model)[0])
 			}
 
 		} else if mails, ok := d.Get("mails").([]interface{}); ok && len(mails) > 0 {
@@ -292,7 +308,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			for _, v := range mails {
 				options := user.ListUsersOperationOptions{
 					Filter: pointer.To(fmt.Sprintf("mail eq '%s'", odata.EscapeSingleQuote(v.(string)))),
-					Select: pointer.To([]string{"id"}),
+					Select: &fieldsToSelect,
 				}
 				resp, err := client.ListUsers(ctx, options)
 				if err != nil {
@@ -312,7 +328,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					return tf.ErrorDiagPathF(err, "mails", "User not found with mail address: %q", v)
 				}
 
-				foundObjectIds = append(foundObjectIds, pointer.From((*resp.Model)[0].Id))
+				foundUsers = append(foundUsers, (*resp.Model)[0])
 			}
 
 		} else if employeeIds, ok := d.Get("employee_ids").([]interface{}); ok && len(employeeIds) > 0 {
@@ -320,7 +336,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			for _, v := range employeeIds {
 				options := user.ListUsersOperationOptions{
 					Filter: pointer.To(fmt.Sprintf("employeeId eq '%s'", odata.EscapeSingleQuote(v.(string)))),
-					Select: pointer.To([]string{"id"}),
+					Select: &fieldsToSelect,
 				}
 				resp, err := client.ListUsers(ctx, options)
 				if err != nil {
@@ -340,14 +356,14 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 					return tf.ErrorDiagPathF(err, "employee_ids", "User not found with employee ID: %q", v)
 				}
 
-				foundObjectIds = append(foundObjectIds, pointer.From((*resp.Model)[0].Id))
+				foundUsers = append(foundUsers, (*resp.Model)[0])
 			}
 		}
 	}
 
 	// Check that the right number of users were returned
-	if !returnAll && !ignoreMissing && len(foundObjectIds) != expectedCount {
-		return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundObjectIds)), "Unexpected number of users returned")
+	if !returnAll && !ignoreMissing && len(foundUsers) != expectedCount {
+		return tf.ErrorDiagF(fmt.Errorf("expected: %d, actual: %d", expectedCount, len(foundUsers)), "Unexpected number of users returned")
 	}
 
 	upns := make([]string, 0)
@@ -357,36 +373,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	employeeIds := make([]string, 0)
 	userList := make([]map[string]interface{}, 0)
 
-	// Users API changes which fields it sends by default, so we explicitly select the fields we want to guard against this
-	options := user.GetUserOperationOptions{
-		Select: pointer.To([]string{
-			"accountEnabled",
-			"displayName",
-			"employeeId",
-			"id",
-			"mail",
-			"mailNickname",
-			"onPremisesImmutableId",
-			"onPremisesSamAccountName",
-			"onPremisesUserPrincipalName",
-			"usageLocation",
-			"userPrincipalName",
-			"userType",
-		}),
-	}
-
-	for _, objectId := range foundObjectIds {
-		id := stable.NewUserID(objectId)
-		resp, err := client.GetUser(ctx, id, options)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Retrieving %s", id)
-		}
-
-		u := resp.Model
-		if u == nil {
-			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
-		}
-
+	for _, u := range foundUsers {
 		if u.Id == nil || u.UserPrincipalName == nil {
 			return tf.ErrorDiagF(errors.New("API returned user with nil object ID or userPrincipalName"), "Bad API Response")
 		}
