@@ -90,6 +90,7 @@ func applicationPasswordResource() *pluginsdk.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"end_date"},
 				ValidateFunc:  validation.StringIsNotEmpty,
+				Deprecated:    "The `end_date_relative` property is deprecated and will be removed in a future version of the AzureAD provider. Please instead use the Terraform `timeadd()` function to calculate a value for the `end_date` property.",
 			},
 
 			"rotate_when_changed": {
