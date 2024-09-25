@@ -555,9 +555,13 @@ func TestAccGroup_writebackUnified(t *testing.T) {
 
 func (r GroupResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Groups.GroupClientBeta
-	id := beta.NewGroupID(state.ID)
 
-	resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
+	id, err := beta.ParseGroupID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetGroup(ctx, *id, groupBeta.DefaultGetGroupOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"slices"
 	"time"
 
@@ -387,7 +388,8 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*foundGroup.Id)
+	id := stable.NewGroupID(*foundGroup.Id)
+	d.SetId(id.ID())
 
 	tf.Set(d, "assignable_to_role", foundGroup.IsAssignableToRole.GetOrZero())
 	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(foundGroup.ResourceBehaviorOptions))
