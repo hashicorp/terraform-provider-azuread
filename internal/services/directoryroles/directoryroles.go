@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 )
 
-func directoryRoleGetMember(ctx context.Context, client *member.MemberClient, id string, memberId string) (*stable.DirectoryObject, error) {
+func directoryRoleGetMember(ctx context.Context, client *member.MemberClient, id stable.DirectoryRoleIdMemberId) (*stable.DirectoryObject, error) {
 	options := member.ListMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", memberId)),
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
 	}
 
-	resp, err := client.ListMembers(ctx, stable.NewDirectoryRoleID(id), options)
+	resp, err := client.ListMembers(ctx, stable.NewDirectoryRoleID(id.DirectoryRoleId), options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return nil, nil
@@ -31,7 +31,7 @@ func directoryRoleGetMember(ctx context.Context, client *member.MemberClient, id
 
 	if resp.Model != nil {
 		for _, member := range *resp.Model {
-			if member.DirectoryObject().Id != nil && *member.DirectoryObject().Id == memberId {
+			if member.DirectoryObject().Id != nil && *member.DirectoryObject().Id == id.DirectoryObjectId {
 				return &member, nil
 			}
 		}

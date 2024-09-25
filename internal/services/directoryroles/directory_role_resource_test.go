@@ -56,9 +56,13 @@ func TestAccDirectoryRole_byTemplateId(t *testing.T) {
 
 func (r DirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRoleClient
-	id := stable.NewDirectoryRoleID(state.ID)
 
-	resp, err := client.GetDirectoryRole(ctx, id, directoryrole.DefaultGetDirectoryRoleOperationOptions())
+	id, err := stable.ParseDirectoryRoleID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetDirectoryRole(ctx, *id, directoryrole.DefaultGetDirectoryRoleOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

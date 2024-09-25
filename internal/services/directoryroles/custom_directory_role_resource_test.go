@@ -131,9 +131,13 @@ func TestAccCustomDirectoryRole_templateId(t *testing.T) {
 
 func (r CustomDirectoryRoleResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRoleDefinitionClient
-	id := stable.NewRoleManagementDirectoryRoleDefinitionID(state.ID)
 
-	resp, err := client.GetDirectoryRoleDefinition(ctx, id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
+	id, err := stable.ParseRoleManagementDirectoryRoleDefinitionID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

@@ -14,11 +14,11 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroledefinition"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/migrations"
 )
 
 func customDirectoryRoleResource() *pluginsdk.Resource {
@@ -36,11 +36,24 @@ func customDirectoryRoleResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidateRoleManagementDirectoryRoleDefinitionID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceCustomDirectoryRoleInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceCustomDirectoryRoleInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
@@ -137,14 +150,19 @@ func customDirectoryRoleResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		return tf.ErrorDiagF(errors.New("API returned custom directory role with nil ID"), "Bad API Response")
 	}
 
-	d.SetId(*role.Id)
+	id := stable.NewRoleManagementDirectoryRoleDefinitionID(*role.Id)
+	d.SetId(id.ID())
 
 	return customDirectoryRoleResourceRead(ctx, d, meta)
 }
 
 func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleDefinitionClient
-	id := stable.NewRoleManagementDirectoryRoleDefinitionID(d.Id())
+
+	id, err := stable.ParseRoleManagementDirectoryRoleDefinitionID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	displayName := d.Get("display_name").(string)
 
@@ -157,8 +175,7 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 		Version:         nullable.Value(d.Get("version").(string)),
 	}
 
-	_, err := client.UpdateDirectoryRoleDefinition(ctx, id, properties, directoryroledefinition.DefaultUpdateDirectoryRoleDefinitionOperationOptions())
-	if err != nil {
+	if _, err = client.UpdateDirectoryRoleDefinition(ctx, *id, properties, directoryroledefinition.DefaultUpdateDirectoryRoleDefinitionOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating custom directory role %q", displayName)
 	}
 
@@ -167,9 +184,13 @@ func customDirectoryRoleResourceUpdate(ctx context.Context, d *pluginsdk.Resourc
 
 func customDirectoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleDefinitionClient
-	id := stable.NewRoleManagementDirectoryRoleDefinitionID(d.Id())
 
-	resp, err := client.GetDirectoryRoleDefinition(ctx, id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
+	id, err := stable.ParseRoleManagementDirectoryRoleDefinitionID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state", id)
@@ -197,9 +218,13 @@ func customDirectoryRoleResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 
 func customDirectoryRoleResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleDefinitionClient
-	id := stable.NewRoleManagementDirectoryRoleDefinitionID(d.Id())
 
-	resp, err := client.GetDirectoryRoleDefinition(ctx, id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
+	id, err := stable.ParseRoleManagementDirectoryRoleDefinitionID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultGetDirectoryRoleDefinitionOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(fmt.Errorf("Custom Directory Role was not found"), "id", "Retrieving %s", id)
@@ -207,7 +232,7 @@ func customDirectoryRoleResourceDelete(ctx context.Context, d *pluginsdk.Resourc
 		return tf.ErrorDiagPathF(err, "id", "Retrieving %s", id)
 	}
 
-	if _, err = client.DeleteDirectoryRoleDefinition(ctx, id, directoryroledefinition.DefaultDeleteDirectoryRoleDefinitionOperationOptions()); err != nil {
+	if _, err = client.DeleteDirectoryRoleDefinition(ctx, *id, directoryroledefinition.DefaultDeleteDirectoryRoleDefinitionOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 

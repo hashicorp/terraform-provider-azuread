@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
 )
 
 type DirectoryRoleMemberResource struct{}
@@ -113,25 +112,25 @@ func TestAccDirectoryRoleMember_requiresImport(t *testing.T) {
 func (r DirectoryRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRoleMemberClient
 
-	id, err := parse.DirectoryRoleMemberID(state.ID)
+	id, err := stable.ParseDirectoryRoleIdMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Directory Role Member ID: %v", err)
 	}
 
 	options := member.ListMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.MemberId)),
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
 	}
 	resp, err := client.ListMembers(ctx, stable.NewDirectoryRoleID(id.DirectoryRoleId), options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve directory role member %q (role ID: %q): %+v", id.MemberId, id.DirectoryRoleId, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
 
 	if resp.Model != nil {
 		for _, member := range *resp.Model {
-			if pointer.From(member.DirectoryObject().Id) == id.MemberId {
+			if pointer.From(member.DirectoryObject().Id) == id.DirectoryObjectId {
 				return pointer.To(true), nil
 			}
 		}
@@ -176,7 +175,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_directory_role_member" "test" {
