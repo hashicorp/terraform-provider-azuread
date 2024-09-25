@@ -25,7 +25,7 @@ func TestAccSynchronizationJobProvisionOnDemand_basic(t *testing.T) {
 		{
 			// The provisioned app isn't actually integrated so this will never work
 			Config:      r.basic(data),
-			ExpectError: regexp.MustCompile("CredentialsMissing: Please configure provisioning"),
+			ExpectError: regexp.MustCompile("CredentialsMissing"),
 		},
 	})
 }
