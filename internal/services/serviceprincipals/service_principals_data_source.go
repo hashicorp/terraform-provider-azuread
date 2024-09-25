@@ -9,7 +9,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"net/http"
+	"log"
 	"strings"
 	"time"
 
@@ -207,6 +207,20 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	ignoreMissing := d.Get("ignore_missing").(bool)
 	returnAll := d.Get("return_all").(bool)
 
+	fieldsToSelect := []string{
+		"accountEnabled",
+		"appId",
+		"appOwnerOrganizationId",
+		"appRoleAssignmentRequired",
+		"displayName",
+		"id",
+		"preferredSingleSignOnMode",
+		"servicePrincipalNames",
+		"servicePrincipalType",
+		"signInAudience",
+		"tags",
+	}
+
 	var clientIdsToSearch []string
 	if v, ok := d.Get("client_ids").([]interface{}); ok && len(v) > 0 {
 		clientIdsToSearch = tf.ExpandStringSlice(v)
@@ -214,7 +228,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		clientIdsToSearch = tf.ExpandStringSlice(v)
 	}
 	if returnAll {
-		resp, err := client.ListServicePrincipals(ctx, serviceprincipal.DefaultListServicePrincipalsOperationOptions())
+		resp, err := client.ListServicePrincipals(ctx, serviceprincipal.ListServicePrincipalsOperationOptions{Select: &fieldsToSelect})
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve service principals")
 		}
@@ -232,6 +246,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		for _, v := range clientIdsToSearch {
 			options := serviceprincipal.ListServicePrincipalsOperationOptions{
 				Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(v))),
+				Select: &fieldsToSelect,
 			}
 			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {
@@ -259,6 +274,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		for _, v := range tf.ExpandStringSlice(displayNames) {
 			options := serviceprincipal.ListServicePrincipalsOperationOptions{
 				Filter: pointer.To(fmt.Sprintf("displayName eq '%s'", odata.EscapeSingleQuote(v))),
+				Select: &fieldsToSelect,
 			}
 			resp, err := client.ListServicePrincipals(ctx, options)
 			if err != nil {
@@ -282,7 +298,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	} else if objectIds, ok := d.Get("object_ids").([]interface{}); ok && len(objectIds) > 0 {
 		expectedCount = len(objectIds)
 		for _, v := range objectIds {
-			resp, err := client.GetServicePrincipal(ctx, stable.NewServicePrincipalID(v.(string)), serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+			resp, err := client.GetServicePrincipal(ctx, stable.NewServicePrincipalID(v.(string)), serviceprincipal.GetServicePrincipalOperationOptions{Select: &fieldsToSelect})
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					if ignoreMissing {
@@ -330,24 +346,17 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 			}
 		}
 
-		// Retrieve from beta API to get samlMetadataUrl field
+		// Retrieve from beta API to get samlMetadataUrl field, intentionally don't retry and fail gracefully on error
+		var servicePrincipalBeta beta.ServicePrincipal
 		options := serviceprincipalBeta.GetServicePrincipalOperationOptions{
-			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
-				if resp == nil || response.WasNotFound(resp) {
-					return true, nil
-				}
-				return false, nil
-			},
 			Select: pointer.To([]string{"samlMetadataUrl"}),
 		}
-		resp, err := clientBeta.GetServicePrincipal(ctx, beta.NewServicePrincipalID(*s.Id), options)
-		if err != nil {
-			return tf.ErrorDiagF(err, "Retrieving %s (beta API)", beta.NewServicePrincipalID(*s.Id))
-		}
-
-		servicePrincipalBeta := resp.Model
-		if servicePrincipalBeta == nil {
-			return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s (beta API)", beta.NewServicePrincipalID(*s.Id))
+		betaId := beta.NewServicePrincipalID(*s.Id)
+		resp, err := clientBeta.GetServicePrincipal(ctx, betaId, options)
+		if err != nil || resp.Model == nil {
+			log.Printf("[DEBUG] Failed to retrieve `samlMetadataUrl` using beta API for %s", betaId)
+		} else {
+			servicePrincipalBeta = *resp.Model
 		}
 
 		sp := make(map[string]interface{})
