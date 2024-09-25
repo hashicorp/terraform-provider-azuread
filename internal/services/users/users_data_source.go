@@ -223,9 +223,7 @@ func usersDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			return tf.ErrorDiagPathF(err, "return_all", "No users found")
 		}
 
-		for _, u := range *resp.Model {
-			foundUsers = append(foundUsers, u)
-		}
+		foundUsers = append(foundUsers, *resp.Model...)
 
 	} else if upns, ok := d.Get("user_principal_names").([]interface{}); ok && len(upns) > 0 {
 		expectedCount = len(upns)
