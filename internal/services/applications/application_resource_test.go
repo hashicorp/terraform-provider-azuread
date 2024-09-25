@@ -292,6 +292,8 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 		data.UUID(),
 	}
 
+	// Note: ImportSteps missing here due to inconsistencies with SDKv2 handling of sets
+
 	data.ResourceTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
@@ -301,7 +303,6 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
 			),
 		},
-		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopes(data, scopeIDs),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -310,7 +311,6 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
 			),
 		},
-		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopesUpdate(data, scopeIDs),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -319,7 +319,6 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("3"),
 			),
 		},
-		data.ImportStep(),
 		{
 			Config: r.oauth2PermissionScopes(data, scopeIDs),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -328,7 +327,6 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("2"),
 			),
 		},
-		data.ImportStep(),
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -337,7 +335,6 @@ func TestAccApplication_oauth2PermissionScopes(t *testing.T) {
 				check.That(data.ResourceName).Key("oauth2_permission_scope_ids.%").HasValue("0"),
 			),
 		},
-		data.ImportStep(),
 	})
 }
 
