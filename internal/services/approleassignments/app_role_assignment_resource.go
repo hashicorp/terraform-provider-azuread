@@ -6,6 +6,7 @@ package approleassignments
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -21,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/migrations"
 )
 
 func appRoleAssignmentResource() *pluginsdk.Resource {
@@ -37,33 +38,48 @@ func appRoleAssignmentResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.AppRoleAssignmentID(id)
-			return err
+			if _, errs := stable.ValidateServicePrincipalIdAppRoleAssignedToID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceAppRoleAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceAppRoleAssignmentInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"app_role_id": {
-				Description:      "The ID of the app role to be assigned",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The ID of the app role to be assigned",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"principal_object_id": {
-				Description:      "The object ID of the user, group or service principal to be assigned this app role",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the user, group or service principal to be assigned this app role",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"resource_object_id": {
-				Description:      "The object ID of the service principal representing the resource",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the service principal representing the resource",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"principal_display_name": {
@@ -137,8 +153,8 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 		return tf.ErrorDiagF(errors.New("Resource ID returned for app role assignment is nil"), "Bad API response")
 	}
 
-	id := parse.NewAppRoleAssignmentID(appRoleAssignment.ResourceId.GetOrZero(), *appRoleAssignment.Id)
-	d.SetId(id.String())
+	id := stable.NewServicePrincipalIdAppRoleAssignedToID(appRoleAssignment.ResourceId.GetOrZero(), pointer.From(appRoleAssignment.Id))
+	d.SetId(id.ID())
 
 	return appRoleAssignmentResourceRead(ctx, d, meta)
 }
@@ -146,14 +162,12 @@ func appRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.ResourceD
 func appRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 
-	resourceId, err := parse.AppRoleAssignmentID(d.Id())
+	id, err := stable.ParseServicePrincipalIdAppRoleAssignedToID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing app role assignment with ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing App Role Assignment ID")
 	}
 
-	id := stable.NewServicePrincipalIdAppRoleAssignedToID(resourceId.ResourceId, resourceId.AssignmentId)
-
-	resp, err := client.GetAppRoleAssignedTo(ctx, id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
+	resp, err := client.GetAppRoleAssignedTo(ctx, *id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -181,14 +195,12 @@ func appRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceDat
 func appRoleAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AppRoleAssignments.AppRoleAssignedToClient
 
-	resourceId, err := parse.AppRoleAssignmentID(d.Id())
+	id, err := stable.ParseServicePrincipalIdAppRoleAssignedToID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing app role assignment with ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing App Role Assignment ID")
 	}
 
-	id := stable.NewServicePrincipalIdAppRoleAssignedToID(resourceId.ResourceId, resourceId.AssignmentId)
-
-	if _, err = client.DeleteAppRoleAssignedTo(ctx, id, approleassignedto.DefaultDeleteAppRoleAssignedToOperationOptions()); err != nil {
+	if _, err = client.DeleteAppRoleAssignedTo(ctx, *id, approleassignedto.DefaultDeleteAppRoleAssignedToOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s: %v", id, err)
 	}
 
