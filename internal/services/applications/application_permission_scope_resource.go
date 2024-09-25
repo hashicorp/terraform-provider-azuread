@@ -56,7 +56,7 @@ func (r ApplicationPermissionScopeResource) Arguments() map[string]*pluginsdk.Sc
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: parse.ValidateApplicationID,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
 		"scope_id": {

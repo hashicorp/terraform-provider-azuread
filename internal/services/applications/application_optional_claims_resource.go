@@ -56,7 +56,7 @@ func (r ApplicationOptionalClaimsResource) Arguments() (ret map[string]*pluginsd
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: parse.ValidateApplicationID,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
 		"access_token": schemaOptionalClaims(),

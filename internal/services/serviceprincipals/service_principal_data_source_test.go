@@ -27,18 +27,6 @@ func TestAccServicePrincipalDataSource_byClientId(t *testing.T) {
 	})
 }
 
-func TestAccServicePrincipalDataSource_byDeprecatedApplicationId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
-	r := ServicePrincipalDataSource{}
-
-	data.DataSourceTest(t, []acceptance.TestStep{
-		{
-			Config: r.byDeprecatedApplicationId(data),
-			Check:  r.testCheckFunc(data),
-		},
-	})
-}
-
 func TestAccServicePrincipalDataSource_byDisplayName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principal", "test")
 	r := ServicePrincipalDataSource{}
@@ -102,7 +90,6 @@ func (ServicePrincipalDataSource) testCheckFunc(data acceptance.TestData) accept
 		check.That(data.ResourceName).Key("app_role_assignment_required").HasValue("true"),
 		check.That(data.ResourceName).Key("app_role_ids.%").HasValue("2"),
 		check.That(data.ResourceName).Key("app_roles.#").HasValue("2"),
-		check.That(data.ResourceName).Key("application_id").IsUuid(),
 		check.That(data.ResourceName).Key("application_tenant_id").HasValue(tenantId),
 		check.That(data.ResourceName).Key("client_id").IsUuid(),
 		check.That(data.ResourceName).Key("description").HasValue("An internal app for testing"),
@@ -140,16 +127,6 @@ data "azuread_service_principal" "test" {
 `, ServicePrincipalResource{}.complete(data))
 }
 
-func (ServicePrincipalDataSource) byDeprecatedApplicationId(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-data "azuread_service_principal" "test" {
-  application_id = azuread_service_principal.test.application_id
-}
-`, ServicePrincipalResource{}.complete(data))
-}
-
 func (ServicePrincipalDataSource) byDisplayName(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 %[1]s
@@ -167,7 +144,7 @@ resource "azuread_application" "test1" {
 }
 
 resource "azuread_service_principal" "test1" {
-  application_id = azuread_application.test1.application_id
+  client_id = azuread_application.test1.client_id
 }
 
 resource "azuread_application" "test2" {
@@ -175,7 +152,7 @@ resource "azuread_application" "test2" {
 }
 
 resource "azuread_service_principal" "test2" {
-  application_id = azuread_application.test2.application_id
+  client_id = azuread_application.test2.client_id
 }
 
 data "azuread_service_principal" "test" {

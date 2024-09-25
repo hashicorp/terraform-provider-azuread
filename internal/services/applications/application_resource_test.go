@@ -31,7 +31,6 @@ func TestAccApplication_basic(t *testing.T) {
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("password.#").HasValue("0"),
@@ -51,7 +50,6 @@ func TestAccApplication_basicFromTemplate(t *testing.T) {
 			Config: r.basicFromTemplate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-APP-%d", data.RandomInteger)),
@@ -71,7 +69,6 @@ func TestAccApplication_complete(t *testing.T) {
 			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
@@ -89,7 +86,6 @@ func TestAccApplication_completeFromTemplate(t *testing.T) {
 			Config: r.completeFromTemplate(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 				check.That(data.ResourceName).Key("template_id").HasValue(testApplicationTemplateId),
@@ -110,7 +106,6 @@ func TestAccApplication_update(t *testing.T) {
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
@@ -120,7 +115,6 @@ func TestAccApplication_update(t *testing.T) {
 			Config: r.complete(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),
@@ -130,7 +124,6 @@ func TestAccApplication_update(t *testing.T) {
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
 				check.That(data.ResourceName).Key("client_id").Exists(),
 				check.That(data.ResourceName).Key("object_id").Exists(),
 			),

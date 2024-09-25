@@ -34,7 +34,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 	applicationsValidate "github.com/hashicorp/terraform-provider-azuread/internal/services/applications/validate"
 )
 
@@ -55,7 +54,7 @@ func applicationResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, errs := parse.ValidateApplicationID(id, "id"); len(errs) > 0 {
+			if _, errs := stable.ValidateApplicationID(id, "id"); len(errs) > 0 {
 				out := ""
 				for _, err := range errs {
 					out += err.Error()
@@ -640,13 +639,6 @@ func applicationResource() *pluginsdk.Resource {
 						},
 					},
 				},
-			},
-
-			"application_id": {
-				Description: "The Application ID (also called Client ID)",
-				Type:        pluginsdk.TypeString,
-				Computed:    true,
-				Deprecated:  "The `application_id` attribute has been replaced by the `client_id` attribute and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"client_id": {
@@ -1635,7 +1627,6 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "api", flattenApplicationApi(app.Api, false))
 	tf.Set(d, "app_role", applications.FlattenAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(app.AppRoles))
-	tf.Set(d, "application_id", app.AppId.GetOrZero())
 	tf.Set(d, "client_id", app.AppId.GetOrZero())
 	tf.Set(d, "description", app.Description.GetOrZero())
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported.GetOrZero())

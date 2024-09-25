@@ -57,22 +57,9 @@ func servicePrincipalResource() *pluginsdk.Resource {
 			"client_id": {
 				Description:  "The client ID of the application for which to create a service principal",
 				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true, // TODO remove Computed in v3.0
+				Required:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"client_id", "application_id"},
 				ValidateFunc: validation.IsUUID,
-			},
-
-			"application_id": {
-				Description:  "The application ID (client ID) of the application for which to create a service principal",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"client_id", "application_id"},
-				ValidateFunc: validation.IsUUID,
-				Deprecated:   "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"account_enabled": {
@@ -366,14 +353,9 @@ func servicePrincipalDiffSuppress(k, old, new string, d *pluginsdk.ResourceData)
 func servicePrincipalResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 	ownerClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalOwnerClient
-	callerId := meta.(*clients.Client).ObjectID
 
-	var clientId string
-	if v := d.Get("client_id").(string); v != "" {
-		clientId = v
-	} else {
-		clientId = d.Get("application_id").(string)
-	}
+	callerId := meta.(*clients.Client).ObjectID
+	clientId := d.Get("client_id").(string)
 
 	listOptions := serviceprincipal.ListServicePrincipalsOperationOptions{
 		Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
@@ -648,7 +630,6 @@ func servicePrincipalResourceRead(ctx context.Context, d *pluginsdk.ResourceData
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
 	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", applications.FlattenAppRoles(servicePrincipal.AppRoles))
-	tf.Set(d, "application_id", servicePrincipal.AppId.GetOrZero())
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId.GetOrZero())
 	tf.Set(d, "client_id", servicePrincipal.AppId.GetOrZero())
 	tf.Set(d, "description", servicePrincipal.Description.GetOrZero())

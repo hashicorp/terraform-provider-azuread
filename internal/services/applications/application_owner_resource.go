@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationOwnerModel struct {
@@ -32,7 +31,7 @@ var _ sdk.Resource = ApplicationOwnerResource{}
 type ApplicationOwnerResource struct{}
 
 func (r ApplicationOwnerResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return parse.ValidateOwnerID
+	return stable.ValidateApplicationIdOwnerID
 }
 
 func (r ApplicationOwnerResource) ResourceType() string {
@@ -50,7 +49,7 @@ func (r ApplicationOwnerResource) Arguments() map[string]*pluginsdk.Schema {
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: parse.ValidateApplicationID,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
 		"owner_object_id": {
@@ -83,24 +82,21 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 				return err
 			}
 
-			ownerId := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, model.OwnerObjectId)
-
-			// TODO: migrate ID to use stable.ApplicationIdOwnerID
-			id := parse.NewOwnerID(applicationId.ApplicationId, model.OwnerObjectId)
+			id := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, model.OwnerObjectId)
 
 			tf.LockByName(applicationResourceName, applicationId.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, applicationId.ApplicationId)
 
-			o, err := applications.GetOwner(ctx, client, ownerId)
+			o, err := applications.GetOwner(ctx, client, id)
 			if err != nil {
-				return fmt.Errorf("checking for presence of existing %s: %+v", ownerId, err)
+				return fmt.Errorf("checking for presence of existing %s: %+v", id, err)
 			}
 			if o != nil {
 				return metadata.ResourceRequiresImport(r.ResourceType(), id)
 			}
 
 			properties := stable.ReferenceCreate{
-				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(ownerId.DirectoryObjectId).ID()),
+				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(id.DirectoryObjectId).ID()),
 			}
 
 			options := owner.AddOwnerRefOperationOptions{
@@ -113,7 +109,7 @@ func (r ApplicationOwnerResource) Create() sdk.ResourceFunc {
 			}
 
 			if _, err = client.AddOwnerRef(ctx, *applicationId, properties, options); err != nil {
-				return fmt.Errorf("adding %s: %+v", ownerId, err)
+				return fmt.Errorf("adding %s: %+v", id, err)
 			}
 
 			metadata.SetID(id)
@@ -128,13 +124,13 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.Applications.ApplicationOwnerClient
 
-			id, err := parse.ParseOwnerID(metadata.ResourceData.Id())
+			id, err := stable.ParseApplicationIdOwnerID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			applicationId := parse.NewApplicationID(id.ApplicationId)
-			ownerId := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, id.OwnerId)
+			applicationId := stable.NewApplicationID(id.ApplicationId)
+			ownerId := stable.NewApplicationIdOwnerID(applicationId.ApplicationId, id.DirectoryObjectId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)
@@ -149,7 +145,7 @@ func (r ApplicationOwnerResource) Read() sdk.ResourceFunc {
 
 			state := ApplicationOwnerModel{
 				ApplicationId: applicationId.ID(),
-				OwnerObjectId: id.OwnerId,
+				OwnerObjectId: id.DirectoryObjectId,
 			}
 
 			return metadata.Encode(&state)
@@ -163,12 +159,12 @@ func (r ApplicationOwnerResource) Delete() sdk.ResourceFunc {
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.Applications.ApplicationOwnerClient
 
-			id, err := parse.ParseOwnerID(metadata.ResourceData.Id())
+			id, err := stable.ParseApplicationIdOwnerID(metadata.ResourceData.Id())
 			if err != nil {
 				return err
 			}
 
-			ownerId := stable.NewApplicationIdOwnerID(id.ApplicationId, id.OwnerId)
+			ownerId := stable.NewApplicationIdOwnerID(id.ApplicationId, id.DirectoryObjectId)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
 			defer tf.UnlockByName(applicationResourceName, id.ApplicationId)

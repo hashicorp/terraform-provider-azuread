@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationRegistrationModel struct {
@@ -49,7 +48,7 @@ var _ sdk.ResourceWithUpdate = ApplicationRegistrationResource{}
 type ApplicationRegistrationResource struct{}
 
 func (r ApplicationRegistrationResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return parse.ValidateApplicationID
+	return stable.ValidateApplicationID
 }
 
 func (r ApplicationRegistrationResource) ResourceType() string {

@@ -79,44 +79,6 @@ func TestAccApplicationPassword_relativeEndDate(t *testing.T) {
 	})
 }
 
-func TestAccApplicationPassword_deprecatedId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	r := ApplicationPasswordResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("end_date").Exists(),
-				check.That(data.ResourceName).Key("key_id").Exists(),
-				check.That(data.ResourceName).Key("start_date").Exists(),
-				check.That(data.ResourceName).Key("value").Exists(),
-			),
-		},
-	})
-}
-
-func TestAccApplicationPassword_deprecatedId2(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_password", "test")
-	r := ApplicationPasswordResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId2(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("end_date").Exists(),
-				check.That(data.ResourceName).Key("key_id").Exists(),
-				check.That(data.ResourceName).Key("start_date").Exists(),
-				check.That(data.ResourceName).Key("value").Exists(),
-			),
-		},
-	})
-}
-
 func (r ApplicationPasswordResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationClient
 
@@ -192,24 +154,4 @@ resource "azuread_application_password" "test" {
   end_date_relative = "8760h"
 }
 `, r.template(data), data.RandomString)
-}
-
-func (r ApplicationPasswordResource) deprecatedId(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_application_password" "test" {
-  application_object_id = azuread_application.test.object_id
-}
-`, r.template(data))
-}
-
-func (r ApplicationPasswordResource) deprecatedId2(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_application_password" "test" {
-  application_object_id = azuread_application.test.id
-}
-`, r.template(data))
 }

@@ -46,7 +46,7 @@ func (r ApplicationFallbackPublicClientResource) Arguments() map[string]*plugins
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: parse.ValidateApplicationID,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
 		"enabled": {

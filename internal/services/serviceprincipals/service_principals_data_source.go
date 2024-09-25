@@ -40,24 +40,11 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "application_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,
 				},
-			},
-
-			"application_ids": {
-				Description:  "The application IDs (client IDs) of the applications associated with the service principals",
-				Type:         pluginsdk.TypeList,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "application_ids", "display_names", "object_ids", "return_all"},
-				Elem: &pluginsdk.Schema{
-					Type:         pluginsdk.TypeString,
-					ValidateFunc: validation.IsUUID,
-				},
-				Deprecated: "The `application_ids` property has been replaced with the `client_ids` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"display_names": {
@@ -65,7 +52,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "application_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.StringIsNotEmpty,
@@ -77,7 +64,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeList,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_ids", "application_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf: []string{"client_ids", "display_names", "object_ids", "return_all"},
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,
@@ -98,7 +85,7 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 				Optional:      true,
 				Default:       false,
 				ConflictsWith: []string{"ignore_missing"},
-				ExactlyOneOf:  []string{"client_ids", "application_ids", "display_names", "object_ids", "return_all"},
+				ExactlyOneOf:  []string{"client_ids", "display_names", "object_ids", "return_all"},
 			},
 
 			"service_principals": {
@@ -117,13 +104,6 @@ func servicePrincipalsDataSource() *pluginsdk.Resource {
 							Description: "Whether this service principal requires an app role assignment to a user or group before Azure AD will issue a user or access token to the application",
 							Type:        pluginsdk.TypeBool,
 							Computed:    true,
-						},
-
-						"application_id": {
-							Description: "The application ID (client ID) for the associated application",
-							Type:        pluginsdk.TypeString,
-							Computed:    true,
-							Deprecated:  "The `application_id` attribute has been replaced by the `client_id` attribute and will be removed in version 3.0 of the AzureAD provider",
 						},
 
 						"application_tenant_id": {
@@ -221,12 +201,7 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		"tags",
 	}
 
-	var clientIdsToSearch []string
-	if v, ok := d.Get("client_ids").([]interface{}); ok && len(v) > 0 {
-		clientIdsToSearch = tf.ExpandStringSlice(v)
-	} else if v, ok := d.Get("application_ids").([]interface{}); ok && len(v) > 0 {
-		clientIdsToSearch = tf.ExpandStringSlice(v)
-	}
+	clientIdsToSearch := tf.ExpandStringSlice(d.Get("client_ids").([]interface{}))
 	if returnAll {
 		resp, err := client.ListServicePrincipals(ctx, serviceprincipal.ListServicePrincipalsOperationOptions{Select: &fieldsToSelect})
 		if err != nil {
@@ -363,7 +338,6 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 		sp["account_enabled"] = s.AccountEnabled.GetOrZero()
 		sp["display_name"] = s.DisplayName.GetOrZero()
 		sp["app_role_assignment_required"] = pointer.From(s.AppRoleAssignmentRequired)
-		sp["application_id"] = s.AppId.GetOrZero()
 		sp["application_tenant_id"] = s.AppOwnerOrganizationId.GetOrZero()
 		sp["client_id"] = s.AppId.GetOrZero()
 		sp["object_id"] = pointer.From(s.Id)
@@ -383,7 +357,6 @@ func servicePrincipalsDataSourceRead(ctx context.Context, d *pluginsdk.ResourceD
 	}
 
 	d.SetId("serviceprincipals#" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
-	tf.Set(d, "application_ids", clientIds)
 	tf.Set(d, "client_ids", clientIds)
 	tf.Set(d, "display_names", displayNames)
 	tf.Set(d, "object_ids", objectIds)

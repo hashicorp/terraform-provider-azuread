@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/applications"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 type ApplicationOwnerResource struct{}
@@ -79,12 +78,12 @@ func TestAccApplicationOwner_requiresImport(t *testing.T) {
 func (r ApplicationOwnerResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationOwnerClient
 
-	id, err := parse.ParseOwnerID(state.ID)
+	id, err := stable.ParseApplicationIdOwnerID(state.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	owner, err := applications.GetOwner(ctx, client, stable.NewApplicationIdOwnerID(id.ApplicationId, id.OwnerId))
+	owner, err := applications.GetOwner(ctx, client, *id)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving %s: %+v", id, err)
 	}
