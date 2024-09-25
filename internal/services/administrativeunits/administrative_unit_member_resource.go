@@ -5,7 +5,6 @@ package administrativeunits
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -20,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/migrations"
 )
 
 func administrativeUnitMemberResource() *pluginsdk.Resource {
@@ -36,9 +35,24 @@ func administrativeUnitMemberResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.AdministrativeUnitMemberID(id)
-			return err
+			if _, errs := stable.ValidateDirectoryAdministrativeUnitIdMemberID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceAdministrativeUnitMemberInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceAdministrativeUnitMemberInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"administrative_unit_object_id": {
@@ -64,7 +78,7 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitClient
 	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
-	id := parse.NewAdministrativeUnitMemberID(d.Get("administrative_unit_object_id").(string), d.Get("member_object_id").(string))
+	id := stable.NewDirectoryAdministrativeUnitIdMemberID(d.Get("administrative_unit_object_id").(string), d.Get("member_object_id").(string))
 
 	tf.LockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 	defer tf.UnlockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
@@ -77,48 +91,35 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 		return tf.ErrorDiagPathF(err, "object_id", "Retrieving administrative unit with object ID: %q", id.AdministrativeUnitId)
 	}
 
-	if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
-		return tf.ErrorDiagF(err, "Checking for existing membership of member %q for administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
+	if member, err := administrativeUnitGetMember(ctx, memberClient, id); err != nil {
+		return tf.ErrorDiagF(err, "Checking for existing %s", id)
 	} else if member != nil {
 		return tf.ImportAsExistsDiag("azuread_administrative_unit_member", id.String())
 	}
 
-	memberId := stable.NewDirectoryObjectID(id.MemberId)
+	memberId := stable.NewDirectoryObjectID(id.DirectoryObjectId)
 
 	addMemberProperties := stable.ReferenceCreate{
 		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
 	if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Adding member %q to administrative unit %q", id.MemberId, id.AdministrativeUnitId)
+		return tf.ErrorDiagF(err, "Adding %s", id)
 	}
 
 	// Wait for membership to reflect
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		return tf.ErrorDiagF(errors.New("context has no deadline"), "Waiting for member %q to reflect for administrative unit %q", id.MemberId, id.AdministrativeUnitId)
-	}
-	timeout := time.Until(deadline)
-	_, err = (&pluginsdk.StateChangeConf{ //nolint:staticcheck
-		Pending:                   []string{"Waiting"},
-		Target:                    []string{"Done"},
-		Timeout:                   timeout,
-		MinTimeout:                1 * time.Second,
-		ContinuousTargetOccurence: 3,
-		Refresh: func() (interface{}, string, error) {
-			if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
-				return nil, "Error", fmt.Errorf("retrieving member")
-			} else if member == nil {
-				return "stub", "Waiting", nil
-			}
-			return "stub", "Done", nil
-		},
-	}).WaitForStateContext(ctx)
-	if err != nil {
-		return tf.ErrorDiagF(err, "Waiting for member %q to reflect for administrative unit %q", id.MemberId, id.AdministrativeUnitId)
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		if member, err := administrativeUnitGetMember(ctx, memberClient, id); err != nil {
+			return nil, fmt.Errorf("retrieving member")
+		} else if member == nil {
+			return pointer.To(false), nil
+		}
+		return pointer.To(true), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for %s", id)
 	}
 
-	d.SetId(id.String())
+	d.SetId(id.ID())
 
 	return administrativeUnitMemberResourceRead(ctx, d, meta)
 }
@@ -126,21 +127,21 @@ func administrativeUnitMemberResourceCreate(ctx context.Context, d *pluginsdk.Re
 func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
-	id, err := parse.AdministrativeUnitMemberID(d.Id())
+	id, err := stable.ParseDirectoryAdministrativeUnitIdMemberID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Member ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Member ID")
 	}
 
-	if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
-		return tf.ErrorDiagF(err, "Retrieving member %q for administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
+	if member, err := administrativeUnitGetMember(ctx, memberClient, *id); err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	} else if member == nil {
-		log.Printf("[DEBUG] Member with ID %q was not found in administrative unit %q - removing from state", id.MemberId, id.AdministrativeUnitId)
+		log.Printf("[DEBUG] %s was not found - removing from state", id)
 		d.SetId("")
 		return nil
 	}
 
 	tf.Set(d, "administrative_unit_object_id", id.AdministrativeUnitId)
-	tf.Set(d, "member_object_id", id.MemberId)
+	tf.Set(d, "member_object_id", id.DirectoryObjectId)
 
 	return nil
 }
@@ -148,28 +149,28 @@ func administrativeUnitMemberResourceRead(ctx context.Context, d *pluginsdk.Reso
 func administrativeUnitMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	memberClient := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitMemberClient
 
-	id, err := parse.AdministrativeUnitMemberID(d.Id())
+	id, err := stable.ParseDirectoryAdministrativeUnitIdMemberID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Member ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Member ID")
 	}
 
 	tf.LockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 	defer tf.UnlockByName(administrativeUnitResourceName, id.AdministrativeUnitId)
 
-	if _, err := memberClient.RemoveAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitIdMemberID(id.AdministrativeUnitId, id.MemberId), administrativeunitmember.DefaultRemoveAdministrativeUnitMemberRefOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Removing member %q from administrative unit with object ID: %q", id.MemberId, id.AdministrativeUnitId)
+	if _, err := memberClient.RemoveAdministrativeUnitMemberRef(ctx, *id, administrativeunitmember.DefaultRemoveAdministrativeUnitMemberRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 
 	// Wait for membership link to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if member, err := administrativeUnitGetMember(ctx, memberClient, id.AdministrativeUnitId, id.MemberId); err != nil {
+		if member, err := administrativeUnitGetMember(ctx, memberClient, *id); err != nil {
 			return nil, err
 		} else if member == nil {
 			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for removal of member %q from administrative unit with object ID %q", id.MemberId, id.AdministrativeUnitId)
+		return tf.ErrorDiagF(err, "Waiting for removal of %s", id)
 	}
 
 	return nil
