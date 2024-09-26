@@ -1,3 +1,10 @@
+## 3.0.0 (Unreleased)
+
+NOTES:
+
+* **Major Version**: Version 3.0 of the AzureAD Provider is a major version. Some behaviors have changed and some deprecated fields/resources have been removed. Please refer to the [3.0 upgrade guide](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/guides/3.0-upgrade-guide) for more information.
+* When upgrading to v3.0 of the AzureAD Provider, we recommend upgrading to the latest version of Terraform Core ([which can be found here](https://www.terraform.io/downloads)).
+
 ## 2.53.1 (June 28, 2024)
 
 BUG FIXES:
