@@ -62,18 +62,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"app_scope_object_id", "directory_scope_id", "directory_scope_object_id"},
-				ValidateFunc:  validation.StringIsNotEmpty,
-			},
-
-			"app_scope_object_id": {
-				Deprecated:    "`app_scope_object_id` has been renamed to `app_scope_id` and will be removed in version 3.0 or the AzureAD Provider",
-				Description:   "Identifier of the app-specific scope when the assignment scope is app-specific",
-				Type:          pluginsdk.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"app_scope_id", "directory_scope_id", "directory_scope_object_id"},
+				ConflictsWith: []string{"directory_scope_id"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 
@@ -83,17 +72,7 @@ func directoryRoleAssignmentResource() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"app_scope_id", "app_scope_object_id", "directory_scope_object_id"},
-				ValidateFunc:  validation.StringIsNotEmpty,
-			},
-
-			"directory_scope_object_id": {
-				Description:   "Identifier of the directory object representing the scope of the assignment",
-				Type:          pluginsdk.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"app_scope_id", "app_scope_object_id", "directory_scope_id"},
+				ConflictsWith: []string{"app_scope_id"},
 				ValidateFunc:  validation.StringIsNotEmpty,
 			},
 		},
@@ -111,19 +90,8 @@ func directoryRoleAssignmentResourceCreate(ctx context.Context, d *pluginsdk.Res
 		RoleDefinitionId: nullable.Value(roleId),
 	}
 
-	var appScopeId, directoryScopeId string
-
-	if v, ok := d.GetOk("app_scope_id"); ok {
-		appScopeId = v.(string)
-	} else if v, ok = d.GetOk("app_scope_object_id"); ok {
-		appScopeId = v.(string)
-	}
-
-	if v, ok := d.GetOk("directory_scope_id"); ok {
-		directoryScopeId = v.(string)
-	} else if v, ok = d.GetOk("directory_scope_object_id"); ok {
-		directoryScopeId = v.(string)
-	}
+	appScopeId := d.Get("app_scope_id").(string)
+	directoryScopeId := d.Get("directory_scope_id").(string)
 
 	switch {
 	case appScopeId != "":
@@ -197,9 +165,7 @@ func directoryRoleAssignmentResourceRead(ctx context.Context, d *pluginsdk.Resou
 	}
 
 	tf.Set(d, "app_scope_id", assignment.AppScopeId.GetOrZero())
-	tf.Set(d, "app_scope_object_id", assignment.AppScopeId.GetOrZero())
 	tf.Set(d, "directory_scope_id", assignment.DirectoryScopeId.GetOrZero())
-	tf.Set(d, "directory_scope_object_id", assignment.DirectoryScopeId.GetOrZero())
 	tf.Set(d, "principal_object_id", assignment.PrincipalId.GetOrZero())
 	tf.Set(d, "role_id", assignment.RoleDefinitionId.GetOrZero())
 

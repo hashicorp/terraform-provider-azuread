@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
 func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
@@ -27,7 +27,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				Deprecated:   "This property has been renamed to `display_name` and will be removed in version 2.0 of the AzureAD provider",
 				ExactlyOneOf: []string{"display_name", "name"},
 			},
 
@@ -128,10 +127,9 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 						},
 
 						"is_enabled": {
-							Type:       pluginsdk.TypeBool,
-							Optional:   true,
-							Default:    true,
-							Deprecated: "[NOTE] This attribute has been renamed to `enabled` and will be removed in version 2.0 of the AzureAD provider",
+							Type:     pluginsdk.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 
 						"value": {
@@ -148,7 +146,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"sign_in_audience"},
-				Deprecated:    "[NOTE] This attribute will be replaced by a new property `sign_in_audience` in version 2.0 of the AzureAD provider",
 			},
 
 			"fallback_public_client_enabled": {
@@ -159,9 +156,8 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 			},
 
 			"group_membership_claims": {
-				Type:       pluginsdk.TypeString,
-				Optional:   true,
-				Deprecated: "[NOTE] This attribute will become a list in version 2.0 of the AzureAD provider",
+				Type:     pluginsdk.TypeString,
+				Optional: true,
 			},
 
 			"homepage": {
@@ -169,7 +165,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.homepage_url"},
-				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `homepage_url` in the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"identifier_uris": {
@@ -186,7 +181,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.logout_url"},
-				Deprecated:    "[NOTE] This attribute will be moved into the `web` block in version 2.0 of the AzureAD provider",
 			},
 
 			"oauth2_allow_implicit_flow": {
@@ -194,7 +188,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.implicit_grant.0.access_token_issuance_enabled"},
-				Deprecated:    "[NOTE] This attribute will be moved to the `implicit_grant` block and renamed to `access_token_issuance_enabled` in version 2.0 of the AzureAD provider",
 			},
 
 			"oauth2_permissions": {
@@ -202,7 +195,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:   true,
 				Computed:   true,
 				ConfigMode: pluginsdk.SchemaConfigModeAttr,
-				Deprecated: "[NOTE] The `oauth2_permissions` block has been renamed to `oauth2_permission_scope` and moved to the `api` block. `oauth2_permissions` will be removed in version 2.0 of the AzureAD provider.",
 				Elem: &pluginsdk.Resource{
 					Schema: map[string]*pluginsdk.Schema{
 						"id": {
@@ -338,7 +330,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"fallback_public_client_enabled"},
-				Deprecated:    "[NOTE] This legacy attribute will be renamed to `fallback_public_client_enabled` in version 2.0 of the AzureAD provider",
 			},
 
 			"reply_urls": {
@@ -346,7 +337,6 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"web.0.redirect_uris"},
-				Deprecated:    "[NOTE] This attribute will be replaced by a new attribute `redirect_uris` in the `web` block in version 2.0 of the AzureAD provider",
 				Elem: &pluginsdk.Schema{
 					Type: pluginsdk.TypeString,
 				},
@@ -391,10 +381,9 @@ func ResourceApplicationInstanceResourceV0() *pluginsdk.Resource {
 			},
 
 			"type": {
-				Type:       pluginsdk.TypeString,
-				Optional:   true,
-				Deprecated: "[NOTE] This legacy property is deprecated and will be removed in version 2.0 of the AzureAD provider",
-				Default:    "webapp/api",
+				Type:     pluginsdk.TypeString,
+				Optional: true,
+				Default:  "webapp/api",
 			},
 
 			"web": {
@@ -1019,7 +1008,7 @@ func ResourceApplicationInstanceStateUpgradeV1(_ context.Context, rawState map[s
 		return rawState, fmt.Errorf("parsing ID for `azuread_application`: %+v", err)
 	}
 
-	newId := parse.NewApplicationID(oldId)
+	newId := stable.NewApplicationID(oldId)
 	rawState["id"] = newId.ID()
 	return rawState, nil
 }

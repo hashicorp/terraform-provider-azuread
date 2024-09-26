@@ -85,40 +85,6 @@ func TestAccApplicationFederatedIdentityCredential_update(t *testing.T) {
 	})
 }
 
-func TestAccApplicationFederatedIdentityCredential_deprecatedId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
-	r := ApplicationFederatedIdentityCredentialResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("credential_id").Exists(),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccApplicationFederatedIdentityCredential_deprecatedId2(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_federated_identity_credential", "test")
-	r := ApplicationFederatedIdentityCredentialResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId2(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("credential_id").Exists(),
-			),
-		},
-		data.ImportStep("application_object_id"),
-	})
-}
-
 func (r ApplicationFederatedIdentityCredentialResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationFederatedIdentityCredential
 
@@ -175,32 +141,4 @@ resource "azuread_application_federated_identity_credential" "test" {
   subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.UUID())
-}
-
-func (r ApplicationFederatedIdentityCredentialResource) deprecatedId(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_application_federated_identity_credential" "test" {
-  application_object_id = azuread_application.test.object_id
-  display_name          = "hashitown-%[2]s"
-  audiences             = ["api://HashiTownLikesAzureAD"]
-  issuer                = "https://tokens.hashitown.net"
-  subject               = "%[3]s"
-}
-`, r.template(data), data.RandomString, data.RandomID)
-}
-
-func (r ApplicationFederatedIdentityCredentialResource) deprecatedId2(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "azuread_application_federated_identity_credential" "test" {
-  application_object_id = azuread_application.test.id
-  display_name          = "hashitown-%[2]s"
-  audiences             = ["api://HashiTownLikesAzureAD"]
-  issuer                = "https://tokens.hashitown.net"
-  subject               = "%[3]s"
-}
-`, r.template(data), data.RandomString, data.RandomID)
 }

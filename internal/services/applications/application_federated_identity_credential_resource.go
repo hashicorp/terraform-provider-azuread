@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/federatedidentitycredential"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
@@ -47,36 +46,9 @@ func applicationFederatedIdentityCredentialResource() *pluginsdk.Resource {
 			"application_id": {
 				Description:  "The resource ID of the application for which this federated identity credential should be created",
 				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true, // TODO remove Computed in v3.0
+				Required:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"application_id", "application_object_id"},
-				ValidateFunc: parse.ValidateApplicationID,
-			},
-
-			"application_object_id": {
-				Description:  "The object ID of the application for which this federated identity credential should be created",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"application_id", "application_object_id"},
-				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
-				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
-				DiffSuppressFunc: func(_, oldValue, newValue string, _ *pluginsdk.ResourceData) bool {
-					// Where oldValue is a UUID (i.e. the bare object ID), and newValue is a properly formed application
-					// resource ID, we'll ignore a diff where these point to the same application resource.
-					// This maintains compatibility with configurations mixing the ID attributes, e.g.
-					//     application_object_id = azuread_application.example.id
-					if _, err := uuid.ParseUUID(oldValue); err == nil {
-						if applicationId, err := parse.ParseApplicationID(newValue); err == nil {
-							if applicationId.ApplicationId == oldValue {
-								return true
-							}
-						}
-					}
-					return false
-				},
+				ValidateFunc: stable.ValidateApplicationID,
 			},
 
 			"audiences": {
@@ -130,24 +102,9 @@ func applicationFederatedIdentityCredentialResourceCreate(ctx context.Context, d
 	client := meta.(*clients.Client).Applications.ApplicationClient
 	federatedIdentityCredentialClient := meta.(*clients.Client).Applications.ApplicationFederatedIdentityCredential
 
-	var applicationId *stable.ApplicationId
-	var err error
-	if v := d.Get("application_id").(string); v != "" {
-		if applicationId, err = stable.ParseApplicationID(v); err != nil {
-			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
-		}
-	} else {
-		// TODO: this permits parsing the application_object_id as either a structured ID or a bare UUID, to avoid
-		// breaking users who might have `application_object_id = azuread_application.foo.id` in their config, and
-		// should be removed in version 3.0 along with the application_object_id property
-		v = d.Get("application_object_id").(string)
-		if _, err = uuid.ParseUUID(v); err == nil {
-			applicationId = pointer.To(stable.NewApplicationID(v))
-		} else {
-			if applicationId, err = stable.ParseApplicationID(v); err != nil {
-				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
-			}
-		}
+	applicationId, err := stable.ParseApplicationID(d.Get("application_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`")
 	}
 
 	tf.LockByName(applicationResourceName, applicationId.ApplicationId)
@@ -263,7 +220,7 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 		return tf.ErrorDiagPathF(err, "id", "Parsing federated identity credential with ID %q", d.Id())
 	}
 
-	applicationId := parse.NewApplicationID(id.ObjectId)
+	applicationId := stable.NewApplicationID(id.ObjectId)
 	credentialId := stable.NewApplicationIdFederatedIdentityCredentialID(id.ObjectId, id.KeyId)
 
 	resp, err := federatedIdentityCredentialClient.GetFederatedIdentityCredential(ctx, credentialId, federatedidentitycredential.DefaultGetFederatedIdentityCredentialOperationOptions())
@@ -289,12 +246,6 @@ func applicationFederatedIdentityCredentialResourceRead(ctx context.Context, d *
 	tf.Set(d, "display_name", credential.Name)
 	tf.Set(d, "issuer", credential.Issuer)
 	tf.Set(d, "subject", credential.Subject)
-
-	if v := d.Get("application_object_id").(string); v != "" {
-		tf.Set(d, "application_object_id", v)
-	} else {
-		tf.Set(d, "application_object_id", id.ObjectId)
-	}
 
 	return nil
 }

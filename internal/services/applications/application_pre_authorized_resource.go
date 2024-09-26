@@ -11,12 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
@@ -47,56 +45,16 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 			"application_id": {
 				Description:  "The resource ID of the application to which this pre-authorized application should be added",
 				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true, // TODO remove Computed in v3.0
+				Required:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"application_id", "application_object_id"},
-				ValidateFunc: parse.ValidateApplicationID,
-			},
-
-			"application_object_id": {
-				Description:  "The object ID of the application to which this pre-authorized application should be added",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"application_id", "application_object_id"},
-				Deprecated:   "The `application_object_id` property has been replaced with the `application_id` property and will be removed in version 3.0 of the AzureAD provider",
-				ValidateFunc: validation.Any(validation.IsUUID, parse.ValidateApplicationID),
-				DiffSuppressFunc: func(_, oldValue, newValue string, _ *pluginsdk.ResourceData) bool {
-					// Where oldValue is a UUID (i.e. the bare object ID), and newValue is a properly formed application
-					// resource ID, we'll ignore a diff where these point to the same application resource.
-					// This maintains compatibility with configurations mixing the ID attributes, e.g.
-					//     application_object_id = azuread_application.example.id
-					if _, err := uuid.ParseUUID(oldValue); err == nil {
-						if applicationId, err := parse.ParseApplicationID(newValue); err == nil {
-							if applicationId.ApplicationId == oldValue {
-								return true
-							}
-						}
-					}
-					return false
-				},
-			},
-
-			"authorized_app_id": {
-				Description:  "The application ID of the pre-authorized application",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
-				Deprecated:   "The `authorized_app_id` property has been replaced with the `authorized_client_id` property and will be removed in version 3.0 of the AzureAD provider",
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateApplicationID,
 			},
 
 			"authorized_client_id": {
 				Description:  "The client ID of the pre-authorized application",
 				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true, // TODO remove Computed in v3.0
+				Required:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"authorized_app_id", "authorized_client_id"},
 				ValidateFunc: validation.IsUUID,
 			},
 
@@ -116,34 +74,12 @@ func applicationPreAuthorizedResource() *pluginsdk.Resource {
 func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Applications.ApplicationClient
 
-	var applicationId *stable.ApplicationId
-	var err error
-	if v := d.Get("application_id").(string); v != "" {
-		if applicationId, err = stable.ParseApplicationID(v); err != nil {
-			return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`: %q", v)
-		}
-	} else {
-		// TODO: this permits parsing the application_object_id as either a structured ID or a bare UUID, to avoid
-		// breaking users who might have `application_object_id = azuread_application.foo.id` in their config, and
-		// should be removed in version 3.0 along with the application_object_id property
-		v = d.Get("application_object_id").(string)
-		if _, err = uuid.ParseUUID(v); err == nil {
-			applicationId = pointer.To(stable.NewApplicationID(v))
-		} else {
-			if applicationId, err = stable.ParseApplicationID(v); err != nil {
-				return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_object_id`: %q", v)
-			}
-		}
+	applicationId, err := stable.ParseApplicationID(d.Get("application_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "application_id", "Parsing `application_id`")
 	}
 
-	var authorizedClientId string
-	if v := d.Get("authorized_client_id").(string); v != "" {
-		authorizedClientId = v
-	} else {
-		authorizedClientId = d.Get("authorized_app_id").(string)
-	}
-
-	id := parse.NewApplicationPreAuthorizedID(applicationId.ApplicationId, authorizedClientId)
+	id := parse.NewApplicationPreAuthorizedID(applicationId.ApplicationId, d.Get("authorized_client_id").(string))
 
 	tf.LockByName(applicationResourceName, id.ObjectId)
 	defer tf.UnlockByName(applicationResourceName, id.ObjectId)
@@ -151,9 +87,9 @@ func applicationPreAuthorizedResourceCreate(ctx context.Context, d *pluginsdk.Re
 	resp, err := client.GetApplication(ctx, *applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "%s was not found", applicationId)
+			return tf.ErrorDiagPathF(nil, "application_id", "%s was not found", applicationId)
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
+		return tf.ErrorDiagPathF(err, "application_id", "Retrieving %s", applicationId)
 	}
 
 	app := resp.Model
@@ -205,9 +141,9 @@ func applicationPreAuthorizedResourceUpdate(ctx context.Context, d *pluginsdk.Re
 	resp, err := client.GetApplication(ctx, applicationId, application.DefaultGetApplicationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return tf.ErrorDiagPathF(nil, "application_object_id", "%s was not found", applicationId)
+			return tf.ErrorDiagPathF(nil, "application_id", "%s was not found", applicationId)
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
+		return tf.ErrorDiagPathF(err, "application_id", "Retrieving %s", applicationId)
 	}
 
 	app := resp.Model
@@ -260,7 +196,7 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.Reso
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
+		return tf.ErrorDiagPathF(err, "application_id", "Retrieving %s", applicationId)
 	}
 
 	app := resp.Model
@@ -285,15 +221,8 @@ func applicationPreAuthorizedResourceRead(ctx context.Context, d *pluginsdk.Reso
 	}
 
 	tf.Set(d, "application_id", applicationId.ID())
-	tf.Set(d, "authorized_app_id", id.AppId)
 	tf.Set(d, "authorized_client_id", id.AppId)
 	tf.Set(d, "permission_ids", tf.FlattenStringSlicePtr(preAuthorizedApp.DelegatedPermissionIds))
-
-	if v := d.Get("application_object_id").(string); v != "" {
-		tf.Set(d, "application_object_id", v)
-	} else {
-		tf.Set(d, "application_object_id", id.ObjectId)
-	}
 
 	return nil
 }
@@ -316,7 +245,7 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagPathF(err, "application_object_id", "Retrieving %s", applicationId)
+		return tf.ErrorDiagPathF(err, "application_id", "Retrieving %s", applicationId)
 	}
 
 	app := resp.Model

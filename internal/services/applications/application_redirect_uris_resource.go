@@ -48,7 +48,7 @@ func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schem
 			Type:         pluginsdk.TypeString,
 			Required:     true,
 			ForceNew:     true,
-			ValidateFunc: parse.ValidateApplicationID,
+			ValidateFunc: stable.ValidateApplicationID,
 		},
 
 		"type": {

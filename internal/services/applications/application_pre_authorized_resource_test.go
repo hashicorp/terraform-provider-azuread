@@ -31,7 +31,7 @@ func TestAccApplicationPreAuthorized_basic(t *testing.T) {
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("authorized_app_id").Exists(),
+				check.That(data.ResourceName).Key("authorized_client_id").Exists(),
 				check.That(data.ResourceName).Key("permission_ids.#").HasValue("2"),
 			),
 		},
@@ -51,42 +51,6 @@ func TestAccApplicationPreAuthorized_requiresImport(t *testing.T) {
 			),
 		},
 		data.RequiresImportErrorStep(r.requiresImport(data)),
-	})
-}
-
-func TestAccApplicationPreAuthorized_deprecatedId(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_pre_authorized", "test")
-	r := ApplicationPreAuthorizedResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("authorized_app_id").Exists(),
-				check.That(data.ResourceName).Key("permission_ids.#").HasValue("2"),
-			),
-		},
-		data.ImportStep(),
-	})
-}
-
-func TestAccApplicationPreAuthorized_deprecatedId2(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_application_pre_authorized", "test")
-	r := ApplicationPreAuthorizedResource{}
-
-	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.deprecatedId2(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_object_id").Exists(),
-				check.That(data.ResourceName).Key("authorized_app_id").Exists(),
-				check.That(data.ResourceName).Key("permission_ids.#").HasValue("2"),
-			),
-		},
-		data.ImportStep("application_object_id"),
 	})
 }
 
@@ -197,86 +161,6 @@ resource "azuread_application_pre_authorized" "import" {
   permission_ids       = ["%[2]s"]
 }
 `, r.basic(data), data.UUID())
-}
-
-func (ApplicationPreAuthorizedResource) deprecatedId(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "authorized" {
-  display_name = "acctestApp-authorized-%[1]d"
-}
-
-resource "azuread_application" "authorizer" {
-  display_name = "acctestApp-authorizer-%[1]d"
-
-  api {
-    oauth2_permission_scope {
-      admin_consent_description  = "Administer the application"
-      admin_consent_display_name = "Administer"
-      enabled                    = true
-      id                         = "%[2]s"
-      type                       = "Admin"
-      value                      = "administer"
-    }
-
-    oauth2_permission_scope {
-      admin_consent_description  = "Access the application"
-      admin_consent_display_name = "Access"
-      enabled                    = true
-      id                         = "%[3]s"
-      type                       = "User"
-      user_consent_description   = "Access the application"
-      user_consent_display_name  = "Access"
-      value                      = "user_impersonation"
-    }
-  }
-}
-
-resource "azuread_application_pre_authorized" "test" {
-  application_object_id = azuread_application.authorizer.object_id
-  authorized_app_id     = azuread_application.authorized.application_id
-  permission_ids        = ["%[2]s", "%[3]s"]
-}
-`, data.RandomInteger, data.UUID(), data.UUID())
-}
-
-func (ApplicationPreAuthorizedResource) deprecatedId2(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-resource "azuread_application" "authorized" {
-  display_name = "acctestApp-authorized-%[1]d"
-}
-
-resource "azuread_application" "authorizer" {
-  display_name = "acctestApp-authorizer-%[1]d"
-
-  api {
-    oauth2_permission_scope {
-      admin_consent_description  = "Administer the application"
-      admin_consent_display_name = "Administer"
-      enabled                    = true
-      id                         = "%[2]s"
-      type                       = "Admin"
-      value                      = "administer"
-    }
-
-    oauth2_permission_scope {
-      admin_consent_description  = "Access the application"
-      admin_consent_display_name = "Access"
-      enabled                    = true
-      id                         = "%[3]s"
-      type                       = "User"
-      user_consent_description   = "Access the application"
-      user_consent_display_name  = "Access"
-      value                      = "user_impersonation"
-    }
-  }
-}
-
-resource "azuread_application_pre_authorized" "test" {
-  application_object_id = azuread_application.authorizer.id
-  authorized_app_id     = azuread_application.authorized.application_id
-  permission_ids        = ["%[2]s", "%[3]s"]
-}
-`, data.RandomInteger, data.UUID(), data.UUID())
 }
 
 func (ApplicationPreAuthorizedResource) multiple(data acceptance.TestData) string {

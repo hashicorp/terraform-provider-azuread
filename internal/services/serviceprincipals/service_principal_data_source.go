@@ -38,7 +38,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.IsUUID,
 			},
 
@@ -47,7 +47,7 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
@@ -56,18 +56,8 @@ func servicePrincipalData() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
+				ExactlyOneOf: []string{"client_id", "display_name", "object_id"},
 				ValidateFunc: validation.IsUUID,
-			},
-
-			"application_id": {
-				Description:  "The application ID (client ID) of the application associated with this service principal",
-				Type:         pluginsdk.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"client_id", "application_id", "display_name", "object_id"},
-				ValidateFunc: validation.IsUUID,
-				Deprecated:   "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"account_enabled": {
@@ -336,12 +326,7 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 			}
 		}
 	} else {
-		var clientId string
-		if v := d.Get("client_id").(string); v != "" {
-			clientId = v
-		} else {
-			clientId = d.Get("application_id").(string)
-		}
+		clientId := d.Get("client_id").(string)
 
 		options := serviceprincipal.ListServicePrincipalsOperationOptions{
 			Filter: pointer.To(fmt.Sprintf("appId eq '%s'", odata.EscapeSingleQuote(clientId))),
@@ -402,7 +387,6 @@ func servicePrincipalDataSourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	tf.Set(d, "app_role_assignment_required", servicePrincipal.AppRoleAssignmentRequired)
 	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(servicePrincipal.AppRoles))
 	tf.Set(d, "app_roles", applications.FlattenAppRoles(servicePrincipal.AppRoles))
-	tf.Set(d, "application_id", servicePrincipal.AppId.GetOrZero())
 	tf.Set(d, "application_tenant_id", servicePrincipal.AppOwnerOrganizationId.GetOrZero())
 	tf.Set(d, "client_id", servicePrincipal.AppId.GetOrZero())
 	tf.Set(d, "description", servicePrincipal.Description.GetOrZero())

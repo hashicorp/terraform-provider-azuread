@@ -38,18 +38,8 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uri"},
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
-			},
-
-			"application_id": {
-				Description:      "The Application ID (also called Client ID)",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uri"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
-				Deprecated:       "The `application_id` property has been replaced with the `client_id` property and will be removed in version 3.0 of the AzureAD provider",
 			},
 
 			"client_id": {
@@ -57,7 +47,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uri"},
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
 			},
 
@@ -66,7 +56,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uri"},
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
@@ -81,7 +71,7 @@ func applicationDataSource() *pluginsdk.Resource {
 				Type:             pluginsdk.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ExactlyOneOf:     []string{"application_id", "client_id", "display_name", "object_id", "identifier_uri"},
+				ExactlyOneOf:     []string{"client_id", "display_name", "object_id", "identifier_uri"},
 				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
 			},
 
@@ -539,11 +529,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 
 	} else {
 		var filter, fieldName, fieldValue string
-		if applicationId, ok := d.GetOk("application_id"); ok && applicationId.(string) != "" {
-			fieldName = "appId"
-			fieldValue = applicationId.(string)
-			filter = fmt.Sprintf("appId eq '%s'", applicationId)
-		} else if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {
+		if clientId, ok := d.GetOk("client_id"); ok && clientId.(string) != "" {
 			fieldName = "appId"
 			fieldValue = clientId.(string)
 			filter = fmt.Sprintf("appId eq '%s'", clientId)
@@ -556,7 +542,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 			fieldValue = identifierUri.(string)
 			filter = fmt.Sprintf("identifierUris/any(uri:uri eq '%s')", identifierUri)
 		} else {
-			return tf.ErrorDiagF(nil, "One of `object_id`, `application_id`, `client_id`, `displayName`, or `identifier_uri` must be specified")
+			return tf.ErrorDiagF(nil, "One of `object_id`, `client_id`, `displayName`, or `identifier_uri` must be specified")
 		}
 
 		options := application.ListApplicationsOperationOptions{
@@ -602,7 +588,6 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
 	tf.Set(d, "app_roles", applications.FlattenAppRoles(app.AppRoles))
 	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(app.AppRoles))
-	tf.Set(d, "application_id", app.AppId.GetOrZero())
 	tf.Set(d, "client_id", app.AppId.GetOrZero())
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported.GetOrZero())
 	tf.Set(d, "disabled_by_microsoft", app.DisabledByMicrosoftStatus.GetOrZero())

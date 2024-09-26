@@ -41,20 +41,6 @@ func TestAccServicePrincipalsDataSource_byClientIdsWithIgnoreMissing(t *testing.
 	}})
 }
 
-func TestAccServicePrincipalsDataSource_byDeprecatedApplicationIds(t *testing.T) {
-	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
-
-	data.DataSourceTest(t, []acceptance.TestStep{{
-		Config: ServicePrincipalsDataSource{}.byDeprecatedApplicationIds(data),
-		Check: acceptance.ComposeTestCheckFunc(
-			check.That(data.ResourceName).Key("application_ids.#").HasValue("2"),
-			check.That(data.ResourceName).Key("display_names.#").HasValue("2"),
-			check.That(data.ResourceName).Key("object_ids.#").HasValue("2"),
-			check.That(data.ResourceName).Key("service_principals.#").HasValue("2"),
-		),
-	}})
-}
-
 func TestAccServicePrincipalsDataSource_byDisplayNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
@@ -113,7 +99,6 @@ func TestAccServicePrincipalsDataSource_noNames(t *testing.T) {
 	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.noNames(),
 		Check: acceptance.ComposeTestCheckFunc(
-			check.That(data.ResourceName).Key("application_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("display_names.#").HasValue("0"),
 			check.That(data.ResourceName).Key("object_ids.#").HasValue("0"),
 			check.That(data.ResourceName).Key("service_principals.#").HasValue("0"),
@@ -127,7 +112,6 @@ func TestAccServicePrincipalsDataSource_returnAll(t *testing.T) {
 	data.DataSourceTest(t, []acceptance.TestStep{{
 		Config: ServicePrincipalsDataSource{}.returnAll(),
 		Check: acceptance.ComposeTestCheckFunc(
-			check.That(data.ResourceName).Key("application_ids.#").Exists(),
 			check.That(data.ResourceName).Key("display_names.#").Exists(),
 			check.That(data.ResourceName).Key("object_ids.#").Exists(),
 			check.That(data.ResourceName).Key("service_principals.#").Exists(),
@@ -221,19 +205,6 @@ data "azuread_service_principals" "test" {
   ]
 }
 `, ServicePrincipalResource{}.threeServicePrincipalsABC(data), data.RandomInteger)
-}
-
-func (ServicePrincipalsDataSource) byDeprecatedApplicationIds(data acceptance.TestData) string {
-	return fmt.Sprintf(`
-%[1]s
-
-data "azuread_service_principals" "test" {
-  application_ids = [
-    azuread_service_principal.testA.application_id,
-    azuread_service_principal.testB.application_id,
-  ]
-}
-`, ServicePrincipalResource{}.threeServicePrincipalsABC(data))
 }
 
 func (ServicePrincipalsDataSource) noNames() string {
