@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 )
 
 func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
@@ -40,11 +41,24 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if len(id) == 0 {
-				return fmt.Errorf("specified ID is not valid: %q", id)
+			if _, errs := stable.ValidateOAuth2PermissionGrantID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceServicePrincipalDelegatedPermissionGrantInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceServicePrincipalDelegatedPermissionGrantInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claim_values": {
@@ -144,20 +158,24 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	}
 
 	id := stable.NewOAuth2PermissionGrantID(*delegatedPermissionGrant.Id)
-	d.SetId(id.OAuth2PermissionGrantId)
+	d.SetId(id.ID())
 
 	return servicePrincipalDelegatedPermissionGrantResourceRead(ctx, d, meta)
 }
 
 func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.OAuth2PermissionGrantClient
-	id := stable.NewOAuth2PermissionGrantID(d.Id())
+
+	id, err := stable.ParseOAuth2PermissionGrantID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	properties := stable.OAuth2PermissionGrant{
 		Scope: nullable.NoZero(strings.Join(tf.ExpandStringSlice(d.Get("claim_values").(*pluginsdk.Set).List()), " ")),
 	}
 
-	if _, err := client.UpdateOAuth2PermissionGrant(ctx, id, properties, oauth2permissiongrant.DefaultUpdateOAuth2PermissionGrantOperationOptions()); err != nil {
+	if _, err := client.UpdateOAuth2PermissionGrant(ctx, *id, properties, oauth2permissiongrant.DefaultUpdateOAuth2PermissionGrantOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
@@ -166,9 +184,13 @@ func servicePrincipalDelegatedPermissionGrantResourceUpdate(ctx context.Context,
 
 func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.OAuth2PermissionGrantClient
-	id := stable.NewOAuth2PermissionGrantID(d.Id())
 
-	resp, err := client.GetOAuth2PermissionGrant(ctx, id, oauth2permissiongrant.DefaultGetOAuth2PermissionGrantOperationOptions())
+	id, err := stable.ParseOAuth2PermissionGrantID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	resp, err := client.GetOAuth2PermissionGrant(ctx, *id, oauth2permissiongrant.DefaultGetOAuth2PermissionGrantOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state", id)
@@ -193,9 +215,13 @@ func servicePrincipalDelegatedPermissionGrantResourceRead(ctx context.Context, d
 
 func servicePrincipalDelegatedPermissionGrantResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.OAuth2PermissionGrantClient
-	id := stable.NewOAuth2PermissionGrantID(d.Id())
 
-	if _, err := client.DeleteOAuth2PermissionGrant(ctx, id, oauth2permissiongrant.DefaultDeleteOAuth2PermissionGrantOperationOptions()); err != nil {
+	id, err := stable.ParseOAuth2PermissionGrantID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	if _, err = client.DeleteOAuth2PermissionGrant(ctx, *id, oauth2permissiongrant.DefaultDeleteOAuth2PermissionGrantOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 

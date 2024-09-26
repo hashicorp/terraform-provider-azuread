@@ -140,9 +140,13 @@ func TestAccNamedLocation_updateCountry(t *testing.T) {
 
 func (r NamedLocationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ConditionalAccess.NamedLocationClient
-	id := stable.NewIdentityConditionalAccessNamedLocationID(state.ID)
 
-	resp, err := client.GetConditionalAccessNamedLocation(ctx, id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+	id, err := stable.ParseIdentityConditionalAccessNamedLocationID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

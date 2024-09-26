@@ -6,6 +6,7 @@ package administrativeunits
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/migrations"
 )
 
 func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
@@ -34,9 +35,24 @@ func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.AdministrativeUnitRoleMemberID(id)
-			return err
+			if _, errs := stable.ValidateDirectoryAdministrativeUnitIdScopedRoleMemberID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceAdministrativeUnitRoleMemberInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceAdministrativeUnitRoleMemberInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"administrative_unit_object_id": {
@@ -88,8 +104,8 @@ func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsd
 		return tf.ErrorDiagF(errors.New("response was nil"), "Adding role member %q to administrative unit %q", memberId, administrativeUnitId)
 	}
 
-	id := parse.NewAdministrativeUnitRoleMemberID(*resp.Model.AdministrativeUnitId, *resp.Model.Id)
-	d.SetId(id.String())
+	id := stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(pointer.From(resp.Model.AdministrativeUnitId), pointer.From(resp.Model.Id))
+	d.SetId(id.ID())
 
 	return administrativeUnitRoleMemberResourceRead(ctx, d, meta)
 }
@@ -97,12 +113,12 @@ func administrativeUnitRoleMemberResourceCreate(ctx context.Context, d *pluginsd
 func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
-	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())
+	id, err := stable.ParseDirectoryAdministrativeUnitIdScopedRoleMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Role Member ID %q", d.Id())
 	}
 
-	resp, err := client.GetAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(id.AdministrativeUnitId, id.ScopedRoleMembershipId), administrativeunitscopedrolemember.DefaultGetAdministrativeUnitScopedRoleMemberOperationOptions())
+	resp, err := client.GetAdministrativeUnitScopedRoleMember(ctx, *id, administrativeunitscopedrolemember.DefaultGetAdministrativeUnitScopedRoleMemberOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] Membership with ID %q was not found in administrative unit %q - removing from state", id.ScopedRoleMembershipId, id.AdministrativeUnitId)
@@ -127,11 +143,12 @@ func administrativeUnitRoleMemberResourceRead(ctx context.Context, d *pluginsdk.
 func administrativeUnitRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
-	id, err := parse.AdministrativeUnitRoleMemberID(d.Id())
+	id, err := stable.ParseDirectoryAdministrativeUnitIdScopedRoleMemberID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Administrative Unit Role Member ID %q", d.Id())
 	}
-	if _, err = client.DeleteAdministrativeUnitScopedRoleMember(ctx, stable.NewDirectoryAdministrativeUnitIdScopedRoleMemberID(id.AdministrativeUnitId, id.ScopedRoleMembershipId), administrativeunitscopedrolemember.DefaultDeleteAdministrativeUnitScopedRoleMemberOperationOptions()); err != nil {
+
+	if _, err = client.DeleteAdministrativeUnitScopedRoleMember(ctx, *id, administrativeunitscopedrolemember.DefaultDeleteAdministrativeUnitScopedRoleMemberOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Removing membership %q from administrative unit ID: %q", id.ScopedRoleMembershipId, id.AdministrativeUnitId)
 	}
 

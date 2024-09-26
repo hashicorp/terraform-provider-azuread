@@ -158,9 +158,13 @@ func TestAccUser_passwordInvalid(t *testing.T) {
 
 func (r UserResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Users.UserClient
-	id := stable.NewUserID(state.ID)
 
-	resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
+	id, err := stable.ParseUserID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetUser(ctx, *id, user.DefaultGetUserOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

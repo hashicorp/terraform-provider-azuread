@@ -117,8 +117,6 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(errors.New("ID is nil for returned IP Named Location"), "Bad API response")
 		}
 
-		d.SetId(*namedLocation.Id)
-
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "ip", flattenIPNamedLocation(&namedLocation))
 
@@ -127,11 +125,12 @@ func namedLocationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(errors.New("ID is nil for returned Country Named Location"), "Bad API response")
 		}
 
-		d.SetId(*namedLocation.Id)
-
 		tf.Set(d, "display_name", pointer.From(namedLocation.DisplayName))
 		tf.Set(d, "country", flattenCountryNamedLocation(&namedLocation))
 	}
+
+	id := stable.NewIdentityConditionalAccessNamedLocationID(pointer.From(item.NamedLocation().Id))
+	d.SetId(id.ID())
 
 	return nil
 }

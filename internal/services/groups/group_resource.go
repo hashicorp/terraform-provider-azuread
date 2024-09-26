@@ -33,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/groups/migrations"
 )
 
 func groupResource() *pluginsdk.Resource {
@@ -52,11 +53,24 @@ func groupResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := beta.ValidateGroupID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceGroupInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceGroupInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
@@ -701,8 +715,8 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(errors.New("unable to obtain group object ID"), "Creating group %q", displayName)
 	}
 
-	d.SetId(groupObjectId)
 	id := beta.NewGroupID(groupObjectId)
+	d.SetId(id.ID())
 
 	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
@@ -907,9 +921,12 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	memberOfClient := meta.(*clients.Client).Groups.GroupMemberOfClientBeta
 	administrativeUnitMemberClient := meta.(*clients.Client).Groups.AdministrativeUnitMemberClientBeta
 
-	callerId := meta.(*clients.Client).ObjectID
+	id, err := beta.ParseGroupID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
-	id := beta.NewGroupID(d.Id())
+	callerId := meta.(*clients.Client).ObjectID
 	displayName := d.Get("display_name").(string)
 
 	tf.LockByName(groupResourceName, id.GroupId)
@@ -970,7 +987,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		group.Visibility = nullable.Value(d.Get("visibility").(string))
 	}
 
-	if _, err := client.UpdateGroup(ctx, id, group, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
+	if _, err := client.UpdateGroup(ctx, *id, group, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
@@ -985,14 +1002,14 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		// Application-authenticated requests will return a 403 or 404 error, so we
 		// only set these when explicitly configured, and when the value differs.
 		// See https://docs.microsoft.com/en-us/graph/known-issues#groups
-		extra, err := groupGetAdditional(ctx, client, id)
+		extra, err := groupGetAdditional(ctx, client, *id)
 		if err != nil {
 			return tf.ErrorDiagF(err, "Retrieving extra fields for %s", id)
 		}
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
 		if v, ok := d.GetOkExists("external_senders_allowed"); ok && (extra == nil || extra.AllowExternalSenders.GetOrZero() != v.(bool)) { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err = client.UpdateGroup(ctx, *id, beta.Group{
 				AllowExternalSenders: nullable.Value(v.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `external_senders_allowed` for %s", id)
@@ -1000,7 +1017,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			// Wait for AllowExternalSenders to be updated
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				groupExtra, err := groupGetAdditional(ctx, client, id)
+				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
 				}
@@ -1012,7 +1029,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// AutoSubscribeNewMembers can only be set in its own PATCH request; including other properties returns a 400
 		if v, ok := d.GetOkExists("auto_subscribe_new_members"); ok && (extra == nil || extra.AutoSubscribeNewMembers.GetOrZero() != v.(bool)) { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err = client.UpdateGroup(ctx, *id, beta.Group{
 				AutoSubscribeNewMembers: nullable.Value(v.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `auto_subscribe_new_members` for %s", id)
@@ -1020,7 +1037,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			// Wait for AutoSubscribeNewMembers to be updated
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				groupExtra, err := groupGetAdditional(ctx, client, id)
+				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
 				}
@@ -1032,7 +1049,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// HideFromAddressLists can only be set in its own PATCH request; including other properties returns a 400
 		if v, ok := d.GetOkExists("hide_from_address_lists"); ok && (extra == nil || extra.HideFromAddressLists.GetOrZero() != v.(bool)) { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err = client.UpdateGroup(ctx, *id, beta.Group{
 				HideFromAddressLists: nullable.Value(v.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `hide_from_address_lists` for %s", id)
@@ -1040,7 +1057,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			// Wait for HideFromAddressLists to be updated
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				groupExtra, err := groupGetAdditional(ctx, client, id)
+				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
 				}
@@ -1052,7 +1069,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// HideFromOutlookClients can only be set in its own PATCH request; including other properties returns a 400
 		if v, ok := d.GetOkExists("hide_from_outlook_clients"); ok && (extra == nil || extra.HideFromOutlookClients.GetOrZero() != v.(bool)) { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err = client.UpdateGroup(ctx, *id, beta.Group{
 				HideFromOutlookClients: nullable.Value(v.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `hide_from_outlook_clients` for %s", id)
@@ -1060,7 +1077,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 			// Wait for HideFromOutlookClients to be updated
 			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-				groupExtra, err := groupGetAdditional(ctx, client, id)
+				groupExtra, err := groupGetAdditional(ctx, client, *id)
 				if err != nil {
 					return nil, err
 				}
@@ -1072,7 +1089,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	if d.HasChange("members") {
-		resp, err := memberClient.ListMembers(ctx, id, memberBeta.DefaultListMembersOperationOptions())
+		resp, err := memberClient.ListMembers(ctx, *id, memberBeta.DefaultListMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
@@ -1099,14 +1116,14 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(v).ID()),
 			}
-			if _, err = memberClient.AddMemberRef(ctx, id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
+			if _, err = memberClient.AddMemberRef(ctx, *id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "removing %s", beta.NewGroupIdMemberID(id.GroupId, v))
 			}
 		}
 	}
 
 	if v, ok := d.GetOk("owners"); ok && d.HasChange("owners") {
-		resp, err := ownerClient.ListOwners(ctx, id, ownerBeta.DefaultListOwnersOperationOptions())
+		resp, err := ownerClient.ListOwners(ctx, *id, ownerBeta.DefaultListOwnersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
@@ -1134,7 +1151,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(v).ID()),
 			}
-			if _, err = ownerClient.AddOwnerRef(ctx, id, ref, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
+			if _, err = ownerClient.AddOwnerRef(ctx, *id, ref, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "removing %s", beta.NewGroupIdOwnerID(id.GroupId, v))
 			}
 		}
@@ -1148,7 +1165,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 
 	if v := d.Get("administrative_unit_ids"); d.HasChange("administrative_unit_ids") {
-		resp, err := memberOfClient.ListMemberOfs(ctx, id, memberofBeta.DefaultListMemberOfsOperationOptions())
+		resp, err := memberOfClient.ListMemberOfs(ctx, *id, memberofBeta.DefaultListMemberOfsOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagPathF(err, "administrative_units", "retrieving administrative unit memberships for %s", id)
 		}
@@ -1203,7 +1220,10 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		memberClient := meta.(*clients.Client).Groups.GroupMemberClientBeta
 		memberOfClient := meta.(*clients.Client).Groups.GroupMemberOfClientBeta
 
-		id := beta.NewGroupID(d.Id())
+		id, err := beta.ParseGroupID(d.Id())
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+		}
 
 		options := groupBeta.DefaultGetGroupOperationOptions()
 		if enableRetries {
@@ -1217,7 +1237,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 			}
 		}
 
-		resp, err := client.GetGroup(ctx, id, options)
+		resp, err := client.GetGroup(ctx, *id, options)
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				log.Printf("[DEBUG] %s was not found - removing from state", id)
@@ -1274,7 +1294,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 		if group.GroupTypes != nil && slices.Contains(*group.GroupTypes, GroupTypeUnified) {
 			// Retrieve these properties in a separate request to sidestep API bugs
-			groupExtra, err := groupGetAdditional(ctx, client, id)
+			groupExtra, err := groupGetAdditional(ctx, client, *id)
 			if err != nil {
 				return tf.ErrorDiagF(err, "Could not retrieve group with object UID %q", d.Id())
 			}
@@ -1293,7 +1313,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "hide_from_outlook_clients", hideFromOutlookClients)
 
 		owners := make([]string, 0)
-		if resp, err := ownerClient.ListOwners(ctx, id, ownerBeta.DefaultListOwnersOperationOptions()); err != nil {
+		if resp, err := ownerClient.ListOwners(ctx, *id, ownerBeta.DefaultListOwnersOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "owners", "Could not retrieve owners for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
@@ -1303,7 +1323,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "owners", owners)
 
 		members := make([]string, 0)
-		if resp, err := memberClient.ListMembers(ctx, id, memberBeta.DefaultListMembersOperationOptions()); err != nil {
+		if resp, err := memberClient.ListMembers(ctx, *id, memberBeta.DefaultListMembersOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "members", "Could not retrieve members for %s", id)
 		} else if resp.Model != nil {
 			for _, o := range *resp.Model {
@@ -1313,7 +1333,7 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 		tf.Set(d, "members", members)
 
 		administrativeUnitIds := make([]string, 0)
-		if resp, err := memberOfClient.ListMemberOfs(ctx, id, memberofBeta.DefaultListMemberOfsOperationOptions()); err != nil {
+		if resp, err := memberOfClient.ListMemberOfs(ctx, *id, memberofBeta.DefaultListMemberOfsOperationOptions()); err != nil {
 			return tf.ErrorDiagPathF(err, "members", "Could not retrieve members for %s", id)
 		} else if resp.Model != nil {
 			for _, obj := range *resp.Model {
@@ -1336,10 +1356,14 @@ func groupResourceReadFunc(enableRetries bool) pluginsdk.ReadContextFunc {
 
 func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Groups.GroupClientBeta
-	id := beta.NewGroupID(d.Id())
+
+	id, err := beta.ParseGroupID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	// Get the group before attempting deletion
-	resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions())
+	resp, err := client.GetGroup(ctx, *id, groupBeta.DefaultGetGroupOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(errors.New("group was not found"), "id", "Retrieving %s", id)
@@ -1347,13 +1371,13 @@ func groupResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagPathF(err, "id", "Retrieving %s", id)
 	}
 
-	if _, err = client.DeleteGroup(ctx, id, groupBeta.DefaultDeleteGroupOperationOptions()); err != nil {
+	if _, err = client.DeleteGroup(ctx, *id, groupBeta.DefaultDeleteGroupOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
 	// Wait for group object to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetGroup(ctx, id, groupBeta.DefaultGetGroupOperationOptions()); err != nil {
+		if resp, err := client.GetGroup(ctx, *id, groupBeta.DefaultGetGroupOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}

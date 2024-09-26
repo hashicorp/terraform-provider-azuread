@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/migrations"
 )
 
 func synchronizationJobResource() *pluginsdk.Resource {
@@ -39,11 +39,24 @@ func synchronizationJobResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.SynchronizationJobID(id)
-			return err
+			if _, errs := stable.ValidateServicePrincipalIdSynchronizationJobID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
 
-		SchemaVersion: 0,
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceSynchronizationJobInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceSynchronizationJobInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
@@ -150,8 +163,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
 	}
 
-	resourceId := parse.NewSynchronizationJobID(id.ServicePrincipalId, id.SynchronizationJobId)
-	d.SetId(resourceId.String())
+	d.SetId(id.ID())
 
 	// Start job if desired
 	if d.Get("enabled").(bool) {
@@ -166,14 +178,12 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
-	resourceId, err := parse.SynchronizationJobID(d.Id())
+	id, err := stable.ParseServicePrincipalIdSynchronizationJobID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job ID %q", d.Id())
 	}
 
-	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
-
-	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
+	resp, err := client.GetSynchronizationJob(ctx, *id, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -198,20 +208,18 @@ func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
-	resourceId, err := parse.SynchronizationJobID(d.Id())
+	id, err := stable.ParseServicePrincipalIdSynchronizationJobID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job ID %q", d.Id())
 	}
 
-	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
-
 	if d.HasChange("enabled") {
 		if d.Get("enabled").(bool) {
-			if _, err = client.StartSynchronizationJob(ctx, id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+			if _, err = client.StartSynchronizationJob(ctx, *id, synchronizationjob.StartSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 				return tf.ErrorDiagF(err, "Starting %s", id)
 			}
 		} else {
-			if _, err = client.PauseSynchronizationJob(ctx, id, synchronizationjob.PauseSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+			if _, err = client.PauseSynchronizationJob(ctx, *id, synchronizationjob.PauseSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 				return tf.ErrorDiagF(err, "Pausing %s", id)
 			}
 		}
@@ -223,23 +231,21 @@ func synchronizationJobResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 func synchronizationJobResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 
-	resourceId, err := parse.SynchronizationJobID(d.Id())
+	id, err := stable.ParseServicePrincipalIdSynchronizationJobID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job with ID %q", d.Id())
 	}
 
-	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
-
 	tf.LockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 
-	if _, err = client.DeleteSynchronizationJob(ctx, id, synchronizationjob.DeleteSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+	if _, err = client.DeleteSynchronizationJob(ctx, *id, synchronizationjob.DeleteSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 
 	// Wait for synchronization job to be deleted
 	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+		resp, err := client.GetSynchronizationJob(ctx, *id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
 		if err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil

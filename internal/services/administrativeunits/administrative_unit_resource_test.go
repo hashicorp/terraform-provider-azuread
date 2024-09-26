@@ -95,15 +95,19 @@ func TestAccGroup_preventDuplicateNamesFail(t *testing.T) {
 func (r AdministrativeUnitResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AdministrativeUnits.AdministrativeUnitClient
 
-	id := stable.NewDirectoryAdministrativeUnitID(state.ID)
-	resp, err := client.GetAdministrativeUnit(ctx, id, administrativeunit.DefaultGetAdministrativeUnitOperationOptions())
+	id, err := stable.ParseDirectoryAdministrativeUnitID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetAdministrativeUnit(ctx, *id, administrativeunit.DefaultGetAdministrativeUnitOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			return nil, fmt.Errorf("administratove unit with object ID %q does not exist", state.ID)
+			return nil, fmt.Errorf("%s does not exist", id)
 		}
-		return nil, fmt.Errorf("failed to retrieve Administratove Unit with object ID %q: %+v", state.ID, err)
+		return nil, fmt.Errorf("failed to retrieve %s: %v", id, err)
 	}
-	return pointer.To(resp.Model != nil && pointer.From(resp.Model.Id) == state.ID), nil
+	return pointer.To(resp.Model != nil), nil
 }
 
 func (AdministrativeUnitResource) basic(data acceptance.TestData) string {

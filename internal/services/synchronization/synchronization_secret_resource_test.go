@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 )
 
 type SynchronizationSecretResource struct{}
@@ -43,19 +42,17 @@ func TestAccSynchronizationSecret_basic(t *testing.T) {
 func (r SynchronizationSecretResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Synchronization.SynchronizationSecretClient
 
-	id, err := parse.SynchronizationSecretID(state.ID)
+	id, err := stable.ParseServicePrincipalID(state.ID)
 	if err != nil {
-		return nil, fmt.Errorf("parsing synchronization secret from service principal %v", err)
+		return nil, err
 	}
 
-	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
-
-	resp, err := client.ListSynchronizationSecrets(ctx, servicePrincipalId, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
+	resp, err := client.ListSynchronizationSecrets(ctx, *id, synchronizationsecret.DefaultListSynchronizationSecretsOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("retrieving synchronization secrets for %s", servicePrincipalId)
+		return nil, fmt.Errorf("retrieving synchronization secrets for %s", id)
 	}
 
 	if resp.Model == nil {

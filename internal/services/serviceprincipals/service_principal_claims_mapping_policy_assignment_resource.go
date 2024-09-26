@@ -6,6 +6,7 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/serviceprincipals/migrations"
 )
 
 func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource {
@@ -33,9 +34,24 @@ func servicePrincipalClaimsMappingPolicyAssignmentResource() *pluginsdk.Resource
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.ObjectSubResourceID(id, "claimsMappingPolicy")
-			return err
+			if _, errs := stable.ValidateServicePrincipalIdClaimsMappingPolicyID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceServicePrincipalClaimsMappingPolicyAssignmentInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceServicePrincipalClaimsMappingPolicyAssignmentInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"claims_mapping_policy_id": {
@@ -71,8 +87,8 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 		return tf.ErrorDiagF(err, "Creating ClaimsMappingPolicyAssignment for %s", servicePrincipalId)
 	}
 
-	id := parse.NewClaimsMappingPolicyAssignmentID(servicePrincipalId.ServicePrincipalId, policyId.DirectoryObjectId)
-	d.SetId(id.String())
+	id := stable.NewServicePrincipalIdClaimsMappingPolicyID(servicePrincipalId.ServicePrincipalId, policyId.DirectoryObjectId)
+	d.SetId(id.ID())
 
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)
 }
@@ -80,7 +96,7 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceCreate(ctx context.Con
 func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
 
-	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())
+	id, err := stable.ParseServicePrincipalIdClaimsMappingPolicyID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Claims Mapping Policy Assignment ID %q", d.Id())
 	}
@@ -127,14 +143,13 @@ func servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx context.Conte
 func servicePrincipalClaimsMappingPolicyAssignmentResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ClaimsMappingPolicyClient
 
-	id, err := parse.ClaimsMappingPolicyAssignmentID(d.Id())
+	id, err := stable.ParseServicePrincipalIdClaimsMappingPolicyID(d.Id())
 	if err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Parsing Claims Mapping Policy Assignment ID %q", d.Id())
 	}
 
-	refId := stable.NewServicePrincipalIdClaimsMappingPolicyID(id.ServicePrincipalId, id.ClaimsMappingPolicyId)
-	if _, err = client.RemoveClaimsMappingPolicyRef(ctx, refId, claimsmappingpolicy.DefaultRemoveClaimsMappingPolicyRefOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "removing %s", refId)
+	if _, err = client.RemoveClaimsMappingPolicyRef(ctx, *id, claimsmappingpolicy.DefaultRemoveClaimsMappingPolicyRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "removing %s", id)
 	}
 
 	return servicePrincipalClaimsMappingPolicyAssignmentResourceRead(ctx, d, meta)

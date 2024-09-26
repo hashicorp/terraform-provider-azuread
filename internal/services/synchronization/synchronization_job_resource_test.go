@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/parse"
 )
 
 type SynchronizationJobResource struct{}
@@ -67,14 +66,12 @@ func testAccSynchronizationJob_disabled(t *testing.T) {
 func (r SynchronizationJobResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.ServicePrincipals.SynchronizationJobClient
 
-	resourceId, err := parse.SynchronizationJobID(state.ID)
+	id, err := stable.ParseServicePrincipalIdSynchronizationJobID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing synchronization job ID: %v", err)
 	}
 
-	id := stable.NewServicePrincipalIdSynchronizationJobID(resourceId.ServicePrincipalId, resourceId.JobId)
-
-	resp, err := client.GetSynchronizationJob(ctx, id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
+	resp, err := client.GetSynchronizationJob(ctx, *id, synchronizationjob.DefaultGetSynchronizationJobOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil

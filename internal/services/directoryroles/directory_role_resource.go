@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/suppress"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/migrations"
 )
 
 type DirectoryRoleModel struct {
@@ -31,11 +31,12 @@ type DirectoryRoleModel struct {
 }
 
 var _ sdk.Resource = DirectoryRoleResource{}
+var _ sdk.ResourceWithStateMigration = DirectoryRoleResource{}
 
 type DirectoryRoleResource struct{}
 
 func (r DirectoryRoleResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
-	return validation.IsUUID
+	return stable.ValidateDirectoryRoleID
 }
 
 func (r DirectoryRoleResource) ResourceType() string {
@@ -44,6 +45,15 @@ func (r DirectoryRoleResource) ResourceType() string {
 
 func (r DirectoryRoleResource) ModelObject() interface{} {
 	return &DirectoryRoleModel{}
+}
+
+func (r DirectoryRoleResource) StateUpgraders() sdk.StateUpgradeData {
+	return sdk.StateUpgradeData{
+		SchemaVersion: 1,
+		Upgraders: map[int]pluginsdk.StateUpgrade{
+			0: migrations.ResourceDirectoryRoleStateUpgradeV0{},
+		},
+	}
 }
 
 func (r DirectoryRoleResource) Arguments() map[string]*pluginsdk.Schema {
@@ -173,7 +183,7 @@ func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving directory role for template ID %q: ID was nil (API error)", templateId)
 			}
 
-			id := parse.NewDirectoryRoleID(*directoryRole.Id)
+			id := stable.NewDirectoryRoleID(*directoryRole.Id)
 			metadata.SetID(id)
 
 			return nil
@@ -187,14 +197,17 @@ func (r DirectoryRoleResource) Read() sdk.ResourceFunc {
 		Func: func(ctx context.Context, metadata sdk.ResourceMetaData) error {
 			client := metadata.Client.DirectoryRoles.DirectoryRoleClient
 
-			id := parse.NewDirectoryRoleID(metadata.ResourceData.Id())
+			id, err := stable.ParseDirectoryRoleID(metadata.ResourceData.Id())
+			if err != nil {
+				return err
+			}
 
 			var state DirectoryRoleModel
 			if err := metadata.Decode(&state); err != nil {
 				return fmt.Errorf("decoding: %+v", err)
 			}
 
-			resp, err := client.GetDirectoryRole(ctx, stable.NewDirectoryRoleID(id.DirectoryRoleId), directoryrole.DefaultGetDirectoryRoleOperationOptions())
+			resp, err := client.GetDirectoryRole(ctx, *id, directoryrole.DefaultGetDirectoryRoleOperationOptions())
 			if err != nil {
 				if response.WasNotFound(resp.HttpResponse) {
 					return metadata.MarkAsGone(id)

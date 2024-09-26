@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/parse"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/directoryroles/migrations"
 )
 
 func directoryRoleMemberResource() *pluginsdk.Resource {
@@ -35,9 +35,24 @@ func directoryRoleMemberResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			_, err := parse.DirectoryRoleMemberID(id)
-			return err
+			if _, errs := stable.ValidateDirectoryRoleIdMemberID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
+			}
+			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceDirectoryRoleMemberInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceDirectoryRoleMemberInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		DeprecationMessage: "This resource is deprecated and will be removed in version 3.0 of the AzureAD provider. Please use the `azuread_directory_role_assignment` resource instead.",
 
@@ -65,7 +80,7 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleMemberClient
 	directoryRoleClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleClient
 
-	id := parse.NewDirectoryRoleMemberID(d.Get("role_object_id").(string), d.Get("member_object_id").(string))
+	id := stable.NewDirectoryRoleIdMemberID(d.Get("role_object_id").(string), d.Get("member_object_id").(string))
 	directoryRoleId := stable.NewDirectoryRoleID(id.DirectoryRoleId)
 
 	tf.LockByName(directoryRoleMemberResourceName, id.DirectoryRoleId)
@@ -79,35 +94,35 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 		return tf.ErrorDiagPathF(err, "object_id", "Retrieving %s", directoryRoleId)
 	}
 
-	if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
-		return tf.ErrorDiagF(err, "Checking for existing membership of member %q for directory role with object ID %q", id.MemberId, id.DirectoryRoleId)
+	if member, err := directoryRoleGetMember(ctx, client, id); err != nil {
+		return tf.ErrorDiagF(err, "Checking for existing %s", id)
 	} else if member != nil {
-		return tf.ImportAsExistsDiag("azuread_directory_role_member", id.String())
+		return tf.ImportAsExistsDiag("azuread_directory_role_member", id.ID())
 	}
 
-	memberId := stable.NewDirectoryObjectID(id.MemberId)
+	memberId := stable.NewDirectoryObjectID(id.DirectoryObjectId)
 
 	addMemberProperties := stable.ReferenceCreate{
 		ODataId: pointer.To(client.Client.BaseUri + memberId.ID()),
 	}
 
 	if _, err = client.AddMemberRef(ctx, directoryRoleId, addMemberProperties, member.DefaultAddMemberRefOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Adding member %q to directory role %q", id.MemberId, id.DirectoryRoleId)
+		return tf.ErrorDiagF(err, "Adding %s", id)
 	}
 
 	// Wait for role membership to reflect
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
+		if member, err := directoryRoleGetMember(ctx, client, id); err != nil {
 			return nil, fmt.Errorf("retrieving member")
 		} else if member == nil {
 			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for role member %q to reflect for directory role %q", id.MemberId, id.DirectoryRoleId)
+		return tf.ErrorDiagF(err, "Waiting for %s", id)
 	}
 
-	d.SetId(id.String())
+	d.SetId(id.ID())
 
 	return directoryRoleMemberResourceRead(ctx, d, meta)
 }
@@ -115,21 +130,21 @@ func directoryRoleMemberResourceCreate(ctx context.Context, d *pluginsdk.Resourc
 func directoryRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleMemberClient
 
-	id, err := parse.DirectoryRoleMemberID(d.Id())
+	id, err := stable.ParseDirectoryRoleIdMemberID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing Directory Role Member ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing Directory Role Member ID")
 	}
 
-	if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
-		return tf.ErrorDiagF(err, "Retrieving member %q for directory role with object ID: %q", id.MemberId, id.DirectoryRoleId)
+	if member, err := directoryRoleGetMember(ctx, client, *id); err != nil {
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	} else if member == nil {
-		log.Printf("[DEBUG] Member with ID %q was not found in directory role %q - removing from state", id.MemberId, id.DirectoryRoleId)
+		log.Printf("[DEBUG] %s was not found - removing from state", id)
 		d.SetId("")
 		return nil
 	}
 
 	tf.Set(d, "role_object_id", id.DirectoryRoleId)
-	tf.Set(d, "member_object_id", id.MemberId)
+	tf.Set(d, "member_object_id", id.DirectoryObjectId)
 
 	return nil
 }
@@ -137,28 +152,28 @@ func directoryRoleMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceD
 func directoryRoleMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleMemberClient
 
-	id, err := parse.DirectoryRoleMemberID(d.Id())
+	id, err := stable.ParseDirectoryRoleIdMemberID(d.Id())
 	if err != nil {
-		return tf.ErrorDiagPathF(err, "id", "Parsing Directory Role Member ID %q", d.Id())
+		return tf.ErrorDiagPathF(err, "id", "Parsing Directory Role Member ID")
 	}
 
 	tf.LockByName(directoryRoleMemberResourceName, id.DirectoryRoleId)
 	defer tf.UnlockByName(directoryRoleMemberResourceName, id.DirectoryRoleId)
 
-	if _, err = client.RemoveMemberRef(ctx, stable.NewDirectoryRoleIdMemberID(id.DirectoryRoleId, id.MemberId), member.DefaultRemoveMemberRefOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Removing member %q from directory role with object ID: %q", id.MemberId, id.DirectoryRoleId)
+	if _, err = client.RemoveMemberRef(ctx, *id, member.DefaultRemoveMemberRefOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Removing %s", id)
 	}
 
 	// Wait for membership link to be deleted
 	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if member, err := directoryRoleGetMember(ctx, client, id.DirectoryRoleId, id.MemberId); err != nil {
+		if member, err := directoryRoleGetMember(ctx, client, *id); err != nil {
 			return nil, err
 		} else if member == nil {
 			return pointer.To(false), nil
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for removal of member %q from directory role with object ID %q", id.MemberId, id.DirectoryRoleId)
+		return tf.ErrorDiagF(err, "Waiting for removal of %s", id)
 	}
 
 	return nil

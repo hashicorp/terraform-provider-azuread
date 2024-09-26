@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/approleassignments/parse"
 )
 
 type AppRoleAssignmentResource struct{}
@@ -100,14 +99,12 @@ func TestAccAppRoleAssignment_userForTenantApp(t *testing.T) {
 func (r AppRoleAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AppRoleAssignments.AppRoleAssignedToClient
 
-	resourceId, err := parse.AppRoleAssignmentID(state.ID)
+	id, err := stable.ParseServicePrincipalIdAppRoleAssignedToID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing App Role Assignment ID: %v", err)
 	}
 
-	id := stable.NewServicePrincipalIdAppRoleAssignedToID(resourceId.ResourceId, resourceId.AssignmentId)
-
-	resp, err := client.GetAppRoleAssignedTo(ctx, id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
+	resp, err := client.GetAppRoleAssignedTo(ctx, *id, approleassignedto.DefaultGetAppRoleAssignedToOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
@@ -130,8 +127,8 @@ provider "azuread" {}
 data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_service_principal" "msgraph" {
-  application_id = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
-  use_existing   = true
+  client_id    = data.azuread_application_published_app_ids.well_known.result.MicrosoftGraph
+  use_existing = true
 }
 
 resource "azuread_application" "test" {
@@ -153,7 +150,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_app_role_assignment" "test" {
@@ -191,7 +188,7 @@ resource "azuread_application" "internal" {
 }
 
 resource "azuread_service_principal" "internal" {
-  application_id = azuread_application.internal.application_id
+  client_id = azuread_application.internal.client_id
 }
 `, data.RandomInteger, data.UUID(), data.UUID())
 }
@@ -204,7 +201,7 @@ resource "azuread_application" "test" {
   display_name = "acctest-appRoleAssignment-%[2]d"
 
   required_resource_access {
-    resource_app_id = azuread_application.internal.application_id
+    resource_app_id = azuread_application.internal.client_id
 
     resource_access {
       id   = azuread_service_principal.internal.app_role_ids["Admin.All"]
@@ -219,7 +216,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_app_role_assignment" "test_admin" {
@@ -262,7 +259,7 @@ resource "azuread_application" "internal" {
 }
 
 resource "azuread_service_principal" "internal" {
-  application_id = azuread_application.internal.application_id
+  client_id = azuread_application.internal.client_id
 }
 
 resource "azuread_group" "test" {

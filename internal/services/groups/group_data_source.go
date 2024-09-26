@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
@@ -387,7 +388,8 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		return tf.ErrorDiagF(errors.New("API returned group with nil object ID"), "Bad API Response")
 	}
 
-	d.SetId(*foundGroup.Id)
+	id := stable.NewGroupID(*foundGroup.Id)
+	d.SetId(id.ID())
 
 	tf.Set(d, "assignable_to_role", foundGroup.IsAssignableToRole.GetOrZero())
 	tf.Set(d, "behaviors", tf.FlattenStringSlicePtr(foundGroup.ResourceBehaviorOptions))

@@ -35,12 +35,12 @@ func administrativeUnitFindByName(ctx context.Context, client *administrativeuni
 	return &result, nil
 }
 
-func administrativeUnitGetMember(ctx context.Context, client *administrativeunitmember.AdministrativeUnitMemberClient, id string, memberId string) (*stable.DirectoryObject, error) {
+func administrativeUnitGetMember(ctx context.Context, client *administrativeunitmember.AdministrativeUnitMemberClient, id stable.DirectoryAdministrativeUnitIdMemberId) (*stable.DirectoryObject, error) {
 	options := administrativeunitmember.ListAdministrativeUnitMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", memberId)),
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
 	}
 
-	resp, err := client.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(id), options)
+	resp, err := client.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return nil, nil
@@ -51,7 +51,7 @@ func administrativeUnitGetMember(ctx context.Context, client *administrativeunit
 
 	if resp.Model != nil {
 		for _, member := range *resp.Model {
-			if member.DirectoryObject().Id != nil && *member.DirectoryObject().Id == memberId {
+			if member.DirectoryObject().Id != nil && *member.DirectoryObject().Id == id.DirectoryObjectId {
 				return &member, nil
 			}
 		}

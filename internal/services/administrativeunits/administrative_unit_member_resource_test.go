@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
 )
 
 type AdministrativeUnitMemberResource struct{}
@@ -113,25 +112,25 @@ func TestAccAdministrativeUnitMember_requiresImport(t *testing.T) {
 func (r AdministrativeUnitMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AdministrativeUnits.AdministrativeUnitMemberClient
 
-	id, err := parse.AdministrativeUnitMemberID(state.ID)
+	id, err := stable.ParseDirectoryAdministrativeUnitIdMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Administrative Unit Member ID: %v", err)
 	}
 
 	options := administrativeunitmember.ListAdministrativeUnitMembersOperationOptions{
-		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.MemberId)),
+		Filter: pointer.To(fmt.Sprintf("id eq '%s'", id.DirectoryObjectId)),
 	}
 	resp, err := client.ListAdministrativeUnitMembers(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), options)
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve administrative unit member %q (administrative unit ID: %q): %+v", id.MemberId, id.AdministrativeUnitId, err)
+		return nil, fmt.Errorf("failed to retrieve administrative unit member %q (administrative unit ID: %q): %+v", id.DirectoryObjectId, id.AdministrativeUnitId, err)
 	}
 
 	if resp.Model != nil {
 		for _, member := range *resp.Model {
-			if pointer.From(member.DirectoryObject().Id) == id.MemberId {
+			if pointer.From(member.DirectoryObject().Id) == id.DirectoryObjectId {
 				return pointer.To(true), nil
 			}
 		}

@@ -147,9 +147,13 @@ func TestAccDirectoryRoleAssignment_multipleUser(t *testing.T) {
 
 func (r DirectoryRoleAssignmentResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.DirectoryRoles.DirectoryRoleAssignmentClient
-	id := stable.NewRoleManagementDirectoryRoleAssignmentID(state.ID)
 
-	if resp, err := client.GetDirectoryRoleAssignment(ctx, id, directoryroleassignment.DefaultGetDirectoryRoleAssignmentOperationOptions()); err != nil {
+	id, err := stable.ParseRoleManagementDirectoryRoleAssignmentID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp, err := client.GetDirectoryRoleAssignment(ctx, *id, directoryroleassignment.DefaultGetDirectoryRoleAssignmentOperationOptions()); err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
 		}
@@ -195,7 +199,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_directory_role_assignment" "test" {
@@ -220,7 +224,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_directory_role_assignment" "test" {
@@ -240,7 +244,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 
 resource "azuread_directory_role_assignment" "test" {

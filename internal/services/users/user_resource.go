@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/users/migrations"
 )
 
 func userResource() *pluginsdk.Resource {
@@ -46,11 +46,24 @@ func userResource() *pluginsdk.Resource {
 		},
 
 		Importer: pluginsdk.ImporterValidatingResourceId(func(id string) error {
-			if _, err := uuid.ParseUUID(id); err != nil {
-				return fmt.Errorf("specified ID (%q) is not valid: %s", id, err)
+			if _, errs := stable.ValidateUserID(id, "id"); len(errs) > 0 {
+				out := ""
+				for _, err := range errs {
+					out += err.Error()
+				}
+				return fmt.Errorf(out)
 			}
 			return nil
 		}),
+
+		SchemaVersion: 1,
+		StateUpgraders: []pluginsdk.StateUpgrader{
+			{
+				Type:    migrations.ResourceUserInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: migrations.ResourceUserInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*pluginsdk.Schema{
 			"user_principal_name": {
@@ -482,7 +495,7 @@ func userResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	}
 
 	id := stable.NewUserID(*u.Id)
-	d.SetId(id.UserId)
+	d.SetId(id.ID())
 
 	// Set the `showInAddressList` field using the beta API, see https://developer.microsoft.com/en-us/graph/known-issues/?search=14972
 	updateProperties := beta.User{
@@ -528,7 +541,10 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	clientBeta := meta.(*clients.Client).Users.UserClientBeta
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	id := stable.NewUserID(d.Id())
+	id, err := stable.ParseUserID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
 	var passwordPolicies []string
 	if d.Get("disable_strong_password").(bool) {
@@ -595,7 +611,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		properties.ShowInAddressList = nullable.NoZero(d.Get("show_in_address_list").(bool))
 	}
 
-	if _, err := client.UpdateUser(ctx, id, properties, user.DefaultUpdateUserOperationOptions()); err != nil {
+	if _, err = client.UpdateUser(ctx, *id, properties, user.DefaultUpdateUserOperationOptions()); err != nil {
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
 		// and Terraform will not offer a diff in the next plan.
@@ -609,7 +625,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		updateProperties := beta.User{
 			ShowInAddressList: nullable.Value(d.Get("show_in_address_list").(bool)),
 		}
-		if _, err := clientBeta.UpdateUser(ctx, beta.UserId(id), updateProperties, userBeta.DefaultUpdateUserOperationOptions()); err != nil {
+		if _, err = clientBeta.UpdateUser(ctx, beta.UserId(*id), updateProperties, userBeta.DefaultUpdateUserOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Setting `showInAddressList` for %s", id)
 		}
 	}
@@ -620,11 +636,11 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 				ODataId: pointer.To(client.Client.BaseUri + stable.NewDirectoryObjectID(d.Get("manager_id").(string)).ID()),
 			}
 
-			if _, err := managerClient.SetManagerRef(ctx, id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
+			if _, err = managerClient.SetManagerRef(ctx, *id, managerRef, manager.DefaultSetManagerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagPathF(err, "manager_id", "Could not assign manager for %s", id)
 			}
 		} else {
-			if _, err := managerClient.RemoveManagerRef(ctx, id, manager.DefaultRemoveManagerRefOperationOptions()); err != nil {
+			if _, err = managerClient.RemoveManagerRef(ctx, *id, manager.DefaultRemoveManagerRefOperationOptions()); err != nil {
 				return tf.ErrorDiagPathF(err, "manager_id", "Could not remove manager for %s", id)
 			}
 		}
@@ -638,9 +654,12 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	clientBeta := meta.(*clients.Client).Users.UserClientBeta
 	managerClient := meta.(*clients.Client).Users.ManagerClient
 
-	id := stable.NewUserID(d.Id())
+	id, err := stable.ParseUserID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
 
-	resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions())
+	resp, err := client.GetUser(ctx, *id, user.DefaultGetUserOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			log.Printf("[DEBUG] %s was not found - removing from state!", id)
@@ -702,7 +721,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 			"usageLocation",
 		},
 	}
-	respExtra, err := client.GetUser(ctx, id, optionsExtra)
+	respExtra, err := client.GetUser(ctx, *id, optionsExtra)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving additional fields for %s", id)
 	}
@@ -758,7 +777,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 	optionsBeta := userBeta.GetUserOperationOptions{
 		Select: &[]string{"showInAddressList"},
 	}
-	respBeta, err := clientBeta.GetUser(ctx, beta.UserId(id), optionsBeta)
+	respBeta, err := clientBeta.GetUser(ctx, beta.UserId(*id), optionsBeta)
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving additional fields for %s", id)
 	}
@@ -772,7 +791,7 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 
 	// Retrieve the user's manager
 	managerId := ""
-	managerResp, err := managerClient.GetManager(ctx, id, manager.DefaultGetManagerOperationOptions())
+	managerResp, err := managerClient.GetManager(ctx, *id, manager.DefaultGetManagerOperationOptions())
 	if !response.WasNotFound(managerResp.HttpResponse) {
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve manager for %s", id)
@@ -789,15 +808,19 @@ func userResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta inter
 
 func userResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Users.UserClient
-	id := stable.NewUserID(d.Id())
 
-	if _, err := client.DeleteUser(ctx, id, user.DefaultDeleteUserOperationOptions()); err != nil {
+	id, err := stable.ParseUserID(d.Id())
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "id", "Parsing ID")
+	}
+
+	if _, err = client.DeleteUser(ctx, *id, user.DefaultDeleteUserOperationOptions()); err != nil {
 		return tf.ErrorDiagPathF(err, "id", "Deleting %s", id)
 	}
 
 	// Wait for user object to be deleted
-	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetUser(ctx, id, user.DefaultGetUserOperationOptions()); err != nil {
+	if err = consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+		if resp, err := client.GetUser(ctx, *id, user.DefaultGetUserOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
