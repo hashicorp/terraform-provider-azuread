@@ -71,9 +71,13 @@ func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 
 func (r UserFlowAttributeResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.UserFlows.UserFlowAttributeClient
-	id := stable.NewIdentityUserFlowAttributeID(state.ID)
 
-	resp, err := client.GetUserFlowAttribute(ctx, id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
+	id, err := stable.ParseIdentityUserFlowAttributeID(state.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.GetUserFlowAttribute(ctx, *id, userflowattribute.DefaultGetUserFlowAttributeOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return pointer.To(false), nil
