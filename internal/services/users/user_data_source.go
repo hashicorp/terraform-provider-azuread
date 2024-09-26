@@ -497,7 +497,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	d.SetId(id.UserId)
+	d.SetId(id.ID())
 
 	tf.Set(d, "account_enabled", u.AccountEnabled.GetOrZero())
 	tf.Set(d, "age_group", u.AgeGroup.GetOrZero())
