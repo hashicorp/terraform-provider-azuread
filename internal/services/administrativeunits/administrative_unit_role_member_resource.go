@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/migrations"
 	"log"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/migrations"
 )
 
 func administrativeUnitRoleMemberResource() *pluginsdk.Resource {
