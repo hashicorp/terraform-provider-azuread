@@ -8,15 +8,19 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
+	administrativeunitBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/beta"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunit"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directory/stable/administrativeunitmember"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
@@ -188,23 +192,31 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	id := stable.NewDirectoryAdministrativeUnitID(*administrativeUnit.Id)
 	updateResp, err := client.UpdateAdministrativeUnit(ctx, id, stable.AdministrativeUnit{
 		DisplayName: nullable.Value(tempDisplayName),
-	}, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions())
+	}, administrativeunit.UpdateAdministrativeUnitOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp), nil
+		},
+	})
 	if err != nil {
 		if response.WasNotFound(updateResp.HttpResponse) {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new administrative unit to be replicated in Azure AD")
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
 		}
-		return tf.ErrorDiagF(err, "Failed to patch administrative unit after creating")
+		return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
 	}
 
 	// Set correct original display name
 	updateResp, err = client.UpdateAdministrativeUnit(ctx, id, stable.AdministrativeUnit{
 		DisplayName: nullable.Value(displayName),
-	}, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions())
+	}, administrativeunit.UpdateAdministrativeUnitOperationOptions{
+		RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
+			return response.WasNotFound(resp), nil
+		},
+	})
 	if err != nil {
 		if response.WasNotFound(updateResp.HttpResponse) {
-			return tf.ErrorDiagF(err, "Timed out whilst waiting for new administrative unit to be replicated in Azure AD")
+			return tf.ErrorDiagF(err, "Timed out whilst waiting for new %s to be replicated in Azure AD", id)
 		}
-		return tf.ErrorDiagF(err, "Failed to patch administrative unit after creating")
+		return tf.ErrorDiagF(err, "Failed to patch %s after creating", id)
 	}
 
 	// Add members after the administrative unit is created
@@ -217,7 +229,7 @@ func administrativeUnitResourceCreate(ctx context.Context, d *pluginsdk.Resource
 			}
 
 			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
-				return tf.ErrorDiagF(err, "Could not add member %q to administrative unit with object ID: %q", memberId, d.Id())
+				return tf.ErrorDiagF(err, "Could not add member %q to %s", memberId, id)
 			}
 		}
 	}
@@ -266,13 +278,13 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 	}
 
 	if _, err := client.UpdateAdministrativeUnit(ctx, id, administrativeUnit, administrativeunit.DefaultUpdateAdministrativeUnitOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Updating administrative unit with ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Updating %s", id)
 	}
 
 	if d.HasChange("members") {
 		membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, id, administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions())
 		if err != nil {
-			return tf.ErrorDiagF(err, "Could not retrieve members for administrative unit with object ID: %q", d.Id())
+			return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 		}
 
 		existingMembers := make([]string, 0)
@@ -285,7 +297,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 
 		for _, memberForRemoval := range membersForRemoval {
 			if _, err = memberClient.RemoveAdministrativeUnitMemberRef(ctx, stable.NewDirectoryAdministrativeUnitIdMemberID(administrativeUnitId, memberForRemoval), administrativeunitmember.DefaultRemoveAdministrativeUnitMemberRefOperationOptions()); err != nil {
-				return tf.ErrorDiagF(err, "Could not remove members from administrative unit with object ID: %q", d.Id())
+				return tf.ErrorDiagF(err, "Could not remove members from %s", id)
 			}
 		}
 
@@ -297,7 +309,7 @@ func administrativeUnitResourceUpdate(ctx context.Context, d *pluginsdk.Resource
 			}
 
 			if _, err = memberClient.AddAdministrativeUnitMemberRef(ctx, id, addMemberProperties, administrativeunitmember.DefaultAddAdministrativeUnitMemberRefOperationOptions()); err != nil {
-				return tf.ErrorDiagF(err, "Could not add member %q to administrative unit with object ID: %q", memberId, d.Id())
+				return tf.ErrorDiagF(err, "Could not add member %q to %s", memberId, id)
 			}
 		}
 	}
@@ -313,11 +325,11 @@ func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 	resp, err := client.GetAdministrativeUnit(ctx, id, administrativeunit.DefaultGetAdministrativeUnitOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] Administrative Unit with ID %q was not found - removing from state", d.Id())
+			log.Printf("[DEBUG] %s was not found - removing from state", id)
 			d.SetId("")
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving administrative unit with object ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
 	administrativeUnit := resp.Model
@@ -330,7 +342,7 @@ func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 
 	membersResp, err := memberClient.ListAdministrativeUnitMembers(ctx, id, administrativeunitmember.DefaultListAdministrativeUnitMembersOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, "Could not retrieve members for administrative unit with object ID: %q", d.Id())
+		return tf.ErrorDiagF(err, "Could not retrieve members for %s", id)
 	}
 
 	members := make([]string, 0)
@@ -350,15 +362,16 @@ func administrativeUnitResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 
 func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitClient
-	id := stable.NewDirectoryAdministrativeUnitID(d.Id())
+	clientBeta := meta.(*clients.Client).AdministrativeUnits.AdministrativeUnitClientBeta
+	id := beta.NewAdministrativeUnitID(d.Id())
 
-	if _, err := client.DeleteAdministrativeUnit(ctx, id, administrativeunit.DefaultDeleteAdministrativeUnitOperationOptions()); err != nil {
-		return tf.ErrorDiagF(err, "Deleting administrative unit with object ID: %q", id.AdministrativeUnitId)
+	if _, err := clientBeta.DeleteAdministrativeUnit(ctx, id, administrativeunitBeta.DefaultDeleteAdministrativeUnitOperationOptions()); err != nil {
+		return tf.ErrorDiagF(err, "Deleting %s", id)
 	}
 
 	// Wait for administrative unit object to be deleted
 	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if resp, err := client.GetAdministrativeUnit(ctx, id, administrativeunit.DefaultGetAdministrativeUnitOperationOptions()); err != nil {
+		if resp, err := client.GetAdministrativeUnit(ctx, stable.NewDirectoryAdministrativeUnitID(id.AdministrativeUnitId), administrativeunit.DefaultGetAdministrativeUnitOperationOptions()); err != nil {
 			if response.WasNotFound(resp.HttpResponse) {
 				return pointer.To(false), nil
 			}
@@ -366,7 +379,7 @@ func administrativeUnitResourceDelete(ctx context.Context, d *pluginsdk.Resource
 		}
 		return pointer.To(true), nil
 	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for deletion of administrative unit with object ID %q", id.AdministrativeUnitId)
+		return tf.ErrorDiagF(err, "Waiting for deletion of %s", id)
 	}
 
 	return nil

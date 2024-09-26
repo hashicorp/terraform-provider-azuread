@@ -684,17 +684,9 @@ func flattenApplicationApi(in *stable.ApiApplication, dataSource bool) []map[str
 	return []map[string]interface{}{{
 		"known_client_applications":      tf.FlattenStringSlicePtr(in.KnownClientApplications),
 		"mapped_claims_enabled":          mappedClaims,
-		scopesKey:                        flattenApplicationOAuth2PermissionScopes(in.OAuth2PermissionScopes),
+		scopesKey:                        applications.FlattenOAuth2PermissionScopes(in.OAuth2PermissionScopes),
 		"requested_access_token_version": accessTokenVersion,
 	}}
-}
-
-func flattenApplicationAppRoleIDs(in *[]stable.AppRole) map[string]string {
-	return applications.FlattenAppRoleIDs(in)
-}
-
-func flattenApplicationAppRoles(in *[]stable.AppRole) []map[string]interface{} {
-	return applications.FlattenAppRoles(in)
 }
 
 func flattenApplicationGroupMembershipClaims(in nullable.Type[string]) []interface{} {
@@ -719,14 +711,6 @@ func flattenApplicationImplicitGrant(in *stable.ImplicitGrantSettings) []map[str
 		"access_token_issuance_enabled": in.EnableAccessTokenIssuance.GetOrZero(),
 		"id_token_issuance_enabled":     in.EnableIdTokenIssuance.GetOrZero(),
 	}}
-}
-
-func flattenApplicationOAuth2PermissionScopeIDs(in *[]stable.PermissionScope) map[string]string {
-	return applications.FlattenOAuth2PermissionScopeIDs(in)
-}
-
-func flattenApplicationOAuth2PermissionScopes(in *[]stable.PermissionScope) []map[string]interface{} {
-	return applications.FlattenOAuth2PermissionScopes(in)
 }
 
 func flattenApplicationOptionalClaims(in *stable.OptionalClaims) []map[string]interface{} {

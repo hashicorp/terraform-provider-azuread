@@ -600,8 +600,8 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	d.SetId(id.ID())
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, true))
-	tf.Set(d, "app_roles", flattenApplicationAppRoles(app.AppRoles))
-	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
+	tf.Set(d, "app_roles", applications.FlattenAppRoles(app.AppRoles))
+	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId.GetOrZero())
 	tf.Set(d, "client_id", app.AppId.GetOrZero())
 	tf.Set(d, "device_only_auth_enabled", app.IsDeviceOnlyAuthSupported.GetOrZero())
@@ -624,7 +624,7 @@ func applicationDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, m
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permission_scope_ids", flattenApplicationOAuth2PermissionScopeIDs(app.Api.OAuth2PermissionScopes))
+		tf.Set(d, "oauth2_permission_scope_ids", applications.FlattenOAuth2PermissionScopeIDs(app.Api.OAuth2PermissionScopes))
 	}
 
 	if app.Info != nil {

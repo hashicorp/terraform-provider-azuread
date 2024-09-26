@@ -1633,8 +1633,8 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	}
 
 	tf.Set(d, "api", flattenApplicationApi(app.Api, false))
-	tf.Set(d, "app_role", flattenApplicationAppRoles(app.AppRoles))
-	tf.Set(d, "app_role_ids", flattenApplicationAppRoleIDs(app.AppRoles))
+	tf.Set(d, "app_role", applications.FlattenAppRoles(app.AppRoles))
+	tf.Set(d, "app_role_ids", applications.FlattenAppRoleIDs(app.AppRoles))
 	tf.Set(d, "application_id", app.AppId.GetOrZero())
 	tf.Set(d, "client_id", app.AppId.GetOrZero())
 	tf.Set(d, "description", app.Description.GetOrZero())
@@ -1659,7 +1659,7 @@ func applicationResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	tf.Set(d, "web", flattenApplicationWeb(app.Web))
 
 	if app.Api != nil {
-		tf.Set(d, "oauth2_permission_scope_ids", flattenApplicationOAuth2PermissionScopeIDs(app.Api.OAuth2PermissionScopes))
+		tf.Set(d, "oauth2_permission_scope_ids", applications.FlattenOAuth2PermissionScopeIDs(app.Api.OAuth2PermissionScopes))
 	}
 
 	if app.Info != nil {
