@@ -29,22 +29,17 @@ data "azuread_application_template" "example" {
   display_name = "Azure Databricks SCIM Provisioning Connector"
 }
 
-resource "azuread_application" "example" {
+resource "azuread_application_from_template" "example" {
   display_name = "example"
   template_id  = data.azuread_application_template.example.template_id
-  feature_tags {
-    enterprise = true
-    gallery    = true
-  }
 }
 
-resource "azuread_service_principal" "example" {
-  client_id    = azuread_application.example.client_id
-  use_existing = true
+data "azuread_service_principal" "example" {
+  object_id = azuread_application_from_template.example.service_principal_object_id
 }
 
 resource "azuread_synchronization_secret" "example" {
-  service_principal_id = azuread_service_principal.example.id
+  service_principal_id = data.azuread_service_principal.example.id
 
   credential {
     key   = "BaseAddress"
@@ -57,13 +52,13 @@ resource "azuread_synchronization_secret" "example" {
 }
 
 resource "azuread_synchronization_job" "example" {
-  service_principal_id = azuread_service_principal.example.id
+  service_principal_id = data.azuread_service_principal.example.id
   template_id          = "dataBricks"
   enabled              = true
 }
 
 resource "azuread_synchronization_job_provision_on_demand" "example" {
-  service_principal_id   = azuread_service_principal.example.id
+  service_principal_id   = azuread_synchronization_job.example.service_principal_id
   synchronization_job_id = azuread_synchronization_job.example.id
   parameter {
     # see specific synchronization schema for rule id https://learn.microsoft.com/en-us/graph/api/synchronization-synchronizationschema-get?view=graph-rest-beta
@@ -82,9 +77,9 @@ resource "azuread_synchronization_job_provision_on_demand" "example" {
 The following arguments are supported:
 
 
-* `synchronization_job_id` (Required) Identifier of the synchronization template this job is based on.
+* `synchronization_job_id` (Required) The ID of the synchronization job.
 * `parameter` (Required) One or more `parameter` blocks as documented below.
-* `service_principal_id` (Required) The object ID of the service principal for the synchronization job.
+* `service_principal_id` (Required) The ID of the service principal for the synchronization job.
 * `triggers` (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html). 
 
 ---

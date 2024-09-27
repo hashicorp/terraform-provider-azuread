@@ -26,7 +26,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  client_id = azuread_application.example.application_id
+  client_id = azuread_application.example.client_id
 }
 
 resource "azuread_service_principal_token_signing_certificate" "example" {
@@ -42,7 +42,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  client_id = azuread_application.example.application_id
+  client_id = azuread_application.example.client_id
 }
 
 resource "azuread_service_principal_token_signing_certificate" "example" {
@@ -61,7 +61,7 @@ The following arguments are supported:
 ~> If not specified, it will default to `CN=Microsoft Azure Federated SSO Certificate`.
 
 * `end_date` - (Optional) The end date until which the token signing certificate is valid, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`). Changing this field forces a new resource to be created.
-* `service_principal_id` - (Required) The object ID of the service principal for which this certificate should be created. Changing this field forces a new resource to be created.
+* `service_principal_id` - (Required) The ID of the service principal for which this certificate should be created. Changing this field forces a new resource to be created.
 
 ## Attributes Reference
 

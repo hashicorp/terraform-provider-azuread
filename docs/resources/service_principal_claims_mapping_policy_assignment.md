@@ -28,7 +28,7 @@ resource "azuread_service_principal_claims_mapping_policy_assignment" "app" {
 The following arguments are supported:
 
 * `claims_mapping_policy_id` - (Required) The ID of the claims mapping policy to assign.
-* `service_principal_id` - (Required) The object ID of the service principal for the policy assignment.
+* `service_principal_id` - (Required) The ID of the service principal for the policy assignment.
 
 ## Attributes Reference
 
