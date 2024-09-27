@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/migrations"
 )
 
@@ -60,11 +59,11 @@ func synchronizationJobResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this synchronization job should be created",
+				Description:  "The ID of the service principal for which this synchronization job should be created",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"template_id": {
@@ -114,12 +113,15 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 	client := meta.(*clients.Client).Synchronization.SynchronizationJobClient
 	servicePrincipalClient := meta.(*clients.Client).Synchronization.ServicePrincipalClient
 
-	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+	servicePrincipalId, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 
-	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(servicePrincipalResp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
@@ -136,7 +138,7 @@ func synchronizationJobResourceCreate(ctx context.Context, d *pluginsdk.Resource
 		TemplateId: nullable.Value(d.Get("template_id").(string)),
 	}
 
-	resp, err := client.CreateSynchronizationJob(ctx, servicePrincipalId, synchronizationJob, synchronizationjob.CreateSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
+	resp, err := client.CreateSynchronizationJob(ctx, *servicePrincipalId, synchronizationJob, synchronizationjob.CreateSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization job for %s", servicePrincipalId)
 	}
@@ -183,6 +185,8 @@ func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 		return tf.ErrorDiagPathF(err, "id", "Parsing synchronization job ID %q", d.Id())
 	}
 
+	servicePrincipalId := stable.NewServicePrincipalID(id.ServicePrincipalId)
+
 	resp, err := client.GetSynchronizationJob(ctx, *id, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
@@ -198,7 +202,7 @@ func synchronizationJobResourceRead(ctx context.Context, d *pluginsdk.ResourceDa
 		return tf.ErrorDiagF(errors.New("model was nil"), "Retrieving %s", id)
 	}
 
-	tf.Set(d, "service_principal_id", id.ServicePrincipalId)
+	tf.Set(d, "service_principal_id", servicePrincipalId.ID())
 	tf.Set(d, "schedule", flattenSynchronizationSchedule(synchronizationJob.Schedule))
 	tf.Set(d, "template_id", synchronizationJob.TemplateId.GetOrZero())
 	tf.Set(d, "enabled", pointer.From(synchronizationJob.Schedule.State) == stable.SynchronizationScheduleState_Active)
