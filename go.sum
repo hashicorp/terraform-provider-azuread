@@ -49,10 +49,10 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-azure-helpers v0.71.0 h1:ra3aIRzg01g6MLKQ+yABcb6WJtrqRUDDgyuPLmyZ9lY=
 github.com/hashicorp/go-azure-helpers v0.71.0/go.mod h1:BmbF4JDYXK5sEmFeU5hcn8Br21uElcqLfdQxjatwQKw=
-github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240923.1151247 h1:jxsVcDHnNhX+mQ0GTxk2Qd3unQKVToBfSL/7SxEd9CM=
-github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240923.1151247/go.mod h1:hhPwwY4iKyGI1HYZfkHtlXjMpsRP/iaHeJkZpO6o9Bw=
-github.com/hashicorp/go-azure-sdk/sdk v0.20240923.1151247 h1:kzNr/Oqfn72C+k9rL5/G/T3maNo1d87u1aAgjNsKOEQ=
-github.com/hashicorp/go-azure-sdk/sdk v0.20240923.1151247/go.mod h1:dMKF6bXrgGmy1d3pLzkmBpG2JIHgSAV2/OMSCEgyMwE=
+github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240927.1005214 h1:m6VCE8gYOJI3XtkVpxEtMp1HwtsYUrL8tvROINe1Q9A=
+github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240927.1005214/go.mod h1:O2eTEWXTgwu1AISomfd1JIv0r6uh3/fY5BA0yC0/tFA=
+github.com/hashicorp/go-azure-sdk/sdk v0.20240927.1005214 h1:nhYBErlMEkQIoG50GY2OZattC4+WBI/8xgZkwx/CsvY=
+github.com/hashicorp/go-azure-sdk/sdk v0.20240927.1005214/go.mod h1:dMKF6bXrgGmy1d3pLzkmBpG2JIHgSAV2/OMSCEgyMwE=
 github.com/hashicorp/go-checkpoint v0.5.0 h1:MFYpPZCnQqQTE18jFwSII6eUQrD/oxMFp3mlgcqk5mU=
 github.com/hashicorp/go-checkpoint v0.5.0/go.mod h1:7nfLNL10NsxqO4iWuW6tWW0HjZuDrwkBuEQsVcpCOgg=
 github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=

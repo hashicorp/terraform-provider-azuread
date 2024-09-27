@@ -58,6 +58,9 @@ func (c UserClient) RevokeSignInSessions(ctx context.Context, id stable.UserId, 
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
+			http.StatusNoContent,
 			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,

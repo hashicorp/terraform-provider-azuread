@@ -56,7 +56,10 @@ func (c DomainClient) CreateForceDelete(ctx context.Context, id stable.DomainId,
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,
 		OptionsObject: options,

@@ -55,6 +55,7 @@ func (c GroupClient) UpdateGroup(ctx context.Context, id beta.GroupId, input bet
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
 			http.StatusNoContent,
 			http.StatusOK,
 		},

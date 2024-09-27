@@ -56,6 +56,7 @@ func (c LogoClient) DeleteLogo(ctx context.Context, id stable.ApplicationId, opt
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: options,

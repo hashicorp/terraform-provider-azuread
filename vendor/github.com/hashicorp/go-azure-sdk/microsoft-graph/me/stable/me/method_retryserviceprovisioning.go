@@ -50,7 +50,10 @@ func (c MeClient) RetryServiceProvisioning(ctx context.Context, options RetrySer
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,
 		OptionsObject: options,
