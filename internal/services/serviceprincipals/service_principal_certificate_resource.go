@@ -46,7 +46,7 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"key_id": {
@@ -121,7 +121,11 @@ func servicePrincipalCertificateResource() *pluginsdk.Resource {
 
 func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
-	objectId := d.Get("service_principal_id").(string)
+
+	servicePrincipalId, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	credential, err := credentials.KeyCredentialForResource(d)
 	if err != nil {
@@ -129,20 +133,19 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 		if kerr, ok := err.(credentials.CredentialError); ok {
 			attr = kerr.Attr()
 		}
-		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for service principal with object ID %q", objectId)
+		return tf.ErrorDiagPathF(err, attr, "Generating certificate credentials for %s", servicePrincipalId)
 	}
 
 	if credential.KeyId == nil {
 		return tf.ErrorDiagF(errors.New("keyId for certificate credential is nil"), "Creating certificate credential")
 	}
 
-	id := parse.NewCredentialID(objectId, "certificate", credential.KeyId.GetOrZero())
-	servicePrincipalId := stable.NewServicePrincipalID(id.ObjectId)
+	id := parse.NewCredentialID(servicePrincipalId.ServicePrincipalId, "certificate", credential.KeyId.GetOrZero())
 
 	tf.LockByName(servicePrincipalResourceName, id.ObjectId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ObjectId)
 
-	resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	resp, err := client.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(resp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
@@ -170,13 +173,13 @@ func servicePrincipalCertificateResourceCreate(ctx context.Context, d *pluginsdk
 	properties := stable.ServicePrincipal{
 		KeyCredentials: &newCredentials,
 	}
-	if _, err = client.UpdateServicePrincipal(ctx, servicePrincipalId, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
+	if _, err = client.UpdateServicePrincipal(ctx, *servicePrincipalId, properties, serviceprincipal.DefaultUpdateServicePrincipalOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Adding certificate for %s", servicePrincipalId)
 	}
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		resp, err := client.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 		if err != nil {
 			return pointer.To(false), err
 		}
@@ -229,7 +232,7 @@ func servicePrincipalCertificateResourceRead(ctx context.Context, d *pluginsdk.R
 		return nil
 	}
 
-	tf.Set(d, "service_principal_id", id.ObjectId)
+	tf.Set(d, "service_principal_id", servicePrincipalId.ID())
 	tf.Set(d, "key_id", id.KeyId)
 	tf.Set(d, "type", credential.Type.GetOrZero())
 	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
