@@ -115,7 +115,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 `, data.RandomInteger)
 }
@@ -125,7 +125,7 @@ func (r ServicePrincipalPasswordResource) basic(data acceptance.TestData) string
 %[1]s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.object_id
+  service_principal_id = azuread_service_principal.test.id
 }
 `, r.template(data))
 }
@@ -135,7 +135,7 @@ func (r ServicePrincipalPasswordResource) complete(data acceptance.TestData, sta
 %[1]s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.object_id
+  service_principal_id = azuread_service_principal.test.id
   display_name         = "terraform-%[2]s"
   start_date           = "%[3]s"
   end_date             = "%[4]s"
@@ -148,7 +148,7 @@ func (r ServicePrincipalPasswordResource) relativeEndDate(data acceptance.TestDa
 %[1]s
 
 resource "azuread_service_principal_password" "test" {
-  service_principal_id = azuread_service_principal.test.object_id
+  service_principal_id = azuread_service_principal.test.id
   display_name         = "terraform-%[2]s"
   end_date_relative    = "8760h"
 }
