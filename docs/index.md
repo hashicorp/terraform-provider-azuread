@@ -32,13 +32,13 @@ data "azuread_domains" "example" {
 }
 
 # Create an application
-resource "azuread_application" "example" {
+resource "azuread_application_registration" "example" {
   display_name = "ExampleApp"
 }
 
 # Create a service principal
 resource "azuread_service_principal" "example" {
-  application_id = azuread_application.example.application_id
+  client_id = azuread_application_registration.example.client_id
 }
 
 # Create a user

@@ -45,7 +45,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  client_id = azuread_application.example.application_id
+  client_id = azuread_application.example.client_id
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "example" {
@@ -84,7 +84,7 @@ resource "azuread_application" "example" {
 }
 
 resource "azuread_service_principal" "example" {
-  client_id = azuread_application.example.application_id
+  client_id = azuread_application.example.client_id
 }
 
 resource "azuread_user" "example" {
