@@ -45,11 +45,11 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this certificate should be created",
+				Description:  "The ID of the service principal for which this certificate should be created",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"display_name": {
@@ -100,7 +100,11 @@ func servicePrincipalTokenSigningCertificateResource() *pluginsdk.Resource {
 
 func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
-	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+
+	servicePrincipalId, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	properties := serviceprincipal.AddTokenSigningCertificateRequest{}
 
@@ -115,7 +119,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 
-	resp, err := client.AddTokenSigningCertificate(ctx, servicePrincipalId, properties, serviceprincipal.DefaultAddTokenSigningCertificateOperationOptions())
+	resp, err := client.AddTokenSigningCertificate(ctx, *servicePrincipalId, properties, serviceprincipal.DefaultAddTokenSigningCertificateOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not add token signing certificate to %s", servicePrincipalId)
 	}
@@ -134,7 +138,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 		MinTimeout:                1 * time.Second,
 		ContinuousTargetOccurence: 5,
 		Refresh: func() (interface{}, string, error) {
-			resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+			resp, err := client.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 			if err != nil {
 				return nil, "Error", err
 			}
@@ -164,7 +168,7 @@ func servicePrincipalTokenSigningCertificateResourceCreate(ctx context.Context, 
 
 	// Workaround b/c the returned keyId is for the Sign key, rather than Verify key,
 	// so we need to get the Verify keyId based on the customKeyIdentifier
-	servicePrincipalResponse, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	servicePrincipalResponse, err := client.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Retrieving %s", servicePrincipalId)
 	}
@@ -220,7 +224,7 @@ func servicePrincipalTokenSigningCertificateResourceRead(ctx context.Context, d 
 		return nil
 	}
 
-	tf.Set(d, "service_principal_id", id.ObjectId)
+	tf.Set(d, "service_principal_id", servicePrincipalId.ID())
 	tf.Set(d, "key_id", id.KeyId)
 	tf.Set(d, "display_name", credential.DisplayName.GetOrZero())
 	tf.Set(d, "value", credential.Key.GetOrZero())
