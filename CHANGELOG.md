@@ -1,3 +1,17 @@
+## 3.0.1 (Unreleased)
+
+BUG FIXES:
+
+* `data.azuread_group` - fix ID parsing bugs and some crashes [GH-1499]
+* `azuread_conditional_access_policy` - fix a parsing bug for `authentication_strength_policy_id` [GH-1499]
+* `azuread_service_principal_certificate` - fix a parsing bug for `service_principal_id` [GH-1499]
+* `azuread_service_principal_claims_mapping_policy_assignment` - fix a parsing bug for `service_principal_id` [GH-1499]
+* `azuread_service_principal_password` - fix a parsing bug for `service_principal_id` [GH-1499]
+* `azuread_service_principal_token_signing_certificate` - fix a parsing bug for `service_principal_id` [GH-1499]
+* `azuread_synchronization_job` - fix a parsing bug for `service_principal_id` [GH-1499]
+* `azuread_synchronization_job_provision_on_demand` - fix parsing bugs for `service_principal_id` and `synchronization_job_id` [GH-1499]
+* `azuread_synchronization_secret` - fix a parsing bug for `service_principal_id` [GH-1499]
+
 ## 3.0.0 (September 27, 2024)
 
 NOTES:
