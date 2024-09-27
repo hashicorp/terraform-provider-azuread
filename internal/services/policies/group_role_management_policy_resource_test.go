@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -66,7 +67,13 @@ func (GroupRoleManagementPolicyResource) Exists(ctx context.Context, clients *cl
 
 	id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
 
-	policyResp, err := client.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+	policyOptions := rolemanagementpolicy.GetRoleManagementPolicyOperationOptions{
+		Expand: &odata.Expand{
+			Relationship: "*",
+		},
+	}
+
+	policyResp, err := client.GetRoleManagementPolicy(ctx, id, policyOptions)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving %s: %v", id, err)
 	}
@@ -90,32 +97,17 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  group_id = azuread_group.pam.id
+  group_id = azuread_group.pam.object_id
   role_id  = "member"
 
   eligible_assignment_rules {
-    expiration_required = false
+    expiration_required = true
+    expire_after        = "P365D"
   }
 
   active_assignment_rules {
-    expire_after = "P365D"
-  }
-
-  notification_rules {
-    eligible_assignments {
-      approver_notifications {
-        notification_level    = "Critical"
-        default_recipients    = false
-        additional_recipients = ["someone@example.com"]
-      }
-    }
-    eligible_activations {
-      assignee_notifications {
-        notification_level    = "All"
-        default_recipients    = true
-        additional_recipients = ["someone@example.com"]
-      }
-    }
+    expiration_required = true
+    expire_after        = "P180D"
   }
 }
 `, data.RandomString)
@@ -142,15 +134,17 @@ resource "azuread_group" "pam" {
 }
 
 resource "azuread_group_role_management_policy" "test" {
-  group_id = azuread_group.pam.id
+  group_id = azuread_group.pam.object_id
   role_id  = "owner"
 
   eligible_assignment_rules {
-    expiration_required = false
+    expiration_required = true
+    expire_after        = "P365D"
   }
 
   active_assignment_rules {
-    expire_after = "P90D"
+    expiration_required = true
+    expire_after        = "P90D"
   }
 
   activation_rules {

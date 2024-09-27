@@ -85,7 +85,13 @@ func (r GroupRoleManagementPolicyDataSource) Read() sdk.ResourceFunc {
 
 			id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
 
-			policyResp, err := policyClient.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+			policyOptions := rolemanagementpolicy.GetRoleManagementPolicyOperationOptions{
+				Expand: &odata.Expand{
+					Relationship: "*",
+				},
+			}
+
+			policyResp, err := policyClient.GetRoleManagementPolicy(ctx, id, policyOptions)
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %v", id, err)
 			}

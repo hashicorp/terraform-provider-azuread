@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicy"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/policies/stable/rolemanagementpolicyassignment"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
+	"github.com/hashicorp/go-azure-sdk/sdk/odata"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
@@ -362,9 +363,15 @@ func (r GroupRoleManagementPolicyResource) Create() sdk.ResourceFunc {
 
 			id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
 
-			resp, err := client.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+			options := rolemanagementpolicy.GetRoleManagementPolicyOperationOptions{
+				Expand: &odata.Expand{
+					Relationship: "*",
+				},
+			}
+
+			resp, err := client.GetRoleManagementPolicy(ctx, id, options)
 			if err != nil {
-				return fmt.Errorf("retrieving existing %s: %v", id, err)
+				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
 
 			roleManagementPolicy := resp.Model
@@ -413,7 +420,13 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 
 			id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
 
-			policyResp, err := client.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+			policyOptions := rolemanagementpolicy.GetRoleManagementPolicyOperationOptions{
+				Expand: &odata.Expand{
+					Relationship: "*",
+				},
+			}
+
+			policyResp, err := client.GetRoleManagementPolicy(ctx, id, policyOptions)
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
@@ -423,10 +436,10 @@ func (r GroupRoleManagementPolicyResource) Read() sdk.ResourceFunc {
 				return fmt.Errorf("retrieving %s: API error, model was nil", id)
 			}
 
-			options := rolemanagementpolicyassignment.ListRoleManagementPolicyAssignmentsOperationOptions{
+			assignmentOptions := rolemanagementpolicyassignment.ListRoleManagementPolicyAssignmentsOperationOptions{
 				Filter: pointer.To(fmt.Sprintf("scopeType eq 'Group' and scopeId eq '%s' and policyId eq '%s'", policyId.ScopeId, id.UnifiedRoleManagementPolicyId)),
 			}
-			resp, err := assignmentClient.ListRoleManagementPolicyAssignments(ctx, options)
+			resp, err := assignmentClient.ListRoleManagementPolicyAssignments(ctx, assignmentOptions)
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
@@ -617,7 +630,13 @@ func (r GroupRoleManagementPolicyResource) Update() sdk.ResourceFunc {
 
 			id := stable.NewPolicyRoleManagementPolicyID(policyId.ID())
 
-			policyResp, err := client.GetRoleManagementPolicy(ctx, id, rolemanagementpolicy.DefaultGetRoleManagementPolicyOperationOptions())
+			policyOptions := rolemanagementpolicy.GetRoleManagementPolicyOperationOptions{
+				Expand: &odata.Expand{
+					Relationship: "*",
+				},
+			}
+
+			policyResp, err := client.GetRoleManagementPolicy(ctx, id, policyOptions)
 			if err != nil {
 				return fmt.Errorf("retrieving %s: %v", id, err)
 			}
@@ -677,33 +696,21 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 	updatedRules := make([]stable.UnifiedRoleManagementPolicyRule, 0)
 
 	if metadata.ResourceData.HasChange("eligible_assignment_rules") {
-		rule, ok := policyRules["Expiration_Admin_Eligibility"].(stable.UnifiedRoleManagementPolicyExpirationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyExpirationRule{}
+		rule := stable.UnifiedRoleManagementPolicyExpirationRule{
+			Id:                   pointer.To("Expiration_Admin_Eligibility"),
+			IsExpirationRequired: nullable.Value(model.EligibleAssignmentRules[0].ExpirationRequired),
+			MaximumDuration:      nullable.NoZero(model.EligibleAssignmentRules[0].ExpireAfter),
 		}
 
-		expirationRequired := rule.IsExpirationRequired
-		if expirationRequired.GetOrZero() != model.EligibleAssignmentRules[0].ExpirationRequired {
-			expirationRequired = nullable.Value(model.EligibleAssignmentRules[0].ExpirationRequired)
+		if existingRule, ok := policyRules["Expiration_Admin_Eligibility"].(stable.UnifiedRoleManagementPolicyExpirationRule); ok {
+			rule.Target = existingRule.Target
 		}
-
-		maximumDuration := rule.MaximumDuration
-		if maximumDuration.GetOrZero() != model.EligibleAssignmentRules[0].ExpireAfter && model.EligibleAssignmentRules[0].ExpireAfter != "" {
-			maximumDuration = nullable.Value(model.EligibleAssignmentRules[0].ExpireAfter)
-		}
-
-		rule.IsExpirationRequired = expirationRequired
-		rule.MaximumDuration = maximumDuration
 
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("active_assignment_rules.0.require_multifactor_authentication") ||
 		metadata.ResourceData.HasChange("active_assignment_rules.0.require_justification") {
-		rule, ok := policyRules["Enablement_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyEnablementRule{}
-		}
 
 		enabledRules := make([]string, 0)
 		if model.ActiveAssignmentRules[0].RequireMultiFactorAuth {
@@ -716,77 +723,84 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 			enabledRules = append(enabledRules, "Ticketing")
 		}
 
-		rule.EnabledRules = pointer.To(enabledRules)
+		rule := stable.UnifiedRoleManagementPolicyEnablementRule{
+			Id:           pointer.To("Enablement_Admin_Assignment"),
+			EnabledRules: &enabledRules,
+		}
+
+		if existingRule, ok := policyRules["Enablement_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule); ok {
+			rule.Target = existingRule.Target
+		}
 
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("active_assignment_rules.0.expiration_required") ||
 		metadata.ResourceData.HasChange("active_assignment_rules.0.expire_after") {
-		rule, ok := policyRules["Expiration_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyExpirationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyExpirationRule{}
+
+		rule := stable.UnifiedRoleManagementPolicyExpirationRule{
+			Id:                   pointer.To("Expiration_Admin_Assignment"),
+			IsExpirationRequired: nullable.Value(model.ActiveAssignmentRules[0].ExpirationRequired),
+			MaximumDuration:      nullable.Value(model.ActiveAssignmentRules[0].ExpireAfter),
 		}
 
-		expirationRequired := rule.IsExpirationRequired
-		if expirationRequired.GetOrZero() != model.ActiveAssignmentRules[0].ExpirationRequired {
-			expirationRequired = nullable.Value(model.ActiveAssignmentRules[0].ExpirationRequired)
+		if existingRule, ok := policyRules["Expiration_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyExpirationRule); ok {
+			rule.Target = existingRule.Target
 		}
-
-		maximumDuration := rule.MaximumDuration
-		if maximumDuration.GetOrZero() != model.ActiveAssignmentRules[0].ExpireAfter && model.ActiveAssignmentRules[0].ExpireAfter != "" {
-			maximumDuration = nullable.Value(model.EligibleAssignmentRules[0].ExpireAfter)
-		}
-
-		rule.IsExpirationRequired = expirationRequired
-		rule.MaximumDuration = maximumDuration
 
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.maximum_duration") {
-		rule, ok := policyRules["Expiration_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyExpirationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyExpirationRule{}
+		rule := stable.UnifiedRoleManagementPolicyExpirationRule{
+			Id:              pointer.To("Expiration_EndUser_Assignment"),
+			MaximumDuration: nullable.Value(model.ActivationRules[0].MaximumDuration),
 		}
 
-		rule.MaximumDuration = nullable.Value(model.ActivationRules[0].MaximumDuration)
+		if existingRule, ok := policyRules["Expiration_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyExpirationRule); ok {
+			rule.Target = existingRule.Target
+		}
 
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.require_approval") ||
 		metadata.ResourceData.HasChange("activation_rules.0.approval_stage") {
-		rule, ok := policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyApprovalRule{}
+
+		rule := stable.UnifiedRoleManagementPolicyApprovalRule{
+			Id: pointer.To("Approval_EndUser_Assignment"),
+			Setting: &stable.ApprovalSettings{
+				IsApprovalRequired: nullable.Value(model.ActivationRules[0].RequireApproval),
+			},
+		}
+
+		if existingRule, ok := policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule); ok {
+			rule.Target = existingRule.Target
+
+			if existingRule.Setting != nil {
+				rule.Setting.ApprovalStages = existingRule.Setting.ApprovalStages
+			}
 		}
 
 		if model.ActivationRules[0].RequireApproval && len(model.ActivationRules[0].ApprovalStages) != 1 {
 			return nil, fmt.Errorf("require_approval is true, but no approval_stages are provided")
 		}
 
-		isApprovalRequired := rule.Setting.IsApprovalRequired.GetOrZero()
-		var approvalStages []stable.UnifiedApprovalStage
-		if isApprovalRequired != model.ActivationRules[0].RequireApproval {
-			isApprovalRequired = model.ActivationRules[0].RequireApproval
-		}
-
 		if metadata.ResourceData.HasChange("activation_rules.0.approval_stage") {
-			approvalStages = make([]stable.UnifiedApprovalStage, 0)
+			approvalStages := make([]stable.UnifiedApprovalStage, 0)
+
 			for _, stage := range model.ActivationRules[0].ApprovalStages {
 				primaryApprovers := make([]stable.SubjectSet, 0)
+
 				for _, approver := range stage.PrimaryApprovers {
 					switch approver.Type {
 					case "singleUser":
 						primaryApprovers = append(primaryApprovers, stable.SingleUser{
-							ODataType: pointer.To("#microsoft.graph.singleUser"),
-							UserId:    nullable.Value(approver.ID),
+							UserId: nullable.Value(approver.ID),
 						})
 					case "groupMembers":
 						primaryApprovers = append(primaryApprovers, stable.GroupMembers{
-							ODataType: pointer.To("#microsoft.graph.groupMembers"),
-							GroupId:   nullable.Value(approver.ID),
+							GroupId: nullable.Value(approver.ID),
 						})
 					}
 				}
@@ -795,44 +809,32 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 					PrimaryApprovers: &primaryApprovers,
 				})
 			}
-		} else {
-			approvalStages = *policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule).Setting.ApprovalStages
+
+			rule.Setting.ApprovalStages = &approvalStages
 		}
 
-		rule = stable.UnifiedRoleManagementPolicyApprovalRule{
-			Id:        policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule).Id,
-			ODataType: policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule).ODataType,
-			Target:    policyRules["Approval_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyApprovalRule).Target,
-			Setting: &stable.ApprovalSettings{
-				IsApprovalRequired: nullable.Value(isApprovalRequired),
-				ApprovalStages:     &approvalStages,
-			},
-		}
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.required_conditional_access_authentication_context") {
-		claimValue := policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule).ClaimValue
-
-		var isEnabled bool
-		if _, set := metadata.ResourceData.GetOk("activation_rules.0.required_conditional_access_authentication_context"); set {
-			isEnabled = true
-			claimValue = nullable.Value(model.ActivationRules[0].RequireConditionalAccessContext)
-		}
-
 		rule := stable.UnifiedRoleManagementPolicyAuthenticationContextRule{
-			Id:         policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule).Id,
-			ODataType:  policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule).ODataType,
-			Target:     policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule).Target,
-			IsEnabled:  nullable.Value(isEnabled),
-			ClaimValue: claimValue,
+			Id:         pointer.To("AuthenticationContext_EndUser_Assignment"),
+			IsEnabled:  nullable.Value(model.ActivationRules[0].RequireConditionalAccessContext != ""),
+			ClaimValue: nullable.NoZero(model.ActivationRules[0].RequireConditionalAccessContext),
 		}
+
+		if existingRule, ok := policyRules["AuthenticationContext_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyAuthenticationContextRule); ok {
+			rule.ClaimValue = existingRule.ClaimValue
+			rule.Target = existingRule.Target
+		}
+
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("activation_rules.0.require_multifactor_authentication") ||
 		metadata.ResourceData.HasChange("activation_rules.0.require_justification") ||
 		metadata.ResourceData.HasChange("activation_rules.0.require_ticket_info") {
+
 		enabledRules := make([]string, 0)
 		if model.ActivationRules[0].RequireMultiFactorAuth {
 			enabledRules = append(enabledRules, "MultiFactorAuthentication")
@@ -845,180 +847,122 @@ func buildPolicyForUpdate(metadata *sdk.ResourceMetaData, policy *stable.Unified
 		}
 
 		rule := stable.UnifiedRoleManagementPolicyEnablementRule{
-			Id:           policyRules["Enablement_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule).Id,
-			ODataType:    policyRules["Enablement_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule).ODataType,
-			Target:       policyRules["Enablement_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule).Target,
+			Id:           pointer.To("Enablement_EndUser_Assignment"),
 			EnabledRules: &enabledRules,
 		}
+
+		if existingRule, ok := policyRules["Enablement_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyEnablementRule); ok {
+			rule.Target = existingRule.Target
+		}
+
 		updatedRules = append(updatedRules, rule)
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.admin_notifications") {
-		rule, ok := policyRules["Notification_Admin_Admin_Eligibility"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].EligibleAssignments[0].AdminNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.admin_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Admin_Admin_Eligibility",
+			policyRules,
+			model.NotificationRules[0].EligibleAssignments[0].AdminNotifications[0],
+			"Admin",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.admin_notifications") {
-		rule, ok := policyRules["Notification_Admin_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].ActiveAssignments[0].AdminNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.admin_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Admin_Admin_Assignment",
+			policyRules,
+			model.NotificationRules[0].ActiveAssignments[0].AdminNotifications[0],
+			"Admin",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.admin_notifications") {
-		rule, ok := policyRules["Notification_Admin_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].EligibleActivations[0].AdminNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.admin_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Admin_EndUser_Assignment",
+			policyRules,
+			model.NotificationRules[0].EligibleActivations[0].AdminNotifications[0],
+			"Admin",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.approver_notifications") {
-		rule, ok := policyRules["Notification_Approver_Admin_Eligibility"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.approver_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Approver_Admin_Eligibility",
+			policyRules,
+			model.NotificationRules[0].EligibleAssignments[0].ApproverNotifications[0],
+			"Approver",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.approver_notifications") {
-		rule, ok := policyRules["Notification_Approver_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.approver_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Approver_Admin_Assignment",
+			policyRules,
+			model.NotificationRules[0].ActiveAssignments[0].ApproverNotifications[0],
+			"Approver",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.approver_notifications") {
-		rule, ok := policyRules["Notification_Approver_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
 		updatedRules = append(updatedRules,
 			expandNotificationSettings(
-				rule,
+				"Notification_Approver_EndUser_Assignment",
+				policyRules,
 				model.NotificationRules[0].EligibleActivations[0].ApproverNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.approver_notifications.0.additional_recipients"),
-			),
-		)
+				"Approver",
+			))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.assignee_notifications") {
-		rule, ok := policyRules["Notification_Requestor_Admin_Eligibility"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_assignments.0.assignee_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Requestor_Admin_Eligibility",
+			policyRules,
+			model.NotificationRules[0].EligibleAssignments[0].AssigneeNotifications[0],
+			"Requestor",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.assignee_notifications") {
-		rule, ok := policyRules["Notification_Requestor_Admin_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.active_assignments.0.assignee_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Requestor_Admin_Assignment",
+			policyRules,
+			model.NotificationRules[0].ActiveAssignments[0].AssigneeNotifications[0],
+			"Requestor",
+		))
 	}
 
 	if metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.assignee_notifications") {
-		rule, ok := policyRules["Notification_Requestor_EndUser_Assignment"].(stable.UnifiedRoleManagementPolicyNotificationRule)
-		if !ok {
-			rule = stable.UnifiedRoleManagementPolicyNotificationRule{}
-		}
-
-		updatedRules = append(updatedRules,
-			expandNotificationSettings(
-				rule,
-				model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications[0],
-				metadata.ResourceData.HasChange("notification_rules.0.eligible_activations.0.assignee_notifications.0.additional_recipients"),
-			),
-		)
+		updatedRules = append(updatedRules, expandNotificationSettings(
+			"Notification_Requestor_EndUser_Assignment",
+			policyRules,
+			model.NotificationRules[0].EligibleActivations[0].AssigneeNotifications[0],
+			"Requestor",
+		))
 	}
 
 	return &stable.UnifiedRoleManagementPolicy{
-		Id:    policy.Id,
-		Rules: pointer.To(updatedRules),
+		Id:        policy.Id,
+		Rules:     pointer.To(updatedRules),
+		ScopeId:   model.GroupId,
+		ScopeType: "Group",
 	}, nil
 }
 
-func expandNotificationSettings(rule stable.UnifiedRoleManagementPolicyNotificationRule, data GroupRoleManagementPolicyNotificationSettings, recipientChange bool) stable.UnifiedRoleManagementPolicyNotificationRule {
-	level := rule.NotificationLevel
-	defaultRecipients := rule.IsDefaultRecipientsEnabled
-	additionalRecipients := rule.NotificationRecipients
-
-	if level.GetOrZero() != data.NotificationLevel {
-		level = nullable.Value(data.NotificationLevel)
-	}
-	if defaultRecipients.GetOrZero() != data.DefaultRecipients {
-		defaultRecipients = nullable.Value(data.DefaultRecipients)
-	}
-	if recipientChange {
-		additionalRecipients = pointer.To(data.AdditionalRecipients)
+func expandNotificationSettings(ruleId string, policyRules map[string]stable.UnifiedRoleManagementPolicyRule, data GroupRoleManagementPolicyNotificationSettings, recipientType string) stable.UnifiedRoleManagementPolicyNotificationRule {
+	rule := stable.UnifiedRoleManagementPolicyNotificationRule{
+		Id:                         pointer.To(ruleId),
+		IsDefaultRecipientsEnabled: nullable.Value(data.DefaultRecipients),
+		NotificationLevel:          nullable.Value(data.NotificationLevel),
+		NotificationRecipients:     pointer.To(data.AdditionalRecipients),
+		NotificationType:           nullable.Value("Email"),
+		RecipientType:              nullable.Value(recipientType),
 	}
 
-	return stable.UnifiedRoleManagementPolicyNotificationRule{
-		Id:                         rule.Id,
-		ODataType:                  rule.ODataType,
-		Target:                     rule.Target,
-		RecipientType:              rule.RecipientType,
-		NotificationType:           rule.NotificationType,
-		NotificationLevel:          level,
-		IsDefaultRecipientsEnabled: defaultRecipients,
-		NotificationRecipients:     additionalRecipients,
+	if existingRule, ok := policyRules[ruleId].(stable.UnifiedRoleManagementPolicyNotificationRule); ok {
+		rule.Target = existingRule.Target
 	}
+
+	return rule
 }
 
 func flattenNotificationSettings(rule stable.UnifiedRoleManagementPolicyNotificationRule) GroupRoleManagementPolicyNotificationSettings {
