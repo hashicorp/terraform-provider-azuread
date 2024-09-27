@@ -58,6 +58,7 @@ func (c MemberClient) RemoveMemberRef(ctx context.Context, id stable.DirectoryRo
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: options,

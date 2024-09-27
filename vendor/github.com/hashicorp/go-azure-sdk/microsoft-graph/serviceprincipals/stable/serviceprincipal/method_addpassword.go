@@ -53,6 +53,9 @@ func (c ServicePrincipalClient) AddPassword(ctx context.Context, id stable.Servi
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
+			http.StatusNoContent,
 			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,

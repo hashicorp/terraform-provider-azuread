@@ -52,7 +52,10 @@ func (c ServicePrincipalClient) RemovePassword(ctx context.Context, id stable.Se
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,
 		OptionsObject: options,

@@ -60,6 +60,7 @@ func (c OwnerClient) RemoveOwnerRefs(ctx context.Context, id stable.ApplicationI
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: options,

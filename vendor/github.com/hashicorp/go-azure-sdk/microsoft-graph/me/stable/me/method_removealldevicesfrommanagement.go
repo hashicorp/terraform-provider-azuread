@@ -51,7 +51,10 @@ func (c MeClient) RemoveAllDevicesFromManagement(ctx context.Context, options Re
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,
 		OptionsObject: options,

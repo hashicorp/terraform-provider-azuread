@@ -59,6 +59,7 @@ func (c OAuth2PermissionGrantClient) DeleteOAuth2PermissionGrant(ctx context.Con
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodDelete,
 		OptionsObject: options,

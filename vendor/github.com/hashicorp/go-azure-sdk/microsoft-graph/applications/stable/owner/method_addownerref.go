@@ -52,7 +52,10 @@ func (c OwnerClient) AddOwnerRef(ctx context.Context, id stable.ApplicationId, i
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",
 		ExpectedStatusCodes: []int{
+			http.StatusAccepted,
+			http.StatusCreated,
 			http.StatusNoContent,
+			http.StatusOK,
 		},
 		HttpMethod:    http.MethodPost,
 		OptionsObject: options,
