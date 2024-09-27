@@ -506,7 +506,7 @@ func expandConditionalAccessGrantControls(in []interface{}) (*stable.Conditional
 			return nil, err
 		}
 		result.AuthenticationStrength = &stable.AuthenticationStrengthPolicy{
-			Id: pointer.To(policyId.ID()),
+			Id: pointer.To(policyId.AuthenticationStrengthPolicyId),
 		}
 	}
 
