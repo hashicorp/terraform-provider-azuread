@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/synchronization/migrations"
 )
 
@@ -61,7 +60,7 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"credential": {
@@ -90,7 +89,10 @@ func synchronizationSecretResource() *pluginsdk.Resource {
 func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).Synchronization.SynchronizationSecretClient
 
-	id := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+	id, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	tf.LockByName(servicePrincipalResourceName, id.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, id.ServicePrincipalId)
@@ -99,13 +101,13 @@ func synchronizationSecretResourceCreate(ctx context.Context, d *pluginsdk.Resou
 		Value: expandSynchronizationSecretKeyStringValuePair(d.Get("credential").([]interface{})),
 	}
 
-	if _, err := client.SetSynchronizationSecret(ctx, id, synchronizationSecrets, synchronizationsecret.SetSynchronizationSecretOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
+	if _, err := client.SetSynchronizationSecret(ctx, *id, synchronizationSecrets, synchronizationsecret.SetSynchronizationSecretOperationOptions{RetryFunc: synchronizationRetryFunc()}); err != nil {
 		return tf.ErrorDiagF(err, "Creating synchronization secret for %s", id)
 	}
 
 	// Wait for the secret to appear
 	if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.ListSynchronizationSecrets(ctx, id, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
+		resp, err := client.ListSynchronizationSecrets(ctx, *id, synchronizationsecret.ListSynchronizationSecretsOperationOptions{RetryFunc: synchronizationRetryFunc()})
 		if err != nil {
 			return pointer.To(false), fmt.Errorf("retrieving synchronization secret")
 		}
@@ -194,6 +196,7 @@ func synchronizationSecretResourceRead(ctx context.Context, d *pluginsdk.Resourc
 		return nil
 	}
 
+	tf.Set(d, "service_principal_id", id.ID())
 	tf.Set(d, "credential", flattenSynchronizationSecretKeyStringValuePair(synchronizationSecrets, d.Get("credential").([]interface{})))
 
 	return nil
