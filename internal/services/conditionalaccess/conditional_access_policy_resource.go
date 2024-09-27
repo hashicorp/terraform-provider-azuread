@@ -636,6 +636,21 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	}
 
 	id := stable.NewIdentityConditionalAccessPolicyID(pointer.From(policy.Id))
+
+	// Consistency check
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
+	}
+
 	d.SetId(id.ID())
 
 	return conditionalAccessPolicyResourceRead(ctx, d, meta)
