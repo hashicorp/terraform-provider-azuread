@@ -150,7 +150,7 @@ func flattenConditionalAccessGrantControls(in *stable.ConditionalAccessGrantCont
 
 	var authenticationStrengthPolicyId string
 	if in.AuthenticationStrength != nil {
-		authenticationStrengthPolicyId = pointer.From(in.AuthenticationStrength.Id)
+		authenticationStrengthPolicyId = stable.NewPolicyAuthenticationStrengthPolicyID(pointer.From(in.AuthenticationStrength.Id)).ID()
 	}
 
 	builtInControls := make([]string, 0)
