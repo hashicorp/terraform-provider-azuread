@@ -67,7 +67,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `application_ids` - A list of client IDs of the applications associated with the service principals.
 * `client_ids` - A list of client IDs of the applications associated with the service principals.
 * `display_names` - A list of display names of the applications associated with the service principals.
 * `object_ids` - The object IDs of the service principals.

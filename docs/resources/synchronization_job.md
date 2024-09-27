@@ -21,22 +21,17 @@ data "azuread_application_template" "example" {
   display_name = "Azure Databricks SCIM Provisioning Connector"
 }
 
-resource "azuread_application" "example" {
+resource "azuread_application_from_template" "example" {
   display_name = "example"
   template_id  = data.azuread_application_template.example.template_id
-  feature_tags {
-    enterprise = true
-    gallery    = true
-  }
 }
 
-resource "azuread_service_principal" "example" {
-  client_id    = azuread_application.example.application_id
-  use_existing = true
+data "azuread_service_principal" "example" {
+  object_id = azuread_application_from_template.example.service_principal_object_id
 }
 
 resource "azuread_synchronization_secret" "example" {
-  service_principal_id = azuread_service_principal.example.id
+  service_principal_id = data.azuread_service_principal.example.id
 
   credential {
     key   = "BaseAddress"
@@ -49,7 +44,7 @@ resource "azuread_synchronization_secret" "example" {
 }
 
 resource "azuread_synchronization_job" "example" {
-  service_principal_id = azuread_service_principal.example.id
+  service_principal_id = data.azuread_service_principal.example.id
   template_id          = "dataBricks"
   enabled              = true
 }
@@ -60,8 +55,8 @@ resource "azuread_synchronization_job" "example" {
 
 The following arguments are supported:
 
-* `enabled` - (Optional) Whether or not the provisioning job is enabled. Default state is `true`.
-* `service_principal_id` - (Required) The object ID of the service principal for which this synchronization job should be created. Changing this field forces a new resource to be created.
+* `enabled` - (Optional) Whether the provisioning job is enabled. Default state is `true`.
+* `service_principal_id` - (Required) The ID of the service principal for which this synchronization job should be created. Changing this field forces a new resource to be created.
 * `template_id` - (Required) Identifier of the synchronization template this job is based on.
 
 ## Attributes Reference

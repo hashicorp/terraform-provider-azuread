@@ -47,11 +47,11 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"service_principal_id": {
-				Description:  "The object ID of the service principal for which this password should be created",
+				Description:  "The ID of the service principal for which this password should be created",
 				Type:         pluginsdk.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"display_name": {
@@ -119,7 +119,11 @@ func servicePrincipalPasswordResource() *pluginsdk.Resource {
 
 func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
-	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+
+	servicePrincipalId, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	credential, err := credentials.PasswordCredentialForResource(d)
 	if err != nil {
@@ -139,7 +143,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.Re
 	properties := serviceprincipal.AddPasswordRequest{
 		PasswordCredential: credential,
 	}
-	resp, err := client.AddPassword(ctx, servicePrincipalId, properties, serviceprincipal.DefaultAddPasswordOperationOptions())
+	resp, err := client.AddPassword(ctx, *servicePrincipalId, properties, serviceprincipal.DefaultAddPasswordOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Adding password for %s", servicePrincipalId)
 	}
@@ -159,7 +163,7 @@ func servicePrincipalPasswordResourceCreate(ctx context.Context, d *pluginsdk.Re
 
 	// Wait for the credential to appear in the service principal manifest, this can take several minutes
 	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-		resp, err := client.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+		resp, err := client.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 		if err != nil {
 			return pointer.To(false), err
 		}
@@ -224,7 +228,7 @@ func servicePrincipalPasswordResourceRead(ctx context.Context, d *pluginsdk.Reso
 	}
 
 	tf.Set(d, "key_id", id.KeyId)
-	tf.Set(d, "service_principal_id", id.ObjectId)
+	tf.Set(d, "service_principal_id", servicePrincipalId.ID())
 	tf.Set(d, "start_date", credential.StartDateTime.GetOrZero())
 	tf.Set(d, "end_date", credential.EndDateTime.GetOrZero())
 

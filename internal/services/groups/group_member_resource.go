@@ -41,19 +41,19 @@ func groupMemberResource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"group_object_id": {
-				Description:      "The object ID of the group you want to add the member to",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the group you want to add the member to",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"member_object_id": {
-				Description:      "The object ID of the principal you want to add as a member to the group. Supported object types are Users, Groups or Service Principals",
-				Type:             pluginsdk.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the principal you want to add as a member to the group. Supported object types are Users, Groups or Service Principals",
+				Type:         pluginsdk.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsUUID,
 			},
 		},
 	}

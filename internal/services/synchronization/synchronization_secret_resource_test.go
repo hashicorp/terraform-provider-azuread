@@ -77,8 +77,12 @@ resource "azuread_application_from_template" "test" {
   template_id  = data.azuread_application_template.test.template_id
 }
 
+data "azuread_service_principal" "test" {
+  object_id = azuread_application_from_template.test.service_principal_object_id
+}
+
 resource "azuread_synchronization_secret" "test" {
-  service_principal_id = azuread_application_from_template.test.service_principal_object_id
+  service_principal_id = data.azuread_service_principal.test.id
 
   credential {
     key   = "BaseAddress"

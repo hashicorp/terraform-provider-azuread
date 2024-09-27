@@ -50,8 +50,12 @@ resource "azuread_application_from_template" "test" {
   template_id  = data.azuread_application_template.test.template_id
 }
 
+data "azuread_service_principal" "test" {
+  object_id = azuread_application_from_template.test.service_principal_object_id
+}
+
 resource "azuread_synchronization_job" "test" {
-  service_principal_id = azuread_application_from_template.test.service_principal_object_id
+  service_principal_id = data.azuread_service_principal.test.id
   template_id          = "dataBricks"
 }
 
@@ -67,8 +71,8 @@ func (r SynchronizationJobProvisionOnDemandResource) basic(data acceptance.TestD
 %[1]s
 
 resource "azuread_synchronization_job_provision_on_demand" "test" {
-  service_principal_id   = azuread_application_from_template.test.service_principal_object_id
-  synchronization_job_id = trimprefix(azuread_synchronization_job.test.id, "${azuread_application_from_template.test.service_principal_object_id}/job/")
+  service_principal_id   = azuread_synchronization_job.test.service_principal_id
+  synchronization_job_id = azuread_synchronization_job.test.id
 
   parameter {
     rule_id = "03f7d90d-bf71-41b1-bda6-aaf0ddbee5d8" // appears to be a global value

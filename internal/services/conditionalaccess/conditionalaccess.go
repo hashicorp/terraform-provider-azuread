@@ -150,7 +150,7 @@ func flattenConditionalAccessGrantControls(in *stable.ConditionalAccessGrantCont
 
 	var authenticationStrengthPolicyId string
 	if in.AuthenticationStrength != nil {
-		authenticationStrengthPolicyId = pointer.From(in.AuthenticationStrength.Id)
+		authenticationStrengthPolicyId = stable.NewPolicyAuthenticationStrengthPolicyID(pointer.From(in.AuthenticationStrength.Id)).ID()
 	}
 
 	builtInControls := make([]string, 0)
@@ -492,17 +492,21 @@ func expandConditionalAccessPlatforms(in []interface{}) *stable.ConditionalAcces
 	return &result
 }
 
-func expandConditionalAccessGrantControls(in []interface{}) *stable.ConditionalAccessGrantControls {
+func expandConditionalAccessGrantControls(in []interface{}) (*stable.ConditionalAccessGrantControls, error) {
 	if len(in) == 0 || in[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	result := stable.ConditionalAccessGrantControls{}
 	config := in[0].(map[string]interface{})
 
 	if id := config["authentication_strength_policy_id"].(string); id != "" {
+		policyId, err := stable.ParsePolicyAuthenticationStrengthPolicyID(id)
+		if err != nil {
+			return nil, err
+		}
 		result.AuthenticationStrength = &stable.AuthenticationStrengthPolicy{
-			Id: &id,
+			Id: pointer.To(policyId.AuthenticationStrengthPolicyId),
 		}
 	}
 
@@ -516,7 +520,7 @@ func expandConditionalAccessGrantControls(in []interface{}) *stable.ConditionalA
 	result.Operator = nullable.Value(config["operator"].(string))
 	result.TermsOfUse = tf.ExpandStringSlicePtr(config["terms_of_use"].([]interface{}))
 
-	return &result
+	return &result, nil
 }
 
 func expandConditionalAccessSessionControls(in []interface{}) *stable.ConditionalAccessSessionControls {

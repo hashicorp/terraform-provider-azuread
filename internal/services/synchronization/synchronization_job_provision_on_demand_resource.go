@@ -39,14 +39,15 @@ func synchronizationJobProvisionOnDemandResource() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsUUID,
+				ValidateFunc: stable.ValidateServicePrincipalID,
 			},
 
 			"synchronization_job_id": {
-				Description: "The identifier for the synchronization jop.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Description:  "The identifier for the synchronization jop.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: stable.ValidateServicePrincipalIdSynchronizationJobID,
 			},
 
 			"parameter": {
@@ -105,12 +106,15 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 	client := meta.(*clients.Client).ServicePrincipals.SynchronizationJobClient
 	servicePrincipalClient := meta.(*clients.Client).ServicePrincipals.ServicePrincipalClient
 
-	servicePrincipalId := stable.NewServicePrincipalID(d.Get("service_principal_id").(string))
+	servicePrincipalId, err := stable.ParseServicePrincipalID(d.Get("service_principal_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "service_principal_id", "Parsing `service_principal_id`")
+	}
 
 	tf.LockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 	defer tf.UnlockByName(servicePrincipalResourceName, servicePrincipalId.ServicePrincipalId)
 
-	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
+	servicePrincipalResp, err := servicePrincipalClient.GetServicePrincipal(ctx, *servicePrincipalId, serviceprincipal.DefaultGetServicePrincipalOperationOptions())
 	if err != nil {
 		if response.WasNotFound(servicePrincipalResp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "service_principal_id", "%s was not found", servicePrincipalId)
@@ -126,9 +130,12 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 		return tf.ErrorDiagF(errors.New("model has nil ID"), "Retrieving %s", servicePrincipalId)
 	}
 
-	jobId := stable.NewServicePrincipalIdSynchronizationJobID(servicePrincipalId.ServicePrincipalId, d.Get("synchronization_job_id").(string))
+	jobId, err := stable.ParseServicePrincipalIdSynchronizationJobID(d.Get("synchronization_job_id").(string))
+	if err != nil {
+		return tf.ErrorDiagPathF(err, "synchronization_job_id", "Parsing `synchronization_job_id`")
+	}
 
-	jobResp, err := client.GetSynchronizationJob(ctx, jobId, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
+	jobResp, err := client.GetSynchronizationJob(ctx, *jobId, synchronizationjob.GetSynchronizationJobOperationOptions{RetryFunc: synchronizationRetryFunc()})
 	if err != nil {
 		if response.WasNotFound(jobResp.HttpResponse) {
 			return tf.ErrorDiagPathF(nil, "synchronization_job_id", "%s was not found", jobId)
@@ -148,7 +155,7 @@ func synchronizationProvisionOnDemandResourceCreate(ctx context.Context, d *sche
 		Parameters: expandSynchronizationJobApplicationParameters(d.Get("parameter").([]interface{})),
 	}
 
-	if _, err = client.ProvisionSynchronizationJobOnDemand(ctx, jobId, properties, synchronizationjob.DefaultProvisionSynchronizationJobOnDemandOperationOptions()); err != nil {
+	if _, err = client.ProvisionSynchronizationJobOnDemand(ctx, *jobId, properties, synchronizationjob.DefaultProvisionSynchronizationJobOnDemandOperationOptions()); err != nil {
 		return tf.ErrorDiagF(err, "Provisioning %s", jobId)
 	}
 

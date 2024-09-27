@@ -21,22 +21,17 @@ data "azuread_application_template" "example" {
   display_name = "Azure Databricks SCIM Provisioning Connector"
 }
 
-resource "azuread_application" "example" {
+resource "azuread_application_from_template" "example" {
   display_name = "example"
   template_id  = data.azuread_application_template.example.template_id
-  feature_tags {
-    enterprise = true
-    gallery    = true
-  }
 }
 
-resource "azuread_service_principal" "example" {
-  client_id    = azuread_application.example.application_id
-  use_existing = true
+data "azuread_service_principal" "example" {
+  object_id = azuread_application_from_template.example.service_principal_object_id
 }
 
 resource "azuread_synchronization_secret" "example" {
-  service_principal_id = azuread_service_principal.example.id
+  service_principal_id = data.azuread_service_principal.example.id
 
   credential {
     key   = "BaseAddress"
@@ -55,7 +50,7 @@ resource "azuread_synchronization_secret" "example" {
 The following arguments are supported:
 
 * `credential` - (Optional) One or more `credential` blocks as documented below.
-* `service_principal_id` - (Required) The object ID of the service principal for which this synchronization secrets should be stored. Changing this field forces a new resource to be created.
+* `service_principal_id` - (Required) The ID of the service principal for which this synchronization secrets should be stored. Changing this field forces a new resource to be created.
 
 ---
 

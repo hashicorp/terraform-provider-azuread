@@ -439,7 +439,7 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							AtLeastOneOf: []string{"grant_controls.0.built_in_controls", "grant_controls.0.authentication_strength_policy_id", "grant_controls.0.terms_of_use"},
 							Type:         pluginsdk.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.IsUUID,
+							ValidateFunc: stable.ValidatePolicyAuthenticationStrengthPolicyID,
 						},
 
 						"custom_authentication_factors": {
@@ -524,6 +524,12 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 					},
 				},
 			},
+
+			"object_id": {
+				Description: "The object ID of the policy",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -592,18 +598,27 @@ func conditionalAccessPolicyDiffSuppress(k, old, new string, d *pluginsdk.Resour
 func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).ConditionalAccess.PolicyClient
 
-	properties := stable.ConditionalAccessPolicy{
-		DisplayName: pointer.To(d.Get("display_name").(string)),
-		State:       pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
-		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
-	}
+	var err error
 
+	var grantControls *stable.ConditionalAccessGrantControls
 	if v, ok := d.GetOk("grant_controls"); ok {
-		properties.GrantControls = expandConditionalAccessGrantControls(v.([]interface{}))
+		grantControls, err = expandConditionalAccessGrantControls(v.([]interface{}))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "grant_controls", "Parsing `grant_controls`")
+		}
 	}
 
+	var sessionControls *stable.ConditionalAccessSessionControls
 	if v, ok := d.GetOk("session_controls"); ok {
-		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
+		sessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
+	}
+
+	properties := stable.ConditionalAccessPolicy{
+		DisplayName:     pointer.To(d.Get("display_name").(string)),
+		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
+		GrantControls:   grantControls,
+		SessionControls: sessionControls,
 	}
 
 	resp, err := client.CreateConditionalAccessPolicy(ctx, properties, conditionalaccesspolicy.DefaultCreateConditionalAccessPolicyOperationOptions())
@@ -621,6 +636,21 @@ func conditionalAccessPolicyResourceCreate(ctx context.Context, d *pluginsdk.Res
 	}
 
 	id := stable.NewIdentityConditionalAccessPolicyID(pointer.From(policy.Id))
+
+	// Consistency check
+	if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetConditionalAccessPolicy(ctx, id, conditionalaccesspolicy.DefaultGetConditionalAccessPolicyOperationOptions())
+		if err != nil {
+			if response.WasNotFound(resp.HttpResponse) {
+				return pointer.To(false), nil
+			}
+			return pointer.To(false), err
+		}
+		return pointer.To(resp.Model != nil), nil
+	}); err != nil {
+		return tf.ErrorDiagF(err, "Waiting for creation of %s", id)
+	}
+
 	d.SetId(id.ID())
 
 	return conditionalAccessPolicyResourceRead(ctx, d, meta)
@@ -634,18 +664,25 @@ func conditionalAccessPolicyResourceUpdate(ctx context.Context, d *pluginsdk.Res
 		return tf.ErrorDiagPathF(err, "id", "Parsing Conditional Access Policy ID")
 	}
 
-	properties := stable.ConditionalAccessPolicy{
-		DisplayName: pointer.To(d.Get("display_name").(string)),
-		State:       pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
-		Conditions:  expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
-	}
-
+	var grantControls *stable.ConditionalAccessGrantControls
 	if v, ok := d.GetOk("grant_controls"); ok {
-		properties.GrantControls = expandConditionalAccessGrantControls(v.([]interface{}))
+		grantControls, err = expandConditionalAccessGrantControls(v.([]interface{}))
+		if err != nil {
+			return tf.ErrorDiagPathF(err, "grant_controls", "Parsing `grant_controls`")
+		}
 	}
 
+	var sessionControls *stable.ConditionalAccessSessionControls
 	if v, ok := d.GetOk("session_controls"); ok {
-		properties.SessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
+		sessionControls = expandConditionalAccessSessionControls(v.([]interface{}))
+	}
+
+	properties := stable.ConditionalAccessPolicy{
+		DisplayName:     pointer.To(d.Get("display_name").(string)),
+		State:           pointer.To(stable.ConditionalAccessPolicyState(d.Get("state").(string))),
+		Conditions:      expandConditionalAccessConditionSet(d.Get("conditions").([]interface{})),
+		GrantControls:   grantControls,
+		SessionControls: sessionControls,
 	}
 
 	if _, err := client.UpdateConditionalAccessPolicy(ctx, *id, properties, conditionalaccesspolicy.DefaultUpdateConditionalAccessPolicyOperationOptions()); err != nil {
@@ -713,6 +750,7 @@ func conditionalAccessPolicyResourceRead(ctx context.Context, d *pluginsdk.Resou
 		return tf.ErrorDiagF(errors.New("model was nil"), "retrieving %s", id)
 	}
 
+	tf.Set(d, "object_id", pointer.From(policy.Id))
 	tf.Set(d, "display_name", pointer.From(policy.DisplayName))
 	tf.Set(d, "state", pointer.From(policy.State))
 	tf.Set(d, "conditions", flattenConditionalAccessConditionSet(policy.Conditions))

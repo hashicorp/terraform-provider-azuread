@@ -39,8 +39,8 @@ resource "azuread_application" "example" {
     requested_access_token_version = 2
 
     known_client_applications = [
-      azuread_application.known1.application_id,
-      azuread_application.known2.application_id,
+      azuread_application.known1.client_id,
+      azuread_application.known2.client_id,
     ]
 
     oauth2_permission_scope {
@@ -246,7 +246,7 @@ The following arguments are supported:
 
 `api` block supports the following:
 
-* `known_client_applications` - (Optional) A set of application IDs (client IDs), used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
+* `known_client_applications` - (Optional) A set of client IDs, used for bundling consent if you have a solution that contains two parts: a client app and a custom web API app.
 * `mapped_claims_enabled` - (Optional) Allows an application to use claims mapping without specifying a custom signing key. Defaults to `false`.
 * `oauth2_permission_scope` - (Optional) One or more `oauth2_permission_scope` blocks as documented below, to describe delegated permissions exposed by the web API represented by this application.
 * `requested_access_token_version` - (Optional) The access token version expected by this resource. Must be one of `1` or `2`, and must be `2` when `sign_in_audience` is either `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount` Defaults to `1`.

@@ -34,12 +34,12 @@ func groupDataSource() *pluginsdk.Resource {
 
 		Schema: map[string]*pluginsdk.Schema{
 			"display_name": {
-				Description:      "The display name for the group",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "object_id", "mail_nickname"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.StringIsNotEmpty),
+				Description:  "The display name for the group",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 
 			"mail_nickname": {
@@ -51,12 +51,12 @@ func groupDataSource() *pluginsdk.Resource {
 			},
 
 			"object_id": {
-				Description:      "The object ID of the group",
-				Type:             pluginsdk.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ExactlyOneOf:     []string{"display_name", "object_id", "mail_nickname"},
-				ValidateDiagFunc: validation.ValidateDiag(validation.IsUUID),
+				Description:  "The object ID of the group",
+				Type:         pluginsdk.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"display_name", "object_id", "mail_nickname"},
+				ValidateFunc: validation.IsUUID,
 			},
 
 			"mail_enabled": {
@@ -420,19 +420,19 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 		dynamicMembership = append(dynamicMembership, map[string]interface{}{
 			"enabled": enabled,
-			"rule":    foundGroup.MembershipRule,
+			"rule":    foundGroup.MembershipRule.GetOrZero(),
 		})
 	}
 	tf.Set(d, "dynamic_membership", dynamicMembership)
 
 	if foundGroup.WritebackConfiguration != nil {
-		tf.Set(d, "writeback_enabled", foundGroup.WritebackConfiguration.IsEnabled)
-		tf.Set(d, "onpremises_group_type", foundGroup.WritebackConfiguration.OnPremisesGroupType)
+		tf.Set(d, "writeback_enabled", foundGroup.WritebackConfiguration.IsEnabled.GetOrZero())
+		tf.Set(d, "onpremises_group_type", foundGroup.WritebackConfiguration.OnPremisesGroupType.GetOrZero())
 	}
 
 	var allowExternalSenders, autoSubscribeNewMembers, hideFromAddressLists, hideFromOutlookClients bool
 	if foundGroup.GroupTypes != nil && slices.Contains(*foundGroup.GroupTypes, GroupTypeUnified) {
-		groupExtra, err := groupGetAdditional(ctx, client, beta.NewGroupID(d.Id()))
+		groupExtra, err := groupGetAdditional(ctx, client, beta.GroupId(id))
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group with object ID %q", d.Id())
 		}
@@ -460,7 +460,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	includeTransitiveMembers := d.Get("include_transitive_members").(bool)
 	var members *[]string
 	if includeTransitiveMembers {
-		resp, err := transitiveMemberClient.ListTransitiveMembers(ctx, beta.NewGroupID(d.Id()), transitivememberBeta.DefaultListTransitiveMembersOperationOptions())
+		resp, err := transitiveMemberClient.ListTransitiveMembers(ctx, beta.GroupId(id), transitivememberBeta.DefaultListTransitiveMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve transitive group members for group with object ID: %q", d.Id())
 		}
@@ -472,7 +472,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			members = &transitiveMembers
 		}
 	} else {
-		resp, err := memberClient.ListMembers(ctx, beta.NewGroupID(d.Id()), memberBeta.DefaultListMembersOperationOptions())
+		resp, err := memberClient.ListMembers(ctx, beta.GroupId(id), memberBeta.DefaultListMembersOperationOptions())
 		if err != nil {
 			return tf.ErrorDiagF(err, "Could not retrieve group members for group with object ID: %q", d.Id())
 		}
@@ -486,7 +486,7 @@ func groupDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	}
 	tf.Set(d, "members", members)
 
-	resp, err := ownerClient.ListOwners(ctx, beta.NewGroupID(d.Id()), ownerBeta.DefaultListOwnersOperationOptions())
+	resp, err := ownerClient.ListOwners(ctx, beta.GroupId(id), ownerBeta.DefaultListOwnersOperationOptions())
 	if err != nil {
 		return tf.ErrorDiagF(err, "Could not retrieve group owners for group with object ID: %q", d.Id())
 	}
