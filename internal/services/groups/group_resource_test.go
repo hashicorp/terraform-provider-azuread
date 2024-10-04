@@ -1021,7 +1021,7 @@ resource "azuread_application" "test" {
 
 resource "azuread_service_principal" "test" {
   count          = 27
-  application_id = azuread_application.test[count.index].application_id
+  client_id = azuread_application.test[count.index].client_id
 }
 
 resource "azuread_user" "test" {

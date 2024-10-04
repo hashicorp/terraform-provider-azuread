@@ -1137,7 +1137,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		existingOwners := make([]string, 0)
-		for resp.Model != nil {
+		if resp.Model != nil {
 			for _, o := range *resp.Model {
 				existingOwners = append(existingOwners, pointer.From(o.DirectoryObject().Id))
 			}
