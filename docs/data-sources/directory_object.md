@@ -37,8 +37,8 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-*`object_id` - The object ID of the directory object.
-*`type` - The shortened OData type of the directory object. Possible values include: `Group`, `User` or `ServicePrincipal`.
+* `object_id` - The object ID of the directory object.
+* `type` - The shortened OData type of the directory object. Possible values include: `Group`, `User` or `ServicePrincipal`.
 
 ## Timeouts
 
