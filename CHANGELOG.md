@@ -1,3 +1,9 @@
+## 3.0.2 (October 04, 2024)
+
+BUG FIXES:
+
+* `azuread_group` - Fix crash and memory leak  ([#1518](https://github.com/hashicorp/terraform-provider-azuread/issues/1518))
+
 ## 3.0.1 (September 27, 2024)
 
 BUG FIXES:

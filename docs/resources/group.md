@@ -197,5 +197,5 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 Groups can be imported using their object ID, e.g.
 
 ```shell
-terraform import azuread_group.my_group "/groups/00000000-0000-0000-0000-000000000000"
+terraform import azuread_group.my_group /groups/00000000-0000-0000-0000-000000000000
 ```

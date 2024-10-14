@@ -681,7 +681,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 				}
 
 				// No point in retrying if the caller wasn't specified as an owner
-				if len(ownersWithoutCallingPrincipal) == len(*properties.Owners) {
+				if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners)) {
 					log.Printf("[DEBUG] Not retrying group creation for %q as owner was not specified", displayName)
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
@@ -1095,7 +1095,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		existingMembers := make([]string, 0)
-		for resp.Model != nil {
+		if resp.Model != nil {
 			for _, m := range *resp.Model {
 				existingMembers = append(existingMembers, pointer.From(m.DirectoryObject().Id))
 			}
@@ -1137,7 +1137,7 @@ func groupResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 		}
 
 		existingOwners := make([]string, 0)
-		for resp.Model != nil {
+		if resp.Model != nil {
 			for _, o := range *resp.Model {
 				existingOwners = append(existingOwners, pointer.From(o.DirectoryObject().Id))
 			}
