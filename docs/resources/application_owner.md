@@ -26,7 +26,7 @@ resource "azuread_application_registration" "example" {
 }
 
 resource "azuread_user" "jane" {
-  user_principal_name = "jane.fischer@hashitown.com"
+  user_principal_name = "jane.fischer@example.com"
   display_name        = "Jane Fischer"
   password            = "Ch@ngeMe"
 }
