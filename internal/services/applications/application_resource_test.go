@@ -781,10 +781,10 @@ resource "azuread_application" "test" {
   notes                        = "Testing application"
   service_management_reference = "app-for-testing"
 
-  marketing_url         = "https://hashitown-%[1]d.com/"
-  privacy_statement_url = "https://hashitown-%[1]d.com/privacy"
-  support_url           = "https://support.hashitown-%[1]d.com/"
-  terms_of_service_url  = "https://hashitown-%[1]d.com/terms"
+  marketing_url         = "https://hashitown.example.com-%[1]d.com/"
+  privacy_statement_url = "https://hashitown.example.com-%[1]d.com/privacy"
+  support_url           = "https://support.hashitown.example.com-%[1]d.com/"
+  terms_of_service_url  = "https://hashitown.example.com-%[1]d.com/terms"
 
   api {
     mapped_claims_enabled          = true
@@ -896,7 +896,7 @@ resource "azuread_application" "test" {
 
   single_page_application {
     redirect_uris = [
-      "https://beta.hashitown-%[1]d.com/",
+      "https://beta.hashitown.example.com-%[1]d.com/",
     ]
   }
 
@@ -908,12 +908,12 @@ resource "azuread_application" "test" {
   ]
 
   web {
-    homepage_url = "https://app.hashitown-%[1]d.com/"
-    logout_url   = "https://app.hashitown-%[1]d.com/logout"
+    homepage_url = "https://app.hashitown.example.com-%[1]d.com/"
+    logout_url   = "https://app.hashitown.example.com-%[1]d.com/logout"
 
     redirect_uris = [
-      "https://app.hashitown-%[1]d.com/",
-      "https://classic.hashitown-%[1]d.com/",
+      "https://app.hashitown.example.com-%[1]d.com/",
+      "https://classic.hashitown.example.com-%[1]d.com/",
       "urn:ietf:wg:oauth:2.0:oob",
     ]
 
