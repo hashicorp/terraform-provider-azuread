@@ -242,7 +242,7 @@ func (r ApplicationRegistrationResource) Create() sdk.ResourceFunc {
 
 			resp, err := client.CreateApplication(ctx, properties, application.DefaultCreateApplicationOperationOptions())
 			if err != nil {
-				return fmt.Errorf("creating applicatoin: %+v", err)
+				return fmt.Errorf("creating application: %+v", err)
 			}
 
 			app := resp.Model
