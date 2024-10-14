@@ -84,8 +84,8 @@ func (ApplicationDataSource) testCheck(data acceptance.TestData) acceptance.Test
 		check.That(data.ResourceName).Key("required_resource_access.#").HasValue("2"),
 		check.That(data.ResourceName).Key("sign_in_audience").HasValue("AzureADandPersonalMicrosoftAccount"),
 		check.That(data.ResourceName).Key("tags.#").HasValue("4"),
-		check.That(data.ResourceName).Key("web.0.homepage_url").HasValue(fmt.Sprintf("https://app.hashitown-%d.com/", data.RandomInteger)),
-		check.That(data.ResourceName).Key("web.0.logout_url").HasValue(fmt.Sprintf("https://app.hashitown-%[1]d.com/logout", data.RandomInteger)),
+		check.That(data.ResourceName).Key("web.0.homepage_url").HasValue(fmt.Sprintf("https://app.hashitown.example.com-%d.com/", data.RandomInteger)),
+		check.That(data.ResourceName).Key("web.0.logout_url").HasValue(fmt.Sprintf("https://app.hashitown.example.com-%[1]d.com/logout", data.RandomInteger)),
 		check.That(data.ResourceName).Key("web.0.redirect_uris.#").HasValue("3"),
 	)
 }

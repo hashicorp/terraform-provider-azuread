@@ -188,8 +188,8 @@ resource "azuread_application_redirect_uris" "test" {
   type           = "SPA"
 
   redirect_uris = [
-    "https://mobile.hashitown-%[1]d.com/",
-    "https://beta.hashitown-%[1]d.com/",
+    "https://mobile.hashitown.example.com-%[1]d.com/",
+    "https://beta.hashitown.example.com-%[1]d.com/",
   ]
 }
 `, data.RandomInteger)
@@ -208,8 +208,8 @@ resource "azuread_application_redirect_uris" "test" {
   type           = "Web"
 
   redirect_uris = [
-    "https://app.hashitown-%[1]d.com/",
-    "https://classic.hashitown-%[1]d.com/",
+    "https://app.hashitown.example.com-%[1]d.com/",
+    "https://classic.hashitown.example.com-%[1]d.com/",
     "urn:ietf:wg:oauth:2.0:oob",
   ]
 }
@@ -243,8 +243,8 @@ resource "azuread_application_redirect_uris" "test_spa" {
   type           = "SPA"
 
   redirect_uris = [
-    "https://mobile.hashitown-%[1]d.com/",
-    "https://beta.hashitown-%[1]d.com/",
+    "https://mobile.hashitown.example.com-%[1]d.com/",
+    "https://beta.hashitown.example.com-%[1]d.com/",
   ]
 }
 
@@ -253,8 +253,8 @@ resource "azuread_application_redirect_uris" "test_web" {
   type           = "Web"
 
   redirect_uris = [
-    "https://app.hashitown-%[1]d.com/",
-    "https://classic.hashitown-%[1]d.com/",
+    "https://app.hashitown.example.com-%[1]d.com/",
+    "https://classic.hashitown.example.com-%[1]d.com/",
     "urn:ietf:wg:oauth:2.0:oob",
   ]
 }

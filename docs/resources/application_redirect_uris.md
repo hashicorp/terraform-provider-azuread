@@ -44,8 +44,8 @@ resource "azuread_application_redirect_uris" "example_spa" {
   type           = "SPA"
 
   redirect_uris = [
-    "https://mobile.hashitown.com/",
-    "https://beta.hashitown.com/",
+    "https://mobile.example.com/",
+    "https://beta.example.com/",
   ]
 }
 
@@ -54,8 +54,8 @@ resource "azuread_application_redirect_uris" "example_web" {
   type           = "Web"
 
   redirect_uris = [
-    "https://app.hashitown.com/",
-    "https://classic.hashitown.com/",
+    "https://app.example.com/",
+    "https://classic.example.com/",
     "urn:ietf:wg:oauth:2.0:oob",
   ]
 }

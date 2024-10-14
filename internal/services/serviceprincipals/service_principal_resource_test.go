@@ -431,8 +431,8 @@ resource "azuread_service_principal" "test" {
   preferred_single_sign_on_mode = "saml"
 
   notification_email_addresses = [
-    "alerts.internal@hashitown.net",
-    "cto@hashitown.net",
+    "alerts.internal@hashitown.example.com.net",
+    "cto@hashitown.example.com.net",
   ]
 
   saml_single_sign_on {
@@ -472,8 +472,8 @@ resource "azuread_service_principal" "test" {
   }
 
   notification_email_addresses = [
-    "alerts.internal@hashitown.net",
-    "cto@hashitown.net",
+    "alerts.internal@hashitown.example.com.net",
+    "cto@hashitown.example.com.net",
   ]
 
   saml_single_sign_on {
@@ -506,8 +506,8 @@ resource "azuread_service_principal" "test" {
   }
 
   notification_email_addresses = [
-    "alerts.internal@hashitown.net",
-    "cto@hashitown.net",
+    "alerts.internal@hashitown.example.com.net",
+    "cto@hashitown.example.com.net",
   ]
 }
 `, r.templateComplete(data), data.RandomInteger)

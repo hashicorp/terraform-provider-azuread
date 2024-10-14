@@ -120,9 +120,9 @@ func (r ApplicationFederatedIdentityCredentialResource) basic(data acceptance.Te
 
 resource "azuread_application_federated_identity_credential" "test" {
   application_id = azuread_application.test.id
-  display_name   = "hashitown-%[2]s"
+  display_name   = "hashitown.example.com-%[2]s"
   audiences      = ["api://HashiTownLikesAzureAD"]
-  issuer         = "https://tokens.hashitown.net"
+  issuer         = "https://tokens.hashitown.example.com.net"
   subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.RandomID)
@@ -134,10 +134,10 @@ func (r ApplicationFederatedIdentityCredentialResource) complete(data acceptance
 
 resource "azuread_application_federated_identity_credential" "test" {
   application_id = azuread_application.test.id
-  display_name   = "hashitown-%[2]s"
+  display_name   = "hashitown.example.com-%[2]s"
   description    = "Funtime tokens for HashiTown"
   audiences      = ["api://HashiTownLikesAzureAD"]
-  issuer         = "https://vending.hashitown.net"
+  issuer         = "https://vending.hashitown.example.com.net"
   subject        = "%[3]s"
 }
 `, r.template(data), data.RandomString, data.UUID())
