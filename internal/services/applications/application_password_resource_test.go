@@ -202,8 +202,6 @@ resource "azuread_application_password" "test" {
 
 func (r ApplicationPasswordResource) passwordsCombined(data acceptance.TestData, renderPassword bool) string {
 	return fmt.Sprintf(`
-#provider "azuread" {}
-
 data "azuread_client_config" "current" {}
 
 resource "azuread_application" "test" {
@@ -218,9 +216,6 @@ resource "azuread_application_password" "test" {
   display_name   = "acctest-application-password-%[2]s"
 }
 
-
-
-
 `, data.RandomInteger, data.RandomString, r.applicationPassword(data.RandomString, renderPassword))
 }
 
@@ -234,5 +229,4 @@ func (r ApplicationPasswordResource) applicationPassword(randomString string, re
 	}
 
 	return ""
-
 }
