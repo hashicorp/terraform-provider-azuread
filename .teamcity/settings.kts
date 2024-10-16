@@ -18,4 +18,3 @@ var vcsRootId = DslContext.getParameter("vcsRootId", "TF_HashiCorp_AzureAD_Repos
 var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId, vcsRootId)
 
 project(AzureAD(environment, clientConfig))
-":
