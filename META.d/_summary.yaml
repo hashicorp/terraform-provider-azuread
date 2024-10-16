@@ -9,6 +9,6 @@ partition: tf-ecosystem
 summary:
   owner: team-terraform-azure
   description: |
-    The Terraform AzureRN provider is a plugin that enables Terraform to manage AzureRM resources.
+    The Terraform AzureAD provider is a plugin that enables Terraform to manage Azure AD/Graph resources.
 
   visibility: external
