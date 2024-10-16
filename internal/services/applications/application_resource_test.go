@@ -1580,8 +1580,8 @@ resource "azuread_application" "owner" {
 }
 
 resource "azuread_service_principal" "owner" {
-  count          = 27
-  application_id = azuread_application.owner[count.index].application_id
+  count     = 27
+  client_id = azuread_application.owner[count.index].client_id
 }
 
 resource "azuread_user" "owner" {
