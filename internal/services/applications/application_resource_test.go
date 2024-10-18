@@ -662,6 +662,41 @@ func TestAccApplication_passwordNotSet(t *testing.T) {
 	})
 }
 
+func TestAccApplication_PasswordSetAndRemove(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_application", "test")
+	startDate := time.Now().AddDate(0, 0, 7).UTC().Format(time.RFC3339)
+	endDate := time.Now().AddDate(0, 5, 27).UTC().Format(time.RFC3339)
+	r := ApplicationResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.passwordComplete(data, startDate, endDate),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password.#").HasValue("1"),
+				check.That(data.ResourceName).Key("password.0.key_id").Exists(),
+				check.That(data.ResourceName).Key("password.0.value").Exists(),
+				check.That(data.ResourceName).Key("password.0.start_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.end_date").Exists(),
+				check.That(data.ResourceName).Key("password.0.display_name").HasValue(fmt.Sprintf("acctest-appPasswordComplete-%d", data.RandomInteger)),
+			),
+		},
+		{
+			Config: r.passwordRemoved(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		{
+			RefreshState: true,
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("password.#").HasValue("0"),
+			),
+		},
+	})
+}
+
 func (r ApplicationResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.Applications.ApplicationClient
 
@@ -1698,4 +1733,17 @@ resource "azuread_application" "test" {
   }
 }
 `, data.RandomInteger, startDate, endDate)
+}
+
+func (r ApplicationResource) passwordRemoved(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+data "azuread_client_config" "current" {}
+
+resource "azuread_application" "test" {
+  display_name = "acctest-APP-%[1]d"
+  owners       = [data.azuread_client_config.current.object_id]
+}
+`, data.RandomInteger)
 }
