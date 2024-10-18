@@ -1,3 +1,8 @@
+## 3.1.0 (Unreleased)
+
+* `azuread_application` - the `password` block can now correctly be removed
+
+
 ## 3.0.2 (October 04, 2024)
 
 BUG FIXES:
