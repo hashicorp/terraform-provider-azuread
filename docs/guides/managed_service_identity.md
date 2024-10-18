@@ -43,7 +43,7 @@ resource "azurerm_linux_virtual_machine" "management_host" {
 
   # ...
 
-  identity = {
+  identity {
     type = "SystemAssigned"
   }
 }
