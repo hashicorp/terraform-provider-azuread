@@ -5,7 +5,6 @@ package groups
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	groupBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/group"
 	memberBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/member"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
@@ -107,7 +105,7 @@ func groupMemberResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, m
 }
 
 func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
-	client := meta.(*clients.Client).Groups.GroupMemberClientBeta
+	//client := meta.(*clients.Client).Groups.GroupMemberClientBeta
 
 	resourceId, err := parse.GroupMemberID(d.Id())
 	if err != nil {
@@ -115,13 +113,13 @@ func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	}
 	id := beta.NewGroupIdMemberID(resourceId.GroupId, resourceId.MemberId)
 
-	if member, err := groupGetMember(ctx, client, id); err != nil {
-		return tf.ErrorDiagF(err, "Retrieving member %q for group with object ID: %q", id.DirectoryObjectId, id.GroupId)
-	} else if member == nil {
-		log.Printf("[DEBUG] %s - removing from state", id)
-		d.SetId("")
-		return nil
-	}
+	// if member, err := groupGetMember(ctx, client, id); err != nil {
+	// 	return tf.ErrorDiagF(err, "Retrieving member %q for group with object ID: %q", id.DirectoryObjectId, id.GroupId)
+	// } else if member == nil {
+	// 	log.Printf("[DEBUG] %s - removing from state", id)
+	// 	d.SetId("")
+	// 	return nil
+	// }
 
 	tf.Set(d, "group_object_id", id.GroupId)
 	tf.Set(d, "member_object_id", id.DirectoryObjectId)
@@ -146,16 +144,16 @@ func groupMemberResourceDelete(ctx context.Context, d *pluginsdk.ResourceData, m
 	}
 
 	// Wait for membership link to be deleted
-	if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
-		if member, err := groupGetMember(ctx, client, id); err != nil {
-			return nil, err
-		} else if member == nil {
-			return pointer.To(false), nil
-		}
-		return pointer.To(true), nil
-	}); err != nil {
-		return tf.ErrorDiagF(err, "Waiting for removal of %s", id)
-	}
+	// if err := consistency.WaitForDeletion(ctx, func(ctx context.Context) (*bool, error) {
+	// 	if member, err := groupGetMember(ctx, client, id); err != nil {
+	// 		return nil, err
+	// 	} else if member == nil {
+	// 		return pointer.To(false), nil
+	// 	}
+	// 	return pointer.To(true), nil
+	// }); err != nil {
+	// 	return tf.ErrorDiagF(err, "Waiting for removal of %s", id)
+	// }
 
 	return nil
 }
