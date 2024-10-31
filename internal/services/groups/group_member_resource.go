@@ -120,6 +120,7 @@ func groupMemberResourceRead(ctx context.Context, d *pluginsdk.ResourceData, met
 	// 	d.SetId("")
 	// 	return nil
 	// }
+	// This is a test
 
 	tf.Set(d, "group_object_id", id.GroupId)
 	tf.Set(d, "member_object_id", id.DirectoryObjectId)
