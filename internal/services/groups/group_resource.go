@@ -27,7 +27,6 @@ import (
 	ownerBeta "github.com/hashicorp/go-azure-sdk/microsoft-graph/groups/beta/owner"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
-	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/consistency"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf"
@@ -718,14 +717,9 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 	id := beta.NewGroupID(groupObjectId)
 	d.SetId(id.ID())
 
-	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet, then set it back to the desired value.
+	// Attempt to patch the newly created group and set the display name, which will tell us whether it exists yet.
 	// The SDK handles retries for us here in the event of 404, 429 or 5xx, then returns after giving up.
-	uid, err := uuid.GenerateUUID()
-	if err != nil {
-		return tf.ErrorDiagF(err, "Failed to generate a UUID")
-	}
-	tempDisplayName := fmt.Sprintf("TERRAFORM_UPDATE_%s", uid)
-	for _, displayNameToSet := range []string{tempDisplayName, displayName} {
+	for _, displayNameToSet := range []string{displayName} {
 		updateOptions := groupBeta.UpdateGroupOperationOptions{
 			RetryFunc: func(resp *http.Response, o *odata.OData) (bool, error) {
 				return response.WasNotFound(resp), nil
@@ -806,7 +800,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// AllowExternalSenders can only be set in its own PATCH request; including other properties returns a 400
 		if allowExternalSenders, ok := d.GetOkExists("external_senders_allowed"); ok { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err := client.UpdateGroup(ctx, id, beta.Group{
 				AllowExternalSenders: nullable.Value(allowExternalSenders.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `external_senders_allowed` for %s", id)
@@ -826,14 +820,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// AutoSubscribeNewMembers can only be set in its own PATCH request; including other properties returns a 400
 		if autoSubscribeNewMembers, ok := d.GetOkExists("auto_subscribe_new_members"); ok { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err := client.UpdateGroup(ctx, id, beta.Group{
 				AutoSubscribeNewMembers: nullable.Value(autoSubscribeNewMembers.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `auto_subscribe_new_members` for %s", id)
 			}
 
 			// Wait for AutoSubscribeNewMembers to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -846,14 +840,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// HideFromAddressLists can only be set in its own PATCH request; including other properties returns a 400
 		if hideFromAddressList, ok := d.GetOkExists("hide_from_address_lists"); ok { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err := client.UpdateGroup(ctx, id, beta.Group{
 				HideFromAddressLists: nullable.Value(hideFromAddressList.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `hide_from_address_lists` for %s", id)
 			}
 
 			// Wait for HideFromAddressLists to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -866,14 +860,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 		// HideFromOutlookClients can only be set in its own PATCH request; including other properties returns a 400
 		if hideFromOutlookClients, ok := d.GetOkExists("hide_from_outlook_clients"); ok { //nolint:staticcheck
-			if _, err = client.UpdateGroup(ctx, id, beta.Group{
+			if _, err := client.UpdateGroup(ctx, id, beta.Group{
 				HideFromOutlookClients: nullable.Value(hideFromOutlookClients.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
 				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `hide_from_outlook_clients` for %s", id)
 			}
 
 			// Wait for HideFromOutlookClients to be updated
-			if err = consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
+			if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
 				groupExtra, err := groupGetAdditional(ctx, client, id)
 				if err != nil {
 					return nil, err
@@ -887,7 +881,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 
 	// Add any remaining owners after the group is created
 	for _, o := range ownersExtra {
-		if _, err = ownerClient.AddOwnerRef(ctx, id, o, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
+		if _, err := ownerClient.AddOwnerRef(ctx, id, o, ownerBeta.DefaultAddOwnerRefOperationOptions()); err != nil {
 			return tf.ErrorDiagF(err, "Could not add owners to %s", id)
 		}
 	}
@@ -898,7 +892,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			ref := beta.ReferenceCreate{
 				ODataId: pointer.To(client.Client.BaseUri + beta.NewDirectoryObjectID(memberId.(string)).ID()),
 			}
-			if _, err = memberClient.AddMemberRef(ctx, id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
+			if _, err := memberClient.AddMemberRef(ctx, id, ref, memberBeta.DefaultAddMemberRefOperationOptions()); err != nil {
 				return tf.ErrorDiagF(err, "Could not add members to group with object ID: %q", d.Id())
 			}
 		}
