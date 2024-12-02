@@ -113,10 +113,10 @@ func expandApprovalSettings(input []interface{}) (*beta.ApprovalSettings, error)
 				stage.PrimaryApprovers = primaryApprovers
 			}
 
-			if _, ok := v["escalation_approver"]; ok {
-				escalationApprovers, err := expandUserSets(v["escalation_approver"].([]interface{}))
+			if _, ok := v["alternative_approver"]; ok {
+				escalationApprovers, err := expandUserSets(v["alternative_approver"].([]interface{}))
 				if err != nil {
-					return nil, fmt.Errorf("building `escalation_approver`: %v", err)
+					return nil, fmt.Errorf("building `alternative_approver`: %v", err)
 				}
 				stage.EscalationApprovers = escalationApprovers
 			}
