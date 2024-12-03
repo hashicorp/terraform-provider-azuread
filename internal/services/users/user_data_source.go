@@ -150,6 +150,12 @@ func userDataSource() *pluginsdk.Resource {
 				Computed:    true,
 			},
 
+			"employee_hire_date": {
+				Description: "The hire date of the user, formatted as an RFC3339 date string (e.g. `2018-01-01T01:02:03Z`).",
+				Type:        pluginsdk.TypeString,
+				Computed:    true,
+			},
+
 			"employee_type": {
 				Description: "Captures enterprise worker type. For example, Employee, Contractor, Consultant, or Vendor.",
 				Type:        pluginsdk.TypeString,
@@ -452,6 +458,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 			"creationType",
 			"department",
 			"displayName",
+			"employeeHireDate",
 			"employeeId",
 			"employeeOrgData",
 			"employeeType",
@@ -509,6 +516,7 @@ func userDataSourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta int
 	tf.Set(d, "creation_type", u.CreationType.GetOrZero())
 	tf.Set(d, "department", u.Department.GetOrZero())
 	tf.Set(d, "display_name", u.DisplayName.GetOrZero())
+	tf.Set(d, "employee_hire_date", u.EmployeeHireDate.GetOrZero())
 	tf.Set(d, "employee_id", u.EmployeeId.GetOrZero())
 	tf.Set(d, "employee_type", u.EmployeeType.GetOrZero())
 	tf.Set(d, "external_user_state", u.ExternalUserState.GetOrZero())

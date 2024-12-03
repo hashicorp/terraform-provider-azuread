@@ -117,6 +117,7 @@ func (UserDataSource) testCheckFunc(data acceptance.TestData) acceptance.TestChe
 		check.That(data.ResourceName).Key("country").HasValue(fmt.Sprintf("acctestUser-%d-Country", data.RandomInteger)),
 		check.That(data.ResourceName).Key("department").HasValue(fmt.Sprintf("acctestUser-%d-Dept", data.RandomInteger)),
 		check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctestUser-%d-DisplayName", data.RandomInteger)),
+		check.That(data.ResourceName).Key("employee_hire_date").HasValue("2018-01-01T01:02:03Z"),
 		check.That(data.ResourceName).Key("given_name").HasValue(fmt.Sprintf("acctestUser-%d-GivenName", data.RandomInteger)),
 		check.That(data.ResourceName).Key("job_title").HasValue(fmt.Sprintf("acctestUser-%d-Job", data.RandomInteger)),
 		// check.That(data.ResourceName).Key("mail").Exists(), // TODO only set for O365 domains
