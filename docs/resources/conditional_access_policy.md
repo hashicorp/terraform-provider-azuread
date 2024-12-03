@@ -175,8 +175,17 @@ The following arguments are supported:
 `applications` block supports the following:
 
 * `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`.
-* `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Cannot be specified with `included_user_actions`. One of `included_applications` or `included_user_actions` must be specified.
-* `included_user_actions` - (Optional) A list of user actions to include. Supported values are `urn:user:registerdevice` and `urn:user:registersecurityinfo`. Cannot be specified with `included_applications`. One of `included_applications` or `included_user_actions` must be specified.
+* `filter` - (Optional) A `filter` block as described below.
+* `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Cannot be specified with `included_user_actions`. One of `included_applications`, `included_user_actions` or `included_authentication_context_class_references` must be specified.
+* `included_authentication_context_class_references` - (Optional) A list of authentication context class reference to include. Supported values are `c1` through `c99`.
+* `included_user_actions` - (Optional) A list of user actions to include. Supported values are `urn:user:registerdevice` and `urn:user:registersecurityinfo`. Cannot be specified with `included_applications`. One of `included_applications`, `included_user_actions` or `included_authentication_context_class_references` must be specified.
+
+---
+
+`filter` block supports the following:
+
+* `mode` - (Required) Whether to include in, or exclude from, matching applications from the policy. Supported values are `include` or `exclude`.
+* `rule` - (Required) Condition filter to match applications. For more information, see [official documentation](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-filter-for-applications).
 
 ---
 
