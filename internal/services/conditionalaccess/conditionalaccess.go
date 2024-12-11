@@ -278,10 +278,16 @@ func flattenCountryNamedLocation(in *stable.CountryNamedLocation) []interface{} 
 		includeUnknown = *in.IncludeUnknownCountriesAndRegions
 	}
 
+	countryLookupMethod := stable.CountryLookupMethodType_ClientIPAddress
+	if in.CountryLookupMethod != nil {
+		countryLookupMethod = *in.CountryLookupMethod
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"countries_and_regions":                 tf.FlattenStringSlice(in.CountriesAndRegions),
 			"include_unknown_countries_and_regions": includeUnknown,
+			"country_lookup_method":                 countryLookupMethod,
 		},
 	}
 }
@@ -658,6 +664,10 @@ func expandCountryNamedLocation(in []interface{}) *stable.CountryNamedLocation {
 
 	result.CountriesAndRegions = tf.ExpandStringSlice(countriesAndRegions)
 	result.IncludeUnknownCountriesAndRegions = pointer.To(includeUnknown.(bool))
+
+	if countryLookupMethodType, ok := config["country_lookup_method"]; ok && countryLookupMethodType.(string) != "" {
+		result.CountryLookupMethod = pointer.To(stable.CountryLookupMethodType(countryLookupMethodType.(string)))
+	}
 
 	return &result
 }
