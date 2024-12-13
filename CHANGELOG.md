@@ -1,5 +1,11 @@
 ## 3.1.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* dependencies - update `golang.org/x/crypto` to `0.31.0`
+
+BUG FIXES:
+
 * `azuread_application` - the `password` block can now correctly be removed
 
 
