@@ -674,14 +674,14 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			if response.WasBadRequest(resp.HttpResponse) && regexp.MustCompile(groupDuplicateValueError).MatchString(err.Error()) {
 				// Retry the group creation, without the calling principal as owner
 				ownersWithoutCallingPrincipal := make([]string, 0)
-				for _, o := range *properties.Owners_ODataBind {
+				for _, o := range pointer.From(properties.Owners_ODataBind) {
 					if o != callerODataId {
 						ownersWithoutCallingPrincipal = append(ownersWithoutCallingPrincipal, o)
 					}
 				}
 
 				// No point in retrying if the caller wasn't specified as an owner
-				if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners)) {
+				if len(ownersWithoutCallingPrincipal) == len(pointer.From(properties.Owners_ODataBind)) {
 					log.Printf("[DEBUG] Not retrying group creation for %q as owner was not specified", displayName)
 					return tf.ErrorDiagF(err, "Creating group %q", displayName)
 				}
