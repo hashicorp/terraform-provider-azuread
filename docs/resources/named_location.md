@@ -58,6 +58,7 @@ The following arguments are supported:
 
 * `countries_and_regions` - (Required) List of countries and/or regions in two-letter format specified by ISO 3166-2. 
 * `include_unknown_countries_and_regions` - (Optional) Whether IP addresses that don't map to a country or region should be included in the named location. Defaults to `false`.
+* `country_lookup_method` - (Optional) Method of detecting country the user is located in. Possible values are `clientIpAddress` for IP-based location and `authenticatorAppGps` for Authenticator app GPS-based location.  Defaults to `clientIpAddress`.
 
 ---
 

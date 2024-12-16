@@ -110,6 +110,13 @@ func namedLocationResource() *pluginsdk.Resource {
 							Type:     pluginsdk.TypeBool,
 							Optional: true,
 						},
+
+						"country_lookup_method": {
+							Type:         pluginsdk.TypeString,
+							Default:      stable.CountryLookupMethodType_ClientIPAddress,
+							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForCountryLookupMethodType(), false),
+							Optional:     true,
+						},
 					},
 				},
 			},
