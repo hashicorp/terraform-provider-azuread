@@ -27,7 +27,7 @@ func NewAccessPackageResourceCatalogAssociationID(catalogId, originId string) Ac
 }
 
 func AccessPackageResourceCatalogAssociationID(idString string) (*AccessPackageResourceCatalogAssociationId, error) {
-	parts := strings.Split(idString, "/")
+	parts := strings.SplitN(idString, "/", 2)
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("ID should be in the format {catalogId}/{originId} - but got %q", idString)
 	}
