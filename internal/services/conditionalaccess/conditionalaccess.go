@@ -649,18 +649,23 @@ func expandExternalTenants(in []interface{}) stable.ConditionalAccessExternalTen
 		return nil
 	}
 
-	result := stable.BaseConditionalAccessExternalTenantsImpl{}
-
 	config := in[0].(map[string]interface{})
 
 	members := config["members"].([]interface{})
+	membershipKind := stable.ConditionalAccessExternalTenantsMembershipKind(config["membership_kind"].(string))
 
-	result.MembershipKind = pointer.To(stable.ConditionalAccessExternalTenantsMembershipKind(config["membership_kind"].(string)))
+	// only membership_kind enumerated is allowed to have members field set
+	if membershipKind == stable.ConditionalAccessExternalTenantsMembershipKind_Enumerated {
+		result := stable.ConditionalAccessEnumeratedExternalTenants{}
 
-	// only membership_kind enumerated is allowed to have members field set, so we omit setting an empty array when no members configured
-	if len(members) > 0 {
+		result.MembershipKind = pointer.To(membershipKind)
 		result.Members = tf.ExpandStringSlicePtr(members)
+
+		return &result
 	}
+
+	result := stable.BaseConditionalAccessExternalTenantsImpl{}
+	result.MembershipKind = pointer.To(membershipKind)
 
 	return &result
 }
