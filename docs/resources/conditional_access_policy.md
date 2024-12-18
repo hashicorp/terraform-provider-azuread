@@ -169,6 +169,7 @@ The following arguments are supported:
 * `sign_in_risk_levels` - (Optional) A list of user sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `users` - (Required) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
+* `insider_risk_levels` - (Optional) The insider risk level in the policy. Possible values are: `minor`, `moderate`, `elevated`, `unknownFutureValue`.
 
 ---
 
