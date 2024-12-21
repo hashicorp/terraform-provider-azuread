@@ -25,7 +25,7 @@ feature/domains:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_domains((.|\n)*)###'
 
 feature/groups:
-  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(group\W+|group_member\W+|groups\W+)((.|\n)*)###'
+  - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(group\W+|group_license_assignment\W+|group_member\W+|groups\W+)((.|\n)*)###'
 
 feature/identity-governance:
   - '### (|New or )Affected Resource\(s\)\/Data Source\(s\)((.|\n)*)azuread_(access_package|privileged_access_group_)((.|\n)*)###'
