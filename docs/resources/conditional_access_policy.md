@@ -291,5 +291,5 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 Conditional Access Policies can be imported using the `id`, e.g.
 
 ```shell
-terraform import azuread_conditional_access_policy.my_location 00000000-0000-0000-0000-000000000000
+terraform import azuread_conditional_access_policy.my_location /identity/conditionalAccess/policies/00000000-0000-0000-0000-000000000000
 ```
