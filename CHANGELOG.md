@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* `azuread_access_package_resource_catalog_association` - allow origin IDs that contain `/` [GH-1592]
 * `azuread_application` - the `password` block can now correctly be removed [GH-1430]
 * `azuread_conditional_access_policy` - fix potential panic in expanding `conditions` [GH-1619]
 * `azuread_group` - prevent creation retry when caller hasn't been specified as an owner [GH-1593]
