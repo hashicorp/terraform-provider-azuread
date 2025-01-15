@@ -394,6 +394,10 @@ func expandConditionalAccessClientApplications(in []interface{}) *stable.Conditi
 
 func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAccessApplications {
 	result := stable.ConditionalAccessApplications{}
+	if len(in) == 0 || in[0] == nil {
+		return result
+	}
+
 	config := in[0].(map[string]interface{})
 
 	includeApplications := config["included_applications"].([]interface{})
