@@ -2,11 +2,13 @@
 
 ENHANCEMENTS:
 
-* dependencies - update `golang.org/x/crypto` to `0.31.0`
+* dependencies - update `golang.org/x/crypto` to `0.31.0` [GH-1585]
 
 BUG FIXES:
 
-* `azuread_application` - the `password` block can now correctly be removed
+* `azuread_application` - the `password` block can now correctly be removed [GH-1430]
+* `azuread_user` - add support for `employee_hire_date` [GH-1437]
+
 
 
 ## 3.0.2 (October 04, 2024)
