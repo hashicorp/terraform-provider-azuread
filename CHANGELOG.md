@@ -1,6 +1,7 @@
 ## 3.1.0 (Unreleased)
 
-* `azuread_application` - the `password` block can now correctly be removed
+* `azuread_application` - the `password` block can now correctly be removed [GH-1430]
+* `azuread_user` - add support for `employee_hire_date` [GH-1437]
 
 
 ## 3.0.2 (October 04, 2024)
