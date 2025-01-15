@@ -330,11 +330,6 @@ func ResourceConditionalAccessPolicyInstanceResourceV0() *pluginsdk.Resource {
 								Type: pluginsdk.TypeString,
 							},
 						},
-
-						"insider_risk_levels": {
-							Type:     pluginsdk.TypeString,
-							Optional: true,
-						},
 					},
 				},
 			},
