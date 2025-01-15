@@ -7,8 +7,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * `azuread_application` - the `password` block can now correctly be removed [GH-1430]
+* `azuread_conditional_access_policy` - fix potential panic in expanding `conditions` [GH-1619]
 * `azuread_user` - add support for `employee_hire_date` [GH-1437]
-
 
 
 ## 3.0.2 (October 04, 2024)
