@@ -163,13 +163,13 @@ The following arguments are supported:
 * `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
 * `client_applications` - (Optional) An `client_applications` block as documented below, which specifies service principals included in and excluded from the policy.
 * `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
+* `insider_risk_levels` - (Optional) The insider risk level in the policy. Possible values are: `minor`, `moderate`, `elevated`, `unknownFutureValue`.
 * `locations` - (Optional) A `locations` block as documented below, which specifies locations included in and excluded from the policy.
 * `platforms` - (Optional) A `platforms` block as documented below, which specifies platforms included in and excluded from the policy.
 * `service_principal_risk_levels` - (Optional) A list of service principal sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `none`, `unknownFutureValue`.
 * `sign_in_risk_levels` - (Optional) A list of user sign-in risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `user_risk_levels` - (Optional) A list of user risk levels included in the policy. Possible values are: `low`, `medium`, `high`, `hidden`, `none`, `unknownFutureValue`.
 * `users` - (Required) A `users` block as documented below, which specifies users, groups, and roles included in and excluded from the policy.
-* `insider_risk_levels` - (Optional) The insider risk level in the policy. Possible values are: `minor`, `moderate`, `elevated`, `unknownFutureValue`.
 
 ---
 
