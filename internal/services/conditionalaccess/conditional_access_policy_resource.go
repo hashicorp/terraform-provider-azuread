@@ -408,6 +408,13 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 								ValidateFunc: validation.StringInSlice(stable.PossibleValuesForRiskLevel(), false),
 							},
 						},
+
+						"insider_risk_levels": {
+							Type:         pluginsdk.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessInsiderRiskLevels(), false),
+						},
 					},
 				},
 			},

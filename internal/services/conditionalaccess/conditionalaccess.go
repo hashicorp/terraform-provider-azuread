@@ -37,6 +37,11 @@ func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionS
 		userRiskLevels = append(userRiskLevels, string(v))
 	}
 
+	insiderRiskLevels := ""
+	if in.InsiderRiskLevels != nil {
+		insiderRiskLevels = string(pointer.From(in.InsiderRiskLevels))
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"applications":                  flattenConditionalAccessApplications(in.Applications),
@@ -49,6 +54,7 @@ func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionS
 			"service_principal_risk_levels": servicePrincipalRiskLevels,
 			"sign_in_risk_levels":           signInRiskLevels,
 			"user_risk_levels":              userRiskLevels,
+			"insider_risk_levels":           insiderRiskLevels,
 		},
 	}
 }
@@ -365,6 +371,10 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	userRiskLevels := make([]stable.RiskLevel, 0)
 	for _, elem := range config["user_risk_levels"].([]interface{}) {
 		userRiskLevels = append(userRiskLevels, stable.RiskLevel(elem.(string)))
+	}
+
+	if insiderRiskLevel, ok := config["insider_risk_levels"]; ok && insiderRiskLevel.(string) != "" {
+		result.InsiderRiskLevels = pointer.To(stable.ConditionalAccessInsiderRiskLevels(insiderRiskLevel.(string)))
 	}
 
 	result.Applications = expandConditionalAccessApplications(applications)

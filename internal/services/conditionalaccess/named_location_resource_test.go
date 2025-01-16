@@ -251,13 +251,13 @@ func (NamedLocationResource) completeCountry(data acceptance.TestData) string {
 resource "azuread_named_location" "test" {
   display_name = "acctestNLC-%[1]d"
   country {
+    country_lookup_method = "clientIpAddress"
     countries_and_regions = [
       "GB",
       "US",
       "JP",
     ]
     include_unknown_countries_and_regions = true
-    country_lookup_method = "clientIpAddress"
   }
 }
 `, data.RandomInteger)
@@ -268,13 +268,13 @@ func (NamedLocationResource) completeCountryByGps(data acceptance.TestData) stri
 resource "azuread_named_location" "test" {
   display_name = "acctestNLC-%[1]d"
   country {
+    country_lookup_method = "authenticatorAppGps"
     countries_and_regions = [
       "GB",
       "US",
       "JP",
     ]
     include_unknown_countries_and_regions = true
-    country_lookup_method = "authenticatorAppGps"
   }
 }
 `, data.RandomInteger)
