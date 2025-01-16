@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * dependencies - update `golang.org/x/crypto` to `0.31.0` [GH-1585]
 * `data.azuread_named_location` - add support for `country_lookup_method` [GH-1589]
+* `azuread_conditional_access_policy` - add support for the `insider_risk_levels` property [GH-1597]
 * `azuread_named_location` - add support for `country_lookup_method` [GH-1589]
 
 BUG FIXES:
