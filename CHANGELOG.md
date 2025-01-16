@@ -1,6 +1,19 @@
-## 3.1.0 (Unreleased)
+## 3.1.0 (January 16, 2025)
 
-* `azuread_application` - the `password` block can now correctly be removed
+ENHANCEMENTS:
+
+* dependencies - update `golang.org/x/crypto` to `0.31.0` ([#1585](https://github.com/hashicorp/terraform-provider-azuread/issues/1585))
+* `data.azuread_named_location` - add support for `country_lookup_method` ([#1589](https://github.com/hashicorp/terraform-provider-azuread/issues/1589))
+* `azuread_conditional_access_policy` - add support for the `insider_risk_levels` property ([#1597](https://github.com/hashicorp/terraform-provider-azuread/issues/1597))
+* `azuread_named_location` - add support for `country_lookup_method` ([#1589](https://github.com/hashicorp/terraform-provider-azuread/issues/1589))
+
+BUG FIXES:
+
+* `azuread_access_package_resource_catalog_association` - allow origin IDs that contain `/` ([#1592](https://github.com/hashicorp/terraform-provider-azuread/issues/1592))
+* `azuread_application` - the `password` block can now correctly be removed ([#1430](https://github.com/hashicorp/terraform-provider-azuread/issues/1430))
+* `azuread_conditional_access_policy` - fix potential panic in expanding `conditions` ([#1619](https://github.com/hashicorp/terraform-provider-azuread/issues/1619))
+* `azuread_group` - prevent creation retry when caller hasn't been specified as an owner ([#1593](https://github.com/hashicorp/terraform-provider-azuread/issues/1593))
+* `azuread_user` - add support for `employee_hire_date` ([#1437](https://github.com/hashicorp/terraform-provider-azuread/issues/1437))
 
 
 ## 3.0.2 (October 04, 2024)
