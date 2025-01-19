@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	// "github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedule"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -33,7 +35,7 @@ func directoryRoleEligibilityScheduleRequestResource() *pluginsdk.Resource {
 
 		Timeouts: &pluginsdk.ResourceTimeout{
 			Create: pluginsdk.DefaultTimeout(10 * time.Minute),
-			Read:   pluginsdk.DefaultTimeout(5 * time.Minute),
+			Read:   pluginsdk.DefaultTimeout(60 * time.Minute),
 			Delete: pluginsdk.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -144,19 +146,20 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
 
-	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
+	roleEligibilityScheduleRequest, err := findRoleEligibilityScheduleRequest(ctx, client, d)
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] %s was not found - removing from state", id)
-			d.SetId("")
-			return nil
-		}
-		return tf.ErrorDiagF(err, "Retrieving %s", id)
+		return tf.ErrorDiagF(err, "locating %s", id)
 	}
 
-	roleEligibilityScheduleRequest := resp.Model
 	if roleEligibilityScheduleRequest == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
+		log.Printf("[DEBUG] %s was not found - removing from state", id)
+		d.SetId("")
+		return nil
+	}
+
+	if foundId := roleEligibilityScheduleRequest.Id; foundId != nil && *foundId != id.UnifiedRoleEligibilityScheduleRequestId {
+		log.Printf("[DEBUG] %s changed ID, was %s, now %s", id, roleEligibilityScheduleRequest.Id, *foundId)
+		d.SetId(*foundId)
 	}
 
 	tf.Set(d, "role_definition_id", roleEligibilityScheduleRequest.RoleDefinitionId.GetOrZero())
@@ -194,4 +197,59 @@ func directoryRoleEligibilityScheduleRequestResourceDelete(ctx context.Context, 
 	}
 
 	return nil
+}
+
+// func findRoleAssignment(ctx context.Context, client *directoryroleassignment.DirectoryRoleAssignmentClient, roleDefinitionId string, principalId string) (*stable.UnifiedRoleAssignment, error) {
+// 	allAssignments, err := client.ListDirectoryRoleAssignmentsComplete(ctx, directoryroleassignment.DefaultListDirectoryRoleAssignmentsOperationOptions())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	result := &stable.UnifiedRoleAssignment{}
+//
+// 	for _, v := range allAssignments.Items {
+// 		if strings.EqualFold(v.RoleDefinitionId.GetOrZero(), roleDefinitionId) {
+// 			if strings.EqualFold(v.PrincipalId.GetOrZero(), principalId) {
+// 				return pointer.To(v), nil
+// 			}
+// 		}
+// 	}
+//
+// 	return result, nil
+// }
+
+// func findRoleEligibilitySchedule(ctx context.Context, client *directoryroleeligibilityschedule.DirectoryRoleEligibilityScheduleClient, id stable.RoleManagementDirectoryRoleAssignmentId) (*stable.UnifiedRoleEligibilitySchedule, error) {
+// 	schedules, err  := client.ListDirectoryRoleEligibilitySchedulesComplete(ctx, directoryroleeligibilityschedule.DefaultListDirectoryRoleEligibilitySchedulesOperationOptions())
+// 	if err != nil {
+// 		return nil, err
+// 	}
+//
+// 	for _, schedule := range schedules.Items {
+//
+// 	}
+//
+// 	return nil, nil
+// }
+
+func findRoleEligibilityScheduleRequest(ctx context.Context, client *directoryroleeligibilityschedulerequest.DirectoryRoleEligibilityScheduleRequestClient, d *pluginsdk.ResourceData) (*stable.UnifiedRoleEligibilityScheduleRequest, error) {
+	scheduleRequests, err := client.ListDirectoryRoleEligibilityScheduleRequestsComplete(ctx, directoryroleeligibilityschedulerequest.DefaultListDirectoryRoleEligibilityScheduleRequestsOperationOptions())
+	if err != nil {
+		return nil, err
+	}
+
+	roleDefinitionId := d.Get("role_definition_id").(string)
+	principalId := d.Get("principal_id").(string)
+	justification := d.Get("justification").(string)
+	directoryScopeId := d.Get("directory_scope_id").(string)
+
+	for _, scheduleRequest := range scheduleRequests.Items {
+		if strings.EqualFold(scheduleRequest.RoleDefinitionId.GetOrZero(), roleDefinitionId) &&
+			strings.EqualFold(scheduleRequest.PrincipalId.GetOrZero(), principalId) &&
+			strings.EqualFold(scheduleRequest.Justification.GetOrZero(), justification) &&
+			strings.EqualFold(scheduleRequest.DirectoryScopeId.GetOrZero(), directoryScopeId) {
+			return pointer.To(scheduleRequest), nil
+		}
+	}
+
+	return nil, fmt.Errorf("role eligibility schedule request not found, (Role Definition ID: %s / Principal ID: %s / Directory Scope ID: %s)", roleDefinitionId, principalId, directoryScopeId)
 }
