@@ -93,6 +93,19 @@ func TestAccServicePrincipalsDataSource_byObjectIdsWithIgnoreMissing(t *testing.
 	}})
 }
 
+func TestAccServicePrincipalsDataSource_byFilter(t *testing.T) {
+	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
+
+	data.DataSourceTest(t, []acceptance.TestStep{{
+		Config: ServicePrincipalsDataSource{}.byFilter(data),
+		Check: acceptance.ComposeTestCheckFunc(
+			check.That(data.ResourceName).Key("display_names.#").HasValue("1"),
+			check.That(data.ResourceName).Key("object_ids.#").HasValue("1"),
+			check.That(data.ResourceName).Key("service_principals.#").HasValue("1"),
+		),
+	}})
+}
+
 func TestAccServicePrincipalsDataSource_noNames(t *testing.T) {
 	data := acceptance.BuildTestData(t, "data.azuread_service_principals", "test")
 
@@ -221,4 +234,14 @@ data "azuread_service_principals" "test" {
   return_all = true
 }
 `
+}
+
+func (ServicePrincipalsDataSource) byFilter(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+%[1]s
+
+data "azuread_service_principals" "test" {
+  filter = "displayName eq '${azuread_service_principal.testA.display_name}'"
+}
+`, ServicePrincipalResource{}.threeServicePrincipalsABC(data))
 }
