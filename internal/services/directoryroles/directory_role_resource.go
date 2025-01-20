@@ -155,25 +155,23 @@ func (r DirectoryRoleResource) Create() sdk.ResourceFunc {
 				Filter: pointer.To(fmt.Sprintf("roleTemplateId eq '%s'", odata.EscapeSingleQuote(templateId))),
 			}
 
-			if resp, err := client.ListDirectoryRoles(ctx, options); err != nil {
-				if response.WasNotFound(resp.HttpResponse) {
-					// Directory role was not found, so activate it
-					properties := stable.DirectoryRole{
-						RoleTemplateId: nullable.Value(templateId),
-					}
-					if resp, err := client.CreateDirectoryRole(ctx, properties, directoryrole.DefaultCreateDirectoryRoleOperationOptions()); err != nil {
-						return fmt.Errorf("activating directory role for template ID %q: %v", templateId, err)
-					} else {
-						directoryRole = resp.Model
-					}
+			if resp, err := client.ListDirectoryRoles(ctx, options); (err != nil && response.WasNotFound(resp.HttpResponse)) || (resp.Model != nil && len(*resp.Model) == 0) {
+				// Directory role was not found, so activate it
+				properties := stable.DirectoryRole{
+					RoleTemplateId: nullable.Value(templateId),
+				}
+				if resp, err := client.CreateDirectoryRole(ctx, properties, directoryrole.DefaultCreateDirectoryRoleOperationOptions()); err != nil {
+					return fmt.Errorf("activating directory role for template ID %q: %v", templateId, err)
 				} else {
-					return fmt.Errorf("retrieving directory role with template ID %q: %v", templateId, err)
+					directoryRole = resp.Model
 				}
 			} else if resp.Model != nil {
 				for _, role := range *resp.Model {
 					directoryRole = &role
 					break
 				}
+			} else {
+				return fmt.Errorf("retrieving directory role with template ID %q: %v", templateId, err)
 			}
 
 			if directoryRole == nil {
