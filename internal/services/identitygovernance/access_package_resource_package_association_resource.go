@@ -59,9 +59,8 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			"access_type": {
 				Description: "The role of access type to the specified resource - for `AadGroup` valid values are `Member` and `Owner`, for `AadApplication` it must be a UUID and for `SharePointOnline` it must be a URL",
 				Type:        pluginsdk.TypeString,
-				Optional:    true,
+				Required:    true,
 				ForceNew:    true,
-				Default:     "Member",
 				ValidateFunc: validation.Any(validation.StringInSlice([]string{
 					"Member",
 					"Owner",
