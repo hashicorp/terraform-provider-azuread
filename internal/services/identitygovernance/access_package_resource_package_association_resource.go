@@ -57,15 +57,15 @@ func accessPackageResourcePackageAssociationResource() *pluginsdk.Resource {
 			},
 
 			"access_type": {
-				Description: "The role of access type to the specified resource, valid values are `Member` and `Owner`",
+				Description: "The role of access type to the specified resource - for `AadGroup` valid values are `Member` and `Owner`, for `AadApplication` it must be a UUID and for `SharePointOnline` it must be a URL",
 				Type:        pluginsdk.TypeString,
 				Optional:    true,
 				ForceNew:    true,
 				Default:     "Member",
-				ValidateFunc: validation.StringInSlice([]string{
+				ValidateFunc: validation.Any(validation.StringInSlice([]string{
 					"Member",
 					"Owner",
-				}, false),
+				}, false), validation.IsUUID, validation.IsURLWithHTTPorHTTPS),
 			},
 		},
 	}
@@ -99,10 +99,25 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 
 	resource := pointer.To((*resourceResp.Model)[0])
 
+	var originId string
+	var displayName string
+	switch resource.OriginSystem.GetOrZero() {
+	case "AadGroup":
+		originId = fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)
+		displayName = accessType
+		break
+	case "AadApplication":
+	case "SharePointOnline":
+		originId = accessType
+		break
+	default:
+		return tf.ErrorDiagF(errors.New("unknown origin system"), "Retrieving origin id")
+	}
+
 	properties := beta.AccessPackageResourceRoleScope{
 		AccessPackageResourceRole: &beta.AccessPackageResourceRole{
-			DisplayName:  nullable.NoZero(accessType),
-			OriginId:     nullable.Value(fmt.Sprintf("%s_%s", accessType, catalogResourceAssociationId.OriginId)),
+			DisplayName:  nullable.NoZero(displayName),
+			OriginId:     nullable.Value(originId),
 			OriginSystem: resource.OriginSystem,
 			AccessPackageResource: &beta.AccessPackageResource{
 				Id:           resource.Id,
