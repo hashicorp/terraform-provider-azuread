@@ -332,9 +332,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			ClientCertificatePath:     d.Get("client_certificate_path").(string),
 			ClientSecret:              *clientSecret,
 
-			OIDCAssertionToken:          *idToken,
-			GitHubOIDCTokenRequestURL:   d.Get("oidc_request_url").(string),
-			GitHubOIDCTokenRequestToken: d.Get("oidc_request_token").(string),
+			OIDCAssertionToken:    *idToken,
+			OIDCTokenRequestURL:   d.Get("oidc_request_url").(string),
+			OIDCTokenRequestToken: d.Get("oidc_request_token").(string),
 
 			CustomManagedIdentityEndpoint: d.Get("msi_endpoint").(string),
 
