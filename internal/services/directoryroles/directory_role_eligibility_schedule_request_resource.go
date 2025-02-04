@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedule"
 	"log"
 	"net/http"
 	"time"
@@ -142,16 +143,38 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 
 func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
+	scheduleClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
 
 	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] %s was not found - removing from state", id)
-			d.SetId("")
+		if !response.WasNotFound(resp.HttpResponse) {
+			// Check if the Schedule still exists
+			return tf.ErrorDiagF(err, "Retrieving %s", id)
+
+		} else {
+			scheduleID := stable.NewRoleManagementDirectoryRoleEligibilityScheduleID(d.Id())
+			scheduleResp, err2 := scheduleClient.GetDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultGetDirectoryRoleEligibilityScheduleOperationOptions())
+			if err2 != nil {
+				if response.WasNotFound(scheduleResp.HttpResponse) {
+					log.Printf("[DEBUG] %s was not found - removing from state", id)
+					d.SetId("")
+					return nil
+				}
+			}
+			roleEligibilitySchedule := scheduleResp.Model
+			if roleEligibilitySchedule == nil {
+				return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
+			}
+
+			tf.Set(d, "role_definition_id", roleEligibilitySchedule.RoleDefinitionId.GetOrZero())
+			tf.Set(d, "principal_id", roleEligibilitySchedule.PrincipalId.GetOrZero())
+			// Schedules do not expose the `justification` field, so we best effort it here and try and get it from config as it's a required property
+			tf.Set(d, "justification", d.Get("justification").(string))
+			tf.Set(d, "directory_scope_id", roleEligibilitySchedule.DirectoryScopeId.GetOrZero())
+
 			return nil
 		}
-		return tf.ErrorDiagF(err, "Retrieving %s", id)
 	}
 
 	roleEligibilityScheduleRequest := resp.Model
