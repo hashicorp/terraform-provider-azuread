@@ -3,8 +3,8 @@ module github.com/hashicorp/terraform-provider-azuread
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/go-azure-helpers v0.71.0
-	github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20240927.1005214
-	github.com/hashicorp/go-azure-sdk/sdk v0.20240927.1005214
+	github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20250131.1134653
+	github.com/hashicorp/go-azure-sdk/sdk v0.20250131.1134653
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-uuid v1.0.3

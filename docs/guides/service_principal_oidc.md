@@ -81,6 +81,24 @@ Where the body is:
 
 See the [official documentation](https://docs.microsoft.com/en-us/azure/active-directory/develop/workload-identity-federation-create-trust-github) for more details.
 
+### Configure Azure Active Directory Application / Managed Identity to Trust an Azure DevOps Service Connection
+
+An application or managed identity requires a federated credential for each Azure DevOps service connection. In common scenarios, there will be one registration/identity per environment with one credential for the environment's service connection.
+
+#### Automatic configuration - App registration
+The simplest method for setting up federation is to create a new **Workload Identity federation (automatic)** in Azure DevOps. This will automatically create a new app registration in your tenant. Alternatively, if you want to retain your existing connection, you can convert an existing secret-based connection to a federated one using the provided `Convert` option in the service connection overview. This may have some implications for your pipelines, but there is a rollback option available.
+
+For more details, refer to [the official documentation](https://learn.microsoft.com/en-gb/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-a-new-workload-identity-federation-service-connection) for more details.
+
+#### Manual Configuration - Managed Identity / App Registration
+To configure a Managed Identity for federation, select the **Workload Identity federation (manual)** option in the creation wizard. After providing a name for the new connection, you will be presented with the issuer URL and subject identifier values required to configure federated credentials in the Managed Identity resource.
+
+In Azure Managed Identity resource settings, select **Other** from the **Federated credential scenario** options and provide the issuer URL, subject identifier provided by Azure DevOps, and a display name for your credentials. Then, proceed with the **Verify and save** option in the Azure DevOps `New Azure service connection` wizard.
+
+#### Terraform Configuration - Managed Identity / App registration
+
+Please refer to examples in [azuredevops_serviceendpoint_azurerm](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/serviceendpoint_azurerm#workload-identity-federation-manual-azurerm-service-endpoint-subscription-scoped) resource documentation.
+
 ### Configure Azure Active Directory Application to Trust a Generic Issuer
 
 On the Azure Active Directory application page, go to **Certificates and secrets**.
@@ -88,8 +106,6 @@ On the Azure Active Directory application page, go to **Certificates and secrets
 In the Federated credentials tab, select **Add credential**. The 'Add a credential' blade opens. Refer to the instructions from your OIDC provider for completing the form, before choosing a **Name** for the federated credential and clicking the **Add** button.
 
 ## Configuring Terraform to use OIDC
-
-~> **Note:** If using the AzureRM Backend you may also need to configure OIDC there too, see [the documentation for the AzureRM Backend](https://www.terraform.io/language/settings/backends/azurerm) for more information.
 
 As we've obtained the credentials for this Service Principal - it's possible to configure them in a few different ways.
 
@@ -102,9 +118,12 @@ $ export ARM_TENANT_ID="00000000-0000-0000-0000-000000000000"
 $ export ARM_USE_OIDC=true
 ```
 
-The provider will use the `ARM_OIDC_TOKEN` environment variable as an OIDC token. You can use this variable to specify the token provided by your OIDC provider. If your OIDC provider provides an ID token in a file, you can specify the path to this file with the `ARM_OIDC_TOKEN_FILE_PATH` environment variable.
+### OIDC token
+The provider will use the `ARM_OIDC_TOKEN` environment variable as an OIDC token. You can use this variable to specify the token provided by your OIDC provider.
 
-When running in GitHub Actions, the provider will detect the `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables set by the GitHub Actions runtime. You can also specify the `ARM_OIDC_REQUEST_TOKEN` and `ARM_OIDC_REQUEST_URL` environment variables.
+**GitHub Actions**
+
+When running Terraform in GitHub Actions, the provider will detect the `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` environment variables set by the GitHub Actions runtime. You can also specify the `ARM_OIDC_REQUEST_TOKEN` and `ARM_OIDC_REQUEST_URL` environment variables.
 
 For GitHub Actions workflows, you'll need to ensure the workflow has `write` permissions for the `id-token`.
 
@@ -115,6 +134,45 @@ permissions:
 ```
 
 For more information about OIDC in GitHub Actions, see [official documentation](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers).
+
+
+**Azure DevOps Pipelines**
+
+When running Terraform in Azure DevOps Pipelines, the provider use `ARM_OIDC_REQUEST_TOKEN` and `ARM_OIDC_REQUEST_URL` environment variables, if these are absent, it will attempt to fall back on `SYSTEM_ACCESSTOKEN` and `SYSTEM_OIDCREQUESTURI` environment variables respectively.
+
+The ADO service connection ID is required in combination with these and can be specified via environment variable `ARM_ADO_PIPELINE_SERVICE_CONNECTION_ID`, or in the provider configuration directly via `ado_pipeline_service_connection_id`. For users of the AzAPI provider AzureAD will also fall back on `ARM_OIDC_AZURE_SERVICE_CONNECTION_ID` for compatibility.
+
+~> **Note:** If the `ado_pipeline_service_connection_id` value is not set, either directly via config or by environment variable, the presence of the remaining OIDC configuration will result in the provider falling back on the GitHub OIDC authoriser instead.
+
+For Azure DevOps Pipelines, at least one task in the pipeline has Service Connection support and has your service connection specified. Without this, the agent will fail to load the Service Connection and results in a `No service connection found with identifier "..."`  error.
+
+It is recommend to use the `AzureCLI@2` task as below (note the `azureSubscription` input parameter):
+
+```yaml
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(SERVICE_CONNECTION_ID)
+    scriptType: bash
+    scriptLocation: "inlineScript"
+    inlineScript: |
+      # Terraform commands
+  env:
+    #...
+    ARM_USE_OIDC: true
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+    ARM_ADO_PIPELINE_SERVICE_CONNECTION_ID: $(SERVICE_CONNECTION_ID)
+```
+
+---
+
+-> **Note:** Support for OpenID Connect was added in version 2.23.0 of the Terraform AzureAD provider.
+
+~> **Note:** If using the AzureRM Backend you may also need to configure OIDC there too, see [the documentation for the AzureRM Backend](https://www.terraform.io/language/settings/backends/azurerm) for more information.
+
+More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
+
+---
 
 The following Terraform and Provider blocks can be specified - where `2.23.0` is the version of the Azure Provider that you'd like to use:
 
@@ -135,12 +193,6 @@ provider "azuread" {
   features {}
 }
 ```
-
--> **Note:** Support for OpenID Connect was added in version 2.23.0 of the Terraform AzureAD provider.
-
-~> **Note:** If using the AzureRM Backend you may also need to configure OIDC there too, see [the documentation for the AzureRM Backend](https://www.terraform.io/language/settings/backends/azurerm) for more information.
-
-More information on [the fields supported in the Provider block can be found here](../index.html#argument-reference).
 
 At this point running either `terraform plan` or `terraform apply` should allow Terraform to run using the Service Principal to authenticate.
 
