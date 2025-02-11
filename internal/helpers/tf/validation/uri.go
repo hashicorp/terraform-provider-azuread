@@ -36,15 +36,9 @@ func IsLogoutUrl(i interface{}, k string) (warnings []string, errors []error) {
 	return
 }
 
-func IsRedirectUriFunc(urnAllowed bool, allowAllSchemes bool) pluginsdk.SchemaValidateFunc {
+func IsRedirectUriFunc(urnAllowed bool) pluginsdk.SchemaValidateFunc {
 	return func(i interface{}, k string) (warnings []string, errors []error) {
-		// See https://docs.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy#register-the-proxyidentityexperienceframework-application
-		var allowedSchemes []string
-		if !allowAllSchemes {
-			allowedSchemes = []string{"http", "https", "ms-appx-web"}
-		}
-
-		warnings, errors = IsUriFunc(allowedSchemes, urnAllowed, true, true)(i, k)
+		warnings, errors = IsUriFunc([]string{}, urnAllowed, true, true)(i, k)
 		if len(errors) > 0 {
 			return
 		}
