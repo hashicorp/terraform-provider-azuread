@@ -260,7 +260,6 @@ func applicationPreAuthorizedResourceDelete(ctx context.Context, d *pluginsdk.Re
 	for _, a := range *app.Api.PreAuthorizedApplications {
 		if !strings.EqualFold(a.AppId.GetOrZero(), id.AppId) {
 			newPreAuthorizedApps = append(newPreAuthorizedApps, a)
-			break
 		}
 	}
 
