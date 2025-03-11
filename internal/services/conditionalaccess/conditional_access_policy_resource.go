@@ -115,6 +115,21 @@ func conditionalAccessPolicyResource() *pluginsdk.Resource {
 							},
 						},
 
+						"authentication_flows": {
+							Type:     pluginsdk.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &pluginsdk.Resource{
+								Schema: map[string]*pluginsdk.Schema{
+									"transfer_methods": {
+										Type:         pluginsdk.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(stable.PossibleValuesForConditionalAccessTransferMethods(), false),
+									},
+								},
+							},
+						},
+
 						"client_applications": {
 							Type:     pluginsdk.TypeList,
 							Optional: true,

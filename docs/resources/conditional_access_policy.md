@@ -160,6 +160,7 @@ The following arguments are supported:
 `conditions` block supports the following:
 
 * `applications` - (Required) An `applications` block as documented below, which specifies applications and user actions included in and excluded from the policy.
+* `authentication_flows` - (Optional) An `authentication_flows` block as documented below, which specifies transfer methods included in the policy.
 * `client_app_types` - (Required) A list of client application types included in the policy. Possible values are: `all`, `browser`, `mobileAppsAndDesktopClients`, `exchangeActiveSync`, `easSupported` and `other`.
 * `client_applications` - (Optional) An `client_applications` block as documented below, which specifies service principals included in and excluded from the policy.
 * `devices` - (Optional) A `devices` block as documented below, which describes devices to be included in and excluded from the policy. A `devices` block can be added to an existing policy, but removing the `devices` block forces a new resource to be created.
@@ -178,6 +179,12 @@ The following arguments are supported:
 * `excluded_applications` - (Optional) A list of application IDs explicitly excluded from the policy. Can also be set to `Office365`.
 * `included_applications` - (Optional) A list of application IDs the policy applies to, unless explicitly excluded (in `excluded_applications`). Can also be set to `All`, `None` or `Office365`. Cannot be specified with `included_user_actions`. One of `included_applications` or `included_user_actions` must be specified.
 * `included_user_actions` - (Optional) A list of user actions to include. Supported values are `urn:user:registerdevice` and `urn:user:registersecurityinfo`. Cannot be specified with `included_applications`. One of `included_applications` or `included_user_actions` must be specified.
+
+---
+
+`authentication_flows` block supports the following:
+
+* `transfer_methods` - One or more comma separated transfer methods included in the policy. Supported values are `authenticationTransfer` and `deviceCodeFlow`.
 
 ---
 

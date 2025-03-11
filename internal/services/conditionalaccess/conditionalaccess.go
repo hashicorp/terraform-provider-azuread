@@ -45,6 +45,7 @@ func flattenConditionalAccessConditionSet(in *stable.ConditionalAccessConditionS
 	return []interface{}{
 		map[string]interface{}{
 			"applications":                  flattenConditionalAccessApplications(in.Applications),
+			"authentication_flows":          flattenConditionalAccessAuthenticationFlows(in.AuthenticationFlows),
 			"client_applications":           flattenConditionalAccessClientApplications(in.ClientApplications),
 			"users":                         flattenConditionalAccessUsers(in.Users),
 			"client_app_types":              clientAppTypes,
@@ -65,6 +66,23 @@ func flattenConditionalAccessApplications(in stable.ConditionalAccessApplication
 			"included_applications": tf.FlattenStringSlicePtr(in.IncludeApplications),
 			"excluded_applications": tf.FlattenStringSlicePtr(in.ExcludeApplications),
 			"included_user_actions": tf.FlattenStringSlicePtr(in.IncludeUserActions),
+		},
+	}
+}
+
+func flattenConditionalAccessAuthenticationFlows(in *stable.ConditionalAccessAuthenticationFlows) []interface{} {
+	if in == nil {
+		return []interface{}{}
+	}
+
+	transferMethods := ""
+	if in.TransferMethods != nil {
+		transferMethods = string(pointer.From(in.TransferMethods))
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"transfer_methods": transferMethods,
 		},
 	}
 }
@@ -347,6 +365,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	config := in[0].(map[string]interface{})
 
 	applications := config["applications"].([]interface{})
+	authenticationFlows := config["authentication_flows"].([]interface{})
 	clientApplications := config["client_applications"].([]interface{})
 	devices := config["devices"].([]interface{})
 	locations := config["locations"].([]interface{})
@@ -378,6 +397,7 @@ func expandConditionalAccessConditionSet(in []interface{}) *stable.ConditionalAc
 	}
 
 	result.Applications = expandConditionalAccessApplications(applications)
+	result.AuthenticationFlows = expandConditionalAccessAuthenticationFlows(authenticationFlows)
 	result.ClientAppTypes = clientAppTypes
 	result.ClientApplications = expandConditionalAccessClientApplications(clientApplications)
 	result.Devices = expandConditionalAccessDevices(devices)
@@ -425,6 +445,21 @@ func expandConditionalAccessApplications(in []interface{}) stable.ConditionalAcc
 	result.IncludeUserActions = tf.ExpandStringSlicePtr(includeUserActions)
 
 	return result
+}
+
+func expandConditionalAccessAuthenticationFlows(in []interface{}) *stable.ConditionalAccessAuthenticationFlows {
+	if len(in) == 0 || in[0] == nil {
+		return nil
+	}
+
+	result := stable.ConditionalAccessAuthenticationFlows{}
+	config := in[0].(map[string]interface{})
+
+	if transferMethods, ok := config["transfer_methods"]; ok && transferMethods.(string) != "" {
+		result.TransferMethods = pointer.To(stable.ConditionalAccessTransferMethods(transferMethods.(string)))
+	}
+
+	return &result
 }
 
 func expandConditionalAccessUsers(in []interface{}) *stable.ConditionalAccessUsers {
