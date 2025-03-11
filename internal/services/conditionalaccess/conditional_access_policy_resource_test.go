@@ -453,9 +453,9 @@ resource "azuread_conditional_access_policy" "test" {
       excluded_applications = []
     }
 
-	authentication_flows {
-	  transfer_methods = "deviceCodeFlow"
-	}
+    authentication_flows {
+      transfer_methods = "deviceCodeFlow"
+    }
 
     devices {
       filter {
