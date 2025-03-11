@@ -984,9 +984,9 @@ resource "azuread_conditional_access_policy" "test" {
   conditions {
     client_app_types = ["browser"]
     
-	authentication_flows {
-	  transfer_methods = "deviceCodeFlow"
-	}
+    authentication_flows {
+      transfer_methods = "deviceCodeFlow"
+    }
 
     applications {
       included_applications = ["None"]
