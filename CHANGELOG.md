@@ -1,3 +1,10 @@
+## 3.2.0 (Unreleased)
+
+BUG FIXES:
+
+* `azuread_access_package_assignment_policy` - fix crash in `Read` [GH-1664]
+* `azuread_access_package_assignment_policy` - fix use of `alternative_approver` in `approval_settings` [GH-1567]
+
 ## 3.1.0 (January 16, 2025)
 
 ENHANCEMENTS:
