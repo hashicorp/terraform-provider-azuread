@@ -374,7 +374,7 @@ func flattenAccessPackageQuestions(input *[]beta.AccessPackageQuestion) []map[st
 					"display_value": flattenAccessPackageLocalizedContent(&choice.DisplayValue),
 				})
 			}
-			question["choices"] = choices
+			question["choice"] = choices
 		}
 
 		questions = append(questions, question)
