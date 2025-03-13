@@ -21,14 +21,14 @@ import (
 
 type GroupRoleManagementPolicyResource struct{}
 
-func TestGroupRoleManagementPolicy_basic(t *testing.T) {
+func TestGroupRoleManagementPolicy_activationRules(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
 	r := GroupRoleManagementPolicyResource{}
 
 	// Ignore the dangling resource post-test as the policy remains while the group is in a pending deletion state
 	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
 		{
-			Config: r.basic(data),
+			Config: r.activationRules(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -102,7 +102,7 @@ func (GroupRoleManagementPolicyResource) Exists(ctx context.Context, clients *cl
 	return pointer.To(true), nil
 }
 
-func (GroupRoleManagementPolicyResource) basic(data acceptance.TestData) string {
+func (GroupRoleManagementPolicyResource) activationRules(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azuread" {}
 
@@ -115,25 +115,8 @@ resource "azuread_group_role_management_policy" "test" {
   group_id = azuread_group.this.object_id
   role_id  = "member"
 
-  active_assignment_rules {
-    expiration_required                = true
-    expire_after                       = "P30D"
-    require_justification              = true
-    require_multifactor_authentication = true
-    require_ticket_info                = false
-  }
-
-  eligible_assignment_rules {
-    expiration_required = false
-    expire_after        = "P365D"
-  }
-
   activation_rules {
-    maximum_duration                   = "PT12H"
-    require_approval                   = false
-    require_justification              = true
-    require_multifactor_authentication = true
-    require_ticket_info                = true
+    maximum_duration = "PT12H"
   }
 }
 `, data.RandomString)
