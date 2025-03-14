@@ -21,6 +21,22 @@ import (
 
 type GroupRoleManagementPolicyResource struct{}
 
+func TestGroupRoleManagementPolicy_activationRules(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
+	r := GroupRoleManagementPolicyResource{}
+
+	// Ignore the dangling resource post-test as the policy remains while the group is in a pending deletion state
+	data.ResourceTestIgnoreDangling(t, r, []acceptance.TestStep{
+		{
+			Config: r.activationRules(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func TestGroupRoleManagementPolicy_member(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_role_management_policy", "test")
 	r := GroupRoleManagementPolicyResource{}
@@ -84,6 +100,26 @@ func (GroupRoleManagementPolicyResource) Exists(ctx context.Context, clients *cl
 	}
 
 	return pointer.To(true), nil
+}
+
+func (GroupRoleManagementPolicyResource) activationRules(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_group" "this" {
+  display_name     = "PAM Basic Test %[1]s"
+  security_enabled = true
+}
+
+resource "azuread_group_role_management_policy" "test" {
+  group_id = azuread_group.this.object_id
+  role_id  = "member"
+
+  activation_rules {
+    maximum_duration = "PT12H"
+  }
+}
+`, data.RandomString)
 }
 
 func (GroupRoleManagementPolicyResource) member(data acceptance.TestData) string {
