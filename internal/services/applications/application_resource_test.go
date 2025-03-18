@@ -509,9 +509,14 @@ func TestAccApplication_featureTagsUpdate(t *testing.T) {
 			Config: r.featureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("feature_tags.#").HasValue("1"),
+				check.That(data.ResourceName).Key("feature_tags.0.custom_single_sign_on").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.enterprise").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.gallery").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.hide").HasValue("true"),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("tags"), // tags on this resource are not "standard" azure tags, feature tags are stored in the same place, so an importStep can't reconcile this
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -523,6 +528,11 @@ func TestAccApplication_featureTagsUpdate(t *testing.T) {
 			Config: r.featureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("feature_tags.#").HasValue("1"),
+				check.That(data.ResourceName).Key("feature_tags.0.custom_single_sign_on").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.enterprise").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.gallery").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.hide").HasValue("true"),
 			),
 		},
 		data.ImportStep(),
@@ -537,23 +547,28 @@ func TestAccApplication_featureTagsUpdate(t *testing.T) {
 			Config: r.featureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("feature_tags.#").HasValue("1"),
+				check.That(data.ResourceName).Key("feature_tags.0.custom_single_sign_on").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.enterprise").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.gallery").HasValue("true"),
+				check.That(data.ResourceName).Key("feature_tags.0.hide").HasValue("true"),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("tags"), // tags on this resource are not "standard" azure tags, feature tags are stored in the same API model location, so an importStep can't reconcile this
 		{
 			Config: r.noFeatureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("tags"),
 		{
 			Config: r.featureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("tags"),
 	})
 }
 

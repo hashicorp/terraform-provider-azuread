@@ -150,6 +150,11 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		}
 
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
+
+		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*10, ipNamedLocationWait(client, &id, v)); err != nil {
+			return tf.ErrorDiagF(err, "waiting for create of %s", id)
+		}
+
 		d.SetId(id.ID())
 
 	} else if v, ok = d.GetOk("country"); ok {
@@ -176,6 +181,9 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 		d.SetId(id.ID())
+		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*10, countryNamedLocationWait(client, &id, v)); err != nil {
+			return tf.ErrorDiagF(err, "waiting for create of %s", id)
+		}
 
 	} else {
 		return tf.ErrorDiagF(errors.New("one of `ip` or `country` must be specified"), "Unable to determine named location type")
@@ -203,36 +211,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
-		if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-			resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
-			if err != nil {
-				return nil, err
-			}
-
-			if resp.Model == nil {
-				return nil, errors.New("returned model was nil")
-			}
-
-			namedLocation, ok := resp.Model.(stable.IPNamedLocation)
-			if !ok {
-				return nil, errors.New("returned model was not an IPNamedLocation")
-			}
-
-			if locationRaw := flattenIPNamedLocation(&namedLocation); len(locationRaw) > 0 {
-				location := locationRaw[0].(map[string]interface{})
-				ip := v.([]interface{})[0].(map[string]interface{})
-
-				if !reflect.DeepEqual(location["ip_ranges"], ip["ip_ranges"]) {
-					return pointer.To(false), nil
-				}
-
-				if location["trusted"].(bool) != ip["trusted"].(bool) {
-					return pointer.To(false), nil
-				}
-			}
-
-			return pointer.To(true), nil
-		}); err != nil {
+		if err := consistency.WaitForUpdate(ctx, ipNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
 
@@ -247,36 +226,7 @@ func namedLocationResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData,
 			return tf.ErrorDiagF(err, "Updating %s", id)
 		}
 
-		if err := consistency.WaitForUpdate(ctx, func(ctx context.Context) (*bool, error) {
-			resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
-			if err != nil {
-				return nil, err
-			}
-
-			if resp.Model == nil {
-				return nil, errors.New("returned model was nil")
-			}
-
-			namedLocation, ok := resp.Model.(stable.CountryNamedLocation)
-			if !ok {
-				return nil, errors.New("returned model was not a CountryNamedLocation")
-			}
-
-			if locationRaw := flattenCountryNamedLocation(&namedLocation); len(locationRaw) > 0 {
-				location := locationRaw[0].(map[string]interface{})
-				ip := v.([]interface{})[0].(map[string]interface{})
-
-				if !reflect.DeepEqual(location["countries_and_regions"], ip["countries_and_regions"]) {
-					return pointer.To(false), nil
-				}
-
-				if location["include_unknown_countries_and_regions"].(bool) != ip["include_unknown_countries_and_regions"].(bool) {
-					return pointer.To(false), nil
-				}
-			}
-
-			return pointer.To(true), nil
-		}); err != nil {
+		if err := consistency.WaitForUpdate(ctx, countryNamedLocationWait(client, id, v)); err != nil {
 			return tf.ErrorDiagF(err, "waiting for update of %s", id)
 		}
 	}
@@ -374,4 +324,70 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 	}
 
 	return nil
+}
+
+func ipNamedLocationWait(client *conditionalaccessnamedlocation.ConditionalAccessNamedLocationClient, id *stable.IdentityConditionalAccessNamedLocationId, v interface{}) consistency.ChangeFunc {
+	return func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.Model == nil {
+			return nil, errors.New("returned model was nil")
+		}
+
+		namedLocation, ok := resp.Model.(stable.IPNamedLocation)
+		if !ok {
+			return nil, errors.New("returned model was not an IPNamedLocation")
+		}
+
+		if locationRaw := flattenIPNamedLocation(&namedLocation); len(locationRaw) > 0 {
+			location := locationRaw[0].(map[string]interface{})
+			ip := v.([]interface{})[0].(map[string]interface{})
+
+			if !reflect.DeepEqual(location["ip_ranges"], ip["ip_ranges"]) {
+				return pointer.To(false), nil
+			}
+
+			if location["trusted"].(bool) != ip["trusted"].(bool) {
+				return pointer.To(false), nil
+			}
+		}
+
+		return pointer.To(true), nil
+	}
+}
+
+func countryNamedLocationWait(client *conditionalaccessnamedlocation.ConditionalAccessNamedLocationClient, id *stable.IdentityConditionalAccessNamedLocationId, v interface{}) consistency.ChangeFunc {
+	return func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.Model == nil {
+			return nil, errors.New("returned model was nil")
+		}
+
+		namedLocation, ok := resp.Model.(stable.CountryNamedLocation)
+		if !ok {
+			return nil, errors.New("returned model was not a CountryNamedLocation")
+		}
+
+		if locationRaw := flattenCountryNamedLocation(&namedLocation); len(locationRaw) > 0 {
+			location := locationRaw[0].(map[string]interface{})
+			ip := v.([]interface{})[0].(map[string]interface{})
+
+			if !reflect.DeepEqual(location["countries_and_regions"], ip["countries_and_regions"]) {
+				return pointer.To(false), nil
+			}
+
+			if location["include_unknown_countries_and_regions"].(bool) != ip["include_unknown_countries_and_regions"].(bool) {
+				return pointer.To(false), nil
+			}
+		}
+
+		return pointer.To(true), nil
+	}
 }

@@ -405,7 +405,7 @@ func applicationResource() *pluginsdk.Resource {
 				},
 			},
 
-			//lintignore:S018 // We are intentionally using TypeSet here to effect a replace-style representation in the diff for this block
+			// lintignore:S018 // We are intentionally using TypeSet here to effect a replace-style representation in the diff for this block
 			"password": {
 				Description: "App password definition",
 				Type:        pluginsdk.TypeSet,

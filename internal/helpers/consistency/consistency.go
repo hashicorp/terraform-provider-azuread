@@ -82,3 +82,42 @@ func WaitForUpdateWithTimeout(ctx context.Context, timeout time.Duration, f Chan
 	}
 	return res.(bool), err
 }
+
+func WaitForUpdateDelayStart(ctx context.Context, delay time.Duration, f ChangeFunc) error {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		return errors.New("context has no deadline")
+	}
+
+	_, err := WaitForUpdateWithTimeoutDelayStart(ctx, time.Until(deadline), delay, f)
+	return err
+}
+
+func WaitForUpdateWithTimeoutDelayStart(ctx context.Context, timeout, delay time.Duration, f ChangeFunc) (bool, error) {
+	res, err := (&pluginsdk.StateChangeConf{ //nolint:staticcheck
+		Delay:                     delay,
+		Pending:                   []string{"Waiting"},
+		Target:                    []string{"Done"},
+		Timeout:                   timeout,
+		MinTimeout:                5 * time.Second,
+		ContinuousTargetOccurence: 5,
+		Refresh: func() (interface{}, string, error) {
+			updated, err := f(ctx)
+			if err != nil {
+				return nil, "Error", fmt.Errorf("retrieving resource: %+v", err)
+			}
+			if updated == nil {
+				return nil, "Error", fmt.Errorf("retrieving resource: updated was nil")
+			}
+			if *updated {
+				return true, "Done", nil
+			}
+			return false, "Waiting", nil
+		},
+	}).WaitForStateContext(ctx)
+
+	if res == nil {
+		return false, err
+	}
+	return res.(bool), err
+}
