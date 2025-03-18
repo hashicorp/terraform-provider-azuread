@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/helpers"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/testclient"
@@ -20,7 +21,7 @@ func (td TestData) DataSourceTest(t *testing.T, steps []TestStep) {
 	// DataSources don't need a check destroy - however since this is a wrapper function
 	// and not matching the ignore pattern `XXX_data_source_test.go`, this needs to be explicitly opted out
 
-	//lintignore:AT001
+	// lintignore:AT001
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		Steps:    steps,
@@ -32,7 +33,7 @@ func (td TestData) DataSourceTestInSequence(t *testing.T, steps []TestStep) {
 	// DataSources don't need a check destroy - however since this is a wrapper function
 	// and not matching the ignore pattern `XXX_data_source_test.go`, this needs to be explicitly opted out
 
-	//lintignore:AT001
+	// lintignore:AT001
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		Steps:    steps,
@@ -42,6 +43,21 @@ func (td TestData) DataSourceTestInSequence(t *testing.T, steps []TestStep) {
 }
 
 func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, steps []TestStep) {
+	newSteps := make([]TestStep, 0)
+	for _, step := range steps {
+		// This block adds a check to make sure tests aren't recreating a resource
+		if (step.Config != "" || step.ConfigDirectory != nil || step.ConfigFile != nil) && !step.PlanOnly {
+			step.ConfigPlanChecks = resource.ConfigPlanChecks{
+				PreApply: []plancheck.PlanCheck{
+					helpers.IsNotResourceAction(td.ResourceName, plancheck.ResourceActionReplace),
+				},
+			}
+		}
+
+		newSteps = append(newSteps, step)
+	}
+	steps = newSteps
+
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
@@ -68,7 +84,7 @@ func (td TestData) ResourceTestIgnoreDangling(t *testing.T, _ types.TestResource
 // ResourceTestIgnoreCheckDestroyed skips the check to confirm the resource test has been destroyed.
 // This is done because certain resources can't actually be deleted.
 func (td TestData) ResourceTestSkipCheckDestroyed(t *testing.T, steps []TestStep) {
-	//lintignore:AT001
+	// lintignore:AT001
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		Steps:    steps,
@@ -77,7 +93,7 @@ func (td TestData) ResourceTestSkipCheckDestroyed(t *testing.T, steps []TestStep
 }
 
 func (td TestData) ResourceSequentialTestSkipCheckDestroyed(t *testing.T, steps []TestStep) {
-	//lintignore:AT001
+	// lintignore:AT001
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		Steps:    steps,

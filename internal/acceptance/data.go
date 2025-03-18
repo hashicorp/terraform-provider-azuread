@@ -42,7 +42,7 @@ type TestData struct {
 	TenantID string
 }
 
-func (t TestData) UUID() string {
+func (td TestData) UUID() string {
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
 		panic(err)
