@@ -421,7 +421,7 @@ resource "azuread_application" "test" {
     ]
   }
 }
-`, data.RandomInteger, UUID1, UUID2, UUID3, UUID4) //
+`, data.RandomInteger, UUID1, UUID2, UUID3, UUID4)
 }
 
 func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
