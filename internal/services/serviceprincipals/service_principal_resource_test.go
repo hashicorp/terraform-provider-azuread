@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/serviceprincipal"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
@@ -20,6 +21,14 @@ import (
 )
 
 type ServicePrincipalResource struct{}
+
+var (
+	// Cannot use the testdata.UUID as this is not consistent between test configs, resulting in diffs
+	UUID1 = UUID()
+	UUID2 = UUID()
+	UUID3 = UUID()
+	UUID4 = UUID()
+)
 
 const testApplicationTemplateId = "4601ed45-8ff3-4599-8377-b6649007e876" // Marketo
 
@@ -146,7 +155,7 @@ func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("use_existing", "tags"), // tags and feature tags overlap and are stored in the same API model, importing cannot differentiate
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -181,14 +190,14 @@ func TestAccServicePrincipal_featureTagsUpdate(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("use_existing", "tags"), // tags and feature tags overlap and are stored in the same API model, importing cannot differentiate
 		{
 			Config: r.featureTags(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep("use_existing"),
+		data.ImportStep("use_existing", "tags"), // tags and feature tags overlap and are stored in the same API model, importing cannot differentiate
 	})
 }
 
@@ -412,7 +421,7 @@ resource "azuread_application" "test" {
     ]
   }
 }
-`, data.RandomInteger, data.UUID(), data.UUID(), data.UUID(), data.UUID())
+`, data.RandomInteger, UUID1, UUID2, UUID3, UUID4) //
 }
 
 func (r ServicePrincipalResource) complete(data acceptance.TestData) string {
@@ -464,13 +473,6 @@ resource "azuread_service_principal" "test" {
   notes                         = "Just testing something"
   preferred_single_sign_on_mode = "saml"
 
-  feature_tags {
-    custom_single_sign_on = true
-    enterprise            = true
-    gallery               = true
-    hide                  = true
-  }
-
   notification_email_addresses = [
     "alerts.internal@hashitown.example.com.net",
     "cto@hashitown.example.com.net",
@@ -478,6 +480,13 @@ resource "azuread_service_principal" "test" {
 
   saml_single_sign_on {
     relay_state = "/samlHome"
+  }
+
+  feature_tags {
+    custom_single_sign_on = true
+    enterprise            = true
+    gallery               = true
+    hide                  = true
   }
 }
 `, r.templateComplete(data), data.RandomInteger)
@@ -657,6 +666,10 @@ resource "azuread_application" "test" {
   display_name = "acctest-APP-%[1]d"
   template_id  = "%[2]s"
   owners       = [data.azuread_client_config.test.object_id]
+
+  lifecycle {
+    ignore_changes = ["api", "app_role"] // this resource is not under test here and these values are not relevant to the outcome
+  }
 }
 
 resource "azuread_service_principal" "test" {
@@ -695,4 +708,12 @@ resource "azuread_service_principal" "testC" {
   client_id = azuread_application.testC.client_id
 }
 `, data.RandomInteger)
+}
+
+func UUID() string {
+	result, err := uuid.GenerateUUID()
+	if err != nil {
+		panic(err)
+	}
+	return result
 }

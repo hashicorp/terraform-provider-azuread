@@ -46,7 +46,7 @@ func TestAccServicePrincipalDataSource_byDisplayNameDuplicates(t *testing.T) {
 	data.DataSourceTest(t, []acceptance.TestStep{
 		{
 			Config:      r.byDisplayNameDuplicates(data),
-			ExpectError: regexp.MustCompile("Found multiple service principals matching filter:"),
+			ExpectError: regexp.MustCompile("found multiple service principals matching filter"),
 		},
 	})
 }
