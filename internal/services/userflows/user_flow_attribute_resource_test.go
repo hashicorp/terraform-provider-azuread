@@ -24,7 +24,7 @@ func TestAccUserFlowAttribute_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceSequentialTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -38,7 +38,7 @@ func TestAccUserFlowAttribute_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceSequentialTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -58,7 +58,7 @@ func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceSequentialTest(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
