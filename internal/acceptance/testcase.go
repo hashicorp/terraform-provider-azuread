@@ -74,8 +74,6 @@ func (td TestData) ResourceTest(t *testing.T, testResource types.TestResource, s
 
 // ResourceTestIgnoreRecreate should be used when checking that a resource should be recreated during a test.
 func (td TestData) ResourceTestIgnoreRecreate(t *testing.T, testResource types.TestResource, steps []TestStep) {
-	// Testing framework as of 1.6.0 no longer auto-refreshes state, so adding it back in here for all steps that update
-	// the config rather than having to modify 1000's of tests individually to add a refresh-only step
 	testCase := resource.TestCase{
 		PreCheck: func() { PreCheck(t) },
 		CheckDestroy: func(s *terraform.State) error {
