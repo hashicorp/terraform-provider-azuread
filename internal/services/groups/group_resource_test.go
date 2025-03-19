@@ -696,6 +696,10 @@ resource "azuread_group" "test" {
   external_senders_allowed   = true
   hide_from_address_lists    = true
   hide_from_outlook_clients  = true
+
+  lifecycle {
+    depends_on = [terraform_data.azlogin]
+  }
 }
 `, data.RandomInteger, os.Getenv("AZURE_CLIENT_ID"), os.Getenv("AZURE_CLIENT_SECRET"), data.TenantID)
 }
