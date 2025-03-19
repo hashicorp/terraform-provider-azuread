@@ -6,7 +6,6 @@ package groups_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -677,12 +676,6 @@ provider "azuread" {
   use_cli             = true
 }
 
-resource "terraform_data" "azlogin" {
-  provisioner "local-exec" {
-    command = "az login --service-principal --username  %[2]s  --password %[3]s --tenant %[4]s"
-  }
-}
-
 resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[1]d"
   description      = "Please delete me as this is a.test.AD group!"
@@ -696,12 +689,8 @@ resource "azuread_group" "test" {
   external_senders_allowed   = true
   hide_from_address_lists    = true
   hide_from_outlook_clients  = true
-
-  
-  depends_on = [terraform_data.azlogin]
-  
 }
-`, data.RandomInteger, os.Getenv("AZURE_CLIENT_ID"), os.Getenv("AZURE_CLIENT_SECRET"), data.TenantID)
+`, data.RandomInteger)
 }
 
 func (GroupResource) unifiedWithWriteback(data acceptance.TestData, onPremisesGroupType string) string {
