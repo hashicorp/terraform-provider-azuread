@@ -182,9 +182,9 @@ func groupWithoutMembersResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				MinItems:    1,
 				MaxItems:    100,
 				Set:         pluginsdk.HashString,
+				ConfigMode:  pluginsdk.SchemaConfigModeAttr,
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
 					ValidateFunc: validation.IsUUID,

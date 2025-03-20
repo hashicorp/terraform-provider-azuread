@@ -37,7 +37,7 @@ func TestAccGroupWithoutMembers_basic(t *testing.T) {
 }
 
 func TestAccGroupWithoutMembers_basicUnified(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group_without_members", "test_unified")
+	data := acceptance.BuildTestData(t, "azuread_group_without_members", "test")
 	r := GroupWithoutMembersResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -231,10 +231,10 @@ func TestAccGroupWithoutMembers_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.removeOwners(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("2"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
 		},
 		data.ImportStep(),
@@ -260,7 +260,7 @@ func TestAccGroupWithoutMembers_preventDuplicateNamesForceNew(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group_without_members", "test")
 	r := GroupWithoutMembersResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -535,9 +535,19 @@ resource "azuread_group_without_members" "test" {
 `, data.RandomInteger)
 }
 
+func (GroupWithoutMembersResource) removeOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group_without_members" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  owners = []
+}
+`, data.RandomInteger)
+}
+
 func (GroupWithoutMembersResource) basicUnified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_group_without_members" "test_unified" {
+resource "azuread_group_without_members" "test" {
   display_name     = "acctestGroup-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
@@ -833,7 +843,7 @@ resource "azuread_administrative_unit" "test2" {
 resource "azuread_group_without_members" "test" {
   display_name            = "acctestGroup-%[1]d"
   security_enabled        = true
-  administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
+  administrative_unit_ids = [azuread_administrative_unit.test.object_id, azuread_administrative_unit.test2.object_id]
 }
 `, data.RandomInteger, data.RandomInteger)
 }
