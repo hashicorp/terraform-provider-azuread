@@ -99,7 +99,7 @@ func TestAccGroup_updateUnified(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("members", "owners"), // Removal doesn't take away the CallerID from these or they'd be unmanageable, so import diff will show
 	})
 }
 
@@ -632,11 +632,11 @@ resource "azuread_group" "test" {
 
 func (GroupResource) basicUnified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
-resource "azuread_group" "test_unified" {
+resource "azuread_group" "test" {
   display_name     = "acctestGroup-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = false
 }
 `, data.RandomInteger)
