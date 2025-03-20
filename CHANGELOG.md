@@ -1,5 +1,9 @@
 ## 3.2.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* dependencies: update `go-azure-sdk` to `v0.20250131.1134653` [GH-1635]
+
 BUG FIXES:
 
 * `azuread_access_package_assignment_policy` - fix crash in `Read` [GH-1664]
