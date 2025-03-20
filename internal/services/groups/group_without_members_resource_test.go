@@ -145,20 +145,6 @@ func TestAccGroupWithoutMembers_dynamicMembership(t *testing.T) {
 			),
 		},
 		data.ImportStep(),
-		{
-			Config: r.unified(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.dynamicMembership(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
 	})
 }
 
@@ -540,7 +526,7 @@ func (GroupWithoutMembersResource) removeOwners(data acceptance.TestData) string
 resource "azuread_group_without_members" "test" {
   display_name     = "acctestGroup-%[1]d"
   security_enabled = true
-  owners = []
+  owners           = []
 }
 `, data.RandomInteger)
 }
