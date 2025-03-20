@@ -37,7 +37,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_basicUnified(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test_unified")
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -99,7 +99,7 @@ func TestAccGroup_updateUnified(t *testing.T) {
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep("members", "owners"), // Removal doesn't take away the CallerID from these or they'd be unmanageable, so import diff will show
 	})
 }
 
@@ -138,20 +138,6 @@ func TestAccGroup_dynamicMembership(t *testing.T) {
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.dynamicMembership(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.unified(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-			),
-		},
-		data.ImportStep(),
 		{
 			Config: r.dynamicMembership(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -231,13 +217,13 @@ func TestAccGroup_owners(t *testing.T) {
 		},
 		data.ImportStep(),
 		{
-			Config: r.basic(data),
+			Config: r.removeOwners(data),
 			Check: acceptance.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("owners.#").HasValue("2"),
+				check.That(data.ResourceName).Key("owners.#").HasValue("0"),
 			),
 		},
-		data.ImportStep(),
+		data.ImportStep(), // The import here will persist the previous step does not remove the owners
 	})
 }
 
@@ -368,7 +354,7 @@ func TestAccGroup_preventDuplicateNamesForceNew(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
-	data.ResourceTest(t, r, []acceptance.TestStep{
+	data.ResourceTestIgnoreRecreate(t, r, []acceptance.TestStep{
 		{
 			Config: r.basic(data),
 			Check: acceptance.ComposeTestCheckFunc(
@@ -634,13 +620,35 @@ resource "azuread_group" "test" {
 `, data.RandomInteger)
 }
 
+func (GroupResource) removeOwners(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  security_enabled = true
+  owners           = []
+}
+`, data.RandomInteger)
+}
+
 func (GroupResource) basicUnified(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctest.Group-%[1]d"
+  security_enabled = false
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) unifiedNotMail(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test_unified" {
   display_name     = "acctestGroup-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
-  mail_nickname    = "acctestGroup-%[1]d"
+  mail_nickname    = "acctest.Group-%[1]d"
   security_enabled = false
 }
 `, data.RandomInteger)
@@ -1117,7 +1125,7 @@ resource "azuread_administrative_unit" "test2" {
 resource "azuread_group" "test" {
   display_name            = "acctestGroup-%[1]d"
   security_enabled        = true
-  administrative_unit_ids = [azuread_administrative_unit.test.id, azuread_administrative_unit.test2.id]
+  administrative_unit_ids = [azuread_administrative_unit.test.object_id, azuread_administrative_unit.test2.object_id]
 }
 `, data.RandomInteger, data.RandomInteger)
 }

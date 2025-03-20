@@ -207,8 +207,8 @@ func groupResource() *pluginsdk.Resource {
 				Type:        pluginsdk.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				MinItems:    1,
 				MaxItems:    100,
+				ConfigMode:  pluginsdk.SchemaConfigModeAttr,
 				Set:         pluginsdk.HashString,
 				Elem: &pluginsdk.Schema{
 					Type:         pluginsdk.TypeString,
@@ -809,7 +809,7 @@ func groupResourceCreate(ctx context.Context, d *pluginsdk.ResourceData, meta in
 			if _, err = client.UpdateGroup(ctx, id, beta.Group{
 				AllowExternalSenders: nullable.Value(allowExternalSenders.(bool)),
 			}, groupBeta.DefaultUpdateGroupOperationOptions()); err != nil {
-				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `external_senders_allowed` for %s", id)
+				return tf.CheckDelegatedAuthDiagF(err, "Failed to set `external_senders_allowed` for %s: %+v", id, err)
 			}
 
 			// Wait for AllowExternalSenders to be updated

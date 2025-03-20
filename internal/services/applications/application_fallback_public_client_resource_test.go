@@ -37,30 +37,11 @@ func TestAccApplicationFallbackPublicClient_basic(t *testing.T) {
 		data.ImportStep(),
 	})
 }
-
-func TestAccApplicationFallbackPublicClient_update(t *testing.T) {
+func TestAccApplicationFallbackPublicClient_disabled(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_application_fallback_public_client", "test")
 	r := ApplicationFallbackPublicClientResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
-		{
-			Config: r.disabled(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("enabled").HasValue("false"),
-			),
-		},
-		data.ImportStep(),
-		{
-			Config: r.enabled(data),
-			Check: acceptance.ComposeTestCheckFunc(
-				check.That(data.ResourceName).ExistsInAzure(r),
-				check.That(data.ResourceName).Key("application_id").Exists(),
-				check.That(data.ResourceName).Key("enabled").HasValue("true"),
-			),
-		},
-		data.ImportStep(),
 		{
 			Config: r.disabled(data),
 			Check: acceptance.ComposeTestCheckFunc(

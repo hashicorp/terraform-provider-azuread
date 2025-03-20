@@ -10,7 +10,7 @@ var defaultStartHour = 0
 var defaultParallelism = 20
 
 // specifies the default version of Terraform Core which should be used for testing
-var defaultTerraformCoreVersion = "1.0.0"
+var defaultTerraformCoreVersion = "1.11.2"
 
 var locations = mapOf(
         "public" to LocationConfiguration("westeurope", "eastus2", "francecentral", false)

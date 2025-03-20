@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance"
 	"github.com/hashicorp/terraform-provider-azuread/internal/acceptance/check"
 	"github.com/hashicorp/terraform-provider-azuread/internal/clients"
-	"github.com/hashicorp/terraform-provider-azuread/internal/services/administrativeunits/parse"
 )
 
 type AdministrativeUnitRoleMemberResource struct{}
@@ -102,7 +101,7 @@ func TestAccAdministrativeUnitRoleMember_servicePrincipal(t *testing.T) {
 func (r AdministrativeUnitRoleMemberResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
 	client := clients.AdministrativeUnits.AdministrativeUnitScopedRoleMemberClient
 
-	id, err := parse.AdministrativeUnitRoleMemberID(state.ID)
+	id, err := stable.ParseDirectoryAdministrativeUnitIdScopedRoleMemberID(state.ID)
 	if err != nil {
 		return nil, fmt.Errorf("parsing Directory Role Member ID: %v", err)
 	}
@@ -161,7 +160,7 @@ resource "azuread_application" "test" {
 }
 
 resource "azuread_service_principal" "test" {
-  application_id = azuread_application.test.application_id
+  client_id = azuread_application.test.client_id
 }
 `, data.RandomInteger)
 }
@@ -183,7 +182,7 @@ func (r AdministrativeUnitRoleMemberResource) oneUser(data acceptance.TestData) 
 resource "azuread_administrative_unit_role_member" "test" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_user.testA.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateThreeUsers(data), AdministrativeUnitResource{}.basic(data))
 }
@@ -197,19 +196,19 @@ func (r AdministrativeUnitRoleMemberResource) threeUsers(data acceptance.TestDat
 resource "azuread_administrative_unit_role_member" "testA" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_user.testA.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 
 resource "azuread_administrative_unit_role_member" "testB" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_user.testB.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 
 resource "azuread_administrative_unit_role_member" "testC" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_user.testC.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateThreeUsers(data), AdministrativeUnitResource{}.basic(data))
 }
@@ -223,7 +222,7 @@ func (r AdministrativeUnitRoleMemberResource) group(data acceptance.TestData) st
 resource "azuread_administrative_unit_role_member" "test" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_group.test.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateGroup(data), AdministrativeUnitResource{}.basic(data))
 }
@@ -237,7 +236,7 @@ func (r AdministrativeUnitRoleMemberResource) servicePrincipal(data acceptance.T
 resource "azuread_administrative_unit_role_member" "test" {
   role_object_id                = azuread_directory_role.test.object_id
   member_object_id              = azuread_service_principal.test.object_id
-  administrative_unit_object_id = azuread_administrative_unit.test.id
+  administrative_unit_object_id = azuread_administrative_unit.test.object_id
 }
 `, AdministrativeUnitRoleMemberResource{}.roleByTemplateId(data), r.templateServicePrincipal(data), AdministrativeUnitResource{}.basic(data))
 }

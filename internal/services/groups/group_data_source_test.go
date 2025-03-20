@@ -250,7 +250,7 @@ data "azuread_group" "test" {
   mail_enabled     = false
   security_enabled = true
 }
-`, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
+`, GroupResource{}.basic(data), GroupResource{}.unifiedNotMail(data))
 }
 
 func (GroupDataSource) caseInsensitiveDisplayName(data acceptance.TestData) string {
@@ -293,7 +293,7 @@ data "azuread_group" "test" {
   mail_enabled     = false
   security_enabled = true
 }
-`, GroupResource{}.basic(data), GroupResource{}.basicUnified(data))
+`, GroupResource{}.basic(data), GroupResource{}.unifiedNotMail(data))
 }
 
 func (GroupDataSource) objectId(data acceptance.TestData) string {
