@@ -37,7 +37,7 @@ func TestAccGroup_basic(t *testing.T) {
 }
 
 func TestAccGroup_basicUnified(t *testing.T) {
-	data := acceptance.BuildTestData(t, "azuread_group", "test_unified")
+	data := acceptance.BuildTestData(t, "azuread_group", "test")
 	r := GroupResource{}
 
 	data.ResourceTest(t, r, []acceptance.TestStep{
@@ -633,6 +633,18 @@ resource "azuread_group" "test" {
 func (GroupResource) basicUnified(data acceptance.TestData) string {
 	return fmt.Sprintf(`
 resource "azuread_group" "test" {
+  display_name     = "acctestGroup-%[1]d"
+  types            = ["Unified"]
+  mail_enabled     = true
+  mail_nickname    = "acctest.Group-%[1]d"
+  security_enabled = false
+}
+`, data.RandomInteger)
+}
+
+func (GroupResource) unifiedNotMail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+resource "azuread_group" "test_unified" {
   display_name     = "acctestGroup-%[1]d"
   types            = ["Unified"]
   mail_enabled     = true
