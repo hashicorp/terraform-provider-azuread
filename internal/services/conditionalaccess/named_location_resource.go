@@ -152,7 +152,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 
 		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, ipNamedLocationWait(client, &id, v)); err != nil {
-			return tf.ErrorDiagF(err, "waiting for create of %s", id)
+			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
 
 		d.SetId(id.ID())
@@ -182,7 +182,7 @@ func namedLocationResourceCreate(ctx context.Context, d *pluginsdk.ResourceData,
 		id := stable.NewIdentityConditionalAccessNamedLocationID(*namedLocation.Id)
 		d.SetId(id.ID())
 		if err := consistency.WaitForUpdateDelayStart(ctx, time.Second*15, countryNamedLocationWait(client, &id, v)); err != nil {
-			return tf.ErrorDiagF(err, "waiting for create of %s", id)
+			return tf.ErrorDiagF(err, "waiting for creation of %s", id)
 		}
 
 	} else {
