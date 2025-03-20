@@ -20,7 +20,34 @@ import (
 
 type UserFlowAttributeResource struct{}
 
-func TestAccUserFlowAttribute_basic(t *testing.T) {
+func TestAccUserFlowAttributeResource_serialised(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"basic": {
+			"basic": testAccUserFlowAttribute_basic,
+		},
+
+		"updates": {
+			"update": testAccUserFlowAttribute_update,
+		},
+		"requires_import": {
+			"requires_import": testAccUserFlowAttribute_requiresImport,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func testAccUserFlowAttribute_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
@@ -34,7 +61,7 @@ func TestAccUserFlowAttribute_basic(t *testing.T) {
 	})
 }
 
-func TestAccUserFlowAttribute_update(t *testing.T) {
+func testAccUserFlowAttribute_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
@@ -54,7 +81,7 @@ func TestAccUserFlowAttribute_update(t *testing.T) {
 	})
 }
 
-func TestAccUserFlowAttribute_requiresImport(t *testing.T) {
+func testAccUserFlowAttribute_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_user_flow_attribute", "test")
 	r := UserFlowAttributeResource{}
 
