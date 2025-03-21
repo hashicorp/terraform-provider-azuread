@@ -1,18 +1,18 @@
-## 3.2.0 (Unreleased)
+## 3.2.0 (March 21, 2025)
 
 FEATURES:
 
-* New Resource: `azuread_group_without_members` [GH-1623]
+* New Resource: `azuread_group_without_members` ([#1623](https://github.com/hashicorp/terraform-provider-azuread/issues/1623))
 
 ENHANCEMENTS:
 
-* dependencies: update `go-azure-sdk` to `v0.20250131.1134653` [GH-1635]
+* dependencies: update `go-azure-sdk` to `v0.20250131.1134653` ([#1635](https://github.com/hashicorp/terraform-provider-azuread/issues/1635))
 
 BUG FIXES:
 
-* `azuread_access_package_assignment_policy` - fix crash in `Read` [GH-1664]
-* `azuread_access_package_assignment_policy` - fix use of `alternative_approver` in `approval_settings` [GH-1567]
-* `azuread_group_role_management_policy` - fix endless drift due to `approval_status computed` [GH-1666]
+* `azuread_access_package_assignment_policy` - fix crash in `Read` ([#1664](https://github.com/hashicorp/terraform-provider-azuread/issues/1664))
+* `azuread_access_package_assignment_policy` - fix use of `alternative_approver` in `approval_settings` ([#1567](https://github.com/hashicorp/terraform-provider-azuread/issues/1567))
+* `azuread_group_role_management_policy` - fix endless drift due to `approval_status computed` ([#1666](https://github.com/hashicorp/terraform-provider-azuread/issues/1666))
 
 ## 3.1.0 (January 16, 2025)
 
