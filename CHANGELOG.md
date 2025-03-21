@@ -1,5 +1,9 @@
 ## 3.2.0 (Unreleased)
 
+FEATURES:
+
+* New Resource: `azuread_group_without_members` [GH-1623]
+
 ENHANCEMENTS:
 
 * dependencies: update `go-azure-sdk` to `v0.20250131.1134653` [GH-1635]
