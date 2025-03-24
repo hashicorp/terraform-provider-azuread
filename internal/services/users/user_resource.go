@@ -51,7 +51,7 @@ func userResource() *pluginsdk.Resource {
 				for _, err := range errs {
 					out += err.Error()
 				}
-				return fmt.Errorf(out)
+				return errors.New(out)
 			}
 			return nil
 		}),
@@ -638,7 +638,7 @@ func userResourceUpdate(ctx context.Context, d *pluginsdk.ResourceData, meta int
 		// Flag the state as 'partial' to avoid setting `password` from the current config. Since the config is the
 		// only source for this property, if the update fails due to a bad password, the current password will be forgotten
 		// and Terraform will not offer a diff in the next plan.
-		d.Partial(true) //lintignore:R007
+		d.Partial(true) // lintignore:R007
 
 		return tf.ErrorDiagF(err, "Could not update %s", id)
 	}

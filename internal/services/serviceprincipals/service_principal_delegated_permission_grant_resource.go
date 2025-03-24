@@ -6,7 +6,6 @@ package serviceprincipals
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -46,7 +45,7 @@ func servicePrincipalDelegatedPermissionGrantResource() *pluginsdk.Resource {
 				for _, err := range errs {
 					out += err.Error()
 				}
-				return fmt.Errorf(out)
+				return errors.New(out)
 			}
 			return nil
 		}),

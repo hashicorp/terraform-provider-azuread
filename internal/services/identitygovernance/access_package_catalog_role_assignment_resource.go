@@ -88,18 +88,18 @@ func accessPackageCatalogRoleAssignmentResourceCreate(ctx context.Context, d *pl
 		OmitDiscriminatedValue: true,
 	}
 
-	createMsg := fmt.Sprintf("Assigning catalog role %q to directory principal %q on catalog %q", roleId, principalId, catalogId)
+	createMsg := `Assigning catalog role %q to directory principal %q on catalog %q`
 	resp, err := client.CreateEntitlementManagementRoleAssignment(ctx, properties, entitlementmanagementroleassignment.DefaultCreateEntitlementManagementRoleAssignmentOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, createMsg)
+		return tf.ErrorDiagF(err, createMsg, roleId, principalId, catalogId)
 	}
 
 	assignment := resp.Model
 	if assignment == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), createMsg)
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, roleId, principalId, catalogId)
 	}
 	if assignment.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, roleId, principalId, catalogId)
 	}
 
 	id := beta.NewRoleManagementEntitlementManagementRoleAssignmentID(*assignment.Id)
