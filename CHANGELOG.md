@@ -1,3 +1,9 @@
+## 3.3.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* dependencies: update `Go` to `1.24.1` [GH-1675]
+
 ## 3.2.0 (March 21, 2025)
 
 FEATURES:
