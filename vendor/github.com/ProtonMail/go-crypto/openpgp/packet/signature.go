@@ -8,9 +8,11 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/dsa"
+	"encoding/asn1"
 	"encoding/binary"
 	"hash"
 	"io"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -24,27 +26,41 @@ import (
 )
 
 const (
-	// See RFC 4880, section 5.2.3.21 for details.
+	// First octet of key flags.
+	// See RFC 9580, section 5.2.3.29 for details.
 	KeyFlagCertify = 1 << iota
 	KeyFlagSign
 	KeyFlagEncryptCommunications
 	KeyFlagEncryptStorage
 	KeyFlagSplitKey
 	KeyFlagAuthenticate
-	KeyFlagForward
+	_
 	KeyFlagGroupKey
+)
+
+const (
+	// First octet of keyserver preference flags.
+	// See RFC 9580, section 5.2.3.25 for details.
+	_ = 1 << iota
+	_
+	_
+	_
+	_
+	_
+	_
+	KeyserverPrefNoModify
 )
 
 const SaltNotationName = "salt@notations.openpgpjs.org"
 
-// Signature represents a signature. See RFC 4880, section 5.2.
+// Signature represents a signature. See RFC 9580, section 5.2.
 type Signature struct {
 	Version    int
 	SigType    SignatureType
 	PubKeyAlgo PublicKeyAlgorithm
 	Hash       crypto.Hash
 	// salt contains a random salt value for v6 signatures
-	// See RFC the crypto refresh Section 5.2.3.
+	// See RFC 9580 Section 5.2.4.
 	salt []byte
 
 	// HashSuffix is extra data that is hashed in after the signed data.
@@ -65,7 +81,6 @@ type Signature struct {
 	ECDSASigR, ECDSASigS encoding.Field
 	EdDSASigR, EdDSASigS encoding.Field
 	EdSig                []byte
-	HMAC                 encoding.Field
 
 	// rawSubpackets contains the unparsed subpackets, in order.
 	rawSubpackets []outputSubpacket
@@ -86,28 +101,37 @@ type Signature struct {
 	// TrustLevel and TrustAmount can be set by the signer to assert that
 	// the key is not only valid but also trustworthy at the specified
 	// level.
-	// See RFC 4880, section 5.2.3.13 for details.
+	// See RFC 9580, section 5.2.3.21 for details.
 	TrustLevel  TrustLevel
 	TrustAmount TrustAmount
 
 	// TrustRegularExpression can be used in conjunction with trust Signature
 	// packets to limit the scope of the trust that is extended.
-	// See RFC 4880, section 5.2.3.14 for details.
+	// See RFC 9580, section 5.2.3.22 for details.
 	TrustRegularExpression *string
 
+	// KeyserverPrefsValid is set if any keyserver preferences were given. See RFC 9580, section
+	// 5.2.3.25 for details.
+	KeyserverPrefsValid   bool
+	KeyserverPrefNoModify bool
+
+	// PreferredKeyserver can be set to a URI where the latest version of the
+	// key that this signature is made over can be found. See RFC 9580, section
+	// 5.2.3.26 for details.
+	PreferredKeyserver string
+
 	// PolicyURI can be set to the URI of a document that describes the
-	// policy under which the signature was issued. See RFC 4880, section
-	// 5.2.3.20 for details.
+	// policy under which the signature was issued. See RFC 9580, section
+	// 5.2.3.28 for details.
 	PolicyURI string
 
-	// FlagsValid is set if any flags were given. See RFC 4880, section
-	// 5.2.3.21 for details.
-	FlagsValid                                                           bool
-	FlagCertify, FlagSign, FlagEncryptCommunications, FlagEncryptStorage bool
-	FlagSplitKey, FlagAuthenticate, FlagForward, FlagGroupKey            bool
+	// FlagsValid is set if any flags were given. See RFC 9580, section
+	// 5.2.3.29 for details.
+	FlagsValid                                                                                                         bool
+	FlagCertify, FlagSign, FlagEncryptCommunications, FlagEncryptStorage, FlagSplitKey, FlagAuthenticate, FlagGroupKey bool
 
 	// RevocationReason is set if this signature has been revoked.
-	// See RFC 4880, section 5.2.3.23 for details.
+	// See RFC 9580, section 5.2.3.31 for details.
 	RevocationReason     *ReasonForRevocation
 	RevocationReasonText string
 
@@ -147,7 +171,7 @@ func (sig *Signature) Salt() []byte {
 }
 
 func (sig *Signature) parse(r io.Reader) (err error) {
-	// RFC 4880, section 5.2.3
+	// RFC 9580, section 5.2.3
 	var buf [7]byte
 	_, err = readFull(r, buf[:1])
 	if err != nil {
@@ -174,7 +198,7 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 	sig.SigType = SignatureType(buf[0])
 	sig.PubKeyAlgo = PublicKeyAlgorithm(buf[1])
 	switch sig.PubKeyAlgo {
-	case PubKeyAlgoRSA, PubKeyAlgoRSASignOnly, PubKeyAlgoDSA, PubKeyAlgoECDSA, PubKeyAlgoEdDSA, PubKeyAlgoEd25519, PubKeyAlgoEd448, ExperimentalPubKeyAlgoHMAC:
+	case PubKeyAlgoRSA, PubKeyAlgoRSASignOnly, PubKeyAlgoDSA, PubKeyAlgoECDSA, PubKeyAlgoEdDSA, PubKeyAlgoEd25519, PubKeyAlgoEd448:
 	default:
 		err = errors.UnsupportedError("public key algorithm " + strconv.Itoa(int(sig.PubKeyAlgo)))
 		return
@@ -312,11 +336,6 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 		if err != nil {
 			return
 		}
-	case ExperimentalPubKeyAlgoHMAC:
-		sig.HMAC = new(encoding.ShortByteString)
-		if _, err = sig.HMAC.ReadFrom(r); err != nil {
-			return
-		}
 	default:
 		panic("unreachable")
 	}
@@ -324,7 +343,7 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 }
 
 // parseSignatureSubpackets parses subpackets of the main signature packet. See
-// RFC 4880, section 5.2.3.1.
+// RFC 9580, section 5.2.3.1.
 func parseSignatureSubpackets(sig *Signature, subpackets []byte, isHashed bool) (err error) {
 	for len(subpackets) > 0 {
 		subpackets, err = parseSignatureSubpacket(sig, subpackets, isHashed)
@@ -354,6 +373,8 @@ const (
 	notationDataSubpacket        signatureSubpacketType = 20
 	prefHashAlgosSubpacket       signatureSubpacketType = 21
 	prefCompressionSubpacket     signatureSubpacketType = 22
+	keyserverPrefsSubpacket      signatureSubpacketType = 23
+	prefKeyserverSubpacket       signatureSubpacketType = 24
 	primaryUserIdSubpacket       signatureSubpacketType = 25
 	policyUriSubpacket           signatureSubpacketType = 26
 	keyFlagsSubpacket            signatureSubpacketType = 27
@@ -368,7 +389,7 @@ const (
 
 // parseSignatureSubpacket parses a single subpacket. len(subpacket) is >= 1.
 func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (rest []byte, err error) {
-	// RFC 4880, section 5.2.3.1
+	// RFC 9580, section 5.2.3.7
 	var (
 		length     uint32
 		packetType signatureSubpacketType
@@ -426,7 +447,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		t := binary.BigEndian.Uint32(subpacket)
 		sig.CreationTime = time.Unix(int64(t), 0)
 	case signatureExpirationSubpacket:
-		// Signature expiration time, section 5.2.3.10
+		// Signature expiration time, section 5.2.3.18
 		if len(subpacket) != 4 {
 			err = errors.StructuralError("expiration subpacket with bad length")
 			return
@@ -443,7 +464,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			err = errors.StructuralError("trust subpacket with bad length")
 			return
 		}
-		// Trust level and amount, section 5.2.3.13
+		// Trust level and amount, section 5.2.3.21
 		sig.TrustLevel = TrustLevel(subpacket[0])
 		sig.TrustAmount = TrustAmount(subpacket[1])
 	case regularExpressionSubpacket:
@@ -451,7 +472,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			err = errors.StructuralError("regexp subpacket with bad length")
 			return
 		}
-		// Trust regular expression, section 5.2.3.14
+		// Trust regular expression, section 5.2.3.22
 		// RFC specifies the string should be null-terminated; remove a null byte from the end
 		if subpacket[len(subpacket)-1] != 0x00 {
 			err = errors.StructuralError("expected regular expression to be null-terminated")
@@ -460,7 +481,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		trustRegularExpression := string(subpacket[:len(subpacket)-1])
 		sig.TrustRegularExpression = &trustRegularExpression
 	case keyExpirationSubpacket:
-		// Key expiration time, section 5.2.3.6
+		// Key expiration time, section 5.2.3.13
 		if len(subpacket) != 4 {
 			err = errors.StructuralError("key expiration subpacket with bad length")
 			return
@@ -468,11 +489,11 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		sig.KeyLifetimeSecs = new(uint32)
 		*sig.KeyLifetimeSecs = binary.BigEndian.Uint32(subpacket)
 	case prefSymmetricAlgosSubpacket:
-		// Preferred symmetric algorithms, section 5.2.3.7
+		// Preferred symmetric algorithms, section 5.2.3.14
 		sig.PreferredSymmetric = make([]byte, len(subpacket))
 		copy(sig.PreferredSymmetric, subpacket)
 	case issuerSubpacket:
-		// Issuer, section 5.2.3.5
+		// Issuer, section 5.2.3.12
 		if sig.Version > 4 && isHashed {
 			err = errors.StructuralError("issuer subpacket found in v6 key")
 			return
@@ -486,7 +507,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket)
 		}
 	case notationDataSubpacket:
-		// Notation data, section 5.2.3.16
+		// Notation data, section 5.2.3.24
 		if len(subpacket) < 8 {
 			err = errors.StructuralError("notation data subpacket with bad length")
 			return
@@ -508,15 +529,27 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 
 		sig.Notations = append(sig.Notations, &notation)
 	case prefHashAlgosSubpacket:
-		// Preferred hash algorithms, section 5.2.3.8
+		// Preferred hash algorithms, section 5.2.3.16
 		sig.PreferredHash = make([]byte, len(subpacket))
 		copy(sig.PreferredHash, subpacket)
 	case prefCompressionSubpacket:
-		// Preferred compression algorithms, section 5.2.3.9
+		// Preferred compression algorithms, section 5.2.3.17
 		sig.PreferredCompression = make([]byte, len(subpacket))
 		copy(sig.PreferredCompression, subpacket)
+	case keyserverPrefsSubpacket:
+		// Keyserver preferences, section 5.2.3.25
+		sig.KeyserverPrefsValid = true
+		if len(subpacket) == 0 {
+			return
+		}
+		if subpacket[0]&KeyserverPrefNoModify != 0 {
+			sig.KeyserverPrefNoModify = true
+		}
+	case prefKeyserverSubpacket:
+		// Preferred keyserver, section 5.2.3.26
+		sig.PreferredKeyserver = string(subpacket)
 	case primaryUserIdSubpacket:
-		// Primary User ID, section 5.2.3.19
+		// Primary User ID, section 5.2.3.27
 		if len(subpacket) != 1 {
 			err = errors.StructuralError("primary user id subpacket with bad length")
 			return
@@ -526,7 +559,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			*sig.IsPrimaryId = true
 		}
 	case keyFlagsSubpacket:
-		// Key flags, section 5.2.3.21
+		// Key flags, section 5.2.3.29
 		sig.FlagsValid = true
 		if len(subpacket) == 0 {
 			return
@@ -549,9 +582,6 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		if subpacket[0]&KeyFlagAuthenticate != 0 {
 			sig.FlagAuthenticate = true
 		}
-		if subpacket[0]&KeyFlagForward != 0 {
-			sig.FlagForward = true
-		}
 		if subpacket[0]&KeyFlagGroupKey != 0 {
 			sig.FlagGroupKey = true
 		}
@@ -559,7 +589,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		userId := string(subpacket)
 		sig.SignerUserId = &userId
 	case reasonForRevocationSubpacket:
-		// Reason For Revocation, section 5.2.3.23
+		// Reason For Revocation, section 5.2.3.31
 		if len(subpacket) == 0 {
 			err = errors.StructuralError("empty revocation reason subpacket")
 			return
@@ -568,7 +598,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		*sig.RevocationReason = NewReasonForRevocation(subpacket[0])
 		sig.RevocationReasonText = string(subpacket[1:])
 	case featuresSubpacket:
-		// Features subpacket, section 5.2.3.24 specifies a very general
+		// Features subpacket, section 5.2.3.32 specifies a very general
 		// mechanism for OpenPGP implementations to signal support for new
 		// features.
 		if len(subpacket) > 0 {
@@ -582,16 +612,13 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		}
 	case embeddedSignatureSubpacket:
 		// Only usage is in signatures that cross-certify
-		// signing subkeys. section 5.2.3.26 describes the
+		// signing subkeys. section 5.2.3.34 describes the
 		// format, with its usage described in section 11.1
 		if sig.EmbeddedSignature != nil {
 			err = errors.StructuralError("Cannot have multiple embedded signatures")
 			return
 		}
 		sig.EmbeddedSignature = new(Signature)
-		// Embedded signatures are required to be v4 signatures see
-		// section 12.1. However, we only parse v4 signatures in this
-		// file anyway.
 		if err := sig.EmbeddedSignature.parse(bytes.NewBuffer(subpacket)); err != nil {
 			return nil, err
 		}
@@ -599,7 +626,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			return nil, errors.StructuralError("cross-signature has unexpected type " + strconv.Itoa(int(sigType)))
 		}
 	case policyUriSubpacket:
-		// Policy URI, section 5.2.3.20
+		// Policy URI, section 5.2.3.28
 		sig.PolicyURI = string(subpacket)
 	case issuerFingerprintSubpacket:
 		if len(subpacket) == 0 {
@@ -619,8 +646,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket[13:21])
 		}
 	case intendedRecipientSubpacket:
-		// Intended Recipient Fingerprint
-		// https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#name-intended-recipient-fingerpr
+		// Intended Recipient Fingerprint, section 5.2.3.36
 		if len(subpacket) < 1 {
 			return nil, errors.StructuralError("invalid intended recipient fingerpring length")
 		}
@@ -632,8 +658,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		copy(fingerprint, subpacket[1:])
 		sig.IntendedRecipients = append(sig.IntendedRecipients, &Recipient{int(version), fingerprint})
 	case prefCipherSuitesSubpacket:
-		// Preferred AEAD cipher suites
-		// See https://www.ietf.org/archive/id/draft-ietf-openpgp-crypto-refresh-07.html#name-preferred-aead-ciphersuites
+		// Preferred AEAD cipher suites, section 5.2.3.15
 		if len(subpacket)%2 != 0 {
 			err = errors.StructuralError("invalid aead cipher suite length")
 			return
@@ -684,7 +709,7 @@ func (sig *Signature) CheckKeyIdOrFingerprintExplicit(fingerprint []byte, keyId 
 
 // serializeSubpacketLength marshals the given length into to.
 func serializeSubpacketLength(to []byte, length int) int {
-	// RFC 4880, Section 4.2.2.
+	// RFC 9580, Section 4.2.1.
 	if length < 192 {
 		to[0] = byte(length)
 		return 1
@@ -827,7 +852,7 @@ func (sig *Signature) signPrepareHash(h hash.Hash) (digest []byte, err error) {
 // The created hash object initially hashes a randomly generated salt
 // as required by v6 signatures. The generated salt is stored in sig. If the signature is not v6,
 // the method returns an empty hash object.
-// See RFC the crypto refresh Section 3.2.4.
+// See RFC 9580 Section 5.2.4.
 func (sig *Signature) PrepareSign(config *Config) (hash.Hash, error) {
 	if !sig.Hash.Available() {
 		return nil, errors.UnsupportedError("hash function")
@@ -851,7 +876,7 @@ func (sig *Signature) PrepareSign(config *Config) (hash.Hash, error) {
 // If the signature is not v6, the method ignores the salt.
 // Use PrepareSign whenever possible instead of generating and
 // hashing the salt externally.
-// See RFC the crypto refresh Section 3.2.4.
+// See RFC 9580 Section 5.2.4.
 func (sig *Signature) SetSalt(salt []byte) error {
 	if sig.Version == 6 {
 		expectedSaltLength, err := SaltLengthForHash(sig.Hash)
@@ -869,7 +894,7 @@ func (sig *Signature) SetSalt(salt []byte) error {
 // PrepareVerify must be called to create a hash object before verifying v6 signatures.
 // The created hash object initially hashes the internally stored salt.
 // If the signature is not v6, the method returns an empty hash object.
-// See crypto refresh Section 3.2.4.
+// See RFC 9580 Section 5.2.4.
 func (sig *Signature) PrepareVerify() (hash.Hash, error) {
 	if !sig.Hash.Available() {
 		return nil, errors.UnsupportedError("hash function")
@@ -937,8 +962,16 @@ func (sig *Signature) Sign(h hash.Hash, priv *PrivateKey, config *Config) (err e
 			sig.DSASigS = new(encoding.MPI).SetBig(s)
 		}
 	case PubKeyAlgoECDSA:
-		sk := priv.PrivateKey.(*ecdsa.PrivateKey)
-		r, s, err := ecdsa.Sign(config.Random(), sk, digest)
+		var r, s *big.Int
+		if sk, ok := priv.PrivateKey.(*ecdsa.PrivateKey); ok {
+			r, s, err = ecdsa.Sign(config.Random(), sk, digest)
+		} else {
+			var b []byte
+			b, err = priv.PrivateKey.(crypto.Signer).Sign(config.Random(), digest, sig.Hash)
+			if err == nil {
+				r, s, err = unwrapECDSASig(b)
+			}
+		}
 
 		if err == nil {
 			sig.ECDSASigR = new(encoding.MPI).SetBig(r)
@@ -963,16 +996,23 @@ func (sig *Signature) Sign(h hash.Hash, priv *PrivateKey, config *Config) (err e
 		if err == nil {
 			sig.EdSig = signature
 		}
-	case ExperimentalPubKeyAlgoHMAC:
-		sigdata, err := priv.PrivateKey.(crypto.Signer).Sign(config.Random(), digest, nil)
-		if err == nil {
-			sig.HMAC = encoding.NewShortByteString(sigdata)
-		}
 	default:
 		err = errors.UnsupportedError("public key algorithm: " + strconv.Itoa(int(sig.PubKeyAlgo)))
 	}
 
 	return
+}
+
+// unwrapECDSASig parses the two integer components of an ASN.1-encoded ECDSA signature.
+func unwrapECDSASig(b []byte) (r, s *big.Int, err error) {
+	var ecsdaSig struct {
+		R, S *big.Int
+	}
+	_, err = asn1.Unmarshal(b, &ecsdaSig)
+	if err != nil {
+		return
+	}
+	return ecsdaSig.R, ecsdaSig.S, nil
 }
 
 // SignUserId computes a signature from priv, asserting that pub is a valid
@@ -1073,7 +1113,7 @@ func (sig *Signature) Serialize(w io.Writer) (err error) {
 	if len(sig.outSubpackets) == 0 {
 		sig.outSubpackets = sig.rawSubpackets
 	}
-	if sig.RSASignature == nil && sig.DSASigR == nil && sig.ECDSASigR == nil && sig.EdDSASigR == nil && sig.EdSig == nil && sig.HMAC == nil {
+	if sig.RSASignature == nil && sig.DSASigR == nil && sig.ECDSASigR == nil && sig.EdDSASigR == nil && sig.EdSig == nil {
 		return errors.InvalidArgumentError("Signature: need to call Sign, SignUserId or SignKey before Serialize")
 	}
 
@@ -1094,8 +1134,6 @@ func (sig *Signature) Serialize(w io.Writer) (err error) {
 		sigLength = ed25519.SignatureSize
 	case PubKeyAlgoEd448:
 		sigLength = ed448.SignatureSize
-	case ExperimentalPubKeyAlgoHMAC:
-		sigLength = int(sig.HMAC.EncodedLength())
 	default:
 		panic("impossible")
 	}
@@ -1202,8 +1240,6 @@ func (sig *Signature) serializeBody(w io.Writer) (err error) {
 		err = ed25519.WriteSignature(w, sig.EdSig)
 	case PubKeyAlgoEd448:
 		err = ed448.WriteSignature(w, sig.EdSig)
-	case ExperimentalPubKeyAlgoHMAC:
-		_, err = w.Write(sig.HMAC.EncodedBytes())
 	default:
 		panic("impossible")
 	}
@@ -1273,6 +1309,19 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 	if len(sig.PreferredCompression) > 0 {
 		subpackets = append(subpackets, outputSubpacket{true, prefCompressionSubpacket, false, sig.PreferredCompression})
 	}
+	// Keyserver Preferences
+	// Keyserver preferences may only appear in self-signatures or certification signatures.
+	if sig.KeyserverPrefsValid {
+		var prefs byte
+		if sig.KeyserverPrefNoModify {
+			prefs |= KeyserverPrefNoModify
+		}
+		subpackets = append(subpackets, outputSubpacket{true, keyserverPrefsSubpacket, false, []byte{prefs}})
+	}
+	// Preferred Keyserver
+	if len(sig.PreferredKeyserver) > 0 {
+		subpackets = append(subpackets, outputSubpacket{true, prefKeyserverSubpacket, false, []uint8(sig.PreferredKeyserver)})
+	}
 	// Primary User ID
 	if sig.IsPrimaryId != nil && *sig.IsPrimaryId {
 		subpackets = append(subpackets, outputSubpacket{true, primaryUserIdSubpacket, false, []byte{1}})
@@ -1303,9 +1352,6 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 		if sig.FlagAuthenticate {
 			flags |= KeyFlagAuthenticate
 		}
-		if sig.FlagForward {
-			flags |= KeyFlagForward
-		}
 		if sig.FlagGroupKey {
 			flags |= KeyFlagGroupKey
 		}
@@ -1316,7 +1362,7 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 		subpackets = append(subpackets, outputSubpacket{true, signerUserIdSubpacket, false, []byte(*sig.SignerUserId)})
 	}
 	// Reason for Revocation
-	// Revocation reason appears only in revocation signatures and is serialized as per section 5.2.3.23.
+	// Revocation reason appears only in revocation signatures and is serialized as per section 5.2.3.31.
 	if sig.RevocationReason != nil {
 		subpackets = append(subpackets, outputSubpacket{true, reasonForRevocationSubpacket, true,
 			append([]uint8{uint8(*sig.RevocationReason)}, []uint8(sig.RevocationReasonText)...)})
@@ -1333,7 +1379,7 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 		subpackets = append(subpackets, outputSubpacket{true, featuresSubpacket, false, []byte{features}})
 	}
 	// Embedded Signature
-	// EmbeddedSignature appears only in subkeys capable of signing and is serialized as per section 5.2.3.26.
+	// EmbeddedSignature appears only in subkeys capable of signing and is serialized as per section 5.2.3.34.
 	if sig.EmbeddedSignature != nil {
 		var buf bytes.Buffer
 		err = sig.EmbeddedSignature.serializeBody(&buf)
@@ -1418,7 +1464,7 @@ func (sig *Signature) AddMetadataToHashSuffix() {
 
 // SaltLengthForHash selects the required salt length for the given hash algorithm,
 // as per Table 23 (Hash algorithm registry) of the crypto refresh.
-// See https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#section-9.5|Crypto Refresh Section 9.5.
+// See RFC 9580 Section 9.5.
 func SaltLengthForHash(hash crypto.Hash) (int, error) {
 	switch hash {
 	case crypto.SHA256, crypto.SHA224, crypto.SHA3_256:
@@ -1434,7 +1480,7 @@ func SaltLengthForHash(hash crypto.Hash) (int, error) {
 
 // SignatureSaltForHash generates a random signature salt
 // with the length for the given hash algorithm.
-// See https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#section-9.5|Crypto Refresh Section 9.5.
+// See RFC 9580 Section 9.5.
 func SignatureSaltForHash(hash crypto.Hash, randReader io.Reader) ([]byte, error) {
 	saltLength, err := SaltLengthForHash(hash)
 	if err != nil {

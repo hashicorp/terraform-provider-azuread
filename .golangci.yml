@@ -32,7 +32,7 @@ linters:
     - unconvert
     - unparam
     - unused
-    - vet
+    - govet
     - vetshadow
 
 linters-settings:

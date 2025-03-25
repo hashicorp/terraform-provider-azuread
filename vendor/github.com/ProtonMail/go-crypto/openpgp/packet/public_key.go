@@ -5,14 +5,12 @@
 package packet
 
 import (
-	"bytes"
 	"crypto/dsa"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/sha256"
 	_ "crypto/sha512"
 	"encoding/binary"
-	goerrors "errors"
 	"fmt"
 	"hash"
 	"io"
@@ -30,7 +28,6 @@ import (
 	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/ecc"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/encoding"
-	"github.com/ProtonMail/go-crypto/openpgp/symmetric"
 	"github.com/ProtonMail/go-crypto/openpgp/x25519"
 	"github.com/ProtonMail/go-crypto/openpgp/x448"
 )
@@ -66,29 +63,10 @@ func (pk *PublicKey) UpgradeToV5() {
 
 // UpgradeToV6 updates the version of the key to v6, and updates all necessary
 // fields.
-func (pk *PublicKey) UpgradeToV6() {
+func (pk *PublicKey) UpgradeToV6() error {
 	pk.Version = 6
 	pk.setFingerprintAndKeyId()
-}
-
-// ReplaceKDF replaces the KDF instance, and updates all necessary fields.
-func (pk *PublicKey) ReplaceKDF(kdf ecdh.KDF) error {
-	ecdhKey, ok := pk.PublicKey.(*ecdh.PublicKey)
-	if !ok {
-		return goerrors.New("wrong forwarding sub key generation")
-	}
-
-	ecdhKey.KDF = kdf
-	byteBuffer := new(bytes.Buffer)
-	err := kdf.Serialize(byteBuffer)
-	if err != nil {
-		return err
-	}
-
-	pk.kdf = encoding.NewOID(byteBuffer.Bytes()[1:])
-	pk.setFingerprintAndKeyId()
-
-	return nil
+	return pk.checkV6Compatibility()
 }
 
 // signingKey provides a convenient abstraction over signature verification
@@ -252,30 +230,6 @@ func NewEd448PublicKey(creationTime time.Time, pub *ed448.PublicKey) *PublicKey 
 	return pk
 }
 
-func NewAEADPublicKey(creationTime time.Time, pub *symmetric.AEADPublicKey) *PublicKey {
-	var pk *PublicKey
-	pk = &PublicKey{
-		Version:      4,
-		CreationTime: creationTime,
-		PubKeyAlgo:   ExperimentalPubKeyAlgoAEAD,
-		PublicKey:    pub,
-	}
-
-	return pk
-}
-
-func NewHMACPublicKey(creationTime time.Time, pub *symmetric.HMACPublicKey) *PublicKey {
-	var pk *PublicKey
-	pk = &PublicKey{
-		Version:      4,
-		CreationTime: creationTime,
-		PubKeyAlgo:   ExperimentalPubKeyAlgoHMAC,
-		PublicKey:    pub,
-	}
-
-	return pk
-}
-
 func (pk *PublicKey) parse(r io.Reader) (err error) {
 	// RFC 4880, section 5.5.2
 	var buf [6]byte
@@ -326,10 +280,6 @@ func (pk *PublicKey) parse(r io.Reader) (err error) {
 		err = pk.parseEd25519(r)
 	case PubKeyAlgoEd448:
 		err = pk.parseEd448(r)
-	case ExperimentalPubKeyAlgoAEAD:
-		err = pk.parseAEAD(r)
-	case ExperimentalPubKeyAlgoHMAC:
-		err = pk.parseHMAC(r)
 	default:
 		err = errors.UnsupportedError("public key type: " + strconv.Itoa(int(pk.PubKeyAlgo)))
 	}
@@ -362,6 +312,23 @@ func (pk *PublicKey) setFingerprintAndKeyId() {
 		copy(pk.Fingerprint, fingerprint.Sum(nil))
 		pk.KeyId = binary.BigEndian.Uint64(pk.Fingerprint[12:20])
 	}
+}
+
+func (pk *PublicKey) checkV6Compatibility() error {
+	// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+	switch pk.PubKeyAlgo {
+	case PubKeyAlgoECDH:
+		curveInfo := ecc.FindByOid(pk.oid)
+		if curveInfo == nil {
+			return errors.UnsupportedError(fmt.Sprintf("unknown oid: %x", pk.oid))
+		}
+		if curveInfo.GenName == ecc.Curve25519GenName {
+			return errors.StructuralError("cannot generate v6 key with deprecated OID: Curve25519Legacy")
+		}
+	case PubKeyAlgoEdDSA:
+		return errors.StructuralError("cannot generate v6 key with deprecated algorithm: EdDSALegacy")
+	}
+	return nil
 }
 
 // parseRSA parses RSA public key material from the given Reader. See RFC 4880,
@@ -488,6 +455,11 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 		return errors.UnsupportedError(fmt.Sprintf("unknown oid: %x", pk.oid))
 	}
 
+	if pk.Version == 6 && curveInfo.GenName == ecc.Curve25519GenName {
+		// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+		return errors.StructuralError("cannot read v6 key with deprecated OID: Curve25519Legacy")
+	}
+
 	pk.p = new(encoding.MPI)
 	if _, err = pk.p.ReadFrom(r); err != nil {
 		return
@@ -502,13 +474,11 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 		return errors.UnsupportedError(fmt.Sprintf("unsupported oid: %x", pk.oid))
 	}
 
-	kdfLen := len(pk.kdf.Bytes())
-	if kdfLen < 3 {
+	if kdfLen := len(pk.kdf.Bytes()); kdfLen < 3 {
 		return errors.UnsupportedError("unsupported ECDH KDF length: " + strconv.Itoa(kdfLen))
 	}
-	kdfVersion := int(pk.kdf.Bytes()[0])
-	if kdfVersion != ecdh.KDFVersion1 && kdfVersion != ecdh.KDFVersionForwarding {
-		return errors.UnsupportedError("unsupported ECDH KDF version: " + strconv.Itoa(kdfVersion))
+	if reserved := pk.kdf.Bytes()[0]; reserved != 0x01 {
+		return errors.UnsupportedError("unsupported KDF reserved field: " + strconv.Itoa(int(reserved)))
 	}
 	kdfHash, ok := algorithm.HashById[pk.kdf.Bytes()[1]]
 	if !ok {
@@ -519,27 +489,19 @@ func (pk *PublicKey) parseECDH(r io.Reader) (err error) {
 		return errors.UnsupportedError("unsupported ECDH KDF cipher: " + strconv.Itoa(int(pk.kdf.Bytes()[2])))
 	}
 
-	kdf := ecdh.KDF{
-		Version: kdfVersion,
-		Hash:    kdfHash,
-		Cipher:  kdfCipher,
-	}
-
-	if kdfVersion == ecdh.KDFVersionForwarding {
-		if pk.Version != 4 || kdfLen != 23 {
-			return errors.UnsupportedError("unsupported ECDH KDF v2 length: " + strconv.Itoa(kdfLen))
-		}
-
-		kdf.ReplacementFingerprint = pk.kdf.Bytes()[3:23]
-	}
-
-	ecdhKey := ecdh.NewPublicKey(c, kdf)
+	ecdhKey := ecdh.NewPublicKey(c, kdfHash, kdfCipher)
 	err = ecdhKey.UnmarshalPoint(pk.p.Bytes())
 	pk.PublicKey = ecdhKey
+
 	return
 }
 
 func (pk *PublicKey) parseEdDSA(r io.Reader) (err error) {
+	if pk.Version == 6 {
+		// Implementations MUST NOT accept or generate version 6 key material using the deprecated OIDs.
+		return errors.StructuralError("cannot generate v6 key with deprecated algorithm: EdDSALegacy")
+	}
+
 	pk.oid = new(encoding.OID)
 	if _, err = pk.oid.ReadFrom(r); err != nil {
 		return
@@ -632,58 +594,6 @@ func (pk *PublicKey) parseEd448(r io.Reader) (err error) {
 	return
 }
 
-func (pk *PublicKey) parseAEAD(r io.Reader) (err error) {
-	var cipher [1]byte
-	_, err = readFull(r, cipher[:])
-	if err != nil {
-		return
-	}
-
-	var bindingHash [32]byte
-	_, err = readFull(r, bindingHash[:])
-	if err != nil {
-		return
-	}
-
-	symmetric := &symmetric.AEADPublicKey{
-		Cipher:      algorithm.CipherFunction(cipher[0]),
-		BindingHash: bindingHash,
-	}
-
-	pk.PublicKey = symmetric
-	return
-}
-
-func (pk *PublicKey) parseHMAC(r io.Reader) (err error) {
-	var hash [1]byte
-	_, err = readFull(r, hash[:])
-	if err != nil {
-		return
-	}
-	bindingHash, err := readBindingHash(r)
-	if err != nil {
-		return
-	}
-
-	hmacHash, ok := algorithm.HashById[hash[0]]
-	if !ok {
-		return errors.UnsupportedError("unsupported HMAC hash: " + strconv.Itoa(int(hash[0])))
-	}
-
-	symmetric := &symmetric.HMACPublicKey{
-		Hash:        hmacHash,
-		BindingHash: bindingHash,
-	}
-
-	pk.PublicKey = symmetric
-	return
-}
-
-func readBindingHash(r io.Reader) (bindingHash [32]byte, err error) {
-	_, err = readFull(r, bindingHash[:])
-	return
-}
-
 // SerializeForHash serializes the PublicKey to w with the special packet
 // header format needed for hashing.
 func (pk *PublicKey) SerializeForHash(w io.Writer) error {
@@ -771,9 +681,6 @@ func (pk *PublicKey) algorithmSpecificByteCount() uint32 {
 		length += ed25519.PublicKeySize
 	case PubKeyAlgoEd448:
 		length += ed448.PublicKeySize
-	case ExperimentalPubKeyAlgoAEAD, ExperimentalPubKeyAlgoHMAC:
-		length += 1  // Hash octet
-		length += 32 // Binding hash
 	default:
 		panic("unknown public key algorithm")
 	}
@@ -866,22 +773,6 @@ func (pk *PublicKey) serializeWithoutHeaders(w io.Writer) (err error) {
 		publicKey := pk.PublicKey.(*ed448.PublicKey)
 		_, err = w.Write(publicKey.Point)
 		return
-	case ExperimentalPubKeyAlgoAEAD:
-		symmKey := pk.PublicKey.(*symmetric.AEADPublicKey)
-		cipherOctet := [1]byte{symmKey.Cipher.Id()}
-		if _, err = w.Write(cipherOctet[:]); err != nil {
-			return
-		}
-		_, err = w.Write(symmKey.BindingHash[:])
-		return
-	case ExperimentalPubKeyAlgoHMAC:
-		symmKey := pk.PublicKey.(*symmetric.HMACPublicKey)
-		hashOctet := [1]byte{symmKey.Hash.Id()}
-		if _, err = w.Write(hashOctet[:]); err != nil {
-			return
-		}
-		_, err = w.Write(symmKey.BindingHash[:])
-		return
 	}
 	return errors.InvalidArgumentError("bad public-key algorithm")
 }
@@ -968,17 +859,6 @@ func (pk *PublicKey) VerifySignature(signed hash.Hash, sig *Signature) (err erro
 			return errors.SignatureError("ed448 verification failure")
 		}
 		return nil
-	case ExperimentalPubKeyAlgoHMAC:
-		HMACKey := pk.PublicKey.(*symmetric.HMACPublicKey)
-
-		result, err := HMACKey.Verify(hashBytes, sig.HMAC.Bytes())
-		if err != nil {
-			return err
-		}
-		if !result {
-			return errors.SignatureError("HMAC verification failure")
-		}
-		return nil
 	default:
 		return errors.SignatureError("Unsupported public key algorithm used in signature")
 	}
@@ -1047,13 +927,6 @@ func (pk *PublicKey) VerifyKeySignature(signed *PublicKey, sig *Signature) error
 		if err := signed.VerifySignature(h, sig.EmbeddedSignature); err != nil {
 			return errors.StructuralError("error while verifying cross-signature: " + err.Error())
 		}
-	}
-
-	// Keys having this flag MUST have the forwarding KDF parameters version 2 defined in Section 5.1.
-	if sig.FlagForward && (signed.PubKeyAlgo != PubKeyAlgoECDH ||
-		signed.kdf == nil ||
-		signed.kdf.Bytes()[0] != ecdh.KDFVersionForwarding) {
-		return errors.StructuralError("forwarding key with wrong ecdh kdf version")
 	}
 
 	return nil
@@ -1207,8 +1080,6 @@ func (pk *PublicKey) BitLength() (bitLength uint16, err error) {
 		bitLength = ed25519.PublicKeySize * 8
 	case PubKeyAlgoEd448:
 		bitLength = ed448.PublicKeySize * 8
-	case ExperimentalPubKeyAlgoAEAD:
-		bitLength = 32
 	default:
 		err = errors.InvalidArgumentError("bad public-key algorithm")
 	}

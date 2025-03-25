@@ -116,19 +116,19 @@ func accessPackageResourcePackageAssociationResourceCreate(ctx context.Context, 
 		},
 	}
 
-	createMsg := fmt.Sprintf("Creating Access Package Resource Association from resource %q@%q to access package %q", catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
+	createMsg := `Creating Access Package Resource Association from resource %q@%q to access package %q`
 
 	resp, err := client.CreateEntitlementManagementAccessPackageResourceRoleScope(ctx, accessPackageId, properties, entitlementmanagementaccesspackageaccesspackageresourcerolescope.DefaultCreateEntitlementManagementAccessPackageResourceRoleScopeOperationOptions())
 	if err != nil {
-		return tf.ErrorDiagF(err, createMsg)
+		return tf.ErrorDiagF(err, createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceRoleScope := resp.Model
 	if resourceRoleScope == nil {
-		return tf.ErrorDiagF(errors.New("model was nil"), createMsg)
+		return tf.ErrorDiagF(errors.New("model was nil"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 	if resourceRoleScope.Id == nil {
-		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg)
+		return tf.ErrorDiagF(errors.New("model has nil ID"), createMsg, catalogResourceAssociationId.OriginId, resource.OriginSystem.GetOrZero(), accessPackageId)
 	}
 
 	resourceId := parse.NewAccessPackageResourcePackageAssociationID(accessPackageId.AccessPackageId, *resourceRoleScope.Id, catalogResourceAssociationId.OriginId, accessType)
