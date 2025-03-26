@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/pluginsdk"
 	"github.com/hashicorp/terraform-provider-azuread/internal/helpers/tf/validation"
 	"github.com/hashicorp/terraform-provider-azuread/internal/sdk"
+	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/migrations"
 	"github.com/hashicorp/terraform-provider-azuread/internal/services/applications/parse"
 )
 
@@ -24,9 +25,18 @@ type ApplicationIdentifierUriModel struct {
 	IdentifierUri string `tfschema:"identifier_uri"`
 }
 
-var _ sdk.Resource = ApplicationIdentifierUriResource{}
+var _ sdk.ResourceWithStateMigration = ApplicationIdentifierUriResource{}
 
 type ApplicationIdentifierUriResource struct{}
+
+func (r ApplicationIdentifierUriResource) StateUpgraders() sdk.StateUpgradeData {
+	return sdk.StateUpgradeData{
+		SchemaVersion: 1,
+		Upgraders: map[int]pluginsdk.StateUpgrade{
+			0: migrations.ResourceApplicationIdentifierUriStateUpgradeV0{},
+		},
+	}
+}
 
 func (r ApplicationIdentifierUriResource) IDValidationFunc() pluginsdk.SchemaValidateFunc {
 	return parse.ValidateIdentifierUriID
@@ -82,7 +92,7 @@ func (r ApplicationIdentifierUriResource) Create() sdk.ResourceFunc {
 				return err
 			}
 
-			identifierUriSegment := base64.StdEncoding.EncodeToString([]byte(model.IdentifierUri))
+			identifierUriSegment := base64.URLEncoding.EncodeToString([]byte(model.IdentifierUri))
 			id := parse.NewIdentifierUriID(applicationId.ApplicationId, identifierUriSegment)
 
 			tf.LockByName(applicationResourceName, id.ApplicationId)
@@ -138,7 +148,7 @@ func (r ApplicationIdentifierUriResource) Read() sdk.ResourceFunc {
 				return err
 			}
 
-			uriFromIdSegment, err := base64.StdEncoding.DecodeString(id.IdentifierUri)
+			uriFromIdSegment, err := base64.URLEncoding.DecodeString(id.IdentifierUri)
 			if err != nil {
 				return fmt.Errorf("failed to decode identifierUri from resource ID: %+v", err)
 			}

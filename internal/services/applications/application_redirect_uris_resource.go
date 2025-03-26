@@ -65,7 +65,7 @@ func (r ApplicationRedirectUrisResource) Arguments() map[string]*pluginsdk.Schem
 			Required:    true,
 			Elem: &pluginsdk.Schema{
 				Type:         pluginsdk.TypeString,
-				ValidateFunc: validation.IsRedirectUriFunc(true, true),
+				ValidateFunc: validation.IsRedirectUriFunc(true),
 			},
 		},
 	}

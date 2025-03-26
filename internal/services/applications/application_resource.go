@@ -471,7 +471,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: validation.IsRedirectUriFunc(true, true),
+								ValidateFunc: validation.IsRedirectUriFunc(true),
 							},
 						},
 					},
@@ -543,7 +543,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: validation.IsRedirectUriFunc(false, false),
+								ValidateFunc: validation.IsRedirectUriFunc(false),
 							},
 						},
 					},
@@ -611,7 +611,7 @@ func applicationResource() *pluginsdk.Resource {
 							MaxItems:    256,
 							Elem: &pluginsdk.Schema{
 								Type:         pluginsdk.TypeString,
-								ValidateFunc: validation.IsRedirectUriFunc(true, false),
+								ValidateFunc: validation.IsRedirectUriFunc(true),
 							},
 						},
 
