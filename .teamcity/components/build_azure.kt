@@ -8,7 +8,9 @@ import jetbrains.buildServer.configs.kotlin.ParametrizedWithType
 class ClientConfiguration(var clientId: String,
                           var clientSecret: String,
                           val tenantId : String,
-                          val vcsRootId : String) {
+                          val vcsRootId : String,
+                          val userPrincipalId : String,
+                          val userPrincipalSecret: String) {
 }
 
 class LocationConfiguration(var primary : String, var secondary : String, var ternary : String, var rotate : Boolean) {
@@ -23,4 +25,6 @@ fun ParametrizedWithType.ConfigureAzureSpecificTestParameters(environment: Strin
     hiddenVariable("env.ARM_TEST_LOCATION", locationsForEnv.primary, "The Primary region which should be used for testing")
     hiddenVariable("env.ARM_TEST_LOCATION_ALT", locationsForEnv.secondary, "The Primary region which should be used for testing")
     hiddenVariable("env.ARM_TEST_LOCATION_ALT2", locationsForEnv.ternary, "The Primary region which should be used for testing")
+    hiddenPasswordVariable("env.ARM_USER_PRINCIPAL_ID", config.userPrincipalId, "The username of the user principal to use for az-cli login")
+    hiddenPasswordVariable("env.ARM_USER_PRINCIPAL_SECRET", config.userPrincipalSecret, "The password for the user principal to use for az-cli login")
 }
