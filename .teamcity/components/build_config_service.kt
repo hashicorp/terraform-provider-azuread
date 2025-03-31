@@ -26,6 +26,7 @@ class serviceDetails(name: String, displayName: String, environment: String, vcs
             steps {
                 ConfigureGoEnv()
                 DownloadTerraformBinary()
+                ConfigureAzCLI()
                 RunAcceptanceTests(packageName)
             }
 
