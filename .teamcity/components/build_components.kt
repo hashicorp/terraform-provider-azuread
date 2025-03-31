@@ -44,7 +44,7 @@ fun BuildSteps.DownloadTerraformBinary() {
 fun BuildSteps.ConfigureAzCLI() {
     step(ScriptBuildStep {
         name = "Configure Az CLI Auth"
-        scriptContent = "az login --service-principal --username \$ARM_CLIENT_ID --password \$ARM_CLIENT_SECRET --tenant \$ARM_TENANT_ID"
+        scriptContent = "az login --allow-no-subscriptions --service-principal --username \$ARM_CLIENT_ID --password \$ARM_CLIENT_SECRET --tenant \$ARM_TENANT_ID"
     })
 }
 
