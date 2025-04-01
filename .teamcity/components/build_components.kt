@@ -41,13 +41,6 @@ fun BuildSteps.DownloadTerraformBinary() {
     })
 }
 
-fun BuildSteps.ConfigureAzCLI() {
-    step(ScriptBuildStep {
-        name = "Configure Az CLI Auth"
-        scriptContent = "az login --allow-no-subscriptions --username \"\$ARM_USER_PRINCIPAL_ID\" --password \"\$ARM_USER_PRINCIPAL_SECRET\" --tenant \$ARM_TENANT_ID"
-    })
-}
-
 fun servicePath(packageName: String) : String {
     return "./internal/services/%s".format(packageName)
 }

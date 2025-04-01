@@ -14,9 +14,7 @@ var clientSecret = DslContext.getParameter("clientSecret", "")
 var tenantId = DslContext.getParameter("tenantId", "")
 var environment = DslContext.getParameter("environment", "public")
 var vcsRootId = DslContext.getParameter("vcsRootId", "TF_HashiCorp_AzureAD_Repository")
-var userPrincipalId = DslContext.getParameter("userPrincipalId", "")
-var userPrincipalSecret = DslContext.getParameter("userPrincipalSecret", "")
 
-var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId, vcsRootId, userPrincipalId, userPrincipalSecret)
+var clientConfig = ClientConfiguration(clientId, clientSecret, tenantId, vcsRootId)
 
 project(AzureAD(environment, clientConfig))
