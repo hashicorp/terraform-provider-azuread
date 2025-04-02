@@ -153,7 +153,7 @@ func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d 
 			return tf.ErrorDiagF(err, "Retrieving %s", id)
 		}
 
-		// After (typically) 45 days the request resources are purged by the service, however, the underlying resource (the schedule) has the same GUID, so we need to check if it's still there or Terraform will try to recreate this resource and fail as it already exists
+		// After (typically) 45 days the request resources are purged by the service, however, the underlying resource (the schedule) has the same GUID, so we need to check if it's still there or Terraform will try to recreate this resource and fail as it already exists.
 		// TODO - This resource needs a redesign/replacement in the longer term to avoid this, however, this will likely be a breaking change requiring a major version to implement.
 		scheduleID := stable.NewRoleManagementDirectoryRoleEligibilityScheduleID(d.Id())
 		scheduleResp, err2 := scheduleClient.GetDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultGetDirectoryRoleEligibilityScheduleOperationOptions())
