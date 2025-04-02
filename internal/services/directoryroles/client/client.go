@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/directoryroletemplates/stable/directoryroletemplate"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleassignment"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroledefinition"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedule"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/terraform-provider-azuread/internal/common"
 )
@@ -19,6 +20,7 @@ type Client struct {
 	DirectoryRoleAssignmentClient                 *directoryroleassignment.DirectoryRoleAssignmentClient
 	DirectoryRoleClient                           *directoryrole.DirectoryRoleClient
 	DirectoryRoleDefinitionClient                 *directoryroledefinition.DirectoryRoleDefinitionClient
+	DirectoryRoleEligibilityScheduleClient        *directoryroleeligibilityschedule.DirectoryRoleEligibilityScheduleClient
 	DirectoryRoleEligibilityScheduleRequestClient *directoryroleeligibilityschedulerequest.DirectoryRoleEligibilityScheduleRequestClient
 	DirectoryRoleMemberClient                     *member.MemberClient
 	DirectoryRoleTemplateClient                   *directoryroletemplate.DirectoryRoleTemplateClient
@@ -55,6 +57,12 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 	}
 	o.Configure(directoryRoleMemberClient.Client)
 
+	directoryRoleEligibilityScheduleClient, err := directoryroleeligibilityschedule.NewDirectoryRoleEligibilityScheduleClientWithBaseURI(o.Environment.MicrosoftGraph)
+	if err != nil {
+		return nil, err
+	}
+	o.Configure(directoryRoleEligibilityScheduleClient.Client)
+
 	directoryRoleEligibilityScheduleRequestClient, err := directoryroleeligibilityschedulerequest.NewDirectoryRoleEligibilityScheduleRequestClientWithBaseURI(o.Environment.MicrosoftGraph)
 	if err != nil {
 		return nil, err
@@ -72,6 +80,7 @@ func NewClient(o *common.ClientOptions) (*Client, error) {
 		DirectoryRoleAssignmentClient:                 directoryRoleAssignmentClient,
 		DirectoryRoleClient:                           directoryRoleClient,
 		DirectoryRoleDefinitionClient:                 directoryRoleDefinitionClient,
+		DirectoryRoleEligibilityScheduleClient:        directoryRoleEligibilityScheduleClient,
 		DirectoryRoleEligibilityScheduleRequestClient: directoryRoleEligibilityScheduleRequestClient,
 		DirectoryRoleMemberClient:                     directoryRoleMemberClient,
 		DirectoryRoleTemplateClient:                   directoryRoleTemplateClient,

@@ -8,11 +8,9 @@ import jetbrains.buildServer.configs.kotlin.ParametrizedWithType
 class ClientConfiguration(var clientId: String,
                           var clientSecret: String,
                           val tenantId : String,
-                          val vcsRootId : String) {
-}
+                          val vcsRootId : String)
 
-class LocationConfiguration(var primary : String, var secondary : String, var ternary : String, var rotate : Boolean) {
-}
+class LocationConfiguration(var primary : String, var secondary : String, var ternary : String, var rotate : Boolean)
 
 fun ParametrizedWithType.ConfigureAzureSpecificTestParameters(environment: String, config: ClientConfiguration, locationsForEnv: LocationConfiguration) {
     hiddenPasswordVariable("env.ARM_CLIENT_ID", config.clientId, "The AppID of the Application used for Testing")

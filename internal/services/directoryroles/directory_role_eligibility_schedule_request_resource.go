@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
 	"github.com/hashicorp/go-azure-helpers/lang/response"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/common-types/stable"
+	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedule"
 	"github.com/hashicorp/go-azure-sdk/microsoft-graph/rolemanagement/stable/directoryroleeligibilityschedulerequest"
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 	"github.com/hashicorp/go-azure-sdk/sdk/odata"
@@ -142,16 +143,39 @@ func directoryRoleEligibilityScheduleRequestResourceCreate(ctx context.Context, 
 
 func directoryRoleEligibilityScheduleRequestResourceRead(ctx context.Context, d *pluginsdk.ResourceData, meta interface{}) pluginsdk.Diagnostics {
 	client := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleRequestClient
+	scheduleClient := meta.(*clients.Client).DirectoryRoles.DirectoryRoleEligibilityScheduleClient
 	id := stable.NewRoleManagementDirectoryRoleEligibilityScheduleRequestID(d.Id())
 
 	resp, err := client.GetDirectoryRoleEligibilityScheduleRequest(ctx, id, directoryroleeligibilityschedulerequest.DefaultGetDirectoryRoleEligibilityScheduleRequestOperationOptions())
 	if err != nil {
-		if response.WasNotFound(resp.HttpResponse) {
-			log.Printf("[DEBUG] %s was not found - removing from state", id)
-			d.SetId("")
-			return nil
+		// Check if the Schedule still exists, any other error we must return
+		if !response.WasNotFound(resp.HttpResponse) {
+			return tf.ErrorDiagF(err, "Retrieving %s", id)
 		}
-		return tf.ErrorDiagF(err, "Retrieving %s", id)
+
+		// After (typically) 45 days the request resources are purged by the service, however, the underlying resource (the schedule) has the same GUID, so we need to check if it's still there or Terraform will try to recreate this resource and fail as it already exists.
+		// TODO - This resource needs a redesign/replacement in the longer term to avoid this, however, this will likely be a breaking change requiring a major version to implement.
+		scheduleID := stable.NewRoleManagementDirectoryRoleEligibilityScheduleID(d.Id())
+		scheduleResp, err2 := scheduleClient.GetDirectoryRoleEligibilitySchedule(ctx, scheduleID, directoryroleeligibilityschedule.DefaultGetDirectoryRoleEligibilityScheduleOperationOptions())
+		if err2 != nil {
+			if response.WasNotFound(scheduleResp.HttpResponse) {
+				log.Printf("[DEBUG] %s was not found - removing from state", id)
+				d.SetId("")
+				return nil
+			}
+		}
+		roleEligibilitySchedule := scheduleResp.Model
+		if roleEligibilitySchedule == nil {
+			return tf.ErrorDiagF(errors.New("model was nil"), "API Error")
+		}
+
+		tf.Set(d, "role_definition_id", roleEligibilitySchedule.RoleDefinitionId.GetOrZero())
+		tf.Set(d, "principal_id", roleEligibilitySchedule.PrincipalId.GetOrZero())
+		// Schedules do not expose the `justification` field, so we best effort it here and try and get it from config as it's a required property
+		tf.Set(d, "justification", d.Get("justification").(string))
+		tf.Set(d, "directory_scope_id", roleEligibilitySchedule.DirectoryScopeId.GetOrZero())
+
+		return nil
 	}
 
 	roleEligibilityScheduleRequest := resp.Model
