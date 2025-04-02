@@ -7,6 +7,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * `azuread_directory_role` - fix for changes in Graph API response for ListRolesResponse in create [GH-1575]
+* `azuread_directory_role_eligibility_schedule_request` - fix `Read` for time based service automatic deletion of request resource [GH-1682]
 
 ## 3.2.0 (March 21, 2025)
 
