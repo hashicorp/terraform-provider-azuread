@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * dependencies: update `Go` to `1.24.1` [GH-1675]
 
+BUG FIXES:
+
+* `azuread_directory_role` - fix for changes in Graph API response for ListRolesResponse in create [GH-1575]
+
 ## 3.2.0 (March 21, 2025)
 
 FEATURES:
