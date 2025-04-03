@@ -1,14 +1,14 @@
-## 3.3.0 (Unreleased)
+## 3.3.0 (April 03, 2025)
 
 ENHANCEMENTS:
 
-* dependencies: update `Go` to `1.24.1` [GH-1675]
+* dependencies: update `Go` to `1.24.1` ([#1675](https://github.com/hashicorp/terraform-provider-azuread/issues/1675))
 
 BUG FIXES:
 
-* `azuread_application_pre_authorized` - Fix unexpected removal of unmanaged pre-authorized apps on delete [GH-1659]
-* `azuread_directory_role` - fix for changes in Graph API response for ListRolesResponse in create [GH-1575]
-* `azuread_directory_role_eligibility_schedule_request` - fix `Read` for time based service automatic deletion of request resource [GH-1682]
+* `azuread_application_pre_authorized` - Fix unexpected removal of unmanaged pre-authorized apps on delete ([#1659](https://github.com/hashicorp/terraform-provider-azuread/issues/1659))
+* `azuread_directory_role` - fix for changes in Graph API response for ListRolesResponse in create ([#1575](https://github.com/hashicorp/terraform-provider-azuread/issues/1575))
+* `azuread_directory_role_eligibility_schedule_request` - fix `Read` for time based service automatic deletion of request resource ([#1682](https://github.com/hashicorp/terraform-provider-azuread/issues/1682))
 
 ## 3.2.0 (March 21, 2025)
 
