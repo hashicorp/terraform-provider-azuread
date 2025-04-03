@@ -6,7 +6,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* `azuread_application_pre_authorized` - Fix unexpected removal of unmanaged pre-authorized apps on delete ([#1659](https://github.com/hashicorp/terraform-provider-azuread/issues/1659))
+* `azuread_application_pre_authorized` - fix unexpected removal of unmanaged pre-authorized apps on delete ([#1659](https://github.com/hashicorp/terraform-provider-azuread/issues/1659))
 * `azuread_directory_role` - fix for changes in Graph API response for ListRolesResponse in create ([#1575](https://github.com/hashicorp/terraform-provider-azuread/issues/1575))
 * `azuread_directory_role_eligibility_schedule_request` - fix `Read` for time based service automatic deletion of request resource ([#1682](https://github.com/hashicorp/terraform-provider-azuread/issues/1682))
 
