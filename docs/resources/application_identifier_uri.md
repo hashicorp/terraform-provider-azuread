@@ -74,8 +74,8 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/l
 
 ## Import
 
-Application Identifier URIs can be imported using the object ID of the application and the base64-encoded identifier URI, in the following format.
+Application Identifier URIs can be imported using the object ID of the application and the URL escaped base64-encoded identifier URI, in the following format.
 
 ```shell
-terraform import azuread_application_identifier_uri.example /applications/00000000-0000-0000-0000-000000000000/identifierUris/aHR0cHM6Ly9leGFtcGxlLm5ldC8=
+terraform import azuread_application_identifier_uri.example /applications/00000000-0000-0000-0000-000000000000/identifierUris/aHR0cHM6Ly9leGFtcGxlLm5ldC8%3D
 ```
