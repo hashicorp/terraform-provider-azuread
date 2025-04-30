@@ -5,6 +5,7 @@ package parse
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids"
 )
@@ -36,9 +37,16 @@ func ParseIdentifierUriID(input string) (*IdentifierUriId, error) {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "applicationId", *parsed)
 	}
 
-	if id.IdentifierUri, ok = parsed.Parsed["identifierUri"]; !ok {
+	var parsedIdentifierUri string
+	if parsedIdentifierUri, ok = parsed.Parsed["identifierUri"]; !ok {
 		return nil, resourceids.NewSegmentNotSpecifiedError(id, "identifierUri", *parsed)
 	}
+
+	identifierUri, err := url.PathUnescape(parsedIdentifierUri)
+	if err != nil {
+		return nil, fmt.Errorf("unescaping %q: %+v", parsedIdentifierUri, err)
+	}
+	id.IdentifierUri = identifierUri
 
 	return id, nil
 }
@@ -61,7 +69,7 @@ func ValidateIdentifierUriID(input interface{}, key string) (warnings []string, 
 
 func (id *IdentifierUriId) ID() string {
 	fmtString := "/applications/%s/identifierUris/%s"
-	return fmt.Sprintf(fmtString, id.ApplicationId, id.IdentifierUri)
+	return fmt.Sprintf(fmtString, id.ApplicationId, url.PathEscape(id.IdentifierUri))
 }
 
 // Segments returns a slice of Resource ID Segments which comprise this ID
@@ -70,7 +78,7 @@ func (id *IdentifierUriId) Segments() []resourceids.Segment {
 		resourceids.StaticSegment("applications", "applications", "applications"),
 		resourceids.UserSpecifiedSegment("applicationId", "00000000-0000-0000-0000-000000000000"),
 		resourceids.StaticSegment("identifierUris", "identifierUris", "identifierUris"),
-		resourceids.UserSpecifiedSegment("identifierUri", "aHR0cHM6Ly9leGFtcGxlLm5ldC8="),
+		resourceids.UserSpecifiedSegment("identifierUri", "aHR0cHM6Ly9leGFtcGxlLm5ldC8%3D"),
 	}
 }
 
@@ -85,9 +93,16 @@ func (id *IdentifierUriId) FromParseResult(input resourceids.ParseResult) error 
 		return resourceids.NewSegmentNotSpecifiedError(id, "applicationId", input)
 	}
 
-	if id.IdentifierUri, ok = input.Parsed["identifierUri"]; !ok {
+	var parsedIdentifierUri string
+	if parsedIdentifierUri, ok = input.Parsed["identifierUri"]; !ok {
 		return resourceids.NewSegmentNotSpecifiedError(id, "identifierUri", input)
 	}
+
+	identifierUri, err := url.PathUnescape(parsedIdentifierUri)
+	if err != nil {
+		return fmt.Errorf("unescaping %q: %+v", parsedIdentifierUri, err)
+	}
+	id.IdentifierUri = identifierUri
 
 	return nil
 }
