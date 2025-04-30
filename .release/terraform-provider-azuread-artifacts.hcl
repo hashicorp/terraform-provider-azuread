@@ -1,6 +1,5 @@
 schema = 1
 artifacts {
-  # TODO: Customize `zip` for your provider. Compare to existing .goreleaser.yml.
   # This should match the `matrix` in .github/workflows/build.yml
   zip = [
     "terraform-provider-azuread_${version}_darwin_amd64.zip",
