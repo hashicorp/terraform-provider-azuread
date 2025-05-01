@@ -32,8 +32,8 @@ resource "azuread_directory_role" "example" {
 
 resource "azuread_administrative_unit_role_member" "example" {
   role_object_id                = azuread_directory_role.example.object_id
-  administrative_unit_object_id = azuread_administrative_unit.example.id
-  member_object_id              = data.azuread_user.example.id
+  administrative_unit_object_id = azuread_administrative_unit.example.object_id
+  member_object_id              = data.azuread_user.example.object_id
 }
 ```
 
