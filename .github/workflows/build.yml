@@ -131,6 +131,10 @@ jobs:
         goos: [freebsd, windows, linux, darwin]
         goarch: ["386", "amd64", "arm", "arm64"]
         exclude:
+          - goos: darwin
+            goarch: arm
+          - goos: darwin
+            goarch: "386"
           - goos: freebsd
             goarch: arm64
           - goos: windows
