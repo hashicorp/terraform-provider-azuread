@@ -41,7 +41,7 @@ func IsRedirectUriFunc(urnAllowed bool, allowAllSchemes bool) pluginsdk.SchemaVa
 		// See https://docs.microsoft.com/en-us/azure/active-directory-b2c/tutorial-create-user-flows?pivots=b2c-custom-policy#register-the-proxyidentityexperienceframework-application
 		var allowedSchemes []string
 		if !allowAllSchemes {
-			allowedSchemes = []string{"http", "https", "ms-appx-web"}
+			allowedSchemes = []string{"http", "https", "ms-appx-web", "brk-multihub"}
 		}
 
 		warnings, errors = IsUriFunc(allowedSchemes, urnAllowed, true, true)(i, k)
