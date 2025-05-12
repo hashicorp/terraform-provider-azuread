@@ -1,3 +1,9 @@
+## 3.4.0 (Unreleased)
+
+* `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris`
+* `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris`
+
+
 ## 3.3.0 (April 03, 2025)
 
 ENHANCEMENTS:
