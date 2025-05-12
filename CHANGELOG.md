@@ -1,7 +1,15 @@
 ## 3.4.0 (Unreleased)
 
-* `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris`
-* `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris`
+* dependencies: update `x/crypto` to `v0.38.0` [GH-1696]
+* dependencies: update `x/net` to  `v0.40.0` [GH-1696]
+* dependencies: update `x/sync` to `v0.14.0` [GH-1696]
+* dependencies: update `x/sys` to `v0.33.0` [GH-1696]
+* dependencies: update `x/text` to `v0.25.0` [GH-1696]
+* dependencies: update `hashicorp/hc-install` to `v0.9.2` [GH-1696]
+* dependencies: update `hashicorp/terraform-exec` to `v0.23.0` [GH-1696]
+* dependencies: update `hashicorp/terraform-registry-address` to `v0.2.5` [GH-1696]
+* `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
+* `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
 
 
 ## 3.3.0 (April 03, 2025)
