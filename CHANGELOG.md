@@ -10,6 +10,7 @@
 * dependencies: update `hashicorp/terraform-registry-address` to `v0.2.5` [GH-1696]
 * `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
 * `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
+* `azuread_conditional_access_policy` - populate members only when `membership_kind` is set to `enumerated` [GH-1601]
 
 
 ## 3.3.0 (April 03, 2025)
