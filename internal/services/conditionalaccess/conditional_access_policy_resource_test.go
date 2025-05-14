@@ -369,6 +369,25 @@ func TestAccConditionalAccessPolicy_insiderRisk(t *testing.T) {
 	})
 }
 
+func TestAccConditionalAccessPolicy_authenticationFlows(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.insiderRisk(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+				check.That(data.ResourceName).Key("id").Exists(),
+				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
+				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+				check.That(data.ResourceName).Key("conditions.0.authentication_flows.transfer_methods").HasValue("deviceCodeFlow"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
 func (r ConditionalAccessPolicyResource) Exists(ctx context.Context, clients *clients.Client, state *pluginsdk.InstanceState) (*bool, error) {
 	id, err := stable.ParseIdentityConditionalAccessPolicyID(state.ID)
 	if err != nil {
@@ -432,6 +451,10 @@ resource "azuread_conditional_access_policy" "test" {
     applications {
       included_applications = ["All"]
       excluded_applications = []
+    }
+
+    authentication_flows {
+      transfer_methods = "deviceCodeFlow"
     }
 
     devices {
@@ -931,6 +954,39 @@ resource "azuread_conditional_access_policy" "test" {
   conditions {
     client_app_types    = ["browser"]
     insider_risk_levels = "moderate"
+
+    applications {
+      included_applications = ["None"]
+    }
+
+    users {
+      included_users = ["All"]
+      excluded_users = ["GuestsOrExternalUsers"]
+    }
+  }
+
+  grant_controls {
+    operator          = "OR"
+    built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) authenticationFlows(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "disabled"
+
+  conditions {
+    client_app_types = ["browser"]
+    
+    authentication_flows {
+      transfer_methods = "deviceCodeFlow"
+    }
 
     applications {
       included_applications = ["None"]
