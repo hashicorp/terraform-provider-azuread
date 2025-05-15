@@ -1,16 +1,17 @@
-## 3.4.0 (Unreleased)
+## 3.4.0 (May 15, 2025)
 
-* dependencies: update `x/crypto` to `v0.38.0` [GH-1696]
-* dependencies: update `x/net` to  `v0.40.0` [GH-1696]
-* dependencies: update `x/sync` to `v0.14.0` [GH-1696]
-* dependencies: update `x/sys` to `v0.33.0` [GH-1696]
-* dependencies: update `x/text` to `v0.25.0` [GH-1696]
-* dependencies: update `hashicorp/hc-install` to `v0.9.2` [GH-1696]
-* dependencies: update `hashicorp/terraform-exec` to `v0.23.0` [GH-1696]
-* dependencies: update `hashicorp/terraform-registry-address` to `v0.2.5` [GH-1696]
-* `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
-* `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris` [GH-1663]
-* `azuread_conditional_access_policy` - populate members only when `membership_kind` is set to `enumerated` [GH-1601]
+* dependencies: update `x/crypto` to `v0.38.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `x/net` to  `v0.40.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+  * dependencies: update `/x/oauth2` to `v0.30.0` ([#1702](https://github.com/hashicorp/terraform-provider-azuread/issues/1702))
+* dependencies: update `x/sync` to `v0.14.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `x/sys` to `v0.33.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `x/text` to `v0.25.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `hashicorp/hc-install` to `v0.9.2` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `hashicorp/terraform-exec` to `v0.23.0` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* dependencies: update `hashicorp/terraform-registry-address` to `v0.2.5` ([#1696](https://github.com/hashicorp/terraform-provider-azuread/issues/1696))
+* `azuread_application` - add support for `brk-multihub` scheme for `redirect_uris` ([#1663](https://github.com/hashicorp/terraform-provider-azuread/issues/1663))
+* `azuread_application_redirect_uris` - add support for `brk-multihub` scheme for `redirect_uris` ([#1663](https://github.com/hashicorp/terraform-provider-azuread/issues/1663))
+* `azuread_conditional_access_policy` - populate members only when `membership_kind` is set to `enumerated` ([#1601](https://github.com/hashicorp/terraform-provider-azuread/issues/1601))
 
 
 ## 3.3.0 (April 03, 2025)
