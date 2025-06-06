@@ -228,7 +228,7 @@ func (r PrivilegedAccessGroupEligibilityScheduleResource) Update() sdk.ResourceF
 				AccessId:      stable.PrivilegedAccessGroupRelationships(resourceId.Relationship),
 				PrincipalId:   nullable.Value(model.PrincipalId),
 				GroupId:       nullable.Value(resourceId.GroupId),
-				Action:        pointer.To(stable.ScheduleRequestActions_AdminAssign),
+				Action:        pointer.To(stable.ScheduleRequestActions_AdminUpdate),
 				Justification: nullable.NoZero(model.Justification),
 				ScheduleInfo:  schedule,
 			}
