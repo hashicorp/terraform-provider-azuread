@@ -557,6 +557,14 @@ func conditionalAccessPolicyCustomizeDiff(_ context.Context, diff *pluginsdk.Res
 		return fmt.Errorf("when specifying `session_controls` but not `grant_controls`, one of the properties in the `session_controls` block must be set to an effective value in order for session controls to work")
 	}
 
+	if diff.Get("session_controls.#").(int) == 1 {
+		if diff.Get("session_controls.0.sign_in_frequency_interval").(string) == string(stable.SignInFrequencyInterval_EveryTime) {
+			if diff.Get("session_controls.0.sign_in_frequency").(int) != 0 || diff.Get("session_controls.0.sign_in_frequency_period").(string) != "" {
+				return fmt.Errorf("when `session_controls.sign_in_frequency_interval` is set to `%s`, `sign_in_frequency` and `sign_in_frequency_period` are not valid", stable.SignInFrequencyInterval_EveryTime)
+			}
+		}
+	}
+
 	return nil
 }
 
