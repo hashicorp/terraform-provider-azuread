@@ -38,7 +38,7 @@ func TestAccConditionalAccessPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccConditionalAccessPolicy_repro1225(t *testing.T) {
+func TestAccConditionalAccessPolicy_signInFrequencyEveryTime(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
 	r := ConditionalAccessPolicyResource{}
 
