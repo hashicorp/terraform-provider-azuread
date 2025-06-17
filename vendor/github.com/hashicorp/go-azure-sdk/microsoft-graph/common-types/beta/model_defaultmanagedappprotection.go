@@ -26,7 +26,7 @@ type DefaultManagedAppProtection struct {
 	AllowedIosDeviceModels nullable.Type[string] `json:"allowedIosDeviceModels,omitempty"`
 
 	// Defines a managed app behavior, either block or warn, if the user is clocked out (non-working time). Possible values
-	// are: block, wipe, warn.
+	// are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfAccountIsClockedOut *ManagedAppRemediationAction `json:"appActionIfAccountIsClockedOut,omitempty"`
 
 	// An admin initiated action to be applied on a managed app.
@@ -45,15 +45,15 @@ type DefaultManagedAppProtection struct {
 	AppActionIfDeviceLockNotSet *ManagedAppRemediationAction `json:"appActionIfDeviceLockNotSet,omitempty"`
 
 	// If the device does not have a passcode of high complexity or higher, trigger the stored action. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanHigh *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanHigh,omitempty"`
 
 	// If the device does not have a passcode of low complexity or higher, trigger the stored action. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanLow *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanLow,omitempty"`
 
 	// If the device does not have a passcode of medium complexity or higher, trigger the stored action. Possible values
-	// are: block, wipe, warn.
+	// are: block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfDevicePasscodeComplexityLessThanMedium *ManagedAppRemediationAction `json:"appActionIfDevicePasscodeComplexityLessThanMedium,omitempty"`
 
 	// An admin initiated action to be applied on a managed app.
@@ -239,7 +239,7 @@ type DefaultManagedAppProtection struct {
 
 	// If set, it will specify what action to take in the case where the user is unable to checkin because their
 	// authentication token is invalid. This happens when the user is deleted or disabled in AAD. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfUnableToAuthenticateUser *ManagedAppRemediationAction `json:"appActionIfUnableToAuthenticateUser,omitempty"`
 
 	// Indicates whether a user can bring data into org documents.

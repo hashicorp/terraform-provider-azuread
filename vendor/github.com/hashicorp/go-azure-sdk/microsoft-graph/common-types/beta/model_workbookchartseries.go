@@ -13,13 +13,13 @@ import (
 var _ Entity = WorkbookChartSeries{}
 
 type WorkbookChartSeries struct {
-	// Represents the formatting of a chart series, which includes fill and line formatting. Read-only.
+	// The formatting of a chart series, which includes fill and line formatting. Read-only.
 	Format *WorkbookChartSeriesFormat `json:"format,omitempty"`
 
-	// Represents the name of a series in a chart.
+	// The name of a series in a chart.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// Represents a collection of all points in the series. Read-only.
+	// A collection of all points in the series. Read-only.
 	Points *[]WorkbookChartPoint `json:"points,omitempty"`
 
 	// Fields inherited from Entity

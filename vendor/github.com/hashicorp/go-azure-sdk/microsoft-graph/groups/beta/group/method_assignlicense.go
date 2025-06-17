@@ -48,9 +48,10 @@ func (o AssignLicenseOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// AssignLicense - Invoke action assignLicense. Add or remove licenses on the group. Licenses assigned to the group will
-// be assigned to all users in the group. To learn more about group-based licensing, see What is group-based licensing
-// in Microsoft Entra ID. To get the subscriptions available in the directory, perform a GET subscribedSkus request.
+// AssignLicense - Invoke action assignLicense. Add or remove licenses on a group. Licenses assigned to the group will
+// be assigned to all users in the group. Group-based licensing is an alternative to direct user licensing. To learn
+// more about group-based licensing, see What is group-based licensing in Microsoft Entra ID. To get the subscriptions
+// available in the directory, perform a GET subscribedSkus request.
 func (c GroupClient) AssignLicense(ctx context.Context, id beta.GroupId, input AssignLicenseRequest, options AssignLicenseOperationOptions) (result AssignLicenseOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

@@ -13,81 +13,112 @@ import (
 var _ DeviceCompliancePolicy = AndroidDeviceOwnerCompliancePolicy{}
 
 type AndroidDeviceOwnerCompliancePolicy struct {
-	// MDATP Require Mobile Threat Protection minimum risk level to report noncompliance. Possible values are: unavailable,
-	// secured, low, medium, high, notSet.
+	// Indicates the Microsoft Defender for Endpoint (also referred to Microsoft Defender Advanced Threat Protection
+	// (MDATP)) minimum risk level to report noncompliance. Possible values are: unavailable, secured, low, medium, high,
+	// notSet. Possible values are: unavailable, secured, low, medium, high, notSet.
 	AdvancedThreatProtectionRequiredSecurityLevel *DeviceThreatProtectionLevel `json:"advancedThreatProtectionRequiredSecurityLevel,omitempty"`
 
-	// Require that devices have enabled device threat protection.
+	// Indicates whether the policy requires devices have device threat protection enabled. When TRUE, threat protection is
+	// enabled. When FALSE, threat protection is not enabled. Default is FALSE.
 	DeviceThreatProtectionEnabled nullable.Type[bool] `json:"deviceThreatProtectionEnabled,omitempty"`
 
-	// Require Mobile Threat Protection minimum risk level to report noncompliance. Possible values are: unavailable,
-	// secured, low, medium, high, notSet.
+	// Indicates the minimum mobile threat protection risk level to that results in Intune reporting device noncompliance.
+	// Possible values are: unavailable, secured, low, medium, high, notSet. Possible values are: unavailable, secured, low,
+	// medium, high, notSet.
 	DeviceThreatProtectionRequiredSecurityLevel *DeviceThreatProtectionLevel `json:"deviceThreatProtectionRequiredSecurityLevel,omitempty"`
 
-	// Minimum Android security patch level.
+	// Indicates the minimum Android security patch level required to mark the device as compliant. For example: 'February
+	// 1, 2025'
 	MinAndroidSecurityPatchLevel nullable.Type[string] `json:"minAndroidSecurityPatchLevel,omitempty"`
 
-	// Maximum Android version.
+	// Indicates the maximum Android version required to mark the device as compliant. For example: '15'
 	OsMaximumVersion nullable.Type[string] `json:"osMaximumVersion,omitempty"`
 
-	// Minimum Android version.
+	// Indicates the minimum Android version required to mark the device as compliant. For example: '14'
 	OsMinimumVersion nullable.Type[string] `json:"osMinimumVersion,omitempty"`
 
-	// Number of days before the password expires. Valid values 1 to 365
+	// Indicates the number of days before the password expires. Valid values 1 to 365.
 	PasswordExpirationDays nullable.Type[int64] `json:"passwordExpirationDays,omitempty"`
 
-	// Minimum password length. Valid values 4 to 16
+	// Indicates the minimum password length required to mark the device as compliant. Valid values are 4 to 16, inclusive.
+	// Valid values 4 to 16
 	PasswordMinimumLength nullable.Type[int64] `json:"passwordMinimumLength,omitempty"`
 
-	// Indicates the minimum number of letter characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of letter characters required for device password for the device to be marked compliant.
+	// Valid values 1 to 16.
 	PasswordMinimumLetterCharacters nullable.Type[int64] `json:"passwordMinimumLetterCharacters,omitempty"`
 
-	// Indicates the minimum number of lower case characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of lower case characters required for device password for the device to be marked
+	// compliant. Valid values 1 to 16.
 	PasswordMinimumLowerCaseCharacters nullable.Type[int64] `json:"passwordMinimumLowerCaseCharacters,omitempty"`
 
-	// Indicates the minimum number of non-letter characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of non-letter characters required for device password for the device to be marked
+	// compliant. Valid values 1 to 16.
 	PasswordMinimumNonLetterCharacters nullable.Type[int64] `json:"passwordMinimumNonLetterCharacters,omitempty"`
 
-	// Indicates the minimum number of numeric characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of numeric characters required for device password for the device to be marked
+	// compliant. Valid values 1 to 16.
 	PasswordMinimumNumericCharacters nullable.Type[int64] `json:"passwordMinimumNumericCharacters,omitempty"`
 
-	// Indicates the minimum number of symbol characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of symbol characters required for device password for the device to be marked compliant.
+	// Valid values 1 to 16.
 	PasswordMinimumSymbolCharacters nullable.Type[int64] `json:"passwordMinimumSymbolCharacters,omitempty"`
 
-	// Indicates the minimum number of upper case letter characters required for device password. Valid values 1 to 16
+	// Indicates the minimum number of upper case letter characters required for device password for the device to be marked
+	// compliant. Valid values 1 to 16.
 	PasswordMinimumUpperCaseCharacters nullable.Type[int64] `json:"passwordMinimumUpperCaseCharacters,omitempty"`
 
-	// Minutes of inactivity before a password is required.
+	// Indicates the number of minutes of inactivity before a password is required.
 	PasswordMinutesOfInactivityBeforeLock nullable.Type[int64] `json:"passwordMinutesOfInactivityBeforeLock,omitempty"`
 
-	// Number of previous passwords to block. Valid values 1 to 24
+	// Indicates the number of previous passwords to block. Valid values 1 to 24.
 	PasswordPreviousPasswordCountToBlock nullable.Type[int64] `json:"passwordPreviousPasswordCountToBlock,omitempty"`
 
-	// Require a password to unlock device.
+	// Indicates whether a password is required to unlock the device. When TRUE, there must be a password set that unlocks
+	// the device for the device to be marked as compliant. When FALSE, a device is marked as compliant whether or not a
+	// password is set as required to unlock the device. Default is FALSE.
 	PasswordRequired nullable.Type[bool] `json:"passwordRequired,omitempty"`
 
-	// Type of characters in password. Possible values are: deviceDefault, required, numeric, numericComplex, alphabetic,
-	// alphanumeric, alphanumericWithSymbols, lowSecurityBiometric, customPassword.
+	// Indicates the password complexity requirement for the device to be marked compliant. Possible values are:
+	// deviceDefault, required, numeric, numericComplex, alphabetic, alphanumeric, alphanumericWithSymbols,
+	// lowSecurityBiometric, customPassword. Possible values are: deviceDefault, required, numeric, numericComplex,
+	// alphabetic, alphanumeric, alphanumericWithSymbols, lowSecurityBiometric, customPassword.
 	PasswordRequiredType *AndroidDeviceOwnerRequiredPasswordType `json:"passwordRequiredType,omitempty"`
 
-	// Require device to have no pending Android system updates.
+	// Indicates whether the device has pending security or OS updates and sets the compliance state accordingly. When TRUE,
+	// checks if there are any pending system updates on each check in and if there are any pending security or OS version
+	// updates (System Updates), the device will be reported as non-compliant. If set to FALSE, then checks for any pending
+	// security or OS version updates (System Updates) are done without impact to device compliance state. Default is FALSE.
 	RequireNoPendingSystemUpdates nullable.Type[bool] `json:"requireNoPendingSystemUpdates,omitempty"`
 
-	// If setting is set to true, checks that the Intune app installed on fully managed, dedicated, or corporate-owned work
-	// profile Android Enterprise enrolled devices, is the one provided by Microsoft from the Managed Google Playstore. If
-	// the check fails, the device will be reported as non-compliant.
+	// Indicates the device should not be rooted. When TRUE, if the device is detected as rooted it will be reported
+	// non-compliant. When FALSE, the device is not reported as non-compliant regardless of device rooted state. Default is
+	// FALSE.
+	SecurityBlockJailbrokenDevices *bool `json:"securityBlockJailbrokenDevices,omitempty"`
+
+	// Indicates whether Intune application integrity is required to mark the device as compliant. When TRUE, Intune checks
+	// that the Intune app installed on fully managed, dedicated, or corporate-owned work profile Android Enterprise
+	// enrolled devices, is the one provided by Microsoft from the Managed Google Play store. If the check fails, the device
+	// will be reported as non-compliant. Default is FALSE.
 	SecurityRequireIntuneAppIntegrity nullable.Type[bool] `json:"securityRequireIntuneAppIntegrity,omitempty"`
 
-	// Require the device to pass the Play Integrity basic integrity check.
+	// Indicates whether the compliance check will validate the Google Play Integrity check. When TRUE, the Google Play
+	// integrity basic check must pass to consider the device compliant. When FALSE, the Google Play integrity basic check
+	// can pass or fail and the device will be considered compliant. Default is FALSE.
 	SecurityRequireSafetyNetAttestationBasicIntegrity nullable.Type[bool] `json:"securityRequireSafetyNetAttestationBasicIntegrity,omitempty"`
 
-	// Require the device to pass the Play Integrity device integrity check.
+	// Indicates whether the compliance check will validate the Google Play Integrity check. When TRUE, the Google Play
+	// integrity device check must pass to consider the device compliant. When FALSE, the Google Play integrity device check
+	// can pass or fail and the device will be considered compliant. Default is FALSE.
 	SecurityRequireSafetyNetAttestationCertifiedDevice nullable.Type[bool] `json:"securityRequireSafetyNetAttestationCertifiedDevice,omitempty"`
 
-	// Require a specific Play Integrity evaluation type for compliance. Possible values are: basic, hardwareBacked.
+	// Indicates the types of measurements and reference data used to evaluate the device SafetyNet evaluation. Evaluation
+	// is completed on the device to assess device integrity based on checks defined by Android and built into the device
+	// hardware, for example, compromised OS version or root detection. Possible values are: basic, hardwareBacked, with
+	// default value of basic. Possible values are: basic, hardwareBacked.
 	SecurityRequiredAndroidSafetyNetEvaluationType *AndroidSafetyNetEvaluationType `json:"securityRequiredAndroidSafetyNetEvaluationType,omitempty"`
 
-	// Require encryption on Android devices.
+	// Indicates whether encryption on Android devices is required to mark the device as compliant.
 	StorageRequireEncryption nullable.Type[bool] `json:"storageRequireEncryption,omitempty"`
 
 	// Fields inherited from DeviceCompliancePolicy
@@ -119,7 +150,8 @@ type AndroidDeviceOwnerCompliancePolicy struct {
 	// List of Scope Tags for this Entity instance.
 	RoleScopeTagIds *[]string `json:"roleScopeTagIds,omitempty"`
 
-	// The list of scheduled action for this rule
+	// The list of scheduled action per rule for this compliance policy. This is a required property when creating any
+	// individual per-platform compliance policies.
 	ScheduledActionsForRule *[]DeviceComplianceScheduledActionForRule `json:"scheduledActionsForRule,omitempty"`
 
 	// Device compliance users status overview

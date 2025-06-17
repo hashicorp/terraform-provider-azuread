@@ -19,6 +19,8 @@ type OnPremisesPublishingProfile struct {
 	// List of existing onPremisesAgent objects. Read-only. Nullable.
 	Agents *[]OnPremisesAgent `json:"agents,omitempty"`
 
+	// Represents the segment configurations that are allowed for an on-premises non-web application published through
+	// Microsoft Entra application proxy.
 	ApplicationSegments *[]IPApplicationSegment `json:"applicationSegments,omitempty"`
 
 	// List of existing connectorGroup objects for applications published through Application Proxy. Read-only. Nullable.
@@ -30,6 +32,7 @@ type OnPremisesPublishingProfile struct {
 	// Represents a hybridAgentUpdaterConfiguration object.
 	HybridAgentUpdaterConfiguration *HybridAgentUpdaterConfiguration `json:"hybridAgentUpdaterConfiguration,omitempty"`
 
+	// Specifies whether default access for app proxy is enabled or disabled.
 	IsDefaultAccessEnabled nullable.Type[bool] `json:"isDefaultAccessEnabled,omitempty"`
 
 	// Represents if Microsoft Entra application proxy is enabled for the tenant.

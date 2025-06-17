@@ -25,6 +25,9 @@ type RoleScopeTag struct {
 	// Description of the Role Scope Tag. This property is read-only.
 	IsBuiltIn *bool `json:"isBuiltIn,omitempty"`
 
+	// Permissions associated with the Role Scope Tag. This property is read-only.
+	Permissions *[]string `json:"permissions,omitempty"`
+
 	// Fields inherited from Entity
 
 	// The unique identifier for an entity. Read-only.
@@ -64,6 +67,7 @@ func (s RoleScopeTag) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "isBuiltIn")
+	delete(decoded, "permissions")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.roleScopeTag"

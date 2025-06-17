@@ -38,6 +38,7 @@ const (
 	CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckIntuneUrlNotAllowListed                  CloudPCOnPremisesConnectionHealthCheckErrorType = "endpointConnectivityCheckIntuneUrlNotAllowListed"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckLocaleUrlNotAllowListed                  CloudPCOnPremisesConnectionHealthCheckErrorType = "endpointConnectivityCheckLocaleUrlNotAllowListed"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckUnknownError                             CloudPCOnPremisesConnectionHealthCheckErrorType = "endpointConnectivityCheckUnknownError"
+	CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckVMAgentEndPointCommunicationError        CloudPCOnPremisesConnectionHealthCheckErrorType = "endpointConnectivityCheckVMAgentEndPointCommunicationError"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckWVDUrlNotAllowListed                     CloudPCOnPremisesConnectionHealthCheckErrorType = "endpointConnectivityCheckWVDUrlNotAllowListed"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorAllocateResourceFailed                         CloudPCOnPremisesConnectionHealthCheckErrorType = "internalServerErrorAllocateResourceFailed"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorDeploymentCanceled                             CloudPCOnPremisesConnectionHealthCheckErrorType = "internalServerErrorDeploymentCanceled"
@@ -57,6 +58,7 @@ const (
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckGeneralSubscriptionError                 CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckGeneralSubscriptionError"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneCustomWindowsRestrictionViolation  CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckIntuneCustomWindowsRestrictionViolation"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneDefaultWindowsRestrictionViolation CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckIntuneDefaultWindowsRestrictionViolation"
+	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckMissingRegistrationForLocation           CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckMissingRegistrationForLocation"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoIntuneReaderRoleError                  CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckNoIntuneReaderRoleError"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoSubnetIP                               CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckNoSubnetIP"
 	CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckResourceGroupBeingDeleted                CloudPCOnPremisesConnectionHealthCheckErrorType = "resourceAvailabilityCheckResourceGroupBeingDeleted"
@@ -109,6 +111,7 @@ func PossibleValuesForCloudPCOnPremisesConnectionHealthCheckErrorType() []string
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckIntuneUrlNotAllowListed),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckLocaleUrlNotAllowListed),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckUnknownError),
+		string(CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckVMAgentEndPointCommunicationError),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckWVDUrlNotAllowListed),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorAllocateResourceFailed),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorDeploymentCanceled),
@@ -128,6 +131,7 @@ func PossibleValuesForCloudPCOnPremisesConnectionHealthCheckErrorType() []string
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckGeneralSubscriptionError),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneCustomWindowsRestrictionViolation),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneDefaultWindowsRestrictionViolation),
+		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckMissingRegistrationForLocation),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoIntuneReaderRoleError),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoSubnetIP),
 		string(CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckResourceGroupBeingDeleted),
@@ -194,6 +198,7 @@ func parseCloudPCOnPremisesConnectionHealthCheckErrorType(input string) (*CloudP
 		"endpointconnectivitycheckintuneurlnotallowlisted":                  CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckIntuneUrlNotAllowListed,
 		"endpointconnectivitychecklocaleurlnotallowlisted":                  CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckLocaleUrlNotAllowListed,
 		"endpointconnectivitycheckunknownerror":                             CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckUnknownError,
+		"endpointconnectivitycheckvmagentendpointcommunicationerror":        CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckVMAgentEndPointCommunicationError,
 		"endpointconnectivitycheckwvdurlnotallowlisted":                     CloudPCOnPremisesConnectionHealthCheckErrorType_EndpointConnectivityCheckWVDUrlNotAllowListed,
 		"internalservererrorallocateresourcefailed":                         CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorAllocateResourceFailed,
 		"internalservererrordeploymentcanceled":                             CloudPCOnPremisesConnectionHealthCheckErrorType_InternalServerErrorDeploymentCanceled,
@@ -213,6 +218,7 @@ func parseCloudPCOnPremisesConnectionHealthCheckErrorType(input string) (*CloudP
 		"resourceavailabilitycheckgeneralsubscriptionerror":                 CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckGeneralSubscriptionError,
 		"resourceavailabilitycheckintunecustomwindowsrestrictionviolation":  CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneCustomWindowsRestrictionViolation,
 		"resourceavailabilitycheckintunedefaultwindowsrestrictionviolation": CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckIntuneDefaultWindowsRestrictionViolation,
+		"resourceavailabilitycheckmissingregistrationforlocation":           CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckMissingRegistrationForLocation,
 		"resourceavailabilitychecknointunereaderroleerror":                  CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoIntuneReaderRoleError,
 		"resourceavailabilitychecknosubnetip":                               CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckNoSubnetIP,
 		"resourceavailabilitycheckresourcegroupbeingdeleted":                CloudPCOnPremisesConnectionHealthCheckErrorType_ResourceAvailabilityCheckResourceGroupBeingDeleted,

@@ -15,7 +15,7 @@ type ChatMessageMention struct {
 	// String used to represent the mention. For example, a user's display name, a team name.
 	MentionText nullable.Type[string] `json:"mentionText,omitempty"`
 
-	// The entity (user, application, team, or channel) that was @mentioned.
+	// The entity (user, application, team, channel, or chat) that was @mentioned.
 	Mentioned *ChatMessageMentionedIdentitySet `json:"mentioned,omitempty"`
 
 	// The OData ID of this entity

@@ -48,7 +48,7 @@ type BaseManagedAppProtectionImpl struct {
 
 	// If set, it will specify what action to take in the case where the user is unable to checkin because their
 	// authentication token is invalid. This happens when the user is deleted or disabled in AAD. Possible values are:
-	// block, wipe, warn.
+	// block, wipe, warn, blockWhenSettingIsSupported.
 	AppActionIfUnableToAuthenticateUser *ManagedAppRemediationAction `json:"appActionIfUnableToAuthenticateUser,omitempty"`
 
 	// Indicates whether a user can bring data into org documents.

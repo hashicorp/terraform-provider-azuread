@@ -13,13 +13,13 @@ import (
 var _ Entity = VppToken{}
 
 type VppToken struct {
-	// The apple Id associated with the given Apple Volume Purchase Program Token.
+	// The Apple ID associated with the given Apple Volume Purchase Program Token.
 	AppleId nullable.Type[string] `json:"appleId,omitempty"`
 
 	// Whether or not apps for the VPP token will be automatically updated.
 	AutomaticallyUpdateApps *bool `json:"automaticallyUpdateApps,omitempty"`
 
-	// Whether or not apps for the VPP token will be automatically updated.
+	// The country or region associated with the Apple Volume Purchase Program Token.
 	CountryOrRegion nullable.Type[string] `json:"countryOrRegion,omitempty"`
 
 	// The expiration date time of the Apple Volume Purchase Program Token.

@@ -14,9 +14,9 @@ var _ Entity = EducationAssignmentDefaults{}
 
 type EducationAssignmentDefaults struct {
 	// Optional field to control adding assignments to students' and teachers' calendars when the assignment is published.
-	// The possible values are: none, studentsAndPublisher, studentsAndTeamOwners, unknownFutureValue, and studentsOnly. You
-	// must use the Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable
-	// enum: studentsOnly. The default value is none.
+	// The possible values are: none, studentsAndPublisher, studentsAndTeamOwners, unknownFutureValue, and studentsOnly. Use
+	// the Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
+	// studentsOnly. The default value is none.
 	AddToCalendarAction *EducationAddToCalendarOptions `json:"addToCalendarAction,omitempty"`
 
 	// Class-level default behavior for handling students who are added after the assignment is published. Possible values

@@ -12,15 +12,17 @@ import (
 type CloudPCDeviceImageErrorCode string
 
 const (
-	CloudPCDeviceImageErrorCode_InternalServerError                  CloudPCDeviceImageErrorCode = "internalServerError"
-	CloudPCDeviceImageErrorCode_OsVersionNotSupported                CloudPCDeviceImageErrorCode = "osVersionNotSupported"
-	CloudPCDeviceImageErrorCode_PaidSourceImageNotSupport            CloudPCDeviceImageErrorCode = "paidSourceImageNotSupport"
-	CloudPCDeviceImageErrorCode_SourceImageInvalid                   CloudPCDeviceImageErrorCode = "sourceImageInvalid"
-	CloudPCDeviceImageErrorCode_SourceImageNotFound                  CloudPCDeviceImageErrorCode = "sourceImageNotFound"
-	CloudPCDeviceImageErrorCode_SourceImageNotGeneralized            CloudPCDeviceImageErrorCode = "sourceImageNotGeneralized"
-	CloudPCDeviceImageErrorCode_SourceImageNotSupportCustomizeVMName CloudPCDeviceImageErrorCode = "sourceImageNotSupportCustomizeVMName"
-	CloudPCDeviceImageErrorCode_SourceImageSizeExceedsLimitation     CloudPCDeviceImageErrorCode = "sourceImageSizeExceedsLimitation"
-	CloudPCDeviceImageErrorCode_VmAlreadyAzureAdjoined               CloudPCDeviceImageErrorCode = "vmAlreadyAzureAdjoined"
+	CloudPCDeviceImageErrorCode_InternalServerError                          CloudPCDeviceImageErrorCode = "internalServerError"
+	CloudPCDeviceImageErrorCode_OsVersionNotSupported                        CloudPCDeviceImageErrorCode = "osVersionNotSupported"
+	CloudPCDeviceImageErrorCode_PaidSourceImageNotSupport                    CloudPCDeviceImageErrorCode = "paidSourceImageNotSupport"
+	CloudPCDeviceImageErrorCode_SourceImageInvalid                           CloudPCDeviceImageErrorCode = "sourceImageInvalid"
+	CloudPCDeviceImageErrorCode_SourceImageNotFound                          CloudPCDeviceImageErrorCode = "sourceImageNotFound"
+	CloudPCDeviceImageErrorCode_SourceImageNotGeneralized                    CloudPCDeviceImageErrorCode = "sourceImageNotGeneralized"
+	CloudPCDeviceImageErrorCode_SourceImageNotSupportCustomizeVMName         CloudPCDeviceImageErrorCode = "sourceImageNotSupportCustomizeVMName"
+	CloudPCDeviceImageErrorCode_SourceImageSizeExceedsLimitation             CloudPCDeviceImageErrorCode = "sourceImageSizeExceedsLimitation"
+	CloudPCDeviceImageErrorCode_SourceImageWithDataDiskNotSupported          CloudPCDeviceImageErrorCode = "sourceImageWithDataDiskNotSupported"
+	CloudPCDeviceImageErrorCode_SourceImageWithDiskEncryptionSetNotSupported CloudPCDeviceImageErrorCode = "sourceImageWithDiskEncryptionSetNotSupported"
+	CloudPCDeviceImageErrorCode_VmAlreadyAzureAdjoined                       CloudPCDeviceImageErrorCode = "vmAlreadyAzureAdjoined"
 )
 
 func PossibleValuesForCloudPCDeviceImageErrorCode() []string {
@@ -33,6 +35,8 @@ func PossibleValuesForCloudPCDeviceImageErrorCode() []string {
 		string(CloudPCDeviceImageErrorCode_SourceImageNotGeneralized),
 		string(CloudPCDeviceImageErrorCode_SourceImageNotSupportCustomizeVMName),
 		string(CloudPCDeviceImageErrorCode_SourceImageSizeExceedsLimitation),
+		string(CloudPCDeviceImageErrorCode_SourceImageWithDataDiskNotSupported),
+		string(CloudPCDeviceImageErrorCode_SourceImageWithDiskEncryptionSetNotSupported),
 		string(CloudPCDeviceImageErrorCode_VmAlreadyAzureAdjoined),
 	}
 }
@@ -52,15 +56,17 @@ func (s *CloudPCDeviceImageErrorCode) UnmarshalJSON(bytes []byte) error {
 
 func parseCloudPCDeviceImageErrorCode(input string) (*CloudPCDeviceImageErrorCode, error) {
 	vals := map[string]CloudPCDeviceImageErrorCode{
-		"internalservererror":                  CloudPCDeviceImageErrorCode_InternalServerError,
-		"osversionnotsupported":                CloudPCDeviceImageErrorCode_OsVersionNotSupported,
-		"paidsourceimagenotsupport":            CloudPCDeviceImageErrorCode_PaidSourceImageNotSupport,
-		"sourceimageinvalid":                   CloudPCDeviceImageErrorCode_SourceImageInvalid,
-		"sourceimagenotfound":                  CloudPCDeviceImageErrorCode_SourceImageNotFound,
-		"sourceimagenotgeneralized":            CloudPCDeviceImageErrorCode_SourceImageNotGeneralized,
-		"sourceimagenotsupportcustomizevmname": CloudPCDeviceImageErrorCode_SourceImageNotSupportCustomizeVMName,
-		"sourceimagesizeexceedslimitation":     CloudPCDeviceImageErrorCode_SourceImageSizeExceedsLimitation,
-		"vmalreadyazureadjoined":               CloudPCDeviceImageErrorCode_VmAlreadyAzureAdjoined,
+		"internalservererror":                          CloudPCDeviceImageErrorCode_InternalServerError,
+		"osversionnotsupported":                        CloudPCDeviceImageErrorCode_OsVersionNotSupported,
+		"paidsourceimagenotsupport":                    CloudPCDeviceImageErrorCode_PaidSourceImageNotSupport,
+		"sourceimageinvalid":                           CloudPCDeviceImageErrorCode_SourceImageInvalid,
+		"sourceimagenotfound":                          CloudPCDeviceImageErrorCode_SourceImageNotFound,
+		"sourceimagenotgeneralized":                    CloudPCDeviceImageErrorCode_SourceImageNotGeneralized,
+		"sourceimagenotsupportcustomizevmname":         CloudPCDeviceImageErrorCode_SourceImageNotSupportCustomizeVMName,
+		"sourceimagesizeexceedslimitation":             CloudPCDeviceImageErrorCode_SourceImageSizeExceedsLimitation,
+		"sourceimagewithdatadisknotsupported":          CloudPCDeviceImageErrorCode_SourceImageWithDataDiskNotSupported,
+		"sourceimagewithdiskencryptionsetnotsupported": CloudPCDeviceImageErrorCode_SourceImageWithDiskEncryptionSetNotSupported,
+		"vmalreadyazureadjoined":                       CloudPCDeviceImageErrorCode_VmAlreadyAzureAdjoined,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

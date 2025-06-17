@@ -18,7 +18,7 @@ type PlannerChecklistItem struct {
 	LastModifiedBy *IdentitySet `json:"lastModifiedBy,omitempty"`
 
 	// Read-only. Date and time at which this is last modified. The Timestamp type represents date and time information
-	// using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
+	// using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
 	// The OData ID of this entity
@@ -30,7 +30,7 @@ type PlannerChecklistItem struct {
 	// Used to set the relative order of items in the checklist. The format is defined as outlined here.
 	OrderHint nullable.Type[string] `json:"orderHint,omitempty"`
 
-	// Title of the checklist item
+	// Title of the checklist item.
 	Title nullable.Type[string] `json:"title,omitempty"`
 }
 

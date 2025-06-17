@@ -11,11 +11,11 @@ import (
 var _ Entity = NetworkaccessConnectivity{}
 
 type NetworkaccessConnectivity struct {
-	// Branches represent locations for connectivity. DEPRECATED AND TO BE RETIRED SOON. Use the remoteNetwork relationship
-	// and its associated APIs instead.
+	// The locations for connectivity. DEPRECATED AND TO BE RETIRED SOON. Use the remoteNetwork relationship and its
+	// associated APIs instead.
 	Branches *[]NetworkaccessBranchSite `json:"branches,omitempty"`
 
-	// Represent locations, such as branches, that are connected to Global Secure Access services through an IPsec tunnel.
+	// The locations, such as branches, that are connected to Global Secure Access services through an IPsec tunnel.
 	RemoteNetworks *[]NetworkaccessRemoteNetwork `json:"remoteNetworks,omitempty"`
 
 	WebCategories *[]NetworkaccessWebCategory `json:"webCategories,omitempty"`

@@ -21,6 +21,11 @@ type FederatedIdentityCredential struct {
 	// characters. Required.
 	Audiences []string `json:"audiences"`
 
+	// Nullable. Defaults to null if not set. Enables the use of claims matching expressions against specified claims. If
+	// claimsMatchingExpression is defined, subject must be null. For the list of supported expression syntax and claims,
+	// visit the Flexible FIC reference.
+	ClaimsMatchingExpression *FederatedIdentityExpression `json:"claimsMatchingExpression,omitempty"`
+
 	// The un-validated, user-provided description of the federated identity credential. It has a limit of 600 characters.
 	// Optional.
 	Description nullable.Type[string] `json:"description,omitempty"`
@@ -34,11 +39,11 @@ type FederatedIdentityCredential struct {
 	// friendly. It is immutable once created. Alternate key. Required. Not nullable. Supports $filter (eq).
 	Name string `json:"name"`
 
-	// Required. The identifier of the external software workload within the external identity provider. Like the audience
-	// value, it has no fixed format, as each identity provider uses their own - sometimes a GUID, sometimes a colon
-	// delimited identifier, sometimes arbitrary strings. The value here must match the sub claim within the token presented
-	// to Microsoft Entra ID. The combination of issuer and subject must be unique on the app. It has a limit of 600
-	// characters. Supports $filter (eq).
+	// Nullable. Defaults to null if not set. The identifier of the external software workload within the external identity
+	// provider. Like the audience value, it has no fixed format, as each identity provider uses their own - sometimes a
+	// GUID, sometimes a colon delimited identifier, sometimes arbitrary strings. The value here must match the sub claim
+	// within the token presented to Microsoft Entra ID. The combination of issuer and subject must be unique on the app. It
+	// has a limit of 600 characters. If subject is defined, claimsMatchingExpression must be null. Supports $filter (eq).
 	Subject nullable.Type[string] `json:"subject,omitempty"`
 
 	// Fields inherited from Entity

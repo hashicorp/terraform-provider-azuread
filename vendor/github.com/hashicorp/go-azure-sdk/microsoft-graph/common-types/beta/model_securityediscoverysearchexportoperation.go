@@ -14,14 +14,26 @@ var _ SecurityCaseOperation = SecurityEdiscoverySearchExportOperation{}
 
 type SecurityEdiscoverySearchExportOperation struct {
 	// The additional items to include in the export. The possible values are: none, teamsAndYammerConversations,
-	// cloudAttachments, allDocumentVersions, subfolderContents, listAttachments, unknownFutureValue.
+	// cloudAttachments, allDocumentVersions, subfolderContents, listAttachments, unknownFutureValue, htmlTranscripts,
+	// advancedIndexing, allItemsInFolder, includeFolderAndPath, condensePaths, friendlyName, splitSource,
+	// optimizedPartitionSize, includeReport. Use the Prefer: include-unknown-enum-members request header to get the
+	// following values from this evolvable enum: htmlTranscripts, advancedIndexing, allItemsInFolder, includeFolderAndPath,
+	// condensePaths, friendlyName, splitSource, optimizedPartitionSize, includeReport.
 	AdditionalOptions *SecurityAdditionalOptions `json:"additionalOptions,omitempty"`
 
-	// The name of export provided by the user.
-	Description nullable.Type[string] `json:"description,omitempty"`
+	// The versions of cloud attachments to include in messages. Possible values are: latest, recent10, recent100, all,
+	// unknownFutureValue.
+	CloudAttachmentVersion *SecurityCloudAttachmentVersion `json:"cloudAttachmentVersion,omitempty"`
 
 	// The description of the export by the user.
+	Description nullable.Type[string] `json:"description,omitempty"`
+
+	// The name of export provided by the user.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The versions of files in SharePoint to include. Possible values are: latest, recent10, recent100, all,
+	// unknownFutureValue.
+	DocumentVersion *SecurityDocumentVersion `json:"documentVersion,omitempty"`
 
 	// Items to be included in the export. The possible values are: searchHits, partiallyIndexed, unknownFutureValue.
 	ExportCriteria *SecurityExportCriteria `json:"exportCriteria,omitempty"`
@@ -46,9 +58,9 @@ type SecurityEdiscoverySearchExportOperation struct {
 	// Fields inherited from SecurityCaseOperation
 
 	// The type of action the operation represents. Possible values are: contentExport, applyTags, convertToPdf, index,
-	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. You must
-	// use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
-	// purgeData, exportReport, exportResult.
+	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. Use the
+	// Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum: purgeData,
+	// exportReport, exportResult.
 	Action *SecurityCaseAction `json:"action,omitempty"`
 
 	// The date and time the operation was completed.
@@ -139,32 +151,36 @@ var _ json.Unmarshaler = &SecurityEdiscoverySearchExportOperation{}
 
 func (s *SecurityEdiscoverySearchExportOperation) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AdditionalOptions  *SecurityAdditionalOptions    `json:"additionalOptions,omitempty"`
-		Description        nullable.Type[string]         `json:"description,omitempty"`
-		DisplayName        nullable.Type[string]         `json:"displayName,omitempty"`
-		ExportCriteria     *SecurityExportCriteria       `json:"exportCriteria,omitempty"`
-		ExportFileMetadata *[]SecurityExportFileMetadata `json:"exportFileMetadata,omitempty"`
-		ExportFormat       *SecurityExportFormat         `json:"exportFormat,omitempty"`
-		ExportLocation     *SecurityExportLocation       `json:"exportLocation,omitempty"`
-		ExportSingleItems  nullable.Type[bool]           `json:"exportSingleItems,omitempty"`
-		Search             *SecurityEdiscoverySearch     `json:"search,omitempty"`
-		Action             *SecurityCaseAction           `json:"action,omitempty"`
-		CompletedDateTime  nullable.Type[string]         `json:"completedDateTime,omitempty"`
-		CreatedDateTime    nullable.Type[string]         `json:"createdDateTime,omitempty"`
-		PercentProgress    nullable.Type[int64]          `json:"percentProgress,omitempty"`
-		ResultInfo         *ResultInfo                   `json:"resultInfo,omitempty"`
-		Status             *SecurityCaseOperationStatus  `json:"status,omitempty"`
-		Id                 *string                       `json:"id,omitempty"`
-		ODataId            *string                       `json:"@odata.id,omitempty"`
-		ODataType          *string                       `json:"@odata.type,omitempty"`
+		AdditionalOptions      *SecurityAdditionalOptions      `json:"additionalOptions,omitempty"`
+		CloudAttachmentVersion *SecurityCloudAttachmentVersion `json:"cloudAttachmentVersion,omitempty"`
+		Description            nullable.Type[string]           `json:"description,omitempty"`
+		DisplayName            nullable.Type[string]           `json:"displayName,omitempty"`
+		DocumentVersion        *SecurityDocumentVersion        `json:"documentVersion,omitempty"`
+		ExportCriteria         *SecurityExportCriteria         `json:"exportCriteria,omitempty"`
+		ExportFileMetadata     *[]SecurityExportFileMetadata   `json:"exportFileMetadata,omitempty"`
+		ExportFormat           *SecurityExportFormat           `json:"exportFormat,omitempty"`
+		ExportLocation         *SecurityExportLocation         `json:"exportLocation,omitempty"`
+		ExportSingleItems      nullable.Type[bool]             `json:"exportSingleItems,omitempty"`
+		Search                 *SecurityEdiscoverySearch       `json:"search,omitempty"`
+		Action                 *SecurityCaseAction             `json:"action,omitempty"`
+		CompletedDateTime      nullable.Type[string]           `json:"completedDateTime,omitempty"`
+		CreatedDateTime        nullable.Type[string]           `json:"createdDateTime,omitempty"`
+		PercentProgress        nullable.Type[int64]            `json:"percentProgress,omitempty"`
+		ResultInfo             *ResultInfo                     `json:"resultInfo,omitempty"`
+		Status                 *SecurityCaseOperationStatus    `json:"status,omitempty"`
+		Id                     *string                         `json:"id,omitempty"`
+		ODataId                *string                         `json:"@odata.id,omitempty"`
+		ODataType              *string                         `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
 	s.AdditionalOptions = decoded.AdditionalOptions
+	s.CloudAttachmentVersion = decoded.CloudAttachmentVersion
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
+	s.DocumentVersion = decoded.DocumentVersion
 	s.ExportCriteria = decoded.ExportCriteria
 	s.ExportFileMetadata = decoded.ExportFileMetadata
 	s.ExportFormat = decoded.ExportFormat

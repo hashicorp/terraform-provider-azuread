@@ -11,6 +11,7 @@ import (
 var _ CloudPCDisasterRecoveryNetworkSetting = CloudPCDisasterRecoveryAzureConnectionSetting{}
 
 type CloudPCDisasterRecoveryAzureConnectionSetting struct {
+	// Indicates the unique ID of the virtual network that the new Cloud PC joins.
 	OnPremisesConnectionId *string `json:"onPremisesConnectionId,omitempty"`
 
 	// Fields inherited from CloudPCDisasterRecoveryNetworkSetting

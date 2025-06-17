@@ -11,6 +11,7 @@ import (
 var _ Entity = UserSolutionRoot{}
 
 type UserSolutionRoot struct {
+	// The working time schedule entity associated with the solution.
 	WorkingTimeSchedule *WorkingTimeSchedule `json:"workingTimeSchedule,omitempty"`
 
 	// Fields inherited from Entity

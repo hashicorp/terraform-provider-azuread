@@ -13,7 +13,7 @@ import (
 var _ DeviceManagementTroubleshootingEvent = MobileAppTroubleshootingEvent{}
 
 type MobileAppTroubleshootingEvent struct {
-	// Indicates collection of App Log Upload Request.
+	// The collection property of AppLogUploadRequest.
 	AppLogCollectionRequests *[]AppLogCollectionRequest `json:"appLogCollectionRequests,omitempty"`
 
 	// Intune application identifier.

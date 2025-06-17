@@ -11,7 +11,8 @@ import (
 var _ Entity = ServicePrincipalSignInActivity{}
 
 type ServicePrincipalSignInActivity struct {
-	// The application ID of the resource.
+	// The globally unique appId (also called client ID on the Microsoft Entra admin center) of the credentialed resource
+	// application.
 	AppId *string `json:"appId,omitempty"`
 
 	// The sign-in activity of the application in a app-only authentication flow (app-to-app tokens) where the application

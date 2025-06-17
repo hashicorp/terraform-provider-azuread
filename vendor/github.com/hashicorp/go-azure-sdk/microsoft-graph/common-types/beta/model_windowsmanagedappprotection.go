@@ -24,7 +24,8 @@ type WindowsManagedAppProtection struct {
 
 	// If set, it will specify what action to take in the case where the user is unable to checkin because their
 	// authentication token is invalid. This happens when the user is deleted or disabled in AAD. Some possible values are
-	// block or wipe. If this property is not set, no action will be taken. Possible values are: block, wipe, warn.
+	// block or wipe. If this property is not set, no action will be taken. Possible values are: block, wipe, warn,
+	// blockWhenSettingIsSupported.
 	AppActionIfUnableToAuthenticateUser *ManagedAppRemediationAction `json:"appActionIfUnableToAuthenticateUser,omitempty"`
 
 	// List of apps to which the policy is deployed.

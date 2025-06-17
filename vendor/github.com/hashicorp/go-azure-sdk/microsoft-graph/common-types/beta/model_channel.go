@@ -13,6 +13,10 @@ import (
 var _ Entity = Channel{}
 
 type Channel struct {
+	// A collection of membership records associated with the channel. It includes both direct and indirect members of
+	// shared channels.
+	AllMembers *[]ConversationMember `json:"allMembers,omitempty"`
+
 	// Read only. Timestamp at which the channel was created.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
@@ -36,19 +40,25 @@ type Channel struct {
 	// users. The property can only be set programmatically via the Create team method. The default value is false.
 	IsFavoriteByDefault nullable.Type[bool] `json:"isFavoriteByDefault,omitempty"`
 
+	LayoutType *ChannelLayoutType `json:"layoutType,omitempty"`
+
 	// A collection of membership records associated with the channel.
 	Members *[]ConversationMember `json:"members,omitempty"`
 
 	// The type of the channel. Can be set during creation and can't be changed. The possible values are: standard, private,
-	// unknownFutureValue, shared. The default value is standard. You must use the Prefer: include-unknown-enum-members
-	// request header to get the following value in this evolvable enum: shared.
+	// unknownFutureValue, shared. The default value is standard. Use the Prefer: include-unknown-enum-members request
+	// header to get the following value in this evolvable enum: shared.
 	MembershipType *ChannelMembershipType `json:"membershipType,omitempty"`
 
-	// A collection of all the messages in the channel. A navigation property. Nullable.
+	// A collection of all the messages in the channel. Nullable.
 	Messages *[]ChatMessage `json:"messages,omitempty"`
 
 	// Settings to configure channel moderation to control who can start new posts and reply to posts in that channel.
 	ModerationSettings *ChannelModerationSettings `json:"moderationSettings,omitempty"`
+
+	// Selective Planner services available to this channel. Currently, only shared channels are supported. Read-only.
+	// Nullable.
+	Planner *TeamsChannelPlanner `json:"planner,omitempty"`
 
 	// A collection of teams with which a channel is shared.
 	SharedWithTeams *[]SharedWithChannelTeamInfo `json:"sharedWithTeams,omitempty"`
@@ -58,7 +68,7 @@ type Channel struct {
 	// channel method.
 	Summary *ChannelSummary `json:"summary,omitempty"`
 
-	// A collection of all the tabs in the channel. A navigation property.
+	// A collection of all the tabs in the channel.
 	Tabs *[]TeamsTab `json:"tabs,omitempty"`
 
 	// The ID of the Microsoft Entra tenant.
@@ -108,6 +118,7 @@ func (s Channel) MarshalJSON() ([]byte, error) {
 
 	delete(decoded, "email")
 	delete(decoded, "isArchived")
+	delete(decoded, "planner")
 	delete(decoded, "webUrl")
 
 	if !s.OmitDiscriminatedValue {
@@ -133,9 +144,11 @@ func (s *Channel) UnmarshalJSON(bytes []byte) error {
 		FilesFolder         *DriveItem                   `json:"filesFolder,omitempty"`
 		IsArchived          nullable.Type[bool]          `json:"isArchived,omitempty"`
 		IsFavoriteByDefault nullable.Type[bool]          `json:"isFavoriteByDefault,omitempty"`
+		LayoutType          *ChannelLayoutType           `json:"layoutType,omitempty"`
 		MembershipType      *ChannelMembershipType       `json:"membershipType,omitempty"`
 		Messages            *[]ChatMessage               `json:"messages,omitempty"`
 		ModerationSettings  *ChannelModerationSettings   `json:"moderationSettings,omitempty"`
+		Planner             *TeamsChannelPlanner         `json:"planner,omitempty"`
 		SharedWithTeams     *[]SharedWithChannelTeamInfo `json:"sharedWithTeams,omitempty"`
 		Summary             *ChannelSummary              `json:"summary,omitempty"`
 		Tabs                *[]TeamsTab                  `json:"tabs,omitempty"`
@@ -156,9 +169,11 @@ func (s *Channel) UnmarshalJSON(bytes []byte) error {
 	s.FilesFolder = decoded.FilesFolder
 	s.IsArchived = decoded.IsArchived
 	s.IsFavoriteByDefault = decoded.IsFavoriteByDefault
+	s.LayoutType = decoded.LayoutType
 	s.MembershipType = decoded.MembershipType
 	s.Messages = decoded.Messages
 	s.ModerationSettings = decoded.ModerationSettings
+	s.Planner = decoded.Planner
 	s.SharedWithTeams = decoded.SharedWithTeams
 	s.Summary = decoded.Summary
 	s.Tabs = decoded.Tabs
@@ -171,6 +186,23 @@ func (s *Channel) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling Channel into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["allMembers"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling AllMembers into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]ConversationMember, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalConversationMemberImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'AllMembers' for 'Channel': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.AllMembers = &output
 	}
 
 	if v, ok := temp["members"]; ok {

@@ -16,10 +16,10 @@ type IdentitySet interface {
 var _ IdentitySet = BaseIdentitySetImpl{}
 
 type BaseIdentitySetImpl struct {
-	// Optional. The application associated with this action.
+	// The Identity of the Application. This property is read-only.
 	Application Identity `json:"application"`
 
-	// Optional. The device associated with this action.
+	// The Identity of the Device. This property is read-only.
 	Device Identity `json:"device"`
 
 	// The OData ID of this entity
@@ -28,7 +28,7 @@ type BaseIdentitySetImpl struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Optional. The user associated with this action.
+	// The Identity of the User. This property is read-only.
 	User Identity `json:"user"`
 
 	// Model Behaviors
@@ -113,6 +113,22 @@ func UnmarshalIdentitySetImplementation(input []byte) (IdentitySet, error) {
 	var value string
 	if v, ok := temp["@odata.type"]; ok {
 		value = fmt.Sprintf("%v", v)
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionMentionedIdentitySet") {
+		var out AiInteractionMentionedIdentitySet
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionMentionedIdentitySet: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalIdentitySet") {
+		var out ApprovalIdentitySet
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalIdentitySet: %+v", err)
+		}
+		return out, nil
 	}
 
 	if strings.EqualFold(value, "#microsoft.graph.chatMessageFromIdentitySet") {

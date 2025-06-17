@@ -13,6 +13,10 @@ import (
 var _ Entity = Channel{}
 
 type Channel struct {
+	// A collection of membership records associated with the channel, including both direct and indirect members of shared
+	// channels.
+	AllMembers *[]ConversationMember `json:"allMembers,omitempty"`
+
 	// Read only. Timestamp at which the channel was created.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
@@ -40,8 +44,8 @@ type Channel struct {
 	Members *[]ConversationMember `json:"members,omitempty"`
 
 	// The type of the channel. Can be set during creation and can't be changed. The possible values are: standard, private,
-	// unknownFutureValue, shared. The default value is standard. Note that you must use the Prefer:
-	// include-unknown-enum-members request header to get the following value in this evolvable enum: shared.
+	// unknownFutureValue, shared. The default value is standard. Use the Prefer: include-unknown-enum-members request
+	// header to get the following value in this evolvable enum: shared.
 	MembershipType *ChannelMembershipType `json:"membershipType,omitempty"`
 
 	// A collection of all the messages in the channel. A navigation property. Nullable.
@@ -167,6 +171,23 @@ func (s *Channel) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling Channel into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["allMembers"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling AllMembers into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]ConversationMember, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalConversationMemberImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'AllMembers' for 'Channel': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.AllMembers = &output
 	}
 
 	if v, ok := temp["members"]; ok {

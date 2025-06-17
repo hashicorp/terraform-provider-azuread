@@ -17,6 +17,8 @@ type BackupRestoreRoot struct {
 	// The list of drive protection units in the tenant.
 	DriveProtectionUnits *[]DriveProtectionUnit `json:"driveProtectionUnits,omitempty"`
 
+	DriveProtectionUnitsBulkAdditionJobs *[]DriveProtectionUnitsBulkAdditionJob `json:"driveProtectionUnitsBulkAdditionJobs,omitempty"`
+
 	// The list of Exchange protection policies in the tenant.
 	ExchangeProtectionPolicies *[]ExchangeProtectionPolicy `json:"exchangeProtectionPolicies,omitempty"`
 
@@ -28,6 +30,8 @@ type BackupRestoreRoot struct {
 
 	// The list of mailbox protection units in the tenant.
 	MailboxProtectionUnits *[]MailboxProtectionUnit `json:"mailboxProtectionUnits,omitempty"`
+
+	MailboxProtectionUnitsBulkAdditionJobs *[]MailboxProtectionUnitsBulkAdditionJob `json:"mailboxProtectionUnitsBulkAdditionJobs,omitempty"`
 
 	// The list of OneDrive for Business protection policies in the tenant.
 	OneDriveForBusinessProtectionPolicies *[]OneDriveForBusinessProtectionPolicy `json:"oneDriveForBusinessProtectionPolicies,omitempty"`
@@ -64,6 +68,8 @@ type BackupRestoreRoot struct {
 
 	// The list of site protection units in the tenant.
 	SiteProtectionUnits *[]SiteProtectionUnit `json:"siteProtectionUnits,omitempty"`
+
+	SiteProtectionUnitsBulkAdditionJobs *[]SiteProtectionUnitsBulkAdditionJob `json:"siteProtectionUnitsBulkAdditionJobs,omitempty"`
 
 	// Fields inherited from Entity
 
@@ -119,24 +125,27 @@ var _ json.Unmarshaler = &BackupRestoreRoot{}
 
 func (s *BackupRestoreRoot) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		DriveInclusionRules                   *[]DriveProtectionRule                 `json:"driveInclusionRules,omitempty"`
-		DriveProtectionUnits                  *[]DriveProtectionUnit                 `json:"driveProtectionUnits,omitempty"`
-		ExchangeProtectionPolicies            *[]ExchangeProtectionPolicy            `json:"exchangeProtectionPolicies,omitempty"`
-		ExchangeRestoreSessions               *[]ExchangeRestoreSession              `json:"exchangeRestoreSessions,omitempty"`
-		MailboxInclusionRules                 *[]MailboxProtectionRule               `json:"mailboxInclusionRules,omitempty"`
-		MailboxProtectionUnits                *[]MailboxProtectionUnit               `json:"mailboxProtectionUnits,omitempty"`
-		OneDriveForBusinessProtectionPolicies *[]OneDriveForBusinessProtectionPolicy `json:"oneDriveForBusinessProtectionPolicies,omitempty"`
-		OneDriveForBusinessRestoreSessions    *[]OneDriveForBusinessRestoreSession   `json:"oneDriveForBusinessRestoreSessions,omitempty"`
-		RestorePoints                         *[]RestorePoint                        `json:"restorePoints,omitempty"`
-		ServiceApps                           *[]ServiceApp                          `json:"serviceApps,omitempty"`
-		ServiceStatus                         *ServiceStatus                         `json:"serviceStatus,omitempty"`
-		SharePointProtectionPolicies          *[]SharePointProtectionPolicy          `json:"sharePointProtectionPolicies,omitempty"`
-		SharePointRestoreSessions             *[]SharePointRestoreSession            `json:"sharePointRestoreSessions,omitempty"`
-		SiteInclusionRules                    *[]SiteProtectionRule                  `json:"siteInclusionRules,omitempty"`
-		SiteProtectionUnits                   *[]SiteProtectionUnit                  `json:"siteProtectionUnits,omitempty"`
-		Id                                    *string                                `json:"id,omitempty"`
-		ODataId                               *string                                `json:"@odata.id,omitempty"`
-		ODataType                             *string                                `json:"@odata.type,omitempty"`
+		DriveInclusionRules                    *[]DriveProtectionRule                   `json:"driveInclusionRules,omitempty"`
+		DriveProtectionUnits                   *[]DriveProtectionUnit                   `json:"driveProtectionUnits,omitempty"`
+		DriveProtectionUnitsBulkAdditionJobs   *[]DriveProtectionUnitsBulkAdditionJob   `json:"driveProtectionUnitsBulkAdditionJobs,omitempty"`
+		ExchangeProtectionPolicies             *[]ExchangeProtectionPolicy              `json:"exchangeProtectionPolicies,omitempty"`
+		ExchangeRestoreSessions                *[]ExchangeRestoreSession                `json:"exchangeRestoreSessions,omitempty"`
+		MailboxInclusionRules                  *[]MailboxProtectionRule                 `json:"mailboxInclusionRules,omitempty"`
+		MailboxProtectionUnits                 *[]MailboxProtectionUnit                 `json:"mailboxProtectionUnits,omitempty"`
+		MailboxProtectionUnitsBulkAdditionJobs *[]MailboxProtectionUnitsBulkAdditionJob `json:"mailboxProtectionUnitsBulkAdditionJobs,omitempty"`
+		OneDriveForBusinessProtectionPolicies  *[]OneDriveForBusinessProtectionPolicy   `json:"oneDriveForBusinessProtectionPolicies,omitempty"`
+		OneDriveForBusinessRestoreSessions     *[]OneDriveForBusinessRestoreSession     `json:"oneDriveForBusinessRestoreSessions,omitempty"`
+		RestorePoints                          *[]RestorePoint                          `json:"restorePoints,omitempty"`
+		ServiceApps                            *[]ServiceApp                            `json:"serviceApps,omitempty"`
+		ServiceStatus                          *ServiceStatus                           `json:"serviceStatus,omitempty"`
+		SharePointProtectionPolicies           *[]SharePointProtectionPolicy            `json:"sharePointProtectionPolicies,omitempty"`
+		SharePointRestoreSessions              *[]SharePointRestoreSession              `json:"sharePointRestoreSessions,omitempty"`
+		SiteInclusionRules                     *[]SiteProtectionRule                    `json:"siteInclusionRules,omitempty"`
+		SiteProtectionUnits                    *[]SiteProtectionUnit                    `json:"siteProtectionUnits,omitempty"`
+		SiteProtectionUnitsBulkAdditionJobs    *[]SiteProtectionUnitsBulkAdditionJob    `json:"siteProtectionUnitsBulkAdditionJobs,omitempty"`
+		Id                                     *string                                  `json:"id,omitempty"`
+		ODataId                                *string                                  `json:"@odata.id,omitempty"`
+		ODataType                              *string                                  `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -144,10 +153,12 @@ func (s *BackupRestoreRoot) UnmarshalJSON(bytes []byte) error {
 
 	s.DriveInclusionRules = decoded.DriveInclusionRules
 	s.DriveProtectionUnits = decoded.DriveProtectionUnits
+	s.DriveProtectionUnitsBulkAdditionJobs = decoded.DriveProtectionUnitsBulkAdditionJobs
 	s.ExchangeProtectionPolicies = decoded.ExchangeProtectionPolicies
 	s.ExchangeRestoreSessions = decoded.ExchangeRestoreSessions
 	s.MailboxInclusionRules = decoded.MailboxInclusionRules
 	s.MailboxProtectionUnits = decoded.MailboxProtectionUnits
+	s.MailboxProtectionUnitsBulkAdditionJobs = decoded.MailboxProtectionUnitsBulkAdditionJobs
 	s.OneDriveForBusinessProtectionPolicies = decoded.OneDriveForBusinessProtectionPolicies
 	s.OneDriveForBusinessRestoreSessions = decoded.OneDriveForBusinessRestoreSessions
 	s.RestorePoints = decoded.RestorePoints
@@ -157,6 +168,7 @@ func (s *BackupRestoreRoot) UnmarshalJSON(bytes []byte) error {
 	s.SharePointRestoreSessions = decoded.SharePointRestoreSessions
 	s.SiteInclusionRules = decoded.SiteInclusionRules
 	s.SiteProtectionUnits = decoded.SiteProtectionUnits
+	s.SiteProtectionUnitsBulkAdditionJobs = decoded.SiteProtectionUnitsBulkAdditionJobs
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

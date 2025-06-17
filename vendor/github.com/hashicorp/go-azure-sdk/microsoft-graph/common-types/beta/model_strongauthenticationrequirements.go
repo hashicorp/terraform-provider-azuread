@@ -11,5 +11,7 @@ type StrongAuthenticationRequirements struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// Sets the per-user MFA state for the user. The possible values are: disabled, enforced, enabled, unknownFutureValue.
+	// When you update a user's MFA state to enabled and the user has already registered an MFA method, their state changes
+	// automatically to enforced.
 	PerUserMfaState *PerUserMfaState `json:"perUserMfaState,omitempty"`
 }

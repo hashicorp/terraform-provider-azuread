@@ -28,8 +28,8 @@ type AppRole struct {
 	// app role.
 	Id *string `json:"id,omitempty"`
 
-	// When creating or updating an app role, this must be set to true (which is the default). To delete a role, this must
-	// first be set to false. At that point, in a subsequent call, this role may be removed.
+	// When you create or updating an app role, this value must be true. To delete a role, this must first be set to false.
+	// At that point, in a subsequent call, this role might be removed. Default value is true.
 	IsEnabled *bool `json:"isEnabled,omitempty"`
 
 	// The OData ID of this entity
@@ -44,7 +44,7 @@ type AppRole struct {
 
 	// Specifies the value to include in the roles claim in ID tokens and access tokens authenticating an assigned user or
 	// service principal. Must not exceed 120 characters in length. Allowed characters are : ! # $ % & ' ( ) * + , - . / : ;
-	// = ? @ [ ] ^ + _ { } ~, and characters in the ranges 0-9, A-Z and a-z. Any other character, including the space
+	// = ? @ [ ] ^ + _ { } ~, and characters in the ranges 0-9, A-Z, and a-z. Any other character, including the space
 	// character, aren't allowed. May not begin with ..
 	Value nullable.Type[string] `json:"value,omitempty"`
 }

@@ -13,32 +13,83 @@ import (
 var _ SecurityAlertEvidence = SecurityIoTDeviceEvidence{}
 
 type SecurityIoTDeviceEvidence struct {
-	DeviceId           nullable.Type[string]            `json:"deviceId,omitempty"`
-	DeviceName         nullable.Type[string]            `json:"deviceName,omitempty"`
-	DevicePageLink     nullable.Type[string]            `json:"devicePageLink,omitempty"`
-	DeviceSubType      nullable.Type[string]            `json:"deviceSubType,omitempty"`
-	DeviceType         nullable.Type[string]            `json:"deviceType,omitempty"`
-	IPAddress          *SecurityIPEvidence              `json:"ipAddress,omitempty"`
-	Importance         *SecurityIoTDeviceImportanceType `json:"importance,omitempty"`
-	IoTHub             *SecurityAzureResourceEvidence   `json:"ioTHub,omitempty"`
-	IoTSecurityAgentId nullable.Type[string]            `json:"ioTSecurityAgentId,omitempty"`
-	IsAuthorized       nullable.Type[bool]              `json:"isAuthorized,omitempty"`
-	IsProgramming      nullable.Type[bool]              `json:"isProgramming,omitempty"`
-	IsScanner          nullable.Type[bool]              `json:"isScanner,omitempty"`
-	MacAddress         nullable.Type[string]            `json:"macAddress,omitempty"`
-	Manufacturer       nullable.Type[string]            `json:"manufacturer,omitempty"`
-	Model              nullable.Type[string]            `json:"model,omitempty"`
-	Nics               *SecurityNicEvidence             `json:"nics,omitempty"`
-	OperatingSystem    nullable.Type[string]            `json:"operatingSystem,omitempty"`
-	Owners             *[]string                        `json:"owners,omitempty"`
-	Protocols          *[]string                        `json:"protocols,omitempty"`
-	PurdueLayer        nullable.Type[string]            `json:"purdueLayer,omitempty"`
-	Sensor             nullable.Type[string]            `json:"sensor,omitempty"`
-	SerialNumber       nullable.Type[string]            `json:"serialNumber,omitempty"`
-	Site               nullable.Type[string]            `json:"site,omitempty"`
-	Source             nullable.Type[string]            `json:"source,omitempty"`
-	SourceRef          *SecurityUrlEvidence             `json:"sourceRef,omitempty"`
-	Zone               nullable.Type[string]            `json:"zone,omitempty"`
+	// The device ID.
+	DeviceId nullable.Type[string] `json:"deviceId,omitempty"`
+
+	// The friendly name of the device.
+	DeviceName nullable.Type[string] `json:"deviceName,omitempty"`
+
+	// The URL to the device page in the IoT Defender portal.
+	DevicePageLink nullable.Type[string] `json:"devicePageLink,omitempty"`
+
+	// The device subtype.
+	DeviceSubType nullable.Type[string] `json:"deviceSubType,omitempty"`
+
+	// The type of the device. For example, 'temperature sensor,' 'freezer,' 'wind turbine,' and so on.
+	DeviceType nullable.Type[string] `json:"deviceType,omitempty"`
+
+	// The current IP address of the device.
+	IPAddress *SecurityIPEvidence `json:"ipAddress,omitempty"`
+
+	// The importance level for the IoT device. Possible values are low, normal, high, and unknownFutureValue.
+	Importance *SecurityIoTDeviceImportanceType `json:"importance,omitempty"`
+
+	// The azureResourceEvidence entity that represents the IoT Hub that the device belongs to.
+	IoTHub *SecurityAzureResourceEvidence `json:"ioTHub,omitempty"`
+
+	// The ID of the Azure Security Center for the IoT agent that is running on the device.
+	IoTSecurityAgentId nullable.Type[string] `json:"ioTSecurityAgentId,omitempty"`
+
+	// Indicates whether the device classified as an authorized device.
+	IsAuthorized nullable.Type[bool] `json:"isAuthorized,omitempty"`
+
+	// Indicates whether the device classified as a programming device.
+	IsProgramming nullable.Type[bool] `json:"isProgramming,omitempty"`
+
+	// Indicates whether the device classified as a scanner.
+	IsScanner nullable.Type[bool] `json:"isScanner,omitempty"`
+
+	// The MAC address of the device.
+	MacAddress nullable.Type[string] `json:"macAddress,omitempty"`
+
+	// The manufacturer of the device.
+	Manufacturer nullable.Type[string] `json:"manufacturer,omitempty"`
+
+	// The model of the device.
+	Model nullable.Type[string] `json:"model,omitempty"`
+
+	// The current network interface controllers on the device.
+	Nics *[]SecurityNicEvidence `json:"nics,omitempty"`
+
+	// The operating system the device is running.
+	OperatingSystem nullable.Type[string] `json:"operatingSystem,omitempty"`
+
+	// The owners for the device.
+	Owners *[]string `json:"owners,omitempty"`
+
+	// The list of protocols that the device supports.
+	Protocols *[]string `json:"protocols,omitempty"`
+
+	// The Purdue Layer of the device.
+	PurdueLayer nullable.Type[string] `json:"purdueLayer,omitempty"`
+
+	// The sensor that monitors the device.
+	Sensor nullable.Type[string] `json:"sensor,omitempty"`
+
+	// The serial number of the device.
+	SerialNumber nullable.Type[string] `json:"serialNumber,omitempty"`
+
+	// The site location of the device.
+	Site nullable.Type[string] `json:"site,omitempty"`
+
+	// The source (microsoft/vendor) of the device entity.
+	Source nullable.Type[string] `json:"source,omitempty"`
+
+	// A URL reference to the source item where the device is managed.
+	SourceRef *SecurityUrlEvidence `json:"sourceRef,omitempty"`
+
+	// The zone location of the device within a site.
+	Zone nullable.Type[string] `json:"zone,omitempty"`
 
 	// Fields inherited from SecurityAlertEvidence
 

@@ -11,10 +11,14 @@ import (
 var _ AppManagementConfiguration = AppManagementApplicationConfiguration{}
 
 type AppManagementApplicationConfiguration struct {
+	// Property to restrict creation or update of apps based on their target signInAudience types.
+	Audiences *AudiencesConfiguration `json:"audiences,omitempty"`
+
+	// Configuration object for restrictions on identifierUris property for an application.
+	IdentifierUris *IdentifierUriConfiguration `json:"identifierUris,omitempty"`
 
 	// Fields inherited from AppManagementConfiguration
 
-	// Collection of keyCredential restrictions settings to be applied to an application or service principal.
 	KeyCredentials *[]KeyCredentialConfiguration `json:"keyCredentials,omitempty"`
 
 	// The OData ID of this entity
@@ -23,7 +27,6 @@ type AppManagementApplicationConfiguration struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
-	// Collection of password restrictions settings to be applied to an application or service principal.
 	PasswordCredentials *[]PasswordCredentialConfiguration `json:"passwordCredentials,omitempty"`
 
 	// Model Behaviors

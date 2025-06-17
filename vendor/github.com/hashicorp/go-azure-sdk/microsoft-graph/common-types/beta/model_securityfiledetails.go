@@ -23,6 +23,9 @@ type SecurityFileDetails struct {
 	// The certificate authority (CA) that issued the certificate.
 	Issuer nullable.Type[string] `json:"issuer,omitempty"`
 
+	// The Md5 cryptographic hash of the file content.
+	Md5 nullable.Type[string] `json:"md5,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 
@@ -34,6 +37,8 @@ type SecurityFileDetails struct {
 
 	// The Sha256 cryptographic hash of the file content.
 	Sha256 nullable.Type[string] `json:"sha256,omitempty"`
+
+	Sha256Ac nullable.Type[string] `json:"sha256Ac,omitempty"`
 
 	// The signer of the signed file.
 	Signer nullable.Type[string] `json:"signer,omitempty"`

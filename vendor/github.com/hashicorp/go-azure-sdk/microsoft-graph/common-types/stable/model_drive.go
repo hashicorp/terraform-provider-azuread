@@ -16,8 +16,8 @@ type Drive struct {
 	// Collection of bundles (albums and multi-select-shared sets of items). Only in personal OneDrive.
 	Bundles *[]DriveItem `json:"bundles,omitempty"`
 
-	// Describes the type of drive represented by this resource. OneDrive personal drives will return personal. OneDrive for
-	// Business will return business. SharePoint document libraries will return documentLibrary. Read-only.
+	// Describes the type of drive represented by this resource. OneDrive personal drives return personal. OneDrive for
+	// Business returns business. SharePoint document libraries return documentLibrary. Read-only.
 	DriveType nullable.Type[string] `json:"driveType,omitempty"`
 
 	// The list of items the user is following. Only in OneDrive for Business.
@@ -43,7 +43,7 @@ type Drive struct {
 	// Collection of common folders available in OneDrive. Read-only. Nullable.
 	Special *[]DriveItem `json:"special,omitempty"`
 
-	// If present, indicates that this is a system-managed drive. Read-only.
+	// If present, indicates that it's a system-managed drive. Read-only.
 	System *SystemFacet `json:"system,omitempty"`
 
 	// Fields inherited from BaseItem

@@ -12,7 +12,8 @@ type KeyCredential struct {
 	// defaults to the thumbprint of the certificate.
 	CustomKeyIdentifier nullable.Type[string] `json:"customKeyIdentifier,omitempty"`
 
-	// Friendly name for the key. Optional.
+	// The friendly name for the key, with a maximum length of 90 characters. Longer values are accepted but shortened.
+	// Optional.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// The date and time at which the credential expires. The DateTimeOffset type represents date and time information using
@@ -21,7 +22,7 @@ type KeyCredential struct {
 
 	// Value for the key credential. Should be a Base64 encoded value. Returned only on $select for a single object, that
 	// is, GET applications/{applicationId}?$select=keyCredentials or GET
-	// servicePrincipals/{servicePrincipalId}?$select=keyCredentials; otherwise, it is always null. From a .cer certificate,
+	// servicePrincipals/{servicePrincipalId}?$select=keyCredentials; otherwise, it's always null. From a .cer certificate,
 	// you can read the key using the Convert.ToBase64String() method. For more information, see Get the certificate key.
 	Key nullable.Type[string] `json:"key,omitempty"`
 

@@ -8,7 +8,7 @@ type ConditionalAccessUsers struct {
 	ExcludeGroups *[]string `json:"excludeGroups,omitempty"`
 
 	// Internal guests or external users excluded from the policy scope. Optionally populated.
-	ExcludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"excludeGuestsOrExternalUsers"`
+	ExcludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"excludeGuestsOrExternalUsers,omitempty"`
 
 	// Role IDs excluded from scope of policy.
 	ExcludeRoles *[]string `json:"excludeRoles,omitempty"`
@@ -20,7 +20,7 @@ type ConditionalAccessUsers struct {
 	IncludeGroups *[]string `json:"includeGroups,omitempty"`
 
 	// Internal guests or external users included in the policy scope. Optionally populated.
-	IncludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"includeGuestsOrExternalUsers"`
+	IncludeGuestsOrExternalUsers *ConditionalAccessGuestsOrExternalUsers `json:"includeGuestsOrExternalUsers,omitempty"`
 
 	// Role IDs in scope of policy unless explicitly excluded.
 	IncludeRoles *[]string `json:"includeRoles,omitempty"`

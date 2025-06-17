@@ -21,10 +21,14 @@ type CloudPCProvisioningPolicy struct {
 	// how to get the assignments relationship, see Get cloudPcProvisioningPolicy.
 	Assignments *[]CloudPCProvisioningPolicyAssignment `json:"assignments,omitempty"`
 
-	// The specific settings for Windows Autopatch that enable its customers to experience it on Cloud PC. The settings take
-	// effect when the tenant enrolls in Windows Autopatch and the managedType of the microsoftManagedDesktop property is
-	// set as starterManaged. Supports $select.
+	// Indicates the Windows Autopatch settings for Cloud PCs using this provisioning policy. The settings take effect when
+	// the tenant enrolls in Autopatch and the managedType of the microsoftManagedDesktop property is set as starterManaged.
+	// Supports $select.
 	Autopatch *CloudPCProvisioningPolicyAutopatch `json:"autopatch,omitempty"`
+
+	// The specific settings for Windows Autopilot that enable Windows 365 customers to experience it on Cloud PC. Supports
+	// $select.
+	AutopilotConfiguration *CloudPCAutopilotConfiguration `json:"autopilotConfiguration,omitempty"`
 
 	// The display name of the Cloud PC group that the Cloud PCs reside in. Read-only.
 	CloudPCGroupDisplayName nullable.Type[string] `json:"cloudPcGroupDisplayName,omitempty"`
@@ -78,16 +82,16 @@ type CloudPCProvisioningPolicy struct {
 	MicrosoftManagedDesktop *MicrosoftManagedDesktop `json:"microsoftManagedDesktop,omitempty"`
 
 	// Specifies the type of licenses to be used when provisioning Cloud PCs using this policy. The possible values are
-	// dedicated, shared, unknownFutureValue, sharedByUser, sharedByEntraGroup. You must use the Prefer:
-	// include-unknown-enum-members request header to get the following values from this evolvable enum: sharedByUser,
-	// sharedByEntraGroup. The shared member is deprecated and will stop returning on April 30, 2027; going forward, use the
-	// sharedByUser member. For example, a dedicated service plan can be assigned to only one user and provision only one
-	// Cloud PC. The shared and sharedByUser plans require customers to purchase a shared service plan. Each shared license
-	// purchased can enable up to three Cloud PCs, with only one user signed in at a time. The sharedByEntraGroup plan also
-	// requires the purchase of a shared service plan. Each shared license under this plan can enable one Cloud PC, which is
-	// shared for the group according to the assignments of this policy. By default, the license type is dedicated if the
-	// provisioningType isn't specified when you create the cloudPcProvisioningPolicy. You can't change this property after
-	// the cloudPcProvisioningPolicy is created.
+	// dedicated, shared, unknownFutureValue, sharedByUser, sharedByEntraGroup. Use the Prefer: include-unknown-enum-members
+	// request header to get the following values from this evolvable enum: sharedByUser, sharedByEntraGroup. The shared
+	// member is deprecated and will stop returning on April 30, 2027; going forward, use the sharedByUser member. For
+	// example, a dedicated service plan can be assigned to only one user and provision only one Cloud PC. The shared and
+	// sharedByUser plans require customers to purchase a shared service plan. Each shared license purchased can enable up
+	// to three Cloud PCs, with only one user signed in at a time. The sharedByEntraGroup plan also requires the purchase of
+	// a shared service plan. Each shared license under this plan can enable one Cloud PC, which is shared for the group
+	// according to the assignments of this policy. By default, the license type is dedicated if the provisioningType isn't
+	// specified when you create the cloudPcProvisioningPolicy. You can't change this property after the
+	// cloudPcProvisioningPolicy is created.
 	ProvisioningType *CloudPCProvisioningType `json:"provisioningType,omitempty"`
 
 	ScopeIds *[]string `json:"scopeIds,omitempty"`

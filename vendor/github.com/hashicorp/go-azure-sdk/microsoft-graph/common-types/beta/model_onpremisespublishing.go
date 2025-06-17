@@ -11,8 +11,8 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type OnPremisesPublishing struct {
-	// If you're configuring a traffic manager in front of multiple App Proxy applications, the alternateUrl is the
-	// user-friendly URL that points to the traffic manager.
+	// If you're configuring a traffic manager in front of multiple app proxy applications, this user-friendly URL points to
+	// the traffic manager.
 	AlternateUrl nullable.Type[string] `json:"alternateUrl,omitempty"`
 
 	// The duration the connector waits for a response from the backend application before closing the connection. Possible
@@ -22,8 +22,8 @@ type OnPremisesPublishing struct {
 	// value is default.
 	ApplicationServerTimeout nullable.Type[string] `json:"applicationServerTimeout,omitempty"`
 
-	// Indicates if this application is an Application Proxy configured application. This is pre-set by the system.
-	// Read-only.
+	// System-defined value that indicates whether this application is an application proxy configured application. The
+	// possible values are quickaccessapp and nonwebapp. Read-only.
 	ApplicationType nullable.Type[string] `json:"applicationType,omitempty"`
 
 	// Details the pre-authentication setting for the application. Pre-authentication enforces that users must authenticate
@@ -31,18 +31,20 @@ type OnPremisesPublishing struct {
 	// aadPreAuthentication.
 	ExternalAuthenticationType *ExternalAuthenticationType `json:"externalAuthenticationType,omitempty"`
 
-	// The published external url for the application. For example, https://intranet-contoso.msappproxy.net/.
+	// The published external URL for the application. For example, https://intranet-contoso.msappproxy.net/.
 	ExternalUrl nullable.Type[string] `json:"externalUrl,omitempty"`
 
 	// The internal url of the application. For example, https://intranet/.
 	InternalUrl nullable.Type[string] `json:"internalUrl,omitempty"`
 
+	// Indicates whether the application is accessible via a Global Secure Access client on a managed device.
 	IsAccessibleViaZTNAClient nullable.Type[bool] `json:"isAccessibleViaZTNAClient,omitempty"`
 
 	// Indicates whether backend SSL certificate validation is enabled for the application. For all new Application Proxy
 	// apps, the property is set to true by default. For all existing apps, the property is set to false.
 	IsBackendCertificateValidationEnabled nullable.Type[bool] `json:"isBackendCertificateValidationEnabled,omitempty"`
 
+	// Indicates Microsoft Entra Private Access should handle DNS resolution. false by default.
 	IsDnsResolutionEnabled nullable.Type[bool] `json:"isDnsResolutionEnabled,omitempty"`
 
 	// Indicates if the HTTPOnly cookie flag should be set in the HTTP response headers. Set this value to true to have
@@ -93,6 +95,7 @@ type OnPremisesPublishing struct {
 	// Represents the single sign-on configuration for the on-premises application.
 	SingleSignOnSettings *OnPremisesPublishingSingleSignOn `json:"singleSignOnSettings,omitempty"`
 
+	// Indicates whether the application should use alternateUrl instead of externalUrl.
 	UseAlternateUrlForTranslationAndRedirect nullable.Type[bool] `json:"useAlternateUrlForTranslationAndRedirect,omitempty"`
 
 	// Details of the certificate associated with the application when a custom domain is in use. null when using the
@@ -104,6 +107,10 @@ type OnPremisesPublishing struct {
 
 	// The associated password credential for the custom domain used.
 	VerifiedCustomDomainPasswordCredential *PasswordCredential `json:"verifiedCustomDomainPasswordCredential,omitempty"`
+
+	WafAllowedHeaders *WafAllowedHeadersDictionary `json:"wafAllowedHeaders,omitempty"`
+	WafIPRanges       *[]IPRange                   `json:"wafIpRanges,omitempty"`
+	WafProvider       nullable.Type[string]        `json:"wafProvider,omitempty"`
 }
 
 var _ json.Marshaler = OnPremisesPublishing{}
@@ -161,6 +168,8 @@ func (s *OnPremisesPublishing) UnmarshalJSON(bytes []byte) error {
 		VerifiedCustomDomainCertificatesMetadata *VerifiedCustomDomainCertificatesMetadata `json:"verifiedCustomDomainCertificatesMetadata,omitempty"`
 		VerifiedCustomDomainKeyCredential        *KeyCredential                            `json:"verifiedCustomDomainKeyCredential,omitempty"`
 		VerifiedCustomDomainPasswordCredential   *PasswordCredential                       `json:"verifiedCustomDomainPasswordCredential,omitempty"`
+		WafAllowedHeaders                        *WafAllowedHeadersDictionary              `json:"wafAllowedHeaders,omitempty"`
+		WafProvider                              nullable.Type[string]                     `json:"wafProvider,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -190,6 +199,8 @@ func (s *OnPremisesPublishing) UnmarshalJSON(bytes []byte) error {
 	s.VerifiedCustomDomainCertificatesMetadata = decoded.VerifiedCustomDomainCertificatesMetadata
 	s.VerifiedCustomDomainKeyCredential = decoded.VerifiedCustomDomainKeyCredential
 	s.VerifiedCustomDomainPasswordCredential = decoded.VerifiedCustomDomainPasswordCredential
+	s.WafAllowedHeaders = decoded.WafAllowedHeaders
+	s.WafProvider = decoded.WafProvider
 
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
@@ -202,6 +213,23 @@ func (s *OnPremisesPublishing) UnmarshalJSON(bytes []byte) error {
 			return fmt.Errorf("unmarshaling field 'SegmentsConfiguration' for 'OnPremisesPublishing': %+v", err)
 		}
 		s.SegmentsConfiguration = impl
+	}
+
+	if v, ok := temp["wafIpRanges"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling WafIPRanges into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]IPRange, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalIPRangeImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'WafIPRanges' for 'OnPremisesPublishing': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.WafIPRanges = &output
 	}
 
 	return nil

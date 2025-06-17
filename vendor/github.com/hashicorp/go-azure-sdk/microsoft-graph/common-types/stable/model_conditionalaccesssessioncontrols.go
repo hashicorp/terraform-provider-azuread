@@ -13,7 +13,7 @@ type ConditionalAccessSessionControls struct {
 	ApplicationEnforcedRestrictions *ApplicationEnforcedRestrictionsSessionControl `json:"applicationEnforcedRestrictions,omitempty"`
 
 	// Session control to apply cloud app security.
-	CloudAppSecurity *CloudAppSecuritySessionControl `json:"cloudAppSecurity"`
+	CloudAppSecurity *CloudAppSecuritySessionControl `json:"cloudAppSecurity,omitempty"`
 
 	// Session control that determines whether it is acceptable for Microsoft Entra ID to extend existing sessions based on
 	// information collected prior to an outage or not.

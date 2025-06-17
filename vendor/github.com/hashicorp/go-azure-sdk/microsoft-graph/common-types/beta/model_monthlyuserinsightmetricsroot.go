@@ -23,6 +23,8 @@ type MonthlyUserInsightMetricsRoot struct {
 	// Insights for MFA usage on apps registered in the tenant for a specified period.
 	MfaCompletions *[]MfaCompletionMetric `json:"mfaCompletions,omitempty"`
 
+	MfaRegisteredUsers *[]MfaUserCountMetric `json:"mfaRegisteredUsers,omitempty"`
+
 	// Insights for all user requests on apps registered in the tenant for a specified period.
 	Requests *[]UserRequestsMetric `json:"requests,omitempty"`
 

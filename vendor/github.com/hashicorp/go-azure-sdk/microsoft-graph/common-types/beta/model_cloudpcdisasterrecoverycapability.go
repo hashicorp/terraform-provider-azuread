@@ -12,6 +12,11 @@ type CloudPCDisasterRecoveryCapability struct {
 	// failback, unknownFutureValue.
 	CapabilityType *CloudPCDisasterRecoveryCapabilityType `json:"capabilityType,omitempty"`
 
+	// The disaster recovery license type that provides the capability. The possible values are: none, standard,
+	// unknownFutureValue, plus. Use the Prefer: include-unknown-enum-members request header to get the following value in
+	// this evolvable enum: plus.
+	LicenseType *CloudPCDisasterRecoveryLicenseType `json:"licenseType,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 

@@ -13,7 +13,7 @@ import (
 var _ EducationResource = EducationExternalResource{}
 
 type EducationExternalResource struct {
-	// Location of the resource. Required
+	// Location of the resource. Required.
 	WebUrl nullable.Type[string] `json:"webUrl,omitempty"`
 
 	// Fields inherited from EducationResource

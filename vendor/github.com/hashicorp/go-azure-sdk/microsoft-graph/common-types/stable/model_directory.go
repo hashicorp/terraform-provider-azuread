@@ -36,6 +36,8 @@ type Directory struct {
 	// A container for on-premises directory synchronization functionalities that are available for the organization.
 	OnPremisesSynchronization *[]OnPremisesDirectorySynchronization `json:"onPremisesSynchronization,omitempty"`
 
+	PublicKeyInfrastructure *PublicKeyInfrastructureRoot `json:"publicKeyInfrastructure,omitempty"`
+
 	// List of commercial subscriptions that an organization acquired.
 	Subscriptions *[]CompanySubscription `json:"subscriptions,omitempty"`
 
@@ -101,6 +103,7 @@ func (s *Directory) UnmarshalJSON(bytes []byte) error {
 		DeletedItems_ODataBind             *[]string                             `json:"deletedItems@odata.bind,omitempty"`
 		DeviceLocalCredentials             *[]DeviceLocalCredentialInfo          `json:"deviceLocalCredentials,omitempty"`
 		OnPremisesSynchronization          *[]OnPremisesDirectorySynchronization `json:"onPremisesSynchronization,omitempty"`
+		PublicKeyInfrastructure            *PublicKeyInfrastructureRoot          `json:"publicKeyInfrastructure,omitempty"`
 		Subscriptions                      *[]CompanySubscription                `json:"subscriptions,omitempty"`
 		Id                                 *string                               `json:"id,omitempty"`
 		ODataId                            *string                               `json:"@odata.id,omitempty"`
@@ -116,6 +119,7 @@ func (s *Directory) UnmarshalJSON(bytes []byte) error {
 	s.DeletedItems_ODataBind = decoded.DeletedItems_ODataBind
 	s.DeviceLocalCredentials = decoded.DeviceLocalCredentials
 	s.OnPremisesSynchronization = decoded.OnPremisesSynchronization
+	s.PublicKeyInfrastructure = decoded.PublicKeyInfrastructure
 	s.Subscriptions = decoded.Subscriptions
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId

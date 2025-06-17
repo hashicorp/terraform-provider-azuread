@@ -12,6 +12,11 @@ type KeyCredentialConfiguration struct {
 	// certificate authorities.
 	CertificateBasedApplicationConfigurationIds *[]string `json:"certificateBasedApplicationConfigurationIds,omitempty"`
 
+	// Collection of custom security attribute exemptions. If an actor user or service principal has the custom security
+	// attribute defined in this section, they're exempted from the restriction. This means that calls the user or service
+	// principal makes to create or update apps are exempt from this policy enforcement.
+	ExcludeActors *AppManagementPolicyActorExemptions `json:"excludeActors,omitempty"`
+
 	// String value that indicates the maximum lifetime for key expiration, defined as an ISO 8601 duration. For example,
 	// P4DT12H30M5S represents four days, 12 hours, 30 minutes, and five seconds. This property is required when
 	// restrictionType is set to keyLifetime.
@@ -27,12 +32,9 @@ type KeyCredentialConfiguration struct {
 	// applications, the enforcement date can be retroactively applied.
 	RestrictForAppsCreatedAfterDateTime nullable.Type[string] `json:"restrictForAppsCreatedAfterDateTime,omitempty"`
 
-	// The type of restriction being applied. Possible values are asymmetricKeyLifetime, and unknownFutureValue. Each value
-	// of restrictionType can be used only once per policy.
 	RestrictionType *AppKeyCredentialRestrictionType `json:"restrictionType,omitempty"`
 
-	// String value that indicates if the restriction is evaluated. The possible values are: enabled, disabled, and
-	// unknownFutureValue. If enabled, the restriction is evaluated. If disabled, the restriction isn't evaluated or
-	// enforced.
+	// Indicates whether the restriction is evaluated. The possible values are: enabled, disabled, unknownFutureValue. If
+	// enabled, the restriction is evaluated. If disabled, the restriction isn't evaluated or enforced.
 	State *AppManagementRestrictionState `json:"state,omitempty"`
 }

@@ -41,6 +41,9 @@ type BaseMailFolderImpl struct {
 	// The collection of multi-value extended properties defined for the mailFolder. Read-only. Nullable.
 	MultiValueExtendedProperties *[]MultiValueLegacyExtendedProperty `json:"multiValueExtendedProperties,omitempty"`
 
+	// The collection of long-running operations in the mailFolder.
+	Operations *[]MailFolderOperation `json:"operations,omitempty"`
+
 	// The unique identifier for the mailFolder's parent mailFolder.
 	ParentFolderId nullable.Type[string] `json:"parentFolderId,omitempty"`
 
@@ -210,6 +213,23 @@ func (s *BaseMailFolderImpl) UnmarshalJSON(bytes []byte) error {
 			output = append(output, impl)
 		}
 		s.Messages = &output
+	}
+
+	if v, ok := temp["operations"]; ok {
+		var listTemp []json.RawMessage
+		if err := json.Unmarshal(v, &listTemp); err != nil {
+			return fmt.Errorf("unmarshaling Operations into list []json.RawMessage: %+v", err)
+		}
+
+		output := make([]MailFolderOperation, 0)
+		for i, val := range listTemp {
+			impl, err := UnmarshalMailFolderOperationImplementation(val)
+			if err != nil {
+				return fmt.Errorf("unmarshaling index %d field 'Operations' for 'BaseMailFolderImpl': %+v", i, err)
+			}
+			output = append(output, impl)
+		}
+		s.Operations = &output
 	}
 
 	return nil

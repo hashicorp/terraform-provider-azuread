@@ -49,11 +49,10 @@ func (o RevokeSignInSessionsOperationOptions) ToQuery() *client.QueryParams {
 }
 
 // RevokeSignInSessions - Invoke action revokeSignInSessions. Invalidates all the refresh tokens issued to applications
-// for a user (as well as session cookies in a user's browser), by resetting the signInSessionsValidFromDateTime user
-// property to the current date-time. Typically, this operation is performed (by the user or an administrator) if the
-// user has a lost or stolen device. This operation prevents access to the organization's data through applications on
-// the device by requiring the user to sign in again to all applications that they have previously consented to,
-// independent of device.
+// for a user (and session cookies in a user's browser), by resetting the signInSessionsValidFromDateTime user property
+// to the current date-time. Typically, this operation is performed (by the user or an administrator) if the user has a
+// lost or stolen device. This operation prevents access to the organization's data through applications on the device
+// by requiring the user to sign in again to all applications that they consented to previously, independent of device.
 func (c UserClient) RevokeSignInSessions(ctx context.Context, id stable.UserId, options RevokeSignInSessionsOperationOptions) (result RevokeSignInSessionsOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

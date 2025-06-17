@@ -18,7 +18,7 @@ type DeviceAndAppManagementAssignmentTarget interface {
 var _ DeviceAndAppManagementAssignmentTarget = BaseDeviceAndAppManagementAssignmentTargetImpl{}
 
 type BaseDeviceAndAppManagementAssignmentTargetImpl struct {
-	// The Id of the filter for the target assignment.
+	// The ID of the filter for the target assignment.
 	DeviceAndAppManagementAssignmentFilterId nullable.Type[string] `json:"deviceAndAppManagementAssignmentFilterId,omitempty"`
 
 	// Represents type of the assignment filter.

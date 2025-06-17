@@ -19,12 +19,12 @@ type LongRunningOperation interface {
 var _ LongRunningOperation = BaseLongRunningOperationImpl{}
 
 type BaseLongRunningOperationImpl struct {
-	// The start time of the operation. The Timestamp type represents date and time information using ISO 8601 format and is
-	// always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	// The start time of the operation. The timestamp type represents date and time information using ISO 8601 format and is
+	// always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
 
-	// The time of the last action in the operation. The Timestamp type represents date and time information using ISO 8601
-	// format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	// The time of the last action in the operation. The timestamp type represents date and time information using ISO 8601
+	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	LastActionDateTime nullable.Type[string] `json:"lastActionDateTime,omitempty"`
 
 	// URI of the resource that the operation is performed on.
@@ -128,6 +128,14 @@ func UnmarshalLongRunningOperationImplementation(input []byte) (LongRunningOpera
 		var out AttackSimulationOperation
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into AttackSimulationOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.engagementAsyncOperation") {
+		var out EngagementAsyncOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EngagementAsyncOperation: %+v", err)
 		}
 		return out, nil
 	}

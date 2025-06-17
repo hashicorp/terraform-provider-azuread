@@ -19,29 +19,36 @@ type VirtualEvent interface {
 var _ VirtualEvent = BaseVirtualEventImpl{}
 
 type BaseVirtualEventImpl struct {
-	// Identity information for the creator of the virtual event. Inherited from virtualEvent.
+	// The identity information for the creator of the virtual event. Inherited from virtualEvent.
 	CreatedBy *CommunicationsIdentitySet `json:"createdBy,omitempty"`
 
-	// Description of the virtual event.
+	// A description of the virtual event.
 	Description *ItemBody `json:"description,omitempty"`
 
-	// Display name of the virtual event.
+	// The display name of the virtual event.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// End time of the virtual event. The timeZone property can be set to any of the time zones currently supported by
+	// The end time of the virtual event. The timeZone property can be set to any of the time zones currently supported by
 	// Windows. For details on how to get all available time zones using PowerShell, see Get-TimeZone.
 	EndDateTime *DateTimeTimeZone `json:"endDateTime,omitempty"`
 
+	// The external information of a virtual event. Returned only for event organizers or coorganizers; otherwise, null.
+	ExternalEventInformation *[]VirtualEventExternalInformation `json:"externalEventInformation,omitempty"`
+
+	// The virtual event presenters.
 	Presenters *[]VirtualEventPresenter `json:"presenters,omitempty"`
 
-	// Sessions for the virtual event.
+	// The sessions for the virtual event.
 	Sessions *[]VirtualEventSession `json:"sessions,omitempty"`
+
+	// The virtual event settings.
+	Settings *VirtualEventSettings `json:"settings,omitempty"`
 
 	// Start time of the virtual event. The timeZone property can be set to any of the time zones currently supported by
 	// Windows. For details on how to get all available time zones using PowerShell, see Get-TimeZone.
 	StartDateTime *DateTimeTimeZone `json:"startDateTime,omitempty"`
 
-	// Status of the virtual event. The possible values are: draft, published, canceled, unknownFutureValue.
+	// The status of the virtual event. The possible values are: draft, published, canceled, and unknownFutureValue.
 	Status *VirtualEventStatus `json:"status,omitempty"`
 
 	// Fields inherited from Entity

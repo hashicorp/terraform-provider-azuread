@@ -12,7 +12,7 @@ var _ Entity = OnPremisesDirectorySynchronization{}
 
 type OnPremisesDirectorySynchronization struct {
 	// Consists of configurations that can be fine-tuned and impact the on-premises directory synchronization process for a
-	// tenant.
+	// tenant. Nullable.
 	Configuration *OnPremisesDirectorySynchronizationConfiguration `json:"configuration,omitempty"`
 
 	Features *OnPremisesDirectorySynchronizationFeature `json:"features,omitempty"`

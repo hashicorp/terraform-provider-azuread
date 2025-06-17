@@ -21,6 +21,9 @@ type WebPartData struct {
 	// The OData Type of this entity
 	ODataType *string `json:"@odata.type,omitempty"`
 
+	// Properties bag of the web part.
+	Properties *Json `json:"properties,omitempty"`
+
 	// Contains collections of data that can be processed by server side services like search index and link fixup.
 	ServerProcessedContent *ServerProcessedContent `json:"serverProcessedContent,omitempty"`
 

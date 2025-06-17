@@ -15,7 +15,7 @@ var _ Entity = EducationAssignment{}
 type EducationAssignment struct {
 	// Optional field to control the assignment behavior for adding assignments to students' and teachers' calendars when
 	// the assignment is published. The possible values are: none, studentsAndPublisher, studentsAndTeamOwners,
-	// unknownFutureValue, and studentsOnly. You must use the Prefer: include-unknown-enum-members request header to get the
+	// unknownFutureValue, and studentsOnly. Use the Prefer: include-unknown-enum-members request header to get the
 	// following value(s) in this evolvable enum: studentsOnly. The default value is none.
 	AddToCalendarAction *EducationAddToCalendarOptions `json:"addToCalendarAction,omitempty"`
 
@@ -87,6 +87,10 @@ type EducationAssignment struct {
 	// Instructions for the assignment. This property and the display name tell the student what to do.
 	Instructions *EducationItemBody `json:"instructions,omitempty"`
 
+	// Specifies the language in which UI notifications for the assignment are displayed. If languageTag isn't provided, the
+	// default language is en-US. Optional.
+	LanguageTag nullable.Type[string] `json:"languageTag,omitempty"`
+
 	// Who last modified the assignment.
 	LastModifiedBy *IdentitySet `json:"lastModifiedBy,omitempty"`
 
@@ -114,8 +118,8 @@ type EducationAssignment struct {
 	Rubric *EducationRubric `json:"rubric,omitempty"`
 
 	// Status of the assignment. You can't PATCH this value. Possible values are: draft, scheduled, published, assigned,
-	// unknownFutureValue, inactive. You must use the Prefer: include-unknown-enum-members request header to get the
-	// following value(s) in this evolvable enum: inactive.
+	// unknownFutureValue, inactive. Use the Prefer: include-unknown-enum-members request header to get the following
+	// value(s) in this evolvable enum: inactive.
 	Status *EducationAssignmentStatus `json:"status,omitempty"`
 
 	// Once published, there is a submission object for each student representing their work and grade. Read-only. Nullable.
@@ -207,6 +211,7 @@ func (s *EducationAssignment) UnmarshalJSON(bytes []byte) error {
 		GradingCategory                         *EducationGradingCategory      `json:"gradingCategory,omitempty"`
 		GradingScheme                           *EducationGradingScheme        `json:"gradingScheme,omitempty"`
 		Instructions                            *EducationItemBody             `json:"instructions,omitempty"`
+		LanguageTag                             nullable.Type[string]          `json:"languageTag,omitempty"`
 		LastModifiedDateTime                    nullable.Type[string]          `json:"lastModifiedDateTime,omitempty"`
 		ModuleUrl                               nullable.Type[string]          `json:"moduleUrl,omitempty"`
 		NotificationChannelUrl                  nullable.Type[string]          `json:"notificationChannelUrl,omitempty"`
@@ -240,6 +245,7 @@ func (s *EducationAssignment) UnmarshalJSON(bytes []byte) error {
 	s.GradingCategory = decoded.GradingCategory
 	s.GradingScheme = decoded.GradingScheme
 	s.Instructions = decoded.Instructions
+	s.LanguageTag = decoded.LanguageTag
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.ModuleUrl = decoded.ModuleUrl
 	s.NotificationChannelUrl = decoded.NotificationChannelUrl

@@ -13,14 +13,20 @@ import (
 var _ BaseSitePage = NewsLinkPage{}
 
 type NewsLinkPage struct {
+	// A link to the banner image for the newsLinkPage.
 	BannerImageWebUrl nullable.Type[string] `json:"bannerImageWebUrl,omitempty"`
-	NewsSharepointIds *SharepointIds        `json:"newsSharepointIds,omitempty"`
-	NewsWebUrl        nullable.Type[string] `json:"newsWebUrl,omitempty"`
+
+	// The SharePoint IDs of the referenced news article if it's recognized as a SharePoint resource. Read-only.
+	NewsSharepointIds *SharepointIds `json:"newsSharepointIds,omitempty"`
+
+	// The URL of the news article referenced by the newsLinkPage. It can be an external link.
+	NewsWebUrl nullable.Type[string] `json:"newsWebUrl,omitempty"`
 
 	// Fields inherited from BaseSitePage
 
 	// The name of the page layout of the page. The possible values are: microsoftReserved, article, home,
-	// unknownFutureValue.
+	// unknownFutureValue, newsLink. Use the Prefer: include-unknown-enum-members request header to get the following value
+	// in this evolvable enum: newsLink.
 	PageLayout *PageLayoutType `json:"pageLayout,omitempty"`
 
 	// The publishing status and the MM.mm version of the page.
@@ -141,6 +147,8 @@ func (s NewsLinkPage) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling NewsLinkPage: %+v", err)
 	}
+
+	delete(decoded, "newsSharepointIds")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.newsLinkPage"

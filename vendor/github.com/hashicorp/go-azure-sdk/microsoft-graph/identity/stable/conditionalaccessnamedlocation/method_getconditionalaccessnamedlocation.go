@@ -56,8 +56,8 @@ func (o GetConditionalAccessNamedLocationOperationOptions) ToQuery() *client.Que
 	return &out
 }
 
-// GetConditionalAccessNamedLocation - Get namedLocation. Retrieve the properties and relationships of a namedLocation
-// object.
+// GetConditionalAccessNamedLocation - Get ipNamedLocation. Retrieve the properties and relationships of an
+// ipNamedLocation object.
 func (c ConditionalAccessNamedLocationClient) GetConditionalAccessNamedLocation(ctx context.Context, id stable.IdentityConditionalAccessNamedLocationId, options GetConditionalAccessNamedLocationOperationOptions) (result GetConditionalAccessNamedLocationOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

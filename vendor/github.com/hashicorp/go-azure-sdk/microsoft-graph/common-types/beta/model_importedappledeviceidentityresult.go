@@ -36,6 +36,7 @@ type ImportedAppleDeviceIdentityResult struct {
 	// Last Contacted Date Time of the device
 	LastContactedDateTime *string `json:"lastContactedDateTime,omitempty"`
 
+	// Supported platform types for policies.
 	Platform *Platform `json:"platform,omitempty"`
 
 	// The time enrollment profile was assigned to the device

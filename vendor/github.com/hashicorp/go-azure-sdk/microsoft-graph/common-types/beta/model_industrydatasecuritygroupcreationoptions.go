@@ -7,7 +7,7 @@ type IndustryDataSecurityGroupCreationOptions struct {
 	// Indicates whether the security group should be created based on the org and role group.
 	CreateBasedOnOrgPlusRoleGroup *bool `json:"createBasedOnOrgPlusRoleGroup,omitempty"`
 
-	// A boolean choice indicating whether the security group should be created based on the role group
+	// A Boolean choice indicating whether the security group should be created based on the role group
 	CreateBasedOnRoleGroup *bool `json:"createBasedOnRoleGroup,omitempty"`
 
 	// The OData ID of this entity

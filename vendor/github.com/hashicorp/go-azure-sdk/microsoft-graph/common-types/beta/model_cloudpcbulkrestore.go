@@ -13,6 +13,11 @@ import (
 var _ CloudPCBulkAction = CloudPCBulkRestore{}
 
 type CloudPCBulkRestore struct {
+	// True indicates that snapshots of unhealthy Cloud PCs are ignored. If no healthy snapshot exists within the selected
+	// timeRange, the healthy snapshot closest to the restorePointDateTime is used. False indicates that the snapshot within
+	// the selected timeRange and closest to the restorePointDateTime is used. The default value is false.
+	IgnoreUnhealthySnapshots nullable.Type[bool] `json:"ignoreUnhealthySnapshots,omitempty"`
+
 	// The date and time point for the selected Cloud PCs to restore. The timestamp type represents date and time
 	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
 	// 2014-01-01T00:00:00Z.

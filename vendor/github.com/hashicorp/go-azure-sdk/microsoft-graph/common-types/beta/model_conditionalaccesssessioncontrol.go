@@ -81,6 +81,14 @@ func UnmarshalConditionalAccessSessionControlImplementation(input []byte) (Condi
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.globalSecureAccessFilteringProfileSessionControl") {
+		var out GlobalSecureAccessFilteringProfileSessionControl
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into GlobalSecureAccessFilteringProfileSessionControl: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.persistentBrowserSessionControl") {
 		var out PersistentBrowserSessionControl
 		if err := json.Unmarshal(input, &out); err != nil {

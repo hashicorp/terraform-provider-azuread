@@ -19,9 +19,14 @@ type VirtualEventRegistrationConfiguration interface {
 var _ VirtualEventRegistrationConfiguration = BaseVirtualEventRegistrationConfigurationImpl{}
 
 type BaseVirtualEventRegistrationConfigurationImpl struct {
-	Capacity           nullable.Type[int64]                    `json:"capacity,omitempty"`
-	Questions          *[]VirtualEventRegistrationQuestionBase `json:"questions,omitempty"`
-	RegistrationWebUrl nullable.Type[string]                   `json:"registrationWebUrl,omitempty"`
+	// Total capacity of the virtual event.
+	Capacity nullable.Type[int64] `json:"capacity,omitempty"`
+
+	// Registration questions.
+	Questions *[]VirtualEventRegistrationQuestionBase `json:"questions,omitempty"`
+
+	// Registration URL of the virtual event.
+	RegistrationWebUrl nullable.Type[string] `json:"registrationWebUrl,omitempty"`
 
 	// Fields inherited from Entity
 

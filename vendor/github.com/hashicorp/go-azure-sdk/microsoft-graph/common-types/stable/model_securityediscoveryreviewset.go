@@ -18,9 +18,18 @@ type SecurityEdiscoveryReviewSet struct {
 
 	// Fields inherited from SecurityDataSet
 
-	CreatedBy       IdentitySet           `json:"createdBy"`
+	// The user who created the data set. Read-only.
+	CreatedBy *IdentitySet `json:"createdBy,omitempty"`
+
+	// The date and time when the review set was created. The timestamp type represents date and time information using ISO
+	// 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Read-only.
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
-	DisplayName     nullable.Type[string] `json:"displayName,omitempty"`
+
+	// The description of the data set.
+	Description nullable.Type[string] `json:"description,omitempty"`
+
+	// The name of the data set. The name is unique with a maximum limit of 64 characters.
+	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// Fields inherited from Entity
 
@@ -41,6 +50,7 @@ func (s SecurityEdiscoveryReviewSet) SecurityDataSet() BaseSecurityDataSetImpl {
 	return BaseSecurityDataSetImpl{
 		CreatedBy:       s.CreatedBy,
 		CreatedDateTime: s.CreatedDateTime,
+		Description:     s.Description,
 		DisplayName:     s.DisplayName,
 		Id:              s.Id,
 		ODataId:         s.ODataId,
@@ -89,6 +99,7 @@ func (s *SecurityEdiscoveryReviewSet) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		Queries         *[]SecurityEdiscoveryReviewSetQuery `json:"queries,omitempty"`
 		CreatedDateTime nullable.Type[string]               `json:"createdDateTime,omitempty"`
+		Description     nullable.Type[string]               `json:"description,omitempty"`
 		DisplayName     nullable.Type[string]               `json:"displayName,omitempty"`
 		Id              *string                             `json:"id,omitempty"`
 		ODataId         *string                             `json:"@odata.id,omitempty"`
@@ -100,6 +111,7 @@ func (s *SecurityEdiscoveryReviewSet) UnmarshalJSON(bytes []byte) error {
 
 	s.Queries = decoded.Queries
 	s.CreatedDateTime = decoded.CreatedDateTime
+	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
@@ -115,7 +127,7 @@ func (s *SecurityEdiscoveryReviewSet) UnmarshalJSON(bytes []byte) error {
 		if err != nil {
 			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'SecurityEdiscoveryReviewSet': %+v", err)
 		}
-		s.CreatedBy = impl
+		s.CreatedBy = &impl
 	}
 
 	return nil

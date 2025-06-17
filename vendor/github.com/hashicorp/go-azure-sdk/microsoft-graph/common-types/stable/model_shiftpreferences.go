@@ -18,6 +18,9 @@ type ShiftPreferences struct {
 
 	// Fields inherited from ChangeTrackedEntity
 
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
+
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
 	CreatedDateTime nullable.Type[string] `json:"createdDateTime,omitempty"`
@@ -46,6 +49,7 @@ type ShiftPreferences struct {
 
 func (s ShiftPreferences) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -115,6 +119,14 @@ func (s *ShiftPreferences) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling ShiftPreferences into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'ShiftPreferences': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

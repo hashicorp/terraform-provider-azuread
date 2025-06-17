@@ -39,6 +39,13 @@ type CloudPCOnPremisesConnection struct {
 	// The display name for the Azure network connection.
 	DisplayName *string `json:"displayName,omitempty"`
 
+	// false if the regular health checks on the network/domain configuration are currently active. true if the checks are
+	// paused. If you perform a create or update operation on a onPremisesNetworkConnection resource, this value is set to
+	// false for 4 weeks. If you retry a health check on network/domain configuration, this value is set to false for two
+	// weeks. If the onPremisesNetworkConnection resource is attached in a provisioningPolicy or used by a Cloud PC in the
+	// past 4 weeks, healthCheckPaused is set to false. Read-only. Default is false.
+	HealthCheckPaused nullable.Type[bool] `json:"healthCheckPaused,omitempty"`
+
 	HealthCheckStatus *CloudPCOnPremisesConnectionStatus `json:"healthCheckStatus,omitempty"`
 
 	// Indicates the results of health checks performed on the on-premises connection. Returned only on $select. For an
@@ -56,10 +63,14 @@ type CloudPCOnPremisesConnection struct {
 	// Example 2: Get the selected properties of an Azure network connection, including healthCheckStatusDetails. Read-only.
 	InUse nullable.Type[bool] `json:"inUse,omitempty"`
 
+	// Indicates whether a Cloud PC is using this on-premises network connection. true if at least one Cloud PC is using it.
+	// Otherwise, false. Read-only. Default is false.
+	InUseByCloudPC nullable.Type[bool] `json:"inUseByCloudPc,omitempty"`
+
 	ManagedBy *CloudPCManagementService `json:"managedBy,omitempty"`
 
-	// The organizational unit (OU) in which the computer account is created. If left null, the OU that’s configured as
-	// the default (a well-known computer object container) in your Active Directory domain (OU) is used. Optional.
+	// The organizational unit (OU) in which the computer account is created. If left null, the OU configured as the default
+	// (a well-known computer object container) in your Active Directory domain (OU) is used. Optional.
 	OrganizationalUnit nullable.Type[string] `json:"organizationalUnit,omitempty"`
 
 	// The ID of the target resource group. Required format:
@@ -85,7 +96,7 @@ type CloudPCOnPremisesConnection struct {
 	// the types of users who can be assigned and can sign into a Cloud PC. The azureADJoin option allows both cloud-only
 	// and hybrid users to be assigned and sign in, whereas hybridAzureADJoin is restricted to hybrid users only. The
 	// default value is hybridAzureADJoin. The possible values are: hybridAzureADJoin, azureADJoin, unknownFutureValue. The
-	// type property is deprecated and stopped returning data on January 31, 2024. Goind forward, use the connectionType
+	// type property is deprecated and stopped returning data on January 31, 2024. Going forward, use the connectionType
 	// property.
 	Type *CloudPCOnPremisesConnectionType `json:"type,omitempty"`
 
@@ -134,9 +145,11 @@ func (s CloudPCOnPremisesConnection) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling CloudPCOnPremisesConnection: %+v", err)
 	}
 
+	delete(decoded, "healthCheckPaused")
 	delete(decoded, "healthCheckStatusDetail")
 	delete(decoded, "healthCheckStatusDetails")
 	delete(decoded, "inUse")
+	delete(decoded, "inUseByCloudPc")
 	delete(decoded, "subscriptionName")
 
 	if !s.OmitDiscriminatedValue {

@@ -67,7 +67,9 @@ type IosCompliancePolicy struct {
 	// Require the device to not have the specified apps installed. This collection can contain a maximum of 100 elements.
 	RestrictedApps *[]AppListItem `json:"restrictedApps,omitempty"`
 
-	// Devices must not be jailbroken or rooted.
+	// Indicates the device should not be jailbroken. When TRUE, if the device is detected as jailbroken it will be reported
+	// non-compliant. When FALSE, the device is not reported as non-compliant regardless of device jailbroken state. Default
+	// is FALSE.
 	SecurityBlockJailbrokenDevices *bool `json:"securityBlockJailbrokenDevices,omitempty"`
 
 	// Fields inherited from DeviceCompliancePolicy
@@ -99,7 +101,8 @@ type IosCompliancePolicy struct {
 	// List of Scope Tags for this Entity instance.
 	RoleScopeTagIds *[]string `json:"roleScopeTagIds,omitempty"`
 
-	// The list of scheduled action for this rule
+	// The list of scheduled action per rule for this compliance policy. This is a required property when creating any
+	// individual per-platform compliance policies.
 	ScheduledActionsForRule *[]DeviceComplianceScheduledActionForRule `json:"scheduledActionsForRule,omitempty"`
 
 	// Device compliance users status overview

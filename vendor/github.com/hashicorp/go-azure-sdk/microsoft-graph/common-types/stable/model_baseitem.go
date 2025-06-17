@@ -248,6 +248,22 @@ func UnmarshalBaseItemImplementation(input []byte) (BaseItem, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.recycleBin") {
+		var out RecycleBin
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RecycleBin: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.recycleBinItem") {
+		var out RecycleBinItem
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RecycleBinItem: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.sharedDriveItem") {
 		var out SharedDriveItem
 		if err := json.Unmarshal(input, &out); err != nil {

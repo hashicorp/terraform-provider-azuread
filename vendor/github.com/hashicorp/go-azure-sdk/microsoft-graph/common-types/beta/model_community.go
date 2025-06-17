@@ -13,7 +13,7 @@ import (
 var _ Entity = Community{}
 
 type Community struct {
-	// The description of the community. The maximum length is 1024 characters.
+	// The description of the community. The maximum length is 1,024 characters.
 	Description *string `json:"description,omitempty"`
 
 	// The name of the community. The maximum length is 255 characters.
@@ -29,6 +29,7 @@ type Community struct {
 	// the calling user is automatically assigned as the community owner.
 	Owners *[]User `json:"owners,omitempty"`
 
+	// Types of communityPrivacy.
 	Privacy *CommunityPrivacy `json:"privacy,omitempty"`
 
 	// Fields inherited from Entity

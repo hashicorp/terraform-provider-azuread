@@ -16,6 +16,8 @@ type TeamsAppSettings struct {
 	// Indicates whether users are allowed to request access to the unavailable Teams apps.
 	AllowUserRequestsForAppAccess nullable.Type[bool] `json:"allowUserRequestsForAppAccess,omitempty"`
 
+	CustomAppSettings *CustomAppSettings `json:"customAppSettings,omitempty"`
+
 	// Indicates whether resource-specific consent for chats/meetings has been enabled for the tenant. True indicates that
 	// Teams apps that are allowed in the tenant and require resource-specific permissions can be installed inside chats and
 	// meetings. False blocks the installation of any Teams app that requires resource-specific permissions in a chat or a

@@ -24,6 +24,7 @@ const (
 	DeviceEnrollmentConfigurationType_Unknown                                               DeviceEnrollmentConfigurationType = "unknown"
 	DeviceEnrollmentConfigurationType_Windows10EnrollmentCompletionPageConfiguration        DeviceEnrollmentConfigurationType = "windows10EnrollmentCompletionPageConfiguration"
 	DeviceEnrollmentConfigurationType_WindowsHelloForBusiness                               DeviceEnrollmentConfigurationType = "windowsHelloForBusiness"
+	DeviceEnrollmentConfigurationType_WindowsRestore                                        DeviceEnrollmentConfigurationType = "windowsRestore"
 )
 
 func PossibleValuesForDeviceEnrollmentConfigurationType() []string {
@@ -40,6 +41,7 @@ func PossibleValuesForDeviceEnrollmentConfigurationType() []string {
 		string(DeviceEnrollmentConfigurationType_Unknown),
 		string(DeviceEnrollmentConfigurationType_Windows10EnrollmentCompletionPageConfiguration),
 		string(DeviceEnrollmentConfigurationType_WindowsHelloForBusiness),
+		string(DeviceEnrollmentConfigurationType_WindowsRestore),
 	}
 }
 
@@ -70,6 +72,7 @@ func parseDeviceEnrollmentConfigurationType(input string) (*DeviceEnrollmentConf
 		"unknown":                                               DeviceEnrollmentConfigurationType_Unknown,
 		"windows10enrollmentcompletionpageconfiguration":        DeviceEnrollmentConfigurationType_Windows10EnrollmentCompletionPageConfiguration,
 		"windowshelloforbusiness":                               DeviceEnrollmentConfigurationType_WindowsHelloForBusiness,
+		"windowsrestore":                                        DeviceEnrollmentConfigurationType_WindowsRestore,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

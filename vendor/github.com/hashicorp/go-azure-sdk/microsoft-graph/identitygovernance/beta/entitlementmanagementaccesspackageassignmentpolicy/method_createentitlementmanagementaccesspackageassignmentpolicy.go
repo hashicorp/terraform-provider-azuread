@@ -47,8 +47,8 @@ func (o CreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions
 	return &out
 }
 
-// CreateEntitlementManagementAccessPackageAssignmentPolicy - Create accessPackageAssignmentPolicy. In Microsoft Entra
-// entitlement management, create a new accessPackageAssignmentPolicy object.
+// CreateEntitlementManagementAccessPackageAssignmentPolicy - Create accessPackageAssignmentPolicy. Create a new
+// accessPackageAssignmentPolicy object in Microsoft Entra entitlement management.
 func (c EntitlementManagementAccessPackageAssignmentPolicyClient) CreateEntitlementManagementAccessPackageAssignmentPolicy(ctx context.Context, input beta.AccessPackageAssignmentPolicy, options CreateEntitlementManagementAccessPackageAssignmentPolicyOperationOptions) (result CreateEntitlementManagementAccessPackageAssignmentPolicyOperationResponse, err error) {
 	opts := client.RequestOptions{
 		ContentType: "application/json; charset=utf-8",

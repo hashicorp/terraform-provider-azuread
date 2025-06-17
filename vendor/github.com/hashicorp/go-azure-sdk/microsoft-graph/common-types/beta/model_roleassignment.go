@@ -19,19 +19,22 @@ type RoleAssignment interface {
 var _ RoleAssignment = BaseRoleAssignmentImpl{}
 
 type BaseRoleAssignmentImpl struct {
-	// Description of the Role Assignment.
+	// Indicates the description of the role assignment. For example: 'All administrators, employees and scope tags
+	// associated with the Houston office.' Max length is 1024 characters.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// The display or friendly name of the role Assignment.
+	// Indicates the display name of the role assignment. For example: 'Houston administrators and users'. Max length is 128
+	// characters.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// List of ids of role scope member security groups. These are IDs from Azure Active Directory.
+	// Indicates the list of resource scope security group Entra IDs. For example: {dec942f4-6777-4998-96b4-522e383b08e2}.
 	ResourceScopes *[]string `json:"resourceScopes,omitempty"`
 
-	// Role definition this assignment is part of.
+	// Indicates the role definition for this role assignment.
 	RoleDefinition *RoleDefinition `json:"roleDefinition,omitempty"`
 
-	// List of ids of role scope member security groups. These are IDs from Azure Active Directory.
+	// Indicates the list of role scope member security groups Entra IDs. For example,
+	// {dec942f4-6777-4998-96b4-522e383b08e2}.
 	ScopeMembers *[]string `json:"scopeMembers,omitempty"`
 
 	// Specifies the type of scope for a Role Assignment.

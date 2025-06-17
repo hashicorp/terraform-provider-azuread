@@ -13,6 +13,10 @@ type ConditionalAccessApplications struct {
 	// MicrosoftAdminPortals - For more information, see Conditional Access Target resources: Microsoft Admin Portals
 	ExcludeApplications *[]string `json:"excludeApplications,omitempty"`
 
+	// Represents traffic profile for Global Secure Access. This property is deprecated and will stop returning data on June
+	// 1, 2025. Use new Global Secure Access applications instead.
+	GlobalSecureAccess *ConditionalAccessGlobalSecureAccess `json:"globalSecureAccess,omitempty"`
+
 	// Can be one of the following: The list of client IDs (appId) the policy applies to, unless explicitly excluded (in
 	// excludeApplications) All Office365 - For the list of apps included in Office365, see Apps included in Conditional
 	// Access Office 365 app suite MicrosoftAdminPortals - For more information, see Conditional Access Target resources:
@@ -24,6 +28,10 @@ type ConditionalAccessApplications struct {
 
 	// User actions to include. Supported values are urn:user:registersecurityinfo and urn:user:registerdevice
 	IncludeUserActions *[]string `json:"includeUserActions,omitempty"`
+
+	// Represents traffic profile for Global Secure Access. This property is deprecated and will stop returning data on June
+	// 1, 2025. Use new Global Secure Access applications instead.
+	NetworkAccess *ConditionalAccessNetworkAccess `json:"networkAccess,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`

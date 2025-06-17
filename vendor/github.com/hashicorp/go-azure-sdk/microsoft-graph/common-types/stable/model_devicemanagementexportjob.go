@@ -19,7 +19,7 @@ type DeviceManagementExportJob struct {
 	// Filters applied on the report
 	Filter nullable.Type[string] `json:"filter,omitempty"`
 
-	// Possible values for the file format of a report.
+	// Possible values for the file format of a report to be exported.
 	Format *DeviceManagementReportFileFormat `json:"format,omitempty"`
 
 	// Configures how the requested export job is localized.

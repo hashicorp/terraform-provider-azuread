@@ -7,9 +7,12 @@ type ConditionalAccessConditionSet struct {
 	// Applications and user actions included in and excluded from the policy. Required.
 	Applications ConditionalAccessApplications `json:"applications"`
 
+	// Authentication flows included in the policy scope.
+	AuthenticationFlows *ConditionalAccessAuthenticationFlows `json:"authenticationFlows,omitempty"`
+
 	// Client application types included in the policy. Possible values are: all, browser, mobileAppsAndDesktopClients,
 	// exchangeActiveSync, easSupported, other. Required. The easUnsupported enumeration member will be deprecated in favor
-	// of exchangeActiveSync which includes EAS supported and unsupported platforms.
+	// of exchangeActiveSync, which includes EAS supported and unsupported platforms.
 	ClientAppTypes []ConditionalAccessClientApp `json:"clientAppTypes"`
 
 	// Client applications (service principals and workload identities) included in and excluded from the policy. Either
@@ -17,13 +20,13 @@ type ConditionalAccessConditionSet struct {
 	ClientApplications *ConditionalAccessClientApplications `json:"clientApplications,omitempty"`
 
 	// Devices in the policy.
-	Devices *ConditionalAccessDevices `json:"devices"`
+	Devices *ConditionalAccessDevices `json:"devices,omitempty"`
 
 	// Insider risk levels included in the policy. The possible values are: minor, moderate, elevated, unknownFutureValue.
 	InsiderRiskLevels *ConditionalAccessInsiderRiskLevels `json:"insiderRiskLevels,omitempty"`
 
 	// Locations included in and excluded from the policy.
-	Locations *ConditionalAccessLocations `json:"locations"`
+	Locations *ConditionalAccessLocations `json:"locations,omitempty"`
 
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
@@ -32,7 +35,7 @@ type ConditionalAccessConditionSet struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// Platforms included in and excluded from the policy.
-	Platforms *ConditionalAccessPlatforms `json:"platforms"`
+	Platforms *ConditionalAccessPlatforms `json:"platforms,omitempty"`
 
 	// Service principal risk levels included in the policy. Possible values are: low, medium, high, none,
 	// unknownFutureValue.

@@ -22,7 +22,8 @@ type SecureScoreControlProfile struct {
 	// GUID string for tenant ID.
 	AzureTenantId *string `json:"azureTenantId,omitempty"`
 
-	// The collection of compliance information associated with secure score control
+	// The collection of compliance information associated with secure score control. Not implemented. Currently returns
+	// null.
 	ComplianceInformation *[]ComplianceInformation `json:"complianceInformation,omitempty"`
 
 	// Control action category (Account, Data, Device, Apps, Infrastructure).

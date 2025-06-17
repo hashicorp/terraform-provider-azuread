@@ -20,7 +20,7 @@ type OutlookTask struct {
 	// Nullable.
 	Attachments *[]Attachment `json:"attachments,omitempty"`
 
-	// The task body that typically contains information about the task. Note that only HTML type is supported.
+	// The task body that typically contains information about the task. Only the HTML type is supported.
 	Body *ItemBody `json:"body,omitempty"`
 
 	// The date in the specified time zone that the task was finished.

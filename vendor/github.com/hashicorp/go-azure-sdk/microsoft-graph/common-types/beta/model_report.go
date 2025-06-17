@@ -8,7 +8,7 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type Report struct {
-	// Report content; details vary by report type.
+	// The http content that has the data
 	Content nullable.Type[string] `json:"content,omitempty"`
 
 	// The OData ID of this entity

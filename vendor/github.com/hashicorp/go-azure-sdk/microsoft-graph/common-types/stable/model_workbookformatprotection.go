@@ -13,12 +13,12 @@ import (
 var _ Entity = WorkbookFormatProtection{}
 
 type WorkbookFormatProtection struct {
-	// Indicates if Excel hides the formula for the cells in the range. A null value indicates that the entire range doesn't
-	// have uniform formula hidden setting.
+	// Indicates whether Excel hides the formula for the cells in the range. A null value indicates that the entire range
+	// doesn't have uniform formula hidden setting.
 	FormulaHidden nullable.Type[bool] `json:"formulaHidden,omitempty"`
 
-	// Indicates if Excel locks the cells in the object. A null value indicates that the entire range doesn't have uniform
-	// lock setting.
+	// Indicates whether Excel locks the cells in the object. A null value indicates that the entire range doesn't have
+	// uniform lock setting.
 	Locked nullable.Type[bool] `json:"locked,omitempty"`
 
 	// Fields inherited from Entity

@@ -31,9 +31,9 @@ type SignInActivity struct {
 	// Request identifier of the last interactive sign-in performed by this user.
 	LastSignInRequestId nullable.Type[string] `json:"lastSignInRequestId,omitempty"`
 
-	// The date and time of the user's most recent successful sign-in activity. The timestamp type represents date and time
-	// information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is
-	// 2014-01-01T00:00:00Z.
+	// The date and time of the user's most recent successful interactive or non-interactive sign-in. The timestamp type
+	// represents date and time information using ISO 8601 format and is always in UTC. For example, midnight UTC on Jan 1,
+	// 2014 is 2014-01-01T00:00:00Z.
 	LastSuccessfulSignInDateTime nullable.Type[string] `json:"lastSuccessfulSignInDateTime,omitempty"`
 
 	// The request ID of the last successful sign-in.

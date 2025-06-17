@@ -13,11 +13,13 @@ import (
 var _ ProtectionPolicyBase = OneDriveForBusinessProtectionPolicy{}
 
 type OneDriveForBusinessProtectionPolicy struct {
-	// Contains the details of the Onedrive for Business protection rule.
+	// Contains the details of the OneDrive for Work or School protection rule.
 	DriveInclusionRules *[]DriveProtectionRule `json:"driveInclusionRules,omitempty"`
 
-	// Contains the protection units associated with a OneDrive for Business protection policy.
+	// Contains the protection units associated with a OneDrive for Work or School protection policy.
 	DriveProtectionUnits *[]DriveProtectionUnit `json:"driveProtectionUnits,omitempty"`
+
+	DriveProtectionUnitsBulkAdditionJobs *[]DriveProtectionUnitsBulkAdditionJob `json:"driveProtectionUnitsBulkAdditionJobs,omitempty"`
 
 	// Fields inherited from ProtectionPolicyBase
 
@@ -112,16 +114,17 @@ var _ json.Unmarshaler = &OneDriveForBusinessProtectionPolicy{}
 
 func (s *OneDriveForBusinessProtectionPolicy) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		DriveInclusionRules  *[]DriveProtectionRule  `json:"driveInclusionRules,omitempty"`
-		DriveProtectionUnits *[]DriveProtectionUnit  `json:"driveProtectionUnits,omitempty"`
-		CreatedDateTime      nullable.Type[string]   `json:"createdDateTime,omitempty"`
-		DisplayName          nullable.Type[string]   `json:"displayName,omitempty"`
-		LastModifiedDateTime nullable.Type[string]   `json:"lastModifiedDateTime,omitempty"`
-		RetentionSettings    *[]RetentionSetting     `json:"retentionSettings,omitempty"`
-		Status               *ProtectionPolicyStatus `json:"status,omitempty"`
-		Id                   *string                 `json:"id,omitempty"`
-		ODataId              *string                 `json:"@odata.id,omitempty"`
-		ODataType            *string                 `json:"@odata.type,omitempty"`
+		DriveInclusionRules                  *[]DriveProtectionRule                 `json:"driveInclusionRules,omitempty"`
+		DriveProtectionUnits                 *[]DriveProtectionUnit                 `json:"driveProtectionUnits,omitempty"`
+		DriveProtectionUnitsBulkAdditionJobs *[]DriveProtectionUnitsBulkAdditionJob `json:"driveProtectionUnitsBulkAdditionJobs,omitempty"`
+		CreatedDateTime                      nullable.Type[string]                  `json:"createdDateTime,omitempty"`
+		DisplayName                          nullable.Type[string]                  `json:"displayName,omitempty"`
+		LastModifiedDateTime                 nullable.Type[string]                  `json:"lastModifiedDateTime,omitempty"`
+		RetentionSettings                    *[]RetentionSetting                    `json:"retentionSettings,omitempty"`
+		Status                               *ProtectionPolicyStatus                `json:"status,omitempty"`
+		Id                                   *string                                `json:"id,omitempty"`
+		ODataId                              *string                                `json:"@odata.id,omitempty"`
+		ODataType                            *string                                `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -129,6 +132,7 @@ func (s *OneDriveForBusinessProtectionPolicy) UnmarshalJSON(bytes []byte) error 
 
 	s.DriveInclusionRules = decoded.DriveInclusionRules
 	s.DriveProtectionUnits = decoded.DriveProtectionUnits
+	s.DriveProtectionUnitsBulkAdditionJobs = decoded.DriveProtectionUnitsBulkAdditionJobs
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.DisplayName = decoded.DisplayName
 	s.Id = decoded.Id

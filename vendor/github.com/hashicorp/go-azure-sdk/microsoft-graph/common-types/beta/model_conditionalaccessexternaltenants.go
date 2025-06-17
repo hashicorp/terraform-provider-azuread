@@ -16,8 +16,6 @@ type ConditionalAccessExternalTenants interface {
 var _ ConditionalAccessExternalTenants = BaseConditionalAccessExternalTenantsImpl{}
 
 type BaseConditionalAccessExternalTenantsImpl struct {
-	Members *[]string `json:"members,omitempty"`
-
 	// The membership kind. Possible values are: all, enumerated, unknownFutureValue. The enumerated member references an
 	// conditionalAccessEnumeratedExternalTenants object.
 	MembershipKind *ConditionalAccessExternalTenantsMembershipKind `json:"membershipKind,omitempty"`

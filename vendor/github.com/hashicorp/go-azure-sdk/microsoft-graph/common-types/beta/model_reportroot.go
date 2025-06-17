@@ -34,6 +34,9 @@ type ReportRoot struct {
 	DailyPrintUsageSummariesByPrinter *[]PrintUsageByPrinter `json:"dailyPrintUsageSummariesByPrinter,omitempty"`
 	DailyPrintUsageSummariesByUser    *[]PrintUsageByUser    `json:"dailyPrintUsageSummariesByUser,omitempty"`
 
+	// Reports for Microsoft Entra Health Monitoring.
+	HealthMonitoring *HealthMonitoringHealthMonitoringRoot `json:"healthMonitoring,omitempty"`
+
 	// Retrieve a list of monthly print usage summaries, grouped by printer.
 	MonthlyPrintUsageByPrinter *[]PrintUsageByPrinter `json:"monthlyPrintUsageByPrinter,omitempty"`
 
@@ -55,7 +58,7 @@ type ReportRoot struct {
 	// Represents a collection of sign-in activities of service principals.
 	ServicePrincipalSignInActivities *[]ServicePrincipalSignInActivity `json:"servicePrincipalSignInActivities,omitempty"`
 
-	// Reports that relate to tenant-level Microsoft Entra SLA attainment.
+	// Reports that relate to tenant-level Microsoft Entra Health SLA attainment.
 	Sla *ServiceLevelAgreementRoot `json:"sla,omitempty"`
 
 	// Represents the self-service password reset (SSPR) usage for a given tenant.
@@ -119,28 +122,29 @@ var _ json.Unmarshaler = &ReportRoot{}
 
 func (s *ReportRoot) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		AppCredentialSignInActivities       *[]AppCredentialSignInActivity       `json:"appCredentialSignInActivities,omitempty"`
-		ApplicationSignInDetailedSummary    *[]ApplicationSignInDetailedSummary  `json:"applicationSignInDetailedSummary,omitempty"`
-		AuthenticationMethods               *AuthenticationMethodsRoot           `json:"authenticationMethods,omitempty"`
-		CredentialUserRegistrationDetails   *[]CredentialUserRegistrationDetails `json:"credentialUserRegistrationDetails,omitempty"`
-		DailyPrintUsageByPrinter            *[]PrintUsageByPrinter               `json:"dailyPrintUsageByPrinter,omitempty"`
-		DailyPrintUsageByUser               *[]PrintUsageByUser                  `json:"dailyPrintUsageByUser,omitempty"`
-		DailyPrintUsageSummariesByPrinter   *[]PrintUsageByPrinter               `json:"dailyPrintUsageSummariesByPrinter,omitempty"`
-		DailyPrintUsageSummariesByUser      *[]PrintUsageByUser                  `json:"dailyPrintUsageSummariesByUser,omitempty"`
-		MonthlyPrintUsageByPrinter          *[]PrintUsageByPrinter               `json:"monthlyPrintUsageByPrinter,omitempty"`
-		MonthlyPrintUsageByUser             *[]PrintUsageByUser                  `json:"monthlyPrintUsageByUser,omitempty"`
-		MonthlyPrintUsageSummariesByPrinter *[]PrintUsageByPrinter               `json:"monthlyPrintUsageSummariesByPrinter,omitempty"`
-		MonthlyPrintUsageSummariesByUser    *[]PrintUsageByUser                  `json:"monthlyPrintUsageSummariesByUser,omitempty"`
-		Partners                            *Partners                            `json:"partners,omitempty"`
-		Security                            *SecurityReportsRoot                 `json:"security,omitempty"`
-		ServiceActivity                     *ServiceActivity                     `json:"serviceActivity,omitempty"`
-		ServicePrincipalSignInActivities    *[]ServicePrincipalSignInActivity    `json:"servicePrincipalSignInActivities,omitempty"`
-		Sla                                 *ServiceLevelAgreementRoot           `json:"sla,omitempty"`
-		UserCredentialUsageDetails          *[]UserCredentialUsageDetails        `json:"userCredentialUsageDetails,omitempty"`
-		UserInsights                        *UserInsightsRoot                    `json:"userInsights,omitempty"`
-		Id                                  *string                              `json:"id,omitempty"`
-		ODataId                             *string                              `json:"@odata.id,omitempty"`
-		ODataType                           *string                              `json:"@odata.type,omitempty"`
+		AppCredentialSignInActivities       *[]AppCredentialSignInActivity        `json:"appCredentialSignInActivities,omitempty"`
+		ApplicationSignInDetailedSummary    *[]ApplicationSignInDetailedSummary   `json:"applicationSignInDetailedSummary,omitempty"`
+		AuthenticationMethods               *AuthenticationMethodsRoot            `json:"authenticationMethods,omitempty"`
+		CredentialUserRegistrationDetails   *[]CredentialUserRegistrationDetails  `json:"credentialUserRegistrationDetails,omitempty"`
+		DailyPrintUsageByPrinter            *[]PrintUsageByPrinter                `json:"dailyPrintUsageByPrinter,omitempty"`
+		DailyPrintUsageByUser               *[]PrintUsageByUser                   `json:"dailyPrintUsageByUser,omitempty"`
+		DailyPrintUsageSummariesByPrinter   *[]PrintUsageByPrinter                `json:"dailyPrintUsageSummariesByPrinter,omitempty"`
+		DailyPrintUsageSummariesByUser      *[]PrintUsageByUser                   `json:"dailyPrintUsageSummariesByUser,omitempty"`
+		HealthMonitoring                    *HealthMonitoringHealthMonitoringRoot `json:"healthMonitoring,omitempty"`
+		MonthlyPrintUsageByPrinter          *[]PrintUsageByPrinter                `json:"monthlyPrintUsageByPrinter,omitempty"`
+		MonthlyPrintUsageByUser             *[]PrintUsageByUser                   `json:"monthlyPrintUsageByUser,omitempty"`
+		MonthlyPrintUsageSummariesByPrinter *[]PrintUsageByPrinter                `json:"monthlyPrintUsageSummariesByPrinter,omitempty"`
+		MonthlyPrintUsageSummariesByUser    *[]PrintUsageByUser                   `json:"monthlyPrintUsageSummariesByUser,omitempty"`
+		Partners                            *Partners                             `json:"partners,omitempty"`
+		Security                            *SecurityReportsRoot                  `json:"security,omitempty"`
+		ServiceActivity                     *ServiceActivity                      `json:"serviceActivity,omitempty"`
+		ServicePrincipalSignInActivities    *[]ServicePrincipalSignInActivity     `json:"servicePrincipalSignInActivities,omitempty"`
+		Sla                                 *ServiceLevelAgreementRoot            `json:"sla,omitempty"`
+		UserCredentialUsageDetails          *[]UserCredentialUsageDetails         `json:"userCredentialUsageDetails,omitempty"`
+		UserInsights                        *UserInsightsRoot                     `json:"userInsights,omitempty"`
+		Id                                  *string                               `json:"id,omitempty"`
+		ODataId                             *string                               `json:"@odata.id,omitempty"`
+		ODataType                           *string                               `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -154,6 +158,7 @@ func (s *ReportRoot) UnmarshalJSON(bytes []byte) error {
 	s.DailyPrintUsageByUser = decoded.DailyPrintUsageByUser
 	s.DailyPrintUsageSummariesByPrinter = decoded.DailyPrintUsageSummariesByPrinter
 	s.DailyPrintUsageSummariesByUser = decoded.DailyPrintUsageSummariesByUser
+	s.HealthMonitoring = decoded.HealthMonitoring
 	s.MonthlyPrintUsageByPrinter = decoded.MonthlyPrintUsageByPrinter
 	s.MonthlyPrintUsageByUser = decoded.MonthlyPrintUsageByUser
 	s.MonthlyPrintUsageSummariesByPrinter = decoded.MonthlyPrintUsageSummariesByPrinter

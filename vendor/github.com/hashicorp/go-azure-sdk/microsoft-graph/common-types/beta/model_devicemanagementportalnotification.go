@@ -21,8 +21,8 @@ type DeviceManagementPortalNotification struct {
 	AlertRuleName nullable.Type[string] `json:"alertRuleName,omitempty"`
 
 	// The associated alert rule template. The possible values are: cloudPcProvisionScenario, cloudPcImageUploadScenario,
-	// cloudPcOnPremiseNetworkConnectionCheckScenario, unknownFutureValue, cloudPcInGracePeriodScenario. Note that you must
-	// use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
+	// cloudPcOnPremiseNetworkConnectionCheckScenario, unknownFutureValue, cloudPcInGracePeriodScenario. Use the Prefer:
+	// include-unknown-enum-members request header to get the following values from this evolvable enum:
 	// cloudPcInGracePeriodScenario.
 	AlertRuleTemplate *DeviceManagementAlertRuleTemplate `json:"alertRuleTemplate,omitempty"`
 

@@ -36,6 +36,8 @@ type Application struct {
 	// created from an application template.
 	ApplicationTemplateId nullable.Type[string] `json:"applicationTemplateId,omitempty"`
 
+	AuthenticationBehaviors *AuthenticationBehaviors `json:"authenticationBehaviors,omitempty"`
+
 	// Specifies the certification status of the application.
 	Certification *Certification `json:"certification,omitempty"`
 
@@ -61,8 +63,8 @@ type Application struct {
 	// activity, or a violation of the Microsoft Services Agreement). Supports $filter (eq, ne, not).
 	DisabledByMicrosoftStatus nullable.Type[string] `json:"disabledByMicrosoftStatus,omitempty"`
 
-	// The display name for the application. Supports $filter (eq, ne, not, ge, le, in, startsWith, and eq on null values),
-	// $search, and $orderby.
+	// The display name for the application. Maximum length is 256 characters. Supports $filter (eq, ne, not, ge, le, in,
+	// startsWith, and eq on null values), $search, and $orderby.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
 	// Read-only. Nullable. Supports $expand and $filter (/$count eq 0, /$count ne 0).
@@ -80,10 +82,9 @@ type Application struct {
 	HomeRealmDiscoveryPolicies *[]HomeRealmDiscoveryPolicy `json:"homeRealmDiscoveryPolicies,omitempty"`
 
 	// Also known as App ID URI, this value is set when an application is used as a resource app. The identifierUris acts as
-	// the prefix for the scopes you reference in your API's code, and it must be globally unique. You can use the default
-	// value provided, which is in the form api://<appId>, or specify a more readable URI like https://contoso.com/api. For
-	// more information on valid identifierUris patterns and best practices, see Microsoft Entra application registration
-	// security best practices. Not nullable. Supports $filter (eq, ne, ge, le, startsWith).
+	// the prefix for the scopes you reference in your API's code, and it must be globally unique across Microsoft Entra ID.
+	// For more information on valid identifierUris patterns and best practices, see Microsoft Entra application
+	// registration security best practices. Not nullable. Supports $filter (eq, ne, ge, le, startsWith).
 	IdentifierUris *[]string `json:"identifierUris,omitempty"`
 
 	// Basic profile information of the application such as app's marketing, support, terms of service and privacy statement
@@ -122,8 +123,9 @@ type Application struct {
 	// optional claims to your app.
 	OptionalClaims *OptionalClaims `json:"optionalClaims,omitempty"`
 
-	// Directory objects that are owners of the application. Read-only. Nullable. Supports $expand, $filter (/$count eq 0,
-	// /$count ne 0, /$count eq 1, /$count ne 1), and $select nested in $expand.
+	// Directory objects that are owners of this application. The owners are a set of nonadmin users or service principals
+	// who are allowed to modify this object. Supports $expand, $filter (/$count eq 0, /$count ne 0, /$count eq 1, /$count
+	// ne 1), and $select nested in $expand.
 	Owners *[]DirectoryObject `json:"owners,omitempty"`
 
 	// List of OData IDs for `Owners` to bind to this entity
@@ -258,7 +260,6 @@ func (s Application) MarshalJSON() ([]byte, error) {
 	delete(decoded, "createdDateTime")
 	delete(decoded, "createdOnBehalfOf")
 	delete(decoded, "extensionProperties")
-	delete(decoded, "owners")
 	delete(decoded, "publisherDomain")
 	delete(decoded, "uniqueName")
 
@@ -284,6 +285,7 @@ func (s *Application) UnmarshalJSON(bytes []byte) error {
 		AppManagementPolicies             *[]AppManagementPolicy             `json:"appManagementPolicies,omitempty"`
 		AppRoles                          *[]AppRole                         `json:"appRoles,omitempty"`
 		ApplicationTemplateId             nullable.Type[string]              `json:"applicationTemplateId,omitempty"`
+		AuthenticationBehaviors           *AuthenticationBehaviors           `json:"authenticationBehaviors,omitempty"`
 		Certification                     *Certification                     `json:"certification,omitempty"`
 		CreatedDateTime                   nullable.Type[string]              `json:"createdDateTime,omitempty"`
 		CreatedOnBehalfOf_ODataBind       *string                            `json:"createdOnBehalfOf@odata.bind,omitempty"`
@@ -340,6 +342,7 @@ func (s *Application) UnmarshalJSON(bytes []byte) error {
 	s.AppManagementPolicies = decoded.AppManagementPolicies
 	s.AppRoles = decoded.AppRoles
 	s.ApplicationTemplateId = decoded.ApplicationTemplateId
+	s.AuthenticationBehaviors = decoded.AuthenticationBehaviors
 	s.Certification = decoded.Certification
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.CreatedOnBehalfOf_ODataBind = decoded.CreatedOnBehalfOf_ODataBind

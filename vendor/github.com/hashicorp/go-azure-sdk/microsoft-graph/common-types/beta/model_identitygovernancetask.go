@@ -19,7 +19,7 @@ type IdentityGovernanceTask struct {
 
 	Category *IdentityGovernanceLifecycleTaskCategory `json:"category,omitempty"`
 
-	// A boolean value that specifies whether, if this task fails, the workflow stops, and subsequent tasks aren't run.
+	// A Boolean value that specifies whether, if this task fails, the workflow stops, and subsequent tasks aren't run.
 	// Optional.
 	ContinueOnError *bool `json:"continueOnError,omitempty"`
 
@@ -32,7 +32,7 @@ type IdentityGovernanceTask struct {
 	// An integer that states in what order the task runs in a workflow.Supports $orderby.
 	ExecutionSequence *int64 `json:"executionSequence,omitempty"`
 
-	// A boolean value that denotes whether the task is set to run or not. Optional.Supports $filter(eq, ne) and orderBy.
+	// A Boolean value that denotes whether the task is set to run or not. Optional.Supports $filter(eq, ne) and orderBy.
 	IsEnabled *bool `json:"isEnabled,omitempty"`
 
 	// A unique template identifier for the task. For more information about the tasks that Lifecycle Workflows currently

@@ -20,7 +20,7 @@ var _ AuthenticationEventsFlow = BaseAuthenticationEventsFlowImpl{}
 
 type BaseAuthenticationEventsFlowImpl struct {
 	// The conditions representing the context of the authentication request that's used to decide whether the events policy
-	// is invoked.
+	// is invoked. Supports $filter (eq). See support for filtering on user flows for syntax information.
 	Conditions *AuthenticationConditions `json:"conditions,omitempty"`
 
 	// The description of the events policy.

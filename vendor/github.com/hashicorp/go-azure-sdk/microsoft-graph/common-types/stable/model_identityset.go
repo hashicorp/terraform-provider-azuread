@@ -115,6 +115,14 @@ func UnmarshalIdentitySetImplementation(input []byte) (IdentitySet, error) {
 		value = fmt.Sprintf("%v", v)
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionMentionedIdentitySet") {
+		var out AiInteractionMentionedIdentitySet
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionMentionedIdentitySet: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.chatMessageFromIdentitySet") {
 		var out ChatMessageFromIdentitySet
 		if err := json.Unmarshal(input, &out); err != nil {

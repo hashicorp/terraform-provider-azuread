@@ -11,10 +11,11 @@ import (
 var _ ConditionalAccessExternalTenants = ConditionalAccessEnumeratedExternalTenants{}
 
 type ConditionalAccessEnumeratedExternalTenants struct {
+	// A collection of tenant IDs that define the scope of a policy targeting conditional access for guests and external
+	// users.
+	Members *[]string `json:"members,omitempty"`
 
 	// Fields inherited from ConditionalAccessExternalTenants
-
-	Members *[]string `json:"members,omitempty"`
 
 	// The membership kind. Possible values are: all, enumerated, unknownFutureValue. The enumerated member references an
 	// conditionalAccessEnumeratedExternalTenants object.
@@ -32,7 +33,6 @@ type ConditionalAccessEnumeratedExternalTenants struct {
 
 func (s ConditionalAccessEnumeratedExternalTenants) ConditionalAccessExternalTenants() BaseConditionalAccessExternalTenantsImpl {
 	return BaseConditionalAccessExternalTenantsImpl{
-		Members:        s.Members,
 		MembershipKind: s.MembershipKind,
 		ODataId:        s.ODataId,
 		ODataType:      s.ODataType,

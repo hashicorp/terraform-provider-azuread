@@ -15,6 +15,7 @@ const (
 	CloudPCDeviceImageStatus_Failed  CloudPCDeviceImageStatus = "failed"
 	CloudPCDeviceImageStatus_Pending CloudPCDeviceImageStatus = "pending"
 	CloudPCDeviceImageStatus_Ready   CloudPCDeviceImageStatus = "ready"
+	CloudPCDeviceImageStatus_Warning CloudPCDeviceImageStatus = "warning"
 )
 
 func PossibleValuesForCloudPCDeviceImageStatus() []string {
@@ -22,6 +23,7 @@ func PossibleValuesForCloudPCDeviceImageStatus() []string {
 		string(CloudPCDeviceImageStatus_Failed),
 		string(CloudPCDeviceImageStatus_Pending),
 		string(CloudPCDeviceImageStatus_Ready),
+		string(CloudPCDeviceImageStatus_Warning),
 	}
 }
 
@@ -43,6 +45,7 @@ func parseCloudPCDeviceImageStatus(input string) (*CloudPCDeviceImageStatus, err
 		"failed":  CloudPCDeviceImageStatus_Failed,
 		"pending": CloudPCDeviceImageStatus_Pending,
 		"ready":   CloudPCDeviceImageStatus_Ready,
+		"warning": CloudPCDeviceImageStatus_Warning,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

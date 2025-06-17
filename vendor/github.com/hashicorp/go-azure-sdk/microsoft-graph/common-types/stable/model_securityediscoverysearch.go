@@ -22,7 +22,7 @@ type SecurityEdiscoverySearch struct {
 	// Custodian sources that are included in the eDiscovery search.
 	CustodianSources *[]SecurityDataSource `json:"custodianSources,omitempty"`
 
-	// When specified, the collection will span across a service for an entire workload. Possible values are: none,
+	// When specified, the collection spans across a service for an entire workload. Possible values are: none,
 	// allTenantMailboxes, allTenantSites, allCaseCustodians, allCaseNoncustodialDataSources.
 	DataSourceScopes *SecurityDataSourceScopes `json:"dataSourceScopes,omitempty"`
 

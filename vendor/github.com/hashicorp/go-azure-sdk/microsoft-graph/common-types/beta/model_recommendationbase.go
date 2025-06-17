@@ -40,8 +40,8 @@ type BaseRecommendationBaseImpl struct {
 	// The future date and time when a recommendation should be completed.
 	ImpactStartDateTime nullable.Type[string] `json:"impactStartDateTime,omitempty"`
 
-	// Indicates the scope of impact of a recommendation. Tenant level indicates that the recommendation impacts the whole
-	// tenant. Other possible values include users, applications.
+	// Indicates the scope of impact of a recommendation. tenantLevel indicates that the recommendation impacts the whole
+	// tenant. Other possible values include users, apps.
 	ImpactType nullable.Type[string] `json:"impactType,omitempty"`
 
 	// The list of directory objects associated with the recommendation.
@@ -72,8 +72,8 @@ type BaseRecommendationBaseImpl struct {
 	// roleOverlap, selfServicePasswordReset, signinRiskPolicy, userRiskPolicy, verifyAppPublisher, privateLinkForAAD,
 	// appRoleAssignmentsGroups, appRoleAssignmentsUsers, managedIdentity, overprivilegedApps, unknownFutureValue,
 	// longLivedCredentials, aadConnectDeprecated, adalToMsalMigration, ownerlessApps, inactiveGuests,
-	// aadGraphDeprecationApplication, aadGraphDeprecationServicePrincipal, mfaServerDeprecation. Note that you must use the
-	// Prefer: include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
+	// aadGraphDeprecationApplication, aadGraphDeprecationServicePrincipal, mfaServerDeprecation. Use the Prefer:
+	// include-unknown-enum-members request header to get the following value(s) in this evolvable enum:
 	// longLivedCredentials , aadConnectDeprecated , adalToMsalMigration , ownerlessApps , inactiveGuests ,
 	// aadGraphDeprecationApplication , aadGraphDeprecationServicePrincipal , mfaServerDeprecation.
 	RecommendationType *RecommendationType `json:"recommendationType,omitempty"`

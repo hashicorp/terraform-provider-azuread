@@ -13,7 +13,7 @@ import (
 var _ Entity = WorkbookNamedItem{}
 
 type WorkbookNamedItem struct {
-	// Represents the comment associated with this name.
+	// The comment associated with this name.
 	Comment nullable.Type[string] `json:"comment,omitempty"`
 
 	// The name of the object. Read-only.
@@ -22,14 +22,17 @@ type WorkbookNamedItem struct {
 	// Indicates whether the name is scoped to the workbook or to a specific worksheet. Read-only.
 	Scope *string `json:"scope,omitempty"`
 
-	// Indicates what type of reference is associated with the name. The possible values are: String, Integer, Double,
-	// Boolean, Range. Read-only.
+	// The type of reference is associated with the name. Possible values are: String, Integer, Double, Boolean, Range.
+	// Read-only.
 	Type nullable.Type[string] `json:"type,omitempty"`
 
-	// Specifies whether the object is visible or not.
+	// The formula that the name is defined to refer to. For example, =Sheet14!$B$2:$H$12 and =4.75. Read-only.
+	Value *Json `json:"value,omitempty"`
+
+	// Indicates whether the object is visible.
 	Visible *bool `json:"visible,omitempty"`
 
-	// Returns the worksheet on which the named item is scoped to. Available only if the item is scoped to the worksheet.
+	// Returns the worksheet to which the named item is scoped. Available only if the item is scoped to the worksheet.
 	// Read-only.
 	Worksheet *WorkbookWorksheet `json:"worksheet,omitempty"`
 
@@ -74,6 +77,7 @@ func (s WorkbookNamedItem) MarshalJSON() ([]byte, error) {
 	delete(decoded, "name")
 	delete(decoded, "scope")
 	delete(decoded, "type")
+	delete(decoded, "value")
 	delete(decoded, "worksheet")
 
 	if !s.OmitDiscriminatedValue {

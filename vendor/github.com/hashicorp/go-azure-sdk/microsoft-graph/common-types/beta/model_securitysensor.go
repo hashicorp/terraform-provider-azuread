@@ -11,16 +11,32 @@ import (
 var _ Entity = SecuritySensor{}
 
 type SecuritySensor struct {
-	CreatedDateTime       *string                     `json:"createdDateTime,omitempty"`
-	DeploymentStatus      *SecurityDeploymentStatus   `json:"deploymentStatus,omitempty"`
-	DisplayName           *string                     `json:"displayName,omitempty"`
-	DomainName            *string                     `json:"domainName,omitempty"`
-	HealthIssues          *[]SecurityHealthIssue      `json:"healthIssues,omitempty"`
-	HealthStatus          *SecuritySensorHealthStatus `json:"healthStatus,omitempty"`
-	OpenHealthIssuesCount *int64                      `json:"openHealthIssuesCount,omitempty"`
-	SensorType            *SecuritySensorType         `json:"sensorType,omitempty"`
-	Settings              *SecuritySensorSettings     `json:"settings,omitempty"`
-	Version               *string                     `json:"version,omitempty"`
+	// The date and time when the sensor was generated. The Timestamp represents date and time information using ISO 8601
+	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
+	CreatedDateTime *string `json:"createdDateTime,omitempty"`
+
+	DeploymentStatus *SecurityDeploymentStatus `json:"deploymentStatus,omitempty"`
+
+	// The display name of the sensor.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// The fully qualified domain name of the sensor.
+	DomainName *string `json:"domainName,omitempty"`
+
+	// Represents potential issues within a customer's Microsoft Defender for Identity configuration that Microsoft Defender
+	// for Identity identified related to the sensor.
+	HealthIssues *[]SecurityHealthIssue `json:"healthIssues,omitempty"`
+
+	HealthStatus *SecuritySensorHealthStatus `json:"healthStatus,omitempty"`
+
+	// This field displays the count of health issues related to this sensor.
+	OpenHealthIssuesCount *int64 `json:"openHealthIssuesCount,omitempty"`
+
+	SensorType *SecuritySensorType     `json:"sensorType,omitempty"`
+	Settings   *SecuritySensorSettings `json:"settings,omitempty"`
+
+	// The version of the sensor.
+	Version *string `json:"version,omitempty"`
 
 	// Fields inherited from Entity
 

@@ -13,16 +13,16 @@ import (
 var _ Entity = WorkbookChartTitle{}
 
 type WorkbookChartTitle struct {
-	// Represents the formatting of a chart title, which includes fill and font formatting. Read-only.
+	// The formatting of a chart title, which includes fill and font formatting. Read-only.
 	Format *WorkbookChartTitleFormat `json:"format,omitempty"`
 
-	// Boolean value representing if the chart title will overlay the chart or not.
+	// Indicates whether the chart title will overlay the chart or not.
 	Overlay nullable.Type[bool] `json:"overlay,omitempty"`
 
-	// Represents the title text of a chart.
+	// The title text of the chart.
 	Text nullable.Type[string] `json:"text,omitempty"`
 
-	// A boolean value that represents the visibility of a chart title object.
+	// Indicates whether the chart title is visible.
 	Visible *bool `json:"visible,omitempty"`
 
 	// Fields inherited from Entity

@@ -13,6 +13,9 @@ import (
 var _ Entity = PrintJob{}
 
 type PrintJob struct {
+	// The dateTimeOffset when the job was acknowledged. Read-only.
+	AcknowledgedDateTime nullable.Type[string] `json:"acknowledgedDateTime,omitempty"`
+
 	Configuration *PrintJobConfiguration `json:"configuration,omitempty"`
 	CreatedBy     *UserIdentity          `json:"createdBy,omitempty"`
 
@@ -20,6 +23,9 @@ type PrintJob struct {
 	CreatedDateTime *string `json:"createdDateTime,omitempty"`
 
 	Documents *[]PrintDocument `json:"documents,omitempty"`
+
+	// The error code of the print job. Read-only.
+	ErrorCode nullable.Type[int64] `json:"errorCode,omitempty"`
 
 	// If true, document can be fetched by printer.
 	IsFetchable *bool `json:"isFetchable,omitempty"`
@@ -73,7 +79,9 @@ func (s PrintJob) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling PrintJob: %+v", err)
 	}
 
+	delete(decoded, "acknowledgedDateTime")
 	delete(decoded, "createdDateTime")
+	delete(decoded, "errorCode")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.printJob"

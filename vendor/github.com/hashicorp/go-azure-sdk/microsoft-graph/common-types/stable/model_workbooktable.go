@@ -13,7 +13,7 @@ import (
 var _ Entity = WorkbookTable{}
 
 type WorkbookTable struct {
-	// Represents a collection of all the columns in the table. Read-only.
+	// The list of all the columns in the table. Read-only.
 	Columns *[]WorkbookTableColumn `json:"columns,omitempty"`
 
 	// Indicates whether the first column contains special formatting.
@@ -22,14 +22,15 @@ type WorkbookTable struct {
 	// Indicates whether the last column contains special formatting.
 	HighlightLastColumn *bool `json:"highlightLastColumn,omitempty"`
 
-	// Legacy ID used in older Excel clients. The value of the identifier remains the same even when the table is renamed.
-	// This property should be interpreted as an opaque string value and shouldn't be parsed to any other type. Read-only.
+	// A legacy identifier used in older Excel clients. The value of the identifier remains the same even when the table is
+	// renamed. This property should be interpreted as an opaque string value and shouldn't be parsed to any other type.
+	// Read-only.
 	LegacyId nullable.Type[string] `json:"legacyId,omitempty"`
 
-	// Name of the table.
+	// The name of the table.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// Represents a collection of all the rows in the table. Read-only.
+	// The list of all the rows in the table. Read-only.
 	Rows *[]WorkbookTableRow `json:"rows,omitempty"`
 
 	// Indicates whether the columns show banded formatting in which odd columns are highlighted differently from even ones
@@ -50,10 +51,10 @@ type WorkbookTable struct {
 	// Indicates whether the total row is visible or not. This value can be set to show or remove the total row.
 	ShowTotals *bool `json:"showTotals,omitempty"`
 
-	// Represents the sorting for the table. Read-only.
+	// The sorting for the table. Read-only.
 	Sort *WorkbookTableSort `json:"sort,omitempty"`
 
-	// Constant value that represents the Table style. The possible values are: TableStyleLight1 through TableStyleLight21,
+	// A constant value that represents the Table style. Possible values are: TableStyleLight1 through TableStyleLight21,
 	// TableStyleMedium1 through TableStyleMedium28, TableStyleStyleDark1 through TableStyleStyleDark11. A custom
 	// user-defined style present in the workbook can also be specified.
 	Style nullable.Type[string] `json:"style,omitempty"`

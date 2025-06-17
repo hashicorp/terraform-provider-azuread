@@ -8,6 +8,7 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type PasswordResetResponse struct {
+	// The Microsoft Entra ID-generated password.
 	NewPassword nullable.Type[string] `json:"newPassword,omitempty"`
 
 	// The OData ID of this entity

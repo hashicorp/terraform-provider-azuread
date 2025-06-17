@@ -14,7 +14,7 @@ type InvitedUserMessageInfo struct {
 	// Additional recipients the invitation message should be sent to. Currently only one additional recipient is supported.
 	CcRecipients *[]Recipient `json:"ccRecipients,omitempty"`
 
-	// Customized message body you want to send if you don't want the default message.
+	// Customized message body you want to send if you don't want the default message. Only plain text is allowed.
 	CustomizedMessageBody nullable.Type[string] `json:"customizedMessageBody,omitempty"`
 
 	// The language you want to send the default message in. If the customizedMessageBody is specified, this property is

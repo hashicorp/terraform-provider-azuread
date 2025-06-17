@@ -23,8 +23,8 @@ type AuthenticationRequirementPolicy struct {
 	// mfaRegistrationRequiredByIdentityProtectionPolicy, baselineProtection, mfaRegistrationRequiredByBaselineProtection,
 	// mfaRegistrationRequiredByMultiConditionalAccess, enforcedForCspAdmins, securityDefaults,
 	// mfaRegistrationRequiredBySecurityDefaults, proofUpCodeRequest, crossTenantOutboundRule, gpsLocationCondition,
-	// riskBasedPolicy, unknownFutureValue, scopeBasedAuthRequirementPolicy, authenticationStrengths . Also, note that you
-	// must use the Prefer: include-unknown-enum-members request header to get the following value or values in this
-	// evolvable enum: scopeBasedAuthRequirementPolicy, authenticationStrengths.
+	// riskBasedPolicy, unknownFutureValue, scopeBasedAuthRequirementPolicy, authenticationStrengths . Use the Prefer:
+	// include-unknown-enum-members request header to get the following value or values in this evolvable enum:
+	// scopeBasedAuthRequirementPolicy, authenticationStrengths.
 	RequirementProvider *RequirementProvider `json:"requirementProvider,omitempty"`
 }

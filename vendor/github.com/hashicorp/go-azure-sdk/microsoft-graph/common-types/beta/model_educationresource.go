@@ -215,6 +215,14 @@ func UnmarshalEducationResourceImplementation(input []byte) (EducationResource, 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.educationSpeakerProgressResource") {
+		var out EducationSpeakerProgressResource
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EducationSpeakerProgressResource: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.educationTeamsAppResource") {
 		var out EducationTeamsAppResource
 		if err := json.Unmarshal(input, &out); err != nil {

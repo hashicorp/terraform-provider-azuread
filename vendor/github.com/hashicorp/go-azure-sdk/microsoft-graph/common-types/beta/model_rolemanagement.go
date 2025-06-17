@@ -4,7 +4,8 @@ package beta
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type RoleManagement struct {
-	CloudPC *RbacApplicationMultiple `json:"cloudPC,omitempty"`
+	CloudPC  *RbacApplicationMultiple `json:"cloudPC,omitempty"`
+	Defender *RbacApplicationMultiple `json:"defender,omitempty"`
 
 	// The RbacApplication for Device Management
 	DeviceManagement *RbacApplicationMultiple `json:"deviceManagement,omitempty"`

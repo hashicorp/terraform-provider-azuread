@@ -14,6 +14,7 @@ var _ Entity = UserRequestsMetric{}
 
 type UserRequestsMetric struct {
 	AppId   nullable.Type[string] `json:"appId,omitempty"`
+	Browser nullable.Type[string] `json:"browser,omitempty"`
 	Country nullable.Type[string] `json:"country,omitempty"`
 
 	// The date of the user insight.

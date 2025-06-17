@@ -288,6 +288,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.activitiesContainer") {
+		var out ActivitiesContainer
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ActivitiesContainer: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.activityHistoryItem") {
 		var out ActivityHistoryItem
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -416,6 +424,70 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.aiInteraction") {
+		var out AiInteraction
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteraction: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionAttachment") {
+		var out AiInteractionAttachment
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionAttachment: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionContext") {
+		var out AiInteractionContext
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionContext: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionHistory") {
+		var out AiInteractionHistory
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionHistory: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionLink") {
+		var out AiInteractionLink
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionLink: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionMention") {
+		var out AiInteractionMention
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionMention: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiOnlineMeeting") {
+		var out AiOnlineMeeting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiOnlineMeeting: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiUser") {
+		var out AiUser
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiUser: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.alert") {
 		var out Alert
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -528,14 +600,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.appRoleAssignment") {
-		var out AppRoleAssignment
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into AppRoleAssignment: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.appScope") {
 		var out AppScope
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -624,6 +688,46 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.approvalItem") {
+		var out ApprovalItem
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItem: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalItemRequest") {
+		var out ApprovalItemRequest
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItemRequest: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalItemResponse") {
+		var out ApprovalItemResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItemResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalOperation") {
+		var out ApprovalOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalSolution") {
+		var out ApprovalSolution
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalSolution: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.approvalStep") {
 		var out ApprovalStep
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -636,6 +740,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out ApprovalWorkflowProvider
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ApprovalWorkflowProvider: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvedClientApp") {
+		var out ApprovedClientApp
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovedClientApp: %+v", err)
 		}
 		return out, nil
 	}
@@ -776,6 +888,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.authenticationFailure") {
+		var out AuthenticationFailure
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AuthenticationFailure: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.authenticationFlowsPolicy") {
 		var out AuthenticationFlowsPolicy
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -804,6 +924,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out AuthenticationMethodConfiguration
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into AuthenticationMethodConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.authenticationMethodDevice") {
+		var out AuthenticationMethodDevice
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AuthenticationMethodDevice: %+v", err)
 		}
 		return out, nil
 	}
@@ -1120,6 +1248,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.callAiInsight") {
+		var out CallAiInsight
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CallAiInsight: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.callEvent") {
 		var out CallEvent
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1164,6 +1300,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out CallRecordsSession
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CallRecordsSession: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.callSettings") {
+		var out CallSettings
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CallSettings: %+v", err)
 		}
 		return out, nil
 	}
@@ -1288,6 +1432,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudCertificationAuthority") {
+		var out CloudCertificationAuthority
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudCertificationAuthority: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudCertificationAuthorityLeafCertificate") {
+		var out CloudCertificationAuthorityLeafCertificate
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudCertificationAuthorityLeafCertificate: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudClipboardItem") {
 		var out CloudClipboardItem
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1300,6 +1460,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out CloudClipboardRoot
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudClipboardRoot: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudLicensing.usageRight") {
+		var out CloudLicensingUsageRight
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudLicensingUsageRight: %+v", err)
 		}
 		return out, nil
 	}
@@ -1404,6 +1572,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out CloudPCOrganizationSettings
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudPCOrganizationSettings: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcPolicyApplyActionResult") {
+		var out CloudPCPolicyApplyActionResult
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCPolicyApplyActionResult: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcPolicyScheduledApplyActionDetail") {
+		var out CloudPCPolicyScheduledApplyActionDetail
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCPolicyScheduledApplyActionDetail: %+v", err)
 		}
 		return out, nil
 	}
@@ -1544,14 +1728,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessPolicy") {
-		var out ConditionalAccessPolicy
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into ConditionalAccessPolicy: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessRoot") {
 		var out ConditionalAccessRoot
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1624,6 +1800,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.contentActivity") {
+		var out ContentActivity
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ContentActivity: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.contentModel") {
 		var out ContentModel
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1676,6 +1860,46 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out ConversationThread
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ConversationThread: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.copilotAdmin") {
+		var out CopilotAdmin
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CopilotAdmin: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.copilotAdminLimitedMode") {
+		var out CopilotAdminLimitedMode
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CopilotAdminLimitedMode: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.copilotAdminSetting") {
+		var out CopilotAdminSetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CopilotAdminSetting: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.copilotPeopleAdminSetting") {
+		var out CopilotPeopleAdminSetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CopilotPeopleAdminSetting: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.copilotSetting") {
+		var out CopilotSetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CopilotSetting: %+v", err)
 		}
 		return out, nil
 	}
@@ -1776,6 +2000,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.customSecurityAttributeExemption") {
+		var out CustomSecurityAttributeExemption
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CustomSecurityAttributeExemption: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.dailyUserInsightMetricsRoot") {
 		var out DailyUserInsightMetricsRoot
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1812,6 +2044,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out DataPolicyOperation
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DataPolicyOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.dataSecurityAndGovernance") {
+		var out DataSecurityAndGovernance
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DataSecurityAndGovernance: %+v", err)
 		}
 		return out, nil
 	}
@@ -1884,6 +2124,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out DelegatedPermissionClassification
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DelegatedPermissionClassification: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.delegationSettings") {
+		var out DelegationSettings
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DelegationSettings: %+v", err)
 		}
 		return out, nil
 	}
@@ -2148,14 +2396,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out DeviceConfigurationGroupAssignment
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DeviceConfigurationGroupAssignment: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.deviceConfigurationProfile") {
-		var out DeviceConfigurationProfile
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into DeviceConfigurationProfile: %+v", err)
 		}
 		return out, nil
 	}
@@ -2992,30 +3232,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationError") {
-		var out EducationSynchronizationError
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationError: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationProfile") {
-		var out EducationSynchronizationProfile
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationProfile: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationProfileStatus") {
-		var out EducationSynchronizationProfileStatus
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationProfileStatus: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.educationUser") {
 		var out EducationUser
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3048,6 +3264,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.employeeExperience") {
+		var out EmployeeExperience
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EmployeeExperience: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.employeeExperienceUser") {
 		var out EmployeeExperienceUser
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3076,6 +3300,30 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out EndpointPrivilegeManagementProvisioningStatus
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into EndpointPrivilegeManagementProvisioningStatus: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.engagementRole") {
+		var out EngagementRole
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EngagementRole: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.engagementRoleMember") {
+		var out EngagementRoleMember
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EngagementRoleMember: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.enhancedPersonalizationSetting") {
+		var out EnhancedPersonalizationSetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EnhancedPersonalizationSetting: %+v", err)
 		}
 		return out, nil
 	}
@@ -3120,6 +3368,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.entra") {
+		var out Entra
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into Entra: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.exactMatchDataStoreBase") {
 		var out ExactMatchDataStoreBase
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3140,6 +3396,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out ExactMatchUploadAgent
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ExactMatchUploadAgent: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.exchangeAdmin") {
+		var out ExchangeAdmin
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ExchangeAdmin: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.exchangeSettings") {
+		var out ExchangeSettings
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ExchangeSettings: %+v", err)
 		}
 		return out, nil
 	}
@@ -3564,6 +3836,30 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out HardwarePasswordInfo
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into HardwarePasswordInfo: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.alert") {
+		var out HealthMonitoringAlert
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringAlert: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.alertConfiguration") {
+		var out HealthMonitoringAlertConfiguration
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringAlertConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.healthMonitoringRoot") {
+		var out HealthMonitoringHealthMonitoringRoot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringHealthMonitoringRoot: %+v", err)
 		}
 		return out, nil
 	}
@@ -4048,6 +4344,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.labelContentRight") {
+		var out LabelContentRight
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into LabelContentRight: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.landingPage") {
 		var out LandingPage
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -4180,6 +4484,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out MailFolder
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into MailFolder: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailFolderOperation") {
+		var out MailFolderOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailFolderOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailboxFolder") {
+		var out MailboxFolder
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxFolder: %+v", err)
 		}
 		return out, nil
 	}
@@ -4776,6 +5096,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.mfaTelecomFraudMetric") {
+		var out MfaTelecomFraudMetric
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MfaTelecomFraudMetric: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mfaUserCountMetric") {
+		var out MfaUserCountMetric
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MfaUserCountMetric: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.microsoftApplicationDataAccessSettings") {
 		var out MicrosoftApplicationDataAccessSettings
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -4984,10 +5320,10 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.namedLocation") {
-		var out NamedLocation
+	if strings.EqualFold(value, "#microsoft.graph.namePronunciationSettings") {
+		var out NamePronunciationSettings
 		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into NamedLocation: %+v", err)
+			return nil, fmt.Errorf("unmarshaling into NamePronunciationSettings: %+v", err)
 		}
 		return out, nil
 	}
@@ -5028,6 +5364,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out NetworkaccessConditionalAccessSettings
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into NetworkaccessConditionalAccessSettings: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.connection") {
+		var out NetworkaccessConnection
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessConnection: %+v", err)
 		}
 		return out, nil
 	}
@@ -5368,14 +5712,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.organizationalBrandingTheme") {
-		var out OrganizationalBrandingTheme
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into OrganizationalBrandingTheme: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.outlookCategory") {
 		var out OutlookCategory
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -5456,6 +5792,30 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.partnerSecurityScore") {
+		var out PartnerSecurityPartnerSecurityScore
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityPartnerSecurityScore: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.securityRequirement") {
+		var out PartnerSecuritySecurityRequirement
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecuritySecurityRequirement: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.securityScoreHistory") {
+		var out PartnerSecuritySecurityScoreHistory
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecuritySecurityScoreHistory: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.partners") {
 		var out Partners
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -5516,6 +5876,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out PartnersBillingOperation
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into PartnersBillingOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partners.billing.unbilledReconciliation") {
+		var out PartnersBillingUnbilledReconciliation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnersBillingUnbilledReconciliation: %+v", err)
 		}
 		return out, nil
 	}
@@ -6016,6 +6384,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.profilePropertySetting") {
+		var out ProfilePropertySetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProfilePropertySetting: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.profileSource") {
 		var out ProfileSource
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6080,6 +6456,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.protectionUnitsBulkJobBase") {
+		var out ProtectionUnitsBulkJobBase
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProtectionUnitsBulkJobBase: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.providerTenantSetting") {
 		var out ProviderTenantSetting
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6092,6 +6476,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out ProvisioningObjectSummary
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ProvisioningObjectSummary: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.publicKeyInfrastructureRoot") {
+		var out PublicKeyInfrastructureRoot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PublicKeyInfrastructureRoot: %+v", err)
 		}
 		return out, nil
 	}
@@ -6112,6 +6504,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.qrCode") {
+		var out QrCode
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrCode: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.qrPin") {
+		var out QrPin
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrPin: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.rbacApplication") {
 		var out RbacApplication
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6128,10 +6536,34 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.readingAssignmentSubmission") {
+		var out ReadingAssignmentSubmission
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ReadingAssignmentSubmission: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.recommendationBase") {
 		var out RecommendationBase
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into RecommendationBase: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.recommendationConfiguration") {
+		var out RecommendationConfiguration
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RecommendationConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.reflectCheckInResponse") {
+		var out ReflectCheckInResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ReflectCheckInResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -6192,6 +6624,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.reportsRoot") {
+		var out ReportsRoot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ReportsRoot: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.request") {
 		var out Request
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6212,6 +6652,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out RestoreArtifactBase
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into RestoreArtifactBase: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.restoreArtifactsBulkRequestBase") {
+		var out RestoreArtifactsBulkRequestBase
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RestoreArtifactsBulkRequestBase: %+v", err)
 		}
 		return out, nil
 	}
@@ -6528,10 +6976,34 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.cloudAppDiscoveryReport") {
+		var out SecurityCloudAppDiscoveryReport
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityCloudAppDiscoveryReport: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.collaborationRoot") {
 		var out SecurityCollaborationRoot
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SecurityCollaborationRoot: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.dataDiscoveryReport") {
+		var out SecurityDataDiscoveryReport
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDataDiscoveryReport: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.dataDiscoveryRoot") {
+		var out SecurityDataDiscoveryRoot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDataDiscoveryRoot: %+v", err)
 		}
 		return out, nil
 	}
@@ -6560,10 +7032,34 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.discoveredCloudAppDetail") {
+		var out SecurityDiscoveredCloudAppDetail
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDiscoveredCloudAppDetail: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.discoveredCloudAppInfo") {
+		var out SecurityDiscoveredCloudAppInfo
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDiscoveredCloudAppInfo: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.dispositionReviewStage") {
 		var out SecurityDispositionReviewStage
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SecurityDispositionReviewStage: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.ediscoveryCaseMember") {
+		var out SecurityEdiscoveryCaseMember
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityEdiscoveryCaseMember: %+v", err)
 		}
 		return out, nil
 	}
@@ -6872,6 +7368,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.selfServiceSignUp") {
+		var out SelfServiceSignUp
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SelfServiceSignUp: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.sensitiveType") {
 		var out SensitiveType
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6988,6 +7492,22 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out SettingStateDeviceSummary
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SettingStateDeviceSummary: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.sharePointGroup") {
+		var out SharePointGroup
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SharePointGroup: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.sharePointGroupMember") {
+		var out SharePointGroupMember
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SharePointGroupMember: %+v", err)
 		}
 		return out, nil
 	}
@@ -7240,6 +7760,30 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.teamsAdminRoot") {
+		var out TeamsAdministrationTeamsAdminRoot
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationTeamsAdminRoot: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.teamsPolicyAssignment") {
+		var out TeamsAdministrationTeamsPolicyAssignment
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationTeamsPolicyAssignment: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.teamsUserConfiguration") {
+		var out TeamsAdministrationTeamsUserConfiguration
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationTeamsUserConfiguration: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.teamsApp") {
 		var out TeamsApp
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -7296,6 +7840,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.teamsChannelPlanner") {
+		var out TeamsChannelPlanner
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsChannelPlanner: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.teamsLicensingDetails") {
 		var out TeamsLicensingDetails
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -7316,14 +7868,6 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out TeamsTemplate
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into TeamsTemplate: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.teamsUserConfiguration.teamsAdminRoot") {
-		var out TeamsUserConfigurationTeamsAdminRoot
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into TeamsUserConfigurationTeamsAdminRoot: %+v", err)
 		}
 		return out, nil
 	}
@@ -7424,10 +7968,26 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.template") {
+		var out Template
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into Template: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.tenantAttachRBAC") {
 		var out TenantAttachRBAC
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into TenantAttachRBAC: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.tenantProtectionScopeContainer") {
+		var out TenantProtectionScopeContainer
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TenantProtectionScopeContainer: %+v", err)
 		}
 		return out, nil
 	}
@@ -7784,6 +8344,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.usageRightsIncluded") {
+		var out UsageRightsIncluded
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into UsageRightsIncluded: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.usedInsight") {
 		var out UsedInsight
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -7812,6 +8380,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out UserAppInstallStatus
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into UserAppInstallStatus: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.userCloudCommunication") {
+		var out UserCloudCommunication
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into UserCloudCommunication: %+v", err)
 		}
 		return out, nil
 	}
@@ -8232,6 +8808,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.userProtectionScopeContainer") {
+		var out UserProtectionScopeContainer
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into UserProtectionScopeContainer: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.userRegistrationDetails") {
 		var out UserRegistrationDetails
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -8300,6 +8884,14 @@ func UnmarshalEntityImplementation(input []byte) (Entity, error) {
 		var out UserVirtualEventsRoot
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into UserVirtualEventsRoot: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.uxSetting") {
+		var out UxSetting
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into UxSetting: %+v", err)
 		}
 		return out, nil
 	}

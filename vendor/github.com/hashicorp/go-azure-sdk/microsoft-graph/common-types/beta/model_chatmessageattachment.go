@@ -15,16 +15,18 @@ type ChatMessageAttachment struct {
 	// property and contentUrl are mutually exclusive.
 	Content nullable.Type[string] `json:"content,omitempty"`
 
-	// The media type of the content attachment. It can have the following values: reference: Attachment is a link to
-	// another file. Populate the contentURL with the link to the object.Any contentType that is supported by the Bot
-	// Framework's Attachment object.application/vnd.microsoft.card.codesnippet: A code snippet.
-	// application/vnd.microsoft.card.announcement: An announcement header.
+	// The media type of the content attachment. The possible values are: reference: The attachment is a link to another
+	// file. Populate the contentURL with the link to the object.forwardedMessageReference: The attachment is a reference to
+	// a forwarded message. Populate the content with the original message context.Any contentType that is supported by the
+	// Bot Framework's Attachment object.application/vnd.microsoft.card.codesnippet: Either a code snippet or place holder.
+	// application/vnd.microsoft.card.announcement: An announcement header. application/vnd.microsoft.card.fluidEmbedCard: A
+	// Microsoft Loop component.
 	ContentType nullable.Type[string] `json:"contentType,omitempty"`
 
 	// The URL for the content of the attachment.
 	ContentUrl nullable.Type[string] `json:"contentUrl,omitempty"`
 
-	// Read-only. The unique id of the attachment.
+	// Read-only. The unique ID of the attachment.
 	Id nullable.Type[string] `json:"id,omitempty"`
 
 	// Name of the attachment.

@@ -51,7 +51,8 @@ type OnPremisesDirectorySynchronizationFeature struct {
 	// Used to indicate on-premise password synchronization is enabled.
 	PasswordSyncEnabled nullable.Type[bool] `json:"passwordSyncEnabled,omitempty"`
 
-	// Used to indicate that writeback of password resets from Microsoft Entra ID to on-premises AD is enabled.
+	// Used to indicate that writeback of password resets from Microsoft Entra ID to on-premises AD is enabled. This
+	// property isn't in use and updating it isn't supported.
 	PasswordWritebackEnabled nullable.Type[bool] `json:"passwordWritebackEnabled,omitempty"`
 
 	// Used to indicate that we should quarantine objects with conflicting proxy address.

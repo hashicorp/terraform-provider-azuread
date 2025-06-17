@@ -376,6 +376,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.actionItemCollectionResponse") {
+		var out ActionItemCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ActionItemCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.actionStepCollectionResponse") {
 		var out ActionStepCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -516,6 +524,62 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out AgreementFileVersionCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into AgreementFileVersionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionAttachmentCollectionResponse") {
+		var out AiInteractionAttachmentCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionAttachmentCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionContextCollectionResponse") {
+		var out AiInteractionContextCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionContextCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionLinkCollectionResponse") {
+		var out AiInteractionLinkCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionLinkCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionMentionCollectionResponse") {
+		var out AiInteractionMentionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionMentionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiInteractionPluginCollectionResponse") {
+		var out AiInteractionPluginCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiInteractionPluginCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiOnlineMeetingCollectionResponse") {
+		var out AiOnlineMeetingCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiOnlineMeetingCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.aiUserCollectionResponse") {
+		var out AiUserCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AiUserCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -1496,6 +1560,46 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.approvalIdentitySetCollectionResponse") {
+		var out ApprovalIdentitySetCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalIdentitySetCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalItemCollectionResponse") {
+		var out ApprovalItemCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItemCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalItemRequestCollectionResponse") {
+		var out ApprovalItemRequestCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItemRequestCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalItemResponseCollectionResponse") {
+		var out ApprovalItemResponseCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalItemResponseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvalOperationCollectionResponse") {
+		var out ApprovalOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovalOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.approvalStageCollectionResponse") {
 		var out ApprovalStageCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1516,6 +1620,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out ApprovalWorkflowProviderCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ApprovalWorkflowProviderCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.approvedClientAppCollectionResponse") {
+		var out ApprovedClientAppCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ApprovedClientAppCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -1824,6 +1936,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.authenticationFailureCollectionResponse") {
+		var out AuthenticationFailureCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AuthenticationFailureCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.authenticationListenerCollectionResponse") {
 		var out AuthenticationListenerCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -1844,6 +1964,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out AuthenticationMethodConfigurationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into AuthenticationMethodConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.authenticationMethodDeviceCollectionResponse") {
+		var out AuthenticationMethodDeviceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into AuthenticationMethodDeviceCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -2488,6 +2616,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.callAiInsightCollectionResponse") {
+		var out CallAiInsightCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CallAiInsightCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.callCollectionResponse") {
 		var out CallCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2624,6 +2760,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.certificateAuthorityDetailCollectionResponse") {
+		var out CertificateAuthorityDetailCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateAuthorityDetailCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.certificateBasedApplicationConfigurationCollectionResponse") {
 		var out CertificateBasedApplicationConfigurationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2640,6 +2784,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.certificateBasedAuthPkiCollectionResponse") {
+		var out CertificateBasedAuthPkiCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CertificateBasedAuthPkiCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.certificateConnectorDetailsCollectionResponse") {
 		var out CertificateConnectorDetailsCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2652,6 +2804,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out CertificationControlCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CertificationControlCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.challengingWordCollectionResponse") {
+		var out ChallengingWordCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ChallengingWordCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -2816,6 +2976,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudCertificationAuthorityCollectionResponse") {
+		var out CloudCertificationAuthorityCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudCertificationAuthorityCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudCertificationAuthorityLeafCertificateCollectionResponse") {
+		var out CloudCertificationAuthorityLeafCertificateCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudCertificationAuthorityLeafCertificateCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudClipboardItemCollectionResponse") {
 		var out CloudClipboardItemCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2828,6 +3004,30 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out CloudClipboardItemPayloadCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudClipboardItemPayloadCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudLicensing.serviceCollectionResponse") {
+		var out CloudLicensingServiceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudLicensingServiceCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudLicensing.usageRightCollectionResponse") {
+		var out CloudLicensingUsageRightCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudLicensingUsageRightCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcAgentHealthCheckDetailCollectionResponse") {
+		var out CloudPCAgentHealthCheckDetailCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCAgentHealthCheckDetailCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -2864,6 +3064,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkCreateSnapshotCollectionResponse") {
+		var out CloudPCBulkCreateSnapshotCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkCreateSnapshotCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkDisasterRecoveryCollectionResponse") {
+		var out CloudPCBulkDisasterRecoveryCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkDisasterRecoveryCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkDisasterRecoveryFailbackCollectionResponse") {
 		var out CloudPCBulkDisasterRecoveryFailbackCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2888,6 +3104,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkMoveCollectionResponse") {
+		var out CloudPCBulkMoveCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkMoveCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkPowerOffCollectionResponse") {
 		var out CloudPCBulkPowerOffCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -2900,6 +3124,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out CloudPCBulkPowerOnCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudPCBulkPowerOnCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkReinstallAgentCollectionResponse") {
+		var out CloudPCBulkReinstallAgentCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkReinstallAgentCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -2932,6 +3164,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out CloudPCBulkRestoreCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CloudPCBulkRestoreCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.cloudPcBulkSetReviewStatusCollectionResponse") {
+		var out CloudPCBulkSetReviewStatusCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CloudPCBulkSetReviewStatusCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -3240,30 +3480,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.compliantNetworkNamedLocationCollectionResponse") {
-		var out CompliantNetworkNamedLocationCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into CompliantNetworkNamedLocationCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessAudienceCollectionResponse") {
-		var out ConditionalAccessAudienceCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into ConditionalAccessAudienceCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessPolicyCollectionResponse") {
-		var out ConditionalAccessPolicyCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into ConditionalAccessPolicyCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessRuleSatisfiedCollectionResponse") {
 		var out ConditionalAccessRuleSatisfiedCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3276,14 +3492,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out ConditionalAccessTemplateCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ConditionalAccessTemplateCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.conditionalAccessWhatIfPolicyCollectionResponse") {
-		var out ConditionalAccessWhatIfPolicyCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into ConditionalAccessWhatIfPolicyCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -3356,6 +3564,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out ContactFolderCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ContactFolderCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.contentActivityCollectionResponse") {
+		var out ContentActivityCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ContentActivityCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -3452,14 +3668,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out CorsConfigurationv2CollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into CorsConfigurationv2CollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.countryNamedLocationCollectionResponse") {
-		var out CountryNamedLocationCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into CountryNamedLocationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -3632,6 +3840,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.customSecurityAttributeExemptionCollectionResponse") {
+		var out CustomSecurityAttributeExemptionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CustomSecurityAttributeExemptionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.customSecurityAttributeStringValueExemptionCollectionResponse") {
+		var out CustomSecurityAttributeStringValueExemptionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into CustomSecurityAttributeStringValueExemptionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.customSubjectAlternativeNameCollectionResponse") {
 		var out CustomSubjectAlternativeNameCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3800,6 +4024,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.delegationSettingsCollectionResponse") {
+		var out DelegationSettingsCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DelegationSettingsCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.deletedChatCollectionResponse") {
 		var out DeletedChatCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3856,6 +4088,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.depTvOSEnrollmentProfileCollectionResponse") {
+		var out DepTvOSEnrollmentProfileCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DepTvOSEnrollmentProfileCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.depVisionOSEnrollmentProfileCollectionResponse") {
+		var out DepVisionOSEnrollmentProfileCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DepVisionOSEnrollmentProfileCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.detectedAppCollectionResponse") {
 		var out DetectedAppCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -3876,6 +4124,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out DeviceActionResultCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DeviceActionResultCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.deviceAndAppManagementAssignedRoleDefinitionCollectionResponse") {
+		var out DeviceAndAppManagementAssignedRoleDefinitionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DeviceAndAppManagementAssignedRoleDefinitionCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -4120,14 +4376,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.deviceConfigurationProfileCollectionResponse") {
-		var out DeviceConfigurationProfileCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into DeviceConfigurationProfileCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.deviceConfigurationSettingStateCollectionResponse") {
 		var out DeviceConfigurationSettingStateCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -4332,14 +4580,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out DeviceManagementAutopilotEventCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DeviceManagementAutopilotEventCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.deviceManagementAutopilotPolicyStatusDetailCollectionResponse") {
-		var out DeviceManagementAutopilotPolicyStatusDetailCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into DeviceManagementAutopilotPolicyStatusDetailCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -4984,6 +5224,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.deviceTemplateCollectionResponse") {
+		var out DeviceTemplateCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DeviceTemplateCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.dimensionCollectionResponse") {
 		var out DimensionCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -5248,10 +5496,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.driveProtectionUnitsBulkAdditionJobCollectionResponse") {
+		var out DriveProtectionUnitsBulkAdditionJobCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DriveProtectionUnitsBulkAdditionJobCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.driveRestoreArtifactCollectionResponse") {
 		var out DriveRestoreArtifactCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into DriveRestoreArtifactCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.driveRestoreArtifactsBulkAdditionRequestCollectionResponse") {
+		var out DriveRestoreArtifactsBulkAdditionRequestCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into DriveRestoreArtifactsBulkAdditionRequestCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -5504,22 +5768,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.educationIdentityDomainCollectionResponse") {
-		var out EducationIdentityDomainCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationIdentityDomainCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationIdentityMatchingOptionsCollectionResponse") {
-		var out EducationIdentityMatchingOptionsCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationIdentityMatchingOptionsCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
 	if strings.EqualFold(value, "#microsoft.graph.educationModuleCollectionResponse") {
 		var out EducationModuleCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -5588,30 +5836,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out EducationSubmissionResourceCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into EducationSubmissionResourceCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationErrorCollectionResponse") {
-		var out EducationSynchronizationErrorCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationErrorCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationLicenseAssignmentCollectionResponse") {
-		var out EducationSynchronizationLicenseAssignmentCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationLicenseAssignmentCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.educationSynchronizationProfileCollectionResponse") {
-		var out EducationSynchronizationProfileCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into EducationSynchronizationProfileCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -5764,6 +5988,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out EngagementAsyncOperationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into EngagementAsyncOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.engagementRoleCollectionResponse") {
+		var out EngagementRoleCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EngagementRoleCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.engagementRoleMemberCollectionResponse") {
+		var out EngagementRoleMemberCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into EngagementRoleMemberCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -6488,6 +6728,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.granularMailboxRestoreArtifactCollectionResponse") {
+		var out GranularMailboxRestoreArtifactCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into GranularMailboxRestoreArtifactCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.groupCollectionResponse") {
 		var out GroupCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -6784,10 +7032,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.hardwareOathAuthenticationMethodCollectionResponse") {
+		var out HardwareOathAuthenticationMethodCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HardwareOathAuthenticationMethodCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.hardwareOathAuthenticationMethodConfigurationCollectionResponse") {
 		var out HardwareOathAuthenticationMethodConfigurationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into HardwareOathAuthenticationMethodConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.hardwareOathTokenAuthenticationMethodDeviceCollectionResponse") {
+		var out HardwareOathTokenAuthenticationMethodDeviceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HardwareOathTokenAuthenticationMethodDeviceCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -6804,6 +7068,38 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out HardwarePasswordInfoCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into HardwarePasswordInfoCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.alertCollectionResponse") {
+		var out HealthMonitoringAlertCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringAlertCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.alertConfigurationCollectionResponse") {
+		var out HealthMonitoringAlertConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringAlertConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.emailNotificationConfigurationCollectionResponse") {
+		var out HealthMonitoringEmailNotificationConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringEmailNotificationConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.healthMonitoring.resourceImpactSummaryCollectionResponse") {
+		var out HealthMonitoringResourceImpactSummaryCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into HealthMonitoringResourceImpactSummaryCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -6860,14 +7156,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out IPCategoryCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into IPCategoryCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.ipNamedLocationCollectionResponse") {
-		var out IPNamedLocationCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into IPNamedLocationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -8104,6 +8392,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.labelContentRightCollectionResponse") {
+		var out LabelContentRightCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into LabelContentRightCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.labelPolicyCollectionResponse") {
 		var out LabelPolicyCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -8632,10 +8928,42 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.mailFolderOperationCollectionResponse") {
+		var out MailFolderOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailFolderOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.mailSearchFolderCollectionResponse") {
 		var out MailSearchFolderCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into MailSearchFolderCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailboxCollectionResponse") {
+		var out MailboxCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailboxFolderCollectionResponse") {
+		var out MailboxFolderCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxFolderCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailboxItemCollectionResponse") {
+		var out MailboxItemCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxItemCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -8656,10 +8984,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.mailboxProtectionUnitsBulkAdditionJobCollectionResponse") {
+		var out MailboxProtectionUnitsBulkAdditionJobCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxProtectionUnitsBulkAdditionJobCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.mailboxRestoreArtifactCollectionResponse") {
 		var out MailboxRestoreArtifactCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into MailboxRestoreArtifactCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mailboxRestoreArtifactsBulkAdditionRequestCollectionResponse") {
+		var out MailboxRestoreArtifactsBulkAdditionRequestCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MailboxRestoreArtifactsBulkAdditionRequestCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -9480,6 +9824,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.meetingNoteCollectionResponse") {
+		var out MeetingNoteCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MeetingNoteCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.meetingNoteSubpointCollectionResponse") {
+		var out MeetingNoteSubpointCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MeetingNoteSubpointCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.meetingParticipantInfoCollectionResponse") {
 		var out MeetingParticipantInfoCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -9540,6 +9900,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out MentionCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into MentionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mentionEventCollectionResponse") {
+		var out MentionEventCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MentionEventCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -9620,6 +9988,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out MfaFailureCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into MfaFailureCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mfaTelecomFraudMetricCollectionResponse") {
+		var out MfaTelecomFraudMetricCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MfaTelecomFraudMetricCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.mfaUserCountMetricCollectionResponse") {
+		var out MfaUserCountMetricCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into MfaUserCountMetricCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -9944,10 +10328,10 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
-	if strings.EqualFold(value, "#microsoft.graph.namedLocationCollectionResponse") {
-		var out NamedLocationCollectionResponse
+	if strings.EqualFold(value, "#microsoft.graph.mutualTlsOauthConfigurationCollectionResponse") {
+		var out MutualTlsOauthConfigurationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into NamedLocationCollectionResponse: %+v", err)
+			return nil, fmt.Errorf("unmarshaling into MutualTlsOauthConfigurationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -10020,6 +10404,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out NetworkaccessConditionalAccessPolicyCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into NetworkaccessConditionalAccessPolicyCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.connectionCollectionResponse") {
+		var out NetworkaccessConnectionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessConnectionCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -10336,6 +10728,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.oidcIdentityProviderCollectionResponse") {
+		var out OidcIdentityProviderCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OidcIdentityProviderCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.omaSettingCollectionResponse") {
 		var out OmaSettingCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -10392,10 +10792,34 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.onEmailOtpSendListenerCollectionResponse") {
+		var out OnEmailOtpSendListenerCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnEmailOtpSendListenerCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.onInteractiveAuthFlowStartListenerCollectionResponse") {
 		var out OnInteractiveAuthFlowStartListenerCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into OnInteractiveAuthFlowStartListenerCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onOtpSendCustomExtensionCollectionResponse") {
+		var out OnOtpSendCustomExtensionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnOtpSendCustomExtensionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.onPhoneMethodLoadStartListenerCollectionResponse") {
+		var out OnPhoneMethodLoadStartListenerCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OnPhoneMethodLoadStartListenerCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -10648,6 +11072,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.organizationalUnitCollectionResponse") {
+		var out OrganizationalUnitCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OrganizationalUnitCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.osVersionCountCollectionResponse") {
 		var out OsVersionCountCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -10744,6 +11176,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.pageTemplateCollectionResponse") {
+		var out PageTemplateCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PageTemplateCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.participantCollectionResponse") {
 		var out ParticipantCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -10760,6 +11200,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.adminsMfaEnforcedSecurityRequirementCollectionResponse") {
+		var out PartnerSecurityAdminsMfaEnforcedSecurityRequirementCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityAdminsMfaEnforcedSecurityRequirementCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.partner.security.affectedResourceCollectionResponse") {
 		var out PartnerSecurityAffectedResourceCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -10768,10 +11216,58 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.customerInsightCollectionResponse") {
+		var out PartnerSecurityCustomerInsightCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityCustomerInsightCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.customersMfaEnforcedSecurityRequirementCollectionResponse") {
+		var out PartnerSecurityCustomersMfaEnforcedSecurityRequirementCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityCustomersMfaEnforcedSecurityRequirementCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.customersSpendingBudgetSecurityRequirementCollectionResponse") {
+		var out PartnerSecurityCustomersSpendingBudgetSecurityRequirementCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityCustomersSpendingBudgetSecurityRequirementCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.partner.security.partnerSecurityAlertCollectionResponse") {
 		var out PartnerSecurityPartnerSecurityAlertCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into PartnerSecurityPartnerSecurityAlertCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.responseTimeSecurityRequirementCollectionResponse") {
+		var out PartnerSecurityResponseTimeSecurityRequirementCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecurityResponseTimeSecurityRequirementCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.securityRequirementCollectionResponse") {
+		var out PartnerSecuritySecurityRequirementCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecuritySecurityRequirementCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.partner.security.securityScoreHistoryCollectionResponse") {
+		var out PartnerSecuritySecurityScoreHistoryCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PartnerSecuritySecurityScoreHistoryCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -11328,6 +11824,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.policyLocationCollectionResponse") {
+		var out PolicyLocationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into PolicyLocationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.policySetAssignmentCollectionResponse") {
 		var out PolicySetAssignmentCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -11680,6 +12184,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.processContentMetadataBaseCollectionResponse") {
+		var out ProcessContentMetadataBaseCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProcessContentMetadataBaseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.processingErrorCollectionResponse") {
+		var out ProcessingErrorCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProcessingErrorCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.profileCardAnnotationCollectionResponse") {
 		var out ProfileCardAnnotationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -11704,10 +12224,34 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.profilePropertySettingCollectionResponse") {
+		var out ProfilePropertySettingCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProfilePropertySettingCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.profileSourceAnnotationCollectionResponse") {
 		var out ProfileSourceAnnotationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ProfileSourceAnnotationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.profileSourceCollectionResponse") {
+		var out ProfileSourceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProfileSourceCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.profileSourceLocalizationCollectionResponse") {
+		var out ProfileSourceLocalizationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ProfileSourceLocalizationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -11848,6 +12392,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.qrCodePinAuthenticationMethodCollectionResponse") {
+		var out QrCodePinAuthenticationMethodCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrCodePinAuthenticationMethodCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.qrCodePinAuthenticationMethodConfigurationCollectionResponse") {
+		var out QrCodePinAuthenticationMethodConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into QrCodePinAuthenticationMethodConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.rankedEmailAddressCollectionResponse") {
 		var out RankedEmailAddressCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -11860,6 +12420,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out RbacApplicationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into RbacApplicationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.readingAssignmentSubmissionCollectionResponse") {
+		var out ReadingAssignmentSubmissionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ReadingAssignmentSubmissionCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -11952,6 +12520,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.reflectCheckInResponseCollectionResponse") {
+		var out ReflectCheckInResponseCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ReflectCheckInResponseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.registryKeyStateCollectionResponse") {
 		var out RegistryKeyStateCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -11996,6 +12572,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out ReputationCategoryCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ReputationCategoryCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.requestActivityCollectionResponse") {
+		var out RequestActivityCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RequestActivityCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -12108,6 +12692,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out RetentionSettingCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into RetentionSettingCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.retrievalExtractCollectionResponse") {
+		var out RetrievalExtractCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RetrievalExtractCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.retrievalHitCollectionResponse") {
+		var out RetrievalHitCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into RetrievalHitCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -12392,6 +12992,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.scopeBaseCollectionResponse") {
+		var out ScopeBaseCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into ScopeBaseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.scopedRoleMembershipCollectionResponse") {
 		var out ScopedRoleMembershipCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -12584,6 +13192,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.analyzedEmailDlpRuleInfoCollectionResponse") {
+		var out SecurityAnalyzedEmailDlpRuleInfoCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityAnalyzedEmailDlpRuleInfoCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.analyzedEmailExchangeTransportRuleInfoCollectionResponse") {
 		var out SecurityAnalyzedEmailExchangeTransportRuleInfoCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -12712,6 +13328,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.cloudAppDiscoveryReportCollectionResponse") {
+		var out SecurityCloudAppDiscoveryReportCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityCloudAppDiscoveryReportCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.compromiseIndicatorCollectionResponse") {
+		var out SecurityCompromiseIndicatorCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityCompromiseIndicatorCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.securityConfigurationTaskCollectionResponse") {
 		var out SecurityConfigurationTaskCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -12760,6 +13392,30 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.discoveredCloudAppDeviceCollectionResponse") {
+		var out SecurityDiscoveredCloudAppDeviceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDiscoveredCloudAppDeviceCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.discoveredCloudAppIPAddressCollectionResponse") {
+		var out SecurityDiscoveredCloudAppIPAddressCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDiscoveredCloudAppIPAddressCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.discoveredCloudAppUserCollectionResponse") {
+		var out SecurityDiscoveredCloudAppUserCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityDiscoveredCloudAppUserCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.dispositionReviewStageCollectionResponse") {
 		var out SecurityDispositionReviewStageCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -12780,6 +13436,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out SecurityEdiscoveryCaseCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SecurityEdiscoveryCaseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.ediscoveryCaseMemberCollectionResponse") {
+		var out SecurityEdiscoveryCaseMemberCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityEdiscoveryCaseMemberCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -13224,6 +13888,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.nicEvidenceCollectionResponse") {
+		var out SecurityNicEvidenceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityNicEvidenceCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.security.passiveDnsRecordCollectionResponse") {
 		var out SecurityPassiveDnsRecordCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -13360,6 +14032,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.security.threatDetectionDetailCollectionResponse") {
+		var out SecurityThreatDetectionDetailCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityThreatDetectionDetailCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.timelineEventCollectionResponse") {
+		var out SecurityTimelineEventCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityTimelineEventCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.securityToolAwsResourceAdministratorFindingCollectionResponse") {
 		var out SecurityToolAwsResourceAdministratorFindingCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -13396,6 +14084,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out SecurityUnifiedGroupSourceCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SecurityUnifiedGroupSourceCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.security.urlEvidenceCollectionResponse") {
+		var out SecurityUrlEvidenceCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SecurityUrlEvidenceCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -13452,6 +14148,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out SecurityWhoisRecordCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SecurityWhoisRecordCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.selfServiceSignUpCollectionResponse") {
+		var out SelfServiceSignUpCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SelfServiceSignUpCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -13696,6 +14400,22 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.sharePointGroupCollectionResponse") {
+		var out SharePointGroupCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SharePointGroupCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.sharePointGroupMemberCollectionResponse") {
+		var out SharePointGroupMemberCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SharePointGroupMemberCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.sharePointIdentitySetCollectionResponse") {
 		var out SharePointIdentitySetCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -13912,10 +14632,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.siteProtectionUnitsBulkAdditionJobCollectionResponse") {
+		var out SiteProtectionUnitsBulkAdditionJobCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SiteProtectionUnitsBulkAdditionJobCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.siteRestoreArtifactCollectionResponse") {
 		var out SiteRestoreArtifactCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into SiteRestoreArtifactCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.siteRestoreArtifactsBulkAdditionRequestCollectionResponse") {
+		var out SiteRestoreArtifactsBulkAdditionRequestCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into SiteRestoreArtifactsBulkAdditionRequestCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -14032,10 +14768,42 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.startRecordingOperationCollectionResponse") {
+		var out StartRecordingOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StartRecordingOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.startTranscriptionOperationCollectionResponse") {
+		var out StartTranscriptionOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StartTranscriptionOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.stopHoldMusicOperationCollectionResponse") {
 		var out StopHoldMusicOperationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into StopHoldMusicOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.stopRecordingOperationCollectionResponse") {
+		var out StopRecordingOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StopRecordingOperationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.stopTranscriptionOperationCollectionResponse") {
+		var out StopTranscriptionOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StopTranscriptionOperationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -14344,6 +15112,30 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.assignedTelephoneNumberCollectionResponse") {
+		var out TeamsAdministrationAssignedTelephoneNumberCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationAssignedTelephoneNumberCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.effectivePolicyAssignmentCollectionResponse") {
+		var out TeamsAdministrationEffectivePolicyAssignmentCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationEffectivePolicyAssignmentCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.teamsAdministration.teamsUserConfigurationCollectionResponse") {
+		var out TeamsAdministrationTeamsUserConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TeamsAdministrationTeamsUserConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.teamsAppCollectionResponse") {
 		var out TeamsAppCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -14404,14 +15196,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out TeamsTemplateCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into TeamsTemplateCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.teamsUserConfiguration.policyAssignmentCollectionResponse") {
-		var out TeamsUserConfigurationPolicyAssignmentCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into TeamsUserConfigurationPolicyAssignmentCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -14848,6 +15632,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.trustedCertificateAuthorityBaseCollectionResponse") {
+		var out TrustedCertificateAuthorityBaseCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into TrustedCertificateAuthorityBaseCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.typedEmailAddressCollectionResponse") {
 		var out TypedEmailAddressCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -15116,6 +15908,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out UnsupportedGroupPolicyExtensionCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into UnsupportedGroupPolicyExtensionCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.updateAllMessagesReadStateOperationCollectionResponse") {
+		var out UpdateAllMessagesReadStateOperationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into UpdateAllMessagesReadStateOperationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -15796,6 +16596,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out VirtualEventCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into VirtualEventCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.virtualEventExternalInformationCollectionResponse") {
+		var out VirtualEventExternalInformationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into VirtualEventExternalInformationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -16880,10 +17688,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.windowsQualityUpdateApprovalSettingCollectionResponse") {
+		var out WindowsQualityUpdateApprovalSettingCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsQualityUpdateApprovalSettingCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.windowsQualityUpdateCatalogItemCollectionResponse") {
 		var out WindowsQualityUpdateCatalogItemCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into WindowsQualityUpdateCatalogItemCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.windowsQualityUpdateCatalogProductRevisionCollectionResponse") {
+		var out WindowsQualityUpdateCatalogProductRevisionCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsQualityUpdateCatalogProductRevisionCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -16916,6 +17740,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out WindowsQualityUpdateProfileCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into WindowsQualityUpdateProfileCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.windowsRestoreDeviceEnrollmentConfigurationCollectionResponse") {
+		var out WindowsRestoreDeviceEnrollmentConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsRestoreDeviceEnrollmentConfigurationCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -16988,6 +17820,14 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out WindowsUpdatesApplicableContentDeviceMatchCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into WindowsUpdatesApplicableContentDeviceMatchCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.windowsUpdates.assignedGroupCollectionResponse") {
+		var out WindowsUpdatesAssignedGroupCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WindowsUpdatesAssignedGroupCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -17180,14 +18020,6 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		var out WindowsUpdatesUpdatableAssetCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into WindowsUpdatesUpdatableAssetCollectionResponse: %+v", err)
-		}
-		return out, nil
-	}
-
-	if strings.EqualFold(value, "#microsoft.graph.windowsUpdates.updatableAssetEnrollmentCollectionResponse") {
-		var out WindowsUpdatesUpdatableAssetEnrollmentCollectionResponse
-		if err := json.Unmarshal(input, &out); err != nil {
-			return nil, fmt.Errorf("unmarshaling into WindowsUpdatesUpdatableAssetEnrollmentCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}
@@ -17440,10 +18272,26 @@ func UnmarshalBaseCollectionPaginationCountResponseImplementation(input []byte) 
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.wslDistributionConfigurationCollectionResponse") {
+		var out WslDistributionConfigurationCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WslDistributionConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.x509CertificateAuthenticationMethodConfigurationCollectionResponse") {
 		var out X509CertificateAuthenticationMethodConfigurationCollectionResponse
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into X509CertificateAuthenticationMethodConfigurationCollectionResponse: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.x509CertificateAuthorityScopeCollectionResponse") {
+		var out X509CertificateAuthorityScopeCollectionResponse
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into X509CertificateAuthorityScopeCollectionResponse: %+v", err)
 		}
 		return out, nil
 	}

@@ -17,6 +17,8 @@ const (
 	DeviceManagementConditionCategory_CloudPCHostHealthCheckFailures      DeviceManagementConditionCategory = "cloudPcHostHealthCheckFailures"
 	DeviceManagementConditionCategory_CloudPCInGracePeriod                DeviceManagementConditionCategory = "cloudPcInGracePeriod"
 	DeviceManagementConditionCategory_CloudPCZoneOutage                   DeviceManagementConditionCategory = "cloudPcZoneOutage"
+	DeviceManagementConditionCategory_FrontlineBufferUsageDuration        DeviceManagementConditionCategory = "frontlineBufferUsageDuration"
+	DeviceManagementConditionCategory_FrontlineBufferUsageThreshold       DeviceManagementConditionCategory = "frontlineBufferUsageThreshold"
 	DeviceManagementConditionCategory_FrontlineInsufficientLicenses       DeviceManagementConditionCategory = "frontlineInsufficientLicenses"
 	DeviceManagementConditionCategory_ImageUploadFailures                 DeviceManagementConditionCategory = "imageUploadFailures"
 	DeviceManagementConditionCategory_ProvisionFailures                   DeviceManagementConditionCategory = "provisionFailures"
@@ -29,6 +31,8 @@ func PossibleValuesForDeviceManagementConditionCategory() []string {
 		string(DeviceManagementConditionCategory_CloudPCHostHealthCheckFailures),
 		string(DeviceManagementConditionCategory_CloudPCInGracePeriod),
 		string(DeviceManagementConditionCategory_CloudPCZoneOutage),
+		string(DeviceManagementConditionCategory_FrontlineBufferUsageDuration),
+		string(DeviceManagementConditionCategory_FrontlineBufferUsageThreshold),
 		string(DeviceManagementConditionCategory_FrontlineInsufficientLicenses),
 		string(DeviceManagementConditionCategory_ImageUploadFailures),
 		string(DeviceManagementConditionCategory_ProvisionFailures),
@@ -55,6 +59,8 @@ func parseDeviceManagementConditionCategory(input string) (*DeviceManagementCond
 		"cloudpchosthealthcheckfailures":      DeviceManagementConditionCategory_CloudPCHostHealthCheckFailures,
 		"cloudpcingraceperiod":                DeviceManagementConditionCategory_CloudPCInGracePeriod,
 		"cloudpczoneoutage":                   DeviceManagementConditionCategory_CloudPCZoneOutage,
+		"frontlinebufferusageduration":        DeviceManagementConditionCategory_FrontlineBufferUsageDuration,
+		"frontlinebufferusagethreshold":       DeviceManagementConditionCategory_FrontlineBufferUsageThreshold,
 		"frontlineinsufficientlicenses":       DeviceManagementConditionCategory_FrontlineInsufficientLicenses,
 		"imageuploadfailures":                 DeviceManagementConditionCategory_ImageUploadFailures,
 		"provisionfailures":                   DeviceManagementConditionCategory_ProvisionFailures,

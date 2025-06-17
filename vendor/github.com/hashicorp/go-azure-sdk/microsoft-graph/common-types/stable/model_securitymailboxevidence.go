@@ -19,6 +19,9 @@ type SecurityMailboxEvidence struct {
 	// The primary email address of the mailbox.
 	PrimaryAddress nullable.Type[string] `json:"primaryAddress,omitempty"`
 
+	// The user principal name of the mailbox.
+	Upn nullable.Type[string] `json:"upn,omitempty"`
+
 	// The user account of the mailbox.
 	UserAccount *SecurityUserAccount `json:"userAccount,omitempty"`
 

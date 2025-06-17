@@ -15,7 +15,7 @@ var _ Entity = OAuth2PermissionGrant{}
 type OAuth2PermissionGrant struct {
 	// The object id (not appId) of the client service principal for the application that is authorized to act on behalf of
 	// a signed-in user when accessing an API. Required. Supports $filter (eq only).
-	ClientId string `json:"clientId"`
+	ClientId *string `json:"clientId,omitempty"`
 
 	// Indicates whether authorization is granted for the client application to impersonate all users or only a specific
 	// user. AllPrincipals indicates authorization to impersonate all users. Principal indicates authorization to

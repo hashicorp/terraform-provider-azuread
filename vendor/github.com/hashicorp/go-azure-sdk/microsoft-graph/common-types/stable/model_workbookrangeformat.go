@@ -22,19 +22,18 @@ type WorkbookRangeFormat struct {
 	// Returns the font object defined on the overall range selected Read-only.
 	Font *WorkbookRangeFont `json:"font,omitempty"`
 
-	// Represents the horizontal alignment for the specified object. The possible values are: General, Left, Center, Right,
-	// Fill, Justify, CenterAcrossSelection, Distributed.
+	// The horizontal alignment for the specified object. Possible values are: General, Left, Center, Right, Fill, Justify,
+	// CenterAcrossSelection, Distributed.
 	HorizontalAlignment nullable.Type[string] `json:"horizontalAlignment,omitempty"`
 
 	// Returns the format protection object for a range. Read-only.
 	Protection *WorkbookFormatProtection `json:"protection,omitempty"`
 
-	// Represents the vertical alignment for the specified object. The possible values are: Top, Center, Bottom, Justify,
-	// Distributed.
+	// The vertical alignment for the specified object. Possible values are: Top, Center, Bottom, Justify, Distributed.
 	VerticalAlignment nullable.Type[string] `json:"verticalAlignment,omitempty"`
 
-	// Indicates if Excel wraps the text in the object. A null value indicates that the entire range doesn't have uniform
-	// wrap setting
+	// Indicates whether Excel wraps the text in the object. A null value indicates that the entire range doesn't have a
+	// uniform wrap setting.
 	WrapText nullable.Type[bool] `json:"wrapText,omitempty"`
 
 	// Fields inherited from Entity

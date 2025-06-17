@@ -42,6 +42,9 @@ type VirtualEventTownhall struct {
 	// Windows. For details on how to get all available time zones using PowerShell, see Get-TimeZone.
 	EndDateTime *DateTimeTimeZone `json:"endDateTime,omitempty"`
 
+	// The external information of a virtual event. Returned only for event organizers or coorganizers; otherwise, null.
+	ExternalEventInformation *[]VirtualEventExternalInformation `json:"externalEventInformation,omitempty"`
+
 	// The virtual event presenters.
 	Presenters *[]VirtualEventPresenter `json:"presenters,omitempty"`
 
@@ -75,18 +78,19 @@ type VirtualEventTownhall struct {
 
 func (s VirtualEventTownhall) VirtualEvent() BaseVirtualEventImpl {
 	return BaseVirtualEventImpl{
-		CreatedBy:     s.CreatedBy,
-		Description:   s.Description,
-		DisplayName:   s.DisplayName,
-		EndDateTime:   s.EndDateTime,
-		Presenters:    s.Presenters,
-		Sessions:      s.Sessions,
-		Settings:      s.Settings,
-		StartDateTime: s.StartDateTime,
-		Status:        s.Status,
-		Id:            s.Id,
-		ODataId:       s.ODataId,
-		ODataType:     s.ODataType,
+		CreatedBy:                s.CreatedBy,
+		Description:              s.Description,
+		DisplayName:              s.DisplayName,
+		EndDateTime:              s.EndDateTime,
+		ExternalEventInformation: s.ExternalEventInformation,
+		Presenters:               s.Presenters,
+		Sessions:                 s.Sessions,
+		Settings:                 s.Settings,
+		StartDateTime:            s.StartDateTime,
+		Status:                   s.Status,
+		Id:                       s.Id,
+		ODataId:                  s.ODataId,
+		ODataType:                s.ODataType,
 	}
 }
 
@@ -129,21 +133,22 @@ var _ json.Unmarshaler = &VirtualEventTownhall{}
 
 func (s *VirtualEventTownhall) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Audience      *MeetingAudience              `json:"audience,omitempty"`
-		CoOrganizers  *[]CommunicationsUserIdentity `json:"coOrganizers,omitempty"`
-		IsInviteOnly  nullable.Type[bool]           `json:"isInviteOnly,omitempty"`
-		CreatedBy     *CommunicationsIdentitySet    `json:"createdBy,omitempty"`
-		Description   *ItemBody                     `json:"description,omitempty"`
-		DisplayName   nullable.Type[string]         `json:"displayName,omitempty"`
-		EndDateTime   *DateTimeTimeZone             `json:"endDateTime,omitempty"`
-		Presenters    *[]VirtualEventPresenter      `json:"presenters,omitempty"`
-		Sessions      *[]VirtualEventSession        `json:"sessions,omitempty"`
-		Settings      *VirtualEventSettings         `json:"settings,omitempty"`
-		StartDateTime *DateTimeTimeZone             `json:"startDateTime,omitempty"`
-		Status        *VirtualEventStatus           `json:"status,omitempty"`
-		Id            *string                       `json:"id,omitempty"`
-		ODataId       *string                       `json:"@odata.id,omitempty"`
-		ODataType     *string                       `json:"@odata.type,omitempty"`
+		Audience                 *MeetingAudience                   `json:"audience,omitempty"`
+		CoOrganizers             *[]CommunicationsUserIdentity      `json:"coOrganizers,omitempty"`
+		IsInviteOnly             nullable.Type[bool]                `json:"isInviteOnly,omitempty"`
+		CreatedBy                *CommunicationsIdentitySet         `json:"createdBy,omitempty"`
+		Description              *ItemBody                          `json:"description,omitempty"`
+		DisplayName              nullable.Type[string]              `json:"displayName,omitempty"`
+		EndDateTime              *DateTimeTimeZone                  `json:"endDateTime,omitempty"`
+		ExternalEventInformation *[]VirtualEventExternalInformation `json:"externalEventInformation,omitempty"`
+		Presenters               *[]VirtualEventPresenter           `json:"presenters,omitempty"`
+		Sessions                 *[]VirtualEventSession             `json:"sessions,omitempty"`
+		Settings                 *VirtualEventSettings              `json:"settings,omitempty"`
+		StartDateTime            *DateTimeTimeZone                  `json:"startDateTime,omitempty"`
+		Status                   *VirtualEventStatus                `json:"status,omitempty"`
+		Id                       *string                            `json:"id,omitempty"`
+		ODataId                  *string                            `json:"@odata.id,omitempty"`
+		ODataType                *string                            `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -156,6 +161,7 @@ func (s *VirtualEventTownhall) UnmarshalJSON(bytes []byte) error {
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName
 	s.EndDateTime = decoded.EndDateTime
+	s.ExternalEventInformation = decoded.ExternalEventInformation
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId
 	s.ODataType = decoded.ODataType

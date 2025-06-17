@@ -13,6 +13,7 @@ type OperationApprovalPolicyType string
 
 const (
 	OperationApprovalPolicyType_App     OperationApprovalPolicyType = "app"
+	OperationApprovalPolicyType_Role    OperationApprovalPolicyType = "role"
 	OperationApprovalPolicyType_Script  OperationApprovalPolicyType = "script"
 	OperationApprovalPolicyType_Unknown OperationApprovalPolicyType = "unknown"
 )
@@ -20,6 +21,7 @@ const (
 func PossibleValuesForOperationApprovalPolicyType() []string {
 	return []string{
 		string(OperationApprovalPolicyType_App),
+		string(OperationApprovalPolicyType_Role),
 		string(OperationApprovalPolicyType_Script),
 		string(OperationApprovalPolicyType_Unknown),
 	}
@@ -41,6 +43,7 @@ func (s *OperationApprovalPolicyType) UnmarshalJSON(bytes []byte) error {
 func parseOperationApprovalPolicyType(input string) (*OperationApprovalPolicyType, error) {
 	vals := map[string]OperationApprovalPolicyType{
 		"app":     OperationApprovalPolicyType_App,
+		"role":    OperationApprovalPolicyType_Role,
 		"script":  OperationApprovalPolicyType_Script,
 		"unknown": OperationApprovalPolicyType_Unknown,
 	}

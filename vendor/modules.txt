@@ -65,8 +65,8 @@ github.com/hashicorp/go-azure-helpers/lang/pointer
 github.com/hashicorp/go-azure-helpers/lang/response
 github.com/hashicorp/go-azure-helpers/resourcemanager/features
 github.com/hashicorp/go-azure-helpers/resourcemanager/resourceids
-# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20250513.1112057
-## explicit; go 1.22
+# github.com/hashicorp/go-azure-sdk/microsoft-graph v0.20250617.1143239
+## explicit; go 1.24.1
 github.com/hashicorp/go-azure-sdk/microsoft-graph/administrativeunits/beta/administrativeunit
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/beta/application
 github.com/hashicorp/go-azure-sdk/microsoft-graph/applications/stable/application
@@ -128,8 +128,8 @@ github.com/hashicorp/go-azure-sdk/microsoft-graph/serviceprincipals/stable/synch
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/beta/user
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/manager
 github.com/hashicorp/go-azure-sdk/microsoft-graph/users/stable/user
-# github.com/hashicorp/go-azure-sdk/sdk v0.20250513.1112057
-## explicit; go 1.22
+# github.com/hashicorp/go-azure-sdk/sdk v0.20250617.1143239
+## explicit; go 1.24.1
 github.com/hashicorp/go-azure-sdk/sdk/auth
 github.com/hashicorp/go-azure-sdk/sdk/claims
 github.com/hashicorp/go-azure-sdk/sdk/client
@@ -329,7 +329,7 @@ github.com/zclconf/go-cty/cty/function/stdlib
 github.com/zclconf/go-cty/cty/gocty
 github.com/zclconf/go-cty/cty/json
 github.com/zclconf/go-cty/cty/set
-# golang.org/x/crypto v0.38.0
+# golang.org/x/crypto v0.39.0
 ## explicit; go 1.23.0
 golang.org/x/crypto/argon2
 golang.org/x/crypto/blake2b
@@ -346,7 +346,7 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/mod v0.24.0
+# golang.org/x/mod v0.25.0
 ## explicit; go 1.23.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
@@ -365,7 +365,7 @@ golang.org/x/net/trace
 ## explicit; go 1.23.0
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.14.0
+# golang.org/x/sync v0.15.0
 ## explicit; go 1.23.0
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.33.0
@@ -373,7 +373,7 @@ golang.org/x/sync/errgroup
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.25.0
+# golang.org/x/text v0.26.0
 ## explicit; go 1.23.0
 golang.org/x/text/cases
 golang.org/x/text/internal

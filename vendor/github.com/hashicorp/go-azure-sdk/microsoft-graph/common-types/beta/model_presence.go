@@ -25,6 +25,9 @@ type Presence struct {
 	// The out of office settings for a user.
 	OutOfOfficeSettings *OutOfOfficeSettings `json:"outOfOfficeSettings,omitempty"`
 
+	// The lexicographically sortable String stamp that represents the version of a presence object.
+	SequenceNumber nullable.Type[string] `json:"sequenceNumber,omitempty"`
+
 	// The presence status message of a user.
 	StatusMessage *PresenceStatusMessage `json:"statusMessage,omitempty"`
 
@@ -65,6 +68,8 @@ func (s Presence) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling Presence: %+v", err)
 	}
+
+	delete(decoded, "sequenceNumber")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.presence"

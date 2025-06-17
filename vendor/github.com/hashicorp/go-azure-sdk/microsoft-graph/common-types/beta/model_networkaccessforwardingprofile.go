@@ -28,13 +28,13 @@ type NetworkaccessForwardingProfile struct {
 	// Description.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// Profile last modified time.
+	// The date and time when the profile was last modified.
 	LastModifiedDateTime *string `json:"lastModifiedDateTime,omitempty"`
 
-	// Profile name.
+	// The name of the profile.
 	Name *string `json:"name,omitempty"`
 
-	// Traffic forwarding policies associated with this profile.
+	// The traffic forwarding policies associated with this profile.
 	Policies *[]NetworkaccessPolicyLink `json:"policies,omitempty"`
 
 	State *NetworkaccessStatus `json:"state,omitempty"`

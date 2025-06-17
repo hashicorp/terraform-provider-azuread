@@ -47,7 +47,7 @@ func (o ChangePasswordOperationOptions) ToQuery() *client.QueryParams {
 	return &out
 }
 
-// ChangePassword - Invoke action changePassword. Enable the user to update their password. Any user can update their
+// ChangePassword - Invoke action changePassword. Update the signed-in user's password. Any user can update their
 // password without belonging to any administrator role.
 func (c UserClient) ChangePassword(ctx context.Context, id stable.UserId, input ChangePasswordRequest, options ChangePasswordOperationOptions) (result ChangePasswordOperationResponse, err error) {
 	opts := client.RequestOptions{

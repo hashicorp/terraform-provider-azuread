@@ -12,13 +12,13 @@ import (
 type SecurityPurgeType string
 
 const (
-	SecurityPurgeType_PermanentlyDeleted SecurityPurgeType = "permanentlyDeleted"
-	SecurityPurgeType_Recoverable        SecurityPurgeType = "recoverable"
+	SecurityPurgeType_PermanentlyDelete SecurityPurgeType = "permanentlyDelete"
+	SecurityPurgeType_Recoverable       SecurityPurgeType = "recoverable"
 )
 
 func PossibleValuesForSecurityPurgeType() []string {
 	return []string{
-		string(SecurityPurgeType_PermanentlyDeleted),
+		string(SecurityPurgeType_PermanentlyDelete),
 		string(SecurityPurgeType_Recoverable),
 	}
 }
@@ -38,8 +38,8 @@ func (s *SecurityPurgeType) UnmarshalJSON(bytes []byte) error {
 
 func parseSecurityPurgeType(input string) (*SecurityPurgeType, error) {
 	vals := map[string]SecurityPurgeType{
-		"permanentlydeleted": SecurityPurgeType_PermanentlyDeleted,
-		"recoverable":        SecurityPurgeType_Recoverable,
+		"permanentlydelete": SecurityPurgeType_PermanentlyDelete,
+		"recoverable":       SecurityPurgeType_Recoverable,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

@@ -12,6 +12,7 @@ import (
 type DeviceManagementAlertRuleTemplate string
 
 const (
+	DeviceManagementAlertRuleTemplate_CloudPCFrontlineConcurrencyScenario            DeviceManagementAlertRuleTemplate = "cloudPcFrontlineConcurrencyScenario"
 	DeviceManagementAlertRuleTemplate_CloudPCFrontlineInsufficientLicensesScenario   DeviceManagementAlertRuleTemplate = "cloudPcFrontlineInsufficientLicensesScenario"
 	DeviceManagementAlertRuleTemplate_CloudPCImageUploadScenario                     DeviceManagementAlertRuleTemplate = "cloudPcImageUploadScenario"
 	DeviceManagementAlertRuleTemplate_CloudPCInGracePeriodScenario                   DeviceManagementAlertRuleTemplate = "cloudPcInGracePeriodScenario"
@@ -22,6 +23,7 @@ const (
 
 func PossibleValuesForDeviceManagementAlertRuleTemplate() []string {
 	return []string{
+		string(DeviceManagementAlertRuleTemplate_CloudPCFrontlineConcurrencyScenario),
 		string(DeviceManagementAlertRuleTemplate_CloudPCFrontlineInsufficientLicensesScenario),
 		string(DeviceManagementAlertRuleTemplate_CloudPCImageUploadScenario),
 		string(DeviceManagementAlertRuleTemplate_CloudPCInGracePeriodScenario),
@@ -46,6 +48,7 @@ func (s *DeviceManagementAlertRuleTemplate) UnmarshalJSON(bytes []byte) error {
 
 func parseDeviceManagementAlertRuleTemplate(input string) (*DeviceManagementAlertRuleTemplate, error) {
 	vals := map[string]DeviceManagementAlertRuleTemplate{
+		"cloudpcfrontlineconcurrencyscenario":            DeviceManagementAlertRuleTemplate_CloudPCFrontlineConcurrencyScenario,
 		"cloudpcfrontlineinsufficientlicensesscenario":   DeviceManagementAlertRuleTemplate_CloudPCFrontlineInsufficientLicensesScenario,
 		"cloudpcimageuploadscenario":                     DeviceManagementAlertRuleTemplate_CloudPCImageUploadScenario,
 		"cloudpcingraceperiodscenario":                   DeviceManagementAlertRuleTemplate_CloudPCInGracePeriodScenario,

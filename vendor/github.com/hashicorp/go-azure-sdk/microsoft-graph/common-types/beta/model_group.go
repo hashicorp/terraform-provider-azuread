@@ -31,7 +31,8 @@ type Group struct {
 	AppRoleAssignments *[]AppRoleAssignment `json:"appRoleAssignments,omitempty"`
 
 	// The list of sensitivity label pairs (label ID, label name) associated with a Microsoft 365 group. Returned only on
-	// $select.
+	// $select. This property can be updated only in delegated scenarios where the caller requires both the Microsoft Graph
+	// permission and a supported administrator role.
 	AssignedLabels *[]AssignedLabel `json:"assignedLabels,omitempty"`
 
 	// The licenses that are assigned to the group. Returned only on $select. Supports $filter (eq). Read-only.
@@ -52,6 +53,9 @@ type Group struct {
 	// property are defined by creating a ClassificationList setting value, based on the template definition.Returned by
 	// default. Supports $filter (eq, ne, not, ge, le, startsWith).
 	Classification nullable.Type[string] `json:"classification,omitempty"`
+
+	// The relationships of a group to cloud licensing resources.
+	CloudLicensing *CloudLicensingGroupCloudLicensing `json:"cloudLicensing,omitempty"`
 
 	// The group's conversations.
 	Conversations *[]Conversation `json:"conversations,omitempty"`
@@ -145,11 +149,9 @@ type Group struct {
 	// Indicates whether the user marked the group as favorite.
 	IsFavorite nullable.Type[bool] `json:"isFavorite,omitempty"`
 
-	// Indicates whether the group is a member of a restricted management administrative unit, in which case it requires a
-	// role scoped to the restricted administrative unit to manage. The default value is false. Read-only. To manage a group
-	// member of a restricted administrative unit, the calling app must be assigned the Directory.Write.Restricted
-	// permission. For delegated scenarios, the administrators must also be explicitly assigned supported roles at the
-	// restricted administrative unit scope.
+	// Indicates whether the group is a member of a restricted management administrative unit. The default value is false.
+	// Read-only. To manage a group member of a restricted management administrative unit, the administrator or calling app
+	// must be assigned a Microsoft Entra role at the scope of the restricted management administrative unit.
 	IsManagementRestricted nullable.Type[bool] `json:"isManagementRestricted,omitempty"`
 
 	// Indicates whether the signed-in user is subscribed to receive email conversations. The default value is true.
@@ -244,9 +246,12 @@ type Group struct {
 	Onenote        *Onenote              `json:"onenote,omitempty"`
 	OrganizationId nullable.Type[string] `json:"organizationId,omitempty"`
 
-	// The owners of the group who can be users or service principals. Nullable. If this property isn't specified when
-	// creating a Microsoft 365 group, the calling user is automatically assigned as the group owner. Supports $filter
-	// (/$count eq 0, /$count ne 0, /$count eq 1, /$count ne 1); Supports $expand including nested $select. For example,
+	// The owners of the group who can be users or service principals. Limited to 100 owners. Nullable. If this property
+	// isn't specified when creating a Microsoft 365 group the calling user (admin or non-admin) is automatically assigned
+	// as the group owner. A non-admin user can't explicitly add themselves to this collection when they're creating the
+	// group. For more information, see the related known issue. For security groups, the admin user isn't automatically
+	// added to this collection. For more information, see the related known issue. Supports $filter (/$count eq 0, /$count
+	// ne 0, /$count eq 1, /$count ne 1); Supports $expand including nested $select. For example,
 	// /groups?$filter=startsWith(displayName,'Role')&$select=id,displayName&$expand=owners($select=id,userPrincipalName,displayName).
 	Owners *[]DirectoryObject `json:"owners,omitempty"`
 
@@ -479,6 +484,7 @@ func (s *Group) UnmarshalJSON(bytes []byte) error {
 		Calendar                           *Calendar                          `json:"calendar,omitempty"`
 		CalendarView                       *[]Event                           `json:"calendarView,omitempty"`
 		Classification                     nullable.Type[string]              `json:"classification,omitempty"`
+		CloudLicensing                     *CloudLicensingGroupCloudLicensing `json:"cloudLicensing,omitempty"`
 		Conversations                      *[]Conversation                    `json:"conversations,omitempty"`
 		CreatedByAppId                     nullable.Type[string]              `json:"createdByAppId,omitempty"`
 		CreatedDateTime                    nullable.Type[string]              `json:"createdDateTime,omitempty"`
@@ -566,6 +572,7 @@ func (s *Group) UnmarshalJSON(bytes []byte) error {
 	s.Calendar = decoded.Calendar
 	s.CalendarView = decoded.CalendarView
 	s.Classification = decoded.Classification
+	s.CloudLicensing = decoded.CloudLicensing
 	s.Conversations = decoded.Conversations
 	s.CreatedByAppId = decoded.CreatedByAppId
 	s.CreatedDateTime = decoded.CreatedDateTime

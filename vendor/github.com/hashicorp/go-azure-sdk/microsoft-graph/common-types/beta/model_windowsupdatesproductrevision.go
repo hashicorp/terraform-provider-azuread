@@ -16,6 +16,10 @@ type WindowsUpdatesProductRevision struct {
 	// The display name of the content. Read-only.
 	DisplayName *string `json:"displayName,omitempty"`
 
+	// True indicates that the content is hotpatchable; otherwise, false. For more information, see Deploy a hotpatch
+	// quality update using Windows Autopatch. Read-only.
+	IsHotpatchUpdate *bool `json:"isHotpatchUpdate,omitempty"`
+
 	// The knowledge base article associated with the product revision.
 	KnowledgeBaseArticle *WindowsUpdatesKnowledgeBaseArticle `json:"knowledgeBaseArticle,omitempty"`
 
@@ -70,6 +74,7 @@ func (s WindowsUpdatesProductRevision) MarshalJSON() ([]byte, error) {
 	}
 
 	delete(decoded, "displayName")
+	delete(decoded, "isHotpatchUpdate")
 	delete(decoded, "product")
 	delete(decoded, "releaseDateTime")
 	delete(decoded, "version")
@@ -91,6 +96,7 @@ var _ json.Unmarshaler = &WindowsUpdatesProductRevision{}
 func (s *WindowsUpdatesProductRevision) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
 		DisplayName          *string                             `json:"displayName,omitempty"`
+		IsHotpatchUpdate     *bool                               `json:"isHotpatchUpdate,omitempty"`
 		KnowledgeBaseArticle *WindowsUpdatesKnowledgeBaseArticle `json:"knowledgeBaseArticle,omitempty"`
 		OsBuild              *WindowsUpdatesBuildVersionDetails  `json:"osBuild,omitempty"`
 		Product              *string                             `json:"product,omitempty"`
@@ -105,6 +111,7 @@ func (s *WindowsUpdatesProductRevision) UnmarshalJSON(bytes []byte) error {
 	}
 
 	s.DisplayName = decoded.DisplayName
+	s.IsHotpatchUpdate = decoded.IsHotpatchUpdate
 	s.KnowledgeBaseArticle = decoded.KnowledgeBaseArticle
 	s.OsBuild = decoded.OsBuild
 	s.Product = decoded.Product

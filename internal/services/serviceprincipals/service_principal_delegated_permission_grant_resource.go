@@ -120,7 +120,7 @@ func servicePrincipalDelegatedPermissionGrantResourceCreate(ctx context.Context,
 	}
 
 	properties := stable.OAuth2PermissionGrant{
-		ClientId:   servicePrincipalId.ServicePrincipalId,
+		ClientId:   pointer.To(servicePrincipalId.ServicePrincipalId),
 		ResourceId: pointer.To(resourcePrincipalId.ServicePrincipalId),
 		Scope:      nullable.NoZero(strings.Join(tf.ExpandStringSlice(d.Get("claim_values").(*pluginsdk.Set).List()), " ")),
 	}

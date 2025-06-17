@@ -5,8 +5,8 @@ package beta
 
 type ContinuousAccessEvaluationSessionControl struct {
 	// Specifies continuous access evaluation settings. The possible values are: strictEnforcement, disabled,
-	// unknownFutureValue, strictLocation. Note that you must use the Prefer: include-unknown-enum-members request header to
-	// get the following value(s) in this evolvable enum: strictLocation.
+	// unknownFutureValue, strictLocation. Use the Prefer: include-unknown-enum-members request header to get the following
+	// value(s) in this evolvable enum: strictLocation.
 	Mode *ContinuousAccessEvaluationMode `json:"mode,omitempty"`
 
 	// The OData ID of this entity

@@ -12,16 +12,24 @@ import (
 type SecurityExportOptions string
 
 const (
-	SecurityExportOptions_OriginalFiles  SecurityExportOptions = "originalFiles"
-	SecurityExportOptions_PdfReplacement SecurityExportOptions = "pdfReplacement"
-	SecurityExportOptions_Tags           SecurityExportOptions = "tags"
-	SecurityExportOptions_Text           SecurityExportOptions = "text"
+	SecurityExportOptions_CondensePaths        SecurityExportOptions = "condensePaths"
+	SecurityExportOptions_FriendlyName         SecurityExportOptions = "friendlyName"
+	SecurityExportOptions_IncludeFolderAndPath SecurityExportOptions = "includeFolderAndPath"
+	SecurityExportOptions_OriginalFiles        SecurityExportOptions = "originalFiles"
+	SecurityExportOptions_PdfReplacement       SecurityExportOptions = "pdfReplacement"
+	SecurityExportOptions_SplitSource          SecurityExportOptions = "splitSource"
+	SecurityExportOptions_Tags                 SecurityExportOptions = "tags"
+	SecurityExportOptions_Text                 SecurityExportOptions = "text"
 )
 
 func PossibleValuesForSecurityExportOptions() []string {
 	return []string{
+		string(SecurityExportOptions_CondensePaths),
+		string(SecurityExportOptions_FriendlyName),
+		string(SecurityExportOptions_IncludeFolderAndPath),
 		string(SecurityExportOptions_OriginalFiles),
 		string(SecurityExportOptions_PdfReplacement),
+		string(SecurityExportOptions_SplitSource),
 		string(SecurityExportOptions_Tags),
 		string(SecurityExportOptions_Text),
 	}
@@ -42,10 +50,14 @@ func (s *SecurityExportOptions) UnmarshalJSON(bytes []byte) error {
 
 func parseSecurityExportOptions(input string) (*SecurityExportOptions, error) {
 	vals := map[string]SecurityExportOptions{
-		"originalfiles":  SecurityExportOptions_OriginalFiles,
-		"pdfreplacement": SecurityExportOptions_PdfReplacement,
-		"tags":           SecurityExportOptions_Tags,
-		"text":           SecurityExportOptions_Text,
+		"condensepaths":        SecurityExportOptions_CondensePaths,
+		"friendlyname":         SecurityExportOptions_FriendlyName,
+		"includefolderandpath": SecurityExportOptions_IncludeFolderAndPath,
+		"originalfiles":        SecurityExportOptions_OriginalFiles,
+		"pdfreplacement":       SecurityExportOptions_PdfReplacement,
+		"splitsource":          SecurityExportOptions_SplitSource,
+		"tags":                 SecurityExportOptions_Tags,
+		"text":                 SecurityExportOptions_Text,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

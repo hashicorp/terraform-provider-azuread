@@ -27,7 +27,8 @@ type CloudPCOnPremisesConnectionHealthCheck struct {
 	// The end time of the health check item. Read-only.
 	EndDateTime *string `json:"endDateTime,omitempty"`
 
-	// The type of error that occurred during this health check.
+	// The type of error that occurred during this health check. For the list of possible values, see
+	// cloudPcOnPremisesConnectionHealthCheckErrorType.
 	ErrorType *CloudPCOnPremisesConnectionHealthCheckErrorType `json:"errorType,omitempty"`
 
 	// The OData ID of this entity

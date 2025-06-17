@@ -86,3 +86,47 @@ func (s ExactMatchLookupJob) MarshalJSON() ([]byte, error) {
 
 	return encoded, nil
 }
+
+var _ json.Unmarshaler = &ExactMatchLookupJob{}
+
+func (s *ExactMatchLookupJob) UnmarshalJSON(bytes []byte) error {
+	var decoded struct {
+		MatchingRows        *[]LookupResultRow    `json:"matchingRows,omitempty"`
+		State               nullable.Type[string] `json:"state,omitempty"`
+		CompletionDateTime  nullable.Type[string] `json:"completionDateTime,omitempty"`
+		CreationDateTime    nullable.Type[string] `json:"creationDateTime,omitempty"`
+		LastUpdatedDateTime nullable.Type[string] `json:"lastUpdatedDateTime,omitempty"`
+		StartDateTime       nullable.Type[string] `json:"startDateTime,omitempty"`
+		Id                  *string               `json:"id,omitempty"`
+		ODataId             *string               `json:"@odata.id,omitempty"`
+		ODataType           *string               `json:"@odata.type,omitempty"`
+	}
+	if err := json.Unmarshal(bytes, &decoded); err != nil {
+		return fmt.Errorf("unmarshaling: %+v", err)
+	}
+
+	s.MatchingRows = decoded.MatchingRows
+	s.State = decoded.State
+	s.CompletionDateTime = decoded.CompletionDateTime
+	s.CreationDateTime = decoded.CreationDateTime
+	s.Id = decoded.Id
+	s.LastUpdatedDateTime = decoded.LastUpdatedDateTime
+	s.ODataId = decoded.ODataId
+	s.ODataType = decoded.ODataType
+	s.StartDateTime = decoded.StartDateTime
+
+	var temp map[string]json.RawMessage
+	if err := json.Unmarshal(bytes, &temp); err != nil {
+		return fmt.Errorf("unmarshaling ExactMatchLookupJob into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["error"]; ok {
+		impl, err := UnmarshalClassificationErrorImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'Error' for 'ExactMatchLookupJob': %+v", err)
+		}
+		s.Error = &impl
+	}
+
+	return nil
+}

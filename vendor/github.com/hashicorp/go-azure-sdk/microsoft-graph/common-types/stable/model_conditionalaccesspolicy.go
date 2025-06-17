@@ -25,14 +25,14 @@ type ConditionalAccessPolicy struct {
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Specifies the grant controls that must be fulfilled to pass the policy.
-	GrantControls *ConditionalAccessGrantControls `json:"grantControls"`
+	GrantControls *ConditionalAccessGrantControls `json:"grantControls,omitempty"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z. Readonly.
 	ModifiedDateTime nullable.Type[string] `json:"modifiedDateTime,omitempty"`
 
 	// Specifies the session controls that are enforced after sign-in.
-	SessionControls *ConditionalAccessSessionControls `json:"sessionControls"`
+	SessionControls *ConditionalAccessSessionControls `json:"sessionControls,omitempty"`
 
 	State      *ConditionalAccessPolicyState `json:"state,omitempty"`
 	TemplateId nullable.Type[string]         `json:"templateId,omitempty"`

@@ -50,7 +50,7 @@ type EducationClass struct {
 	// Possible values are: sis, lms, or manual.
 	ExternalSource *EducationExternalSource `json:"externalSource,omitempty"`
 
-	// The name of the external source this resources was generated from.
+	// The name of the external source from which this resource was generated.
 	ExternalSourceDetail nullable.Type[string] `json:"externalSourceDetail,omitempty"`
 
 	// Grade level of the class.

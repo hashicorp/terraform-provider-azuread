@@ -20,9 +20,9 @@ var _ SecurityCaseOperation = BaseSecurityCaseOperationImpl{}
 
 type BaseSecurityCaseOperationImpl struct {
 	// The type of action the operation represents. Possible values are: contentExport, applyTags, convertToPdf, index,
-	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. You must
-	// use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
-	// purgeData, exportReport, exportResult.
+	// estimateStatistics, addToReviewSet, holdUpdate, unknownFutureValue, purgeData, exportReport, exportResult. Use the
+	// Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum: purgeData,
+	// exportReport, exportResult.
 	Action *SecurityCaseAction `json:"action,omitempty"`
 
 	// The date and time the operation was completed.

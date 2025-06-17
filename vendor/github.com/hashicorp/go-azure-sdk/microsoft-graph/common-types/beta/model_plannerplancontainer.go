@@ -28,9 +28,9 @@ type BasePlannerPlanContainerImpl struct {
 	ODataType *string `json:"@odata.type,omitempty"`
 
 	// The type of the resource that contains the plan. For supported types, see the previous table. Possible values are:
-	// group, unknownFutureValue, roster, project, driveItem, and user. You must use the Prefer:
-	// include-unknown-enum-members request header to get the following value in this evolvable enum: roster, project,
-	// driveItem, and user. Optional.
+	// group, unknownFutureValue, roster, project, driveItem, user, teamsChannel, and plannerTask. Use the Prefer:
+	// include-unknown-enum-members request header to get the following values in this evolvable enum: roster, project,
+	// driveItem, user, teamsChannel, and plannerTask. Optional.
 	Type *PlannerContainerType `json:"type,omitempty"`
 
 	// The full canonical URL of the container. Optional.

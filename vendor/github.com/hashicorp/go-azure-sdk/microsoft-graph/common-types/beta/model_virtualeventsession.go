@@ -22,6 +22,10 @@ type VirtualEventSession struct {
 	// The virtual event session start time.
 	StartDateTime *DateTimeTimeZone `json:"startDateTime,omitempty"`
 
+	// The URL of the video on demand (VOD) for Microsoft Teams events that allows webinar and town hall organizers to
+	// quickly publish and share event recordings.
+	VideoOnDemandWebUrl nullable.Type[string] `json:"videoOnDemandWebUrl,omitempty"`
+
 	// Fields inherited from OnlineMeetingBase
 
 	// Indicates whether attendees can turn on their camera.
@@ -30,15 +34,22 @@ type VirtualEventSession struct {
 	// Indicates whether attendees can turn on their microphone.
 	AllowAttendeeToEnableMic nullable.Type[bool] `json:"allowAttendeeToEnableMic,omitempty"`
 
-	AllowBreakoutRooms nullable.Type[bool]      `json:"allowBreakoutRooms,omitempty"`
-	AllowLiveShare     *MeetingLiveShareOptions `json:"allowLiveShare,omitempty"`
+	// Indicates whether breakout rooms are enabled for the meeting.
+	AllowBreakoutRooms nullable.Type[bool] `json:"allowBreakoutRooms,omitempty"`
 
-	// Specifies the mode of meeting chat.
+	// Indicates whether copying and sharing meeting content is enabled for the meeting.
+	AllowCopyingAndSharingMeetingContent nullable.Type[bool] `json:"allowCopyingAndSharingMeetingContent,omitempty"`
+
+	// Indicates whether live share is enabled for the meeting. Possible values are: enabled, disabled, unknownFutureValue.
+	AllowLiveShare *MeetingLiveShareOptions `json:"allowLiveShare,omitempty"`
+
+	// Specifies the mode of meeting chat. Possible values are: enabled, disabled, limited, unknownFutureValue.
 	AllowMeetingChat *MeetingChatMode `json:"allowMeetingChat,omitempty"`
 
 	// Specifies if participants are allowed to rename themselves in an instance of the meeting.
 	AllowParticipantsToChangeName nullable.Type[bool] `json:"allowParticipantsToChangeName,omitempty"`
 
+	// Indicates whether PowerPoint live is enabled for the meeting.
 	AllowPowerPointSharing nullable.Type[bool] `json:"allowPowerPointSharing,omitempty"`
 
 	// Indicates whether recording is enabled for the meeting.
@@ -50,9 +61,15 @@ type VirtualEventSession struct {
 	// Indicates whether transcription is enabled for the meeting.
 	AllowTranscription nullable.Type[bool] `json:"allowTranscription,omitempty"`
 
+	// Indicates whether whiteboard is enabled for the meeting.
 	AllowWhiteboard nullable.Type[bool] `json:"allowWhiteboard,omitempty"`
 
-	// Specifies who can be a presenter in a meeting.
+	// Specifies the users who can admit from the lobby. Possible values are: organizerAndCoOrganizersAndPresenters,
+	// organizerAndCoOrganizers, unknownFutureValue.
+	AllowedLobbyAdmitters *AllowedLobbyAdmitterRoles `json:"allowedLobbyAdmitters,omitempty"`
+
+	// Specifies who can be a presenter in a meeting. Possible values are: everyone, organization, roleIsPresenter,
+	// organizer, unknownFutureValue.
 	AllowedPresenters *OnlineMeetingPresenters `json:"allowedPresenters,omitempty"`
 
 	// Specifies whose identity is anonymized in the meeting. Possible values are: attendee. The attendee value can't be
@@ -68,7 +85,10 @@ type VirtualEventSession struct {
 	// The chat information associated with this online meeting.
 	ChatInfo *ChatInfo `json:"chatInfo,omitempty"`
 
-	ChatRestrictions            *ChatRestrictions   `json:"chatRestrictions,omitempty"`
+	// Specifies the configuration settings for meeting chat restrictions.
+	ChatRestrictions *ChatRestrictions `json:"chatRestrictions,omitempty"`
+
+	// Indicates whether end-to-end encryption (E2EE) is enabled for the online meeting.
 	IsEndToEndEncryptionEnabled nullable.Type[bool] `json:"isEndToEndEncryptionEnabled,omitempty"`
 
 	// Indicates whether to announce when callers join or leave.
@@ -122,37 +142,39 @@ type VirtualEventSession struct {
 
 func (s VirtualEventSession) OnlineMeetingBase() BaseOnlineMeetingBaseImpl {
 	return BaseOnlineMeetingBaseImpl{
-		AllowAttendeeToEnableCamera:    s.AllowAttendeeToEnableCamera,
-		AllowAttendeeToEnableMic:       s.AllowAttendeeToEnableMic,
-		AllowBreakoutRooms:             s.AllowBreakoutRooms,
-		AllowLiveShare:                 s.AllowLiveShare,
-		AllowMeetingChat:               s.AllowMeetingChat,
-		AllowParticipantsToChangeName:  s.AllowParticipantsToChangeName,
-		AllowPowerPointSharing:         s.AllowPowerPointSharing,
-		AllowRecording:                 s.AllowRecording,
-		AllowTeamworkReactions:         s.AllowTeamworkReactions,
-		AllowTranscription:             s.AllowTranscription,
-		AllowWhiteboard:                s.AllowWhiteboard,
-		AllowedPresenters:              s.AllowedPresenters,
-		AnonymizeIdentityForRoles:      s.AnonymizeIdentityForRoles,
-		AttendanceReports:              s.AttendanceReports,
-		AudioConferencing:              s.AudioConferencing,
-		ChatInfo:                       s.ChatInfo,
-		ChatRestrictions:               s.ChatRestrictions,
-		IsEndToEndEncryptionEnabled:    s.IsEndToEndEncryptionEnabled,
-		IsEntryExitAnnounced:           s.IsEntryExitAnnounced,
-		JoinInformation:                s.JoinInformation,
-		JoinMeetingIdSettings:          s.JoinMeetingIdSettings,
-		JoinWebUrl:                     s.JoinWebUrl,
-		LobbyBypassSettings:            s.LobbyBypassSettings,
-		RecordAutomatically:            s.RecordAutomatically,
-		ShareMeetingChatHistoryDefault: s.ShareMeetingChatHistoryDefault,
-		Subject:                        s.Subject,
-		VideoTeleconferenceId:          s.VideoTeleconferenceId,
-		WatermarkProtection:            s.WatermarkProtection,
-		Id:                             s.Id,
-		ODataId:                        s.ODataId,
-		ODataType:                      s.ODataType,
+		AllowAttendeeToEnableCamera:          s.AllowAttendeeToEnableCamera,
+		AllowAttendeeToEnableMic:             s.AllowAttendeeToEnableMic,
+		AllowBreakoutRooms:                   s.AllowBreakoutRooms,
+		AllowCopyingAndSharingMeetingContent: s.AllowCopyingAndSharingMeetingContent,
+		AllowLiveShare:                       s.AllowLiveShare,
+		AllowMeetingChat:                     s.AllowMeetingChat,
+		AllowParticipantsToChangeName:        s.AllowParticipantsToChangeName,
+		AllowPowerPointSharing:               s.AllowPowerPointSharing,
+		AllowRecording:                       s.AllowRecording,
+		AllowTeamworkReactions:               s.AllowTeamworkReactions,
+		AllowTranscription:                   s.AllowTranscription,
+		AllowWhiteboard:                      s.AllowWhiteboard,
+		AllowedLobbyAdmitters:                s.AllowedLobbyAdmitters,
+		AllowedPresenters:                    s.AllowedPresenters,
+		AnonymizeIdentityForRoles:            s.AnonymizeIdentityForRoles,
+		AttendanceReports:                    s.AttendanceReports,
+		AudioConferencing:                    s.AudioConferencing,
+		ChatInfo:                             s.ChatInfo,
+		ChatRestrictions:                     s.ChatRestrictions,
+		IsEndToEndEncryptionEnabled:          s.IsEndToEndEncryptionEnabled,
+		IsEntryExitAnnounced:                 s.IsEntryExitAnnounced,
+		JoinInformation:                      s.JoinInformation,
+		JoinMeetingIdSettings:                s.JoinMeetingIdSettings,
+		JoinWebUrl:                           s.JoinWebUrl,
+		LobbyBypassSettings:                  s.LobbyBypassSettings,
+		RecordAutomatically:                  s.RecordAutomatically,
+		ShareMeetingChatHistoryDefault:       s.ShareMeetingChatHistoryDefault,
+		Subject:                              s.Subject,
+		VideoTeleconferenceId:                s.VideoTeleconferenceId,
+		WatermarkProtection:                  s.WatermarkProtection,
+		Id:                                   s.Id,
+		ODataId:                              s.ODataId,
+		ODataType:                            s.ODataType,
 	}
 }
 

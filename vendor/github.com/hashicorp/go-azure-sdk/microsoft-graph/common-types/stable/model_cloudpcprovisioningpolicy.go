@@ -21,6 +21,11 @@ type CloudPCProvisioningPolicy struct {
 	// how to get the assignments relationship, see Get cloudPcProvisioningPolicy.
 	Assignments *[]CloudPCProvisioningPolicyAssignment `json:"assignments,omitempty"`
 
+	// Indicates the Windows Autopatch settings for Cloud PCs using this provisioning policy. The settings take effect when
+	// the tenant enrolls in Autopatch and the managedType of the microsoftManagedDesktop property is set as starterManaged.
+	// Supports $select.
+	Autopatch *CloudPCProvisioningPolicyAutopatch `json:"autopatch,omitempty"`
+
 	// The display name of the Cloud PC group that the Cloud PCs reside in. Read-only.
 	CloudPCGroupDisplayName nullable.Type[string] `json:"cloudPcGroupDisplayName,omitempty"`
 

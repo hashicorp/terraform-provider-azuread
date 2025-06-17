@@ -13,7 +13,8 @@ import (
 var _ Entity = UserSignUpMetric{}
 
 type UserSignUpMetric struct {
-	AppId nullable.Type[string] `json:"appId,omitempty"`
+	AppId   nullable.Type[string] `json:"appId,omitempty"`
+	Browser nullable.Type[string] `json:"browser,omitempty"`
 
 	// The total number of users who signed up in the specified period. Supports $filter (eq).
 	Count *int64 `json:"count,omitempty"`

@@ -13,6 +13,10 @@ import (
 var _ ChangeTrackedEntity = TimeOffReason{}
 
 type TimeOffReason struct {
+	// The code of the timeOffReason to represent an external identifier. This field must be unique within the team in
+	// Microsoft Teams and uses an alphanumeric format, with a maximum of 100 characters.
+	Code nullable.Type[string] `json:"code,omitempty"`
+
 	// The name of the timeOffReason. Required.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
@@ -24,6 +28,9 @@ type TimeOffReason struct {
 	IsActive nullable.Type[bool] `json:"isActive,omitempty"`
 
 	// Fields inherited from ChangeTrackedEntity
+
+	// Identity of the creator of the entity.
+	CreatedBy IdentitySet `json:"createdBy"`
 
 	// The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example,
 	// midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
@@ -53,6 +60,7 @@ type TimeOffReason struct {
 
 func (s TimeOffReason) ChangeTrackedEntity() BaseChangeTrackedEntityImpl {
 	return BaseChangeTrackedEntityImpl{
+		CreatedBy:            s.CreatedBy,
 		CreatedDateTime:      s.CreatedDateTime,
 		LastModifiedBy:       s.LastModifiedBy,
 		LastModifiedDateTime: s.LastModifiedDateTime,
@@ -101,6 +109,7 @@ var _ json.Unmarshaler = &TimeOffReason{}
 
 func (s *TimeOffReason) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
+		Code                 nullable.Type[string] `json:"code,omitempty"`
 		DisplayName          nullable.Type[string] `json:"displayName,omitempty"`
 		IconType             TimeOffReasonIconType `json:"iconType"`
 		IsActive             nullable.Type[bool]   `json:"isActive,omitempty"`
@@ -114,6 +123,7 @@ func (s *TimeOffReason) UnmarshalJSON(bytes []byte) error {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.Code = decoded.Code
 	s.DisplayName = decoded.DisplayName
 	s.IconType = decoded.IconType
 	s.IsActive = decoded.IsActive
@@ -126,6 +136,14 @@ func (s *TimeOffReason) UnmarshalJSON(bytes []byte) error {
 	var temp map[string]json.RawMessage
 	if err := json.Unmarshal(bytes, &temp); err != nil {
 		return fmt.Errorf("unmarshaling TimeOffReason into map[string]json.RawMessage: %+v", err)
+	}
+
+	if v, ok := temp["createdBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'CreatedBy' for 'TimeOffReason': %+v", err)
+		}
+		s.CreatedBy = impl
 	}
 
 	if v, ok := temp["lastModifiedBy"]; ok {

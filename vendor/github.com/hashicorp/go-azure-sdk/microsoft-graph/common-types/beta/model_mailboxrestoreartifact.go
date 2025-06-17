@@ -3,6 +3,7 @@ package beta
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/go-azure-sdk/sdk/nullable"
 )
@@ -10,14 +11,23 @@ import (
 // Copyright (c) HashiCorp Inc. All rights reserved.
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
-var _ RestoreArtifactBase = MailboxRestoreArtifact{}
+type MailboxRestoreArtifact interface {
+	Entity
+	RestoreArtifactBase
+	MailboxRestoreArtifact() BaseMailboxRestoreArtifactImpl
+}
 
-type MailboxRestoreArtifact struct {
-	// The new restored folder identifier for the user.
+var _ MailboxRestoreArtifact = BaseMailboxRestoreArtifactImpl{}
+
+type BaseMailboxRestoreArtifactImpl struct {
+	// The newly restored folder identifier for the user.
 	RestoredFolderId nullable.Type[string] `json:"restoredFolderId,omitempty"`
 
 	// The new restored folder name.
 	RestoredFolderName nullable.Type[string] `json:"restoredFolderName,omitempty"`
+
+	// The number of items that are being restored in the folder.
+	RestoredItemCount nullable.Type[int64] `json:"restoredItemCount,omitempty"`
 
 	// Fields inherited from RestoreArtifactBase
 
@@ -55,7 +65,11 @@ type MailboxRestoreArtifact struct {
 	OmitDiscriminatedValue bool `json:"-"`
 }
 
-func (s MailboxRestoreArtifact) RestoreArtifactBase() BaseRestoreArtifactBaseImpl {
+func (s BaseMailboxRestoreArtifactImpl) MailboxRestoreArtifact() BaseMailboxRestoreArtifactImpl {
+	return s
+}
+
+func (s BaseMailboxRestoreArtifactImpl) RestoreArtifactBase() BaseRestoreArtifactBaseImpl {
 	return BaseRestoreArtifactBaseImpl{
 		CompletionDateTime: s.CompletionDateTime,
 		DestinationType:    s.DestinationType,
@@ -69,7 +83,7 @@ func (s MailboxRestoreArtifact) RestoreArtifactBase() BaseRestoreArtifactBaseImp
 	}
 }
 
-func (s MailboxRestoreArtifact) Entity() BaseEntityImpl {
+func (s BaseMailboxRestoreArtifactImpl) Entity() BaseEntityImpl {
 	return BaseEntityImpl{
 		Id:        s.Id,
 		ODataId:   s.ODataId,
@@ -77,19 +91,42 @@ func (s MailboxRestoreArtifact) Entity() BaseEntityImpl {
 	}
 }
 
-var _ json.Marshaler = MailboxRestoreArtifact{}
+var _ MailboxRestoreArtifact = RawMailboxRestoreArtifactImpl{}
 
-func (s MailboxRestoreArtifact) MarshalJSON() ([]byte, error) {
-	type wrapper MailboxRestoreArtifact
+// RawMailboxRestoreArtifactImpl is returned when the Discriminated Value doesn't match any of the defined types
+// NOTE: this should only be used when a type isn't defined for this type of Object (as a workaround)
+// and is used only for Deserialization (e.g. this cannot be used as a Request Payload).
+type RawMailboxRestoreArtifactImpl struct {
+	mailboxRestoreArtifact BaseMailboxRestoreArtifactImpl
+	Type                   string
+	Values                 map[string]interface{}
+}
+
+func (s RawMailboxRestoreArtifactImpl) MailboxRestoreArtifact() BaseMailboxRestoreArtifactImpl {
+	return s.mailboxRestoreArtifact
+}
+
+func (s RawMailboxRestoreArtifactImpl) RestoreArtifactBase() BaseRestoreArtifactBaseImpl {
+	return s.mailboxRestoreArtifact.RestoreArtifactBase()
+}
+
+func (s RawMailboxRestoreArtifactImpl) Entity() BaseEntityImpl {
+	return s.mailboxRestoreArtifact.Entity()
+}
+
+var _ json.Marshaler = BaseMailboxRestoreArtifactImpl{}
+
+func (s BaseMailboxRestoreArtifactImpl) MarshalJSON() ([]byte, error) {
+	type wrapper BaseMailboxRestoreArtifactImpl
 	wrapped := wrapper(s)
 	encoded, err := json.Marshal(wrapped)
 	if err != nil {
-		return nil, fmt.Errorf("marshaling MailboxRestoreArtifact: %+v", err)
+		return nil, fmt.Errorf("marshaling BaseMailboxRestoreArtifactImpl: %+v", err)
 	}
 
 	var decoded map[string]interface{}
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
-		return nil, fmt.Errorf("unmarshaling MailboxRestoreArtifact: %+v", err)
+		return nil, fmt.Errorf("unmarshaling BaseMailboxRestoreArtifactImpl: %+v", err)
 	}
 
 	delete(decoded, "restoredFolderName")
@@ -100,8 +137,44 @@ func (s MailboxRestoreArtifact) MarshalJSON() ([]byte, error) {
 
 	encoded, err = json.Marshal(decoded)
 	if err != nil {
-		return nil, fmt.Errorf("re-marshaling MailboxRestoreArtifact: %+v", err)
+		return nil, fmt.Errorf("re-marshaling BaseMailboxRestoreArtifactImpl: %+v", err)
 	}
 
 	return encoded, nil
+}
+
+func UnmarshalMailboxRestoreArtifactImplementation(input []byte) (MailboxRestoreArtifact, error) {
+	if input == nil {
+		return nil, nil
+	}
+
+	var temp map[string]interface{}
+	if err := json.Unmarshal(input, &temp); err != nil {
+		return nil, fmt.Errorf("unmarshaling MailboxRestoreArtifact into map[string]interface: %+v", err)
+	}
+
+	var value string
+	if v, ok := temp["@odata.type"]; ok {
+		value = fmt.Sprintf("%v", v)
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.granularMailboxRestoreArtifact") {
+		var out GranularMailboxRestoreArtifact
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into GranularMailboxRestoreArtifact: %+v", err)
+		}
+		return out, nil
+	}
+
+	var parent BaseMailboxRestoreArtifactImpl
+	if err := json.Unmarshal(input, &parent); err != nil {
+		return nil, fmt.Errorf("unmarshaling into BaseMailboxRestoreArtifactImpl: %+v", err)
+	}
+
+	return RawMailboxRestoreArtifactImpl{
+		mailboxRestoreArtifact: parent,
+		Type:                   value,
+		Values:                 temp,
+	}, nil
+
 }

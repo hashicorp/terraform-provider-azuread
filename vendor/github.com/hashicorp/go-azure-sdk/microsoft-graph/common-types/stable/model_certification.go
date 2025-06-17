@@ -20,7 +20,7 @@ type Certification struct {
 	// Indicates whether the application is certified by Microsoft.
 	IsCertifiedByMicrosoft nullable.Type[bool] `json:"isCertifiedByMicrosoft,omitempty"`
 
-	// Indicates whether the application has been self-attested by the application developer or the publisher.
+	// Indicates whether the application developer or publisher completed Publisher Attestation.
 	IsPublisherAttested nullable.Type[bool] `json:"isPublisherAttested,omitempty"`
 
 	// The timestamp when the certification for the application was most recently added or updated.

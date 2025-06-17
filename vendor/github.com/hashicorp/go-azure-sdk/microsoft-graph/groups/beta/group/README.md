@@ -473,12 +473,7 @@ if model := read.Model; model != nil {
 ctx := context.TODO()
 id := group.NewGroupID("groupId")
 
-payload := group.RestoreRequest{
-	// ...
-}
-
-
-read, err := client.Restore(ctx, id, payload, group.DefaultRestoreOperationOptions())
+read, err := client.Restore(ctx, id, group.DefaultRestoreOperationOptions())
 if err != nil {
 	// handle the error
 }

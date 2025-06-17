@@ -37,8 +37,14 @@ type BaseRestoreSessionBaseImpl struct {
 	// Timestamp of the last modification of the restore session.
 	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
+	// Indicates whether the restore session was created normally or by a bulk job.
+	RestoreJobType *RestoreJobType `json:"restoreJobType,omitempty"`
+
+	// The number of metadata artifacts that belong to this restore session.
+	RestoreSessionArtifactCount *RestoreSessionArtifactCount `json:"restoreSessionArtifactCount,omitempty"`
+
 	// Status of the restore session. The value is an aggregated status of the restored artifacts. The possible values are:
-	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. You must use the Prefer:
+	// draft, activating, active, completedWithError, completed, unknownFutureValue, failed. Use the Prefer:
 	// include-unknown-enum-members request header to get the following value in this evolvable enum: failed.
 	Status *RestoreSessionStatus `json:"status,omitempty"`
 
@@ -119,14 +125,16 @@ var _ json.Unmarshaler = &BaseRestoreSessionBaseImpl{}
 
 func (s *BaseRestoreSessionBaseImpl) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		CompletedDateTime    nullable.Type[string] `json:"completedDateTime,omitempty"`
-		CreatedDateTime      nullable.Type[string] `json:"createdDateTime,omitempty"`
-		Error                *PublicError          `json:"error,omitempty"`
-		LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
-		Status               *RestoreSessionStatus `json:"status,omitempty"`
-		Id                   *string               `json:"id,omitempty"`
-		ODataId              *string               `json:"@odata.id,omitempty"`
-		ODataType            *string               `json:"@odata.type,omitempty"`
+		CompletedDateTime           nullable.Type[string]        `json:"completedDateTime,omitempty"`
+		CreatedDateTime             nullable.Type[string]        `json:"createdDateTime,omitempty"`
+		Error                       *PublicError                 `json:"error,omitempty"`
+		LastModifiedDateTime        nullable.Type[string]        `json:"lastModifiedDateTime,omitempty"`
+		RestoreJobType              *RestoreJobType              `json:"restoreJobType,omitempty"`
+		RestoreSessionArtifactCount *RestoreSessionArtifactCount `json:"restoreSessionArtifactCount,omitempty"`
+		Status                      *RestoreSessionStatus        `json:"status,omitempty"`
+		Id                          *string                      `json:"id,omitempty"`
+		ODataId                     *string                      `json:"@odata.id,omitempty"`
+		ODataType                   *string                      `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
@@ -136,6 +144,8 @@ func (s *BaseRestoreSessionBaseImpl) UnmarshalJSON(bytes []byte) error {
 	s.CreatedDateTime = decoded.CreatedDateTime
 	s.Error = decoded.Error
 	s.LastModifiedDateTime = decoded.LastModifiedDateTime
+	s.RestoreJobType = decoded.RestoreJobType
+	s.RestoreSessionArtifactCount = decoded.RestoreSessionArtifactCount
 	s.Status = decoded.Status
 	s.Id = decoded.Id
 	s.ODataId = decoded.ODataId

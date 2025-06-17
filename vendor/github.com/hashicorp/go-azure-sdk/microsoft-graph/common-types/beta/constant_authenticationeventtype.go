@@ -12,12 +12,18 @@ import (
 type AuthenticationEventType string
 
 const (
-	AuthenticationEventType_PageRenderStart    AuthenticationEventType = "pageRenderStart"
-	AuthenticationEventType_TokenIssuanceStart AuthenticationEventType = "tokenIssuanceStart"
+	AuthenticationEventType_AttributeCollectionStart  AuthenticationEventType = "attributeCollectionStart"
+	AuthenticationEventType_AttributeCollectionSubmit AuthenticationEventType = "attributeCollectionSubmit"
+	AuthenticationEventType_EmailOtpSend              AuthenticationEventType = "emailOtpSend"
+	AuthenticationEventType_PageRenderStart           AuthenticationEventType = "pageRenderStart"
+	AuthenticationEventType_TokenIssuanceStart        AuthenticationEventType = "tokenIssuanceStart"
 )
 
 func PossibleValuesForAuthenticationEventType() []string {
 	return []string{
+		string(AuthenticationEventType_AttributeCollectionStart),
+		string(AuthenticationEventType_AttributeCollectionSubmit),
+		string(AuthenticationEventType_EmailOtpSend),
 		string(AuthenticationEventType_PageRenderStart),
 		string(AuthenticationEventType_TokenIssuanceStart),
 	}
@@ -38,8 +44,11 @@ func (s *AuthenticationEventType) UnmarshalJSON(bytes []byte) error {
 
 func parseAuthenticationEventType(input string) (*AuthenticationEventType, error) {
 	vals := map[string]AuthenticationEventType{
-		"pagerenderstart":    AuthenticationEventType_PageRenderStart,
-		"tokenissuancestart": AuthenticationEventType_TokenIssuanceStart,
+		"attributecollectionstart":  AuthenticationEventType_AttributeCollectionStart,
+		"attributecollectionsubmit": AuthenticationEventType_AttributeCollectionSubmit,
+		"emailotpsend":              AuthenticationEventType_EmailOtpSend,
+		"pagerenderstart":           AuthenticationEventType_PageRenderStart,
+		"tokenissuancestart":        AuthenticationEventType_TokenIssuanceStart,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

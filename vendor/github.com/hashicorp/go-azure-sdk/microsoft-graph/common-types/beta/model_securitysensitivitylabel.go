@@ -34,7 +34,6 @@ type SecuritySensitivityLabel struct {
 	// The plaintext name of the label.
 	Name nullable.Type[string] `json:"name,omitempty"`
 
-	// The parent label associated with a child label. Null if the label has no parent.
 	Parent *SecuritySensitivityLabel `json:"parent,omitempty"`
 
 	// The sensitivity value of the label, where lower is less sensitive.

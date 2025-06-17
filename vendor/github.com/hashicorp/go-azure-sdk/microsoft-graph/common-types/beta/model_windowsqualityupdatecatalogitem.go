@@ -13,14 +13,22 @@ import (
 var _ WindowsUpdateCatalogItem = WindowsQualityUpdateCatalogItem{}
 
 type WindowsQualityUpdateCatalogItem struct {
-	// Windows quality update classification
-	Classification *WindowsQualityUpdateClassification `json:"classification,omitempty"`
+	// Windows quality update category
+	Classification *WindowsQualityUpdateCategory `json:"classification,omitempty"`
 
-	// Flag indicating if update qualifies for expedite
+	// When TRUE, indicates that the quality updates qualify for expedition. When FALSE, indicates the quality updates do
+	// not quality for expedition. Default value is FALSE. Read-only
 	IsExpeditable *bool `json:"isExpeditable,omitempty"`
 
-	// Knowledge base article id
+	// Identifies the knowledge base article associated with the Windows quality update catalog item. Read-only
 	KbArticleId *string `json:"kbArticleId,omitempty"`
+
+	// The operating system product revisions that are released as part of this quality update. Read-only.
+	ProductRevisions *[]WindowsQualityUpdateCatalogProductRevision `json:"productRevisions,omitempty"`
+
+	// The publishing cadence of the quality update. Possible values are: monthly, outOfBand. This property cannot be
+	// modified and is automatically populated when the catalog is created.
+	QualityUpdateCadence *WindowsQualityUpdateCadence `json:"qualityUpdateCadence,omitempty"`
 
 	// Fields inherited from WindowsUpdateCatalogItem
 
@@ -81,6 +89,8 @@ func (s WindowsQualityUpdateCatalogItem) MarshalJSON() ([]byte, error) {
 	if err = json.Unmarshal(encoded, &decoded); err != nil {
 		return nil, fmt.Errorf("unmarshaling WindowsQualityUpdateCatalogItem: %+v", err)
 	}
+
+	delete(decoded, "productRevisions")
 
 	if !s.OmitDiscriminatedValue {
 		decoded["@odata.type"] = "#microsoft.graph.windowsQualityUpdateCatalogItem"

@@ -12,7 +12,9 @@ import (
 
 type AppliedAuthenticationEventListener struct {
 	// The type of authentication event that triggered the custom authentication extension request. The possible values are:
-	// tokenIssuanceStart, pageRenderStart, unknownFutureValue.
+	// tokenIssuanceStart, pageRenderStart, unknownFutureValue, attributeCollectionStart, attributeCollectionSubmit,
+	// emailOtpSend. Use the Prefer: include-unknown-enum-members request header to get the following values in this
+	// evolvable enum: attributeCollectionStart, attributeCollectionSubmit, emailOtpSend.
 	EventType *AuthenticationEventType `json:"eventType,omitempty"`
 
 	// ID of the authentication event listener that was executed.

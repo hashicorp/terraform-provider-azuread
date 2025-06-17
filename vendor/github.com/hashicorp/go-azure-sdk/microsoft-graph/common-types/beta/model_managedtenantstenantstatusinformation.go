@@ -13,8 +13,8 @@ import (
 type ManagedTenantsTenantStatusInformation struct {
 	// The status of the delegated admin privilege relationship between the managing entity and the managed tenant. Possible
 	// values are: none, delegatedAdminPrivileges, unknownFutureValue, granularDelegatedAdminPrivileges,
-	// delegatedAndGranularDelegetedAdminPrivileges. You must use the Prefer: include-unknown-enum-members request header to
-	// get the following values from this evolvable enum: granularDelegatedAdminPrivileges ,
+	// delegatedAndGranularDelegetedAdminPrivileges. Use the Prefer: include-unknown-enum-members request header to get the
+	// following values from this evolvable enum: granularDelegatedAdminPrivileges ,
 	// delegatedAndGranularDelegetedAdminPrivileges. Optional. Read-only.
 	DelegatedPrivilegeStatus *ManagedTenantsDelegatedPrivilegeStatus `json:"delegatedPrivilegeStatus,omitempty"`
 

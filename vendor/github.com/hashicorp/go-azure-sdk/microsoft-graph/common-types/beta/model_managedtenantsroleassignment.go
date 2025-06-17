@@ -6,8 +6,8 @@ package beta
 type ManagedTenantsRoleAssignment struct {
 	// The type of the admin relationship(s) associated with the role assignment. Possible values are: none,
 	// delegatedAdminPrivileges, unknownFutureValue, granularDelegatedAdminPrivileges,
-	// delegatedAndGranularDelegetedAdminPrivileges. Note that you must use the Prefer: include-unknown-enum-members request
-	// header to get the following values from this evolvable enum: granularDelegatedAdminPrivileges ,
+	// delegatedAndGranularDelegetedAdminPrivileges. Use the Prefer: include-unknown-enum-members request header to get the
+	// following values from this evolvable enum: granularDelegatedAdminPrivileges ,
 	// delegatedAndGranularDelegetedAdminPrivileges.
 	AssignmentType *ManagedTenantsDelegatedPrivilegeStatus `json:"assignmentType,omitempty"`
 

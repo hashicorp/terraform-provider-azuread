@@ -13,6 +13,8 @@ import (
 var _ ManagedAppStatus = ManagedAppStatusRaw{}
 
 type ManagedAppStatusRaw struct {
+	// Status report content.
+	Content *Json `json:"content,omitempty"`
 
 	// Fields inherited from ManagedAppStatus
 

@@ -20,8 +20,8 @@ type CloudPCDeviceImage struct {
 	// The error code of the status of the image that indicates why the upload failed, if applicable. Possible values are:
 	// internalServerError, sourceImageNotFound, osVersionNotSupported, sourceImageInvalid, sourceImageNotGeneralized,
 	// unknownFutureValue, vmAlreadyAzureAdJoined, paidSourceImageNotSupport, sourceImageNotSupportCustomizeVMName,
-	// sourceImageSizeExceedsLimitation. Note that you must use the Prefer: include-unknown-enum-members request header to
-	// get the following values from this evolvable enum: vmAlreadyAzureAdJoined, paidSourceImageNotSupport,
+	// sourceImageSizeExceedsLimitation. Use the Prefer: include-unknown-enum-members request header to get the following
+	// values from this evolvable enum: vmAlreadyAzureAdJoined, paidSourceImageNotSupport,
 	// sourceImageNotSupportCustomizeVMName, sourceImageSizeExceedsLimitation. Read-only.
 	ErrorCode *CloudPCDeviceImageErrorCode `json:"errorCode,omitempty"`
 

@@ -31,8 +31,10 @@ const (
 	DeviceType_Nokia             DeviceType = "nokia"
 	DeviceType_Palm              DeviceType = "palm"
 	DeviceType_SurfaceHub        DeviceType = "surfaceHub"
+	DeviceType_TvOS              DeviceType = "tvOS"
 	DeviceType_Unix              DeviceType = "unix"
 	DeviceType_Unknown           DeviceType = "unknown"
+	DeviceType_VisionOS          DeviceType = "visionOS"
 	DeviceType_WinCE             DeviceType = "winCE"
 	DeviceType_WinEmbedded       DeviceType = "winEmbedded"
 	DeviceType_WinMO6            DeviceType = "winMO6"
@@ -62,8 +64,10 @@ func PossibleValuesForDeviceType() []string {
 		string(DeviceType_Nokia),
 		string(DeviceType_Palm),
 		string(DeviceType_SurfaceHub),
+		string(DeviceType_TvOS),
 		string(DeviceType_Unix),
 		string(DeviceType_Unknown),
+		string(DeviceType_VisionOS),
 		string(DeviceType_WinCE),
 		string(DeviceType_WinEmbedded),
 		string(DeviceType_WinMO6),
@@ -107,8 +111,10 @@ func parseDeviceType(input string) (*DeviceType, error) {
 		"nokia":             DeviceType_Nokia,
 		"palm":              DeviceType_Palm,
 		"surfacehub":        DeviceType_SurfaceHub,
+		"tvos":              DeviceType_TvOS,
 		"unix":              DeviceType_Unix,
 		"unknown":           DeviceType_Unknown,
+		"visionos":          DeviceType_VisionOS,
 		"wince":             DeviceType_WinCE,
 		"winembedded":       DeviceType_WinEmbedded,
 		"winmo6":            DeviceType_WinMO6,

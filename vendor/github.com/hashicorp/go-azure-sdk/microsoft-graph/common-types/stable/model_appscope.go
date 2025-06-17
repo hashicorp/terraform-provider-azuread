@@ -13,12 +13,10 @@ import (
 var _ Entity = AppScope{}
 
 type AppScope struct {
-	// Provides the display name of the app-specific resource represented by the app scope. Provided for display purposes
-	// since appScopeId is often an immutable, non-human-readable id. Read-only.
+	// Provides the display name of the app-specific resource represented by the app scope. Read only.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// Describes the type of app-specific resource represented by the app scope and is provided for display purposes, so a
-	// user interface can convey to the user the kind of app specific resource represented by the app scope. Read-only.
+	// Describes the type of app-specific resource represented by the app scope. Read-only.
 	Type nullable.Type[string] `json:"type,omitempty"`
 
 	// Fields inherited from Entity
@@ -59,7 +57,6 @@ func (s AppScope) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling AppScope: %+v", err)
 	}
 
-	delete(decoded, "displayName")
 	delete(decoded, "type")
 
 	if !s.OmitDiscriminatedValue {

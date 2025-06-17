@@ -53,7 +53,9 @@ type AndroidForWorkCompliancePolicy struct {
 	// Android 11+.
 	RequiredPasswordComplexity *AndroidRequiredPasswordComplexity `json:"requiredPasswordComplexity,omitempty"`
 
-	// Devices must not be jailbroken or rooted.
+	// Indicates the device should not be rooted. When TRUE, if the device is detected as rooted it will be reported
+	// non-compliant. When FALSE, the device is not reported as non-compliant regardless of device rooted state. Default is
+	// FALSE.
 	SecurityBlockJailbrokenDevices *bool `json:"securityBlockJailbrokenDevices,omitempty"`
 
 	// Disable USB debugging on Android devices.
@@ -138,7 +140,8 @@ type AndroidForWorkCompliancePolicy struct {
 	// List of Scope Tags for this Entity instance.
 	RoleScopeTagIds *[]string `json:"roleScopeTagIds,omitempty"`
 
-	// The list of scheduled action for this rule
+	// The list of scheduled action per rule for this compliance policy. This is a required property when creating any
+	// individual per-platform compliance policies.
 	ScheduledActionsForRule *[]DeviceComplianceScheduledActionForRule `json:"scheduledActionsForRule,omitempty"`
 
 	// Device compliance users status overview

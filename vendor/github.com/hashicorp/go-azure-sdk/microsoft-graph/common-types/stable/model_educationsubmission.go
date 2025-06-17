@@ -13,12 +13,22 @@ import (
 var _ Entity = EducationSubmission{}
 
 type EducationSubmission struct {
+	// The unique identifier for the assignment with which this submission is associated. A submission is always associated
+	// with one and only one assignment.
+	AssignmentId nullable.Type[string] `json:"assignmentId,omitempty"`
+
 	// The user that marked the submission as excused.
 	ExcusedBy *IdentitySet `json:"excusedBy,omitempty"`
 
 	// The time that the submission was excused. The timestamp type represents date and time information using ISO 8601
 	// format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	ExcusedDateTime nullable.Type[string] `json:"excusedDateTime,omitempty"`
+
+	// The identities of those who modified the submission.
+	LastModifiedBy *IdentitySet `json:"lastModifiedBy,omitempty"`
+
+	// The date and time the submission was modified.
+	LastModifiedDateTime nullable.Type[string] `json:"lastModifiedDateTime,omitempty"`
 
 	Outcomes *[]EducationOutcome `json:"outcomes,omitempty"`
 
@@ -44,7 +54,7 @@ type EducationSubmission struct {
 	// 8601 format and is always in UTC. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z.
 	ReturnedDateTime nullable.Type[string] `json:"returnedDateTime,omitempty"`
 
-	// Read-only. Possible values are: excused, reassigned, returned, submitted and working. You must use the Prefer:
+	// Read-only. Possible values are: excused, reassigned, returned, submitted and working. Use the Prefer:
 	// include-unknown-enum-members request header to get the following values in this evolvable enum: excused and
 	// reassigned.
 	Status *EducationSubmissionStatus `json:"status,omitempty"`
@@ -108,8 +118,11 @@ func (s EducationSubmission) MarshalJSON() ([]byte, error) {
 		return nil, fmt.Errorf("unmarshaling EducationSubmission: %+v", err)
 	}
 
+	delete(decoded, "assignmentId")
 	delete(decoded, "excusedBy")
 	delete(decoded, "excusedDateTime")
+	delete(decoded, "lastModifiedBy")
+	delete(decoded, "lastModifiedDateTime")
 	delete(decoded, "reassignedBy")
 	delete(decoded, "reassignedDateTime")
 	delete(decoded, "resourcesFolderUrl")
@@ -138,25 +151,29 @@ var _ json.Unmarshaler = &EducationSubmission{}
 
 func (s *EducationSubmission) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		ExcusedDateTime     nullable.Type[string]          `json:"excusedDateTime,omitempty"`
-		ReassignedDateTime  nullable.Type[string]          `json:"reassignedDateTime,omitempty"`
-		Resources           *[]EducationSubmissionResource `json:"resources,omitempty"`
-		ResourcesFolderUrl  nullable.Type[string]          `json:"resourcesFolderUrl,omitempty"`
-		ReturnedDateTime    nullable.Type[string]          `json:"returnedDateTime,omitempty"`
-		Status              *EducationSubmissionStatus     `json:"status,omitempty"`
-		SubmittedDateTime   nullable.Type[string]          `json:"submittedDateTime,omitempty"`
-		SubmittedResources  *[]EducationSubmissionResource `json:"submittedResources,omitempty"`
-		UnsubmittedDateTime nullable.Type[string]          `json:"unsubmittedDateTime,omitempty"`
-		WebUrl              nullable.Type[string]          `json:"webUrl,omitempty"`
-		Id                  *string                        `json:"id,omitempty"`
-		ODataId             *string                        `json:"@odata.id,omitempty"`
-		ODataType           *string                        `json:"@odata.type,omitempty"`
+		AssignmentId         nullable.Type[string]          `json:"assignmentId,omitempty"`
+		ExcusedDateTime      nullable.Type[string]          `json:"excusedDateTime,omitempty"`
+		LastModifiedDateTime nullable.Type[string]          `json:"lastModifiedDateTime,omitempty"`
+		ReassignedDateTime   nullable.Type[string]          `json:"reassignedDateTime,omitempty"`
+		Resources            *[]EducationSubmissionResource `json:"resources,omitempty"`
+		ResourcesFolderUrl   nullable.Type[string]          `json:"resourcesFolderUrl,omitempty"`
+		ReturnedDateTime     nullable.Type[string]          `json:"returnedDateTime,omitempty"`
+		Status               *EducationSubmissionStatus     `json:"status,omitempty"`
+		SubmittedDateTime    nullable.Type[string]          `json:"submittedDateTime,omitempty"`
+		SubmittedResources   *[]EducationSubmissionResource `json:"submittedResources,omitempty"`
+		UnsubmittedDateTime  nullable.Type[string]          `json:"unsubmittedDateTime,omitempty"`
+		WebUrl               nullable.Type[string]          `json:"webUrl,omitempty"`
+		Id                   *string                        `json:"id,omitempty"`
+		ODataId              *string                        `json:"@odata.id,omitempty"`
+		ODataType            *string                        `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
+	s.AssignmentId = decoded.AssignmentId
 	s.ExcusedDateTime = decoded.ExcusedDateTime
+	s.LastModifiedDateTime = decoded.LastModifiedDateTime
 	s.ReassignedDateTime = decoded.ReassignedDateTime
 	s.Resources = decoded.Resources
 	s.ResourcesFolderUrl = decoded.ResourcesFolderUrl
@@ -181,6 +198,14 @@ func (s *EducationSubmission) UnmarshalJSON(bytes []byte) error {
 			return fmt.Errorf("unmarshaling field 'ExcusedBy' for 'EducationSubmission': %+v", err)
 		}
 		s.ExcusedBy = &impl
+	}
+
+	if v, ok := temp["lastModifiedBy"]; ok {
+		impl, err := UnmarshalIdentitySetImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'LastModifiedBy' for 'EducationSubmission': %+v", err)
+		}
+		s.LastModifiedBy = &impl
 	}
 
 	if v, ok := temp["outcomes"]; ok {

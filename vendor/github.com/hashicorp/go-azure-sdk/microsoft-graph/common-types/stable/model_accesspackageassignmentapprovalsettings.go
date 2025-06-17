@@ -14,6 +14,9 @@ type AccessPackageAssignmentApprovalSettings struct {
 	// If false, then approval isn't required for updates to requests in this policy.
 	IsApprovalRequiredForUpdate nullable.Type[bool] `json:"isApprovalRequiredForUpdate,omitempty"`
 
+	// If false, then requestor justification isn't required for updates to requests in this policy.
+	IsRequestorJustificationRequired nullable.Type[bool] `json:"isRequestorJustificationRequired,omitempty"`
+
 	// The OData ID of this entity
 	ODataId *string `json:"@odata.id,omitempty"`
 

@@ -9,6 +9,7 @@ import (
 // Licensed under the MIT License. See NOTICE.txt in the project root for license information.
 
 type SolutionsRoot struct {
+	Approval      *ApprovalSolution  `json:"approval,omitempty"`
 	BackupRestore *BackupRestoreRoot `json:"backupRestore,omitempty"`
 
 	// A collection of businesses in Microsoft Bookings. Read-only. Nullable.

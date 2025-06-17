@@ -13,13 +13,11 @@ type EnrollmentTimeDeviceMembershipTargetType string
 
 const (
 	EnrollmentTimeDeviceMembershipTargetType_StaticSecurityGroup EnrollmentTimeDeviceMembershipTargetType = "staticSecurityGroup"
-	EnrollmentTimeDeviceMembershipTargetType_Unknown             EnrollmentTimeDeviceMembershipTargetType = "unknown"
 )
 
 func PossibleValuesForEnrollmentTimeDeviceMembershipTargetType() []string {
 	return []string{
 		string(EnrollmentTimeDeviceMembershipTargetType_StaticSecurityGroup),
-		string(EnrollmentTimeDeviceMembershipTargetType_Unknown),
 	}
 }
 
@@ -39,7 +37,6 @@ func (s *EnrollmentTimeDeviceMembershipTargetType) UnmarshalJSON(bytes []byte) e
 func parseEnrollmentTimeDeviceMembershipTargetType(input string) (*EnrollmentTimeDeviceMembershipTargetType, error) {
 	vals := map[string]EnrollmentTimeDeviceMembershipTargetType{
 		"staticsecuritygroup": EnrollmentTimeDeviceMembershipTargetType_StaticSecurityGroup,
-		"unknown":             EnrollmentTimeDeviceMembershipTargetType_Unknown,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {
 		return &v, nil

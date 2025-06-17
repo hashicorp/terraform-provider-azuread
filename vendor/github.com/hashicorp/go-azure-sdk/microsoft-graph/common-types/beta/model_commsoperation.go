@@ -189,10 +189,42 @@ func UnmarshalCommsOperationImplementation(input []byte) (CommsOperation, error)
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.startRecordingOperation") {
+		var out StartRecordingOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StartRecordingOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.startTranscriptionOperation") {
+		var out StartTranscriptionOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StartTranscriptionOperation: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.stopHoldMusicOperation") {
 		var out StopHoldMusicOperation
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into StopHoldMusicOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.stopRecordingOperation") {
+		var out StopRecordingOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StopRecordingOperation: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.stopTranscriptionOperation") {
+		var out StopTranscriptionOperation
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StopTranscriptionOperation: %+v", err)
 		}
 		return out, nil
 	}

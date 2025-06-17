@@ -25,15 +25,16 @@ type Domain struct {
 	// AvailableImmediately or EmailVerifiedDomainTakeoverScheduled.
 	AvailabilityStatus nullable.Type[string] `json:"availabilityStatus,omitempty"`
 
-	// The objects such as users and groups that reference the domain ID. Read-only, Nullable. Supports $expand and $filter
-	// by the OData type of objects returned. For example, /domains/{domainId}/domainNameReferences/microsoft.graph.user and
+	// The objects such as users and groups that reference the domain ID. Read-only, Nullable. Does not support $expand.
+	// Supports $filter by the OData type of objects returned. For example,
+	// /domains/{domainId}/domainNameReferences/microsoft.graph.user and
 	// /domains/{domainId}/domainNameReferences/microsoft.graph.group.
 	DomainNameReferences *[]DirectoryObject `json:"domainNameReferences,omitempty"`
 
 	// List of OData IDs for `DomainNameReferences` to bind to this entity
 	DomainNameReferences_ODataBind *[]string `json:"domainNameReferences@odata.bind,omitempty"`
 
-	// Domain settings configured by customer when federated with Microsoft Entra ID. Supports $expand.
+	// Domain settings configured by customer when federated with Microsoft Entra ID. Does not support $expand.
 	FederationConfiguration *[]InternalDomainFederation `json:"federationConfiguration,omitempty"`
 
 	// The value of the property is false if the DNS record management of the domain is delegated to Microsoft 365.
@@ -65,7 +66,7 @@ type Domain struct {
 	RootDomain *Domain `json:"rootDomain,omitempty"`
 
 	// DNS records the customer adds to the DNS zone file of the domain before the domain can be used by Microsoft Online
-	// services. Read-only, Nullable. Supports $expand.
+	// services. Read-only, Nullable. Does not support $expand.
 	ServiceConfigurationRecords *[]DomainDnsRecord `json:"serviceConfigurationRecords,omitempty"`
 
 	SharedEmailDomainInvitations *[]SharedEmailDomainInvitation `json:"sharedEmailDomainInvitations,omitempty"`
@@ -81,7 +82,7 @@ type Domain struct {
 	SupportedServices *[]string `json:"supportedServices,omitempty"`
 
 	// DNS records that the customer adds to the DNS zone file of the domain before the customer can complete domain
-	// ownership verification with Microsoft Entra ID. Read-only, Nullable. Supports $expand.
+	// ownership verification with Microsoft Entra ID. Read-only, Nullable. Does not support $expand.
 	VerificationDnsRecords *[]DomainDnsRecord `json:"verificationDnsRecords,omitempty"`
 
 	// Fields inherited from Entity

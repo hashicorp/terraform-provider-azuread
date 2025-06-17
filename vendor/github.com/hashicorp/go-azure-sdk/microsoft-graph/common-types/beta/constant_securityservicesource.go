@@ -23,6 +23,7 @@ const (
 	SecurityServiceSource_MicrosoftDefenderForOffice365  SecurityServiceSource = "microsoftDefenderForOffice365"
 	SecurityServiceSource_MicrosoftInsiderRiskManagement SecurityServiceSource = "microsoftInsiderRiskManagement"
 	SecurityServiceSource_MicrosoftSentinel              SecurityServiceSource = "microsoftSentinel"
+	SecurityServiceSource_MicrosoftThreatIntelligence    SecurityServiceSource = "microsoftThreatIntelligence"
 	SecurityServiceSource_Unknown                        SecurityServiceSource = "unknown"
 )
 
@@ -39,6 +40,7 @@ func PossibleValuesForSecurityServiceSource() []string {
 		string(SecurityServiceSource_MicrosoftDefenderForOffice365),
 		string(SecurityServiceSource_MicrosoftInsiderRiskManagement),
 		string(SecurityServiceSource_MicrosoftSentinel),
+		string(SecurityServiceSource_MicrosoftThreatIntelligence),
 		string(SecurityServiceSource_Unknown),
 	}
 }
@@ -69,6 +71,7 @@ func parseSecurityServiceSource(input string) (*SecurityServiceSource, error) {
 		"microsoftdefenderforoffice365":  SecurityServiceSource_MicrosoftDefenderForOffice365,
 		"microsoftinsiderriskmanagement": SecurityServiceSource_MicrosoftInsiderRiskManagement,
 		"microsoftsentinel":              SecurityServiceSource_MicrosoftSentinel,
+		"microsoftthreatintelligence":    SecurityServiceSource_MicrosoftThreatIntelligence,
 		"unknown":                        SecurityServiceSource_Unknown,
 	}
 	if v, ok := vals[strings.ToLower(input)]; ok {

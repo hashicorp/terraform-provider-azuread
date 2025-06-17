@@ -13,27 +13,35 @@ import (
 var _ RoleAssignment = DeviceAndAppManagementRoleAssignment{}
 
 type DeviceAndAppManagementRoleAssignment struct {
-	// The list of ids of role member security groups. These are IDs from Azure Active Directory.
+	// Indicates the list of role member security group Entra IDs. For example: {dec942f4-6777-4998-96b4-522e383b08e2}.
 	Members *[]string `json:"members,omitempty"`
 
-	// The set of Role Scope Tags defined on the Role Assignment.
+	// Indicates the set of role scope tag IDs for the role assignment. These scope tags will limit the visibility of any
+	// Intune resources to those that match any of the scope tags in this collection.
+	RoleScopeTagIds *[]string `json:"roleScopeTagIds,omitempty"`
+
+	// Indicates the set of scope tags for the role assignment. These scope tags will limit the visibility of any Intune
+	// resources to those that match any of the scope tags in this collection.
 	RoleScopeTags *[]RoleScopeTag `json:"roleScopeTags,omitempty"`
 
 	// Fields inherited from RoleAssignment
 
-	// Description of the Role Assignment.
+	// Indicates the description of the role assignment. For example: 'All administrators, employees and scope tags
+	// associated with the Houston office.' Max length is 1024 characters.
 	Description nullable.Type[string] `json:"description,omitempty"`
 
-	// The display or friendly name of the role Assignment.
+	// Indicates the display name of the role assignment. For example: 'Houston administrators and users'. Max length is 128
+	// characters.
 	DisplayName nullable.Type[string] `json:"displayName,omitempty"`
 
-	// List of ids of role scope member security groups. These are IDs from Azure Active Directory.
+	// Indicates the list of resource scope security group Entra IDs. For example: {dec942f4-6777-4998-96b4-522e383b08e2}.
 	ResourceScopes *[]string `json:"resourceScopes,omitempty"`
 
-	// Role definition this assignment is part of.
+	// Indicates the role definition for this role assignment.
 	RoleDefinition *RoleDefinition `json:"roleDefinition,omitempty"`
 
-	// List of ids of role scope member security groups. These are IDs from Azure Active Directory.
+	// Indicates the list of role scope member security groups Entra IDs. For example,
+	// {dec942f4-6777-4998-96b4-522e383b08e2}.
 	ScopeMembers *[]string `json:"scopeMembers,omitempty"`
 
 	// Specifies the type of scope for a Role Assignment.
@@ -107,22 +115,24 @@ var _ json.Unmarshaler = &DeviceAndAppManagementRoleAssignment{}
 
 func (s *DeviceAndAppManagementRoleAssignment) UnmarshalJSON(bytes []byte) error {
 	var decoded struct {
-		Members        *[]string                `json:"members,omitempty"`
-		RoleScopeTags  *[]RoleScopeTag          `json:"roleScopeTags,omitempty"`
-		Description    nullable.Type[string]    `json:"description,omitempty"`
-		DisplayName    nullable.Type[string]    `json:"displayName,omitempty"`
-		ResourceScopes *[]string                `json:"resourceScopes,omitempty"`
-		ScopeMembers   *[]string                `json:"scopeMembers,omitempty"`
-		ScopeType      *RoleAssignmentScopeType `json:"scopeType,omitempty"`
-		Id             *string                  `json:"id,omitempty"`
-		ODataId        *string                  `json:"@odata.id,omitempty"`
-		ODataType      *string                  `json:"@odata.type,omitempty"`
+		Members         *[]string                `json:"members,omitempty"`
+		RoleScopeTagIds *[]string                `json:"roleScopeTagIds,omitempty"`
+		RoleScopeTags   *[]RoleScopeTag          `json:"roleScopeTags,omitempty"`
+		Description     nullable.Type[string]    `json:"description,omitempty"`
+		DisplayName     nullable.Type[string]    `json:"displayName,omitempty"`
+		ResourceScopes  *[]string                `json:"resourceScopes,omitempty"`
+		ScopeMembers    *[]string                `json:"scopeMembers,omitempty"`
+		ScopeType       *RoleAssignmentScopeType `json:"scopeType,omitempty"`
+		Id              *string                  `json:"id,omitempty"`
+		ODataId         *string                  `json:"@odata.id,omitempty"`
+		ODataType       *string                  `json:"@odata.type,omitempty"`
 	}
 	if err := json.Unmarshal(bytes, &decoded); err != nil {
 		return fmt.Errorf("unmarshaling: %+v", err)
 	}
 
 	s.Members = decoded.Members
+	s.RoleScopeTagIds = decoded.RoleScopeTagIds
 	s.RoleScopeTags = decoded.RoleScopeTags
 	s.Description = decoded.Description
 	s.DisplayName = decoded.DisplayName

@@ -14,8 +14,6 @@ type ConditionalAccessAllExternalTenants struct {
 
 	// Fields inherited from ConditionalAccessExternalTenants
 
-	Members *[]string `json:"members,omitempty"`
-
 	// The membership kind. Possible values are: all, enumerated, unknownFutureValue. The enumerated member references an
 	// conditionalAccessEnumeratedExternalTenants object.
 	MembershipKind *ConditionalAccessExternalTenantsMembershipKind `json:"membershipKind,omitempty"`
@@ -32,7 +30,6 @@ type ConditionalAccessAllExternalTenants struct {
 
 func (s ConditionalAccessAllExternalTenants) ConditionalAccessExternalTenants() BaseConditionalAccessExternalTenantsImpl {
 	return BaseConditionalAccessExternalTenantsImpl{
-		Members:        s.Members,
 		MembershipKind: s.MembershipKind,
 		ODataId:        s.ODataId,
 		ODataType:      s.ODataType,

@@ -13,8 +13,8 @@ import (
 var _ AuthenticationEventListener = OnAuthenticationMethodLoadStartListener{}
 
 type OnAuthenticationMethodLoadStartListener struct {
-	// Required. Configuration for what to invoke if the event resolves to this listener. This lets us define potential
-	// handler configurations per-event.
+	// Required. Configuration for what to invoke if the event resolves to this listener. This property lets us define
+	// potential handler configurations per-event.
 	Handler OnAuthenticationMethodLoadStartHandler `json:"handler"`
 
 	// Fields inherited from AuthenticationEventListener

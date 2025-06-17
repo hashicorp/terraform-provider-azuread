@@ -14,10 +14,11 @@ var _ Entity = DeviceManagementAlertRule{}
 
 type DeviceManagementAlertRule struct {
 	// The rule template of the alert event. The possible values are: cloudPcProvisionScenario, cloudPcImageUploadScenario,
-	// cloudPcOnPremiseNetworkConnectionCheckScenario, cloudPcInGracePeriodScenario,
-	// cloudPcFrontlineInsufficientLicensesScenario, cloudPcInaccessibleScenario. Note that you must use the Prefer:
-	// include-unknown-enum-members request header to get the following values from this evolvable enum:
-	// cloudPcInGracePeriodScenario.
+	// cloudPcOnPremiseNetworkConnectionCheckScenario, unknownFutureValue, cloudPcInGracePeriodScenario,
+	// cloudPcFrontlineInsufficientLicensesScenario, cloudPcInaccessibleScenario, and cloudPcFrontlineConcurrencyScenario.
+	// Use the Prefer: include-unknown-enum-members request header to get the following values from this evolvable enum:
+	// cloudPcInGracePeriodScenario, cloudPcFrontlineInsufficientLicensesScenario, cloudPcInaccessibleScenario, and
+	// cloudPcFrontlineConcurrencyScenario.
 	AlertRuleTemplate *DeviceManagementAlertRuleTemplate `json:"alertRuleTemplate,omitempty"`
 
 	// The conditions that determine when to send alerts. For example, you can configure a condition to send an alert when

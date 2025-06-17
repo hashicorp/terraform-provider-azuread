@@ -13,8 +13,14 @@ import (
 var _ Entity = VirtualEventPresenter{}
 
 type VirtualEventPresenter struct {
-	Email            nullable.Type[string]         `json:"email,omitempty"`
-	Identity         Identity                      `json:"identity"`
+	// Email address of the presenter.
+	Email nullable.Type[string] `json:"email,omitempty"`
+
+	// Identity information of the presenter. The supported identities are: communicationsGuestIdentity and
+	// communicationsUserIdentity.
+	Identity Identity `json:"identity"`
+
+	// Other details about the presenter. This property returns null when the virtual event type is virtualEventTownhall.
 	PresenterDetails *VirtualEventPresenterDetails `json:"presenterDetails,omitempty"`
 
 	// Fields inherited from Entity

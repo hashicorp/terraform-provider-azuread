@@ -13,8 +13,8 @@ import (
 var _ AuthenticationEventListener = OnInteractiveAuthFlowStartListener{}
 
 type OnInteractiveAuthFlowStartListener struct {
-	// Required. Configuration for what to invoke if the event resolves to this listener. This lets us define potential
-	// handler configurations per-event.
+	// Required. Configuration for what to invoke if the event resolves to this listener. You can use this handler to define
+	// potential handler configurations for specific events.
 	Handler OnInteractiveAuthFlowStartHandler `json:"handler"`
 
 	// Fields inherited from AuthenticationEventListener

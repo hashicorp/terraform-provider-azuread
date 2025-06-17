@@ -16,8 +16,15 @@ type ExternalUsersSelfServiceSignUpEventsFlow struct {
 	// The configuration for what to invoke when attributes are ready to be collected from the user.
 	OnAttributeCollection OnAttributeCollectionHandler `json:"onAttributeCollection"`
 
+	// The configuration for what to invoke when attribution collection starts.
+	OnAttributeCollectionStart OnAttributeCollectionStartHandler `json:"onAttributeCollectionStart"`
+
+	// The configuration for what to invoke when attributes are submitted at the end of attribution collection.
+	OnAttributeCollectionSubmit OnAttributeCollectionSubmitHandler `json:"onAttributeCollectionSubmit"`
+
 	// Required. The configuration for what to invoke when authentication methods are ready to be presented to the user.
-	// Must have at least one identity provider linked.
+	// Must have at least one identity provider linked. Supports $filter (eq). See support for filtering on user flows for
+	// syntax information.
 	OnAuthenticationMethodLoadStart OnAuthenticationMethodLoadStartHandler `json:"onAuthenticationMethodLoadStart"`
 
 	// Required. The configuration for what to invoke when an authentication flow is ready to be initiated.
@@ -29,7 +36,7 @@ type ExternalUsersSelfServiceSignUpEventsFlow struct {
 	// Fields inherited from AuthenticationEventsFlow
 
 	// The conditions representing the context of the authentication request that's used to decide whether the events policy
-	// is invoked.
+	// is invoked. Supports $filter (eq). See support for filtering on user flows for syntax information.
 	Conditions *AuthenticationConditions `json:"conditions,omitempty"`
 
 	// The description of the events policy.
@@ -132,6 +139,22 @@ func (s *ExternalUsersSelfServiceSignUpEventsFlow) UnmarshalJSON(bytes []byte) e
 			return fmt.Errorf("unmarshaling field 'OnAttributeCollection' for 'ExternalUsersSelfServiceSignUpEventsFlow': %+v", err)
 		}
 		s.OnAttributeCollection = impl
+	}
+
+	if v, ok := temp["onAttributeCollectionStart"]; ok {
+		impl, err := UnmarshalOnAttributeCollectionStartHandlerImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'OnAttributeCollectionStart' for 'ExternalUsersSelfServiceSignUpEventsFlow': %+v", err)
+		}
+		s.OnAttributeCollectionStart = impl
+	}
+
+	if v, ok := temp["onAttributeCollectionSubmit"]; ok {
+		impl, err := UnmarshalOnAttributeCollectionSubmitHandlerImplementation(v)
+		if err != nil {
+			return fmt.Errorf("unmarshaling field 'OnAttributeCollectionSubmit' for 'ExternalUsersSelfServiceSignUpEventsFlow': %+v", err)
+		}
+		s.OnAttributeCollectionSubmit = impl
 	}
 
 	if v, ok := temp["onAuthenticationMethodLoadStart"]; ok {

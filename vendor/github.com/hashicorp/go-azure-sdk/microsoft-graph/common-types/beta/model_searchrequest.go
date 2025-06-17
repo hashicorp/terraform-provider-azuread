@@ -26,8 +26,8 @@ type SearchRequest struct {
 	// Contains the ordered collection of fields and limit to collapse results. Optional.
 	CollapseProperties *[]CollapseProperty `json:"collapseProperties,omitempty"`
 
-	// Contains the connection to be targeted. Respects the following format : /external/connections/connectionid where
-	// connectionid is the ConnectionId defined in the Connectors Administration. Note: contentSource is only applicable
+	// Contains the connection to be targeted. Respects the following format: /external/connections/connectionid where
+	// connectionid is the ConnectionId defined in the connectors administration. Note: contentSource is only applicable
 	// when entityType=externalItem. Optional.
 	ContentSources *[]string `json:"contentSources,omitempty"`
 
@@ -42,9 +42,9 @@ type SearchRequest struct {
 
 	// Contains the fields to be returned for each resource object specified in entityTypes, allowing customization of the
 	// fields returned by default otherwise, including additional fields such as custom managed properties from SharePoint
-	// and OneDrive, or custom fields in externalItem from content that Microsoft Graph connectors bring in. The fields
-	// property can be using the semantic labels applied to properties. For example, if a property is label as title, you
-	// can retrieve it using the following syntax : label_title.Optional.
+	// and OneDrive, or custom fields in externalItem from content that Microsoft 365 Copilot connectors bring in. The
+	// fields property can be using the semantic labels applied to properties. For example, if a property is labeled as
+	// title, you can retrieve it using the following syntax : label_title.Optional.
 	Fields *[]string `json:"fields,omitempty"`
 
 	// Specifies the offset for the search results. Offset 0 returns the very first result. Optional.
@@ -69,7 +69,7 @@ type SearchRequest struct {
 	// Provides the search result templates options for rendering connectors search results.
 	ResultTemplateOptions *ResultTemplateOption `json:"resultTemplateOptions,omitempty"`
 
-	// Indicates the kind of contents to be searched when a search is performed using application permissions. Optional.
+	// Indicates the kind of content to be searched when a search is performed using application permissions. Optional.
 	SharePointOneDriveOptions *SharePointOneDriveOptions `json:"sharePointOneDriveOptions,omitempty"`
 
 	// The size of the page to be retrieved. The maximum value is 500. Optional.
@@ -82,6 +82,7 @@ type SearchRequest struct {
 	// This is now replaced by the fields property.
 	Storedfields *[]string `json:"stored_fields,omitempty"`
 
-	// Indicates whether to trim away the duplicate SharePoint files from search results. Default value is false. Optional.
+	// Indicates whether to trim away the duplicate SharePoint files from search results. The default value is false.
+	// Optional.
 	TrimDuplicates nullable.Type[bool] `json:"trimDuplicates,omitempty"`
 }

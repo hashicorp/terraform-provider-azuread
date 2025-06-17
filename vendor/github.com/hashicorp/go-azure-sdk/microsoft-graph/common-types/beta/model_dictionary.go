@@ -84,6 +84,14 @@ func UnmarshalDictionaryImplementation(input []byte) (Dictionary, error) {
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.networkaccess.extendedProperties") {
+		var out NetworkaccessExtendedProperties
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into NetworkaccessExtendedProperties: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.partner.security.additionalDataDictionary") {
 		var out PartnerSecurityAdditionalDataDictionary
 		if err := json.Unmarshal(input, &out); err != nil {
@@ -104,6 +112,22 @@ func UnmarshalDictionaryImplementation(input []byte) (Dictionary, error) {
 		var out ResultTemplateDictionary
 		if err := json.Unmarshal(input, &out); err != nil {
 			return nil, fmt.Errorf("unmarshaling into ResultTemplateDictionary: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.stringDictionary") {
+		var out StringDictionary
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into StringDictionary: %+v", err)
+		}
+		return out, nil
+	}
+
+	if strings.EqualFold(value, "#microsoft.graph.wafAllowedHeadersDictionary") {
+		var out WafAllowedHeadersDictionary
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into WafAllowedHeadersDictionary: %+v", err)
 		}
 		return out, nil
 	}

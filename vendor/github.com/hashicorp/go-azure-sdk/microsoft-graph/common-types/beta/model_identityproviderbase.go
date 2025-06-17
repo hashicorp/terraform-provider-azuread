@@ -126,6 +126,14 @@ func UnmarshalIdentityProviderBaseImplementation(input []byte) (IdentityProvider
 		return out, nil
 	}
 
+	if strings.EqualFold(value, "#microsoft.graph.oidcIdentityProvider") {
+		var out OidcIdentityProvider
+		if err := json.Unmarshal(input, &out); err != nil {
+			return nil, fmt.Errorf("unmarshaling into OidcIdentityProvider: %+v", err)
+		}
+		return out, nil
+	}
+
 	if strings.EqualFold(value, "#microsoft.graph.openIdConnectIdentityProvider") {
 		var out OpenIdConnectIdentityProvider
 		if err := json.Unmarshal(input, &out); err != nil {
