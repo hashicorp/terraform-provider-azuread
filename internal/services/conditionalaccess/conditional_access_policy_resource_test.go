@@ -6,6 +6,7 @@ package conditionalaccess_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/go-azure-helpers/lang/pointer"
@@ -32,6 +33,56 @@ func TestAccConditionalAccessPolicy_basic(t *testing.T) {
 				check.That(data.ResourceName).Key("id").Exists(),
 				check.That(data.ResourceName).Key("display_name").HasValue(fmt.Sprintf("acctest-CONPOLICY-%d", data.RandomInteger)),
 				check.That(data.ResourceName).Key("state").HasValue("disabled"),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccConditionalAccessPolicy_signInFrequencyEveryTime(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.signinfrequencyintervalEverytime(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+	})
+}
+
+func TestAccConditionalAccessPolicy_signInFrequencyEveryTimeShouldFail(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config:      r.signinfrequencyintervalEverytimeShouldFail(data),
+			PlanOnly:    true,
+			ExpectError: regexp.MustCompile("when `session_controls.sign_in_frequency_interval` is set to"),
+		},
+	})
+}
+
+func TestAccConditionalAccessPolicy_signInFrequencyEveryTimeUpdate(t *testing.T) {
+	data := acceptance.BuildTestData(t, "azuread_conditional_access_policy", "test")
+	r := ConditionalAccessPolicyResource{}
+
+	data.ResourceTest(t, r, []acceptance.TestStep{
+		{
+			Config: r.basic(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
+			),
+		},
+		data.ImportStep(),
+		{
+			Config: r.signinfrequencyintervalEverytime(data),
+			Check: acceptance.ComposeTestCheckFunc(
+				check.That(data.ResourceName).ExistsInAzure(r),
 			),
 		},
 		data.ImportStep(),
@@ -999,6 +1050,124 @@ resource "azuread_conditional_access_policy" "test" {
   grant_controls {
     operator          = "OR"
     built_in_controls = ["block"]
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) signinfrequencyintervalEverytime(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "enabledForReportingButNotEnforced"
+
+  conditions {
+    client_app_types = [
+      "all",
+    ]
+    sign_in_risk_levels = []
+    user_risk_levels = [
+      "high",
+    ]
+    service_principal_risk_levels = []
+
+    applications {
+      excluded_applications = []
+      included_applications = [
+        "All",
+      ]
+    }
+
+    users {
+      excluded_groups = []
+      excluded_roles  = []
+      excluded_users  = []
+      included_groups = []
+      included_roles  = []
+      included_users = [
+        "None"
+      ]
+    }
+  }
+
+  grant_controls {
+    built_in_controls = [
+      "mfa",
+      "passwordChange"
+    ]
+    custom_authentication_factors = []
+    operator                      = "AND"
+    terms_of_use                  = []
+  }
+
+  session_controls {
+    cloud_app_security_policy             = null
+    disable_resilience_defaults           = null
+    persistent_browser_mode               = null
+    sign_in_frequency_authentication_type = "primaryAndSecondaryAuthentication"
+    sign_in_frequency_interval            = "everyTime" // NOTE: this precludes the use of sign_in_frequency_period etc
+  }
+}
+`, data.RandomInteger)
+}
+
+func (ConditionalAccessPolicyResource) signinfrequencyintervalEverytimeShouldFail(data acceptance.TestData) string {
+	return fmt.Sprintf(`
+provider "azuread" {}
+
+resource "azuread_conditional_access_policy" "test" {
+  display_name = "acctest-CONPOLICY-%[1]d"
+  state        = "enabledForReportingButNotEnforced"
+
+  conditions {
+    client_app_types = [
+      "all",
+    ]
+    sign_in_risk_levels = []
+    user_risk_levels = [
+      "high",
+    ]
+    service_principal_risk_levels = []
+
+    applications {
+      excluded_applications = []
+      included_applications = [
+        "All",
+      ]
+    }
+
+    users {
+      excluded_groups = []
+      excluded_roles  = []
+      excluded_users  = []
+      included_groups = []
+      included_roles  = []
+      included_users = [
+        "None"
+      ]
+    }
+  }
+
+  grant_controls {
+    built_in_controls = [
+      "mfa",
+      "passwordChange"
+    ]
+    custom_authentication_factors = []
+    operator                      = "AND"
+    terms_of_use                  = []
+  }
+
+  session_controls {
+    cloud_app_security_policy             = null
+    disable_resilience_defaults           = null
+    persistent_browser_mode               = null
+    sign_in_frequency_authentication_type = "primaryAndSecondaryAuthentication"
+    sign_in_frequency_interval            = "everyTime" // NOTE: this precludes the use of sign_in_frequency_period etc
+    sign_in_frequency_period              = "hours"     // This should fail because sign_in_frequency_interval is set to "everyTime"
+    sign_in_frequency                     = 1           // This should fail because sign_in_frequency_interval is set to "everyTime"
   }
 }
 `, data.RandomInteger)
