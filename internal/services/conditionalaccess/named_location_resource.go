@@ -295,6 +295,10 @@ func namedLocationResourceDelete(ctx context.Context, d *pluginsdk.ResourceData,
 
 			return tf.ErrorDiagF(err, "updating %s prior to deletion", id)
 		}
+
+		if err = consistency.WaitForUpdate(ctx, ipNamedLocationTrustedDeleteWait(client, id)); err != nil {
+			return tf.ErrorDiagF(err, "waiting for removal of trusted status on %s", id)
+		}
 	}
 
 	resp, err := client.DeleteConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultDeleteConditionalAccessNamedLocationOperationOptions())
@@ -352,6 +356,30 @@ func ipNamedLocationWait(client *conditionalaccessnamedlocation.ConditionalAcces
 			if location["trusted"].(bool) != ip["trusted"].(bool) {
 				return pointer.To(false), nil
 			}
+		}
+
+		return pointer.To(true), nil
+	}
+}
+
+func ipNamedLocationTrustedDeleteWait(client *conditionalaccessnamedlocation.ConditionalAccessNamedLocationClient, id *stable.IdentityConditionalAccessNamedLocationId) consistency.ChangeFunc {
+	return func(ctx context.Context) (*bool, error) {
+		resp, err := client.GetConditionalAccessNamedLocation(ctx, *id, conditionalaccessnamedlocation.DefaultGetConditionalAccessNamedLocationOperationOptions())
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.Model == nil {
+			return nil, errors.New("returned model was nil")
+		}
+
+		namedLocation, ok := resp.Model.(stable.IPNamedLocation)
+		if !ok {
+			return nil, errors.New("returned model was not an IPNamedLocation")
+		}
+
+		if pointer.From(namedLocation.IsTrusted) {
+			return pointer.To(false), nil
 		}
 
 		return pointer.To(true), nil
